@@ -102,7 +102,11 @@ describe("Space", () => {
     const client = mock<Socket>({
         getUserData: vi.fn().mockReturnValue(clientData),
     });
-    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor());
+    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor(), [
+        "screenSharingState",
+        "cameraState",
+        "microphoneState",
+    ]);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
     });

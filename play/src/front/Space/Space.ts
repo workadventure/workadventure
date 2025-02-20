@@ -16,6 +16,75 @@ import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 
+// -------------------- Interfaces --------------------
+
+export interface PeerConnectionInterface {
+    closeAllConnections(): void;
+    blockedFromRemotePlayer(userId: number): void;
+    setSpaceFilter(filter: SpaceFilterInterface): void;
+}
+
+export interface PeerFactoryInterface {
+    create(space: SpaceInterface): PeerConnectionInterface;
+}
+
+export interface PeerStoreInterface {
+    getSpaceStore(spaceName: string): Map<number, PeerConnectionInterface> | undefined;
+    cleanupStore(spaceName: string): void;
+    removePeer(userId: number, spaceName: string): void;
+    getPeer(userId: number, spaceName: string): PeerConnectionInterface | undefined;
+}
+
+// -------------------- Default Implementations --------------------x
+
+const defaultPeerFactory: PeerFactoryInterface = {
+    create: (space: SpaceInterface) => {
+        const repository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
+        return new SimplePeer(space, repository);
+    },
+};
+
+// -------------------- Peer Manager --------------------
+export class SpacePeerManager {
+    private _peer: PeerConnectionInterface | undefined;
+
+    constructor(
+        private space: SpaceInterface,
+        private peerStore: PeerStoreInterface,
+        private screenSharingPeerStore: PeerStoreInterface,
+        private peerFactory: PeerFactoryInterface = defaultPeerFactory
+    ) {}
+
+    initialize(propertiesToSync: string[]): void {
+        if (
+            propertiesToSync.includes("screenSharingState") ||
+            propertiesToSync.includes("cameraState") ||
+            propertiesToSync.includes("microphoneState")
+        ) {
+            this._peer = this.peerFactory.create(this.space);
+        }
+    }
+
+    cleanup(): void {
+        const spaceName = this.space.getName();
+
+        this._peer?.closeAllConnections();
+
+        this.peerStore.getSpaceStore(spaceName)?.forEach((peer) => {
+            peer.destroy();
+        });
+        this.peerStore.cleanupStore(spaceName);
+
+        this.screenSharingPeerStore.getSpaceStore(spaceName)?.forEach((peer) => {
+            peer.destroy();
+        });
+        this.screenSharingPeerStore.cleanupStore(spaceName);
+    }
+
+    getPeer(): PeerConnectionInterface | undefined {
+        return this._peer;
+    }
+}
 export class Space implements SpaceInterface {
     private readonly name: string;
     private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();
@@ -24,29 +93,27 @@ export class Space implements SpaceInterface {
     private filterNumber = 0;
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
-    private _simplePeer: SimplePeer | undefined;
+    private peerManager: SpacePeerManager;
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
      */
     constructor(
         name: string,
-        private metadata = new Map<string, unknown>(),
+        private _metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
-        private propertiesToSync: string[] = []
+        private _propertiesToSync: string[] = [],
+        private _peerStore: PeerStoreInterface = peerStore,
+        private _screenSharingPeerStore: PeerStoreInterface = screenSharingPeerStore
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
 
-        if (
-            this.propertiesToSync.includes("screenSharingState") ||
-            this.propertiesToSync.includes("cameraState") ||
-            this.propertiesToSync.includes("microphoneState")
-        ) {
-            this._simplePeer = new SimplePeer(this, gameManager.getCurrentGameScene().getRemotePlayersRepository());
-        }
+        this.peerManager = new SpacePeerManager(this, this._peerStore, this._screenSharingPeerStore);
+
+        this.peerManager.initialize(_propertiesToSync);
 
         this.userJoinSpace();
 
@@ -56,27 +123,41 @@ export class Space implements SpaceInterface {
         return this.name;
     }
     getMetadata(): Map<string, unknown> {
-        return this.metadata;
+        return this._metadata;
     }
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
-            this.metadata.set(key, value);
+            this._metadata.set(key, value);
         });
     }
 
     watchAllUsers(): AllUsersSpaceFilterInterface {
         const filterName = `allUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
+        const newFilter = new AllUsersSpaceFilter(
+            filterName,
+            this,
+            this._connection,
+            this._peerStore,
+            this._screenSharingPeerStore
+        );
         this.filters.set(filterName, newFilter);
+        this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         return newFilter;
     }
 
     watchLiveStreamingUsers(): SpaceFilterInterface {
         const filterName = `liveStreamingUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
+        const newFilter = new LiveStreamingUsersSpaceFilter(
+            filterName,
+            this,
+            this._connection,
+            this._peerStore,
+            this._screenSharingPeerStore
+        );
         this.filters.set(filterName, newFilter);
+        this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         return newFilter;
     }
 
@@ -101,25 +182,11 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-        if (
-            this.propertiesToSync.includes("screenSharingState") ||
-            this.propertiesToSync.includes("cameraState") ||
-            this.propertiesToSync.includes("microphoneState")
-        ) {
-            this._simplePeer?.closeAllConnections();
-            peerStore.getSpaceStore(this.getName())?.forEach((peer) => {
-                peer.destroy();
-            });
-            peerStore.cleanupStore(this.getName());
-            screenSharingPeerStore.getSpaceStore(this.getName())?.forEach((peer) => {
-                peer.destroy();
-            });
-            screenSharingPeerStore.cleanupStore(this.getName());
-        }
+        this.peerManager.cleanup();
     }
 
     private userJoinSpace() {
-        this._connection.emitJoinSpace(this.name, this.propertiesToSync);
+        this._connection.emitJoinSpace(this.name, this._propertiesToSync);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
@@ -236,10 +303,11 @@ export class Space implements SpaceInterface {
         //this._simplePeer?.closeAllConnections();
         //peerStore.cleanupStore(this.getName());
         //screenSharingPeerStore.cleanupStore(this.getName());
+        this.peerManager.cleanup();
     }
 
-    public getSimplePeer(): SimplePeer | undefined {
-        return this._simplePeer;
+    public getSimplePeer(): PeerConnectionInterface | undefined {
+        return this.peerManager.getPeer();
     }
     /**
      * @returns an observable that emits the new metadata of the space when it changes.
