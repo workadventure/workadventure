@@ -378,7 +378,6 @@ export class SimplePeer {
             if (peer !== undefined) {
                 peer.signal(data.signal);
             } else {
-                console.error(">>>>> createPeerConnection receiveWebrtcSignal", data.userId, peer);
                 console.error('Could not find peer whose ID is "' + data.userId + '" in PeerConnectionArray');
             }
         } catch (e) {

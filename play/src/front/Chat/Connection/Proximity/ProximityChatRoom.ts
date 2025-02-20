@@ -96,7 +96,6 @@ export class ProximityChatRoom implements ChatRoom {
     constructor(
         private _userId: number,
         private spaceRegistry: SpaceRegistryInterface,
-        //private space: SpaceInterface,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
@@ -403,7 +402,6 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        //TODO : ajouter getSimplePeer a l'interface SpaceInterface
         this._space.getSimplePeer()?.setSpaceFilter(this._spaceWatcher);
 
         const actualStatus = get(availabilityStatusStore);
