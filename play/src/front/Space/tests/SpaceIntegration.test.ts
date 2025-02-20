@@ -93,7 +93,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
@@ -120,7 +120,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
@@ -172,7 +172,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
@@ -219,7 +219,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
@@ -288,7 +288,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
 
         const subscriber = vi.fn();
 
@@ -328,7 +328,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, []);
 
         const subscriber = vi.fn();
 
