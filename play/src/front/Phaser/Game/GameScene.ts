@@ -275,7 +275,7 @@ export class GameScene extends DirtyScene {
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private peerStoreUnsubscriber: Unsubscriber[] = [];
+    private peerStoreUnsubscriber: Unsubscriber[] | undefined;
     private emoteUnsubscriber!: Unsubscriber;
     private emoteMenuUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
@@ -2132,13 +2132,6 @@ export class GameScene extends DirtyScene {
 
         this.peerStoreUnsubscriber = [
             peerStore.subscribe((store) => {
-                while (this.peerStoreUnsubscriber.length > 1) {
-                    const unsubscriber = this.peerStoreUnsubscriber.pop();
-                    if (unsubscriber) {
-                        unsubscriber();
-                    }
-                }
-
                 store.forEach((spaceStore, spaceId) => {
                     const unsubscriber = spaceStore.subscribe((peers) => {
                         const newPeerNumber = peers.size;
