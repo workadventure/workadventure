@@ -368,7 +368,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string): Promise<void> {
+    public async handleJoinSpace(
+        client: Socket,
+        spaceName: string,
+        localSpaceName: string,
+        propertiesToSync: string[]
+    ): Promise<void> {
         const socketData = client.getUserData();
 
         try {
@@ -529,7 +534,14 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor);
+                space = new Space(
+                    spaceName,
+                    localSpaceName,
+                    spaceStreamToBack,
+                    backId,
+                    eventProcessor,
+                    propertiesToSync
+                );
 
                 this.spaces.set(spaceName, space);
 
@@ -538,6 +550,7 @@ export class SocketManager implements ZoneEventListener {
                         $case: "joinSpaceMessage",
                         joinSpaceMessage: {
                             spaceName,
+                            propertiesToSync,
                         },
                     },
                 });
@@ -661,21 +674,20 @@ export class SocketManager implements ZoneEventListener {
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
-        if (
-            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
-            playerDetailsMessage.availabilityStatus !== 0
-        ) {
-            fieldMask.push("availabilityStatus");
+
+        // Get all fields from playerDetailsMessage
+        for (const [key, value] of Object.entries(playerDetailsMessage)) {
+            // Skip if value is undefined or empty string or 0
+            if (value === undefined || value === "" || value === 0) {
+                continue;
+            }
+
+            // Compare with current value in socketData
+            if (socketData.spaceUser[key as keyof typeof socketData.spaceUser] !== value) {
+                fieldMask.push(key);
+            }
         }
-        if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
-            fieldMask.push("chatID");
-        }
-        if (
-            playerDetailsMessage.showVoiceIndicator !== undefined &&
-            socketData.spaceUser.showVoiceIndicator !== playerDetailsMessage.showVoiceIndicator
-        ) {
-            fieldMask.push("showVoiceIndicator");
-        }
+
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,

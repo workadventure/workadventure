@@ -132,9 +132,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
     }
 
-    joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
+    joinSpace(
+        spaceName: string,
+        propertiesToSync: string[],
+        metadata: Map<string, unknown> = new Map<string, unknown>()
+    ): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection);
+        const newSpace = new Space(spaceName, metadata, this.roomConnection, propertiesToSync);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }

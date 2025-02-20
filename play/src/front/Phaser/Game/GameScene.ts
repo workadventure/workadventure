@@ -275,7 +275,7 @@ export class GameScene extends DirtyScene {
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private peerStoreUnsubscriber!: Unsubscriber;
+    private peerStoreUnsubscriber: Unsubscriber[] = [];
     private emoteUnsubscriber!: Unsubscriber;
     private emoteMenuUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
@@ -1002,10 +1002,6 @@ export class GameScene extends DirtyScene {
         });
     }
 
-    public getSimplePeer() {
-        return this.simplePeer;
-    }
-
     public cleanupClosingScene(): void {
         // make sure we restart own medias
         mediaManager.disableMyCamera();
@@ -1033,8 +1029,6 @@ export class GameScene extends DirtyScene {
 
         this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
-        this.simplePeer?.closeAllConnections();
-        this.simplePeer?.unregister();
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.pinchManager?.destroy();
@@ -1044,7 +1038,9 @@ export class GameScene extends DirtyScene {
         this._broadcastService?.destroy();
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
-        this.peerStoreUnsubscriber?.();
+        this.peerStoreUnsubscriber?.forEach((unsubscriber) => {
+            unsubscriber();
+        });
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
@@ -1573,7 +1569,7 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
 
                 gameManager
                     .getChatConnection()
@@ -1771,24 +1767,15 @@ export class GameScene extends DirtyScene {
                     this.showWorldFullError(message);
                 });
 
-                // When connection is performed, let's connect SimplePeer
-                //eslint-disable-next-line @typescript-eslint/no-this-alias
-                /*const me = this;
-                this.events.once("render", () => {
-                    if (me.connection) {*/
-                this.simplePeer = new SimplePeer(this.connection, this.remotePlayersRepository);
-                /*} else {
-                        console.warn("Connection to peers not started!");
-                    }
-                });*/
                 // Set up manager of audio streams received by the scripting API (useful for bots)
-                this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
-                this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
+                //TODO: See how we can move these 2 lines to just go through the current space
+                //this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
+                //this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getUserId(),
                     this._spaceRegistry,
-                    this.simplePeer,
+                    //this.simplePeer,
                     iframeListener
                 );
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
@@ -2142,139 +2129,154 @@ export class GameScene extends DirtyScene {
 
         let alreadyInBubble = false;
         const pendingConnects = new Set<number>();
-        this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
-            const newPeerNumber = peers.size;
-            const newUsers = new Map<number, MessageUserJoined>();
-            const players = this.remotePlayersRepository.getPlayers();
 
-            for (const playerId of peers.keys()) {
-                const currentPlayer = players.get(playerId);
-                if (currentPlayer) {
-                    newUsers.set(playerId, currentPlayer);
-                }
-            }
-
-            // Join
-            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                // Note: by design, the peerStore can only add or remove one user at a given time.
-                // So we know for sure that there is only one new user.
-                const peer = Array.from(peers.values())[0];
-                //askIfUserWantToJoinBubbleOf(peer.userName);
-                statusChanger.setUserNameInteraction(peer.player.name);
-                statusChanger.applyInteractionRules();
-
-                pendingConnects.add(peer.userId);
-                setTimeout(() => {
-                    // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                    pendingConnects.delete(peer.userId);
-                    /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
-                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                        alreadyInBubble = true;
-                    }*/
-                }, 5000);
-                peer.once("connect", () => {
-                    pendingConnects.delete(peer.userId);
-                    if (pendingConnects.size === 0) {
-                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                        alreadyInBubble = true;
+        this.peerStoreUnsubscriber = [
+            peerStore.subscribe((store) => {
+                while (this.peerStoreUnsubscriber.length > 1) {
+                    const unsubscriber = this.peerStoreUnsubscriber.pop();
+                    if (unsubscriber) {
+                        unsubscriber();
                     }
-                });
-            }
-
-            // Left
-            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
-                // TODO: leave event can be triggered without a join if connect fails
-                hideBubbleConfirmationModal();
-                iframeListener.sendLeaveProximityMeetingEvent();
-
-                if (screenWakeRelease) {
-                    screenWakeRelease()
-                        .then(() => {
-                            screenWakeRelease = undefined;
-                        })
-                        .catch((error) => console.error(error));
                 }
-            }
 
-            // Participant Join
-            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
-                const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
+                store.forEach((spaceStore, spaceId) => {
+                    const unsubscriber = spaceStore.subscribe((peers) => {
+                        const newPeerNumber = peers.size;
+                        const newUsers = new Map<number, MessageUserJoined>();
+                        const players = this.remotePlayersRepository.getPlayers();
 
-                if (newUser) {
-                    if (alreadyInBubble) {
-                        peers.get(newUser.userId)?.once("connect", () => {
-                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                        });
-                    } else {
-                        const peer = peers.get(newUser.userId);
-                        if (peer) {
-                            pendingConnects.add(newUser.userId);
+                        // Populate newUsers from the current space's peers
+                        for (const [playerId] of peers) {
+                            const currentPlayer = players.get(playerId);
+                            if (currentPlayer) {
+                                newUsers.set(playerId, currentPlayer);
+                            }
+                        }
+
+                        // Handle Join
+                        if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
+                            const peer = Array.from(peers.values())[0];
+                            statusChanger.setUserNameInteraction(peer.player.name);
+                            statusChanger.applyInteractionRules();
+
+                            pendingConnects.add(peer.userId);
                             setTimeout(() => {
-                                // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                                pendingConnects.delete(newUser.userId);
-                                /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }*/
+                                pendingConnects.delete(peer.userId);
                             }, 5000);
+
                             peer.once("connect", () => {
-                                pendingConnects.delete(newUser.userId);
+                                pendingConnects.delete(peer.userId);
                                 if (pendingConnects.size === 0) {
                                     iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
                                     alreadyInBubble = true;
                                 }
                             });
                         }
-                    }
-                }
-            }
 
-            // Participant Left
-            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
-                const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
+                        // Left
+                        if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                            // TODO: leave event can be triggered without a join if connect fails
+                            hideBubbleConfirmationModal();
+                            iframeListener.sendLeaveProximityMeetingEvent();
 
-                if (oldUser) {
-                    // TODO: leave event can be triggered without a join if connect fails
-                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
-                }
-            }
-
-            if (newPeerNumber > oldPeersNumber) {
-                this.playSound("audio-webrtc-in");
-                faviconManager.pushNotificationFavicon();
-            } else if (newPeerNumber < oldPeersNumber) {
-                this.playSound("audio-webrtc-out");
-                faviconManager.pushOriginalFavicon();
-            }
-
-            if (newPeerNumber > 0) {
-                if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
-                        if (spectrum === undefined) {
-                            this.CurrentPlayer.toggleTalk(false, true);
-                            return;
+                            if (screenWakeRelease) {
+                                screenWakeRelease()
+                                    .then(() => {
+                                        screenWakeRelease = undefined;
+                                    })
+                                    .catch((error) => console.error(error));
+                            }
                         }
-                        const volume = spectrum.reduce((a, b) => a + b, 0);
-                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+
+                        // Participant Join
+                        if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
+                            const newUser = Array.from(newUsers.values()).find(
+                                (player) => !oldUsers.get(player.userId)
+                            );
+
+                            if (newUser) {
+                                if (alreadyInBubble) {
+                                    peers.get(newUser.userId)?.once("connect", () => {
+                                        iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                                    });
+                                } else {
+                                    const peer = peers.get(newUser.userId);
+                                    if (peer) {
+                                        pendingConnects.add(newUser.userId);
+                                        setTimeout(() => {
+                                            pendingConnects.delete(newUser.userId);
+                                            /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                                            iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                            alreadyInBubble = true;
+                                        }*/
+                                        }, 5000);
+                                        peer.once("connect", () => {
+                                            pendingConnects.delete(newUser.userId);
+                                            if (pendingConnects.size === 0) {
+                                                iframeListener.sendJoinProximityMeetingEvent(
+                                                    Array.from(newUsers.values())
+                                                );
+                                                alreadyInBubble = true;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        // Participant Left
+                        if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
+                            const oldUser = Array.from(oldUsers.values()).find(
+                                (player) => !newUsers.get(player.userId)
+                            );
+
+                            if (oldUser) {
+                                // TODO: leave event can be triggered without a join if connect fails
+                                iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
+                            }
+                        }
+
+                        if (newPeerNumber > oldPeersNumber) {
+                            this.playSound("audio-webrtc-in");
+                            faviconManager.pushNotificationFavicon();
+                        } else if (newPeerNumber < oldPeersNumber) {
+                            this.playSound("audio-webrtc-out");
+                            faviconManager.pushOriginalFavicon();
+                        }
+
+                        if (newPeerNumber > 0) {
+                            if (!this.localVolumeStoreUnsubscriber) {
+                                this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
+                                    if (spectrum === undefined) {
+                                        this.CurrentPlayer.toggleTalk(false, true);
+                                        return;
+                                    }
+                                    const volume = spectrum.reduce((a, b) => a + b, 0);
+                                    this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+                                });
+                            }
+                            //this.reposition();
+                        } else {
+                            this.CurrentPlayer.toggleTalk(false, true);
+                            this.connection?.emitPlayerShowVoiceIndicator(false);
+                            this.showVoiceIndicatorChangeMessageSent = false;
+                            this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
+                            if (this.localVolumeStoreUnsubscriber) {
+                                this.localVolumeStoreUnsubscriber();
+                                this.localVolumeStoreUnsubscriber = undefined;
+                            }
+
+                            //this.reposition();
+                        }
+
+                        oldUsers = newUsers;
+                        oldPeersNumber = newPeerNumber;
                     });
-                }
-                //this.reposition();
-            } else {
-                this.CurrentPlayer.toggleTalk(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
-                this.showVoiceIndicatorChangeMessageSent = false;
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
-                if (this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber();
-                    this.localVolumeStoreUnsubscriber = undefined;
-                }
 
-                //this.reposition();
-            }
-
-            oldUsers = newUsers;
-            oldPeersNumber = newPeerNumber;
-        });
+                    this.peerStoreUnsubscriber.push(unsubscriber);
+                });
+            }),
+        ];
 
         this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
             if (isOn) {
@@ -3196,10 +3198,15 @@ ${escapedMessage}
             scriptUtils.goToPage("/login");
         });
 
-        iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
-            const soundUrl = new URL(message.url, this.mapUrlFile);
-            await this.simplePeer.dispatchSound(soundUrl);
-        });
+        iframeListener.registerAnswerer(
+            "playSoundInBubble",
+            /*async*/ (message) => {
+                const soundUrl = new URL(message.url, this.mapUrlFile);
+                console.error("playSoundInBubble", soundUrl);
+                //TODO: see how to replace simplepeer with the current space
+                //await this.simplePeer.dispatchSound(soundUrl);
+            }
+        );
     }
 
     private setPropertyLayer(

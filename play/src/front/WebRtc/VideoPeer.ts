@@ -4,17 +4,16 @@ import { derived, get, Readable, readable, Unsubscriber, Writable, writable } fr
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -56,7 +55,7 @@ export class VideoPeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
+        private space: SpaceInterface,
         private spaceFilter: Promise<SpaceFilterInterface>
     ) {
         const bandwidth = get(videoBandwidthStore);
@@ -177,7 +176,7 @@ export class VideoPeer extends Peer implements Streamable {
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
-                        const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
+                        const simplePeer = this.space.getSimplePeer();
                         simplePeer.blockedFromRemotePlayer(this.userId);
                         break;
                     }
@@ -269,7 +268,16 @@ export class VideoPeer extends Peer implements Streamable {
 
     private sendWebrtcSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcSignalToServerMessage",
+                    webRtcSignalToServerMessage: {
+                        receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.player.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);
         }

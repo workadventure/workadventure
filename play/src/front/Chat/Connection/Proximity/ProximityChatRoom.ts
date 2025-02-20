@@ -21,7 +21,6 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, selectedRoomStore } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
-import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
@@ -97,7 +96,7 @@ export class ProximityChatRoom implements ChatRoom {
     constructor(
         private _userId: number,
         private spaceRegistry: SpaceRegistryInterface,
-        private simplePeer: SimplePeer,
+        //private space: SpaceInterface,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
@@ -365,8 +364,8 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public joinSpace(spaceName: string): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName);
+    public joinSpace(spaceName: string, propertiesToSync: string[]): void {
+        this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
 
         this._spaceWatcher = this._space.watchAllUsers();
         bindMuteEventsToSpace(this._space, this._spaceWatcher);
@@ -404,7 +403,8 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this.simplePeer.setSpaceFilter(this._spaceWatcher);
+        //TODO : ajouter getSimplePeer a l'interface SpaceInterface
+        this._space.getSimplePeer()?.setSpaceFilter(this._spaceWatcher);
 
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
@@ -456,8 +456,6 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceRegistry.leaveSpace(this._space);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
-
-        this.simplePeer.setSpaceFilter(undefined);
     }
 
     public destroy(): void {

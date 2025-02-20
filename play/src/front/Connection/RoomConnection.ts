@@ -887,30 +887,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.addEventListener("error", callback);
     }
 
-    public sendWebrtcSignal(signal: unknown, receiverId: number) {
-        this.send({
-            message: {
-                $case: "webRtcSignalToServerMessage",
-                webRtcSignalToServerMessage: {
-                    receiverId,
-                    signal: JSON.stringify(signal),
-                },
-            },
-        });
-    }
-
-    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
-        this.send({
-            message: {
-                $case: "webRtcScreenSharingSignalToServerMessage",
-                webRtcScreenSharingSignalToServerMessage: {
-                    receiverId,
-                    signal: JSON.stringify(signal),
-                },
-            },
-        });
-    }
-
     public getUserId(): number {
         if (this.userId === null) throw new Error("UserId cannot be null!");
         return this.userId;
@@ -1462,12 +1438,13 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinSpace(spaceName: string): void {
+    public emitJoinSpace(spaceName: string, propertiesToSync: string[]): void {
         this.send({
             message: {
                 $case: "joinSpaceMessage",
                 joinSpaceMessage: {
                     spaceName,
+                    propertiesToSync,
                 },
             },
         });

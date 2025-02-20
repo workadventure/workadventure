@@ -6,6 +6,7 @@ import { applyFieldMask } from "protobuf-fieldmask";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
+import { screenSharingPeerStore, peerStore } from "../../Stores/PeerStore";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -138,6 +139,18 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             if (this._leftUserSubscriber) {
                 this._leftUserSubscriber.next(user);
             }
+        }
+
+        const peerConnection = peerStore.getPeer(userId, this._space.getName());
+        if (peerConnection) {
+            peerConnection.destroy();
+            peerStore.removePeer(userId, this._space.getName());
+        }
+
+        const screenSharingPeerConnection = screenSharingPeerStore.getPeer(userId, this._space.getName());
+        if (screenSharingPeerConnection) {
+            screenSharingPeerConnection.destroy();
+            screenSharingPeerStore.removePeer(userId, this._space.getName());
         }
     }
 

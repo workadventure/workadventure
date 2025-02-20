@@ -1,5 +1,6 @@
 import { get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { MapStore } from "@workadventure/store-utils";
 import type { VideoPeer } from "../WebRtc/VideoPeer";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -8,33 +9,64 @@ import { localUserStore } from "../Connection/LocalUserStore";
  * A generic store that contains the list of (video or screenSharing) peers we are connected to.
  */
 function createPeerStore<T>() {
-    const { subscribe, set, update } = writable(new Map<number, T>());
+    const { subscribe, update } = writable(new Map<string, MapStore<number, T>>());
 
     return {
         subscribe,
-        getPeer(userId: number): T | undefined {
-            return get({ subscribe }).get(userId);
+        getPeer(userId: number, spaceId: string): T | undefined {
+            const spaceMap = get({ subscribe }).get(spaceId);
+            if (!spaceMap) return undefined;
+            return spaceMap.get(userId);
         },
-        addPeer(userId: number, peer: T) {
-            update((users) => {
-                users.set(userId, peer);
-                return users;
+        addPeer(userId: number, peer: T, spaceId: string) {
+            update((spaces) => {
+                if (!spaces.has(spaceId)) {
+                    spaces.set(spaceId, new MapStore<number, T>());
+                }
+                const spaceMap = spaces.get(spaceId)!;
+                spaceMap.set(userId, peer);
+                return spaces;
             });
         },
-        removePeer(userId: number) {
-            update((users) => {
-                const peerConnectionDeleted = users.delete(userId);
+        removePeer(userId: number, spaceId: string) {
+            update((spaces) => {
+                const spaceMap = spaces.get(spaceId);
+                if (!spaceMap) {
+                    Sentry.captureException(new Error("Error deleting peer connection - space not found"));
+                    return spaces;
+                }
+                const peerConnectionDeleted = spaceMap.delete(userId);
                 if (!peerConnectionDeleted) {
                     Sentry.captureException(new Error("Error deleting peer connection"));
                 }
-                return users;
+                if (spaceMap.size === 0) {
+                    spaces.delete(spaceId);
+                }
+                return spaces;
             });
         },
-        cleanupStore() {
-            set(new Map<number, T>());
+        cleanupStore(spaceId: string) {
+            update((spaces) => {
+                spaces.delete(spaceId);
+                return spaces;
+            });
+        },
+        cleanupSpace(spaceId: string) {
+            update((spaces) => {
+                spaces.delete(spaceId);
+                return spaces;
+            });
         },
         getSize(): number {
-            return get({ subscribe }).size;
+            return Array.from(get({ subscribe }).values()).reduce((sum, spaceMap) => sum + spaceMap.size, 0);
+        },
+        getSpaceSize(spaceId: string): number {
+            const spaceMap = get({ subscribe }).get(spaceId);
+            return spaceMap?.size ?? 0;
+        },
+
+        getSpaceStore(spaceId: string): MapStore<number, T> | undefined {
+            return get({ subscribe }).get(spaceId);
         },
     };
 }
@@ -59,21 +91,23 @@ function createScreenSharingStreamStore() {
 
             peers = new Map<number, ScreenSharingPeer>();
 
-            screenSharingPeers.forEach((screenSharingPeer: ScreenSharingPeer, key: number) => {
-                if (screenSharingPeer.isReceivingScreenSharingStream()) {
-                    peers.set(key, screenSharingPeer);
-                }
+            screenSharingPeers.forEach((spaceMap) => {
+                spaceMap.forEach((screenSharingPeer: ScreenSharingPeer, key: number) => {
+                    if (screenSharingPeer.isReceivingScreenSharingStream()) {
+                        peers.set(key, screenSharingPeer);
+                    }
 
-                unsubscribes.push(
-                    screenSharingPeer.streamStore.subscribe((stream) => {
-                        if (stream) {
-                            peers.set(key, screenSharingPeer);
-                        } else {
-                            peers.delete(key);
-                        }
-                        set(peers);
-                    })
-                );
+                    unsubscribes.push(
+                        screenSharingPeer.streamStore.subscribe((stream) => {
+                            if (stream) {
+                                peers.set(key, screenSharingPeer);
+                            } else {
+                                peers.delete(key);
+                            }
+                            set(peers);
+                        })
+                    );
+                });
             });
 
             set(peers);

@@ -1,5 +1,14 @@
 import { Observable, Subject } from "rxjs";
-import { PrivateEvent, PublicEvent, SpaceEvent, UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import {
+    PrivateEvent,
+    PrivateSpaceEvent,
+    PublicEvent,
+    SpaceEvent,
+    UpdateSpaceMetadataMessage,
+} from "@workadventure/messages";
+import { SimplePeer } from "../WebRtc/SimplePeer";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -15,7 +24,7 @@ export class Space implements SpaceInterface {
     private filterNumber = 0;
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
-
+    private _simplePeer: SimplePeer | undefined;
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
@@ -23,12 +32,21 @@ export class Space implements SpaceInterface {
     constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
-        private _connection: RoomConnectionForSpacesInterface
+        private _connection: RoomConnectionForSpacesInterface,
+        private propertiesToSync: string[] = []
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
+
+        if (
+            this.propertiesToSync.includes("screenSharingState") ||
+            this.propertiesToSync.includes("cameraState") ||
+            this.propertiesToSync.includes("microphoneState")
+        ) {
+            this._simplePeer = new SimplePeer(this, gameManager.getCurrentGameScene().getRemotePlayersRepository());
+        }
 
         this.userJoinSpace();
 
@@ -83,10 +101,25 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
+        if (
+            this.propertiesToSync.includes("screenSharingState") ||
+            this.propertiesToSync.includes("cameraState") ||
+            this.propertiesToSync.includes("microphoneState")
+        ) {
+            this._simplePeer?.closeAllConnections();
+            peerStore.getSpaceStore(this.getName())?.forEach((peer) => {
+                peer.destroy();
+            });
+            peerStore.cleanupStore(this.getName());
+            screenSharingPeerStore.getSpaceStore(this.getName())?.forEach((peer) => {
+                peer.destroy();
+            });
+            screenSharingPeerStore.cleanupStore(this.getName());
+        }
     }
 
     private userJoinSpace() {
-        this._connection.emitJoinSpace(this.name);
+        this._connection.emitJoinSpace(this.name, this.propertiesToSync);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
@@ -102,7 +135,6 @@ export class Space implements SpaceInterface {
         }
         return observable;
     }
-
     public observePrivateEvent<K extends keyof PrivateEventsObservables>(
         key: K
     ): NonNullable<PrivateEventsObservables[K]> {
@@ -173,6 +205,10 @@ export class Space implements SpaceInterface {
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
+    public emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: number): void {
+        this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
+    }
+
     /**
      * Sends a message to the server to update our user in the space.
      */
@@ -195,8 +231,16 @@ export class Space implements SpaceInterface {
         }
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
+
+        //TODO : should close all connections for a space
+        //this._simplePeer?.closeAllConnections();
+        //peerStore.cleanupStore(this.getName());
+        //screenSharingPeerStore.cleanupStore(this.getName());
     }
 
+    public getSimplePeer(): SimplePeer | undefined {
+        return this._simplePeer;
+    }
     /**
      * @returns an observable that emits the new metadata of the space when it changes.
      */

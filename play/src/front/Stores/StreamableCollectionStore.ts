@@ -78,7 +78,12 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             };
 
             $screenSharingStreamStore.forEach(addPeer);
-            $peerStore.forEach(addPeer);
+
+            $peerStore.forEach((spacePeerStore) => {
+                spacePeerStore.forEach((peer) => {
+                    addPeer(peer);
+                });
+            });
 
             $broadcastTracksStore.forEach((trackWrapper) => {
                 if (trackWrapper instanceof JitsiTrackWrapper) {

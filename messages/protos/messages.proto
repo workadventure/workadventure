@@ -832,6 +832,12 @@ message PrivateSpaceEvent {
     MuteVideoPrivateMessage muteVideo = 1;
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
+    WebRtcStartMessage webRtcStartMessage = 4;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
   }
 }
 
@@ -861,6 +867,7 @@ message PrivateEventFrontToPusher {
  */
 message JoinSpaceRequestMessage {
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 
 /**
@@ -1229,6 +1236,7 @@ message BackToPusherSpaceMessage{
  */
 message JoinSpaceMessage{
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;

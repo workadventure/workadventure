@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import * as Sentry from "@sentry/svelte";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
@@ -10,6 +9,7 @@ import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { lookupUserById } from "../Space/Utils/UserLookup";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -45,7 +45,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
+        private space: SpaceInterface,
         stream: MediaStream | undefined,
         private spaceFilter: Promise<SpaceFilterInterface>
     ) {
@@ -151,7 +151,16 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcScreenSharingSignalToServerMessage",
+                    webRtcScreenSharingSignalToServerMessage: {
+                        receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.player.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }
