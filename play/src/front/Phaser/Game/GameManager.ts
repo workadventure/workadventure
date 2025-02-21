@@ -189,21 +189,23 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
-        gameSceneIsLoadedStore.set(false);
+        this.closeGameScene();
+        if (!this.scenePlugin.get(targetSceneName)) {
+            this.scenePlugin.add(targetSceneName, sceneClass, false);
+        }
+        this.scenePlugin.run(targetSceneName);
+    }
 
+    closeGameScene(): void {
+        gameSceneIsLoadedStore.set(false);
         const gameScene = this.scenePlugin.get(this.currentGameSceneName ?? "default");
 
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
-
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
-        if (!this.scenePlugin.get(targetSceneName)) {
-            this.scenePlugin.add(targetSceneName, sceneClass, false);
-        }
-        this.scenePlugin.run(targetSceneName);
     }
 
     /**

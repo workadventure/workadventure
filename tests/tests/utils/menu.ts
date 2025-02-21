@@ -27,7 +27,7 @@ class Menu {
     /*async openMenu(page: Page) {
         // 'button#burgerIcon' do not exist in the new graphic version !!
         await expect(page.locator('button#burgerIcon')).toBeVisible();
-        const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+        const mobileMenuVisible = await page.locator('button#burgerIcon img.rotate-0').isVisible();
         if(mobileMenuVisible){
             await page.click('button#burgerIcon');
         }

@@ -29,7 +29,7 @@
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
             searchLoader = true;
-            if ($navChat === "chat" && $chatSearchBarValue.trim() !== "") {
+            if ($navChat.key === "chat" && $chatSearchBarValue.trim() !== "") {
                 searchAccessibleRooms();
             }
 
@@ -63,7 +63,7 @@
 <div class="p-2 flex items-center absolute w-full z-40">
     <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
-            {#if $navChat === "chat"}
+            {#if $navChat.key === "chat"}
                 <button
                     class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
                     on:click={() => navChat.switchToUserList()}
@@ -82,7 +82,7 @@
     </div>
     <div class="flex flex-col items-center justify-center grow">
         <div class="text-md font-bold h-5 {searchActive ? 'hidden' : ''}">
-            {#if $navChat === "chat"}
+            {#if $navChat.key === "chat"}
                 {$LL.chat.chat()}
             {:else}
                 {$LL.chat.users()}
@@ -119,7 +119,7 @@
                     <input
                         autocomplete="new-password"
                         class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
-                        placeholder={$navChat === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                        placeholder={$navChat.key === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
                         on:keydown={handleKeyDown}
                         on:keyup={() => handleKeyUp(userProviderMerger)}
                         bind:value={$chatSearchBarValue}
