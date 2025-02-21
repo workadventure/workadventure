@@ -386,7 +386,7 @@ const mapEditor: BaseTranslation = {
         close: "Close",
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
-        searchPlaceholder: "Write...",
+        searchPlaceholder: "Type keywords...",
     },
 };
 
