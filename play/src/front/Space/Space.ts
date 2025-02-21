@@ -8,6 +8,7 @@ import {
 } from "@workadventure/messages";
 import { SimplePeer } from "../WebRtc/SimplePeer";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { VideoPeer } from "../WebRtc/VideoPeer";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -23,6 +24,8 @@ export interface SimplePeerConnectionInterface {
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
     dispatchStream(mediaStream: MediaStream): void;
+    videoPeerAdded: Observable<VideoPeer>;
+    videoPeerRemoved: Observable<VideoPeer>;
 }
 
 export interface PeerFactoryInterface {
