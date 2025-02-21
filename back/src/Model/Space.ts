@@ -13,6 +13,7 @@ import {
 import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
+import { EventProcessor } from "./EventProcessor";
 
 const debug = Debug("space");
 
@@ -21,7 +22,7 @@ export class Space implements CustomJsonReplacerInterface {
     private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
     private metadata: Map<string, unknown>;
 
-    constructor(name: string) {
+    constructor(name: string, private eventProcessor: EventProcessor) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
@@ -184,22 +185,78 @@ export class Space implements CustomJsonReplacerInterface {
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
         console.log("dispatchPublicEvent to all pushers", publicEvent);
+
+        if (!publicEvent.spaceEvent?.event) {
+            // If there is no event, just forward the public event as-is
+            this.notifyWatchers({
+                message: {
+                    $case: "publicEvent",
+                    publicEvent,
+                },
+            });
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPublicEvent(
+            publicEvent.spaceEvent.event,
+            publicEvent.senderUserId
+        );
+
+        // Create new public event with processed event
+        const processedPublicEvent: PublicEvent = {
+            ...publicEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
-                publicEvent,
+                publicEvent: processedPublicEvent,
             },
         });
     }
-
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         // Let's notify the watcher that contains the user
+        if (!privateEvent.spaceEvent?.event) {
+            // If there is no event, just forward the private event as-is
+            for (const [watcher, users] of this.users.entries()) {
+                if (users.has(privateEvent.receiverUserId)) {
+                    watcher.write({
+                        message: {
+                            $case: "privateEvent",
+                            privateEvent,
+                        },
+                    });
+                }
+            }
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPrivateEvent(
+            privateEvent.spaceEvent.event,
+            privateEvent.senderUserId,
+            privateEvent.receiverUserId
+        );
+
+        // Create new private event with processed event
+        const processedPrivateEvent: PrivateEvent = {
+            ...privateEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
+        // Send to target user
         for (const [watcher, users] of this.users.entries()) {
             if (users.has(privateEvent.receiverUserId)) {
                 watcher.write({
                     message: {
                         $case: "privateEvent",
-                        privateEvent,
+                        privateEvent: processedPrivateEvent,
                     },
                 });
             }

@@ -41,7 +41,6 @@ import {
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WebRtcSignalToClientMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
@@ -67,6 +66,7 @@ import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
@@ -1281,7 +1281,7 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            space = new Space(joinSpaceMessage.spaceName, eventProcessor);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
@@ -1391,69 +1391,6 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
         }
-
-        if (!privateEvent.spaceEvent?.event) {
-            space.dispatchPrivateEvent(privateEvent);
-            return;
-        }
-
-        switch (privateEvent.spaceEvent.event.$case) {
-            case "webRtcStartMessage": {
-                if (TURN_STATIC_AUTH_SECRET) {
-                    const { username, password } = this.getTURNCredentials(
-                        privateEvent.spaceEvent.event.webRtcStartMessage.userId.toString(),
-                        TURN_STATIC_AUTH_SECRET
-                    );
-                    privateEvent.spaceEvent.event.webRtcStartMessage.webRtcUserName = username;
-                    privateEvent.spaceEvent.event.webRtcStartMessage.webRtcPassword = password;
-                }
-                break;
-            }
-
-            case "webRtcSignalToServerMessage":
-            case "webRtcScreenSharingSignalToServerMessage": {
-                const signal =
-                    privateEvent.spaceEvent.event.$case === "webRtcSignalToServerMessage"
-                        ? privateEvent.spaceEvent.event.webRtcSignalToServerMessage.signal
-                        : privateEvent.spaceEvent.event.webRtcScreenSharingSignalToServerMessage.signal;
-
-                const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-                    userId: privateEvent.senderUserId,
-                    signal,
-                };
-
-                if (TURN_STATIC_AUTH_SECRET) {
-                    const { username, password } = this.getTURNCredentials(
-                        privateEvent.senderUserId.toString(),
-                        TURN_STATIC_AUTH_SECRET
-                    );
-                    webrtcSignalToClientMessage.webRtcUserName = username;
-                    webrtcSignalToClientMessage.webRtcPassword = password;
-                }
-
-                space.dispatchPrivateEvent({
-                    spaceName: privateEvent.spaceName,
-                    senderUserId: privateEvent.senderUserId,
-                    receiverUserId: privateEvent.receiverUserId,
-                    spaceEvent: {
-                        event:
-                            privateEvent.spaceEvent.event.$case === "webRtcSignalToServerMessage"
-                                ? {
-                                      $case: "webRtcSignalToClientMessage",
-                                      webRtcSignalToClientMessage:
-                                          WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-                                  }
-                                : {
-                                      $case: "webRtcScreenSharingSignalToClientMessage",
-                                      webRtcScreenSharingSignalToClientMessage:
-                                          WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-                                  },
-                    },
-                });
-                return;
-            }
-        }
-
         space.dispatchPrivateEvent(privateEvent);
     }
 
