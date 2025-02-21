@@ -106,8 +106,12 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
         scene.broadcastService.leaveSpace(event.spaceName);
         chatZoneLiveStore.set(false);
         // Close all connection simple peer
-        scene.getSimplePeer().closeAllConnections();
-        peerStore.cleanupStore();
+        const simplePeer = space.getSimplePeer();
+        if (simplePeer) {
+            simplePeer.closeAllConnections();
+        }
+        //TODO : should close all connections for a space
+        peerStore.cleanupStore(space.getName());
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

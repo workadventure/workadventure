@@ -758,7 +758,8 @@ export class IoSocketController {
                             await socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
-                                localSpaceName
+                                localSpaceName,
+                                message.message.joinSpaceMessage.propertiesToSync
                             );
                             break;
                         }
@@ -941,8 +942,6 @@ export class IoSocketController {
                         }
                         case "itemEventMessage":
                         case "variableMessage":
-                        case "webRtcSignalToServerMessage":
-                        case "webRtcScreenSharingSignalToServerMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":

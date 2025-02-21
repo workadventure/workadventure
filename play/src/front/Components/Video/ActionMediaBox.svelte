@@ -79,7 +79,7 @@
             kickOffUser: {},
         });
         // FIXME: this works only in bubbles
-        peerStore.removePeer(spaceUser.id);
+        peerStore.removePeer(spaceUser.id, spaceUser.space.getName());
         close();
     }
 

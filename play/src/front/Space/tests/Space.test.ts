@@ -1,30 +1,57 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { Space } from "../Space";
+import { PeerConnectionInterface, PeerFactoryInterface, PeerStoreInterface, Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
-    return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
-        },
-    };
-});
+// Mock the entire GameManager module
+vi.mock("../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: vi.fn(() => ({})),
+    },
+}));
 
-vi.mock("../../Phaser/Game/GameManager", () => {
-    return {
-        gameManager: {
-            getCurrentGameScene: () => ({}),
-        },
-    };
-});
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    peerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
+    emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
+
+const defaultPeerStoreMock = {
+    getSpaceStore: vi.fn().mockReturnValue(new Map<number, PeerConnectionInterface>()),
+    cleanupStore: vi.fn(),
+    removePeer: vi.fn(),
+    getPeer: vi.fn(),
+} as unknown as PeerStoreInterface;
+
+const defaultPeerFactoryMock = {
+    create: vi.fn(),
+} as unknown as PeerFactoryInterface;
+
+const defaultPropertiesToSync = ["x", "y", "z"];
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -47,14 +74,30 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         expect(() => {
-            new Space(spaceName, metadata, defaultRoomConnectionMock);
+            new Space(
+                spaceName,
+                metadata,
+                defaultRoomConnectionMock,
+                defaultPropertiesToSync,
+                defaultPeerFactoryMock,
+                defaultPeerStoreMock,
+                defaultPeerStoreMock
+            );
         }).toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(
+            spaceName,
+            metadata,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
         expect(space.getName()).toBe(spaceName);
     });
     it("should emit joinSpace event when you create the space", () => {
@@ -64,12 +107,20 @@ describe("Space test", () => {
             emitJoinSpace: vi.fn(),
         };
 
-        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        new Space(
+            spaceName,
+            metadata,
+            mockRoomConnection as unknown as RoomConnection,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
 
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, defaultPropertiesToSync);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
@@ -81,7 +132,15 @@ describe("Space test", () => {
             emitLeaveSpace: vi.fn(),
         };
 
-        const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        const space = new Space(
+            spaceName,
+            metadata,
+            mockRoomConnection as unknown as RoomConnection,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
 
         space.destroy();
         // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -93,7 +152,15 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(
+            spaceName,
+            metadata,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -111,7 +178,15 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(
+            spaceName,
+            metadata,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -123,10 +198,17 @@ describe("Space test", () => {
     });
     it("should not delete metadata who is in space data but not in newMetadata map ", () => {
         const spaceName = "space-name";
-
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(
+            spaceName,
+            metadata,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            defaultPeerFactoryMock,
+            defaultPeerStoreMock,
+            defaultPeerStoreMock
+        );
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],

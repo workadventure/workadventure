@@ -302,8 +302,6 @@ message ClientToServerMessage {
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 11;
     EmotePromptMessage emotePromptMessage = 13;
@@ -718,7 +716,6 @@ message MegaphoneSettings{
 }
 
 message WebRtcStartMessage {
-  int32 userId = 1;
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
@@ -729,7 +726,6 @@ message WebRtcDisconnectMessage {
 }
 
 message WebRtcSignalToClientMessage {
-  int32 userId = 1;
   string signal = 2;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
@@ -832,6 +828,12 @@ message PrivateSpaceEvent {
     MuteVideoPrivateMessage muteVideo = 1;
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
+    WebRtcStartMessage webRtcStartMessage = 4;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
   }
 }
 
@@ -861,6 +863,7 @@ message PrivateEventFrontToPusher {
  */
 message JoinSpaceRequestMessage {
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 
 /**
@@ -990,8 +993,6 @@ message PusherToBackMessage {
     UserMovesMessage userMovesMessage = 2;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -1229,6 +1230,7 @@ message BackToPusherSpaceMessage{
  */
 message JoinSpaceMessage{
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;
