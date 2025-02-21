@@ -53,6 +53,7 @@
 {#if actionsMenuData}
     <div
         class="absolute left-0 right-0 m-auto w-96 z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg overflow-hidden pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        data-testid="actions-menu"
     >
         {#if actionsMenuData.menuName}
             <div class="mb-4">

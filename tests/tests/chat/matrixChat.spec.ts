@@ -4,6 +4,7 @@ import Map from "../utils/map";
 import { oidcLogout, oidcMatrixUserLogin } from "../utils/oidc";
 import { getPage} from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
+import Menu from "../utils/menu";
 import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
@@ -605,6 +606,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
 
   test("Verify a session with emoji", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
+    if (isMobile(page)) {
+      await Menu.openMenu(page);
+    }
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -616,6 +620,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
 
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
+    if (isMobile(otherPage)) {
+      await Menu.openMenu(otherPage);
+    }
     await oidcMatrixUserLogin(otherPage);
     await ChatUtils.openChat(otherPage);
     await otherPage.getByTestId('chatBackward').click();
@@ -640,6 +647,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
   test("Verify a session with emoji , one device click on mismatch button", async ({browser,
   } ) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
+    if (isMobile(page)) {
+      await Menu.openMenu(page);
+    }
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -650,6 +660,9 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
     const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
+    if (isMobile(otherPage)) {
+      await Menu.openMenu(otherPage);
+    }
     await oidcMatrixUserLogin(otherPage);
     await ChatUtils.openChat(otherPage);
     await otherPage.getByTestId('chatBackward').click();
