@@ -105,6 +105,7 @@ import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGrou
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
+    batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
     localVolumeStore,
     requestedCameraDeviceIdStore,
@@ -1767,6 +1768,11 @@ export class GameScene extends DirtyScene {
                     this.showWorldFullError(message);
                 });
 
+                //TODO : voir si c'est le bon endroit ou le deplacer dans le proximityChatRoom
+                batchGetUserMediaStore.startBatch();
+                mediaManager.enableMyCamera();
+                mediaManager.enableMyMicrophone();
+                batchGetUserMediaStore.commitChanges();
                 // Set up manager of audio streams received by the scripting API (useful for bots)
                 //TODO: See how we can move these 2 lines to just go through the current space
                 //this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);

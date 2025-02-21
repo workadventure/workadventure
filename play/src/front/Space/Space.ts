@@ -21,6 +21,7 @@ export interface SimplePeerConnectionInterface {
     closeAllConnections(): void;
     blockedFromRemotePlayer(userId: number): void;
     setSpaceFilter(filter: SpaceFilterInterface): void;
+    unregister(): void;
 }
 
 export interface PeerFactoryInterface {
@@ -71,6 +72,7 @@ export class SpacePeerManager {
         const spaceName = this.space.getName();
 
         this._peer?.closeAllConnections();
+        this._peer?.unregister();
 
         this.peerStore.getSpaceStore(spaceName)?.forEach((peer) => {
             peer.destroy();
@@ -302,10 +304,6 @@ export class Space implements SpaceInterface {
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
 
-        //TODO : should close all connections for a space
-        //this._simplePeer?.closeAllConnections();
-        //peerStore.cleanupStore(this.getName());
-        //screenSharingPeerStore.cleanupStore(this.getName());
         this.peerManager.cleanup();
     }
 

@@ -6,7 +6,7 @@ import type { WebRtcSignalReceivedMessageInterface } from "../Connection/Connexi
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
-import { batchGetUserMediaStore } from "../Stores/MediaStore";
+//import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
@@ -14,7 +14,7 @@ import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository"
 import { BasicNotification, notificationManager } from "../Notification";
 import LL from "../../i18n/i18n-svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
-import { mediaManager } from "./MediaManager";
+//import { mediaManager } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
@@ -136,10 +136,12 @@ export class SimplePeer {
             })
         );
 
+        /*
         batchGetUserMediaStore.startBatch();
         mediaManager.enableMyCamera();
         mediaManager.enableMyMicrophone();
         batchGetUserMediaStore.commitChanges();
+        */
 
         //receive message start
         this.rxJsUnsubscribers.push(
