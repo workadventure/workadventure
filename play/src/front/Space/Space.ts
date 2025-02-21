@@ -22,6 +22,7 @@ export interface SimplePeerConnectionInterface {
     blockedFromRemotePlayer(userId: number): void;
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
+    dispatchStream(mediaStream: MediaStream): void;
 }
 
 export interface PeerFactoryInterface {

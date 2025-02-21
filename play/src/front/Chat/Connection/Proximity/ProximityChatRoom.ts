@@ -26,6 +26,8 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification, notificationManager } from "../../../Notification";
+import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -92,6 +94,9 @@ export class ProximityChatRoom implements ChatRoom {
         color: undefined,
         id: undefined,
     } as ChatUser;
+
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
 
     constructor(
         private _userId: number,
@@ -365,6 +370,12 @@ export class ProximityChatRoom implements ChatRoom {
 
     public joinSpace(spaceName: string, propertiesToSync: string[]): void {
         this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
+        const proximityChatRoomSimplePeer = this._space.getSimplePeer();
+        if (proximityChatRoomSimplePeer) {
+            // Set up manager of audio streams received by the scripting API (useful for bots)
+            this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(proximityChatRoomSimplePeer);
+            this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(proximityChatRoomSimplePeer);
+        }
 
         this._spaceWatcher = this._space.watchAllUsers();
         bindMuteEventsToSpace(this._space, this._spaceWatcher);
@@ -454,6 +465,11 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceRegistry.leaveSpace(this._space);
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
+        this.scriptingOutputAudioStreamManager = undefined;
+        this.scriptingInputAudioStreamManager = undefined;
     }
 
     public destroy(): void {

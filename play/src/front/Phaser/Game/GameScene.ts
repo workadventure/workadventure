@@ -1773,10 +1773,8 @@ export class GameScene extends DirtyScene {
                 mediaManager.enableMyCamera();
                 mediaManager.enableMyMicrophone();
                 batchGetUserMediaStore.commitChanges();
+
                 // Set up manager of audio streams received by the scripting API (useful for bots)
-                //TODO: See how we can move these 2 lines to just go through the current space
-                //this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
-                //this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getUserId(),
