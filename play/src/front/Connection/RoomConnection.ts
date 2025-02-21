@@ -581,45 +581,6 @@ export class RoomConnection implements RoomConnection {
                     this.closeConnection();
                     break;
                 }
-                case "webRtcSignalToClientMessage": {
-                    this._webRtcSignalToClientMessageStream.next({
-                        userId: message.webRtcSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcSignalToClientMessage.webRtcUserName
-                            ? message.webRtcSignalToClientMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcSignalToClientMessage.webRtcPassword
-                            ? message.webRtcSignalToClientMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
-                case "webRtcScreenSharingSignalToClientMessage": {
-                    this._webRtcScreenSharingSignalToClientMessageStream.next({
-                        userId: message.webRtcScreenSharingSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
-                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
-                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
-                case "webRtcStartMessage": {
-                    this._webRtcStartMessageStream.next({
-                        userId: message.webRtcStartMessage.userId,
-                        initiator: message.webRtcStartMessage.initiator,
-                        webRtcUser: message.webRtcStartMessage.webRtcUserName
-                            ? message.webRtcStartMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcStartMessage.webRtcPassword
-                            ? message.webRtcStartMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
                 case "webRtcDisconnectMessage": {
                     this._webRtcDisconnectMessageStream.next(message.webRtcDisconnectMessage);
                     break;

@@ -28,7 +28,6 @@ eventProcessor.registerPrivateEventProcessor("webRtcSignalToServerMessage", (eve
     const signal = event.webRtcSignalToServerMessage.signal;
 
     const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-        userId: senderId,
         signal,
     };
 
@@ -55,7 +54,6 @@ eventProcessor.registerPrivateEventProcessor(
         const signal = event.webRtcScreenSharingSignalToServerMessage.signal;
 
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: senderId,
             signal,
         };
 
