@@ -13,7 +13,7 @@
 
 {#if entitiesPrefabsVariants.length !== 0}
     <li
-        class="min-w-full bg-white bg-opacity-10 rounded-xl mt-2 hover:bg-opacity-100 hover:text-dark hover:!cursor-pointer"
+        class="min-w-full group transition-all bg-white bg-opacity-10 rounded mt-2 hover:bg-opacity-100 hover:text-dark hover:!cursor-pointer"
         on:click={() => dispatch("onSelectedTag", tag)}
     >
         <div class="entities-tag-list-item-grid p-2">
@@ -31,7 +31,7 @@
                 {entitiesPrefabsVariants.length}
             </div>
             <div class="object">{$LL.mapEditor.entityEditor.images(entitiesPrefabsVariants.length)}</div>
-            <div class="chevronRight">
+            <div class="chevronRight group-hover:-translate-x-2 transition-transform">
                 <IconChevronRight />
             </div>
         </div>

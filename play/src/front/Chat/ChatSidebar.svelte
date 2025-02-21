@@ -107,7 +107,7 @@
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
+        class=" chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
         <div class="close-window absolute -right-[4.5rem] top-2 p-2 bg-contrast/80 rounded-2xl">
             <button

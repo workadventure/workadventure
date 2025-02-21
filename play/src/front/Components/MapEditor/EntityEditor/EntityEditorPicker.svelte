@@ -22,7 +22,7 @@
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
     import { IconChevronLeft, IconDeselect, IconPencil } from "@wa-icons";
-
+    import Input from "../../Input/Input.svelte";
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
@@ -170,23 +170,25 @@
                 <p class="text-[22px] m-0">{$LL.mapEditor.entityEditor.header.title()}</p>
                 <p class="m-0 opacity-50">{$LL.mapEditor.entityEditor.header.description()}</p>
             {:else}
-                <button
-                    class="p-0"
-                    data-testid="clearCurrentSelection"
-                    on:click={displayTagListAndClearCurrentSelection}
-                    ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()} - {$selectCategoryStore
-                        ? $selectCategoryStore
-                        : ""}</button
-                >
+                <div class="flex flex-row items-center gap-4">
+                    <button
+                        class="p-2 rounded-full flex flex-row items-center hover:bg-white/10"
+                        data-testid="clearCurrentSelection"
+                        on:click={displayTagListAndClearCurrentSelection}
+                    >
+                        <IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()}
+                    </button>
+                </div>
             {/if}
         </div>
-        <div class="flex">
-            <input
-                class="flex-1 h-8 !border-solid !rounded-2xl !border-gray-400 !placeholder-gray-400"
-                type="search"
-                bind:value={searchTerm}
-                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
-            />
+        <div class="flex *:w-full">
+            <Input rounded bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()} />
+<!--            <input-->
+<!--                class="flex-1 h-8 !border-solid !rounded-2xl !border-gray-400 !placeholder-gray-400"-->
+<!--                type="search"-->
+<!--                bind:value={searchTerm}-->
+<!--                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}-->
+<!--            />-->
         </div>
     </div>
     <div class={`flex-1 overflow-auto ${pickedEntity ? "pt-44" : ""}`}>
@@ -255,15 +257,22 @@
                 </div>
             {/if}
             {#if !isEditingCustomEntity}
-                <EntitiesGrid
-                    entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
-                        $entitiesPrefabsVariants,
-                        $selectCategoryStore,
-                        searchTerm
-                    )}
-                    onSelectEntity={onPickEntityVariant}
-                    currentSelectedEntityId={pickedEntity?.id}
-                />
+                <div class="flex flex-col gap-2">
+                    {#if $selectCategoryStore}
+                            <span class="font-bold text-lg">
+                                {$selectCategoryStore}
+                            </span>
+                    {/if}
+                    <EntitiesGrid
+                        entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
+                            $entitiesPrefabsVariants,
+                            $selectCategoryStore,
+                            searchTerm
+                        )}
+                        onSelectEntity={onPickEntityVariant}
+                        currentSelectedEntityId={pickedEntity?.id}
+                    />
+                </div>
             {/if}
         {/if}
     </div>

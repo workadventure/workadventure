@@ -9,11 +9,11 @@
     export let errorHelperText: string | undefined = undefined;
 </script>
 
-<div class="input-select">
-    <label for="input">
+<div class="flex flex-col mt-0">
+    <label for="input" class="input-label">
         {label}
     </label>
-    <select id="input" bind:value>
+    <select id="input" class="input-select" bind:value>
         {#each options as option (option.value)}
             <option value={option.value}>{option.label}</option>
         {/each}
