@@ -60,6 +60,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             "microphoneState",
             "screenSharingState",
             "megaphoneState",
+            "jitsiParticipantId",
         ]);
 
         this.unsubscribes.push(
