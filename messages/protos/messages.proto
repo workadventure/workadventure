@@ -716,7 +716,6 @@ message MegaphoneSettings{
 }
 
 message WebRtcStartMessage {
-  int32 userId = 1;
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
@@ -727,7 +726,6 @@ message WebRtcDisconnectMessage {
 }
 
 message WebRtcSignalToClientMessage {
-  int32 userId = 1;
   string signal = 2;
   string webRtcUserName = 4;
   string webRtcPassword = 5;

@@ -104,7 +104,7 @@ export class SimplePeer {
                 const webRtcSignalToClientMessage = message.webRtcSignalToClientMessage;
 
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
-                    userId: webRtcSignalToClientMessage.userId,
+                    userId: message.sender,
                     signal: JSON.parse(webRtcSignalToClientMessage.signal),
                     webRtcUser: webRtcSignalToClientMessage.webRtcUserName,
                     webRtcPassword: webRtcSignalToClientMessage.webRtcPassword,
@@ -123,7 +123,7 @@ export class SimplePeer {
                 const webRtcScreenSharingSignalToClientMessage = message.webRtcScreenSharingSignalToClientMessage;
 
                 const webRtcSignalReceivedMessage: WebRtcSignalReceivedMessageInterface = {
-                    userId: webRtcScreenSharingSignalToClientMessage.userId,
+                    userId: message.sender,
                     signal: JSON.parse(webRtcScreenSharingSignalToClientMessage.signal),
                     webRtcUser: webRtcScreenSharingSignalToClientMessage.webRtcUserName,
                     webRtcPassword: webRtcScreenSharingSignalToClientMessage.webRtcPassword,
@@ -148,7 +148,14 @@ export class SimplePeer {
             this.space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
                 const webRtcStartMessage = message.webRtcStartMessage;
 
-                this.receiveWebrtcStart(webRtcStartMessage).catch((e) => {
+                const user: UserSimplePeerInterface = {
+                    userId: message.sender,
+                    initiator: webRtcStartMessage.initiator,
+                    webRtcUser: webRtcStartMessage.webRtcUserName,
+                    webRtcPassword: webRtcStartMessage.webRtcPassword,
+                };
+
+                this.receiveWebrtcStart(user).catch((e) => {
                     console.error("Error while receiving WebRTC signal", e);
                     Sentry.captureException(e);
                 });
