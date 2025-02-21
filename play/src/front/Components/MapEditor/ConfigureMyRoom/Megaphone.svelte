@@ -11,6 +11,8 @@
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import { InputTagOption } from "../../Input/InputTagOption";
     import { IconInfoCircle } from "@wa-icons";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
+    import Input from "../../Input/Input.svelte";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
@@ -91,8 +93,8 @@
 </script>
 
 <div class="flex flex-wrap gap-x-4 items-center h-fit">
-    <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
-    <h3 id="megaphone">{$LL.mapEditor.settings.megaphone.title()}</h3>
+
+    <InputSwitch id="megaphone" label={$LL.mapEditor.settings.megaphone.title()} bind:value={enabled} on:change={partialSave} disabled={loading} />
 </div>
 
 <p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
@@ -101,13 +103,14 @@
         {#await getTags()}
             <PureLoader size={12} color="lighter-purple" customClass="h-full" />
         {:then tags}
-            <InputText
+            <Input
                 errorHelperText={dynamicStrings.error.title}
                 label={$LL.mapEditor.settings.megaphone.inputs.spaceName()}
-                placeHolder="MySpace"
+                placeholder="MySpace"
                 bind:value={title}
                 onKeyPress={() => (dynamicStrings.error.title = "")}
             />
+
             <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
             <p class="help-text">
                 <IconInfoCircle font-size="18" />

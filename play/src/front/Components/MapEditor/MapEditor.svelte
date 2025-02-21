@@ -26,14 +26,15 @@
     }
 </script>
 
-<div class="flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0">
+{#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+    <ConfigureMyRoom />
+{/if}
+<div id="map-editor-container" class="flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0">
     <MapEditorSideBar />
-    <div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
-        {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
-            <ConfigureMyRoom />
-        {:else if $mapEditorVisibilityStore}
+    <div id="map-editor-right" class={`map-editor h-screen ${$mapEditorSelectedToolStore}`}>
+        {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div
-                class="sidebar h-screen"
+                class="sidebar h-screen bg-contrast/80 backdrop-blur-md"
                 in:fly={{ x: 100, duration: 250, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
@@ -59,8 +60,7 @@
         top: 0;
         right: 0;
         width: fit-content !important;
-        z-index: 800;
-
+        z-index: 1999;
         pointer-events: auto;
         color: whitesmoke;
 

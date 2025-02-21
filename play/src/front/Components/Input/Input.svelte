@@ -3,7 +3,7 @@
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
-    export let label: string;
+    export let label: string|undefined = undefined;
     export let placeholder = "";
     export let onChange = () => {};
     export let disabled = false;
@@ -18,6 +18,7 @@
     export let onKeyPress = () => {};
     export let optional = false;
     export let isValid = true;
+    export let rounded = false;
 
     const SLOTS = $$slots;
 
@@ -31,7 +32,9 @@
 
 <div class="flex flex-col">
     <div class="input-label">
-        <label for={uniqueId} class="relative grow">{label}</label>
+        {#if label}
+            <label for={uniqueId} class="relative grow">{label}</label>
+        {/if}
 
         {#if SLOTS.info}
             <InfoButton>
@@ -59,6 +62,7 @@
                 class:input-text-lg={size === "lg"}
                 class:error={status === "error"}
                 class:success={status === "success"}
+                class:rounded-full={rounded}
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}
