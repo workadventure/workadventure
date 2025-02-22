@@ -13,7 +13,7 @@ test.describe('Action bar responsiveness', () => {
             return;
         }
     });
-    test('Check items in the action bar go in the menu one by one', async ({ browser }) => {
+    test('Check items in the action bar go in the menu one by one @oidc', async ({ browser }) => {
         
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "responsive_actionbar")

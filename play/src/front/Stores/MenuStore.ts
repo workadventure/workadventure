@@ -374,7 +374,9 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
             menuItems.push(loginMenuItem);
         }
 
-        menuItems[menuItems.length - 1].props.last = true;
+        if (menuItems.length > 0) {
+            menuItems[menuItems.length - 1].props.last = true;
+        }
 
         menuItems.push(mapsMenuItem);
 
