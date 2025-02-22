@@ -234,8 +234,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByText(chatMessageContent).hover();
     await page.getByTestId("openEmojiPickerButton").click();
     const reactionKey = "😀";
-    await page.getByText(reactionKey).nth(1).click({ force: true });
-    await expect(page.getByTestId('😀_reactionButton').getByText('😀')).toBeVisible();
+    await page.locator(".emoji-picker__emojis").getByText(reactionKey).nth(1).click();
+    await expect(page.locator('.reactions-bar').getByText('😀')).toBeVisible();
     await page.close();
     await page.context().close();
   });
@@ -255,11 +255,11 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByText(chatMessageContent).hover();
     await page.getByTestId("openEmojiPickerButton").click();
     const reactionKey = "😀";
-    await page.getByText(reactionKey).nth(1).click({ force: true });
-    await page.getByTestId(`${reactionKey}_reactionButton`).click();
+    await page.locator(".emoji-picker__emojis").getByText(reactionKey).nth(1).click();
+    await page.locator('.reactions-bar').getByText('😀').click();
     await expect(
-      page.getByTestId(`${reactionKey}_reactionButton`)
-    ).not.toBeAttached();
+        page.locator('.reactions-bar').getByText('😀')
+    ).toBeHidden();
     await page.close();
     await page.context().close();
   });
