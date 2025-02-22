@@ -18,8 +18,7 @@ test.describe("Iframe API", () => {
       publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
 
-    // FIXME e2e test related to chat
-    //await expect(page.locator('p.other-text')).toHaveText('The iframe opened by a script works !', {useInnerText: true});
+    await expect(page.getByText('The iframe opened by a script')).toBeVisible();
     await page.close();
     await page.context().close();
   });
@@ -89,9 +88,7 @@ test.describe("Iframe API", () => {
     });
 
     // Check if the screen sharing is disabled
-    expect(
-      await page.locator("#invite-btn").isHidden({ timeout: 10000 })
-    ).toBeTruthy();
+    await expect(page.getByRole('button', { name: 'Invite' })).toBeHidden();
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
@@ -101,9 +98,7 @@ test.describe("Iframe API", () => {
     });
 
     // Check if the screen sharing is enabled
-    expect(
-      await page.locator("#invite-btn").isVisible({ timeout: 10000 })
-    ).toBeTruthy();
+    await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
 
     await page.close();
     await page.context().close();

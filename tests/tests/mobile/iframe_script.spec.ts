@@ -3,6 +3,7 @@ import { evaluateScript } from "../utils/scripting";
 import { publicTestMapUrl } from "../utils/urls";
 import { getPage } from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
+import Menu from "../utils/menu";
 
 test.describe("Iframe API", () => {
     test.beforeEach(async ({ page }) => {
@@ -14,7 +15,7 @@ test.describe("Iframe API", () => {
     test("test disable invite user button", async ({ browser }) => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
-        await page.getByTestId('burger-menu').click();
+        await Menu.openMenu(page);
         await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
         // Create a script to evaluate function to disable map editor
         await evaluateScript(page, async () => {

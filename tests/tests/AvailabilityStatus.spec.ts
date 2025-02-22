@@ -7,13 +7,6 @@ import { getPage } from './utils/auth'
 import {isMobile} from "./utils/isMobile";
 
 test.describe('Availability Status', () => {
-    test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-    });
     test.describe('Busy Status',() => {
         test('should return to online status when you move',
             async({ browser }, { project }) => {
@@ -42,7 +35,6 @@ test.describe('Availability Status', () => {
         
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100);
-            await Menu.openStatusList(page, false);
             await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
             await page.close();
             await page.context().close();
@@ -282,10 +274,16 @@ test.describe('Availability Status', () => {
                 test.skip();
                 return;
             }
+
             const statusName = "Back in a moment";
             const page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
+            if (isMobile(page)) {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
 
             await Menu.openStatusList(page, false);
             await Menu.clickOnStatus(page,statusName);
@@ -394,6 +392,11 @@ test.describe('Availability Status', () => {
             const page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
+            if (isMobile(page)) {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
 
             await Menu.closeNotificationPopUp(page);
             await Menu.openStatusList(page, false);

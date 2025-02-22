@@ -14,11 +14,6 @@ class Menu {
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
-    async openBurgerMenu(page: Page) {
-        await page.getByTestId('burger-menu').click();
-        await expect(page.getByText('Change your status')).toBeVisible();
-    }
-
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
@@ -44,11 +39,6 @@ class Menu {
     async closeMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(page.getByTestId('profile-menu')).toBeHidden();
-    }
-
-    async closeBurgerMenu(page: Page) {
-        await page.getByTestId('burger-menu').click();
-        await expect(page.getByText('Change your status')).toBeHidden();
     }
 
     async closeMapMenu(page: Page) {
@@ -88,13 +78,11 @@ class Menu {
         //await this.closeMapMenu(page);
     }
 
+    /**
+     * @deprecated Use Menu.openMenu instead
+     */
     async openStatusList(page : Page, isMobile = false){
-        if(isMobile){
-            await page.getByTestId('burger-menu').click();
-        }
-        else {
-            await page.getByTestId('action-user').click();
-        }
+        await this.openMenu(page);
     }
 
     async clickOnStatus(page:Page, status: string){

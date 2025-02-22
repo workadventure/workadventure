@@ -34,10 +34,10 @@ test.describe('OpenID connect @oidc', () => {
 
     // Log out user
     await oidcLogout(page);
-    await expect(page.locator('a:has-text("Login")')).toBeVisible();
+    await expect(page.locator('button:has-text("Login")')).toBeVisible();
     // Let's check the sign-in button is back here when we signed out
-    await page.click('#action-invite');
-    await expect(page.locator('a:has-text("Login")')).toContainText("Login");
+    await page.getByRole('button', { name: 'Invite' }).click();
+    await expect(page.locator('button:has-text("Login")')).toContainText("Login");
 
     // Let's try to login using the scripting API
     await evaluateScript(page, async () => {

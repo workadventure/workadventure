@@ -1,6 +1,5 @@
 import { expect, Page } from "@playwright/test";
 import Menu from "./menu";
-import {isMobile} from "./isMobile";
 
 
 // for oidcLogin to work on mobile you must open the burger menu before calling this function
@@ -9,13 +8,7 @@ export async function oidcLogin(
   userName = "User1",
   password = "pwd"
 ) {
-  if (isMobile(page)) {
-    await page.getByTestId('burger-menu').click();
-    await page.getByRole('link', { name: 'Login' }).click();
-  }
-  else {
-    await page.click('a:has-text("Login")');
-  }
+  await page.getByRole('button', { name: 'Login' }).click();
   await page.fill("#Input_Username", userName, {
     timeout: 40_000,
   });
@@ -32,12 +25,7 @@ export async function oidcLogin(
 }
 
 export async function oidcLogout(page: Page) {
-  if (isMobile(page)) {
-    await page.getByTestId('burger-menu').click();
-  }
-  else {
-    await Menu.openMenu(page);
-  }
+  await Menu.openMenu(page);
   await page.getByRole('button', { name: 'Log out' }).click();
 }
 

@@ -4,6 +4,7 @@ import {evaluateScript} from "../utils/scripting";
 import {publicTestMapUrl} from "../utils/urls";
 import {getPage} from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
+import Menu from "../utils/menu";
 
 test.describe('OpenId connect @oidc mobile', () => {
     test.beforeEach(async ({ page, browserName }) => {
@@ -17,6 +18,10 @@ test.describe('OpenId connect @oidc mobile', () => {
     test('Can login and logout', async ({ browser }, { project }) => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
+        await page.addLocatorHandler(page.getByText('Continue without webcam'), async () => {
+            await page.getByText('Continue without webcam').click();
+        });
+
         // Test if player variable is correct
         let isLogged = await evaluateScript(page, async () => {
             await WA.onInit();
@@ -25,6 +30,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         await expect(isLogged).toBe(false);
 
         // Login and Logout
+        await Menu.openMenu(page);
         await oidcLogin(page);
 
         // Test  if player variable is correct
@@ -38,8 +44,8 @@ test.describe('OpenId connect @oidc mobile', () => {
         await oidcLogout(page);
 
         // Check user is Logout
-        await page.getByTestId('burger-menu').click();
-        await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
+        await Menu.openMenu(page);
+        await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
 
         // Let's try to login using the scripting API
         await evaluateScript(page, async () => {

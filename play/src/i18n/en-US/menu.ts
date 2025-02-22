@@ -132,6 +132,7 @@ const menu: BaseTranslation = {
         report: "Report Issues",
         chat: "Chat",
         help: "Help & tutorials",
+        contextualActions: "Contextual actions",
     },
 };
 

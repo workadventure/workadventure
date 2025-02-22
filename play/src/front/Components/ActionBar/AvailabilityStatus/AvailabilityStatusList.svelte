@@ -1,13 +1,14 @@
 <script lang="ts">
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
-    import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import CheckIcon from "../../Icons/CheckIcon.svelte";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import LL from "../../../../i18n/i18n-svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
+    import HeaderMenuItem from "../MenuIcons/HeaderMenuItem.svelte";
+    import { openedMenuStore } from "../../../Stores/MenuStore";
     import { StatusInformationInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
@@ -18,26 +19,20 @@
         if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
         if (e.key === "Enter") {
             resetAllStatusStoreExcept(newStatus);
-            availabilityStatusMenuStore.closeAvailabilityStatusMenu();
+            openedMenuStore.close("profileMenu");
         }
     };
     const handleClick = (newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
         if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
         resetAllStatusStoreExcept(newStatus);
-        // FIXME: remove availabilityStatusMenuStore because it is now merged with the profile menu
-        availabilityStatusMenuStore.closeAvailabilityStatusMenu();
+        openedMenuStore.close("profileMenu");
     };
 </script>
 
 <div>
     <ExternalComponents zone="availabilityStatus" />
 
-    <div
-        class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold"
-        class:justify-end={align === "right"}
-    >
-        <div class="font-bold opacity-80">{$LL.actionbar.listStatusTitle.enable()}</div>
-    </div>
+    <HeaderMenuItem label={$LL.actionbar.listStatusTitle.enable()} />
     <!-- Some status (silent, in a meeting...) are locking the status bar to only one option -->
     {#if [AvailabilityStatus.SPEAKER, AvailabilityStatus.JITSI, AvailabilityStatus.BBB, AvailabilityStatus.DENY_PROXIMITY_MEETING, AvailabilityStatus.SILENT].includes($availabilityStatusStore)}
         <button

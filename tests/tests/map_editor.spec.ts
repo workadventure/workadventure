@@ -176,7 +176,7 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
+        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
         await AreaEditor.addProperty(page, "Exit area");
         await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
         await Menu.closeMapEditor(page);
@@ -209,7 +209,7 @@ test.describe("Map editor @oidc", () => {
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
+        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Klaxoon
@@ -236,7 +236,7 @@ test.describe("Map editor @oidc", () => {
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 13 * 32, y: 13 * 32}, {x: 15 * 32, y: 15 * 32});
+        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
 
         await AreaEditor.setAreaName(page, "My app zone");
 
@@ -302,11 +302,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // add property Google Docs
         await EntityEditor.addProperty(page, "Open Google Docs");
@@ -344,14 +344,14 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // check if the popup with application is opened and can be close
         await expect(page.getByRole('button', { name: 'Open Google Drive' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Slides' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Sheets' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Open Google Docs' })).toBeVisible();
-        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByTestId('actions-menu').getByRole('button', { name: 'Close' }).click();
 
         await page.close();
         await page.context().close();
@@ -367,11 +367,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // add property Klaxoon
         await EntityEditor.addProperty(page, "Open Klaxoon");
@@ -383,7 +383,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
 
         // check if the popup with application is opened and can be closed
         await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
@@ -439,11 +439,11 @@ test.describe("Map editor @oidc", () => {
 
         // Select uploaded entity and move it to the map
         await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5);
 
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
         await EntityEditor.addProperty(page, "Open Link");
 
         // fill link
@@ -453,8 +453,8 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup on both pages
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
-        await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
+        await EntityEditor.moveAndClick(page2, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
 
         // check if the popup with application is opened on both pages
         await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
@@ -552,7 +552,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set searchable processus for entity and zone", async ({ browser, request}) => {
+    test("Successfully set searchable feature for entity and zone", async ({ browser, request}) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -573,9 +573,9 @@ test.describe("Map editor @oidc", () => {
         // Entity
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
         await EntityEditor.setEntityName(page, "My Jitsi Entity");
         await EntityEditor.setEntityDescription(
             page,

@@ -132,6 +132,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         report: "Remonter un bug",
         chat: "Chat",
         help: "Besoin d'aide ?",
+        contextualActions: "Actions contextuelles",
     },
 };
 

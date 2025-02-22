@@ -63,3 +63,5 @@ export { default as IconApps } from "~icons/tabler/apps";
 export { default as IconCalendar } from "~icons/tabler/calendar";
 export { default as IconTeams } from "~icons/tabler/brand-teams";
 export { default as IconMusic } from "~icons/tabler/music";
+export { default as IconUserCircle } from "~icons/tabler/user-circle";
+export { default as IconShare3 } from "~icons/tabler/share-3";

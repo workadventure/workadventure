@@ -1,4 +1,5 @@
-import { derived, get, writable, Readable } from "svelte/store";
+import { derived, get, writable, Readable, Writable } from "svelte/store";
+import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
 import {
     AddActionButtonActionBarEvent,
@@ -11,15 +12,21 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import {
     CONTACT_URL,
+    ENABLE_OPENID,
     ENABLE_REPORT_ISSUES_MENU,
     OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
 import { gameManager } from "../Phaser/Game/GameManager";
+import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
+import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
+import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
+import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
 import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
-import { isMatrixChatEnabledStore } from "./ChatStore";
+import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
 import { gameSceneStore } from "./GameSceneStore";
+import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "./ModalStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -265,48 +272,131 @@ export function getProfileUrl() {
     ).toString();
 }
 
+export interface CustomButtonActionBarDescriptor {
+    id: string;
+    label: string | undefined;
+    tooltipTitle: string | undefined;
+    tooltipDesc: string | undefined;
+    imageSrc: string | undefined;
+    state: "normal" | "active" | "forbidden" | "disabled";
+}
+
 function createAdditionalButtonsMenu() {
-    const { subscribe, update } = writable<Map<string, AddButtonActionBarEvent>>(
-        new Map<string, AddButtonActionBarEvent>()
+    const { subscribe, update } = writable<Map<string, RightMenuItem<CustomActionBarButton>>>(
+        new Map<string, RightMenuItem<CustomActionBarButton>>()
     );
     return {
         subscribe,
-        addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
-            update((additionnalButtonsMenu) => {
+        addAdditionalButtonActionBar(button: AddButtonActionBarEvent) {
+            update((additionalButtonsMenu) => {
                 if (button.type === "action") {
-                    additionnalButtonsMenu.set(button.id, {
-                        ...button,
-                        imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
+                    additionalButtonsMenu.set(button.id, {
+                        id: button.id,
+                        fallsInBurgerMenuStore: writable(false),
+                        component: CustomActionBarButton,
+                        props: {
+                            last: false,
+                            button: {
+                                id: button.id,
+                                tooltipTitle: button.toolTip,
+                                imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
+                            },
+                        },
                     });
                 } else {
-                    additionnalButtonsMenu.set(button.id, button);
+                    additionalButtonsMenu.set(button.id, {
+                        id: button.id,
+                        fallsInBurgerMenuStore: writable(false),
+                        component: CustomActionBarButton,
+                        props: {
+                            last: false,
+                            button: {
+                                id: button.id,
+                                label: button.label,
+                            },
+                        },
+                    });
                 }
 
-                return additionnalButtonsMenu;
+                return additionalButtonsMenu;
             });
         },
-        removeAdditionnalButtonActionBar(button: RemoveButtonActionBarEvent) {
-            update((additionnalButtonsMenu) => {
-                additionnalButtonsMenu.delete(button.id);
-                return additionnalButtonsMenu;
+        removeAdditionalButtonActionBar(button: RemoveButtonActionBarEvent) {
+            update((additionalButtonsMenu) => {
+                additionalButtonsMenu.delete(button.id);
+                return additionalButtonsMenu;
             });
         },
     };
 }
-export const additionnalButtonsMenu = createAdditionalButtonsMenu();
+export const additionalButtonsMenu = createAdditionalButtonsMenu();
+
+export interface RightMenuItem<T extends SvelteComponentTyped> {
+    id: string;
+    fallsInBurgerMenuStore: Writable<boolean>;
+    component: ComponentType<T>;
+    props: ComponentProps<T>;
+}
+
+const mapsMenuItem: RightMenuItem<MapSubMenu> = {
+    id: "maps",
+    fallsInBurgerMenuStore: writable(false),
+    component: MapSubMenu,
+    props: {},
+};
+
+const loginMenuItem: RightMenuItem<LoginMenuItem> = {
+    id: "login",
+    fallsInBurgerMenuStore: writable(true),
+    component: LoginMenuItem,
+    props: {
+        last: false,
+    },
+};
+
+const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
+    id: "invite",
+    fallsInBurgerMenuStore: writable(false),
+    component: InviteMenuItem,
+    props: {
+        last: false,
+    },
+};
+
+export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
+    [additionalButtonsMenu, userIsConnected, inviteUserActivated],
+    ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
+        const menuItems = [...$additionalButtonsMenu.values()];
+        if ($inviteUserActivated) {
+            menuItems.push(inviteMenuItem);
+        }
+        if (!$userIsConnected && ENABLE_OPENID) {
+            menuItems.push(loginMenuItem);
+        }
+
+        menuItems[menuItems.length - 1].props.last = true;
+
+        menuItems.push(mapsMenuItem);
+
+        return menuItems;
+    }
+);
+
+// @deprecated
 export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
+// @deprecated
 export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-additionnalButtonsMenu.subscribe((map) => {
+/*additionalButtonsMenu.subscribe((map) => {
     addClassicButtonActionBarEvent.set(
         [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]
     );
     addActionButtonActionBarEvent.set(
         [...map.values()].filter((c) => c.type === "action") as AddActionButtonActionBarEvent[]
     );
-});
+});*/
 
 // The store that decides what tools to display just below the menu (typically triggered when you click on an item in the action bar)
 export const activeSecondaryZoneActionBarStore = writable<"emote" | "audio-manager" | undefined>(undefined);
@@ -338,7 +428,7 @@ export const mapMenuVisibleStore = derived(
     }
 );
 
-type Menus = "appMenu" | "profileMenu" | "burgerMenu" | "mapMenu";
+type Menus = "appMenu" | "profileMenu" | "mapMenu";
 
 function createOpenedMenuStore() {
     const openedMenuStore = writable<Menus | undefined>(undefined);
@@ -370,3 +460,19 @@ function createOpenedMenuStore() {
 }
 
 export const openedMenuStore = createOpenedMenuStore();
+
+export function showMenuItem(key: MenuKeys | string) {
+    const menuItem = subMenusStore.findByKey(key);
+    if (get(menuVisiblilityStore)) {
+        menuVisiblilityStore.set(false);
+        activeSubMenuStore.activateByIndex(0);
+        return;
+    }
+    activeSubMenuStore.activateByMenuItem(menuItem);
+    menuVisiblilityStore.set(true);
+
+    chatVisibilityStore.set(false);
+    modalVisibilityStore.set(false);
+    modalIframeStore.set(null);
+    showModalGlobalComminucationVisibilityStore.set(false);
+}

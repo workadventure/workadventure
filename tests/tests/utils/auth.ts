@@ -21,7 +21,7 @@ function isJsonCreate(name: string): boolean {
 
     const stats = fs.statSync(file);
     const timeCreation = stats.mtime.getTime();
-    const twoHoursAgo = new Date().getTime() - 2 * 60 * 60 * 1000; // 2 hours in ms
+    const twoHoursAgo = new Date().getTime() - 60 * 60 * 1000; // 1 hour in ms
     return timeCreation > twoHoursAgo;
 }
 
@@ -53,8 +53,10 @@ async function createUser(
     if(browser.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", 'normal');
         await Menu.expectButtonState(page, "camera-button", 'normal');
+    } else {
+        await Menu.expectButtonState(page, "microphone-button", 'forbidden');
+        await Menu.expectButtonState(page, "camera-button", 'forbidden');
     }
-    await expect(page.locator('#main-layout').getByRole('button').filter({ hasText: /^$/ }).first()).toBeVisible();
 
     switch (name) {
         case "Admin1":
