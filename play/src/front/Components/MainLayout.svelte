@@ -215,8 +215,9 @@
             <MainModal />
         </section>
         <div class="">
-            <ActionBar />
+            <!--<ActionBar />-->
         </div>
+        <ActionBar />
     </div>
 
     {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
