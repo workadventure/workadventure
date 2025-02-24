@@ -153,7 +153,6 @@ services:
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
       MATRIX_DOMAIN: matrix.workadventure.localhost
-      DISCORD_BOT_ID: "@discordbot:matrix.workadventure.localhost"
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       IFRAMELY_KEY: "$IFRAMELY_KEY"
@@ -469,24 +468,6 @@ services:
       MATRIX_ADMIN_PASSWORD: MySecretPassword
       JWT_SECRET: "$SECRET_KEY"
 
-  mautrix-discord:
-    container_name: mautrix-discord
-    image: dock.mau.dev/mautrix/discord:latest
-    restart: unless-stopped
-    ports:
-      - 29334:29334
-    volumes:
-      - ./mautrix_discord_data:/data
-
-  mautrix-discord-db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: mautrix
-      POSTGRES_PASSWORD: mautrix_discord
-    volumes:
-      - mautrix_discord_db_data:/var/lib/postgresql/data
-
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
@@ -514,5 +495,3 @@ services:
 #volumes:
 #  synapsedata:
 
-volumes:
-  mautrix_discord_db_data:

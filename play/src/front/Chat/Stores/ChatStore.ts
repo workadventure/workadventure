@@ -89,3 +89,5 @@ export const isAChatRoomIsVisible = () => {
 export const alreadyAskForInitCryptoConfiguration = writable(false);
 
 export const isChatIdSentToPusher = writable(false);
+
+export const botsChatIds = writable<string[]>([]);

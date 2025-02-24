@@ -160,7 +160,6 @@ export const EnvironmentVariables = z.object({
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
     MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
-    DISCORD_BOT_ID: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -34,10 +34,15 @@ import {
     ChatRoomNotificationControl,
     memberTypingInformation,
 } from "../ChatConnection";
-import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
+import {
+    isAChatRoomIsVisible,
+    navChat,
+    selectedChatMessageToReply,
+    selectedRoomStore,
+    botsChatIds,
+} from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { DISCORD_BOT_ID } from "../../../Enum/EnvironmentVariable";
 import { MessageNotification, notificationManager } from "../../../Notification";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -281,10 +286,11 @@ export class MatrixChatRoom
     private handleNewMessage(event: MatrixEvent) {
         const message = new MatrixChatMessage(event, this.matrixRoom);
         this.messages.push(message);
-
         const senderID = event.getSender();
-        if (senderID === DISCORD_BOT_ID) {
-            return;
+        if (senderID) {
+            if (get(botsChatIds).includes(senderID)) {
+                return;
+            }
         }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
             this.notifyNewMessage(message);

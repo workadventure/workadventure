@@ -134,7 +134,6 @@ export class Room {
 
             const data = result.data;
 
-            console.log("getMapDetail", data);
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
             const errorApiDataChecking = ErrorApiData.safeParse(data);
