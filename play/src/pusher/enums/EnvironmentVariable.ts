@@ -121,8 +121,6 @@ export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
-export const DISCORD_BOT_ID: string | undefined = env.DISCORD_BOT_ID;
-
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
@@ -188,7 +186,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
-    DISCORD_BOT_ID,
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
 };

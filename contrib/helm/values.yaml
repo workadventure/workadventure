@@ -141,7 +141,6 @@ play:
     MAX_USERNAME_LENGTH: 10
     DISABLE_ANONYMOUS: "false"
     DISABLE_NOTIFICATIONS: "false"
-    DISCORD_BOT_ID: ""
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []
