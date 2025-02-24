@@ -565,6 +565,8 @@ export class SocketManager {
                 propertiesToSync: ["cameraState", "microphoneState", "screenSharingState"],
             },
         });
+
+        //TODO : 
     }
 
     /**
@@ -1281,7 +1283,7 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName, eventProcessor);
+            space = new Space(joinSpaceMessage.spaceName, eventProcessor,joinSpaceMessage.propertiesToSync);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);

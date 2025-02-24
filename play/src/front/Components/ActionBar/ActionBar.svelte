@@ -37,7 +37,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { peerStore } from "../../Stores/PeerStore";
     import {
         modalIframeStore,
         modalVisibilityStore,
@@ -69,6 +68,7 @@
     import { RequestedStatus } from "../../Rules/StatusRules/statusRules";
     import { audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
+    import { peerSizeStore } from "../../Stores/PeerStore";
     import ActionBarButton from "./ActionBarButton.svelte";
     import MapSubMenu from "./MenuIcons/MapSubMenu.svelte";
     import MediaSettingsList from "./MediaSettingsList.svelte";
@@ -240,7 +240,7 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size > 0 &&
+    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$peerSizeStore > 0 &&
     $highlightFullScreen
         ? 'hidden'
         : ''}"
@@ -736,7 +736,7 @@
                                     {$LL.actionbar.otherSettings()}
                                 </button>
 
-                                {#if $peerStore.size > 0}
+                                {#if $peerSizeStore > 0}
                                     <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
                                     <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">
                                         Camera

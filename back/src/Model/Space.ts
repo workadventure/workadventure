@@ -14,18 +14,24 @@ import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
+import { CommunicationManager } from "./CommunicationManager";
 
 const debug = Debug("space");
+
+
 
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
     private metadata: Map<string, unknown>;
-
-    constructor(name: string, private eventProcessor: EventProcessor) {
+    //TODO : make a interface 
+    private communicationManager: CommunicationManager;
+    //TODO : voir si utile de passer les propertiesToSync ici
+    constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
+        this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
 
@@ -44,8 +50,10 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserAdded(spaceUser);
         debug(`${this.name} : user => added ${spaceUser.id}`);
     }
+
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(sourceWatcher);
         const user = usersList.get(spaceUser.id);
@@ -73,10 +81,18 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserUpdated(spaceUser);
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
-        const usersList = this.usersList(sourceWatcher);
+        //TODO : problème quand un user quitte le space avec un etat de cam/micro si il change en dehors du space le changement n'est pas pris en compte
+        const usersList = this.usersList(sourceWatcher); 
+        const user = usersList.get(id);
+        if (!user) {
+            console.error("User not found in this space", id);
+            Sentry.captureMessage(`User not found in this space ${id}`);
+            return;
+        }
         usersList.delete(id);
 
         this.notifyWatchers(
@@ -91,6 +107,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserDeleted(user);
         debug(`${this.name} : user => removed ${id}`);
     }
 
@@ -261,5 +278,17 @@ export class Space implements CustomJsonReplacerInterface {
                 });
             }
         }
+    }
+    public getAllUsers(): SpaceUser[] {
+        return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
+    }   
+    public getUser(userId: number): SpaceUser | undefined {
+        return Array.from(this.users.values()).flatMap((users: Map<number, SpaceUser>) => Array.from(users.values())).find((user: SpaceUser) => user.id === userId);
+    }
+    public getSpaceName(): string {
+        return this.name;
+    }
+    public getPropertiesToSync(): string[] {
+        return this.propertiesToSync;
     }
 }

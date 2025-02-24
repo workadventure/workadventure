@@ -1,12 +1,11 @@
 import { derived } from "svelte/store";
-import { peerStore } from "./PeerStore";
 import { followStateStore } from "./FollowStore";
 import { silentStore } from "./MediaStore";
 import { screenSharingAvailableStore } from "./ScreenSharingStore";
-
+import { peerSizeStore } from "./PeerStore";
 export const bottomActionBarVisibilityStore = derived(
-    [peerStore, followStateStore, silentStore, screenSharingAvailableStore],
-    ([$peerStore, $followStateStore, $silentStore, $screenSharingAvailableStore]) => {
-        return $peerStore.size > 0 && (!$silentStore || $followStateStore != "off" || $screenSharingAvailableStore);
+    [peerSizeStore, followStateStore, silentStore, screenSharingAvailableStore],
+    ([$peerSizeStore, $followStateStore, $silentStore, $screenSharingAvailableStore]) => {
+        return $peerSizeStore > 0 && (!$silentStore || $followStateStore != "off" || $screenSharingAvailableStore);
     }
 );

@@ -1,7 +1,7 @@
 import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
+//import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
 import { User } from "./User";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
@@ -150,7 +150,9 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     }
 
     isFull(): boolean {
-        return this.users.size >= MAX_PER_GROUP;
+        //TODO : Delete this function after the implementation of the strategy livekit
+        return false
+        //return this.users.size >= MAX_PER_GROUP;
     }
 
     isLocked(): boolean {

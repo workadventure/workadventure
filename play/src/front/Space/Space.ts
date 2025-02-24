@@ -6,9 +6,14 @@ import {
     SpaceEvent,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import { derived, Readable, Unsubscriber } from "svelte/store";
+import { MapStore } from "@workadventure/store-utils";
 import { SimplePeer } from "../WebRtc/SimplePeer";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
+import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
@@ -26,6 +31,10 @@ export interface SimplePeerConnectionInterface {
     dispatchStream(mediaStream: MediaStream): void;
     videoPeerAdded: Observable<VideoPeer>;
     videoPeerRemoved: Observable<VideoPeer>;
+    peerStore: MapStore<number, VideoPeer>;
+    screenSharingPeerStore: MapStore<number, ScreenSharingPeer>;
+    cleanupStore(): void;
+    removePeer(userId: number): void;
 }
 
 export interface PeerFactoryInterface {
@@ -54,13 +63,9 @@ export const defaultPeerFactory: PeerFactoryInterface = {
 // -------------------- Peer Manager --------------------
 export class SpacePeerManager {
     private _peer: SimplePeerConnectionInterface | undefined;
+    private unsubscribes: Unsubscriber[] = [];
 
-    constructor(
-        private space: SpaceInterface,
-        private peerStore: PeerStoreInterface,
-        private screenSharingPeerStore: PeerStoreInterface,
-        private peerFactory: PeerFactoryInterface
-    ) {}
+    constructor(private space: SpaceInterface, private peerFactory: PeerFactoryInterface) {}
 
     initialize(propertiesToSync: string[]): void {
         if (
@@ -69,24 +74,54 @@ export class SpacePeerManager {
             propertiesToSync.includes("microphoneState")
         ) {
             this._peer = this.peerFactory.create(this.space);
+
+            this.synchronizeMediaState();
         }
     }
 
-    cleanup(): void {
-        const spaceName = this.space.getName();
+    private synchronizeMediaState(): void {
+        //TODO : trouver un moyen d'enlever les dépendances de MediaStore
+        this.unsubscribes.push(
+            requestedMicrophoneState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    microphoneState: state,
+                });
+            })
+        );
+        this.unsubscribes.push(
+            requestedCameraState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    cameraState: state,
+                });
+            })
+        );
 
+        this.unsubscribes.push(
+            requestedScreenSharingState.subscribe((state) => {
+                this.space.emitUpdateUser({
+                    screenSharingState: state,
+                });
+            })
+        );
+    }
+
+    cleanup(): void {
         this._peer?.closeAllConnections();
         this._peer?.unregister();
 
-        this.peerStore.getSpaceStore(spaceName)?.forEach((peer) => {
+        this._peer?.peerStore.forEach((peer) => {
             peer.destroy();
         });
-        this.peerStore.cleanupStore(spaceName);
+        this._peer?.cleanupStore();
 
-        this.screenSharingPeerStore.getSpaceStore(spaceName)?.forEach((peer) => {
+        this._peer?.screenSharingPeerStore.forEach((peer) => {
             peer.destroy();
         });
-        this.screenSharingPeerStore.cleanupStore(spaceName);
+        this._peer?.cleanupStore();
+
+        for (const unsubscribe of this.unsubscribes) {
+            unsubscribe();
+        }
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
@@ -95,7 +130,7 @@ export class SpacePeerManager {
 }
 export class Space implements SpaceInterface {
     private readonly name: string;
-    private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();
+    private filters: MapStore<string, SpaceFilter> = new MapStore<string, SpaceFilter>();
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
@@ -111,16 +146,14 @@ export class Space implements SpaceInterface {
         private _metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
         private _propertiesToSync: string[] = [],
-        private _peerFactory: PeerFactoryInterface,
-        private _peerStore: PeerStoreInterface,
-        private _screenSharingPeerStore: PeerStoreInterface
+        private _peerFactory: PeerFactoryInterface
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
 
-        this.peerManager = new SpacePeerManager(this, this._peerStore, this._screenSharingPeerStore, this._peerFactory);
+        this.peerManager = new SpacePeerManager(this, this._peerFactory);
 
         this.peerManager.initialize(_propertiesToSync);
 
@@ -143,13 +176,7 @@ export class Space implements SpaceInterface {
     watchAllUsers(): AllUsersSpaceFilterInterface {
         const filterName = `allUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new AllUsersSpaceFilter(
-            filterName,
-            this,
-            this._connection,
-            this._peerStore,
-            this._screenSharingPeerStore
-        );
+        const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
         this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         return newFilter;
@@ -158,13 +185,7 @@ export class Space implements SpaceInterface {
     watchLiveStreamingUsers(): SpaceFilterInterface {
         const filterName = `liveStreamingUsers_${this.filterNumber}`;
         this.filterNumber += 1;
-        const newFilter = new LiveStreamingUsersSpaceFilter(
-            filterName,
-            this,
-            this._connection,
-            this._peerStore,
-            this._screenSharingPeerStore
-        );
+        const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
         this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         return newFilter;
@@ -180,6 +201,90 @@ export class Space implements SpaceInterface {
         return spaceFilter;
     }
 
+    getAllPeerStores(): Readable<Map<number, VideoPeer>> {
+        return derived(
+            this.filters,
+            ($filters, set) => {
+                const allPeers: Map<number, VideoPeer> = new Map();
+                const unsubscribers: Unsubscriber[] = [];
+
+                const updateAllPeers = () => {
+                    allPeers.clear();
+                    unsubscribers.forEach((unsubscribe) => unsubscribe());
+                    unsubscribers.length = 0;
+
+                    $filters.forEach((filter) => {
+                        const peerStore = filter.getAllPeerStores();
+                        const unsubscribe = peerStore.subscribe((peers) => {
+                            peers.forEach((peer, userId) => {
+                                unsubscribers.push(
+                                    peer.subscribe((videoPeer) => {
+                                        if (videoPeer) {
+                                            allPeers.set(userId, videoPeer);
+                                            set(new Map(allPeers)); // Update the derived store
+                                        }
+                                    })
+                                );
+                            });
+                        });
+                        unsubscribers.push(unsubscribe);
+                    });
+                };
+
+                // Initial update
+                updateAllPeers();
+
+                // Return a cleanup function to unsubscribe from all subscriptions
+                return () => {
+                    unsubscribers.forEach((unsubscribe) => unsubscribe());
+                };
+            },
+            new Map<number, VideoPeer>() // Initial value
+        );
+    }
+
+    getAllScreenSharingPeerStores(): Readable<Map<number, ScreenSharingPeer>> {
+        return derived(
+            this.filters,
+            ($filters, set) => {
+                const allPeers: Map<number, ScreenSharingPeer> = new Map();
+                const unsubscribers: Unsubscriber[] = [];
+
+                const updateAllPeers = () => {
+                    allPeers.clear();
+                    unsubscribers.forEach((unsubscribe) => unsubscribe());
+                    unsubscribers.length = 0;
+
+                    $filters.forEach((filter) => {
+                        const peerStore = filter.getAllScreenSharingPeerStores();
+                        const unsubscribe = peerStore.subscribe((peers) => {
+                            peers.forEach((peer, userId) => {
+                                unsubscribers.push(
+                                    peer.subscribe((screenSharingPeer) => {
+                                        if (screenSharingPeer) {
+                                            allPeers.set(userId, screenSharingPeer);
+                                            console.log("allPeers getAllScreenSharingPeerStores from space", allPeers);
+                                            set(new Map(allPeers)); // Update the derived store
+                                        }
+                                    })
+                                );
+                            });
+                        });
+                        unsubscribers.push(unsubscribe);
+                    });
+                };
+
+                // Initial update
+                updateAllPeers();
+
+                // Return a cleanup function to unsubscribe from all subscriptions
+                return () => {
+                    unsubscribers.forEach((unsubscribe) => unsubscribe());
+                };
+            },
+            new Map<number, ScreenSharingPeer>() // Initial value
+        );
+    }
     // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).
     // This is mildly an issue because it is unlikely we will need to create many filters (we have only 2 so far)
     /*stopWatching(spaceFilter: SpaceFilterInterface): void {

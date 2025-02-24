@@ -834,13 +834,27 @@ message PrivateSpaceEvent {
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
+    CommunicationStrategyMessage communicationStrategyMessage = 10;
+    PrepareSwitchMessage prepareSwitchMessage = 11;
+    ExecuteSwitchMessage executeSwitchMessage = 12;
   }
+}
+
+message CommunicationStrategyMessage {
+  string strategy = 1;
+}
+
+message PrepareSwitchMessage {
+  string strategy = 1;
+}
+
+message ExecuteSwitchMessage {
+  string strategy = 1;
 }
 
 message SpaceMessage {
   string message = 1;
 }
-
 message SpaceIsTyping {
   bool isTyping = 1;
 }

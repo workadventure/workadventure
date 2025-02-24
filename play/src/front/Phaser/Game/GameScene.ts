@@ -54,7 +54,6 @@ import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
@@ -77,7 +76,6 @@ import type {
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
@@ -181,6 +179,9 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { peerSizeStore, peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
+import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -266,7 +267,6 @@ export class GameScene extends DirtyScene {
     public readonly superLoad: SuperLoaderPlugin;
     private initPosition?: PositionInterface;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private simplePeer!: SimplePeer;
     private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
@@ -276,7 +276,6 @@ export class GameScene extends DirtyScene {
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private peerStoreUnsubscriber: Unsubscriber[] | undefined;
     private emoteUnsubscriber!: Unsubscriber;
     private emoteMenuUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
@@ -292,6 +291,7 @@ export class GameScene extends DirtyScene {
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
+    private peerSizeSubscription!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
@@ -1025,7 +1025,7 @@ export class GameScene extends DirtyScene {
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {
-            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+            this.spaceRegistry.leaveSpace(this.allUserSpace);
         }
 
         this.matrixClientWrapper?.stopClient();
@@ -1039,9 +1039,6 @@ export class GameScene extends DirtyScene {
         this._broadcastService?.destroy();
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
-        this.peerStoreUnsubscriber?.forEach((unsubscriber) => {
-            unsubscriber();
-        });
         this.mapEditorModeStoreUnsubscriber?.();
         this.refreshPromptStoreStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
@@ -1056,6 +1053,7 @@ export class GameScene extends DirtyScene {
         this.mapExplorationStoreUnsubscriber?.();
         this.cameraResistanceModeStoreUnsubscriber?.();
         this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
+        this.peerSizeSubscription?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -1090,7 +1088,7 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
-        this._spaceRegistry?.destroy();
+        this.spaceRegistry.destroy();
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1570,7 +1568,11 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
+                this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
+
+                //TODO : solution pour éviter les dépendances circulaires et passer les stream dans les spaces
+                peerStore.set(this._spaceRegistry.peerStore);
+                screenSharingPeerStore.set(this._spaceRegistry.screenSharingPeerStore);
 
                 gameManager
                     .getChatConnection()
@@ -2015,7 +2017,7 @@ export class GameScene extends DirtyScene {
                         getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
                         adminUrl: ADMIN_URL,
                         externalSvelteComponent: externalSvelteComponentService,
-                        spaceRegistry: this.spaceRegistry,
+                        spaceRegistry: this._spaceRegistry,
                         logoutCallback: () => {
                             connectionManager.logout();
                         },
@@ -2039,7 +2041,6 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
             this.refreshPromptStoreStoreUnsubscriber != undefined ||
             this.mapExplorationStoreUnsubscriber != undefined ||
@@ -2053,7 +2054,6 @@ export class GameScene extends DirtyScene {
                 this.emoteUnsubscriber,
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
                 this.refreshPromptStoreStoreUnsubscriber,
                 this.mapExplorationStoreUnsubscriber,
@@ -2126,10 +2126,6 @@ export class GameScene extends DirtyScene {
             //this.reposition();
         });
 
-        if (!this.peerStoreUnsubscriber) {
-            this.peerStoreUnsubscriber = [];
-        }
-
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
@@ -2138,144 +2134,129 @@ export class GameScene extends DirtyScene {
         const pendingConnects = new Set<number>();
 
         // Store all subscriptions to be able to unsubscribe later
-        this.peerStoreUnsubscriber.push(
-            peerStore.subscribe((spaces) => {
-                // For each space in the peerStore
-                spaces.forEach((spaceStore, spaceId) => {
-                    // Subscribe to each space's changes
-                    this.peerStoreUnsubscriber?.push(
-                        spaceStore.subscribe((peers) => {
-                            const newPeerNumber = peers.size;
-                            const newUsers = new Map<number, MessageUserJoined>();
-                            const players = this.remotePlayersRepository.getPlayers();
+        this.peerSizeSubscription = peerSizeStore.subscribe((peerSize) => {
+            const newPeerNumber = peerSize;
+            const newUsers = new Map<number, MessageUserJoined>();
+            const players = this.remotePlayersRepository.getPlayers();
+            const peers = get(get(peerStore));
 
-                            // Populate newUsers from the current space's peers
-                            for (const [playerId] of peers) {
-                                const currentPlayer = players.get(playerId);
-                                if (currentPlayer) {
-                                    newUsers.set(playerId, currentPlayer);
-                                }
-                            }
+            // Populate newUsers from the current space's peers
+            for (const [playerId] of peers) {
+                const currentPlayer = players.get(playerId);
+                if (currentPlayer) {
+                    newUsers.set(playerId, currentPlayer);
+                }
+            }
 
-                            // Handle Join
-                            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                                const peer = Array.from(peers.values())[0];
-                                statusChanger.setUserNameInteraction(peer.player.name);
-                                statusChanger.applyInteractionRules();
+            // Handle Join
+            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
+                const peer = Array.from(peers.values())[0];
+                statusChanger.setUserNameInteraction(peer.player.name);
+                statusChanger.applyInteractionRules();
 
-                                pendingConnects.add(peer.userId);
-                                setTimeout(() => {
-                                    pendingConnects.delete(peer.userId);
-                                }, 5000);
+                pendingConnects.add(peer.userId);
+                setTimeout(() => {
+                    pendingConnects.delete(peer.userId);
+                }, 5000);
 
-                                peer.once("connect", () => {
-                                    pendingConnects.delete(peer.userId);
-                                    if (pendingConnects.size === 0) {
-                                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                        alreadyInBubble = true;
-                                    }
-                                });
-                            }
-
-                            // Left
-                            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
-                                // TODO: leave event can be triggered without a join if connect fails
-                                hideBubbleConfirmationModal();
-                                iframeListener.sendLeaveProximityMeetingEvent();
-
-                                if (screenWakeRelease) {
-                                    screenWakeRelease()
-                                        .then(() => {
-                                            screenWakeRelease = undefined;
-                                        })
-                                        .catch((error) => console.error(error));
-                                }
-                            }
-
-                            // Participant Join
-                            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
-                                const newUser = Array.from(newUsers.values()).find(
-                                    (player) => !oldUsers.get(player.userId)
-                                );
-
-                                if (newUser) {
-                                    if (alreadyInBubble) {
-                                        peers.get(newUser.userId)?.once("connect", () => {
-                                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                                        });
-                                    } else {
-                                        const peer = peers.get(newUser.userId);
-                                        if (peer) {
-                                            pendingConnects.add(newUser.userId);
-                                            setTimeout(() => {
-                                                pendingConnects.delete(newUser.userId);
-                                            }, 5000);
-                                            peer.once("connect", () => {
-                                                pendingConnects.delete(newUser.userId);
-                                                if (pendingConnects.size === 0) {
-                                                    iframeListener.sendJoinProximityMeetingEvent(
-                                                        Array.from(newUsers.values())
-                                                    );
-                                                    alreadyInBubble = true;
-                                                }
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Participant Left
-                            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
-                                const oldUser = Array.from(oldUsers.values()).find(
-                                    (player) => !newUsers.get(player.userId)
-                                );
-
-                                if (oldUser) {
-                                    // TODO: leave event can be triggered without a join if connect fails
-                                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
-                                }
-                            }
-
-                            if (newPeerNumber > oldPeersNumber) {
-                                this.playSound("audio-webrtc-in");
-                                faviconManager.pushNotificationFavicon();
-                            } else if (newPeerNumber < oldPeersNumber) {
-                                this.playSound("audio-webrtc-out");
-                                faviconManager.pushOriginalFavicon();
-                            }
-
-                            if (newPeerNumber > 0) {
-                                if (!this.localVolumeStoreUnsubscriber) {
-                                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
-                                        if (spectrum === undefined) {
-                                            this.CurrentPlayer.toggleTalk(false, true);
-                                            return;
-                                        }
-                                        const volume = spectrum.reduce((a, b) => a + b, 0);
-                                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
-                                    });
-                                }
-                                //this.reposition();
-                            } else {
-                                this.CurrentPlayer.toggleTalk(false, true);
-                                this.connection?.emitPlayerShowVoiceIndicator(false);
-                                this.showVoiceIndicatorChangeMessageSent = false;
-                                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
-                                if (this.localVolumeStoreUnsubscriber) {
-                                    this.localVolumeStoreUnsubscriber();
-                                    this.localVolumeStoreUnsubscriber = undefined;
-                                }
-
-                                //this.reposition();
-                            }
-
-                            oldUsers = newUsers;
-                            oldPeersNumber = newPeerNumber;
-                        })
-                    );
+                peer.once("connect", () => {
+                    pendingConnects.delete(peer.userId);
+                    if (pendingConnects.size === 0) {
+                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                        alreadyInBubble = true;
+                    }
                 });
-            })
-        );
+            }
+
+            // Left
+            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                // TODO: leave event can be triggered without a join if connect fails
+                hideBubbleConfirmationModal();
+                iframeListener.sendLeaveProximityMeetingEvent();
+
+                if (screenWakeRelease) {
+                    screenWakeRelease()
+                        .then(() => {
+                            screenWakeRelease = undefined;
+                        })
+                        .catch((error) => console.error(error));
+                }
+            }
+
+            // Participant Join
+            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
+                const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
+
+                if (newUser) {
+                    if (alreadyInBubble) {
+                        peers.get(newUser.userId)?.once("connect", () => {
+                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                        });
+                    } else {
+                        const peer = peers.get(newUser.userId);
+                        if (peer) {
+                            pendingConnects.add(newUser.userId);
+                            setTimeout(() => {
+                                pendingConnects.delete(newUser.userId);
+                            }, 5000);
+                            peer.once("connect", () => {
+                                pendingConnects.delete(newUser.userId);
+                                if (pendingConnects.size === 0) {
+                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                    alreadyInBubble = true;
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Participant Left
+            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
+                const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
+
+                if (oldUser) {
+                    // TODO: leave event can be triggered without a join if connect fails
+                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
+                }
+            }
+
+            if (newPeerNumber > oldPeersNumber) {
+                this.playSound("audio-webrtc-in");
+                faviconManager.pushNotificationFavicon();
+            } else if (newPeerNumber < oldPeersNumber) {
+                this.playSound("audio-webrtc-out");
+                faviconManager.pushOriginalFavicon();
+            }
+
+            if (newPeerNumber > 0) {
+                if (!this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
+                        if (spectrum === undefined) {
+                            this.CurrentPlayer.toggleTalk(false, true);
+                            return;
+                        }
+                        const volume = spectrum.reduce((a, b) => a + b, 0);
+                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+                    });
+                }
+                //this.reposition();
+            } else {
+                this.CurrentPlayer.toggleTalk(false, true);
+                this.connection?.emitPlayerShowVoiceIndicator(false);
+                this.showVoiceIndicatorChangeMessageSent = false;
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
+                if (this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber();
+                    this.localVolumeStoreUnsubscriber = undefined;
+                }
+
+                //this.reposition();
+            }
+
+            oldUsers = newUsers;
+            oldPeersNumber = newPeerNumber;
+        });
 
         this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
             if (isOn) {
@@ -3925,5 +3906,13 @@ ${escapedMessage}
             throw new Error("this.worldUserProvider not yet initialized");
         }
         return this.worldUserProvider.userCount;
+    }
+
+    get peerStore(): Readable<Map<number, VideoPeer>> {
+        return this.spaceRegistry.peerStore;
+    }
+
+    get screenSharingPeerStore(): Readable<Map<number, ScreenSharingPeer>> {
+        return this.spaceRegistry.screenSharingPeerStore;
     }
 }

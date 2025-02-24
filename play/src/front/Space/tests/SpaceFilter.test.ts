@@ -13,12 +13,12 @@ const defaultRoomConnectionMock = {
     emitRemoveSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
 
-const defaultPeerStoreMock = {
-    getSpaceStore: vi.fn(),
-    cleanupStore: vi.fn(),
-    removePeer: vi.fn(),
-    getPeer: vi.fn(),
-};
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+//     cleanupStore: vi.fn(),
+//     removePeer: vi.fn(),
+//     getPeer: vi.fn(),
+// };
 
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
@@ -74,22 +74,14 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
             const id = 0;
             const user: Pick<SpaceUserExtended, "id"> = {
                 id,
             };
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                defaultRoomConnectionMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
             await spaceFilter.addUser(user as SpaceUserExtended);
             expect(get(spaceFilter.usersStore).has(user.id)).toBeTruthy();
         });
@@ -101,19 +93,11 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
             const id = 1;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                defaultRoomConnectionMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
             await spaceFilter.addUser({
                 id,
                 name: "user-name",
@@ -137,9 +121,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
             const id = 0;
 
@@ -154,13 +136,7 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUserExtended;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                defaultRoomConnectionMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
@@ -177,9 +153,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
             const id = 0;
 
@@ -200,13 +174,7 @@ describe("SpaceFilter", () => {
                 ...newData,
             };
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                defaultRoomConnectionMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
@@ -225,9 +193,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
             const id = 0;
 
@@ -243,13 +209,7 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUser;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                defaultRoomConnectionMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
 
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
@@ -268,9 +228,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
 
             const mockRoomConnection = {
@@ -279,13 +237,7 @@ describe("SpaceFilter", () => {
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                mockRoomConnection,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
 
             const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
 
@@ -313,9 +265,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
 
             const mockRoomConnection = {
@@ -323,13 +273,7 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                mockRoomConnection,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
             const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
             unsubscribe();
 
@@ -350,9 +294,7 @@ describe("SpaceFilter", () => {
                 new Map<string, unknown>(),
                 defaultRoomConnectionMock,
                 [],
-                defaultPeerFactoryMock,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
+                defaultPeerFactoryMock
             );
 
             const mockRoomConnection = {
@@ -361,13 +303,7 @@ describe("SpaceFilter", () => {
                 emitRemoveSpaceFilter: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new AllUsersSpaceFilter(
-                spaceFilterName,
-                space,
-                mockRoomConnection,
-                defaultPeerStoreMock,
-                defaultPeerStoreMock
-            );
+            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
 
             const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
 

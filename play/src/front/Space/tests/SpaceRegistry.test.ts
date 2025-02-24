@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { PeerFactoryInterface, PeerStoreInterface, Space } from "../Space";
+import { PeerFactoryInterface, Space } from "../Space";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
@@ -51,12 +51,12 @@ const defaultPeerFactoryMock = {
     create: vi.fn(),
 } as unknown as PeerFactoryInterface;
 
-const defaultPeerStoreMock = {
-    getSpaceStore: vi.fn(),
-    cleanupStore: vi.fn(),
-    removePeer: vi.fn(),
-    getPeer: vi.fn(),
-} as unknown as PeerStoreInterface;
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+//     cleanupStore: vi.fn(),
+//     removePeer: vi.fn(),
+//     getPeer: vi.fn(),
+// } as unknown as PeerStoreInterface;
 
 const defaultRoomConnectionMock: RoomConnectionForSpacesInterface = new MockRoomConnectionForSpaces();
 
@@ -72,9 +72,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistry = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
+                    defaultPeerFactoryMock
                 );
                 spaceRegistry.joinSpace(newSpace.getName(), []);
                 expect(spaceRegistry.get(newSpace.getName())).toBeInstanceOf(Space);
@@ -88,9 +86,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistry = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
+                    defaultPeerFactoryMock
                 );
                 spaceRegistry.joinSpace(newSpace.getName(), []);
                 expect(() => {
@@ -108,9 +104,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 const spaceRegistry: SpaceRegistry = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
+                    defaultPeerFactoryMock
                 );
 
                 spaceRegistry.joinSpace(newSpace.getName(), []);
@@ -127,9 +121,7 @@ describe("SpaceProviderInterface implementation", () => {
                 } as SpaceInterface;
                 const spaceRegistry: SpaceRegistry = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
+                    defaultPeerFactoryMock
                 );
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
                 expect(result).toBeFalsy();
@@ -138,12 +130,7 @@ describe("SpaceProviderInterface implementation", () => {
         describe("SpaceRegistry delete", () => {
             it("should delete a space when space is in the store", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistry = new SpaceRegistry(
-                    roomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
-                );
+                const spaceRegistry: SpaceRegistry = new SpaceRegistry(roomConnectionMock, defaultPeerFactoryMock);
 
                 spaceRegistry.joinSpace("space-test1", []);
                 spaceRegistry.joinSpace("space-test2", []);
@@ -161,9 +148,7 @@ describe("SpaceProviderInterface implementation", () => {
                 } as SpaceInterface;
                 const spaceRegistry: SpaceRegistry = new SpaceRegistry(
                     defaultRoomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
+                    defaultPeerFactoryMock
                 );
 
                 expect(() => {
@@ -174,12 +159,7 @@ describe("SpaceProviderInterface implementation", () => {
         describe("SpaceRegistry destroy", () => {
             it("should destroy space store", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistry = new SpaceRegistry(
-                    roomConnectionMock,
-                    defaultPeerFactoryMock,
-                    defaultPeerStoreMock,
-                    defaultPeerStoreMock
-                );
+                const spaceRegistry: SpaceRegistry = new SpaceRegistry(roomConnectionMock, defaultPeerFactoryMock);
 
                 spaceRegistry.joinSpace("space-test1", []);
                 spaceRegistry.joinSpace("space-test2", []);

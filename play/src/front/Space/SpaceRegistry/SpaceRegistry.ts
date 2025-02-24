@@ -1,13 +1,15 @@
 import * as Sentry from "@sentry/svelte";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { MapStore } from "@workadventure/store-utils";
+import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { defaultPeerFactory, PeerFactoryInterface, PeerStoreInterface, Space } from "../Space";
+import { defaultPeerFactory, PeerFactoryInterface, Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
+import { VideoPeer } from "../../WebRtc/VideoPeer";
+import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
-
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.
@@ -37,7 +39,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  * It acts both as a factory and a registry.
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
-    private spaces: Map<string, Space> = new Map<string, Space>();
+    private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -46,11 +48,72 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
 
+    public readonly peerStore: Readable<Map<number, VideoPeer>> = derived(this.spaces, ($spaces, set) => {
+        const allPeers: Map<number, VideoPeer> = new Map();
+        const unsubscribers: (() => void)[] = [];
+
+        const updatePeers = () => {
+            allPeers.clear();
+            if ($spaces.size === 0) {
+                set(new Map()); // Set to an empty Map if there are no spaces
+                return;
+            }
+            $spaces.forEach((space) => {
+                const aggregatedPeerStores = space.getAllPeerStores(); // Use the getAllPeerStores method
+                const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                    peerStores.forEach((videoPeer, userId) => {
+                        allPeers.set(userId, videoPeer);
+                    });
+                    console.log("allPeers getAllPeerStores from spaceRegistry", allPeers);
+                    set(new Map(allPeers)); // Update the derived store
+                });
+                unsubscribers.push(unsubscribeAggregated);
+            });
+        };
+
+        updatePeers();
+
+        return () => {
+            unsubscribers.forEach((unsub) => unsub());
+        };
+    });
+
+    public readonly screenSharingPeerStore: Readable<Map<number, ScreenSharingPeer>> = derived(
+        this.spaces,
+        ($spaces, set) => {
+            const allPeers: Map<number, ScreenSharingPeer> = new Map();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                allPeers.clear();
+                if ($spaces.size === 0) {
+                    set(new Map()); // Set to an empty Map if there are no spaces
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedPeerStores = space.getAllScreenSharingPeerStores(); // Use the getAllPeerStores method
+                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        peerStores.forEach((screenSharingPeer, userId) => {
+                            allPeers.set(userId, screenSharingPeer);
+                        });
+                        console.log("allPeers getAllScreenSharingPeerStores from spaceRegistry", allPeers);
+                        set(new Map(allPeers)); // Update the derived store
+                    });
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        }
+    );
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private _peerFactory: PeerFactoryInterface = defaultPeerFactory,
-        private _peerStore: PeerStoreInterface = peerStore,
-        private _screenSharingPeerStore: PeerStoreInterface = screenSharingPeerStore
+        private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
@@ -144,15 +207,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(
-            spaceName,
-            metadata,
-            this.roomConnection,
-            propertiesToSync,
-            this._peerFactory,
-            this._peerStore,
-            this._screenSharingPeerStore
-        );
+        const newSpace = new Space(spaceName, metadata, this.roomConnection, propertiesToSync, this._peerFactory);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }

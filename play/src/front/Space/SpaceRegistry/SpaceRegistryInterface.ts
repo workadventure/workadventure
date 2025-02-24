@@ -1,4 +1,7 @@
+import { Readable } from "svelte/store";
+import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
+import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
@@ -6,4 +9,6 @@ export interface SpaceRegistryInterface {
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): void;
     destroy(): void;
+    peerStore: Readable<Map<number, VideoPeer>>;
+    screenSharingPeerStore: Readable<Map<number, ScreenSharingPeer>>;
 }

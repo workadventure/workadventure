@@ -1,8 +1,7 @@
 import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import { Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { peerStore } from "../../Stores/PeerStore";
 import { SimplePeerConnectionInterface } from "../../Space/Space";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
@@ -57,10 +56,8 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    get(peerStore).forEach((spaceStore) => {
-                        spaceStore.forEach((peer) => {
-                            this.addMediaStreamStore(peer.streamStore);
-                        });
+                    simplePeer.peerStore.forEach((peer) => {
+                        this.addMediaStreamStore(peer.streamStore);
                     });
                 })().catch((e) => {
                     console.error("Error while starting listening to streams", e);
@@ -75,10 +72,8 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                get(peerStore).forEach((spaceStore) => {
-                    spaceStore.forEach((peer) => {
-                        this.removeMediaStreamStore(peer.streamStore);
-                    });
+                simplePeer.peerStore.forEach((peer) => {
+                    this.removeMediaStreamStore(peer.streamStore);
                 });
 
                 if (this.pcmStreamerResolved || this.pcmStreamerResolving) {

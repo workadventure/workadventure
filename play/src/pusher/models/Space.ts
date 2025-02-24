@@ -54,51 +54,6 @@ export class Space {
 
         debug(`created : ${name}`);
     }
-    private initWebRTCCommunication(spaceUser: PartialSpaceUser) {
-        //broadcast to all users that the webRTC communication is starting
-
-        this.users.forEach((user) => {
-            if (user.id === spaceUser.id) {
-                return;
-            }
-            const startWebRTCMessageForOtherUser: NonUndefinedFields<PrivateEvent> = {
-                spaceName: this.name,
-                receiverUserId: user.id,
-                senderUserId: spaceUser.id,
-                spaceEvent: {
-                    event: {
-                        $case: "webRtcStartMessage",
-                        webRtcStartMessage: {
-                            initiator: false,
-                            userId: spaceUser.id,
-                            webRtcUserName: "",
-                            webRtcPassword: "",
-                        },
-                    },
-                },
-            };
-
-            this.sendPrivateEvent(startWebRTCMessageForOtherUser);
-            const startWebRTCMessageForInitiator: NonUndefinedFields<PrivateEvent> = {
-                spaceName: this.name,
-                receiverUserId: spaceUser.id,
-                senderUserId: user.id,
-                spaceEvent: {
-                    event: {
-                        $case: "webRtcStartMessage",
-                        webRtcStartMessage: {
-                            initiator: true,
-                            userId: user.id,
-                            webRtcUserName: "",
-                            webRtcPassword: "",
-                        },
-                    },
-                },
-            };
-
-            this.sendPrivateEvent(startWebRTCMessageForInitiator);
-        });
-    }
 
     private addClientWatcher(watcher: Socket) {
         const socketData = watcher.getUserData();
@@ -163,14 +118,6 @@ export class Space {
             },
         };
         this.notifyAll(subMessage, user as SpaceUserExtended);
-
-        if (
-            this.propertiesToSync.includes("cameraState") ||
-            this.propertiesToSync.includes("microphoneState") ||
-            this.propertiesToSync.includes("screenSharingState")
-        ) {
-            this.initWebRTCCommunication(spaceUser);
-        }
     }
 
     public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {

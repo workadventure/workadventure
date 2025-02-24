@@ -13,7 +13,6 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
-    import { peerStore } from "../../Stores/PeerStore";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
@@ -78,8 +77,8 @@
             $case: "kickOffUser",
             kickOffUser: {},
         });
-        // FIXME: this works only in bubbles
-        peerStore.removePeer(spaceUser.id, spaceUser.space.getName());
+
+        spaceUser.space.getSimplePeer()?.removePeer(spaceUser.id);
         close();
     }
 

@@ -9,7 +9,7 @@ import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
-import { peerStore, screenSharingStreamStore } from "./PeerStore";
+import { peerSizeStore, peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
@@ -65,8 +65,9 @@ const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
-        [broadcastTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia],
-        ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $screenSharingLocalMedia] /*, set*/) => {
+        [broadcastTracksStore, screenSharingStreamStore, peerSizeStore, screenSharingLocalMedia],
+        ([$broadcastTracksStore, $screenSharingStreamStore, $peerSizeStore, $screenSharingLocalMedia] /*, set*/) => {
+            //console.log(">>>>> createStreamableCollectionStore");
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
@@ -79,11 +80,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
 
-            $peerStore.forEach((spacePeerStore) => {
-                spacePeerStore.forEach((peer) => {
-                    addPeer(peer);
-                });
-            });
+            get(get(peerStore)).forEach(addPeer);
+            //console.log(">>>>> peerSizeStore", get(peerSizeStore) , get(peerStore));
 
             $broadcastTracksStore.forEach((trackWrapper) => {
                 if (trackWrapper instanceof JitsiTrackWrapper) {

@@ -21,7 +21,7 @@ import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
 import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
-import { PeerFactoryInterface, PeerStoreInterface } from "../Space";
+import { PeerFactoryInterface } from "../Space";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
@@ -125,21 +125,16 @@ const defaultPeerFactoryMock = {
     create: vi.fn(),
 } as unknown as PeerFactoryInterface;
 
-const defaultPeerStoreMock = {
-    getSpaceStore: vi.fn(),
-} as unknown as PeerStoreInterface;
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+// } as unknown as PeerStoreInterface;
 
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
     it("should emit event when you create space and spaceFilter", () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 
@@ -166,12 +161,7 @@ describe("", () => {
 
     it("should add user inSpaceFilter._users when receive AddSpaceUserMessage", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 
@@ -223,12 +213,7 @@ describe("", () => {
 
     it("should define reactive property after... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 
@@ -275,12 +260,7 @@ describe("", () => {
 
     it("... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 
@@ -349,12 +329,7 @@ describe("", () => {
 
     it("should forward public events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 
@@ -394,12 +369,7 @@ describe("", () => {
 
     it("should forward private events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(
-            roomConnection,
-            defaultPeerFactoryMock,
-            defaultPeerStoreMock,
-            defaultPeerStoreMock
-        );
+        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
 
         const spaceName = "space1";
 

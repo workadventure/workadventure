@@ -1,20 +1,17 @@
 import merge from "lodash/merge";
 import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { Observable, Subject, Subscriber } from "rxjs";
-import { Readable, get, readable, writable, Writable } from "svelte/store";
+import { Readable, get, readable, writable, Writable, derived } from "svelte/store";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
-import { PeerStoreInterface } from "../Space";
+import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+import { VideoPeer } from "../../WebRtc/VideoPeer";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
-    //userExist(userId: number): boolean;
-    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
-    //removeUser(userId: number): void;
-    //updateUserData(userdata: Partial<SpaceUser>): void;
     getName(): string;
 
     /**
@@ -49,6 +46,8 @@ export type SpaceUserExtended = SpaceUser & {
     //emitter: JitsiEventEmitter | undefined;
     space: SpaceInterface;
     reactiveUser: ReactiveSpaceUser;
+    getPeerStore: () => Readable<VideoPeer> | undefined;
+    getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
 };
 
 export type Filter = SpaceFilterMessage["filter"];
@@ -63,6 +62,7 @@ export type Filter = SpaceFilterMessage["filter"];
 //     emitProximityPrivateMessage(message: string, receiverUserId: number): void;
 // }
 
+//TODO : mettre une fonction qui permet de récuperer les peer d'un user dans direct dans un store qui va etre dans le space
 export abstract class SpaceFilter implements SpaceFilterInterface {
     private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
     readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
@@ -78,9 +78,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         private _name: string,
         private _space: SpaceInterface,
         private _connection: RoomConnectionForSpacesInterface,
-        private _filter: Filter,
-        private _peerStore: PeerStoreInterface,
-        private _screenSharingPeerStore: PeerStoreInterface
+        private _filter: Filter
     ) {
         this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
@@ -143,16 +141,16 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        const peerConnection = this._peerStore.getPeer(userId, this._space.getName());
+        const peerConnection = this._space.getSimplePeer()?.peerStore.get(userId);
         if (peerConnection) {
             peerConnection.destroy();
-            this._peerStore.removePeer(userId, this._space.getName());
+            this._space.getSimplePeer()?.peerStore.delete(userId);
         }
 
-        const screenSharingPeerConnection = this._screenSharingPeerStore.getPeer(userId, this._space.getName());
+        const screenSharingPeerConnection = this._space.getSimplePeer()?.screenSharingPeerStore.get(userId);
         if (screenSharingPeerConnection) {
             screenSharingPeerConnection.destroy();
-            this._screenSharingPeerStore.removePeer(userId, this._space.getName());
+            this._space.getSimplePeer()?.screenSharingPeerStore.delete(userId);
         }
     }
 
@@ -216,6 +214,24 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 this._connection.emitPrivateSpaceEvent(this._space.getName(), message, user.id);
             },
             space: this._space,
+            getPeerStore: () => {
+                const peerStore = this._space.getSimplePeer()?.peerStore;
+                if (peerStore) {
+                    return derived(peerStore, ($peerStore) => {
+                        return $peerStore.get(user.id);
+                    });
+                }
+                return undefined;
+            },
+            getScreenSharingPeerStore: () => {
+                const screenSharingPeerStore = this._space.getSimplePeer()?.screenSharingPeerStore;
+                if (screenSharingPeerStore) {
+                    return derived(screenSharingPeerStore, ($screenSharingPeerStore) => {
+                        return $screenSharingPeerStore.get(user.id);
+                    });
+                }
+                return undefined;
+            },
         } as unknown as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
@@ -281,5 +297,34 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             });
         }
         this.registerRefCount++;
+    }
+
+    /**
+     * Returns a derived store that aggregates all peer stores from the extended users.
+     */
+    public getAllPeerStores(): Readable<Map<number, Readable<VideoPeer>>> {
+        return derived(this.usersStore, ($usersStore) => {
+            const allPeers: Map<number, Readable<VideoPeer>> = new Map();
+            for (const user of $usersStore.values()) {
+                const peerStore = user.getPeerStore();
+                if (peerStore !== undefined) {
+                    allPeers.set(user.id, peerStore);
+                }
+            }
+            return allPeers;
+        });
+    }
+
+    public getAllScreenSharingPeerStores(): Readable<Map<number, Readable<ScreenSharingPeer>>> {
+        return derived(this.usersStore, ($usersStore) => {
+            const allPeers: Map<number, Readable<ScreenSharingPeer>> = new Map();
+            for (const user of $usersStore.values()) {
+                const peerStore = user.getScreenSharingPeerStore();
+                if (peerStore !== undefined) {
+                    allPeers.set(user.id, peerStore);
+                }
+            }
+            return allPeers;
+        });
     }
 }

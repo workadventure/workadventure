@@ -3,12 +3,12 @@ import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { Streamable } from "./StreamableCollectionStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
+import { peerSizeStore } from "./PeerStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -62,8 +62,11 @@ export const screenShareBandwidthStore = createScreenShareBandwidthStore();
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, inExternalServiceStore, peerStore],
-    ([$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $inExternalServiceStore, $peerStore], set) => {
+    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, inExternalServiceStore, peerSizeStore],
+    (
+        [$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $inExternalServiceStore, $peerSizeStore],
+        set
+    ) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         let currentAudioConstraint: boolean | MediaTrackConstraints = false;
 
@@ -80,7 +83,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($peerStore.size === 0) {
+        if ($peerSizeStore === 0) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -205,13 +208,13 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
-export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) => {
+export const screenSharingAvailableStore = derived(peerSizeStore, ($peerSizeStore, set) => {
     if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
         set(false);
         return;
     }
 
-    set($peerStore.size !== 0);
+    set($peerSizeStore !== 0);
 });
 
 export interface ScreenSharingLocalMedia {
