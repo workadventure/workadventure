@@ -106,7 +106,7 @@
 
 <section class="side-bar-container z-[1999]" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
-    <div class="flex flex-col items-center gap-4 pt-2">
+    <div class="flex flex-col items-center gap-4 pt-2 side-bar">
         <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
             <button
                 class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
@@ -140,15 +140,6 @@
 
 <style lang="scss">
     .side-bar {
-        display: flex;
-        flex-direction: column;
-        width: fit-content;
-        height: fit-content;
-        position: absolute;
-        top: 6%;
-        left: 2rem;
-        align-content: bottom;
-        z-index: 425;
         .tool-button {
             position: relative !important;
             display: flex;
