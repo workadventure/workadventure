@@ -137,7 +137,6 @@ export class Room {
             const roomRedirectChecking = isRoomRedirect.safeParse(data);
             const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
             const errorApiDataChecking = ErrorApiData.safeParse(data);
-
             if (roomRedirectChecking.success) {
                 const data = roomRedirectChecking.data;
                 return {

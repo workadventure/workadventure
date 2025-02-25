@@ -125,6 +125,14 @@ export class MatrixChatMessage implements ChatMessage {
         return this.event.replacingEventId() !== undefined;
     }
 
+    public getFormattedBody(): string {
+        const content = this.event.getOriginalContent();
+        return content.formatted_body;
+    }
+
+    public mxcUrlToHttp(url: string) {
+        return this.room.client.mxcUrlToHttp(url);
+    }
     private mapMatrixMessageTypeToChatMessage() {
         const matrixMessageType = this.event.getOriginalContent().msgtype;
         switch (matrixMessageType) {
