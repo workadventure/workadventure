@@ -3,7 +3,6 @@
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import InputText from "../../Input/InputText.svelte";
     import InputSelect from "../../Input/InputSelect.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import PureLoader from "../../PureLoader.svelte";
