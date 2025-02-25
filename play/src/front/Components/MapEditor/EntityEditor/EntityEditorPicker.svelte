@@ -14,6 +14,7 @@
         SelectableTag,
         selectCategoryStore,
     } from "../../../Stores/MapEditorStore";
+    import Input from "../../Input/Input.svelte";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
@@ -22,7 +23,7 @@
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
     import { IconChevronLeft, IconDeselect, IconPencil } from "@wa-icons";
-    import Input from "../../Input/Input.svelte";
+
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
@@ -182,13 +183,17 @@
             {/if}
         </div>
         <div class="flex *:w-full">
-            <Input rounded bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()} />
-<!--            <input-->
-<!--                class="flex-1 h-8 !border-solid !rounded-2xl !border-gray-400 !placeholder-gray-400"-->
-<!--                type="search"-->
-<!--                bind:value={searchTerm}-->
-<!--                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}-->
-<!--            />-->
+            <Input
+                rounded
+                bind:value={searchTerm}
+                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
+            />
+            <!--            <input-->
+            <!--                class="flex-1 h-8 !border-solid !rounded-2xl !border-gray-400 !placeholder-gray-400"-->
+            <!--                type="search"-->
+            <!--                bind:value={searchTerm}-->
+            <!--                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}-->
+            <!--            />-->
         </div>
     </div>
     <div class={`flex-1 overflow-auto ${pickedEntity ? "pt-44" : ""}`}>
@@ -259,9 +264,9 @@
             {#if !isEditingCustomEntity}
                 <div class="flex flex-col gap-2">
                     {#if $selectCategoryStore}
-                            <span class="font-bold text-lg">
-                                {$selectCategoryStore}
-                            </span>
+                        <span class="font-bold text-lg">
+                            {$selectCategoryStore}
+                        </span>
                     {/if}
                     <EntitiesGrid
                         entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -12,13 +13,10 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
-    import {IconX} from "@wa-icons";
-    import {onMount} from "svelte";
+    import { IconX } from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
     // $: showTooltip = false;
-
-
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
@@ -74,9 +72,9 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
 
-    onMount(()=>{
+    onMount(() => {
         // showTooltip = true;
-    })
+    });
 </script>
 
 <!--<div-->
@@ -117,9 +115,9 @@
     <div class="flex flex-col items-center gap-4 pt-2">
         <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
             <button
-                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
-                    data-testid="closeChatButton"
-                    on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                data-testid="closeChatButton"
+                on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
             >
                 <IconX font-size="20" />
             </button>
@@ -128,7 +126,9 @@
             {#each availableTools as tool (tool.toolName)}
                 <div>
                     <button
-                        class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName? 'bg-secondary': 'hover:bg-white/10'}"
+                        class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
+                            ? 'bg-secondary'
+                            : 'hover:bg-white/10'}"
                         id={tool.toolName}
                         class:active={$mapEditorSelectedToolStore === tool.toolName}
                         on:click|preventDefault={() => switchTool(tool.toolName)}
@@ -136,8 +136,8 @@
                     >
                         <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
                     </button>
-<!--                    TODO: add tooltip with popover-->
-<!--                    <Tooltip text={tool.tooltiptext}  />-->
+                    <!--                    TODO: add tooltip with popover-->
+                    <!--                    <Tooltip text={tool.tooltiptext}  />-->
                 </div>
             {/each}
         </div>

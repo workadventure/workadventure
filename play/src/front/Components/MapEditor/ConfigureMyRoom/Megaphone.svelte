@@ -9,9 +9,9 @@
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import { InputTagOption } from "../../Input/InputTagOption";
-    import { IconInfoCircle } from "@wa-icons";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import { IconInfoCircle } from "@wa-icons";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
@@ -92,8 +92,13 @@
 </script>
 
 <div class="flex flex-wrap gap-x-4 items-center h-fit">
-
-    <InputSwitch id="megaphone" label={$LL.mapEditor.settings.megaphone.title()} bind:value={enabled} on:change={partialSave} disabled={loading} />
+    <InputSwitch
+        id="megaphone"
+        label={$LL.mapEditor.settings.megaphone.title()}
+        bind:value={enabled}
+        on:change={partialSave}
+        disabled={loading}
+    />
 </div>
 
 <p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
