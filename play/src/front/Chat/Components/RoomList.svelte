@@ -12,6 +12,7 @@
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import messageSmileyImg from "../images/message-smiley.svg";
+    import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -136,7 +137,7 @@
 
 <div
     class="flex-1 flex flex-row overflow-auto"
-    class:!flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat === "chat"}
+    class:!flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"}
 >
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
@@ -315,25 +316,28 @@
                     {/each}
                 {/if}
             </div>
-            {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                <div class="fixed bottom-0 w-full backdrop-blur-md mt-3">
-                    <button
-                        data-testid="restoreEncryptionButton"
-                        on:click|stopPropagation={initChatConnectionEncryption}
-                        class="text-white flex gap-2 justify-center w-full bg-white/20 hover:bg-neutral hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
-                    >
-                        <IconCloudLock font-size="20" />
-                        <div class="text-sm font-bold grow text-left">
-                            {$LL.chat.e2ee.encryptionNotConfigured()}
-                        </div>
-                        <div
-                            class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10"
+            <div class="fixed bottom-0 w-full flex flex-col">
+                <ExternalComponents zone="chatBand" />
+                {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+                    <div class="w-full">
+                        <button
+                            data-testid="restoreEncryptionButton"
+                            on:click|stopPropagation={initChatConnectionEncryption}
+                            class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
                         >
-                            {$LL.chat.e2ee.configure()}
-                        </div>
-                    </button>
-                </div>
-            {/if}
+                            <IconCloudLock font-size="20" />
+                            <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
+                                {$LL.chat.e2ee.encryptionNotConfigured()}
+                            </div>
+                            <div
+                                class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                            >
+                                {$LL.chat.e2ee.configure()}
+                            </div>
+                        </button>
+                    </div>
+                {/if}
+            </div>
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}

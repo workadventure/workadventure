@@ -7,7 +7,7 @@
     export let classes = "";
 </script>
 
-<div class="absolute -bottom-4 flex flex-row flex-wrap rounded-3xl {classes}">
+<div class="reactions-bar absolute -bottom-4 flex flex-row flex-wrap rounded-3xl {classes}">
     {#each [...$reactions] as [reactionKey, reaction] (reactionKey)}
         <Reaction {reaction} />
     {/each}

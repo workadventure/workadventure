@@ -211,12 +211,16 @@
             {/if}
 
             <ExternalComponents zone="popup" />
+            <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+                <ExternalComponents zone="centeredPopup" />
+            </div>
 
             <MainModal />
         </section>
         <div class="">
-            <ActionBar />
+            <!--<ActionBar />-->
         </div>
+        <ActionBar />
     </div>
 
     {#if $visibilityStore == false && $streamableCollectionStore.size > 0}

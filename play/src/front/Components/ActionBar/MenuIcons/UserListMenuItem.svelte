@@ -19,7 +19,7 @@
 
 <ActionBarButton
     on:click={toggleUserList}
-    classList="group/btn-users"
+    classList="group/btn-users hidden @sm/actions:flex"
     tooltipTitle={$LL.actionbar.help.users.title()}
     tooltipDesc={$LL.actionbar.help.users.desc()}
     state={"normal"}

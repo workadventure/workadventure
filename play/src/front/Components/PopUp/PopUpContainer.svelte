@@ -13,7 +13,7 @@
         </div>
     </div>
     {#if SLOTS.buttons}
-        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast/50 pointer-events-auto">
+        <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 bg-contrast pointer-events-auto">
             <slot name="buttons" />
         </div>
     {/if}
