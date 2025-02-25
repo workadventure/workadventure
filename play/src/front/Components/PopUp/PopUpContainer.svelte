@@ -1,6 +1,7 @@
 <script lang="ts">
     const SLOTS = $$props.$$slots;
     export let extraClasses = "";
+    export let fullContent = false;
 </script>
 
 <div
@@ -9,7 +10,7 @@
         : ''} {extraClasses}"
 >
     <div class="flex items-center p-4 pointer-events-auto justify-center grow">
-        <div class="text-center leading-6 responsive-message w-full">
+        <div class="text-center leading-6 responsive-message {fullContent ? 'w-full' : ''}">
             <slot />
         </div>
     </div>
