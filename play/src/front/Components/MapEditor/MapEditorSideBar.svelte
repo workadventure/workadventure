@@ -8,7 +8,6 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import AreaToolImg from "../images/icon-tool-area.png";
-    import CloseImg from "../images/close.png";
     import ConfigureImg from "../images/configure.svg";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
@@ -54,11 +53,6 @@
         });
         availableTools.push(trashEditorTool);
     }
-    availableTools.push({
-        toolName: EditorToolName.CloseMapEditor,
-        img: CloseImg,
-        tooltiptext: $LL.mapEditor.sideBar.closeMapEditor(),
-    });
 
     function switchTool(newTool: EditorToolName) {
         // The map sidebar is opened when the user clicks on the explorer for the first time.

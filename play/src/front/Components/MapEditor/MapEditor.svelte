@@ -13,7 +13,10 @@
 {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
     <ConfigureMyRoom />
 {/if}
-<div id="map-editor-container" class="flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0 z-10">
+<div
+    id="map-editor-container"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0"
+>
     <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
     </div>
