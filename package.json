@@ -8,6 +8,7 @@
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
   },
   "workspaces": [
+    "front",
     "play",
     "back",
     "map-storage",
