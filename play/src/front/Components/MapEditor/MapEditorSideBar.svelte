@@ -104,7 +104,7 @@
 <!--    </div>-->
 <!--</div>-->
 
-<section class="z-[1999]" class:!right-20={!$mapEditorVisibilityStore}>
+<section class="side-bar-container z-[1999]" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="flex flex-col items-center gap-4 pt-2">
         <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
@@ -139,13 +139,6 @@
 </section>
 
 <style lang="scss">
-    .side-bar-container {
-        position: absolute;
-        right: 28rem;
-        top: 10%;
-        z-index: 500;
-        pointer-events: auto;
-    }
     .side-bar {
         display: flex;
         flex-direction: column;
