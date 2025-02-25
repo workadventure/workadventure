@@ -527,8 +527,8 @@ export const isIframeResponseEvent = z.union([
         data: isUpdateWritingStatusChatListEvent,
     }),
     z.object({
-        type: z.literal("buttonActionBarTrigger"),
-        data: isAddButtonActionBarEvent,
+        type: z.literal("buttonActionBarTriggered"),
+        data: z.string(),
     }),
     z.object({
         type: z.literal("modalCloseTrigger"),

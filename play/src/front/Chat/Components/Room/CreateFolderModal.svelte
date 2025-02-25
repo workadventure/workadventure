@@ -107,7 +107,7 @@
                 id=""
                 on:keypress={() => {}}
             />
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createFolder.users()}</p>
+            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createFolder.users()}</p>
             <SelectMatrixUser
                 on:error={handleSelectMatrixUserError}
                 bind:value={createFolderOptions.invite}

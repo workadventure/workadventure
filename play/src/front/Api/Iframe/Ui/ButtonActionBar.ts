@@ -30,15 +30,13 @@ export type ActionBarActionButtonDescriptor = {
 };
 
 export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<WorkAdventureButtonActionBarCommands> {
-    private _callbacks: Map<string, ButtonActionBarClickedCallback> = new Map<string, ButtonActionBarClickedCallback>();
+    private _callbacks: Map<string, () => void> = new Map<string, () => void>();
 
     callbacks = [
         apiCallback({
-            type: "buttonActionBarTrigger",
-            callback: (event) => {
-                if (this._callbacks.has(event.id)) {
-                    (this._callbacks.get(event.id) as ButtonActionBarClickedCallback)(event);
-                }
+            type: "buttonActionBarTriggered",
+            callback: (id) => {
+                this._callbacks.get(id)?.();
             },
         }),
     ];
@@ -48,12 +46,12 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      * {@link http://workadventure.localhost/map-building/api-ui.md#add-action-bar | Website documentation}
      */
     addButton(descriptor: ActionBarClassicButtonDescriptor | ActionBarActionButtonDescriptor) {
-        if (descriptor.callback != undefined) {
-            this._callbacks.set(descriptor.id, descriptor.callback);
-        }
-
         const addClassicButtonActionBar = isAddClassicButtonActionBarEvent.safeParse(descriptor);
         if (addClassicButtonActionBar.success && addClassicButtonActionBar.data.type === "button") {
+            if (descriptor.callback != undefined) {
+                this._callbacks.set(descriptor.id, () => descriptor.callback?.(addClassicButtonActionBar.data));
+            }
+
             sendToWorkadventure({
                 type: "addButtonActionBar",
                 data: {
@@ -66,6 +64,10 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
 
         const addActionButtonActionBarEvent = isAddActionButtonActionBarEvent.safeParse(descriptor);
         if (addActionButtonActionBarEvent.success && addActionButtonActionBarEvent.data.type === "action") {
+            if (descriptor.callback != undefined) {
+                this._callbacks.set(descriptor.id, () => descriptor.callback?.(addActionButtonActionBarEvent.data));
+            }
+
             sendToWorkadventure({
                 type: "addButtonActionBar",
                 data: {

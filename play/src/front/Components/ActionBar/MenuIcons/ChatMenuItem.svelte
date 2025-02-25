@@ -10,6 +10,8 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { peerStore } from "../../../Stores/PeerStore";
 
+    export let last: boolean | undefined = undefined;
+
     const dispatch = createEventDispatcher();
 
     function toggleChat() {
@@ -32,11 +34,12 @@
         navChat.switchToChat();
         analyticsClient.openedChat();
     }}
-    classList="group/btn-message-circle"
+    classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
     tooltipTitle={$LL.actionbar.help.chat.title()}
     tooltipDesc={$LL.actionbar.help.chat.desc()}
     dataTestId="chat-btn"
     state={"normal"}
+    {last}
     disabledHelp={false}
 >
     <MessageCircleIcon />
