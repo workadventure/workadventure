@@ -1,26 +1,20 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import {
-        mapEditorSelectedToolStore,
-        mapEditorVisibilityStore,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
-
 </script>
 
 {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
     <ConfigureMyRoom />
 {/if}
 <div id="map-editor-container" class="flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0 z-10">
-    <div
-        in:fly={{x: 100, duration: 250, delay: 300}}
-        out:fly={{ x: 100, duration: 200, delay: 100 }}>
+    <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
     </div>
     <div id="map-editor-right" class={`map-editor h-screen ${$mapEditorSelectedToolStore}`}>

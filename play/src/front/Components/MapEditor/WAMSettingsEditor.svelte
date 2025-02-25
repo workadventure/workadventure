@@ -45,9 +45,11 @@
 </script>
 
 <div>
-
-    <div class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit"
-         in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+    <div
+        class="configure-my-room bg-contrast/80 overflow-hidden backdrop-blur-md flex flex-col justify-between absolute rounded-lg w-4/6 min-h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-fit"
+        in:fly={{ x: 100, duration: 250, delay: 200 }}
+        out:fly={{ x: 100, duration: 200 }}
+    >
         <div class="absolute top-2 right-2 hover:bg-white/10">
             <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}
                 >&#215;</button
@@ -95,12 +97,14 @@
             </div>
         </div>
 
-
         <div class="w-full h-fit flex items-center justify-center p-2 space-x-2 bg-contrast/50 pointer-events-auto">
-            <div  class="flex flex-row justify-content-center w-full gap-2">
-                <button class="btn btn-outline hover:bg-white/10 w-full close-window" on:click|preventDefault|stopPropagation={close}>close </button>
+            <div class="flex flex-row justify-content-center w-full gap-2">
+                <button
+                    class="btn btn-outline hover:bg-white/10 w-full close-window"
+                    on:click|preventDefault|stopPropagation={close}
+                    >close
+                </button>
             </div>
         </div>
     </div>
 </div>
-

@@ -603,9 +603,9 @@
             bind:value={areaName}
             onChange={onUpdateName}
         >
-<!--            <div slot="optional">Optional</div>-->
+            <!--            <div slot="optional">Optional</div>-->
 
-<!--            <div slot="helper">Helper Textttt</div>-->
+            <!--            <div slot="helper">Helper Textttt</div>-->
         </Input>
 
         <div class="area-name-container">
@@ -617,9 +617,11 @@
                 <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
-                <label for="objectDescription" class="pl-2 pb-1 pt-3">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+                <label for="objectDescription" class="pl-2 pb-1 pt-3"
+                    >{$LL.mapEditor.areaEditor.areaDescription()}</label
+                >
                 <textarea
-                        class="bg-contrast border border-solid border-contrast-400 rounded-md placeholder:text-contrast-400"
+                    class="bg-contrast border border-solid border-contrast-400 rounded-md placeholder:text-contrast-400"
                     id="objectDescription"
                     placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                     bind:value={areaDescription}
