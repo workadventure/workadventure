@@ -110,7 +110,7 @@
         <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
             <button
                 class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
-                data-testid="closeChatButton"
+                data-testid="closeMapEditorButton"
                 on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
             >
                 <IconX font-size="20" />
