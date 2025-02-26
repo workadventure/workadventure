@@ -76,7 +76,8 @@ test.describe("Map editor interacting with object @oidc", () => {
     await EntityEditor.selectEntity(page, 0, "small table");
     await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
     await EntityEditor.clearEntitySelection(page);
-    await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+    // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+    await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
     await EntityEditor.setEntityName(page, "My Open Link");
     await EntityEditor.addProperty(page, "Open Link");
     await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
