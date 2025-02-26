@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { createPopperActions } from "svelte-popperjs";
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -16,6 +17,22 @@
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
     // $: showTooltip = false;
+    const [popperRef, popperContent] = createPopperActions({
+        placement: "left",
+    });
+
+    // const extraOpts = {
+    //     modifiers: [
+    //         { name: "offset", options: { offset: [0, 14] } },
+    //         {
+    //             name: "popper-arrow",
+    //             options: {
+    //                 element: ".popper-arrow",
+    //                 padding: 12,
+    //             },
+    //         },
+    //     ],
+    // };
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
@@ -118,7 +135,7 @@
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool (tool.toolName)}
-                <div class="tool-button">
+                <div class="tool-button" use:popperRef>
                     <button
                         class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
                             ? 'bg-secondary'
@@ -132,6 +149,12 @@
                     </button>
                     <!--                    TODO: add tooltip with popover-->
                     <!--                    <Tooltip text={tool.tooltiptext}  />-->
+                    <div
+                        use:popperContent
+                        class="tooltip bg-contrast/80 backdrop-blur rounded-md p-1 text-white text-xs text-nowrap "
+                    >
+                        {tool.tooltiptext}
+                    </div>
                 </div>
             {/each}
         </div>
