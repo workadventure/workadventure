@@ -44,7 +44,7 @@
         resetModalVisibility();
 
         roomListVisibilityStore.set(true);
-        openedMenuStore.close("appMenu");
+        openedMenuStore.toggle("appMenu");
     }
 
     function openExternalModuleCalendar() {
@@ -52,7 +52,7 @@
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
-        openedMenuStore.close("appMenu");
+        openedMenuStore.toggle("appMenu");
     }
 
     function openExternalModuleTodoList() {

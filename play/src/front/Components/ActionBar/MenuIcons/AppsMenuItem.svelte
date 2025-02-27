@@ -58,6 +58,7 @@
         dataTestId={undefined}
         action={popperRef}
     >
+        {$openedMenuStore}
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" ? "stroke-white fill-white" : "stroke-white fill-transparent"}
             hover="group-hover/btn-apps:fill-white"
