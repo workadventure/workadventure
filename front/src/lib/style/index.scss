@@ -1,0 +1,14 @@
+@charset "UTF-8";
+@import "highlight.js/scss/dark";
+@import "breakpoints";
+@import "cowebsite.scss";
+@import "style";
+@import "chat.scss";
+@import "@workadventure/tailwind/style/index.scss";
+@import "wa-theme/action-menu-bar.scss";
+@import "audio-range";
+@import "map-editor";
+@import "loader";
+@import "input";
+@import "warning-toast";
+@import "chat";

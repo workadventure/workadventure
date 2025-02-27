@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "wa-theme/action-menu-bar.scss";
+
+@layer base {
+    * {
+        @apply font-sans;
+    }
+}
+
+@layer components {
+    /* Menus - Main one uses theses classes */
+    .menu-container {
+        &.right{
+            @apply w-1/3 top-0 left-auto right-0 h-full
+        }
+        &.left{
+            @apply w-1/3 top-0 left-0 right-auto h-full
+        }
+
+        .menu-submenu-container {
+            border-left: 1px solid theme("colors.light-purple");
+            @apply p-3 w-4/5 overflow-auto;
+        }
+
+        .menu-item-container {
+            @apply flex flex-row items-center justify-between py-0 px-3 transition-colors duration-300;
+        }
+
+        .menu-item {
+            @apply bg-transparent h-12 font-sans font-bold text-sm items-center pl-1 text-white align-middle text-left break-words outline-none;
+            @apply md:text-base md:pl-3 md:mr-1;
+        }
+
+        .menu-item-container:hover,
+        .active {
+            @apply bg-light-purple clickable;
+
+            .menu-icon {
+                @apply brightness-125;
+            }
+        }
+    }
+
+    .menu-icon {
+        @apply h-3 p-0.5 invisible md:visible;
+    }
+
+    /* Buttons - basic buttons appearance */
+    button,
+    .btn {
+        @apply border-none rounded px-2 py-1 mx-0.5 my-1 items-center flex no-underline transition-colors duration-300 break-words outline-none;
+        @apply md:px-4;
+        * {
+            @apply clickable;
+        }
+    }
+
+    .btn:hover,
+    button:hover {
+        @apply no-underline;
+        filter: brightness(1.25);
+    }
+
+    .resizing-width {
+        @apply w-3/4 md:w-1/2 lg:w-1/3;
+    }
+
+    .resizing-text {
+        @apply text-sm md:text-base;
+    }
+
+    /* Dialog boxes used to notify user about something (follow feature, jitsi room, etc...) */
+    .blue-dialog-box {
+        @apply bg-dark-purple/95 rounded text-light-blue self-center m-1 p-1 align-middle align-middle pointer-events-auto;
+    }
+
+    .outline-light {
+        @apply border-light-blue border-solid border;
+    }
+}
+
+@layer utilities {
+    input[type="checkbox"],
+    input[type="radio"] {
+        @apply border-light-purple text-light-purple focus:border-lighter-purple focus:ring-lighter-purple transition-all duration-150;
+    }
+
+    input[type="checkbox"] {
+        @apply rounded;
+    }
+
+    .blue-title {
+        @apply text-light-blue font-sans text-base font-normal;
+    }
+
+    button,
+    .btn {
+        &.light,
+        &.dark,
+        &.outline,
+        &.disabled,
+        &.danger {
+            @apply min-h-10;
+        }
+
+        &.light {
+            @apply bg-light-blue text-dark-purple;
+        }
+
+        &.dark {
+            @apply bg-dark-purple text-light-blue;
+        }
+
+        &.outline {
+            @apply bg-transparent text-light-blue border border-light-blue border-solid;
+        }
+
+        &.outline:hover {
+            @apply bg-light-blue text-dark-purple;
+            .darken-icon {
+                @apply brightness-0;
+            }
+        }
+
+        &.disabled {
+            @apply bg-grey text-dark-purple cursor-not-allowed opacity-60;
+        }
+
+        &.danger {
+            @apply bg-pop-red text-dark-purple;
+        }
+
+        &.close-window {
+            @apply bg-pop-red text-white ring-1 ring-dark-blue absolute right-6 px-0 py-0 h-5 w-5 justify-center outline-none;
+            &#cowebsite-close{
+                position: initial;
+                @apply text-3xl;
+            }
+        }
+    }
+
+    section {
+        @apply mb-4 p-2 h-full;
+        .bottom-separator {
+            border-bottom: 1px solid theme("colors.light-purple");
+        }
+    }
+
+    .centered-column {
+        @apply flex flex-col items-center;
+    }
+
+    .tooltip {
+        @apply relative inline-block;
+    }
+
+    .tooltip .tooltiptext {
+        @apply bg-medium-purple text-white text-center items-center px-3 py-5 rounded bottom-full absolute invisible;
+    }
+
+    .tooltip:hover .tooltiptext {
+        @apply visible;
+    }
+
+    .tooltip .tooltiptext::after {
+        content: "";
+        @apply absolute border-solid top-full left-10;
+        margin-left: -5px;
+        border-width: 5px;
+        border-color: theme("colors.medium-purple") theme("colors.transparent") theme("colors.transparent")
+            theme("colors.transparent");
+    }
+
+    .clickable,
+    .clickable:hover {
+        cursor: pointer;
+    }
+}

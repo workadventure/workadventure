@@ -1,0 +1,84 @@
+@media screen and (orientation:portrait) {
+  #main-container {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  #cowebsite {
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+
+    visibility: collapse;
+    transform: translateY(-100%);
+
+    &.loading {
+      visibility: visible;
+      transform: translateY(0%);
+    }
+
+    &.opened {
+      visibility: visible;
+      transform: translateY(0%);
+      box-shadow: 3px 3px red, 1em 0 10em black;
+    }
+
+    &.closing {
+      visibility: visible;
+    }
+
+    &-loader {
+      height: 20%;
+    }
+
+    main {
+      height: 100%;
+    }
+
+    aside {
+      height: 50px;
+      flex-direction: row-reverse;
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+
+      #cowebsite-aside-holder {
+        height: 100%;
+        cursor: ns-resize;
+
+        img {
+          height: 100%;
+        }
+      }
+
+      #cowebsite-aside-buttons {
+        flex-direction: row-reverse;
+        margin-left: auto;
+        margin-bottom: 0;
+        justify-content: flex-end;
+      }
+
+      #cowebsite-fullscreen {
+        padding-top: 0;
+      }
+
+      #cowebsite-other-actions {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0;
+        height: 100%;
+        visibility: visible;
+      }
+
+      .top-right-btn {
+        img {
+          width: 15px;
+        }
+      }
+    }
+  }
+}

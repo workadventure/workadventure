@@ -1,0 +1,96 @@
+@layer components {
+    .bottom-action-bar {
+
+        .bottom-action-section {
+
+            #invite-btn {
+                @apply min-h-[2rem] h-8 sm:h-10 outline-none;
+            }
+            #register-btn {
+                @apply min-h-[2rem] h-8 sm:h-10 outline-none;
+            }
+
+            button.large {
+              @apply w-max;
+            }
+
+            .border-top-light {
+                border-top: 4px solid theme("colors.light-blue");
+                @apply pt-0;
+            }
+
+            .border-top-warning {
+                border-top: 4px solid rgb(233, 199, 76);
+                @apply pt-0;
+            }
+
+            .megaphone-confirm {
+                @apply border-warning border border-solid;
+                transform: translateX(-38%);
+                bottom: calc(100% + 1rem);
+
+                &::before {
+                    @apply border-dark-purple/95;
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    border-width: 10px 10px 0 10px;
+                    border-bottom-color: transparent;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    content: "";
+                    position: absolute;
+                    bottom: -8px;
+                    margin-left: calc(50% - 15px - 1rem);
+                    z-index: 1;
+                }
+                &::after {
+                    @apply border-warning;
+                    width: 0;
+                    height: 0;
+                    border-style: solid;
+                    border-width: 10px 10px 0 10px;
+                    border-bottom-color: transparent;
+                    border-left-color: transparent;
+                    border-right-color: transparent;
+                    content: "";
+                    position: absolute;
+                    margin-top: 8px;
+                    margin-left: calc(50% - 15px - 1rem);
+                }
+
+                button[type="button"] {
+                    all: unset;
+                    @apply m-auto cursor-pointer min-w-fit;
+                    border-radius: 0.25rem !important;
+                    padding: 0.2rem 0.8rem !important;
+                    height: initial !important;
+                    min-height: fit-content !important;
+
+                    &.light {
+                        @apply bg-light-blue text-brand-blue;
+                    }
+
+                    &.dark {
+                        @apply text-white;
+                        &:hover {
+                            @apply bg-light-purple;
+                        }
+                    }
+
+                    &:hover {
+                        filter: brightness(1.25);
+                    }
+
+                    &.disabled {
+                        @apply cursor-not-allowed opacity-50;
+                    }
+                }
+            }
+
+            .disable-opacity {
+                @apply opacity-50;
+            }
+        }
+    }
+}

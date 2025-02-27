@@ -1,0 +1,9 @@
+.pure-loader{
+  .svg {
+    @apply bg-contain bg-no-repeat bg-center w-7 h-7 ml-3;
+    content: "";
+  }
+  p {
+    @apply text-center animate-pulse;
+  }
+}

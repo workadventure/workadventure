@@ -1,0 +1,61 @@
+div.main-audio-manager {
+  max-height: clamp(150px, 10vh, 15vh); /*replace @media for small screen*/
+  z-index: 550;
+  text-align: center;
+  pointer-events: auto;
+
+  section.audio-manager-file {
+      display: none;
+    }
+
+  #audioplayer_volume_icon_playing.muted {
+    #audioplayer_volume_icon_playing_low {
+      visibility: hidden;
+      display: none;
+    }
+
+    #audioplayer_volume_icon_playing_mid {
+      visibility: hidden;
+      display: none;
+    }
+
+    #audioplayer_volume_icon_playing_high {
+      visibility: hidden;
+      display: none;
+    }
+    #audioplayer_volume_icon_playing_muted {
+      visibility: inherit;
+      display: initial;
+    }
+  }
+
+  #audioplayer_volume_icon_playing #audioplayer_volume_icon_playing_muted {
+    visibility: hidden;
+    display: none;
+  }
+
+  #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
+    visibility: hidden;
+    display: none;
+  }
+
+  #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_mid {
+    visibility: hidden;
+    display: none;
+  }
+
+  #audioplayer_volume_icon_playing.mid #audioplayer_volume_icon_playing_high {
+    visibility: hidden;
+    display: none;
+  }
+}
+
+@media screen and (max-width: 480px) {
+    div.main-audio-manager {
+        width: auto;
+        z-index: 550;
+        text-align: center;
+        pointer-events: auto;
+        margin-bottom: 12px;
+    }
+}

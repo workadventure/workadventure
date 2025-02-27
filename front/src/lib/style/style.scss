@@ -1,0 +1,709 @@
+//* {
+//    cursor: auto;
+//}
+* a,
+button,
+select {
+    cursor: pointer;
+}
+body {
+    overflow: hidden;
+}
+
+body button:focus,
+body img:focus,
+body input:focus {
+    outline: -webkit-focus-ring-color auto 0;
+}
+
+body .message-info {
+    width: 20%;
+    height: auto;
+    min-height: 30px;
+    position: absolute;
+    top: 5px;
+    left: 40%;
+    padding-top: 10px;
+    text-align: center;
+}
+
+body .message-info.error {
+    background: red;
+}
+
+body .message-info.success {
+    background: green;
+}
+
+body .message-info.info {
+    background: dodgerblue;
+}
+
+body .message-info.warning {
+    background: #ffa500d6;
+}
+
+
+
+/* New layout */
+body {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.main-container {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+#game {
+    iframe {
+        pointer-events: all;
+    }
+}
+
+
+.chat-mode > div {
+    margin: 1%;
+    max-height: 96%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
+    cursor: pointer;
+}
+
+.chat-mode > div:hover {
+    margin: 0;
+}
+
+.chat-mode.one-col {
+    grid-template-columns: repeat(1, 1fr);
+}
+
+.chat-mode.two-col {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.chat-mode.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.chat-mode.four-col {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/*GLOBAL MESSAGE*/
+.message-container {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    min-height: 200px;
+    max-height: 80%;
+    top: -80%;
+    /*left: 10%;*/
+    left: 250px;
+    background: #333333;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+    border-radius: 0 0 15px 15px;
+}
+
+.message-container {
+    height: auto;
+    border-radius: 0 0 10px 10px;
+    color: white;
+    top: 0;
+}
+
+.message-container .content-message {
+    position: relative;
+    padding: 20px;
+    margin: 20px;
+    overflow: scroll;
+    max-height: 400px;
+}
+
+.message-container div.clear {
+    position: absolute;
+    color: white;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+    top: calc(100% + 2px);
+    width: 200px;
+    height: 40px;
+    background-color: #2d2d2dba;
+    left: calc(50% - 100px);
+    border-radius: 15px 15px 15px 15px;
+    text-align: center;
+}
+
+.message-container div.clear {
+    width: 100px;
+    left: calc(50% - 50px);
+}
+
+.message-container div.clear img {
+    margin-top: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    padding: 0 5px;
+    transition: all 0.5s ease;
+    transform: rotateY(0);
+    opacity: 0.5;
+}
+
+.message-container div.clear img:hover {
+    opacity: 1;
+}
+
+.message-container div.clear img {
+    transform: rotateY(3.142rad);
+    opacity: 1;
+}
+
+.message-container div.clear p {
+    margin-top: 12px;
+}
+
+.message-container div.clear:hover {
+    cursor: pointer;
+    top: calc(100% + 5px);
+    transform: scale(1.2) translateY(3px);
+}
+
+/* VIDEO QUALITY */
+.main-console div.setting h1 {
+    color: white;
+}
+.main-console div.setting select {
+    background: black;
+    color: white;
+    min-width: 280px;
+    text-align: center;
+    min-height: 40px;
+    padding: 10px;
+    border-radius: 15px;
+}
+.main-console div.setting select:focus {
+    border: solid 1px white;
+    outline: none;
+}
+.main-console div.setting.active section {
+    display: block;
+}
+
+/*REPORT input*/
+div.modal-report-user {
+    position: absolute;
+    width: 800px;
+    height: 600px;
+    left: calc(50% - 400px);
+    top: 100px;
+    background-color: #000000ad;
+    border-radius: 15px;
+}
+
+.modal-report-user textarea {
+    position: absolute;
+    height: 200px;
+    z-index: 999;
+    top: 200px;
+    background-color: #000000;
+    color: white;
+    width: calc(100% - 60px);
+    margin: 30px;
+    border-radius: 15px;
+}
+
+.modal-report-user img {
+    position: absolute;
+    height: 24px;
+    width: 24px;
+    z-index: 999;
+    left: calc(50% - 12px);
+    top: 10px;
+}
+
+.modal-report-user img#cancel-report-user {
+    position: absolute;
+    z-index: 999;
+    right: 0;
+    left: auto;
+    top: 0;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    margin: 10px;
+}
+
+.modal-report-user button {
+    position: absolute;
+    top: 450px;
+    left: calc(50% - 50px);
+    width: 100px;
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 15px;
+    padding: 10px 30px;
+    transition: all 0.2s ease;
+}
+.modal-report-user button:hover {
+    cursor: pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}
+
+.modal-report-user p#title-report-user {
+    font-size: 30px;
+    color: white;
+    position: absolute;
+    top: 30px;
+    width: 100%;
+    text-align: center;
+}
+
+.modal-report-user p#body-report-user {
+    font-size: 24px;
+    color: white;
+    position: absolute;
+    top: 70px;
+    width: 100%;
+    text-align: left;
+    padding: 30px;
+    max-width: calc(800px - 60px); /* size of modal - padding*/
+}
+
+/*MESSAGE*/
+.discussion {
+    position: fixed;
+    left: -300px;
+    top: 0;
+    width: 220px;
+    height: 100%;
+    background-color: #333333;
+    padding: 20px;
+    transition: all 0.5s ease;
+}
+.discussion.active {
+    left: 0;
+}
+.discussion .active-btn {
+    display: none;
+    cursor: pointer;
+    height: 50px;
+    width: 50px;
+    background-color: #2d2d2dba;
+    position: absolute;
+    top: calc(50% - 25px);
+    margin-left: 315px;
+    border-radius: 50%;
+    border: none;
+    transition: all 0.5s ease;
+}
+.discussion .active-btn.active {
+    display: block;
+}
+
+.discussion .active-btn:hover {
+    transform: scale(1.1) rotateY(3.142rad);
+}
+.discussion .active-btn img {
+    width: 26px;
+    height: 26px;
+    margin: 13px 5px;
+}
+
+.discussion .close-btn {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.discussion .close-btn img {
+    height: 15px;
+    right: 15px;
+}
+
+.discussion p {
+    color: white;
+    font-size: 22px;
+    padding-left: 10px;
+    margin: 0;
+}
+
+.discussion .participants {
+    height: 200px;
+    margin: 10px 0;
+}
+
+.discussion .participants .participant {
+    display: flex;
+    margin: 5px 10px;
+    background-color: #ffffff69;
+    padding: 5px;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.discussion .participants .participant:hover {
+    background-color: #ffffff;
+}
+.discussion .participants .participant:hover p {
+    color: black;
+}
+
+.discussion .participants .participant:before {
+    content: "";
+    height: 10px;
+    width: 10px;
+    background-color: #1e7e34;
+    position: absolute;
+    margin-left: 18px;
+    border-radius: 50%;
+    margin-top: 18px;
+}
+
+.discussion .participants .participant img {
+    width: 26px;
+    height: 26px;
+}
+
+.discussion .participants .participant p {
+    font-size: 16px;
+    margin-left: 10px;
+    margin-top: 2px;
+}
+
+.discussion .participants .participant button.report-btn {
+    cursor: pointer;
+    position: absolute;
+    background-color: #2d2d2dba;
+    right: 34px;
+    margin: 0;
+    padding: 2px 0;
+    border-radius: 15px;
+    border: none;
+    color: white;
+    width: 0;
+    overflow: hidden;
+    transition: all 0.5s ease;
+}
+
+.discussion .participants .participant:hover button.report-btn {
+    width: 70px;
+}
+
+.discussion .messages {
+    position: absolute;
+    height: calc(100% - 390px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
+}
+
+.discussion .messages h2 {
+    color: white;
+}
+
+.discussion .messages .message {
+    margin: 5px;
+    float: right;
+    text-align: right;
+    width: 100%;
+}
+
+.discussion .messages .message.me {
+    float: left;
+    text-align: left;
+}
+
+.discussion .messages .message p {
+    font-size: 12px;
+}
+
+.discussion .messages .message p.body {
+    color: white;
+    font-size: 16px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.discussion .messages .message p a {
+    color: white;
+}
+
+.discussion .messages .message p a:visited {
+    color: white;
+}
+
+.discussion .send-message {
+    position: absolute;
+    bottom: 45px;
+    width: 200px;
+    height: 26px;
+    margin-bottom: 10px;
+}
+
+.discussion .send-message input {
+    position: absolute;
+    width: calc(100% - 20px);
+    height: 30px;
+    background-color: #171717;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 6px;
+}
+
+.discussion .send-message img {
+    position: absolute;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff69;
+}
+
+.discussion .send-message img:hover {
+    background-color: #ffffff;
+}
+
+/** Action button **/
+div.action {
+    position: absolute;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    bottom: 40px;
+    transition: all 0.5s ease;
+    animation: mymove 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+
+div.action.info,
+div.action.warning,
+div.action.danger {
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+
+div.action p.action-body {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #2d2d2dba;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
+    border-radius: 15px;
+}
+
+div.action.warning p.action-body {
+    background-color: #ff9800eb;
+    color: #000;
+}
+
+div.action.danger p.action-body {
+    background-color: #da0000e3;
+    color: #000;
+}
+
+@keyframes mymove {
+    0% {
+        bottom: 40px;
+    }
+    50% {
+        bottom: 30px;
+    }
+    100% {
+        bottom: 40px;
+    }
+}
+
+#game-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+
+    & + div {
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    & + div > div {
+        pointer-events: auto;
+    }
+
+    & > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
+
+        & > div.scrollable {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
+        }
+    }
+
+    &.hide {
+        visibility: hidden;
+    }
+}
+
+
+.active-discussion div.emoji-picker {
+    transform: translateX(-188px);
+}
+
+div.emoji-picker {
+    @apply bg-contrast/80 backdrop-blur rounded-lg border-none;
+    transform: translateX(-68px);
+    input.emoji-picker__search {
+        border-radius: 1em;
+    }
+    .emoji-picker__content {
+        @apply pb-0 px-0;
+    }
+    button.emoji-picker__category-button {
+        @apply relative z-10;
+        &:not(.active) {
+            @apply opacity-50 transition-all;
+            &:hover {
+                @apply opacity-100;
+            }
+        }
+        &.active {
+            @apply border-none pb-2;
+            @apply after:content-[''] after:absolute after:-bottom-[1px] after:left-0 after:w-full after:h-[3px] after:rounded after:bg-success;
+        }
+    }
+    .emoji-picker__emoji {
+        @apply transition-all rounded;
+        &:focus, &:hover {
+            @apply bg-white/10;
+        }
+    }
+    .emoji-picker__emojis {
+        h2.emoji-picker__category-name {
+            @apply text-xs uppercase text-white/50 pl-3 font-normal first:mt-3;
+        }
+    }
+    .emoji-picker__search-container {
+        @apply flex items-center;
+        .emoji-picker__search {
+            @apply pl-4 bg-white/10 border-none placeholder:text-white/50;
+        }
+        .emoji-picker__search-icon {
+            @apply static px-3 opacity-20;
+        }
+    }
+    .emoji-picker__category-buttons {
+        @apply m-0 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-white/20;
+    }
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+/* TODO: remove once https://github.com/nostalgic-css/NES.css/pull/482 is released */
+.nes-container.is-rounded {
+    border-image-repeat: stretch;
+}
+
+.emoji-picker__overlay {
+    z-index: 200 !important;
+}
+
+/* Style for the action or bulle info displayed a side of the user */
+.characterTriggerAction{
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    p{
+        @apply m-0 p-0;
+    }
+}
+
+/* Popper arrow placement */ 
+
+.popper-tooltip[data-popper-placement^='top'] .popper-arrow {
+    bottom: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow {
+    top: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='left'] .popper-arrow {
+    right: -4px;
+}
+  
+.popper-tooltip[data-popper-placement^='right'] .popper-arrow {
+    left: -4px;
+}
+
+.popper-arrow,
+.popper-arrow::before {
+    position: absolute;
+}
+
+.popper-arrow {
+    visibility: hidden;
+}
+
+.popper-arrow::before {
+    visibility: visible;
+    content: '';
+    position: absolute;
+    width: 0px;
+    height: 0px;
+
+    border-style: solid;
+    border-width: 8px;
+    border-color: transparent;
+}
+
+.popper-tooltip[data-popper-placement^='top'] .popper-arrow::before {
+    @apply border-t-contrast/80;
+
+    bottom: -12px;
+}
+
+.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow::before {
+    @apply border-b-contrast/80;
+    top: -12px;
+}
+
+.popper-tooltip[data-popper-placement^='left'] .popper-arrow::before {
+    @apply border-l-contrast/80;
+    right: -12px;
+}
+
+.popper-tooltip[data-popper-placement^='right'] .popper-arrow::before {
+    @apply border-r-contrast/80;
+    left: -12px;
+}

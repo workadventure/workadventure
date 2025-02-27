@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import Icons from "unplugin-icons/vite";
 
 export default defineConfig({
 	plugins: [
@@ -11,7 +12,8 @@ export default defineConfig({
 		paraglide({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide'
-		})
+		}),
+		Icons({ compiler: "svelte" }),
 	],
 
 	test: {
@@ -33,7 +35,7 @@ export default defineConfig({
 				extends: './vite.config.ts',
 
 				test: {
-					name: 'server',
+xœ					name: 'server',
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
