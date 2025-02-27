@@ -28,8 +28,6 @@
         }
     });
 
-    let displayRoomInvitations = ($invitations?.length ?? 0) > 0;
-
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -72,7 +70,7 @@
 
     {#if isOpen}
         <div class="tw-flex tw-flex-col tw-overflow-auto">
-            {#if displayRoomInvitations}
+            {#if $invitations.length > 0}
                 <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
                     <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
                         <RoomInvitation {room} />
