@@ -1,7 +1,7 @@
 import Debug from "debug";
 import { Logger } from "matrix-js-sdk/lib/logger";
 
-class CustomLogger implements Logger {
+export class CustomLogger implements Logger {
     private namespace: string;
 
     private traceLogger: Debug.Debugger;

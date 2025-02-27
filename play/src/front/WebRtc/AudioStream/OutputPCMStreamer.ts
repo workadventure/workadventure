@@ -1,4 +1,5 @@
 import { Deferred } from "ts-deferred";
+import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import audioWorkletProcessorUrl from "./OutputAudioWorkletProcessor.ts?worker&url";
 
 export class OutputPCMStreamer {
@@ -104,7 +105,7 @@ export class OutputPCMStreamer {
             this.audioContext
                 .close()
                 .then(() => {
-                    console.info("AudioContext closed.");
+                    customWebRTCLogger.info("AudioContext closed.");
                 })
                 .catch((err) => {
                     console.error("Error closing AudioContext:", err);

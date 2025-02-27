@@ -16,6 +16,7 @@ import {
     StreamMessage,
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
+import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -96,8 +97,6 @@ export class ScreenSharingPeer extends Peer {
             this._streamStore.set(stream);
             this.stream(stream);
 
-            // check active codec
-            this.checkActiveCodec().catch((err) => console.error("checkActiveCodec error", err));
             // Set the max bitrate for the video stream
             this.setMaxBitrate().catch((err) => console.error("setMaxBitrate error", err));
         });
@@ -114,11 +113,9 @@ export class ScreenSharingPeer extends Peer {
 
         this.on("connect", () => {
             this._connected = true;
-            console.info(`connect => ${this.userId}`);
+            customWebRTCLogger.info(`connect => ${this.userId}`);
             this._statusStore.set("connected");
 
-            // check active codec
-            this.checkActiveCodec().catch((err) => console.error("checkActiveCodec error", err));
             // Set the max bitrate for the video stream
             this.setMaxBitrate().catch((err) => console.error("setMaxBitrate error", err));
         });
@@ -224,47 +221,12 @@ export class ScreenSharingPeer extends Peer {
         return this._streamStore;
     }
 
-    private async checkActiveCodec() {
-        const pc = (this as unknown as { _pc: RTCPeerConnection })._pc;
-        if (!pc) {
-            console.warn("checkActiveCodec => RTCPeerConnection not found.");
-            return;
-        }
-
-        // Find the video sender
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-
-        if (!sender) {
-            console.warn("checkActiveCodec => No video sender found.");
-            return;
-        }
-
-        try {
-            const stats = await sender.getStats();
-
-            stats.forEach((report) => {
-                if (report.type === "outbound-rtp" && report.codecId) {
-                    console.info("checkActiveCodec => Codec ID:", report.codecId);
-
-                    // Find the codec name from stats
-                    stats.forEach((codecReport) => {
-                        if (codecReport.type === "codec" && codecReport.id === report.codecId) {
-                            console.info("checkActiveCodec => Active Video Codec:", codecReport.mimeType);
-                        }
-                    });
-                }
-            });
-        } catch (error) {
-            console.error("checkActiveCodec => Error fetching codec stats:", error);
-        }
-    }
-
     private async setMaxBitrate() {
         try {
             // Get the RTCPeerConnection instance
             const pc = (this as unknown as { _pc: RTCPeerConnection })._pc;
             if (!pc) {
-                console.warn("RTCPeerConnection not found.");
+                customWebRTCLogger.warn("RTCPeerConnection not found.");
                 return;
             }
             const promise: Promise<unknown>[] = [];
@@ -277,7 +239,7 @@ export class ScreenSharingPeer extends Peer {
                     encoding.priority = "high";
                     encoding.networkPriority = "high";
                 }
-                console.info(
+                customWebRTCLogger.info(
                     "setMaxBitrate => Setting max bitrate to 1.5 Mbps and max framerate to 30 fps.",
                     parameters
                 );
