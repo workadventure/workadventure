@@ -1,5 +1,6 @@
 <script lang="ts">
     import { setContext } from "svelte";
+    import { get } from "svelte/store";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
@@ -43,8 +44,10 @@
         resetChatVisibility();
         resetModalVisibility();
 
+        console.log("1showRoomList", get(openedMenuStore));
         roomListVisibilityStore.set(true);
-        openedMenuStore.toggle("appMenu");
+        openedMenuStore.close("appMenu");
+        console.log("2showRoomList", get(openedMenuStore));
     }
 
     function openExternalModuleCalendar() {
@@ -52,7 +55,7 @@
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
-        openedMenuStore.toggle("appMenu");
+        openedMenuStore.close("appMenu");
     }
 
     function openExternalModuleTodoList() {
@@ -66,9 +69,11 @@
 
 <!-- Room list part -->
 {#if $roomListActivated}
-    <ActionBarButton on:click={showRoomList} label={$LL.actionbar.help.roomList.title()}>
-        <WorldIcon />
-    </ActionBarButton>
+    <div on:click|stopPropagation={showRoomList} on:keydown|stopPropagation={showRoomList}>
+        <ActionBarButton label={$LL.actionbar.help.roomList.title()}>
+            <WorldIcon />
+        </ActionBarButton>
+    </div>
 {/if}
 
 <!-- Calendar integration -->
