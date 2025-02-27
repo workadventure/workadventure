@@ -76,15 +76,15 @@
     use:clickOutside={() => dispatch("close")}
 >
     <div class="flex flex-col overflow-auto space-y-2 p-1" style="max-height: calc(100vh - 160px);">
-        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-            <div class="">
+        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length >= 1}
+            <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                     {$LL.actionbar.subtitle.camera()}
                 </div>
                 {#each $cameraListStore as camera, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
+                        class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
                         camera.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
@@ -137,14 +137,14 @@
             </div>
         {/if}
         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
-            <div class="">
+            <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
                 </div>
                 {#each $microphoneListStore as microphone, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
+                        class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
                         microphone.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
@@ -177,11 +177,11 @@
                 {/each}
             </div>
         {:else}
-            <div class="">
+            <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
                 </div>
-                <div class="group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
                     <div class="text-sm italic">
                         {$LL.actionbar.microphone.disabled()}
                     </div>
@@ -198,14 +198,14 @@
             </div>
         {/if}
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-            <div class="">
+            <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
                     {$LL.actionbar.subtitle.speaker()}
                 </div>
                 {#each $speakerListStore as speaker, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
+                        class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$speakerSelectedStore ===
                         speaker.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
@@ -239,8 +239,9 @@
         {/if}
     </div>
     <div class="relative z-10 flex gap-2 p-2 bg-contrast/50">
-        <button class="btn btn-sm btn-ghost btn-light justify-center w-full rounded" on:click={openEnableCameraScene}
-            >{$LL.actionbar.test()}</button
+        <button
+            class="btn btn-sm btn-ghost btn-light justify-center w-full rounded text-nowrap"
+            on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
         >
         <button
             class="btn btn-sm btn-border btn-light justify-center w-full cursor-pointer rounded"
