@@ -11,6 +11,7 @@ import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "..
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 const JitsiConfig = z
@@ -247,7 +248,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                                 .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
 
                             if (cancelled /*&& iframe*/) {
-                                console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
+                                customWebRTCLogger.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
                                 //this.closeOrUnload(iframe);
                                 this.destroy();
                                 return;
@@ -279,7 +280,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                 });
 
             cancel(() => {
-                console.info("CLOSING Canceling JitsiCoWebsite");
+                customWebRTCLogger.info("CLOSING Canceling JitsiCoWebsite");
                 cancelled = true;
                 this.unload().catch((err) => {
                     console.error("Cannot unload Jitsi co-website while cancel loading", err);
@@ -313,9 +314,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     unload(): Promise<void> {
         if (this.loadPromise) {
-            console.info("CLOSING unload JitsiCoWebsite");
+            customWebRTCLogger.info("CLOSING unload JitsiCoWebsite");
         } else {
-            console.info("CLOSING NOOOOT unload JitsiCoWebsite");
+            customWebRTCLogger.info("CLOSING NOOOOT unload JitsiCoWebsite");
         }
         try {
             this.loadPromise?.cancel();

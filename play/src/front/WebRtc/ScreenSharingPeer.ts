@@ -1,6 +1,7 @@
 import { Buffer } from "buffer";
 import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
+import { SignalData } from "simple-peer";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
@@ -15,6 +16,7 @@ import {
     StreamMessage,
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
+import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -82,7 +84,8 @@ export class ScreenSharingPeer extends Peer {
         this._statusStore = writable<PeerStatus>("connecting");
 
         //start listen signal for the peer connection
-        this.on("signal", (data: unknown) => {
+        this.on("signal", (data: SignalData) => {
+            // transform sdp to force to use h264 codec
             this.sendWebrtcScreenSharingSignal(data);
         });
 
@@ -93,6 +96,9 @@ export class ScreenSharingPeer extends Peer {
             });
             this._streamStore.set(stream);
             this.stream(stream);
+
+            // Set the max bitrate for the video stream
+            this.setMaxBitrate().catch((err) => console.error("setMaxBitrate error", err));
         });
 
         this.on("close", () => {
@@ -107,8 +113,11 @@ export class ScreenSharingPeer extends Peer {
 
         this.on("connect", () => {
             this._connected = true;
-            console.info(`connect => ${this.userId}`);
+            customWebRTCLogger.info(`connect => ${this.userId}`);
             this._statusStore.set("connected");
+
+            // Set the max bitrate for the video stream
+            this.setMaxBitrate().catch((err) => console.error("setMaxBitrate error", err));
         });
 
         this.once("finish", () => {
@@ -210,5 +219,35 @@ export class ScreenSharingPeer extends Peer {
 
     get streamStore(): Readable<MediaStream | null> {
         return this._streamStore;
+    }
+
+    private async setMaxBitrate() {
+        try {
+            // Get the RTCPeerConnection instance
+            const pc = (this as unknown as { _pc: RTCPeerConnection })._pc;
+            if (!pc) {
+                customWebRTCLogger.warn("RTCPeerConnection not found.");
+                return;
+            }
+            const promise: Promise<unknown>[] = [];
+            for (const sender of pc.getSenders()) {
+                const parameters = sender.getParameters();
+                for (const encoding of parameters.encodings) {
+                    encoding.scaleResolutionDownBy = 2.0;
+                    encoding.maxBitrate = 1_500_000; // 1.5 Mbps
+                    encoding.maxFramerate = 30; // 30 fps
+                    encoding.priority = "high";
+                    encoding.networkPriority = "high";
+                }
+                customWebRTCLogger.info(
+                    "setMaxBitrate => Setting max bitrate to 1.5 Mbps and max framerate to 30 fps.",
+                    parameters
+                );
+                promise.push(sender.setParameters(parameters));
+            }
+            await Promise.all(promise);
+        } catch (e) {
+            console.error("setMaxBitrate => Error setting max bitrate:", e);
+        }
     }
 }
