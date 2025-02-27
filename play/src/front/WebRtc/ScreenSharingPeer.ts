@@ -31,7 +31,6 @@ export class ScreenSharingPeer extends Peer {
     public readonly uniqueId: string;
     private readonly _streamStore: Writable<MediaStream | null>;
     private readonly _statusStore: Writable<PeerStatus>;
-    public _pc: RTCPeerConnection | null = null;
 
     constructor(
         user: UserSimplePeerInterface,
@@ -86,9 +85,6 @@ export class ScreenSharingPeer extends Peer {
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
             // transform sdp to force to use h264 codec
-            if (typeof data === "object" && "sdp" in data && data.sdp != undefined) {
-                data.sdp = this.filterSDPForH264(data.sdp);
-            }
             this.sendWebrtcScreenSharingSignal(data);
         });
 
@@ -228,29 +224,18 @@ export class ScreenSharingPeer extends Peer {
         return this._streamStore;
     }
 
-    // force H.264 codec for video tracks in a RTCPeerConnection instance
-    // try to apply H.264 codec to all video tracks in the RTCPeerConnection instance
-    // the goals is to reduce the latency of the connection
-    private filterSDPForH264(sdp: string) {
-        let sdpLines = sdp.split("\n");
-
-        // Remove all other codecs (VP8, VP9, AV1)
-        sdpLines = sdpLines.filter((line) => !line.includes("VP8") && !line.includes("VP9") && !line.includes("AV1"));
-
-        return sdpLines.join("\n");
-    }
-
     private async checkActiveCodec() {
-        if (!this._pc) {
-            console.warn("RTCPeerConnection not found.");
+        const pc = (this as unknown as { _pc: RTCPeerConnection })._pc;
+        if (!pc) {
+            console.warn("checkActiveCodec => RTCPeerConnection not found.");
             return;
         }
 
         // Find the video sender
-        const sender = this._pc.getSenders().find((s) => s.track?.kind === "video");
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
 
         if (!sender) {
-            console.warn("No video sender found.");
+            console.warn("checkActiveCodec => No video sender found.");
             return;
         }
 
@@ -259,43 +244,48 @@ export class ScreenSharingPeer extends Peer {
 
             stats.forEach((report) => {
                 if (report.type === "outbound-rtp" && report.codecId) {
-                    console.log("Codec ID:", report.codecId);
+                    console.info("checkActiveCodec => Codec ID:", report.codecId);
 
                     // Find the codec name from stats
                     stats.forEach((codecReport) => {
                         if (codecReport.type === "codec" && codecReport.id === report.codecId) {
-                            console.log("Active Video Codec:", codecReport.mimeType);
+                            console.info("checkActiveCodec => Active Video Codec:", codecReport.mimeType);
                         }
                     });
                 }
             });
         } catch (error) {
-            console.error("Error fetching codec stats:", error);
+            console.error("checkActiveCodec => Error fetching codec stats:", error);
         }
     }
 
     private async setMaxBitrate() {
-        // Get the RTCPeerConnection instance
-        if (!this._pc) {
-            console.warn("RTCPeerConnection not found.");
-            return;
-        }
-        const promise: Promise<unknown>[] = [];
-        this._pc.getSenders().forEach((sender) => {
-            const parameters = sender.getParameters();
-            parameters.encodings[0].maxBitrate = 1_500_000; // 1.5 Mbps
-            parameters.encodings[0].maxFramerate = 30; // 30 fps
-
-            if (sender.track?.kind === "video") {
-                const params = sender.getParameters();
-                params.encodings.forEach((encoding) => {
-                    encoding.priority = "high"; // Prioriser le partage d’écran
-                });
+        try {
+            // Get the RTCPeerConnection instance
+            const pc = (this as unknown as { _pc: RTCPeerConnection })._pc;
+            if (!pc) {
+                console.warn("RTCPeerConnection not found.");
+                return;
             }
-
-            promise.push(sender.setParameters(parameters));
-        });
-
-        await Promise.all(promise);
+            const promise: Promise<unknown>[] = [];
+            for (const sender of pc.getSenders()) {
+                const parameters = sender.getParameters();
+                for (const encoding of parameters.encodings) {
+                    encoding.scaleResolutionDownBy = 2.0;
+                    encoding.maxBitrate = 1_500_000; // 1.5 Mbps
+                    encoding.maxFramerate = 30; // 30 fps
+                    encoding.priority = "high";
+                    encoding.networkPriority = "high";
+                }
+                console.info(
+                    "setMaxBitrate => Setting max bitrate to 1.5 Mbps and max framerate to 30 fps.",
+                    parameters
+                );
+                promise.push(sender.setParameters(parameters));
+            }
+            await Promise.all(promise);
+        } catch (e) {
+            console.error("setMaxBitrate => Error setting max bitrate:", e);
+        }
     }
 }
