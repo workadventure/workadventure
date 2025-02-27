@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg" xmlns:ns1="http://sozi.baierouge.fr" xmlns:xlink="http://www.w3.org/1999/xlink" id="svg4172" sodipodi:docname="New document 16" version="1.1" inkscape:version="0.48.0 r9654" viewBox="0 0 200 200">
+  <sodipodi:namedview id="base" bordercolor="#666666" inkscape:pageshadow="2" inkscape:guide-bbox="true" pagecolor="#ffffff" inkscape:window-height="823" inkscape:window-maximized="0" inkscape:zoom="2.0925" inkscape:window-x="81" showgrid="false" borderopacity="1.0" inkscape:current-layer="layer1" inkscape:cx="200" inkscape:cy="100" showguides="true" inkscape:window-y="20" inkscape:window-width="1324" inkscape:pageopacity="0.0" inkscape:document-units="px">
+    <sodipodi:guide id="guide5396" position="399.66942,535.53719" orientation="1,0"/>
+    <sodipodi:guide id="guide5398" position="293.55372,398.67769" orientation="0,1"/>
+  </sodipodi:namedview>
+  <g id="layer1" inkscape:label="Layer 1" inkscape:groupmode="layer" transform="translate(0 -852.36)">
+    <g id="g5408" transform="translate(-2.6068 398.07)">
+      
+      <g id="g5368" transform="translate(1.0538 60.717)">
+        <rect id="rect5341" style="color:#ffffff;stroke:#ffffff;fill:#ffffff" transform="rotate(45)" height="116.26" width="33.849" y="269.79" x="402.46"/>
+        <path id="path5343" sodipodi:rx="73.584366" sodipodi:ry="73.584366" style="color:#ffffff;stroke:#ffffff;stroke-width:35;fill:#000000" sodipodi:type="arc" d="m403.24 437.2c0 40.64-32.945 73.584-73.584 73.584-40.64 0-73.584-32.945-73.584-73.584 0-40.64 32.945-73.584 73.584-73.584 40.64 0 73.584 32.945 73.584 73.584z" transform="matrix(.47861 .47861 -.47861 .47861 176.5 100)" sodipodi:cy="437.1969" sodipodi:cx="329.65796"/>
+        <path id="path5345" sodipodi:nodetypes="ccccc" d="m101.28 460.1v13.844l47.5-0.00001-0.00001-13.844z" style="color:#ffffff;stroke:#ffffff;stroke-width:.40877;fill:#ffffff" inkscape:connector-curvature="0"/>
+      </g>
+    </g>
+  </g>
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title>Simple Zoom icons</dc:title>
+        <dc:date>2010-10-01T20:11:26</dc:date>
+        <dc:description>Simple icons for indication of zoom in and out functionality.</dc:description>
+        <dc:source>https://openclipart.org/detail/88045/simple-zoom-icons-by-snifty</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>snifty</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>icon</rdf:li>
+            <rdf:li>magnifying glass</rdf:li>
+            <rdf:li>zoom</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>

@@ -1,0 +1,256 @@
+#chat-aside{
+  left: 0;
+  top: 0;
+  width: 28vw;
+  height: 100vh;
+  display: flex;
+  transform: translateX(-100%);
+  position: fixed;
+  z-index: 820;
+  transition: transform 0.5s;
+  background-color: rgba(10, 9, 9, 0.8);
+}
+
+#chat-aside.opened{
+  visibility: visible;
+  transform: translateX(0);
+}
+
+//@import "fonts";
+//@import "tailwind";
+@import '@workadventure/tailwind/style/index.scss';
+@import "../style/breakpoints.scss";
+
+@include media-breakpoint-up(sm) {
+    .chatWindow {
+        width: 100% !important;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: none;
+}
+::-webkit-scrollbar-thumb {
+    @apply bg-lighter-purple;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:active {
+    @apply bg-light-blue;
+}
+
+.emoji-picker__overlay{
+    background: none!important;
+}
+.emoji-picker__wrapper{
+    bottom: 50px!important;
+    top: auto!important;
+    .emoji-picker{
+        border: none!important;
+    }
+}
+
+.wa-message{
+    .actions{
+        visibility: hidden;
+        justify-content: space-between;
+        .action{
+            cursor: pointer;
+            opacity: 0.8;
+            position: relative;
+            .caption{
+                @apply absolute bg-dark-blue px-2 py-1 rounded-xl border-lighter-purple border border-solid;
+                display: none;
+                top: -32px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                &::before{
+                    @apply absolute border-t-lighter-purple;
+                    left: calc( 50% - 10px );
+                    top: 100.5%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 9px solid transparent;
+                    border-right: 9px solid transparent;
+                    border-top-width: 6px;
+                    border-top-style: solid;
+                }
+                &::after{
+                    @apply absolute border-t-dark-blue;
+                    margin-left: -50%;
+                    top: 100%;
+                    content: '';
+                    width: 0;
+                    height: 0;
+                    border-left: 7px solid transparent;
+                    border-right: 7px solid transparent;
+                    border-top-width: 5px;
+                    border-top-style: solid;
+                }
+            }
+            &:hover{
+                opacity: 1;
+                .caption{
+                    display: block;
+                }
+            }
+        }
+    }
+    &:hover{
+        .actions{
+            visibility: visible;
+        }
+    }
+}
+.wa-message-body{
+    @apply rounded-lg bg-dark text-xs px-3 py-2 text-left;
+    p{
+        @apply whitespace-pre-line;
+        margin: 0;
+        .mention{
+            margin: 0 2px;
+            padding: 0px 4px;
+            background-color: black;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+    }
+
+    .file {
+        @apply mt-1;
+        position: relative;
+        &:hover {
+            .actions {
+                display: flex;
+            }
+        }
+
+        .actions {
+            display: none;
+            position: absolute;
+            top: 0px;
+            padding: 0px;
+            cursor: pointer;
+            flex-direction: column;
+            border-radius: 0.25rem;
+            border-width: 1px;
+            border-style: solid;
+            --border-opacity: 1;
+            border-color: rgb(77 75 103 / var(--border-opacity));
+            background-color: rgb(27 27 41 / 0.95);
+            font-size: 0.75rem;
+            line-height: 1rem;
+            font-weight: 500;
+            color: rgb(255 255 255 / var(--text-opacity));
+            --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-colored: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+            box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);
+            z-index: 1;
+
+            .action {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: 4px;
+                border-radius: 0.15rem;
+
+                & > span {
+                    display: none;
+                }
+
+                &:hover {
+                    --bg-opacity: 1;
+                    background-color: rgb(77 75 103 / var(--bg-opacity));
+                }
+            }
+
+            &:hover {
+                span.action > span {
+                    display: block;
+                }
+            }
+        }
+
+        .other-content {
+            @apply p-0.5 cursor-pointer rounded mr-0.5;
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            --bg-opacity: 1;
+            border: solid 1px rgb(77 75 103 / var(--bg-opacity));
+            &:hover {
+                background-color: rgb(77 75 103 / var(--bg-opacity));
+            }
+            .icon{
+            }
+        }
+
+        audio {
+            max-width: 100%;
+        }
+    }
+}
+
+.selected {
+    .wa-message{
+        &::after{
+            @apply animate-ping;
+        }
+    }
+}
+
+.chatWindow nav{
+    @apply bg-dark-purple p-1 mx-3 mb-1 rounded-2xl border-solid border border-light-purple relative;
+    width: calc( 100% - 65px );
+}
+.chatWindow nav .background{
+    @apply rounded-xl transition-transform transform bg-light-blue absolute;
+    height: 26px;
+    width: 48.5%;
+}
+.chatWindow nav .background.chat{
+    @apply translate-x-full;
+}
+.chatWindow nav .background.hidden{
+    //@apply hidden;
+    display: none;
+}
+.chatWindow nav ul{
+    @apply flex list-none justify-between w-full p-0 m-0;
+}
+.chatWindow nav ul li{
+    @apply text-center rounded font-bold transition-transform transform cursor-pointer rounded-2xl;
+    padding: 1px 0;
+    width: 48.5%;
+}
+.chatWindow nav ul li:not(.active):hover{
+    background-color: rgba(146, 142, 187, .3);
+}
+
+.chatWindow nav ul li.active{
+    @apply text-black cursor-default;
+}
+
+.chatWindow {
+    color: white;
+    position: absolute !important;
+    top: 0;
+    min-width: 335px !important;
+    width: 335px;
+    pointer-events: auto;
+    height: 100dvh !important;
+    z-index: 2000;
+    .close-window {
+        cursor: pointer;
+    }
+}
+
+.server-icon.sync:after {
+    content: "";
+    @apply absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full;
+}

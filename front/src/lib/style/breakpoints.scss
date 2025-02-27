@@ -1,0 +1,102 @@
+@use "sass:map";
+
+// If you modify this breakpoints don't forget to change it also in TS utils.
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+);
+
+@function get-upper-breakpoint($breakpoint) {
+    @return map-get((
+        xs: map.get($grid-breakpoints, "sm"),
+        sm: map.get($grid-breakpoints, "md"),
+        md: map.get($grid-breakpoints, "lg"),
+        lg: map.get($grid-breakpoints, "xl"),
+        xl: map.get($grid-breakpoints, "xxl"),
+        xxl: null,
+    ), $breakpoint);
+}
+
+@function get-under-breakpoint($breakpoint) {
+    @return map-get((
+        xs: null,
+        sm: map.get($grid-breakpoints, "xs"),
+        md: map.get($grid-breakpoints, "sm"),
+        lg: map.get($grid-breakpoints, "md"),
+        xl: map.get($grid-breakpoints, "lg"),
+        xxl: map.get($grid-breakpoints, "xl"),
+    ), $breakpoint);
+}
+
+@mixin media-breakpoint-up($upTo) {
+    @if $upTo == 'xxl' {
+        @media only screen {
+            @content;
+        }
+    } @else {
+        $value: get-upper-breakpoint($upTo);
+
+        @if $value != null {
+            $value: $value - 1px;
+            @media only screen and (max-width: $value) {
+                @content;
+            }
+        }
+    }
+}
+
+@mixin media-breakpoint-down($downFrom) {
+    @if $downFrom == 'xs' {
+        @media only screen {
+            @content;
+        }
+    } @else {
+        $value: map.get($grid-breakpoints, $downFrom);
+
+        @if $value != null {
+            @media only screen and (min-width: $value) {
+                @content;
+            }
+        }
+    }
+}
+
+@mixin media-breakpoint-only($only) {
+    $maxValue: get-upper-breakpoint($only);
+    $minValue: map.get($grid-breakpoints, $only);
+
+    @if $minValue == null {
+
+    } @else if $maxValue != null {
+        $maxValue: $maxValue - 1px;
+        @media only screen and (min-width: $minValue) and (max-width: $maxValue) {
+            @content;
+        }
+    } @else {
+        @media only screen and (min-width: $minValue) {
+            @content;
+        }
+    }
+}
+
+@mixin media-breakpoint-between($start, $end) {
+    $maxValue: get-upper-breakpoint($end);
+    $minValue: map.get($grid-breakpoints, $start);
+
+    @if $minValue == null {
+
+    } @else if $maxValue != null {
+        $maxValue: $maxValue - 1px;
+        @media only screen and (min-width: $minValue) and (max-width: $maxValue) {
+            @content;
+        }
+    } @else {
+        @media only screen and (min-width: $minValue) {
+            @content;
+        }
+    }
+}

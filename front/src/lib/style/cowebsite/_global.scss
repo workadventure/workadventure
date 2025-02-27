@@ -1,0 +1,139 @@
+#cowebsite {
+    @apply bg-dark-blue/50 backdrop-blur;
+    position: fixed;
+    z-index: 820;
+    transition: transform 0.5s;
+    display: none;
+
+    #cowebsite-slot-main #custom-logo {
+        max-width: 30%;
+    }
+
+    main {
+        iframe {
+            width: 100%;
+            height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+    }
+
+    aside {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+
+        #cowebsite-aside-holder {
+            height: 20px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 16px 0;
+            &:hover {
+                @apply bg-contrast/80;
+            }
+
+            img {
+                width: 80%;
+                pointer-events: none;
+            }
+        }
+
+        #cowebsite-aside-buttons {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: auto;
+            flex: 1;
+            justify-content: flex-start;
+
+            img {
+                @apply h-9 w-9;
+            }
+
+            #cowebsite-swipe {
+                display: none;
+                img {
+                    transform: rotate(0deg) scale(0.5) !important;
+                }
+            }
+        }
+
+        .top-right-btn {
+            @apply w-11 h-11 justify-center content-center;
+            transform: scale(0.5);
+            cursor: pointer;
+        }
+
+        #cowebsite-other-actions {
+            display: flex;
+            margin-top: auto;
+            visibility: hidden;
+            justify-content: flex-end;
+            flex: 1;
+        }
+    }
+
+    &-loader {
+        width: 20%;
+        display: none;
+
+        #smoke {
+            @for $i from 1 through 3 {
+                #trail-#{$i} {
+                    @for $y from 1 through 3 {
+                        #trail-#{$i}-state-#{$y} {
+                            visibility: hidden;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &-slot-main {
+        z-index: 70 !important;
+        background-color: rgba(10, 9, 9, 0);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &-buffer {
+        iframe {
+            z-index: 201 !important;
+            pointer-events: none !important;
+            overflow: hidden;
+            border: 0;
+            position: absolute;
+
+            &.pixel {
+                height: 1px !important;
+                width: 1px !important;
+            }
+        }
+
+        .main {
+            pointer-events: all !important;
+            z-index: 821 !important;
+        }
+
+        .highlighted {
+            pointer-events: all !important;
+            padding: 4px;
+            z-index: 149 !important;
+        }
+
+        .thumbnail {
+            transform: scale(0.5, 0.5);
+        }
+    }
+
+    .pixel {
+        visibility: hidden;
+        height: 1px;
+        width: 1px;
+    }
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="available-circle" width="16" height="16">
+    <circle id="green_circle" fill="#64dd17" cx="8" cy="8" r="8" />
+</svg>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <g id="grip-solid-horizontal">
+    <path class="cls-1" d="M480,448H32c-17.7,0-32-14.3-32-32s14.3-32,32-32h448c17.7,0,32,14.3,32,32,0,17.7-14.3,32-32,32Z"/>
+    <path class="cls-1" d="M480,288H32c-17.7,0-32-14.3-32-32s14.3-32,32-32h448c17.7,0,32,14.3,32,32s-14.3,32-32,32Z"/>
+    <path class="cls-1" d="M480,128H32C14.3,128,0,113.7,0,96s14.3-32,32-32h448c17.7,0,32,14.3,32,32s-14.3,32-32,32Z"/>
+  </g>
+</svg>
