@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { createPopperActions } from "svelte-popperjs";
+    // import { createPopperActions } from "svelte-popperjs";
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -17,20 +17,15 @@
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
     // $: showTooltip = false;
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "left",
-    });
+
+    // const [popperRef, popperContent] = createPopperActions({
+    //     placement: "left",
+    //
+    // });
 
     // const extraOpts = {
     //     modifiers: [
-    //         { name: "offset", options: { offset: [0, 14] } },
-    //         {
-    //             name: "popper-arrow",
-    //             options: {
-    //                 element: ".popper-arrow",
-    //                 padding: 12,
-    //             },
-    //         },
+    //         { name: "offset", options: { offset: [0, 18] } },
     //     ],
     // };
 
@@ -70,6 +65,8 @@
         });
         availableTools.push(trashEditorTool);
     }
+
+    // const popperActions = availableTools.map(() => createPopperActions({ placement: "left" }));
 
     function switchTool(newTool: EditorToolName) {
         // The map sidebar is opened when the user clicks on the explorer for the first time.
@@ -134,8 +131,9 @@
             </button>
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
-            {#each availableTools as tool (tool.toolName)}
-                <div class="tool-button" use:popperRef>
+            {#each availableTools as tool, i (tool.toolName)}
+                <!--            <div class="tool-button" use:popperRef={popperActions[i][0]}>-->
+                <div class="tool-button">
                     <button
                         class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
                             ? 'bg-secondary'
@@ -147,14 +145,10 @@
                     >
                         <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
                     </button>
-                    <!--                    TODO: add tooltip with popover-->
-                    <!--                    <Tooltip text={tool.tooltiptext}  />-->
-                    <div
-                        use:popperContent
-                        class="tooltip bg-contrast/80 backdrop-blur rounded-md p-1 text-white text-xs text-nowrap "
-                    >
-                        {tool.tooltiptext}
-                    </div>
+                    <!--                    <div-->
+                    <!--                            use:popperContent={extraOpts}-->
+                    <!--                            class="tooltip popper-tooltip bg-contrast/80 backdrop-blur rounded p-2 text-white text-sm text-nowrap"-->
+                    <!--                    >-->
                 </div>
             {/each}
         </div>

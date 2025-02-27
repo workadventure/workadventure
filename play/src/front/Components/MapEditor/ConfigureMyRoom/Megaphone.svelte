@@ -91,7 +91,7 @@
     }
 </script>
 
-<div class="flex flex-wrap gap-x-4 items-center h-fit">
+<div class="flex flex-wrap gap-x-4 items-center h-fit [& > *]:w-full">
     <InputSwitch
         id="megaphone"
         label={$LL.mapEditor.settings.megaphone.title()}

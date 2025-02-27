@@ -27,7 +27,12 @@
     }
 </script>
 
-<button type="button" class="btn btn-secondary w-full" on:click={click} disabled={state !== "ready"}>
+<button
+    type="button"
+    class="{state} btn btn-secondary w-full button-state"
+    on:click={click}
+    disabled={state !== "ready"}
+>
     {#if state === "ready"}
         {initialText}
     {:else if state === "loading"}

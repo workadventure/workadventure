@@ -49,7 +49,7 @@
         {/if}
     </div>
 
-    <div class="relative flex grow">
+    <div class="relative flex flex-col grow">
         {#if type === "text"}
             <input
                 id={uniqueId}
