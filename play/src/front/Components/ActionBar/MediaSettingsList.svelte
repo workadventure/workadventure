@@ -24,6 +24,9 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
+    import CamOnIcon from "../Icons/CamOnIcon.svelte";
+    import MicOnIcon from "../Icons/MicOnIcon.svelte";
+    import HeadphonesIcon from "../Icons/HeadphonesIcon.svelte";
 
     export let mediaSettingsDisplayed = false;
 
@@ -75,16 +78,16 @@
     in:fly={{ y: 40, duration: 150 }}
     use:clickOutside={() => dispatch("close")}
 >
-    <div class="flex flex-col overflow-auto space-y-2 p-1" style="max-height: calc(100vh - 160px);">
+    <div class="flex flex-col overflow-auto gap-2 p-1" style="max-height: calc(100vh - 160px);">
         {#if $requestedCameraState && $cameraListStore && $cameraListStore.length >= 1}
             <div class="flex flex-col gap-1">
-                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.camera()}
                 </div>
                 {#each $cameraListStore as camera, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedCameraDeviceIdStore ===
+                        class="cursor-pointer group flex items-center relative z-10 p-1 overflow-hidden rounded {$usedCameraDeviceIdStore ===
                         camera.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
@@ -93,11 +96,18 @@
                         }}
                         on:click|stopPropagation|preventDefault={() => selectCamera(camera.deviceId)}
                     >
+                        {#if $usedCameraDeviceIdStore === camera.deviceId}
+                            <div class="h-full aspect-square flex items-center justify-center rounded-md mr-2">
+                                <CamOnIcon fillColor="fill-white" />
+                            </div>
+                        {/if}
+
                         <div
                             class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore ===
                             camera.deviceId
                                 ? 'opacity-100'
                                 : 'opacity-80 group-hover:opacity-100'}"
+                            title={StringUtils.normalizeDeviceName(camera.label)}
                         >
                             {StringUtils.normalizeDeviceName(camera.label)}
                         </div>
@@ -136,6 +146,9 @@
                 </div>
             </div>
         {/if}
+        <div class="w-full z-10 flex items-center">
+            <div class="bg-white/10 w-full h-[1px] " />
+        </div>
         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
             <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
@@ -144,7 +157,7 @@
                 {#each $microphoneListStore as microphone, index (index)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
-                        class="cursor-pointer group flex items-center relative z-10 py-1 px-2 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
+                        class="cursor-pointer group flex items-center relative z-10 p-1 overflow-hidden rounded {$usedMicrophoneDeviceIdStore ===
                         microphone.deviceId
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
@@ -153,6 +166,11 @@
                         }}
                         on:click|stopPropagation|preventDefault={() => selectMicrophone(microphone.deviceId)}
                     >
+                        {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
+                            <div class="h-full aspect-square flex items-center justify-center rounded-md mr-2">
+                                <MicOnIcon hover="fill-white" />
+                            </div>
+                        {/if}
                         <div
                             class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore ===
                             microphone.deviceId
@@ -178,7 +196,7 @@
             </div>
         {:else}
             <div class="flex flex-col gap-1">
-                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-2 relative bold">
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
                 </div>
                 <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
@@ -197,9 +215,12 @@
                 </div>
             </div>
         {/if}
+        <div class="w-full z-10 flex items-center">
+            <div class="bg-white/10 w-full h-[1px] " />
+        </div>
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
             <div class="flex flex-col gap-1">
-                <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.speaker()}
                 </div>
                 {#each $speakerListStore as speaker, index (index)}
@@ -214,6 +235,11 @@
                         }}
                         on:click|stopPropagation|preventDefault={() => selectSpeaker(speaker.deviceId)}
                     >
+                        {#if $speakerSelectedStore === speaker.deviceId}
+                            <div class="h-full aspect-square flex items-center justify-center rounded-md mr-2">
+                                <HeadphonesIcon hover="fill-white" />
+                            </div>
+                        {/if}
                         <div
                             class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore ===
                             speaker.deviceId
