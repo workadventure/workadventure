@@ -915,6 +915,7 @@ export class GameMapPropertiesListener {
         }
         */
 
+        popupStore.removePopup(actionTriggerUuid);
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));
     }
 

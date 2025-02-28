@@ -19,7 +19,7 @@
 <PopUpContainer>
     {message}
     <svelte:fragment slot="buttons">
-        <button class="btn btn-secondary w-1/2 justify-center responsive-message" on:click={click}>Close</button>
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}>Open Website</button>
     </svelte:fragment>
 </PopUpContainer>
 
