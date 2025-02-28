@@ -94,7 +94,7 @@
             {/if}
         </div>
     {/if}
-        <!--If we have a video to display-->
+    <!--If we have a video to display-->
     {#if !$silentStore}
         {#if $localStreamStore.type === "success" && !$inExternalServiceStore}
             {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
@@ -111,7 +111,9 @@
                         : 'media-box-micropohone-off'}"
                     style="background-image: url({loaderImg})"
                 >
-                    <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">
+                    <div
+                        class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10"
+                    >
                         {$LL.camera.my.loading()}
                     </div>
                     <video
