@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {fly} from "svelte/transition";
+    import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
 </script>
 
