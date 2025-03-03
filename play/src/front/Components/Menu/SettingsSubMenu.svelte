@@ -22,9 +22,9 @@
     import RangeSlider from "../Input/RangeSlider.svelte";
     import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
-    import IconTablerAntennaBars from "../Icons/IconTablerAntennaBars.svelte";
-    import IconTablerAntennaBars2 from "../Icons/IconTablerAntennaBars2.svelte";
-    import IconTablerAntennaBars3 from "../Icons/IconTablerAntennaBars3.svelte";
+    import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
+    import TablerAntennaBars2Icon from "../Icons/TablerAntennaBars2Icon.svelte";
+    import TablerAntennaBars3Icon from "../Icons/TablerAntennaBars3Icon.svelte";
     import AdjustmentsIcon from "../Icons/AdjustmentsIcon.svelte";
     import LanguageIcon from "../Icons/LanguageIcon.svelte";
     import DoorArrowRightIcon from "../Icons/DoorArrowRightIcon.svelte";
@@ -210,7 +210,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars />
+                        <TablerAntennaBarsIcon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 1)}
@@ -222,7 +222,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars2 />
+                        <TablerAntennaBars2Icon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 2)}
@@ -234,7 +234,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars3 />
+                        <TablerAntennaBars3Icon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 3)}
@@ -267,7 +267,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars />
+                        <TablerAntennaBarsIcon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
@@ -279,7 +279,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars2 />
+                        <TablerAntennaBars2Icon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
@@ -291,7 +291,7 @@
                             ? 'opacity-100 font-bold'
                             : 'opacity-50 hover:opacity-80'}"
                     >
-                        <IconTablerAntennaBars3 />
+                        <TablerAntennaBars3Icon />
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
