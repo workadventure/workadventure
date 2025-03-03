@@ -302,11 +302,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // add property Google Docs
         await EntityEditor.addProperty(page, "Open Google Docs");
@@ -344,7 +344,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // check if the popup with application is opened and can be close
         await expect(page.getByRole('button', { name: 'Open Google Drive' })).toBeVisible();
@@ -367,11 +367,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // add property Klaxoon
         await EntityEditor.addProperty(page, "Open Klaxoon");
@@ -383,7 +383,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // check if the popup with application is opened and can be closed
         await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();

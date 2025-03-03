@@ -118,7 +118,7 @@
         />
     </div>
 {:else}
-    <div>
+    <div class="no-padding">
         <p class="m-0">{$LL.mapEditor.entityEditor.uploadEntity.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.entityEditor.uploadEntity.description()}</p>
         <div

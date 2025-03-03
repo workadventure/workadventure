@@ -53,6 +53,7 @@ test.describe("Map editor area with rights @oidc", () => {
       ["admin"],
       ["admin"]
     );
+    await page.pause();
     await Menu.closeMapEditor(page);
     const anonymLoginPromise = page.waitForResponse(
       (response) =>
@@ -338,7 +339,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
@@ -384,7 +385,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
@@ -431,7 +432,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,

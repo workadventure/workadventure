@@ -18,6 +18,7 @@
     export let onKeyPress = () => {};
     export let optional = false;
     export let isValid = true;
+    export let rounded = false;
 
     const SLOTS = $$slots;
 
@@ -48,7 +49,7 @@
         {/if}
     </div>
 
-    <div class="relative flex grow">
+    <div class="relative flex flex-col grow">
         {#if type === "text"}
             <input
                 id={uniqueId}
@@ -61,6 +62,7 @@
                 class:input-text-lg={size === "lg"}
                 class:error={status === "error"}
                 class:success={status === "success"}
+                class:rounded-full={rounded}
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}

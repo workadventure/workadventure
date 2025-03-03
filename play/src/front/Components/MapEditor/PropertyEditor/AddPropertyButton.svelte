@@ -11,7 +11,8 @@
 </script>
 
 <button
-    class="add-property-button tooltip p-4 flex justify-center items-center"
+    class="add-property-button tooltip p-3 flex justify-center items-center
+    border border-solid border-white/25 text-gray-500 rounded-lg relative  flex-col m-[0.25rem_0.125rem]"
     data-testid={testId}
     {style}
     on:click={() => {
@@ -20,10 +21,10 @@
     }}
     {disabled}
 >
-    <div class="w-10 h-10 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
+    <div class="w-8 h-8 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
         <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
-    <span class="tooltiptext text-xs">
+    <span class="tooltiptext text-xs bg-contrast text-white">
         <p class="text-sm mb-2">{headerText}</p>
         {descriptionText}
     </span>
@@ -41,12 +42,8 @@
         bottom: 100%;
         align-items: center;
         border-radius: 0.25rem;
-        --tw-bg-opacity: 1;
-        background-color: rgb(56 56 74 / var(--tw-bg-opacity));
         padding: 1.25rem 0.75rem;
         text-align: center;
-        --tw-text-opacity: 1;
-        color: rgb(255 255 255 / var(--tw-text-opacity));
     }
 
     .tooltip:hover .tooltiptext {
@@ -65,18 +62,7 @@
     }
 
     .add-property-button {
-        --border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--border-opacity));
-        --bg-opacity: 1;
-        background-color: rgb(27 27 41 / var(--bg-opacity));
-        --text-opacity: 1;
-        color: gray;
-        border-radius: 10px;
-        position: relative;
         display: flex;
-        flex-direction: column;
-        margin: 0.25rem 0.125rem;
-
         .tooltiptext {
             top: 100%;
             bottom: 0;
