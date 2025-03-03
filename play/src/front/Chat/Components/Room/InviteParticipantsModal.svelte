@@ -12,7 +12,7 @@
     export let isOpen: boolean;
     export let room: ChatRoom;
 
-    const { searchMembers } = searchChatMembersRule();
+    const { searchWorldMembers } = searchChatMembersRule();
 
     let invitations: { value: string; label: string }[] = [];
 
@@ -76,7 +76,7 @@
                 --item-color="black"
                 --item-hover-color="black"
                 --clear-select-color="red"
-                loadOptions={searchMembers}
+                loadOptions={searchWorldMembers}
                 placeholder={$LL.chat.createRoom.users()}
             >
                 <div slot="item" let:item>

@@ -19,7 +19,7 @@
 
     const chat = gameManager.chatConnection;
 
-    const { searchMembers } = searchChatMembersRule();
+    const { searchWorldMembers } = searchChatMembersRule();
 
     let loadingRoomCreation = false;
 
@@ -140,7 +140,7 @@
                 --item-color="black"
                 --item-hover-color="black"
                 --clear-select-color="red"
-                loadOptions={searchMembers}
+                loadOptions={searchWorldMembers}
                 placeholder={$LL.chat.createRoom.users()}
             >
                 <div slot="item" let:item>
