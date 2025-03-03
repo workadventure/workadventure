@@ -33,6 +33,7 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    addNew: "Add new : ",
     invitations: "Invitations",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
@@ -254,6 +255,9 @@ const chat: BaseTranslation = {
         ban: "Banned",
         kick: "Kicked",
         leave: "Leaved",
+        membership: "Membership",
+        permissionLevel: "Roles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Send invitations",
             cancel: "Cancel",

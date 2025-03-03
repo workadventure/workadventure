@@ -145,6 +145,7 @@ export interface ChatConnectionInterface {
     hasUnreadMessages: Readable<boolean>;
     clearListener: () => void;
     directRoomsUsers: Readable<ChatUser[]>;
+    isUserExist: (address: string) => Promise<boolean>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;
