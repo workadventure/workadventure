@@ -1,7 +1,9 @@
 import fs from "fs";
-import type { Server } from "hyper-express";
-import HyperExpress from "hyper-express";
+import express, { Application } from "express";
+import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
+import cors from "cors";
+import uWebsockets from "uWebSockets.js";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -11,8 +13,7 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import { cors } from "./middlewares/Cors";
-import { ENABLE_OPENAPI_ENDPOINT, PROMETHEUS_PORT } from "./enums/EnvironmentVariable";
+import { ALLOWED_CORS_ORIGIN, ENABLE_OPENAPI_ENDPOINT, PROMETHEUS_PORT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
@@ -23,22 +24,42 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LiveDirectory = require("live-directory");
 
 class App {
-    private app: HyperExpress.compressors.TemplatedApp;
-    private webserver: Server;
-    private prometheusWebserver: Server | undefined;
+    private readonly app: Application;
+    private readonly websocketApp: uWebsockets.TemplatedApp;
+    private readonly prometheusWebserver: Application | undefined;
 
     constructor() {
-        this.webserver = new HyperExpress.Server();
-        this.app = this.webserver.uws_instance;
+        this.websocketApp = uWebsockets.App();
+        this.app = express();
+
+        this.app.use(express.json());
+        this.app.use(express.urlencoded());
+        // It seems the cookieParser type is not yet compatible with express 5
+        //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        this.app.use(cookieParser());
 
         // Global middlewares
-        this.webserver.use(cors);
+        this.app.use(
+            cors({
+                origin: ALLOWED_CORS_ORIGIN,
+                methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+                allowedHeaders: [
+                    "Content-Type",
+                    "Authorization",
+                    "Origin",
+                    "X-Requested-With",
+                    "Accept",
+                    "Pragma",
+                    "Cache-Control",
+                ],
+                credentials: true,
+            })
+        );
 
-        this.webserver.set_error_handler(globalErrorHandler);
+        //this.app.set_error_handler(globalErrorHandler);
 
         let path: string;
         if (fs.existsSync("dist/public")) {
@@ -51,64 +72,95 @@ class App {
             throw new Error("Could not find public folder");
         }
 
-        /**
-         * Todo: Replace this lib by the embed static middleware of HyperExpress
-         *       when the v3.0 will be released.
-         */
-        const liveAssets = new LiveDirectory({
-            path,
-            keep: {
-                extensions: [
-                    ".css",
-                    ".js",
-                    ".png",
-                    ".svg",
-                    ".ico",
-                    ".xml",
-                    ".mp3",
-                    ".json",
-                    ".html",
-                    ".ttf",
-                    ".woff2",
-                    ".map",
-                    ".gif",
-                ],
-            },
-            hot_reload: process.env.NODE_ENV !== "production",
-        });
-
-        liveAssets.ready().then(() => {
-            console.info("All static assets have been loaded!");
-        });
-
         // Socket controllers
-        new IoSocketController(this.app);
+        new IoSocketController(this.websocketApp);
 
         // Http controllers
-        new AuthenticateController(this.webserver);
-        new MapController(this.webserver);
+        new AuthenticateController(this.app);
+        new MapController(this.app);
         if (PROMETHEUS_PORT) {
-            this.prometheusWebserver = new HyperExpress.Server();
+            this.prometheusWebserver = express();
             new PrometheusController(this.prometheusWebserver);
         } else {
-            new PrometheusController(this.webserver);
+            new PrometheusController(this.app);
         }
-        new DebugController(this.webserver);
-        new AdminController(this.webserver);
-        new OpenIdProfileController(this.webserver);
-        new PingController(this.webserver);
+        new DebugController(this.app);
+        new AdminController(this.app);
+        new OpenIdProfileController(this.app);
+        new PingController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
-            new SwaggerController(this.webserver);
+            new SwaggerController(this.app);
         }
-        new FrontController(this.webserver, liveAssets);
-        new UserController(this.webserver);
-        new MatrixRoomAreaController(this.webserver);
+        new FrontController(this.app);
+        new UserController(this.app);
+        new MatrixRoomAreaController(this.app);
+
+        const staticOptions = {
+            extensions: [
+                ".css",
+                ".js",
+                ".png",
+                ".svg",
+                ".ico",
+                ".xml",
+                ".mp3",
+                ".json",
+                ".html",
+                ".ttf",
+                ".woff2",
+                ".map",
+                ".gif",
+            ],
+            etag: true,
+            maxAge: "15d",
+        };
+
+        this.app.use(
+            "assets",
+            express.static(path + "/assets", {
+                ...staticOptions,
+                maxAge: "1y",
+            })
+        );
+
+        this.app.use(
+            "resources",
+            express.static(path + "/resources", {
+                ...staticOptions,
+                maxAge: "1d",
+            })
+        );
+
+        this.app.use(
+            "static",
+            express.static(path + "/static", {
+                ...staticOptions,
+                maxAge: "1d",
+            })
+        );
+
+        this.app.use(
+            "collections",
+            express.static(path + "/collections", {
+                ...staticOptions,
+                maxAge: "1d",
+            })
+        );
+
+        this.app.use(
+            express.static(path, {
+                ...staticOptions,
+                maxAge: "1h",
+            })
+        );
+
+        this.app.use(globalErrorHandler);
     }
 
     public async init() {
-        const companionListController = new CompanionListController(this.webserver, jwtTokenManager);
-        const wokaListController = new WokaListController(this.webserver, jwtTokenManager);
+        const companionListController = new CompanionListController(this.app, jwtTokenManager);
+        const wokaListController = new WokaListController(this.app, jwtTokenManager);
 
         try {
             const capabilities = await adminApi.initialise();
@@ -120,15 +172,46 @@ class App {
         }
     }
 
-    public listen(port: number, host?: string): Promise<HyperExpress.compressors.us_listen_socket | string> {
-        return this.webserver.listen(port, host);
+    public listenWebServer(port: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.app.listen(port, (err) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve();
+            });
+        });
     }
 
-    public listenPrometheusPort(): Promise<HyperExpress.compressors.us_listen_socket | string> | undefined {
-        if (PROMETHEUS_PORT && this.prometheusWebserver) {
-            return this.prometheusWebserver.listen(PROMETHEUS_PORT);
-        }
-        return;
+    public listenWebSocket(port: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.websocketApp.listen(port, (token) => {
+                if (token) {
+                    resolve();
+                } else {
+                    reject(new Error(`Error starting WorkAdventure Pusher on port ${port}!`));
+                }
+            });
+        });
+    }
+
+    public listenPrometheusPort(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (PROMETHEUS_PORT && this.prometheusWebserver) {
+                this.prometheusWebserver.listen(PROMETHEUS_PORT, (err) => {
+                    if (err) {
+                        console.error(err);
+                        Sentry.captureException(err);
+                        reject(err);
+                        return;
+                    }
+                    console.info(`WorkAdventure Prometheus web-server started on port ${PROMETHEUS_PORT}!`);
+                    resolve();
+                });
+            }
+            return;
+        });
     }
 }
 
