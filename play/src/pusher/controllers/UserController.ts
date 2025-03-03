@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Request } from "hyper-express";
-import { Response } from "hyper-express";
+import type { Request } from "express";
+import { Response } from "express";
 import { adminService } from "../services/AdminService";
 import { validatePostQuery } from "../services/QueryValidator";
 import { authenticated, ResponseWithUserIdentifier } from "../middlewares/Authenticated";
@@ -51,14 +51,12 @@ export class UserController extends BaseHttpController {
      */
     private saveName(): void {
         this.app.options("/save-name", (req: Request, res: Response) => {
-            res.atomic(() => {
-                res.status(200).send("");
-            });
+            res.status(200).send("");
             return;
         });
 
         this.app.post("/save-name", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
-            const body = await validatePostQuery(
+            const body = validatePostQuery(
                 req,
                 res,
                 z.object({
@@ -81,9 +79,7 @@ export class UserController extends BaseHttpController {
                 await adminService.saveName(res.userIdentifier, body.name, body.roomUrl);
             }
 
-            res.atomic(() => {
-                res.status(204).send("");
-            });
+            res.status(204).send("");
             return;
         });
     }
@@ -127,14 +123,12 @@ export class UserController extends BaseHttpController {
      */
     private saveTextures(): void {
         this.app.options("/save-textures", (req: Request, res: Response) => {
-            res.atomic(() => {
-                res.status(200).send("");
-            });
+            res.status(200).send("");
             return;
         });
 
         this.app.post("/save-textures", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
-            const body = await validatePostQuery(
+            const body = validatePostQuery(
                 req,
                 res,
                 z.object({
@@ -157,9 +151,7 @@ export class UserController extends BaseHttpController {
                 await adminService.saveTextures(res.userIdentifier, body.textures, body.roomUrl);
             }
 
-            res.atomic(() => {
-                res.status(204).send("");
-            });
+            res.status(204).send("");
             return;
         });
     }
@@ -201,9 +193,7 @@ export class UserController extends BaseHttpController {
      */
     private saveCompanionTexture(): void {
         this.app.options("/save-companion-texture", (req: Request, res: Response) => {
-            res.atomic(() => {
-                res.status(200).send("");
-            });
+            res.status(200).send("");
             return;
         });
 
@@ -211,7 +201,7 @@ export class UserController extends BaseHttpController {
             "/save-companion-texture",
             [authenticated],
             async (req: Request, res: ResponseWithUserIdentifier) => {
-                const body = await validatePostQuery(
+                const body = validatePostQuery(
                     req,
                     res,
                     z.object({
@@ -234,9 +224,7 @@ export class UserController extends BaseHttpController {
                     await adminService.saveCompanionTexture(res.userIdentifier, body.texture, body.roomUrl);
                 }
 
-                res.atomic(() => {
-                    res.status(204).send("");
-                });
+                res.status(204).send("");
                 return;
             }
         );

@@ -1,5 +1,4 @@
 import Debug from "debug";
-import type { compressors } from "hyper-express";
 import {
     AddSpaceFilterMessage,
     AdminMessage,
@@ -52,6 +51,7 @@ import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
 import { applyFieldMask } from "protobuf-fieldmask";
 import merge from "lodash/merge";
+import { WebSocket } from "uWebSockets.js";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
@@ -72,9 +72,9 @@ import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
 
-export type AdminSocket = compressors.WebSocket<AdminSocketData>;
-export type Socket = compressors.WebSocket<SocketData>;
-export type SocketUpgradeFailed = compressors.WebSocket<UpgradeFailedData>;
+export type AdminSocket = WebSocket<AdminSocketData>;
+export type Socket = WebSocket<SocketData>;
+export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();

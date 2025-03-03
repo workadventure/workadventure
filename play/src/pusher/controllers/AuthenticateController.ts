@@ -5,7 +5,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
 import Mustache from "mustache";
-import type { Server } from "hyper-express";
+import { Application } from "express";
 import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
@@ -18,7 +18,7 @@ import { BaseHttpController } from "./BaseHttpController";
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;
     private readonly redirectToPlayFile: string;
-    constructor(app: Server) {
+    constructor(app: Application) {
         super(app);
 
         let redirectToMatrixPath: string;
@@ -111,22 +111,18 @@ export class AuthenticateController extends BaseHttpController {
             const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
-                res.atomic(() => {
-                    res.status(403);
-                    res.send("Unauthorized domain in playUri");
-                });
+                res.status(403);
+                res.send("Unauthorized domain in playUri");
                 return;
             }
 
             const loginUri = await openIDClient.authorizationUrl(res, query.playUri, req, query.manuallyTriggered);
-            res.atomic(() => {
-                res.cookie("playUri", query.playUri, undefined, {
-                    httpOnly: true, // dont let browser javascript access cookie ever
-                    secure: req.secure, // only use cookie over https
-                });
-
-                res.redirect(loginUri);
+            res.cookie("playUri", query.playUri, {
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
+
+            res.redirect(loginUri);
             return;
         });
     }
@@ -168,7 +164,7 @@ export class AuthenticateController extends BaseHttpController {
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
-            const IPAddress = req.header("x-forwarded-for");
+            const IPAddress = req.header("x-forwarded-for") ?? "";
             const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;
@@ -196,43 +192,37 @@ export class AuthenticateController extends BaseHttpController {
                 );
 
                 if (resUserData.status === "error") {
-                    res.atomic(() => {
-                        res.json(resUserData);
-                    });
+                    res.json(resUserData);
                     return;
                 }
 
                 if (authTokenData.accessToken == undefined) {
                     //if not nonce and code, anonymous user connected
                     //get data with identifier and return token
-                    res.atomic(() => {
-                        res.json({
-                            authToken: token,
-                            username: authTokenData?.username,
-                            locale: authTokenData?.locale,
-                            // TODO: replace ... with each property
-                            ...resUserData,
-                            matrixUserId: authTokenData?.matrixUserId,
-                            matrixServerUrl: MATRIX_PUBLIC_URI,
-                        } satisfies MeResponse);
-                    });
+                    res.json({
+                        authToken: token,
+                        username: authTokenData?.username,
+                        locale: authTokenData?.locale,
+                        // TODO: replace ... with each property
+                        ...resUserData,
+                        matrixUserId: authTokenData?.matrixUserId,
+                        matrixServerUrl: MATRIX_PUBLIC_URI,
+                    } satisfies MeResponse);
                     return;
                 }
 
                 try {
                     const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                    res.atomic(() => {
-                        res.json({
-                            username: authTokenData?.username,
-                            authToken: token,
-                            locale: authTokenData?.locale,
-                            matrixUserId: authTokenData?.matrixUserId,
-                            matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
-                            // TODO: replace ... with each property
-                            ...resUserData,
-                            ...resCheckTokenAuth,
-                        } satisfies MeResponse);
-                    });
+                    res.json({
+                        username: authTokenData?.username,
+                        authToken: token,
+                        locale: authTokenData?.locale,
+                        matrixUserId: authTokenData?.matrixUserId,
+                        matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                        // TODO: replace ... with each property
+                        ...resUserData,
+                        ...resCheckTokenAuth,
+                    } satisfies MeResponse);
                 } catch (err) {
                     console.warn("Error while checking token auth", err);
                     throw new JsonWebTokenError("Invalid token");
@@ -240,10 +230,8 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             } catch (err) {
                 if (err instanceof JsonWebTokenError) {
-                    res.atomic(() => {
-                        res.status(401);
-                        res.send("Invalid token");
-                    });
+                    res.status(401);
+                    res.send("Invalid token");
                     return;
                 }
 
@@ -298,10 +286,8 @@ export class AuthenticateController extends BaseHttpController {
                 //if no access on openid provider, return error
                 Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
-                res.atomic(() => {
-                    res.status(500);
-                    res.send("An error occurred while connecting to OpenID Provider");
-                });
+                res.status(500);
+                res.send("An error occurred while connecting to OpenID Provider");
                 return;
             }
             const email = userInfo.email || userInfo.sub;
@@ -344,11 +330,9 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            res.atomic(() => {
-                res.clearCookie("playUri");
-                // FIXME: possibly redirect to Admin instead.
-                res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
-            });
+            res.clearCookie("playUri");
+            // FIXME: possibly redirect to Admin instead.
+            res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
             return;
         });
     }
@@ -380,17 +364,15 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             }
 
-            res.atomic(() => {
-                res.clearCookie("playUri");
-                res.clearCookie("authToken");
-                const playUri = new URL(req.cookies.playUri);
-                playUri.searchParams.append("matrixLoginToken", query.loginToken);
+            res.clearCookie("playUri");
+            res.clearCookie("authToken");
+            const playUriUrl = new URL(req.cookies.playUri);
+            playUriUrl.searchParams.append("matrixLoginToken", query.loginToken);
 
-                const html = Mustache.render(this.redirectToPlayFile, {
-                    playUri: playUri.toString(),
-                });
-                res.type("html").send(html);
+            const html = Mustache.render(this.redirectToPlayFile, {
+                playUri: playUriUrl.toString(),
             });
+            res.type("html").send(html);
             return;
         });
     }
@@ -443,13 +425,11 @@ export class AuthenticateController extends BaseHttpController {
      */
     private register(): void {
         this.app.options("/register", (req, res) => {
-            res.atomic(() => {
-                res.status(200).send("");
-            });
+            res.status(200).send("");
         });
 
         this.app.post("/register", async (req, res) => {
-            const param = await req.json();
+            const param = req.body;
 
             //todo: what to do if the organizationMemberToken is already used?
             const organizationMemberToken: string | null = param.organizationMemberToken;
@@ -476,16 +456,14 @@ export class AuthenticateController extends BaseHttpController {
                 matrixUserId
             );
 
-            res.atomic(() => {
-                res.json({
-                    authToken,
-                    userUuid,
-                    email,
-                    roomUrl,
-                    mapUrlStart,
-                    organizationMemberToken,
-                } satisfies RegisterData);
-            });
+            res.json({
+                authToken,
+                userUuid,
+                email,
+                roomUrl,
+                mapUrlStart,
+                organizationMemberToken,
+            } satisfies RegisterData);
         });
     }
 
@@ -514,18 +492,14 @@ export class AuthenticateController extends BaseHttpController {
     private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
-                res.atomic(() => {
-                    res.status(403);
-                });
+                res.status(403).send("");
                 return;
             } else {
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
-                res.atomic(() => {
-                    res.json({
-                        authToken,
-                        userUuid,
-                    });
+                res.json({
+                    authToken,
+                    userUuid,
                 });
                 return;
             }
@@ -574,11 +548,9 @@ export class AuthenticateController extends BaseHttpController {
 
             const accessToken = authTokenData.accessToken;
             //get login profile
-            res.atomic(() => {
-                res.status(302);
-                res.setHeader("Location", adminService.getProfileUrl(accessToken, playUri));
-                res.send("");
-            });
+            res.status(302);
+            res.setHeader("Location", adminService.getProfileUrl(accessToken, playUri));
+            res.send("");
             return;
         });
     }
@@ -603,18 +575,14 @@ export class AuthenticateController extends BaseHttpController {
         this.app.get("/logout-callback", (req, res) => {
             // if no playUri, redirect to front
             if (!req.cookies.playUri) {
-                res.atomic(() => {
-                    res.redirect(FRONT_URL);
-                });
+                res.redirect(FRONT_URL);
                 return;
             }
 
             // when user logout, redirect to playUri saved in cookie
             const logOutAdminUrl = new URL(req.cookies.playUri);
-            res.atomic(() => {
-                res.clearCookie("playUri");
-                res.redirect(logOutAdminUrl.toString());
-            });
+            res.clearCookie("playUri");
+            res.redirect(logOutAdminUrl.toString());
             return;
         });
     }
@@ -646,10 +614,8 @@ export class AuthenticateController extends BaseHttpController {
             const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
-                res.atomic(() => {
-                    res.status(403);
-                    res.send("Unauthorized domain in playUri");
-                });
+                res.status(403);
+                res.send("Unauthorized domain in playUri");
                 return;
             }
 
@@ -662,22 +628,20 @@ export class AuthenticateController extends BaseHttpController {
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
 
-            res.atomic(() => {
-                // if no redirect, redirect to playUri and connect user to the world
-                // if the world is with authentication mandatory, the user will be redirected to the login screen
-                // if the world is anonymous or with authentication optional, the user will be connected to the world
-                if (!query.redirect) {
-                    res.redirect(query.playUri);
-                    return;
-                }
+            // if no redirect, redirect to playUri and connect user to the world
+            // if the world is with authentication mandatory, the user will be redirected to the login screen
+            // if the world is anonymous or with authentication optional, the user will be connected to the world
+            if (!query.redirect) {
+                res.redirect(query.playUri);
+                return;
+            }
 
-                // save the playUri in cookie to redirect to the world after logout
-                res.cookie("playUri", query.playUri, undefined, {
-                    httpOnly: true, // dont let browser javascript access cookie ever
-                    secure: req.secure, // only use cookie over https
-                });
-                res.redirect(query.redirect);
+            // save the playUri in cookie to redirect to the world after logout
+            res.cookie("playUri", query.playUri, {
+                httpOnly: true, // dont let browser javascript access cookie ever
+                secure: req.secure, // only use cookie over https
             });
+            res.redirect(query.redirect);
         });
     }
 }
