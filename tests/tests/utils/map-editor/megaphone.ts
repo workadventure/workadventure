@@ -2,9 +2,10 @@ import { expect, Page } from "@playwright/test";
 
 class Megaphone {
   async toggleMegaphone(page: Page) {
-    await page
+    /*await page
       .locator('.map-editor .configure-my-room input[type="checkbox"]')
-      .check();
+      .check();*/
+    await page.locator(".input-switch").click();
   }
 
   async isMegaphoneEnabled(page: Page) {
