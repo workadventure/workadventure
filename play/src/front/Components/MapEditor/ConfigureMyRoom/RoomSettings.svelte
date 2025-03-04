@@ -2,13 +2,13 @@
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import InputText from "../../Input/InputText.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import InputTextArea from "../../Input/InputTextArea.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import { UpdateWAMMetadataFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/WAM/UpdateWAMMetadataFrontCommand";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import Input from "../../Input/Input.svelte";
+    import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let dynamicStrings = {
@@ -79,23 +79,31 @@
 </script>
 
 <div class="flex flex-col">
-    <h3>{$LL.mapEditor.settings.room.title()}</h3>
-    <InputText
+    <h3 style="color: white;">{$LL.mapEditor.settings.room.title()}</h3>
+    <Input
+        type="text"
         label={$LL.mapEditor.settings.room.inputs.name()}
-        placeHolder="MySpace"
+        placeholder="MySpace"
         bind:value={name}
         onKeyPress={() => (dynamicStrings.error.name = false)}
-        error={dynamicStrings.error.name}
+        onerror={() => {
+            dynamicStrings.error.name = true;
+        }}
+        variant="light"
     />
+
     <p class="help-text">
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.description()}
     </p>
-    <InputTextArea
+    <Input
+        type="text"
         label={$LL.mapEditor.settings.room.inputs.description()}
-        placeHolder="MySpace"
+        placeholder="MySpace"
         bind:value={description}
         onKeyPress={() => {}}
+        variant="light"
+        area={true}
     />
     <p class="help-text">
         <IconInfoCircle font-size="18" />
@@ -106,23 +114,24 @@
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.copyright()}
     </p>
-    <InputTextArea
+    <Input
+        type="text"
         label={$LL.mapEditor.settings.room.inputs.copyright()}
-        placeHolder="MySpace"
+        placeholder="MySpace"
         bind:value={copyright}
         onKeyPress={() => {}}
+        variant="light"
+        area={true}
     />
 
-    <div class="flex flex-row justify-center">
-        <input
-            id="confirm-save"
-            type="checkbox"
-            class:border-danger-1000={dynamicStrings.error.confirmSave}
-            bind:checked={$confirmSaving}
-        />
-        <label for="confirm-save" class="ml-2" class:text-danger-1000={dynamicStrings.error.confirmSave}>
-            {$LL.mapEditor.settings.room.confirmSave()}
-        </label>
+    <div class="flex flex-row justify-center mt-4">
+        <div class="ml-2" class:text-danger-1000={dynamicStrings.error.confirmSave}>
+            <InputCheckbox
+                label={$LL.mapEditor.settings.room.confirmSave()}
+                id="confirm-save"
+                bind:value={$confirmSaving}
+            />
+        </div>
     </div>
 
     <div class="flex flex-row justify-center">
