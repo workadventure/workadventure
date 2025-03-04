@@ -1454,6 +1454,11 @@ export class SocketManager {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
             space.removeUser(pusher, removeSpaceUserMessage.userId);
+            if (space.canBeDeleted()) {
+                debug("[space] Space %s => deleted", space.name);
+                this.spaces.delete(space.name);
+                pusher.unwatchSpace(space.name);
+            }
         }
     }
 
