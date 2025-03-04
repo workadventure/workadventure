@@ -1,6 +1,6 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let onChange = () => {};
     export let disabled = false;
     export let value = false;
@@ -23,7 +23,9 @@
         <div class="input-checkbox" class:input-checkbox-light={variant === "light"} />
     </label>
 
-    <label for={uniqueId} class="  input-label input-label-inline input-label-light text-white "
-        >{label} <slot />
-    </label>
+    {#if label}
+        <label for={uniqueId} class="input-label input-label-inline input-label-light text-white"
+            >{label} <slot />
+        </label>
+    {/if}
 </div>
