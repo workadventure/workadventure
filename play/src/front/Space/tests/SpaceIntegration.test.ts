@@ -21,7 +21,7 @@ import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
 import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
-import { PeerFactoryInterface } from "../Space";
+import { PeerFactoryInterface } from "../SpacePeerManager/SpacePeerManager";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 

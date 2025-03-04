@@ -11,14 +11,14 @@ import { LivekitCommunicationStrategy } from "./strategies/LivekitCommunicationS
 
 
 
+export const communicationConfig = {
+    MAX_USERS_FOR_WEBRTC: 4,
+    SWITCH_TO_LIVEKIT_TIMEOUT_MS: 5000,
+    SWITCH_TO_WEBRTC_TIMEOUT_MS: 5000, //TODO : augmenter
+    WEBRTC_RECONNECTION_WINDOW_MS: 5000
+}
 
 export class CommunicationManager {
-    private static readonly CONFIG: ISwitchConfig = {
-        MAX_USERS_FOR_WEBRTC: 4,
-        SWITCH_TO_LIVEKIT_TIMEOUT_MS: 5000,
-        SWITCH_TO_WEBRTC_TIMEOUT_MS: 5000, //TODO : augmenter
-        WEBRTC_RECONNECTION_WINDOW_MS: 5000
-    };
 
     //TODO : est ce qu'on laisse la partie prepareStrategy de ce cote ou on essaye de la basculer côté switch 
     private _currentStrategy: ICommunicationStrategy;
@@ -26,23 +26,19 @@ export class CommunicationManager {
     private _communicationStrategyType: CommunicationType = CommunicationType.NONE;
     private _switchHandler: SwitchHandler;
 
-    constructor(private readonly space: ICommunicationSpaceManager) {
-        this._switchHandler = new SwitchHandler(space, CommunicationManager.CONFIG, this);
+    constructor(private readonly space: ICommunicationSpaceManager , private readonly config: ISwitchConfig = communicationConfig) {
+        this._switchHandler = new SwitchHandler(space, config, this);
         this._currentStrategy = new DefaultCommunicationStrategy(this.space);
         this.initializeStrategy();
     }
 
     public onUserAdded(user: SpaceUser): void {
-        if (this._communicationStrategyType === CommunicationType.NONE) {
-            this._currentStrategy.addUser(user);
-            return;
-        }
-
         if (this.shouldSwitchToLivekit()) {
             this._switchHandler.handleSwitch(CommunicationType.LIVEKIT, user);
-        } else {
-            this._currentStrategy.addUser(user);
-        }
+            return;
+        } 
+
+        this._currentStrategy.addUser(user,!!this._preparedStrategy);
     }
 
     public onUserDeleted(user: SpaceUser): void {
@@ -53,7 +49,12 @@ export class CommunicationManager {
     }
 
     public onUserUpdated(user: SpaceUser): void {
-        this._currentStrategy.updateUser(user);
+
+        if(!this._preparedStrategy) {
+            this._currentStrategy.updateUser(user);
+        }else {
+            //TODO : gerer le cas ou on est en train de switcher de strategie et qu'on a un user qui se connecte  
+        }
     }
 
     public handleUserReadyForSwitch(userId: number): void {
@@ -84,12 +85,12 @@ export class CommunicationManager {
 
     private shouldSwitchToLivekit(): boolean {
         return this._communicationStrategyType === CommunicationType.WEBRTC &&
-            this.space.getAllUsers().length > CommunicationManager.CONFIG.MAX_USERS_FOR_WEBRTC;
+            this.space.getAllUsers().length > this.config.MAX_USERS_FOR_WEBRTC;
     }
 
     private shouldSwitchBackToWebRTC(): boolean {
         const isSwitchingToLivekit = (this._communicationStrategyType === CommunicationType.LIVEKIT) || (this._preparedStrategy !== null && (this.getStrategyType(this._preparedStrategy) === CommunicationType.LIVEKIT));
-        const isMaxUsersReached = this.space.getAllUsers().length <= CommunicationManager.CONFIG.MAX_USERS_FOR_WEBRTC;
+        const isMaxUsersReached = this.space.getAllUsers().length <= this.config.MAX_USERS_FOR_WEBRTC;
         return (isSwitchingToLivekit && isMaxUsersReached);
     }
 
@@ -146,6 +147,10 @@ export class CommunicationManager {
             this._preparedStrategy.cleanup();
             this._preparedStrategy = null;
         }
+    }
+
+    get preparedStrategy(): ICommunicationStrategy | null {
+        return this._preparedStrategy;
     }
 }
 

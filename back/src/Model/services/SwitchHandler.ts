@@ -37,11 +37,12 @@ export class SwitchHandler {
         }
 
         this._readyUsers.add(userId);
+        this._communicationManager.preparedStrategy?.addUserReady(userId);
         if (this.areAllUsersReady()) {
             this.completeSwitchEarly();
         }
     }
-
+    
     private isInvalidSwitchRequest(targetStrategy: CommunicationType): boolean {
         return this._switchInProgress || targetStrategy === CommunicationType.NONE;
     }
@@ -61,12 +62,13 @@ export class SwitchHandler {
         this.setupSwitchTimeout(targetStrategy);
     }
 
+
     private notifyAllUsersToPrepareSwitchTo(targetStrategy: CommunicationType): void {
         const users = this._space.getAllUsers();
         const usersToNotify = users.filter(user => !this._readyUsers.has(user.id));
         
         usersToNotify.forEach(user => {
-            this.dispatchSwitchEvent(user.id, "prepareSwitchMessage", { targetStrategy });
+            this.dispatchSwitchEvent(user.id, "prepareSwitchMessage", { strategy: targetStrategy.toString() });
         });
     }
 
@@ -74,7 +76,7 @@ export class SwitchHandler {
         this.dispatchSwitchEvent(user.id, "communicationStrategyMessage", { strategy });
     }
 
-    private dispatchSwitchEvent(userId: number, eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage", payload: any): void {
+    private dispatchSwitchEvent(userId: number, eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage", payload: unknown): void {
         const event: PrivateEvent = {
             spaceName: this._space.getSpaceName(),
             receiverUserId: userId,
@@ -85,13 +87,12 @@ export class SwitchHandler {
                     [eventType]: payload
                 }
             }
-        } ;
+        } as PrivateEvent;
         this._space.dispatchPrivateEvent(event);
     }
 
     private areAllUsersReady(): boolean {
-        const allUsers = this._space.getAllUsers();
-        return allUsers.every(user => this._readyUsers.has(user.id));
+        return this._communicationManager.preparedStrategy?.canSwitch() ?? false;
     }
 
     private completeSwitchEarly(): void {
@@ -123,12 +124,12 @@ export class SwitchHandler {
 
         try {
             const users = this._space.getAllUsers();
+
             users.forEach(user => {
                 this.dispatchSwitchEvent(user.id, "executeSwitchMessage", {
                     strategy: targetStrategy
                 });
             });
-
             
         } finally {
             this._communicationManager.switchToStrategy(targetStrategy);

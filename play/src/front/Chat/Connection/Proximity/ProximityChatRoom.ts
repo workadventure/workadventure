@@ -370,7 +370,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     public joinSpace(spaceName: string, propertiesToSync: string[]): void {
         this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
-        const proximityChatRoomSimplePeer = this._space.getSimplePeer();
+        const proximityChatRoomSimplePeer = this._space.simplePeer;
         if (proximityChatRoomSimplePeer) {
             // Set up manager of audio streams received by the scripting API (useful for bots)
             this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(proximityChatRoomSimplePeer);
@@ -413,7 +413,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this._space.getSimplePeer()?.setSpaceFilter(this._spaceWatcher);
+        this._space.simplePeer?.setSpaceFilter(this._spaceWatcher);
 
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {

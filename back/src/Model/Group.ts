@@ -149,10 +149,9 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         }
     }
 
+    //TODO: delete or set a large value
     isFull(): boolean {
-        //TODO : Delete this function after the implementation of the strategy livekit
-        return false
-        //return this.users.size >= MAX_PER_GROUP;
+        return this.users.size >= 100;
     }
 
     isLocked(): boolean {

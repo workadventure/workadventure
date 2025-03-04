@@ -85,6 +85,16 @@
     class="pointer-events-none"
     id="cameras-container"
 >
+    {#if $myCameraStore && !$myJitsiCameraStore}
+        <div
+            id="unique-mycam"
+            class={isHighlighted
+                ? "w-[230px] all-cameras-highlighted pointer-events-auto"
+                : "w-full h-full all-cameras m-auto pointer-event-auto"}
+        >
+            <MyCamera />
+        </div>
+    {/if}
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if $highlightedEmbedScreen !== peer}
             {#key uniqueId}
@@ -98,17 +108,6 @@
             {/key}
         {/if}
     {/each}
-
-    {#if $myCameraStore && !$myJitsiCameraStore}
-        <div
-            id="unique-mycam"
-            class={isHighlighted
-                ? "w-[230px] all-cameras-highlighted pointer-events-auto"
-                : "w-full h-full all-cameras m-auto pointer-event-auto"}
-        >
-            <MyCamera />
-        </div>
-    {/if}
 
     {#if $myJitsiCameraStore}
         <MediaBox streamable={$myJitsiCameraStore} flipX={true} muted={true} />

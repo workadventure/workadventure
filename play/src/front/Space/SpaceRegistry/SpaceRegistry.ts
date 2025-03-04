@@ -5,10 +5,12 @@ import { MapStore } from "@workadventure/store-utils";
 import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { defaultPeerFactory, PeerFactoryInterface, Space } from "../Space";
+import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
+import { defaultPeerFactory, PeerFactoryInterface } from "../SpacePeerManager/SpacePeerManager";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -54,18 +56,26 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         const updatePeers = () => {
             allPeers.clear();
+            unsubscribers.forEach((unsub) => unsub());
+            unsubscribers.length = 0;
+
             if ($spaces.size === 0) {
-                set(new Map()); // Set to an empty Map if there are no spaces
+                set(new Map());
                 return;
             }
+
             $spaces.forEach((space) => {
-                const aggregatedPeerStores = space.getAllPeerStores(); // Use the getAllPeerStores method
+                const aggregatedPeerStores = space.videoPeerStore;
                 const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                    allPeers.clear();
                     peerStores.forEach((videoPeer, userId) => {
-                        allPeers.set(userId, videoPeer);
+                        if (videoPeer) {
+                            allPeers.set(userId, videoPeer);
+                        } else {
+                            allPeers.delete(userId);
+                        }
                     });
-                    console.log("allPeers getAllPeerStores from spaceRegistry", allPeers);
-                    set(new Map(allPeers)); // Update the derived store
+                    set(allPeers);
                 });
                 unsubscribers.push(unsubscribeAggregated);
             });
@@ -87,17 +97,83 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             const updatePeers = () => {
                 allPeers.clear();
                 if ($spaces.size === 0) {
-                    set(new Map()); // Set to an empty Map if there are no spaces
+                    set(new Map());
                     return;
                 }
                 $spaces.forEach((space) => {
-                    const aggregatedPeerStores = space.getAllScreenSharingPeerStores(); // Use the getAllPeerStores method
+                    const aggregatedPeerStores = space.screenSharingPeerStore;
                     const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        allPeers.clear();
                         peerStores.forEach((screenSharingPeer, userId) => {
                             allPeers.set(userId, screenSharingPeer);
                         });
-                        console.log("allPeers getAllScreenSharingPeerStores from spaceRegistry", allPeers);
-                        set(new Map(allPeers)); // Update the derived store
+                        set(new Map(allPeers));
+                    });
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        }
+    );
+
+    public readonly livekitVideoStreamStore: Readable<Map<number, Streamable>> = derived(
+        this.spaces,
+        ($spaces, set) => {
+            const allPeers: Map<number, Streamable> = new Map();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                allPeers.clear();
+                if ($spaces.size === 0) {
+                    set(new Map());
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedPeerStores = space.livekitVideoStreamStore;
+                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        allPeers.clear();
+                        peerStores.forEach((streamable, userId) => {
+                            allPeers.set(userId, streamable);
+                        });
+                        set(new Map(allPeers));
+                    });
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        }
+    );
+
+    public readonly livekitScreenShareStreamStore: Readable<Map<number, Streamable>> = derived(
+        this.spaces,
+        ($spaces, set) => {
+            const allPeers: Map<number, Streamable> = new Map();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                allPeers.clear();
+                if ($spaces.size === 0) {
+                    set(new Map());
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedPeerStores = space.livekitScreenShareStreamStore;
+                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        allPeers.clear();
+                        peerStores.forEach((streamable, userId) => {
+                            allPeers.set(userId, streamable);
+                        });
+                        set(new Map(allPeers));
                     });
                     unsubscribers.push(unsubscribeAggregated);
                 });

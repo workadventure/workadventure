@@ -64,3 +64,8 @@ export const SENTRY_DSN = env.SENTRY_DSN;
 export const SENTRY_ENVIRONMENT = env.SENTRY_ENVIRONMENT;
 export const SENTRY_RELEASE = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;
+
+export const LIVEKIT_HOST = env.LIVEKIT_HOST ?? "http://livekit.workadventure.localhost";
+export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY ?? "devkey";
+export const LIVEKIT_API_SECRET = env.LIVEKIT_API_SECRET ?? "12345678901234567890123456789012";
+export const LIVEKIT_FRONTEND_URL = env.LIVEKIT_FRONTEND_URL ?? "ws://livekit.workadventure.localhost";

@@ -46,7 +46,6 @@ import {
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
-    MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
 } from "../../Enum/EnvironmentVariable";
@@ -179,7 +178,13 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
-import { peerSizeStore, peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
+import {
+    livekitScreenShareStreamStore,
+    livekitVideoStreamStore,
+    peerSizeStore,
+    peerStore,
+    screenSharingPeerStore,
+} from "../../Stores/PeerStore";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -1573,6 +1578,8 @@ export class GameScene extends DirtyScene {
                 //TODO : solution pour éviter les dépendances circulaires et passer les stream dans les spaces
                 peerStore.set(this._spaceRegistry.peerStore);
                 screenSharingPeerStore.set(this._spaceRegistry.screenSharingPeerStore);
+                livekitVideoStreamStore.set(this._spaceRegistry.livekitVideoStreamStore);
+                livekitScreenShareStreamStore.set(this._spaceRegistry.livekitScreenShareStreamStore);
 
                 gameManager
                     .getChatConnection()
@@ -3720,9 +3727,7 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
-                ? "circleSprite-red"
-                : "circleSprite-white"
+            groupPositionMessage.locked ? "circleSprite-red" : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
         this.add.existing(sprite);

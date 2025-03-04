@@ -10,8 +10,13 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     constructor(private readonly _space: ICommunicationSpaceManager, private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService ) {
         this._credentialsService = new WebRTCCredentialsService();
     }
+    addUserReady(userId: number): void {
+    }
+    canSwitch(): boolean {
+        return true;
+    }
 
-    public addUser(newUser: SpaceUser): void {
+    public addUser(newUser: SpaceUser, switchInProgress: boolean): void {
         const existingUsers = this._space.getAllUsers()
             .filter(user => user.id !== newUser.id);
 
@@ -69,6 +74,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
         otherUsers.forEach(otherUser => {
             if (!this.hasExistingConnection(user.id, otherUser.id)) {
+                console.log(" >>>>> handleUserMediaUpdate establishConnection from webRTCCommunicationStrategy", user.id, otherUser.id);
                 this.establishConnection(user, otherUser);
                 return;
             }
@@ -138,6 +144,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     return;
                 }
                 if (!this.hasExistingConnection(user1.id, user2.id)) {
+                    console.log(" >>>>> initialize establishConnection from webRTCCommunicationStrategy", user1.id, user2.id);
                     this.establishConnection(user1, user2);
                 }
             });

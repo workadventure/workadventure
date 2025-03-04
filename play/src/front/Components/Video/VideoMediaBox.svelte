@@ -188,7 +188,6 @@
                     </button>
                 </div>
             </div>
-
             {#if $statusStore === "connected" && $hasAudioStore}
                 <div
                     class="z-[251] absolute aspect-ratio p-2 right-1"

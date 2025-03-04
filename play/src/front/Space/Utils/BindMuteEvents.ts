@@ -105,7 +105,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
         scene.broadcastService.leaveSpace(event.spaceName);
         chatZoneLiveStore.set(false);
         // Close all connection simple peer
-        const simplePeer = space.getSimplePeer();
+        const simplePeer = space.simplePeer;
         if (simplePeer) {
             simplePeer.closeAllConnections();
             simplePeer.cleanupStore();

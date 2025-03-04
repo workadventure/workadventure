@@ -8,6 +8,7 @@ import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -48,6 +49,8 @@ export type SpaceUserExtended = SpaceUser & {
     reactiveUser: ReactiveSpaceUser;
     getPeerStore: () => Readable<VideoPeer> | undefined;
     getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
+    getLivekitVideoStreamStore: () => Readable<Streamable> | undefined;
+    getLivekitScreenShareStreamStore: () => Readable<Streamable> | undefined;
 };
 
 export type Filter = SpaceFilterMessage["filter"];
@@ -112,7 +115,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user);
-
         if (!this._users.has(user.id)) {
             this._users.set(user.id, extendSpaceUser);
             if (this._setUsers) {
@@ -141,16 +143,16 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        const peerConnection = this._space.getSimplePeer()?.peerStore.get(userId);
+        const peerConnection = this._space.videoPeerStore.get(userId);
         if (peerConnection) {
             peerConnection.destroy();
-            this._space.getSimplePeer()?.peerStore.delete(userId);
+            this._space.videoPeerStore.delete(userId);
         }
 
-        const screenSharingPeerConnection = this._space.getSimplePeer()?.screenSharingPeerStore.get(userId);
+        const screenSharingPeerConnection = this._space.screenSharingPeerStore.get(userId);
         if (screenSharingPeerConnection) {
             screenSharingPeerConnection.destroy();
-            this._space.getSimplePeer()?.screenSharingPeerStore.delete(userId);
+            this._space.screenSharingPeerStore.delete(userId);
         }
     }
 
@@ -215,7 +217,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             },
             space: this._space,
             getPeerStore: () => {
-                const peerStore = this._space.getSimplePeer()?.peerStore;
+                const peerStore = this._space.videoPeerStore;
                 if (peerStore) {
                     return derived(peerStore, ($peerStore) => {
                         return $peerStore.get(user.id);
@@ -223,8 +225,26 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 }
                 return undefined;
             },
+            getLivekitVideoStreamStore: () => {
+                const livekitVideoStreamStore = this._space.livekitVideoStreamStore;
+
+                const store = derived(livekitVideoStreamStore, ($livekitVideoStreamStore) => {
+                    return $livekitVideoStreamStore.get(user.id);
+                });
+
+                return store;
+            },
+            getLivekitScreenShareStreamStore: () => {
+                const livekitScreenShareStreamStore = this._space.livekitScreenShareStreamStore;
+                if (livekitScreenShareStreamStore) {
+                    return derived(livekitScreenShareStreamStore, ($livekitScreenShareStreamStore) => {
+                        return $livekitScreenShareStreamStore.get(user.id);
+                    });
+                }
+                return undefined;
+            },
             getScreenSharingPeerStore: () => {
-                const screenSharingPeerStore = this._space.getSimplePeer()?.screenSharingPeerStore;
+                const screenSharingPeerStore = this._space.screenSharingPeerStore;
                 if (screenSharingPeerStore) {
                     return derived(screenSharingPeerStore, ($screenSharingPeerStore) => {
                         return $screenSharingPeerStore.get(user.id);
@@ -326,5 +346,34 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
             return allPeers;
         });
+    }
+
+    public getAllLivekitVideoStreamStores(): Readable<Map<number, Readable<Streamable>>> {
+        return derived(this.usersStore, ($usersStore) => {
+            const allPeers: Map<number, Readable<Streamable>> = new Map();
+            for (const user of $usersStore.values()) {
+                const peerStore = user.getLivekitVideoStreamStore();
+                if (peerStore !== undefined) {
+                    allPeers.set(user.id, peerStore);
+                }
+            }
+            return allPeers;
+        });
+    }
+
+    public getAllLivekitScreenShareStreamStores(): Readable<Map<number, Readable<Streamable>>> {
+        return derived(this.usersStore, ($usersStore) => {
+            const allPeers: Map<number, Readable<Streamable>> = new Map();
+            for (const user of $usersStore.values()) {
+                const peerStore = user.getLivekitScreenShareStreamStore();
+                if (peerStore !== undefined) {
+                    allPeers.set(user.id, peerStore);
+                }
+            }
+            return allPeers;
+        });
+    }
+    public getUserByUuid(uuid: string): SpaceUserExtended | undefined {
+        return Array.from(this._users.values()).find((user) => user.uuid === uuid);
     }
 }

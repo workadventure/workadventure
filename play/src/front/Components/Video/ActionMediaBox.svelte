@@ -78,7 +78,7 @@
             kickOffUser: {},
         });
 
-        spaceUser.space.getSimplePeer()?.removePeer(spaceUser.id);
+        spaceUser.space.simplePeer?.removePeer(spaceUser.id);
         close();
     }
 

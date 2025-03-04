@@ -8,7 +8,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMe
 import type {} from "../Api/Desktop";
 import { Streamable } from "./StreamableCollectionStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
-import { peerSizeStore } from "./PeerStore";
+import { livekitVideoStreamSizeStore, peerSizeStore } from "./PeerStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -62,9 +62,23 @@ export const screenShareBandwidthStore = createScreenShareBandwidthStore();
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, inExternalServiceStore, peerSizeStore],
+    [
+        requestedScreenSharingState,
+        myCameraStore,
+        myMicrophoneStore,
+        inExternalServiceStore,
+        peerSizeStore,
+        livekitVideoStreamSizeStore,
+    ],
     (
-        [$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $inExternalServiceStore, $peerSizeStore],
+        [
+            $requestedScreenSharingState,
+            $myCameraStore,
+            $myMicrophoneStore,
+            $inExternalServiceStore,
+            $peerSizeStore,
+            $livekitVideoStreamSizeStore,
+        ],
         set
     ) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
@@ -83,7 +97,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($peerSizeStore === 0) {
+        if ($peerSizeStore === 0 && $livekitVideoStreamSizeStore === 0) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

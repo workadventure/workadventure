@@ -837,6 +837,9 @@ message PrivateSpaceEvent {
     CommunicationStrategyMessage communicationStrategyMessage = 10;
     PrepareSwitchMessage prepareSwitchMessage = 11;
     ExecuteSwitchMessage executeSwitchMessage = 12;
+    LivekitInvitationMessage livekitInvitationMessage = 13;
+    LivekitDisconnectMessage livekitDisconnectMessage = 14;
+    UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
   }
 }
 
@@ -849,6 +852,19 @@ message PrepareSwitchMessage {
 }
 
 message ExecuteSwitchMessage {
+  string strategy = 1;
+}
+
+message LivekitInvitationMessage {
+  string token = 1;
+  string serverUrl = 2;
+  bool shouldJoinRoomImmediately = 3;
+}
+
+message LivekitDisconnectMessage {
+}
+
+message UserReadyForSwitchEvent {
   string strategy = 1;
 }
 

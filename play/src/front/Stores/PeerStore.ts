@@ -2,22 +2,46 @@ import { derived, Readable, readable, Writable, writable } from "svelte/store";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { VideoPeer } from "../WebRtc/VideoPeer";
+import { Streamable } from "./StreamableCollectionStore";
 
-//TODO : faire des peerstore des writable de writable pour qu'au moment ou le spaceRegistry soit init on ai le temps de set ce store pour éviter les dépendances circulaire
 export const peerStore: Writable<Readable<Map<number, VideoPeer>>> = writable<Writable<Map<number, VideoPeer>>>(
     writable<Map<number, VideoPeer>>(new Map())
 );
 export const screenSharingPeerStore: Writable<Readable<Map<number, ScreenSharingPeer>>> = writable<
     Readable<Map<number, ScreenSharingPeer>>
 >(writable<Map<number, ScreenSharingPeer>>(new Map()));
+export const livekitVideoStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
+    Readable<Map<number, Streamable>>
+>(writable<Map<number, Streamable>>(new Map()));
+export const livekitScreenShareStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
+    Readable<Map<number, Streamable>>
+>(writable<Map<number, Streamable>>(new Map()));
 
-//TODO : voir si besoin de unsubscribe
 export const peerSizeStore = derived(
     peerStore,
     ($peerStore, set) => {
         return $peerStore.subscribe(($innerPeerStore) => {
-            console.log(">>>>> inner peerSizeStore", $innerPeerStore.size, $innerPeerStore, $innerPeerStore.values());
             set($innerPeerStore.size);
+        });
+    },
+    0
+);
+
+export const livekitVideoStreamSizeStore = derived(
+    livekitVideoStreamStore,
+    ($livekitVideoStreamStore, set) => {
+        return $livekitVideoStreamStore.subscribe(($innerLivekitVideoStreamStore) => {
+            set($innerLivekitVideoStreamStore.size);
+        });
+    },
+    0
+);
+
+export const livekitScreenShareStreamSizeStore = derived(
+    livekitScreenShareStreamStore,
+    ($livekitScreenShareStreamStore, set) => {
+        return $livekitScreenShareStreamStore.subscribe(($innerLivekitScreenShareStreamStore) => {
+            set($innerLivekitScreenShareStreamStore.size);
         });
     },
     0
@@ -26,6 +50,7 @@ export const peerSizeStore = derived(
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!
  */
+
 function createScreenSharingStreamStore(): Readable<Map<number, ScreenSharingPeer>> {
     return readable(new Map<number, ScreenSharingPeer>(), (set) => {
         let unsubscribes: (() => void)[] = [];

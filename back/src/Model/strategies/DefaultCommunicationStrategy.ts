@@ -7,8 +7,14 @@ export class DefaultCommunicationStrategy implements ICommunicationStrategy {
     
     constructor(private _space: ICommunicationSpaceManager) {
     }
+    addUserReady(userId: number): void {
+    
+    }
+    canSwitch(): boolean {
+        return false;
+    }
 
-    addUser(user: SpaceUser): void {
+    addUser(user: SpaceUser, switchInProgress: boolean): void {
     }
 
     deleteUser(user: SpaceUser): void {

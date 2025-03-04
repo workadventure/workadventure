@@ -16,8 +16,8 @@ import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 
-const debug = Debug("space");
 
+const debug = Debug("space");
 
 
 export class Space implements CustomJsonReplacerInterface {
@@ -26,7 +26,6 @@ export class Space implements CustomJsonReplacerInterface {
     private metadata: Map<string, unknown>;
     //TODO : make a interface 
     private communicationManager: CommunicationManager;
-    //TODO : voir si utile de passer les propertiesToSync ici
     constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
@@ -34,7 +33,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
-
+ 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(sourceWatcher);
         usersList.set(spaceUser.id, spaceUser);
@@ -200,9 +199,8 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
+    
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
-
         if (!publicEvent.spaceEvent?.event) {
             // If there is no event, just forward the public event as-is
             this.notifyWatchers({
@@ -249,6 +247,11 @@ export class Space implements CustomJsonReplacerInterface {
                     });
                 }
             }
+            return;
+        }
+
+        if(privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
+            this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
             return;
         }
 

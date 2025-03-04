@@ -9,6 +9,7 @@ eventProcessor.registerPrivateEventProcessor("webRtcSignalToServerMessage", (eve
     if (event.$case !== "webRtcSignalToServerMessage") {
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");
+        
     }
 
     const signal = event.webRtcSignalToServerMessage.signal;
@@ -57,3 +58,5 @@ eventProcessor.registerPrivateEventProcessor(
         };
     }
 );
+
+

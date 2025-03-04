@@ -176,7 +176,7 @@ export class VideoPeer extends Peer implements Streamable {
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
-                        const simplePeer = this.space.getSimplePeer();
+                        const simplePeer = this.space.simplePeer;
                         if (simplePeer) {
                             simplePeer.blockedFromRemotePlayer(this.userId);
                         }

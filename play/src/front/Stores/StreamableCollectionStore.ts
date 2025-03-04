@@ -9,7 +9,15 @@ import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
-import { peerSizeStore, peerStore, screenSharingStreamStore } from "./PeerStore";
+import {
+    livekitScreenShareStreamSizeStore,
+    livekitScreenShareStreamStore,
+    livekitVideoStreamSizeStore,
+    livekitVideoStreamStore,
+    peerSizeStore,
+    peerStore,
+    screenSharingStreamStore,
+} from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
@@ -65,9 +73,24 @@ const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
-        [broadcastTracksStore, screenSharingStreamStore, peerSizeStore, screenSharingLocalMedia],
-        ([$broadcastTracksStore, $screenSharingStreamStore, $peerSizeStore, $screenSharingLocalMedia] /*, set*/) => {
-            //console.log(">>>>> createStreamableCollectionStore");
+        [
+            broadcastTracksStore,
+            screenSharingStreamStore,
+            peerSizeStore,
+            screenSharingLocalMedia,
+            livekitVideoStreamSizeStore,
+            livekitScreenShareStreamSizeStore,
+        ],
+        (
+            [
+                $broadcastTracksStore,
+                $screenSharingStreamStore,
+                $peerSizeStore,
+                $screenSharingLocalMedia,
+                $livekitVideoStreamSizeStore,
+                $livekitScreenShareStreamSizeStore,
+            ] /*, set*/
+        ) => {
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
@@ -81,7 +104,6 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             $screenSharingStreamStore.forEach(addPeer);
 
             get(get(peerStore)).forEach(addPeer);
-            //console.log(">>>>> peerSizeStore", get(peerSizeStore) , get(peerStore));
 
             $broadcastTracksStore.forEach((trackWrapper) => {
                 if (trackWrapper instanceof JitsiTrackWrapper) {
@@ -107,6 +129,9 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             ) {
                 addPeer($screenSharingLocalMedia);
             }
+
+            get(get(livekitVideoStreamStore)).forEach(addPeer);
+            get(get(livekitScreenShareStreamStore)).forEach(addPeer);
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
