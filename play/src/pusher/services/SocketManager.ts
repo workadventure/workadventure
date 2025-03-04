@@ -1333,12 +1333,12 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             space.removeClientWatcher(client);
             space.removeUser(socketData.spaceUser.id);
+            this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
                 console.error("Could not find space", spaceName, "to leave");
                 Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
             }
-            this.deleteSpaceIfEmpty(space);
         } else {
             console.error("Could not find space", spaceName, "to leave");
             Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
