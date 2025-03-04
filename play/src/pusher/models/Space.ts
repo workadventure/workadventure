@@ -13,6 +13,7 @@ import {
 } from "@workadventure/messages";
 import { applyFieldMask } from "protobuf-fieldmask";
 import merge from "lodash/merge";
+import { intersection } from "lodash";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
@@ -44,11 +45,13 @@ export class Space {
         private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        private eventProcessor: EventProcessor
+        private eventProcessor: EventProcessor,
+        private propertiesToSync: string[] = []
     ) {
         this.users = new Map<number, SpaceUserExtended>();
         this._metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
+
         debug(`created : ${name}`);
     }
 
@@ -118,20 +121,31 @@ export class Space {
     }
 
     public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
+        const updateMaskToSync = intersection(updateMask, this.propertiesToSync);
+
+        if (updateMaskToSync.length === 0) {
+            return;
+        }
+
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this.name,
                     user: SpaceUser.fromPartial(spaceUser),
-                    updateMask,
+                    updateMask: updateMaskToSync,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        this.localUpdateUser(spaceUser, updateMask);
+        this.localUpdateUser(spaceUser, updateMaskToSync);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
+        const fieldsToSync = intersection(updateMask, this.propertiesToSync);
+        if (fieldsToSync.length === 0) {
+            return;
+        }
+
         const user = this.users.get(spaceUser.id);
         if (!user) {
             console.error("User not found in this space", spaceUser);

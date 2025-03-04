@@ -1,7 +1,7 @@
 import { get, Writable, writable } from "svelte/store";
 import { Subject } from "rxjs";
-import { peerStore } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
+import { peerSizeStore } from "./PeerStore";
 
 export interface AudioManagerVolume {
     muted: boolean;
@@ -105,6 +105,6 @@ export const audioManagerRetryPlaySubject = new Subject<void>();
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
-peerStore.subscribe((peers) => {
-    audioManagerVolumeStore.setTalking(peers.size > 0);
+peerSizeStore.subscribe((peerSize) => {
+    audioManagerVolumeStore.setTalking(peerSize > 0);
 });

@@ -1,0 +1,29 @@
+services:
+  livekit:
+  #TODO : choisir une version de livekit-server
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880" # HTTP API
+      - "7881:7881/udp" # WebRTC UDP
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.livekit.rule=Host(`livekit.workadventure.localhost`)"
+      - "traefik.http.routers.livekit.entryPoints=web"
+      - "traefik.http.services.livekit.loadbalancer.server.port=7880"
+      - "traefik.udp.routers.livekit-udp.entrypoints=udp"
+      - "traefik.udp.routers.livekit-udp.service=livekit-udp"
+      - "traefik.udp.services.livekit-udp.loadbalancer.server.port=7881"
+    environment:
+      LIVEKIT_LOG_LEVEL: info
+      LIVEKIT_REDIS_HOST: redis
+      LIVEKIT_KEYS: '{"devkey": "12345678901234567890123456789012"}'
+    depends_on:
+      - redis
+  reverse-proxy:
+    networks:
+      default:
+        aliases:
+        - "livekit.workadventure.localhost"
+
+
+

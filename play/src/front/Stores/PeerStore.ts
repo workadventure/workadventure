@@ -1,89 +1,95 @@
-import { get, readable, writable } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
-import type { VideoPeer } from "../WebRtc/VideoPeer";
+import { derived, Readable, readable, Writable, writable } from "svelte/store";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { Streamable } from "./StreamableCollectionStore";
 
-/**
- * A generic store that contains the list of (video or screenSharing) peers we are connected to.
- */
-function createPeerStore<T>() {
-    const { subscribe, set, update } = writable(new Map<number, T>());
+export const peerStore: Writable<Readable<Map<number, VideoPeer>>> = writable<Writable<Map<number, VideoPeer>>>(
+    writable<Map<number, VideoPeer>>(new Map())
+);
+export const screenSharingPeerStore: Writable<Readable<Map<number, ScreenSharingPeer>>> = writable<
+    Readable<Map<number, ScreenSharingPeer>>
+>(writable<Map<number, ScreenSharingPeer>>(new Map()));
+export const livekitVideoStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
+    Readable<Map<number, Streamable>>
+>(writable<Map<number, Streamable>>(new Map()));
+export const livekitScreenShareStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
+    Readable<Map<number, Streamable>>
+>(writable<Map<number, Streamable>>(new Map()));
 
-    return {
-        subscribe,
-        getPeer(userId: number): T | undefined {
-            return get({ subscribe }).get(userId);
-        },
-        addPeer(userId: number, peer: T) {
-            update((users) => {
-                users.set(userId, peer);
-                return users;
-            });
-        },
-        removePeer(userId: number) {
-            update((users) => {
-                const peerConnectionDeleted = users.delete(userId);
-                if (!peerConnectionDeleted) {
-                    Sentry.captureException(new Error("Error deleting peer connection"));
-                }
-                return users;
-            });
-        },
-        cleanupStore() {
-            set(new Map<number, T>());
-        },
-        getSize(): number {
-            return get({ subscribe }).size;
-        },
-    };
-}
+export const peerSizeStore = derived(
+    peerStore,
+    ($peerStore, set) => {
+        return $peerStore.subscribe(($innerPeerStore) => {
+            set($innerPeerStore.size);
+        });
+    },
+    0
+);
 
-export const peerStore = createPeerStore<VideoPeer>();
-export const screenSharingPeerStore = createPeerStore<ScreenSharingPeer>();
+export const livekitVideoStreamSizeStore = derived(
+    livekitVideoStreamStore,
+    ($livekitVideoStreamStore, set) => {
+        return $livekitVideoStreamStore.subscribe(($innerLivekitVideoStreamStore) => {
+            set($innerLivekitVideoStreamStore.size);
+        });
+    },
+    0
+);
+
+export const livekitScreenShareStreamSizeStore = derived(
+    livekitScreenShareStreamStore,
+    ($livekitScreenShareStreamStore, set) => {
+        return $livekitScreenShareStreamStore.subscribe(($innerLivekitScreenShareStreamStore) => {
+            set($innerLivekitScreenShareStreamStore.size);
+        });
+    },
+    0
+);
 
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!
  */
-function createScreenSharingStreamStore() {
-    let peers = new Map<number, ScreenSharingPeer>();
 
-    return readable<Map<number, ScreenSharingPeer>>(peers, function start(set) {
+function createScreenSharingStreamStore(): Readable<Map<number, ScreenSharingPeer>> {
+    return readable(new Map<number, ScreenSharingPeer>(), (set) => {
         let unsubscribes: (() => void)[] = [];
 
-        const unsubscribe = screenSharingPeerStore.subscribe((screenSharingPeers) => {
-            for (const unsubscribe of unsubscribes) {
-                unsubscribe();
-            }
+        const unsubscribePeers = screenSharingPeerStore.subscribe((wrappedScreenSharingPeers) => {
+            // Unsubscribe previous listeners
+            unsubscribes.forEach((unsub) => unsub());
             unsubscribes = [];
 
-            peers = new Map<number, ScreenSharingPeer>();
+            unsubscribes.push(
+                wrappedScreenSharingPeers.subscribe((screenSharingPeers) => {
+                    const newPeers = new Map<number, ScreenSharingPeer>();
 
-            screenSharingPeers.forEach((screenSharingPeer: ScreenSharingPeer, key: number) => {
-                if (screenSharingPeer.isReceivingScreenSharingStream()) {
-                    peers.set(key, screenSharingPeer);
-                }
-
-                unsubscribes.push(
-                    screenSharingPeer.streamStore.subscribe((stream) => {
-                        if (stream) {
-                            peers.set(key, screenSharingPeer);
-                        } else {
-                            peers.delete(key);
+                    screenSharingPeers.forEach((screenSharingPeer, key) => {
+                        if (screenSharingPeer.isReceivingScreenSharingStream()) {
+                            newPeers.set(key, screenSharingPeer);
                         }
-                        set(peers);
-                    })
-                );
-            });
 
-            set(peers);
+                        // Track stream changes per peer
+                        const unsub = screenSharingPeer.streamStore.subscribe((stream) => {
+                            if (stream) {
+                                newPeers.set(key, screenSharingPeer);
+                            } else {
+                                newPeers.delete(key);
+                            }
+                            set(new Map(newPeers)); // Ensure a new Map instance for reactivity
+                        });
+
+                        unsubscribes.push(unsub);
+                    });
+
+                    set(new Map(newPeers)); // Ensure store reactivity
+                })
+            );
         });
 
-        return function stop() {
-            unsubscribe();
-            for (const unsubscribe of unsubscribes) {
-                unsubscribe();
-            }
+        return () => {
+            unsubscribePeers();
+            unsubscribes.forEach((unsub) => unsub());
         };
     });
 }

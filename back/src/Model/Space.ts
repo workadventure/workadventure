@@ -13,21 +13,27 @@ import {
 import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
+import { EventProcessor } from "./EventProcessor";
+import { CommunicationManager } from "./CommunicationManager";
+
 
 const debug = Debug("space");
+
 
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
     private metadata: Map<string, unknown>;
-
-    constructor(name: string) {
+    //TODO : make a interface 
+    private communicationManager: CommunicationManager;
+    constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
+        this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
-
+ 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(sourceWatcher);
         usersList.set(spaceUser.id, spaceUser);
@@ -43,8 +49,10 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserAdded(spaceUser);
         debug(`${this.name} : user => added ${spaceUser.id}`);
     }
+
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(sourceWatcher);
         const user = usersList.get(spaceUser.id);
@@ -72,10 +80,18 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserUpdated(spaceUser);
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
-        const usersList = this.usersList(sourceWatcher);
+        //TODO : problème quand un user quitte le space avec un etat de cam/micro si il change en dehors du space le changement n'est pas pris en compte
+        const usersList = this.usersList(sourceWatcher); 
+        const user = usersList.get(id);
+        if (!user) {
+            console.error("User not found in this space", id);
+            Sentry.captureMessage(`User not found in this space ${id}`);
+            return;
+        }
         usersList.delete(id);
 
         this.notifyWatchers(
@@ -90,6 +106,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.onUserDeleted(user);
         debug(`${this.name} : user => removed ${id}`);
     }
 
@@ -182,27 +199,99 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
+    
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
+        if (!publicEvent.spaceEvent?.event) {
+            // If there is no event, just forward the public event as-is
+            this.notifyWatchers({
+                message: {
+                    $case: "publicEvent",
+                    publicEvent,
+                },
+            });
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPublicEvent(
+            publicEvent.spaceEvent.event,
+            publicEvent.senderUserId
+        );
+
+        // Create new public event with processed event
+        const processedPublicEvent: PublicEvent = {
+            ...publicEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
-                publicEvent,
+                publicEvent: processedPublicEvent,
             },
         });
     }
-
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         // Let's notify the watcher that contains the user
+        if (!privateEvent.spaceEvent?.event) {
+            // If there is no event, just forward the private event as-is
+            for (const [watcher, users] of this.users.entries()) {
+                if (users.has(privateEvent.receiverUserId)) {
+                    watcher.write({
+                        message: {
+                            $case: "privateEvent",
+                            privateEvent,
+                        },
+                    });
+                }
+            }
+            return;
+        }
+
+        if(privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
+            this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPrivateEvent(
+            privateEvent.spaceEvent.event,
+            privateEvent.senderUserId,
+            privateEvent.receiverUserId
+        );
+
+        // Create new private event with processed event
+        const processedPrivateEvent: PrivateEvent = {
+            ...privateEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
+        // Send to target user
         for (const [watcher, users] of this.users.entries()) {
             if (users.has(privateEvent.receiverUserId)) {
                 watcher.write({
                     message: {
                         $case: "privateEvent",
-                        privateEvent,
+                        privateEvent: processedPrivateEvent,
                     },
                 });
             }
         }
+    }
+    public getAllUsers(): SpaceUser[] {
+        return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
+    }   
+    public getUser(userId: number): SpaceUser | undefined {
+        return Array.from(this.users.values()).flatMap((users: Map<number, SpaceUser>) => Array.from(users.values())).find((user: SpaceUser) => user.id === userId);
+    }
+    public getSpaceName(): string {
+        return this.name;
+    }
+    public getPropertiesToSync(): string[] {
+        return this.propertiesToSync;
     }
 }

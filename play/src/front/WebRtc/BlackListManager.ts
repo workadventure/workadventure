@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 
-class BlackListManager {
+export class BlackListManager {
     private list: string[] = [];
     public onBlockStream: Subject<string> = new Subject();
     public onUnBlockStream: Subject<string> = new Subject();

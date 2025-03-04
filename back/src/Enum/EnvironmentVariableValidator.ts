@@ -90,6 +90,11 @@ Note that anonymous players don't have any TTL limit because their data is store
         .string()
         .optional()
         .describe("The Sentry environnement we target. Only used if SENTRY_DSN is configured."),
+    //TODO : voir pour enlever le default
+    LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
+    LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
+    LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
+    LIVEKIT_FRONTEND_URL: z.string().optional().describe("The Livekit frontend URL."),    
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
