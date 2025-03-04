@@ -9,6 +9,7 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import Input from "../../Input/Input.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
+    import InputTextArea from "../../Input/InputTextArea.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let dynamicStrings = {
@@ -96,14 +97,13 @@
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.description()}
     </p>
-    <Input
-        type="text"
+    <InputTextArea
         label={$LL.mapEditor.settings.room.inputs.description()}
-        placeholder="MySpace"
+        placeHolder="MySpace"
         bind:value={description}
         onKeyPress={() => {}}
         variant="light"
-        area={true}
+        height="h-[9em]"
     />
     <p class="help-text">
         <IconInfoCircle font-size="18" />
@@ -114,14 +114,12 @@
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.copyright()}
     </p>
-    <Input
-        type="text"
+    <InputTextArea
         label={$LL.mapEditor.settings.room.inputs.copyright()}
-        placeholder="MySpace"
+        placeHolder="MySpace"
         bind:value={copyright}
         onKeyPress={() => {}}
         variant="light"
-        area={true}
     />
 
     <div class="flex flex-row justify-center mt-4">
@@ -134,7 +132,7 @@
         </div>
     </div>
 
-    <div class="flex flex-row justify-center">
+    <div class="flex flex-row justify-center ">
         <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
     </div>
 </div>
