@@ -3,7 +3,7 @@
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let placeholder = "";
     export let onChange = () => {};
     export let disabled = false;
@@ -29,9 +29,11 @@
     }
 </script>
 
-<div class="flex flex-col">
-    <div class="input-label">
-        <label for={uniqueId} class="relative grow">{label}</label>
+<div class="flex flex-col w-full">
+    <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
+        {#if label}
+            <label for={uniqueId} class="relative grow">{label}</label>
+        {/if}
 
         {#if SLOTS.info}
             <InfoButton>
@@ -92,7 +94,13 @@
             />
         {/if}
         {#if SLOTS.inputAppend}
-            <slot name="inputAppend" />
+            <div
+                class="absolute inset-y-0 flex items-center pb-2"
+                class:left-3={appendSide === "left"}
+                class:right-3={appendSide === "right"}
+            >
+                <slot name="inputAppend" />
+            </div>
         {/if}
     </div>
 

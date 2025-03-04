@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
+import { ComponentType } from "svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
@@ -154,7 +155,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoomStore } from "../../Chat/Stores/ChatStore";
+import { selectedRoomStore, navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -187,6 +188,7 @@ import {
 } from "../../Stores/PeerStore";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -362,6 +364,8 @@ export class GameScene extends DirtyScene {
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+
+    public _chatConnection: ChatConnectionInterface | undefined;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1584,6 +1588,7 @@ export class GameScene extends DirtyScene {
                 gameManager
                     .getChatConnection()
                     .then((chatConnection) => {
+                        this._chatConnection = chatConnection;
                         const connection = this.connection;
                         const allUserSpace = this.allUserSpace;
 
@@ -1992,7 +1997,6 @@ export class GameScene extends DirtyScene {
                     console.warn(`Unable to find module "${moduleName}" inside external modules`);
                     return;
                 }
-
                 (async () => {
                     const extensionModule = (await moduleFactory()) as { default: ExtensionModule };
                     const defaultExtensionModule = extensionModule.default;
@@ -2029,6 +2033,14 @@ export class GameScene extends DirtyScene {
                             connectionManager.logout();
                         },
                         externalRestrictedMapEditorProperties: mapEditorRestrictedPropertiesStore,
+                        showComponentInChat(component: ComponentType, props: Record<string, unknown>) {
+                            navChat.switchToCustomComponent(component, props);
+                            chatVisibilityStore.set(true);
+                        },
+                        openErrorScreen: (error: Error) => {
+                            errorScreenStore.setException(error);
+                            gameManager.closeGameScene();
+                        },
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);

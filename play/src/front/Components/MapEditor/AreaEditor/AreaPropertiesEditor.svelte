@@ -602,12 +602,7 @@
             placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
             bind:value={areaName}
             onChange={onUpdateName}
-            variant="light"
-        >
-            <div slot="optional">Optional</div>
-
-            <div slot="helper">Helper Text</div>
-        </Input>
+        />
 
         <div class="area-name-container">
             {#if !showDescriptionField}

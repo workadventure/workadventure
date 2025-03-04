@@ -30,9 +30,9 @@ test.describe('Mobile', () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
         // Text open menu
-        await Menu.openBurgerMenu(page);
+        await Menu.openMenu(page);
         // Text close menu
-        await Menu.closeBurgerMenu(page);
+        await Menu.closeMenu(page);
 
         // Second browser
         const pageAlice = await getPage(browser, 'Alice', Map.url("empty"));
@@ -44,8 +44,8 @@ test.describe('Mobile', () => {
 
         await expect(pageAlice.getByText('Bob')).toBeVisible();
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
-        await Menu.openBurgerMenu(pageAlice);
-        await Menu.closeBurgerMenu(pageAlice);
+        await Menu.openMenu(pageAlice);
+        await Menu.closeMenu(pageAlice);
         
         // check if we can pin the camera of other user
         // to do this we use the pin button to unpin the video
@@ -66,8 +66,8 @@ test.describe('Mobile', () => {
         await expect(pageJohn.getByText('Alice')).toBeVisible();
 
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
-        await Menu.openBurgerMenu(pageJohn);
-        await Menu.closeBurgerMenu(pageJohn);
+        await Menu.openMenu(pageJohn);
+        await Menu.closeMenu(pageJohn);
         
         await pageJohn.locator('#cameras-container').getByRole('button').nth(1).click();
         await pageJohn.locator('#video-container-receive').getByRole('button').first().click();

@@ -34,7 +34,13 @@ import {
     ChatRoomNotificationControl,
     memberTypingInformation,
 } from "../ChatConnection";
-import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
+import {
+    isAChatRoomIsVisible,
+    navChat,
+    selectedChatMessageToReply,
+    selectedRoomStore,
+    botsChatIds,
+} from "../../Stores/ChatStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification, notificationManager } from "../../../Notification";
@@ -280,8 +286,12 @@ export class MatrixChatRoom
     private handleNewMessage(event: MatrixEvent) {
         const message = new MatrixChatMessage(event, this.matrixRoom);
         this.messages.push(message);
-
         const senderID = event.getSender();
+        if (senderID) {
+            if (get(botsChatIds).includes(senderID)) {
+                return;
+            }
+        }
         if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
             this.notifyNewMessage(message);
             if (!isAChatRoomIsVisible() && get(selectedRoomStore)?.id !== "proximity") {

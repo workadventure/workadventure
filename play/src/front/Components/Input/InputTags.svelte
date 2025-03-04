@@ -37,9 +37,9 @@
     }
 </script>
 
-<div class={"flex flex-col pb-5 text-dark-purple"}>
+<div class={"flex flex-col pb-5 text-dark-purple "}>
     {#if label}
-        <label for="selector" class="text-white">
+        <label for="selector" class="text-white mb-2 ml-3">
             {label}
         </label>
     {/if}

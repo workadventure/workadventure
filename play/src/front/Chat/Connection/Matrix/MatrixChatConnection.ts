@@ -896,16 +896,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 const memberIDs = get(room.members)
                     .filter((member) => member.id && ["join", "invite"].includes(get(member.membership)))
                     .map((member) => member.id);
-
                 return (
                     room.type === "direct" &&
                     memberIDs.some((memberId) => memberId === userID && memberIDs.length === 2)
                 );
             })
             .map((room) => room);
-
         if (directRooms.length > 0) return directRooms[0];
-
         return undefined;
     }
 

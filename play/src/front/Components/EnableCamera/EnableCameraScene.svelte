@@ -111,10 +111,14 @@
                 const videoTracks = stream.getVideoTracks();
                 if (videoTracks.length > 0) {
                     selectedCamera = videoTracks[0].getSettings().deviceId;
+                } else {
+                    selectedCamera = undefined;
                 }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
                     selectedMicrophone = audioTracks[0].getSettings().deviceId;
+                } else {
+                    selectedMicrophone = undefined;
                 }
             }
         } else {
@@ -187,9 +191,11 @@
                 </p>
             </section>
 
-            <div class="flex space-x-4 items-center flex-col lg:flex-row lg:items-start">
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
-                    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
+            <div class="flex space-x-4 items-center flex-col lg:flex-row items-stretch">
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
+                >
+                    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2 ">
                         <MicOnIcon height="h-8" width="w-8" />
                         <div class="grow pr-8">{$LL.actionbar.subtitle.microphone()}</div>
                         <button
@@ -204,36 +210,38 @@
                         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
+                                class="border border-solid  min-w-[25em] border-white rounded-lg relative items-center justify-start m-2 space-x-4  transition-all overflow-hidden cursor-pointer   px-6 py-6 {selectedMicrophone ===
                                 undefined
-                                    ? 'bg-white text-secondary pt-12'
-                                    : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone != undefined) ||
-                                (!microphoneEdit && selectedMicrophone == undefined)
-                                    ? 'flex'
-                                    : 'hidden'}"
+                                    ? 'bg-white text-secondary pt-5'
+                                    : ' hover:bg-white/10 pt-4'} "
+                                class:hidden={!microphoneEdit && selectedMicrophone !== undefined}
+                                class:flex={microphoneEdit || selectedMicrophone === undefined}
                                 on:click={() => {
                                     selectMicrophone(undefined);
                                     microphoneEdit = false;
                                 }}
                             >
                                 <div
-                                    class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedMicrophone ===
-                                    undefined
-                                        ? 'bg-secondary border-secondary'
-                                        : 'border-white'}"
+                                    class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                                    class:bg-secondary={selectedMicrophone === undefined}
+                                    class:border-secondary={selectedMicrophone === undefined}
                                 >
                                     {#if selectedMicrophone == undefined}
                                         <CheckIcon width="w-4" height="h-4" />
                                     {/if}
                                 </div>
+
                                 <div class="space-y-1">
                                     <div
-                                        class="text-lg bold max-w-[241px] truncate text-ellipsis overflow-hidden leading-tight flex items-center"
+                                        class="text-lg bold max-w-[241px] truncate text-ellipsis overflow-hidden leading-tight flex  self-start"
                                     >
-                                        <MicOffIcon height="h-4" width="w-4" />
+                                        {#if microphoneEdit && selectedMicrophone !== undefined}
+                                            <MicOffIcon height="h-4" width="w-4" />
+                                        {/if}
+
                                         {$LL.audio.disable()}
                                     </div>
-                                    {#if selectedMicrophone == undefined}
+                                    {#if selectedMicrophone === undefined}
                                         <span class="chip chip-sm chip-neutral inline rounded-sm rounded-sm">
                                             <span class="chip-label">{$LL.camera.active()}</span>
                                         </span>
@@ -247,31 +255,28 @@
                             {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone ===
+                                    class="border border-solid border-white min-w-[25em]  rounded-lg pr-8 pl-6 pb-4 m-2  items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 {selectedMicrophone ===
                                     microphone.deviceId
                                         ? 'bg-white text-secondary pt-12'
-                                        : 'hover:bg-white/10 pt-4'} {(microphoneEdit &&
-                                        selectedMicrophone !== microphone.deviceId) ||
-                                    (!microphoneEdit && selectedMicrophone === microphone.deviceId)
-                                        ? 'flex'
-                                        : 'hidden'}"
+                                        : 'hover:bg-white/10 pt-4'}"
+                                    class:hidden={!microphoneEdit && selectedMicrophone !== microphone.deviceId}
+                                    class:flex={microphoneEdit || selectedMicrophone === microphone.deviceId}
                                     on:click={() => {
                                         selectMicrophone(microphone.deviceId);
                                         microphoneEdit = false;
                                     }}
                                 >
                                     {#if microphone.deviceId === selectedMicrophone}
-                                        <div class="absolute top-4 left-0 flex justify-center w-full">
+                                        <div class="absolute top-4 left-0 flex justify-center w-full ">
                                             <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                                         </div>
                                     {/if}
                                     <div
-                                        class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedMicrophone ===
-                                        microphone.deviceId
-                                            ? 'bg-secondary border-secondary'
-                                            : 'border-white'}"
+                                        class="aspect-square mr-4 h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                                        class:bg-secondary={selectedMicrophone === microphone.deviceId}
+                                        class:border-secondary={selectedMicrophone === microphone.deviceId}
                                     >
-                                        {#if selectedMicrophone === microphone.deviceId}
+                                        {#if selectedMicrophone == microphone.deviceId}
                                             <CheckIcon width="w-4" height="h-4" />
                                         {/if}
                                     </div>
@@ -297,7 +302,9 @@
                     </div>
                 </div>
 
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px] min-w-[28em] flex flex-col  items-center lg:min-h-[24rem]"
+                >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <CamOnIcon height="h-8" width="w-8" />
                         <div class="grow pr-8">{$LL.camera.editCam()}</div>
@@ -308,33 +315,36 @@
                             {!cameraEdit ? $LL.actionbar.edit() : $LL.actionbar.cancel()}
                         </button>
                     </div>
-
                     <div class="flex justify-center">
-                        <div class="flex items-center justify-center min-h-[294px]">
+                        <div
+                            class="flex items-center justify-center flex flex-wrap
+                        "
+                        >
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera ==
+                                class=" border border-solid  border-white min-w-[25em] rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden  {selectedCamera ==
                                 undefined
-                                    ? 'bg-white/10'
-                                    : 'hover:bg-white/10'} {(cameraEdit && selectedCamera != undefined) ||
-                                (!cameraEdit && selectedCamera == undefined)
-                                    ? 'flex flex-col'
-                                    : 'hidden'}"
+                                    ? 'bg-white text-secondary border-none'
+                                    : 'hover:bg-white/10'}"
+                                class:hidden={!cameraEdit && selectedCamera !== undefined}
+                                class:flex,flex-col={cameraEdit || selectedCamera === undefined}
                                 on:click={() => {
                                     selectCamera(undefined);
                                     cameraEdit = false;
                                 }}
                             >
-                                {#if selectedCamera == undefined}
+                                {#if !cameraEdit && selectedCamera == undefined}
                                     <div
-                                        class="webrtcsetup flex items-center justify-center h-[200px] aspect-video overflow-hidden bg-contrast"
+                                        class="webrtcsetup flex items-center justify-center h-[200px] w-full aspect-video overflow-hidden bg-contrast"
                                     >
                                         <CamOffIcon />
                                     </div>
                                 {/if}
                                 <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
                                     <div
-                                        class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center"
+                                        class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center  "
+                                        class:bg-secondary={selectedCamera === undefined}
+                                        class:border-secondary={selectedCamera === undefined}
                                     >
                                         {#if selectedCamera == undefined}
                                             <CheckIcon width="w-4" height="h-4" />
@@ -361,23 +371,21 @@
                             {#each $cameraListStore ?? [] as camera (camera.deviceId)}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="border border-solid rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera ===
+                                    class="border border-solid min-w-[25em] rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera ===
                                     camera.deviceId
-                                        ? 'bg-white text-secondary border-none'
-                                        : 'border-white hover:bg-white/10'} {(cameraEdit &&
-                                        selectedCamera !== camera.deviceId) ||
-                                    (!cameraEdit && selectedCamera === camera.deviceId)
-                                        ? 'flex flex-col'
-                                        : 'hidden'}"
+                                        ? 'bg-white text-secondary border-none '
+                                        : 'border-white hover:bg-white/10'}"
+                                    class:hidden={!cameraEdit && selectedCamera !== camera.deviceId}
+                                    class:flex,flex-col={cameraEdit || selectedCamera === camera.deviceId}
                                     on:click={() => {
                                         selectCamera(camera.deviceId);
                                         cameraEdit = false;
                                     }}
                                 >
-                                    {#if camera.deviceId === selectedCamera}
-                                        {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                                    {#if !cameraEdit && camera.deviceId === selectedCamera}
+                                        {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                                             <video
-                                                class="myCamVideoSetup flex items-center justify-center h-[200px] aspect-video overflow-hidden"
+                                                class="myCamVideoSetup flex items-center  justify-center h-[230px]  aspect-video overflow-hidden scale-x-[-1]"
                                                 use:srcObject={$localStreamStore.stream}
                                                 autoplay
                                                 muted
@@ -393,18 +401,20 @@
                                     {/if}
                                     <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
                                         <div
-                                            class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedCamera ===
-                                            camera.deviceId
-                                                ? 'bg-secondary border-secondary'
-                                                : 'border-white'}"
+                                            class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                                            class:bg-secondary={selectedCamera === camera.deviceId}
+                                            class:border-secondary={selectedCamera === camera.deviceId}
                                         >
-                                            {#if selectedCamera === camera.deviceId}
+                                            {#if selectedCamera == camera.deviceId}
                                                 <CheckIcon width="w-4" height="h-4" />
                                             {/if}
                                         </div>
                                         <div class="space-y-1">
                                             <div
-                                                class="text-lg bold max-w-[241px] truncate text-ellipsis overflow-hidden leading-tight"
+                                                class="text-lg bold  truncate text-ellipsis overflow-hidden leading-tight"
+                                                style:width={!cameraEdit && selectedCamera === camera.deviceId
+                                                    ? "251px"
+                                                    : "auto"}
                                             >
                                                 {StringUtils.normalizeDeviceName(camera.label)}
                                             </div>
@@ -413,8 +423,8 @@
                                                     <span class="chip-label">{$LL.camera.active()}</span>
                                                 </span>
                                             {:else}
-                                                <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                                    <span class="chip-label">{$LL.camera.disabled()}</span>
+                                                <span class="chip chip-sm chip-neutral inline rounded-sm ">
+                                                    <span class="chip-label">{$LL.camera.disabled()} C</span>
                                                 </span>
                                             {/if}
                                         </div>
@@ -426,9 +436,11 @@
                 </div>
 
                 {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-                    <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                    <div
+                        class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 max-w-[450px]  flex flex-col lg:min-h-[24rem] items-center"
+                    >
                         <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
-                            <MicOnIcon height="h-8" width="w-8" />
+                            <VolumeIcon height="h-8" width="w-8" />
                             <div class="grow pr-8">{$LL.camera.editSpeaker()}</div>
                             <button
                                 class="btn {!speakerEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
@@ -443,14 +455,12 @@
                                 {#each $speakerListStore as speaker, index (index)}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
-                                        class="border border-solid rounded-lg relative justify-start items-center m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-8 py-6 {$speakerSelectedStore ===
+                                        class="border border-solid min-w-[25em] rounded-lg relative items-center justify-start  m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-8 py-6 {$speakerSelectedStore ===
                                         speaker.deviceId
                                             ? 'bg-white text-secondary border-none'
-                                            : 'border-white hover:bg-white/10'} {(speakerEdit &&
-                                            $speakerSelectedStore !== speaker.deviceId) ||
-                                        (!speakerEdit && $speakerSelectedStore === speaker.deviceId)
-                                            ? 'flex'
-                                            : 'hidden'}"
+                                            : 'border-white hover:bg-white/10'}"
+                                        class:flex={speakerEdit || $speakerSelectedStore === speaker.deviceId}
+                                        class:hidden={!speakerEdit && $speakerSelectedStore !== speaker.deviceId}
                                         on:click={() => {
                                             selectSpeaker(speaker.deviceId);
                                             speakerEdit = false;

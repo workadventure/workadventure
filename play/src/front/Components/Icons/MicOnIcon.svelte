@@ -10,7 +10,7 @@
 
 <svg
     xmlns="http://www.w3.org/2000/svg"
-    class="icon {height} {width} {strokeColor} {fillColor} {classList}"
+    class="icon {height} {width} {strokeColor} {fillColor} {classList} "
     stroke-width={strokeWidth}
     stroke-linecap="round"
     stroke-linejoin="round"

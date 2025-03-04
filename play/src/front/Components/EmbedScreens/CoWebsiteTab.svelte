@@ -72,7 +72,7 @@
 <div
     class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
         ? 'text-contrast bg-white hover:bg-white/90 tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
-        : 'text-white cursor-pointer hover:bg-white/10 tab'}"
+        : 'text-white cursor-pointer bg-white/10 hover:bg-white/20 tab'}"
     on:click={toggleActive}
     on:click={() => (active = !active)}
 >

@@ -6,17 +6,28 @@
     export let disabled = false;
     export let labelPosition: "top" | "right" = "right";
     export let variant: "white" | "black" = "black";
+
+    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
 
 <div class="value-switch">
     {#if labelPosition === "top" && label}
-        <label for={id} class="input-label">{label}</label>
+        <label for={uniqueId} class="input-label">{label}</label>
     {/if}
     <label class="inline-flex cursor-pointer items-center relative">
-        <input {id} type="checkbox" class="sr-only peer" bind:checked={value} on:change={onChange} {disabled} />
+        <input
+            id={uniqueId}
+            type="checkbox"
+            class="sr-only peer"
+            bind:checked={value}
+            on:change={onChange}
+            {disabled}
+        />
         <div class="input-switch" class:input-switch-white={variant === "white"} />
         {#if labelPosition === "right" && label}
-            <span class="input-label input-label-inline">{label}</span>
+            <span class="input-label input-label-inline ml-3 text-white/50 font-regular peer-checked:text-white"
+                >{label}</span
+            >
         {/if}
     </label>
 </div>

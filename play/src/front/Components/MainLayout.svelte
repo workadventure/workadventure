@@ -21,6 +21,7 @@
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { silentStore } from "../Stores/MediaStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
@@ -51,6 +52,7 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import SilentBlock from "./ActionBar/SilentBlock.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -211,12 +213,16 @@
             {/if}
 
             <ExternalComponents zone="popup" />
+            <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+                <ExternalComponents zone="centeredPopup" />
+            </div>
 
             <MainModal />
         </section>
         <div class="">
-            <ActionBar />
+            <!--<ActionBar />-->
         </div>
+        <ActionBar />
     </div>
 
     {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
@@ -225,6 +231,10 @@
 
     {#if $actionsMenuStore}
         <ActionsMenu />
+    {/if}
+
+    {#if $silentStore}
+        <SilentBlock />
     {/if}
 
     <Lazy
