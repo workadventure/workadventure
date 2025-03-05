@@ -14,7 +14,6 @@
     export let size: "xs" | "sm" | "lg" | "" = "";
     export let appendSide: "left" | "right" = "right";
     export let status: "error" | "success" | "" = "";
-    export let area = false;
     export let errorHelperText: string | null = null;
     export let onKeyPress = () => {};
     export let optional = false;
@@ -51,26 +50,7 @@
     </div>
 
     <div class="relative flex grow">
-        {#if area}
-            <textarea
-                id={uniqueId}
-                class="grow input-text input-icon h-[85px]"
-                class:input-icon-left={appendSide === "left"}
-                class:input-text-light={variant === "light"}
-                class:input-text-xs={size === "xs"}
-                class:input-text-sm={size === "sm"}
-                class:input-text-lg={size === "lg"}
-                class:error={status === "error"}
-                class:success={status === "success"}
-                bind:value
-                {placeholder}
-                on:keypress={onKeyPress}
-                on:change={onChange}
-                on:click={onClick}
-                on:input={validateInput}
-                {disabled}
-            />
-        {:else if type === "text"}
+        {#if type === "text"}
             <input
                 id={uniqueId}
                 type="text"
