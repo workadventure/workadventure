@@ -44,7 +44,7 @@ class App {
         // Global middlewares
         this.app.use(
             cors({
-                origin: ALLOWED_CORS_ORIGIN,
+                origin: ALLOWED_CORS_ORIGIN === "*" ? true : ALLOWED_CORS_ORIGIN,
                 methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
                 allowedHeaders: [
                     "Content-Type",
