@@ -103,7 +103,6 @@
         bind:value={description}
         onKeyPress={() => {}}
         variant="light"
-        height="h-[9em]"
     />
     <p class="help-text">
         <IconInfoCircle font-size="18" />
