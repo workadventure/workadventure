@@ -9,7 +9,7 @@
     import { InputTagOption } from "../../Input/InputTagOption";
     import Input from "../../Input/Input.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
-    import InputTextArea from "../../Input/InputTextArea.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let dynamicStrings = {
@@ -97,7 +97,7 @@
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.description()}
     </p>
-    <InputTextArea
+    <TextArea
         label={$LL.mapEditor.settings.room.inputs.description()}
         placeHolder="MySpace"
         bind:value={description}
@@ -114,7 +114,7 @@
         <IconInfoCircle font-size="18" />
         {$LL.mapEditor.settings.room.helps.copyright()}
     </p>
-    <InputTextArea
+    <TextArea
         label={$LL.mapEditor.settings.room.inputs.copyright()}
         placeHolder="MySpace"
         bind:value={copyright}
