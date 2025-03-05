@@ -173,7 +173,7 @@ export interface ChatConnectionInterface {
     clearListener: () => void;
     directRoomsUsers: Readable<ChatUser[]>;
     isUserExist: (address: string) => Promise<boolean>;
-    getRoombyID(roomId: string): ChatRoom;
+    getRoomByID(roomId: string): ChatRoom;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

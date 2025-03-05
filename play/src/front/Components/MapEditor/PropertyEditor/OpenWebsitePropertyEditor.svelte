@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import {
         CardsException,
@@ -497,7 +497,7 @@
     }
 
     function onClickInputHandler() {
-        // If klaxxon application, open the activity picker
+        // If Klaxoon application, open the activity picker
         if (property.application !== "klaxoon") return;
         openKlaxoonActivityPicker();
     }
@@ -511,21 +511,25 @@
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
-            property.link = KlaxoonService.getKlaxoonEmbedUrl(
-                new URL(payload.url),
-                connectionManager.klaxoonToolClientId
-            );
-            property.poster = payload.imageUrl ?? undefined;
-            property.buttonLabel = payload.title ?? undefined;
-            // check if the link is embeddable
-            checkWebsiteProperty().catch((e) => {
-                console.error("Error checking embeddable website", e);
-            });
-        });
+        windowKlaxoonActivityPicker = KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(payload.url),
+                    connectionManager.klaxoonToolClientId
+                );
+                property.poster = payload.imageUrl ?? undefined;
+                property.buttonLabel = payload.title ?? undefined;
+                // check if the link is embeddable
+                checkWebsiteProperty().catch((e) => {
+                    console.error("Error checking embeddable website", e);
+                });
+            }
+        );
     }
 
     function openPicker() {
+        closePicker();
         // if klaxoon, open Activity Picker
         if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
             openKlaxoonActivityPicker();
@@ -594,6 +598,11 @@
         }
     }
 
+    let windowKlaxoonActivityPicker: Window | null = null;
+    function closePicker() {
+        if (windowKlaxoonActivityPicker != undefined) windowKlaxoonActivityPicker.close();
+    }
+
     function openApplicationWithoutPicker() {
         if (property.application === "cards") {
             window.open("https://app.cards-microlearning.com/", "_blank");
@@ -615,6 +624,10 @@
         property.policy = policy?.reduce((policyStr, policy) => `${policyStr}${policy.value};`, "");
         onValueChange();
     }
+
+    onDestroy(() => {
+        closePicker();
+    });
 </script>
 
 <PropertyEditorBase
@@ -732,7 +745,6 @@
                     on:keypress={onKeyPressed}
                     on:change={onValueChange}
                     on:blur={() => checkWebsiteProperty()}
-                    on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 /> -->
 

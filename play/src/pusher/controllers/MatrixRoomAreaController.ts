@@ -1,6 +1,6 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/node";
-import { DefaultResponseLocals, Response } from "hyper-express";
+import { Request, Response } from "express";
 import { matrixProvider } from "../services/MatrixProvider";
 import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
@@ -48,21 +48,24 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               type: string
          *               example: Internal Server Error
          */
-        this.app.post("/roomArea", [mapStorageToken], async (req, res) => {
+        this.app.post("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
             try {
-                const body = await validatePostQuery(req, res, MatrixRoomPropertyData);
+                const body = validatePostQuery(req, res, MatrixRoomPropertyData);
 
                 if (!body) {
-                    return res.status(400).send("Invalid Request Body");
+                    res.status(400).send("Invalid Request Body");
+                    return;
                 }
 
                 const roomID = await matrixProvider.createRoomForArea();
                 body.serverData = {
                     matrixRoomId: roomID,
                 };
-                return res.status(201).json(body);
+                res.status(201).json(body);
+                return;
             } catch (error) {
-                return this.handleError(res, error);
+                this.handleError(res, error);
+                return;
             }
         });
 
@@ -103,21 +106,24 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               type: string
          *               example: Internal Server Error
          */
-        this.app.delete("/roomArea", [mapStorageToken], async (req, res) => {
+        this.app.delete("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
             try {
-                const body = await req.json();
+                const body = req.body;
                 const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
 
                 if (!isMatrixRoomPropertyData.success) {
-                    return res.status(400).send("Invalid request body");
+                    res.status(400).send("Invalid request body");
+                    return;
                 }
 
                 if (isMatrixRoomPropertyData.data.serverData?.matrixRoomId) {
                     await matrixProvider.deleteRoom(isMatrixRoomPropertyData.data.serverData.matrixRoomId);
                 }
-                return res.status(204).send();
+                res.status(204).send();
+                return;
             } catch (error) {
-                return this.handleError(res, error);
+                this.handleError(res, error);
+                return;
             }
         });
         /**
@@ -144,13 +150,14 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               example: ko
          *
          */
-        this.app.patch("/roomArea", [mapStorageToken], async (req, res) => {
+        this.app.patch("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
             try {
-                const body = await req.json();
+                const body = req.body;
                 const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
 
                 if (!isMatrixRoomPropertyData.success) {
-                    return res.status(400).send("Invalid request body");
+                    res.status(400).send("Invalid request body");
+                    return;
                 }
 
                 if (isMatrixRoomPropertyData.data.serverData?.matrixRoomId) {
@@ -159,13 +166,15 @@ export class MatrixRoomAreaController extends BaseHttpController {
                         isMatrixRoomPropertyData.data.displayName
                     );
                 }
-                return res.status(200).send("Room name updated successfully");
+                res.status(200).send("Room name updated successfully");
+                return;
             } catch (error) {
-                return this.handleError(res, error);
+                this.handleError(res, error);
+                return;
             }
         });
     }
-    private handleError(res: Response<DefaultResponseLocals>, error: unknown) {
+    private handleError(res: Response, error: unknown) {
         console.error(error);
         Sentry.captureMessage(`Internal Server Error : ${error}`);
         return res.status(500).send("Internal Server Error");

@@ -3,8 +3,8 @@ import { ErrorApiData } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import { localeDetector } from "../../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { localeDetector } from "../../Utils/locales";
 
 export const EntrySceneName = "EntryScene";
 

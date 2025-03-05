@@ -143,11 +143,14 @@ describe("Space", () => {
 
         space.removeUser(watcher1, 1);
 
+        // should return false because Space is not empty
+        expect(space.canBeDeleted()).toBe(false);
+
         // should have received the removeUser event
         expect(eventsWatcher3.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
         space.removeWatcher(watcher3);
     });
-    it("should return false because Space is not empty", () => {
-        expect(space.canBeDeleted()).toBe(false);
+    it("should return true because Space is empty at the end (watcher1, watcher2 and watcher3 as removed)", () => {
+        expect(space.canBeDeleted()).toBe(true);
     });
 });

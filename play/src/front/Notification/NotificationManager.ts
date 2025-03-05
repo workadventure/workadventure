@@ -70,7 +70,7 @@ class NotificationManager {
             room = gameManager.getCurrentGameScene().proximityChatRoom;
         } else {
             const chatConnection = await gameManager.getChatConnection();
-            room = chatConnection.getRoombyID(chatRoomId);
+            room = chatConnection.getRoomByID(chatRoomId);
         }
         if (room) {
             this.selectedRoomStore.set(room);

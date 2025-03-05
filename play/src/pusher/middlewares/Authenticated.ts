@@ -1,4 +1,4 @@
-import type { MiddlewareNext, MiddlewarePromise, Request, Response } from "hyper-express";
+import type { NextFunction, Request, Response } from "express";
 import * as Sentry from "@sentry/node";
 import { jwtTokenManager } from "../services/JWTTokenManager";
 
@@ -7,11 +7,7 @@ export type ResponseWithUserIdentifier = Response & {
     isLogged?: boolean;
 };
 
-export function authenticated(
-    req: Request,
-    res: ResponseWithUserIdentifier,
-    next: MiddlewareNext
-): MiddlewarePromise | void {
+export function authenticated(req: Request, res: ResponseWithUserIdentifier, next: NextFunction): void {
     const token = req.header("authorization");
     if (!token) {
         res.status(401).send("Missing authorization header");

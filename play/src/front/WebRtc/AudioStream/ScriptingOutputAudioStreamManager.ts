@@ -1,6 +1,7 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
 import { SimplePeer } from "../SimplePeer";
+import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
 
 /**
@@ -48,7 +49,7 @@ export class ScriptingOutputAudioStreamManager {
         });
 
         iframeListener.registerAnswerer("resetAudioBuffer", async () => {
-            console.info("Resetting audio buffer");
+            customWebRTCLogger.info("Resetting audio buffer");
             const pcmStreamer = await this.pcmStreamerDeferred.promise;
             pcmStreamer.resetAudioBuffer();
         });
