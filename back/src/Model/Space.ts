@@ -15,6 +15,7 @@ import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
+import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 
 
 const debug = Debug("space");
@@ -24,8 +25,7 @@ export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
     private metadata: Map<string, unknown>;
-    //TODO : make a interface 
-    private communicationManager: CommunicationManager;
+    private communicationManager: ICommunicationManager;
     constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
