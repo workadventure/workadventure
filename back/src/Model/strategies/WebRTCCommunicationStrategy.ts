@@ -1,13 +1,13 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationStrategy } from "../interfaces/ICommunicationStrategy";
-import { ICommunicationSpaceManager } from "../interfaces/ICommunicationSpaceManager";
-import  {WebRTCCredentialsService , webRTCCredentialsService} from "../services/WebRTCCredentialsService";
-import { IWebRTCCredentials } from "../types/CommunicationTypes";
+import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import  {WebRTCCredentialsService , webRTCCredentialsService} from "../Services/WebRTCCredentialsService";
+import { IWebRTCCredentials } from "../types/CommunicationTypes"
 
 export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private readonly _messageTracker: Map<string, boolean> = new Map();
 
-    constructor(private readonly _space: ICommunicationSpaceManager, private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService ) {
+    constructor(private readonly _space: ICommunicationSpace, private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService ) {
         this._credentialsService = new WebRTCCredentialsService();
     }
     addUserReady(userId: number): void {

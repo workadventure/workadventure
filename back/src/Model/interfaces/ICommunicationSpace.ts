@@ -1,6 +1,6 @@
 import { PublicEvent, PrivateEvent, SpaceUser } from "@workadventure/messages";
 
-export interface ICommunicationSpaceManager {
+export interface ICommunicationSpace {
     getAllUsers(): SpaceUser[];
     getUser(userId: number): SpaceUser | undefined;
     dispatchPrivateEvent(privateEvent: PrivateEvent): void;

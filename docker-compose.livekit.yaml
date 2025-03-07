@@ -24,6 +24,13 @@ services:
       default:
         aliases:
         - "livekit.workadventure.localhost"
+  back:
+    environment:
+      LIVEKIT_HOST: "http://livekit.workadventure.localhost"
+      LIVEKIT_API_KEY: "devkey"
+      LIVEKIT_API_SECRET: "12345678901234567890123456789012"
+      LIVEKIT_WS_URL: "ws://livekit.workadventure.localhost"
+      
 
 
 
