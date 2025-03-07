@@ -3,6 +3,7 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 //import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import { User } from "./User";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -151,7 +152,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
     //TODO: delete or set a large value
     isFull(): boolean {
-        return this.users.size >= 100;
+        return this.users.size >= MAX_PER_GROUP;
     }
 
     isLocked(): boolean {

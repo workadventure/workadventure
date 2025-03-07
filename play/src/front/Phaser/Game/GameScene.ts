@@ -47,6 +47,7 @@ import {
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
+    MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
 } from "../../Enum/EnvironmentVariable";
@@ -3739,7 +3740,9 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.locked ? "circleSprite-red" : "circleSprite-white"
+            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
+                ? "circleSprite-red"
+                : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
         this.add.existing(sprite);
