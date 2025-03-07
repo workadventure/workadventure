@@ -99,7 +99,7 @@ describe('Communication Manager Tests', () => {
             
         //Act
             const communicationManager = new CommunicationManager(space);  
-            communicationManager.onUserAdded(userDefault);
+            communicationManager.handleUserAdded(userDefault);
         //Assert
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.WEBRTC); 
     });
@@ -122,7 +122,7 @@ describe('Communication Manager Tests', () => {
             
         //Act
             const communicationManager = new CommunicationManager(space);  
-            communicationManager.onUserAdded(userDefault);
+            communicationManager.handleUserAdded(userDefault);
         //Assert
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.LIVEKIT); 
     });
@@ -144,10 +144,10 @@ describe('Communication Manager Tests', () => {
             
         //Act
             const communicationManager = new CommunicationManager(space); 
-            communicationManager.onUserAdded(userDefault);
+            communicationManager.handleUserAdded(userDefault);
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.LIVEKIT);  
             users.pop();
-            communicationManager.onUserDeleted(userDefault);
+            communicationManager.handleUserDeleted(userDefault);
         //Assert
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.WEBRTC); 
     });
@@ -169,9 +169,9 @@ describe('Communication Manager Tests', () => {
             
         //Act
             const communicationManager = new CommunicationManager(space); 
-            communicationManager.onUserAdded(userDefault);
+            communicationManager.handleUserAdded(userDefault);
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.LIVEKIT);  
-            communicationManager.onUserDeleted(userDefault);
+            communicationManager.handleUserDeleted(userDefault);
         
         //Assert
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.LIVEKIT); 
@@ -195,9 +195,9 @@ describe('Communication Manager Tests', () => {
             
         //Act
             const communicationManager = new CommunicationManager(space); 
-            communicationManager.onUserAdded(userDefault);
+            communicationManager.handleUserAdded(userDefault);
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.NONE);  
-            communicationManager.onUserDeleted(userDefault);
+            communicationManager.handleUserDeleted(userDefault);
         
         //Assert
             expect(communicationManager.getCommunicationStrategy()).toBe(CommunicationType.NONE); 

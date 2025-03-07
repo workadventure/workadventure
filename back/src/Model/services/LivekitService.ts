@@ -1,11 +1,8 @@
 import { SpaceUser } from '@workadventure/messages';
 import { RoomServiceClient, AccessToken , CreateOptions, TrackSource } from 'livekit-server-sdk';
 import * as Sentry from "@sentry/node";
-import { LIVEKIT_FRONTEND_URL } from '../../Enum/EnvironmentVariable';
-import { LIVEKIT_API_SECRET } from '../../Enum/EnvironmentVariable';
-import { LIVEKIT_API_KEY } from '../../Enum/EnvironmentVariable';
-import { LIVEKIT_HOST } from '../../Enum/EnvironmentVariable';
-
+import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from '../../Enum/EnvironmentVariable';
+    
 export class LiveKitService {
     private livekitHost: string;
     private livekitApiKey: string;
@@ -13,7 +10,7 @@ export class LiveKitService {
     private livekitFrontendUrl: string;
     private roomServiceClient: RoomServiceClient;
 
-    constructor(livekitHost = LIVEKIT_HOST, livekitApiKey = LIVEKIT_API_KEY, livekitApiSecret = LIVEKIT_API_SECRET, livekitFrontendUrl = LIVEKIT_FRONTEND_URL) {
+    constructor(livekitHost = LIVEKIT_HOST, livekitApiKey = LIVEKIT_API_KEY, livekitApiSecret = LIVEKIT_API_SECRET, livekitFrontendUrl = LIVEKIT_WS_URL) {
         this.livekitHost = livekitHost;
         this.livekitApiKey = livekitApiKey;
         this.livekitApiSecret = livekitApiSecret;

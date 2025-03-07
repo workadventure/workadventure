@@ -18,6 +18,20 @@ export const communicationConfig = {
     WEBRTC_RECONNECTION_WINDOW_MS: 5000
 }
 
+export interface ICommunicationManager {
+    //TODO : peut etre é interface une  coté fonction pour les events
+    //TODO : autre interface pour les fonctions coté switch 
+    handleUserAdded(user: SpaceUser): void;
+    handleUserDeleted(user: SpaceUser): void;
+    handleUserUpdated(user: SpaceUser): void;
+    handleUserReadyForSwitch(userId: number): void;
+    getCurrentStrategy(): CommunicationType;
+    switchToStrategy(type: CommunicationType): void;
+    prepareStrategy(type: CommunicationType): void;
+    cancelPreparedStrategy(): void;
+    preparedStrategy: ICommunicationStrategy | null;
+}
+
 export class CommunicationManager {
 
     //TODO : est ce qu'on laisse la partie prepareStrategy de ce cote ou on essaye de la basculer côté switch 
@@ -32,7 +46,7 @@ export class CommunicationManager {
         this.initializeStrategy();
     }
 
-    public onUserAdded(user: SpaceUser): void {
+    public handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchToLivekit()) {
             this._switchHandler.handleSwitch(CommunicationType.LIVEKIT, user);
             return;
@@ -41,14 +55,14 @@ export class CommunicationManager {
         this._currentStrategy.addUser(user,!!this._preparedStrategy);
     }
 
-    public onUserDeleted(user: SpaceUser): void {
+    public handleUserDeleted(user: SpaceUser): void {
         this._currentStrategy.deleteUser(user);
         if (this.shouldSwitchBackToWebRTC()) {
             this._switchHandler.handleSwitch(CommunicationType.WEBRTC);
         }
     }
 
-    public onUserUpdated(user: SpaceUser): void {
+    public handleUserUpdated(user: SpaceUser): void {
 
         if(!this._preparedStrategy) {
             this._currentStrategy.updateUser(user);

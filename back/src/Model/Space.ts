@@ -29,7 +29,7 @@ export class Space implements CustomJsonReplacerInterface {
     constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
-        this.metadata = new Map<string, unknown>();
+        this.metadata = new Map<string, unknown>(); 
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
@@ -49,7 +49,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
-        this.communicationManager.onUserAdded(spaceUser);
+        this.communicationManager.handleUserAdded(spaceUser);
         debug(`${this.name} : user => added ${spaceUser.id}`);
     }
 
@@ -80,7 +80,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
-        this.communicationManager.onUserUpdated(spaceUser);
+        this.communicationManager.handleUserUpdated(spaceUser);
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
@@ -106,7 +106,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
-        this.communicationManager.onUserDeleted(user);
+        this.communicationManager.handleUserDeleted(user);
         debug(`${this.name} : user => removed ${id}`);
     }
 
