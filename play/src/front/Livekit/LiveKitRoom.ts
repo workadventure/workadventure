@@ -170,9 +170,6 @@ export class LiveKitRoom {
             console.error("An error occurred in leaveRoom", err);
             Sentry.captureException(err);
         });
-
-        console.error("Room not found");
-        Sentry.captureException(new Error("Room not found"));
     }
 
     public destroy() {

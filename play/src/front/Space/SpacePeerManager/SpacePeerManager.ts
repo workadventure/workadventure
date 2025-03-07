@@ -7,40 +7,36 @@ import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
-import { LivekitConnection } from "../../Livekit/LivekitConnection";
+import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { WebRTCState } from "./WebRTCState";
+import { LivekitState } from "./LivekitState";
 
-export const defaultPeerFactory: PeerFactoryInterface = {
-    create: (space: SpaceInterface) => {
-        const repository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
-        return new SimplePeer(space, repository);
-    },
-};
-
+export interface ICommunicationState {
+    getPeer(): SimplePeerConnectionInterface | undefined;
+    destroy(): void;
+}
 // -------------------- Peer Manager --------------------
-// ou media manager
+//Communication manager
+//TODO : voir si on part sur des states comme dans le back / pas d'utilité de l'avoir les 2 instances en meme temps
 export class SpacePeerManager {
-    private _peer: SimplePeerConnectionInterface | undefined;
-    private livekitConnection: LivekitConnection | undefined;
+    // private _peer: SimplePeerConnectionInterface;
+    // private livekitConnection: LivekitConnection;
     private unsubscribes: Unsubscriber[] = [];
+    private _communicationState: ICommunicationState;
+    constructor(private space: SpaceInterface) {
+            // this._peer = this.peerFactory.create(this.space);
+            // this.livekitConnection = new LivekitConnection(this.space);
 
-    constructor(private space: SpaceInterface, private peerFactory: PeerFactoryInterface) {}
+            //Autre maniere de savoir si on est en livekit ou webRTC c'est le back qui va décider
+            console.log("SpacePeerManager constructor");
 
-    initialize(propertiesToSync: string[]): void {
-        //TODO : voir si on s'occupe des conditions dans le front alors que le back gère les conditions
-        if (
-            propertiesToSync.includes("screenSharingState") ||
-            propertiesToSync.includes("cameraState") ||
-            propertiesToSync.includes("microphoneState")
-        ) {
-            //TODO : voir si on instancie les 2 ou on fait un switch comme dans le back
-            this._peer = this.peerFactory.create(this.space);
-            this.livekitConnection = new LivekitConnection(this.space);
+            this._communicationState = new WebRTCState(this.space, this);
+            
             this.synchronizeMediaState();
-        }
     }
 
     private synchronizeMediaState(): void {
@@ -70,17 +66,18 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
-        this._peer?.closeAllConnections();
-        this._peer?.unregister();
-        this.livekitConnection?.destroy();
+        this._communicationState?.destroy();
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
     }
 
-    //TODO : voir si on en a toujours besoin avoir avoir mis les map dans les space directement
     getPeer(): SimplePeerConnectionInterface | undefined {
-        return this._peer;
+        return this._communicationState.getPeer();
+    }
+
+    setState(state: ICommunicationState): void {
+        this._communicationState = state;
     }
 }
 // -------------------- Interfaces --------------------
@@ -101,14 +98,4 @@ export interface SimplePeerConnectionInterface {
 
 export interface PeerFactoryInterface {
     create(space: SpaceInterface): SimplePeerConnectionInterface;
-}
-
-export interface PeerConnectionInterface {
-    destroy(): void;
-}
-export interface PeerStoreInterface {
-    getSpaceStore(spaceName: string): Map<number, PeerConnectionInterface> | undefined;
-    cleanupStore(spaceName: string): void;
-    removePeer(userId: number, spaceName: string): void;
-    getPeer(userId: number, spaceName: string): PeerConnectionInterface | undefined;
 }

@@ -1,26 +1,27 @@
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import  {WebRTCCredentialsService , webRTCCredentialsService} from "../Services/WebRTCCredentialsService";
-import { IWebRTCCredentials } from "../types/CommunicationTypes"
+import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
+import { IWebRTCCredentials } from "../Types/CommunicationTypes";
 
 export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private readonly _messageTracker: Map<string, boolean> = new Map();
 
-    constructor(private readonly _space: ICommunicationSpace, private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService ) {
+    constructor(
+        private readonly _space: ICommunicationSpace,
+        private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService
+    ) {
         this._credentialsService = new WebRTCCredentialsService();
     }
-    addUserReady(userId: number): void {
-    }
+    addUserReady(userId: number): void {}
     canSwitch(): boolean {
         return true;
     }
 
     public addUser(newUser: SpaceUser, switchInProgress: boolean): void {
-        const existingUsers = this._space.getAllUsers()
-            .filter(user => user.id !== newUser.id);
+        const existingUsers = this._space.getAllUsers().filter((user) => user.id !== newUser.id);
 
-        existingUsers.forEach(existingUser => {
+        existingUsers.forEach((existingUser) => {
             if (this.shouldEstablishConnection(newUser, existingUser)) {
                 this.establishConnection(newUser, existingUser);
             }
@@ -32,13 +33,11 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
-
-            this.handleUserMediaUpdate(user);
+        this.handleUserMediaUpdate(user);
     }
     private shutdownConnection(user: SpaceUser, otherUser: SpaceUser): void {
         this.sendWebRTCDisconnect(user.id, otherUser.id);
         this.sendWebRTCDisconnect(otherUser.id, user.id);
-
     }
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
         return this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
@@ -69,18 +68,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private handleUserMediaUpdate(user: SpaceUser): void {
-        const otherUsers = this._space.getAllUsers()
-            .filter(otherUser => otherUser.id !== user.id);
+        const otherUsers = this._space.getAllUsers().filter((otherUser) => otherUser.id !== user.id);
 
-        otherUsers.forEach(otherUser => {
+        otherUsers.forEach((otherUser) => {
             if (!this.hasExistingConnection(user.id, otherUser.id)) {
-                console.log(" >>>>> handleUserMediaUpdate establishConnection from webRTCCommunicationStrategy", user.id, otherUser.id);
                 this.establishConnection(user, otherUser);
                 return;
             }
 
-            if(!this.hasActiveMediaState(otherUser) && !this.hasActiveMediaState(user)){
-                this.shutdownConnection(user , otherUser);
+            if (!this.hasActiveMediaState(otherUser) && !this.hasActiveMediaState(user)) {
+                this.shutdownConnection(user, otherUser);
                 return;
             }
         });
@@ -101,7 +98,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         const messageKey = this.getMessageKey(senderId, receiverId);
         this._messageTracker.set(messageKey, true);
 
-        console.log("sendWebRTCStart", senderId, receiverId, credentials, isInitiator);
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
             receiverUserId: receiverId,
@@ -111,13 +107,12 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     $case: "webRtcStartMessage",
                     webRtcStartMessage: {
                         initiator: isInitiator,
-                        ...credentials
-                    }
-                }
-            }
+                        ...credentials,
+                    },
+                },
+            },
         });
     }
-
 
     private sendWebRTCDisconnect(senderId: number, receiverId: number): void {
         this._messageTracker.delete(this.getMessageKey(senderId, receiverId));
@@ -129,22 +124,21 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 event: {
                     $case: "webRtcDisconnectMessage",
                     webRtcDisconnectMessage: {
-                        userId: senderId
-                    }
-                }
-            }
+                        userId: senderId,
+                    },
+                },
+            },
         });
     }
 
     initialize(): void {
         const users = this._space.getAllUsers();
-        users.forEach(user1 => {
-            users.forEach(user2 => {
+        users.forEach((user1) => {
+            users.forEach((user2) => {
                 if (user1.id === user2.id) {
                     return;
                 }
                 if (!this.hasExistingConnection(user1.id, user2.id)) {
-                    console.log(" >>>>> initialize establishConnection from webRTCCommunicationStrategy", user1.id, user2.id);
                     this.establishConnection(user1, user2);
                 }
             });
@@ -153,7 +147,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     cleanup(): void {
         for (const [messageKey] of this._messageTracker) {
-            const [senderId, receiverId] = messageKey.split('_').map(Number);
+            const [senderId, receiverId] = messageKey.split("_").map(Number);
             this._space.dispatchPrivateEvent({
                 spaceName: this._space.getSpaceName(),
                 receiverUserId: receiverId,
@@ -162,14 +156,13 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     event: {
                         $case: "webRtcDisconnectMessage",
                         webRtcDisconnectMessage: {
-                            userId: senderId
-                        }
-                    }
-                }
+                            userId: senderId,
+                        },
+                    },
+                },
             });
         }
 
-
         this._messageTracker.clear();
     }
-} 
+}

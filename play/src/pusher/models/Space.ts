@@ -660,3 +660,4 @@ export class Space {
         // Finally, let's send a message to the front to warn that the space is deleted
     }
 }
+

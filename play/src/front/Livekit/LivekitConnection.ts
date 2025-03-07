@@ -55,7 +55,6 @@ export class LivekitConnection {
                     });
             })
         );
-
         this.unsubscribers.push(
             this.space.observePrivateEvent("livekitDisconnectMessage").subscribe(() => {
                 if (!this.livekitRoom) {
@@ -68,36 +67,18 @@ export class LivekitConnection {
                 this.livekitRoom = undefined;
             })
         );
+    }
 
-        this.unsubscribers.push(
-            this.space.observePrivateEvent("prepareSwitchMessage").subscribe(() => {
-                if (!this.livekitRoom) {
-                    console.error("LivekitRoom not found");
-                    Sentry.captureException(new Error("LivekitRoom not found"));
-                    return;
-                }
-                this.livekitRoom.prepareConnection().catch((err) => {
-                    console.error("An error occurred in prepareSwitchMessage", err);
-                    Sentry.captureException(err);
-                });
-            })
-        );
-
-        this.unsubscribers.push(
-            this.space.observePrivateEvent("executeSwitchMessage").subscribe((message) => {
-                if (message.executeSwitchMessage.strategy === CommunicationType.LIVEKIT) {
-                    if (!this.livekitRoom) {
-                        console.error("LivekitRoom not found");
-                        Sentry.captureException(new Error("LivekitRoom not found"));
-                        return;
-                    }
-                    this.livekitRoom.joinRoom().catch((err) => {
-                        console.error("An error occurred in executeSwitchMessage", err);
-                        Sentry.captureException(err);
-                    });
-                }
-            })
-        );
+    joinRoom() {
+        if (!this.livekitRoom) {
+            console.error("LivekitRoom not found");
+            Sentry.captureException(new Error("LivekitRoom not found"));
+            return;
+        }
+        this.livekitRoom.joinRoom().catch((err) => {
+            console.error("An error occurred in executeSwitchMessage", err);
+            Sentry.captureException(err);
+        });
     }
 
     destroy() {
@@ -112,3 +93,4 @@ export class LivekitConnection {
         }
     }
 }
+

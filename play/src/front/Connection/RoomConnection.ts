@@ -88,7 +88,7 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/
 import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { isSpeakerStore } from "../Stores/MediaStore";
+import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
@@ -137,16 +137,6 @@ export class RoomConnection implements RoomConnection {
         room: RoomJoinedMessageInterface;
     }>();
     public readonly roomJoinedMessageStream = this._roomJoinedMessageStream.asObservable();
-    private readonly _webRtcStartMessageStream = new Subject<UserSimplePeerInterface>();
-    public readonly webRtcStartMessageStream = this._webRtcStartMessageStream.asObservable();
-    private readonly _webRtcSignalToClientMessageStream = new Subject<WebRtcSignalReceivedMessageInterface>();
-    public readonly webRtcSignalToClientMessageStream = this._webRtcSignalToClientMessageStream.asObservable();
-    private readonly _webRtcScreenSharingSignalToClientMessageStream =
-        new Subject<WebRtcSignalReceivedMessageInterface>();
-    public readonly webRtcScreenSharingSignalToClientMessageStream =
-        this._webRtcScreenSharingSignalToClientMessageStream.asObservable();
-    private readonly _webRtcDisconnectMessageStream = new Subject<WebRtcDisconnectMessageTsProto>();
-    public readonly webRtcDisconnectMessageStream = this._webRtcDisconnectMessageStream.asObservable();
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
     private readonly _worldFullMessageStream = new Subject<string | null>();
@@ -292,6 +282,8 @@ export class RoomConnection implements RoomConnection {
         url += "&version=" + apiVersionHash;
         url += "&chatID=" + (localUserStore.getChatId() ?? "");
         url += "&roomName=" + (gameManager.currentStartedRoom.roomName ?? "");
+        url += "&cameraState=" + (get(requestedCameraState) ?? "false");
+        url += "&microphoneState=" + (get(requestedMicrophoneState) ?? "false");
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -579,10 +571,6 @@ export class RoomConnection implements RoomConnection {
                 case "worldConnectionMessage": {
                     this._worldFullMessageStream.next(message.worldConnectionMessage.message);
                     this.closeConnection();
-                    break;
-                }
-                case "webRtcDisconnectMessage": {
-                    this._webRtcDisconnectMessageStream.next(message.webRtcDisconnectMessage);
                     break;
                 }
                 case "teleportMessageMessage": {
@@ -1755,10 +1743,6 @@ export class RoomConnection implements RoomConnection {
         this._errorMessageStream.complete();
         this._errorScreenMessageStream.complete();
         this._roomJoinedMessageStream.complete();
-        this._webRtcStartMessageStream.complete();
-        this._webRtcSignalToClientMessageStream.complete();
-        this._webRtcScreenSharingSignalToClientMessageStream.complete();
-        this._webRtcDisconnectMessageStream.complete();
         this._teleportMessageMessageStream.complete();
         this._worldFullMessageStream.complete();
         this._worldConnectionMessageStream.complete();

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { TURN_STATIC_AUTH_SECRET } from "../../Enum/EnvironmentVariable";
-import { IWebRTCCredentials } from "../types/CommunicationTypes";
+import { IWebRTCCredentials } from "../Types/CommunicationTypes";
 
 export class WebRTCCredentialsService {
     private static readonly CREDENTIAL_VALIDITY_HOURS = 4;
@@ -9,7 +9,7 @@ export class WebRTCCredentialsService {
         if (!TURN_STATIC_AUTH_SECRET) {
             return { webRtcUserName: "", webRtcPassword: "" };
         }
-        
+
         return this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
     }
 
@@ -17,13 +17,12 @@ export class WebRTCCredentialsService {
         const unixTimeStamp = this.calculateExpirationTimestamp();
         const username = this.generateUsername(unixTimeStamp, name);
         const password = this.generatePassword(username, secret);
-        
+
         return { webRtcUserName: username, webRtcPassword: password };
     }
 
     private calculateExpirationTimestamp(): number {
-        return Math.floor(Date.now() / 1000) + 
-            (WebRTCCredentialsService.CREDENTIAL_VALIDITY_HOURS * 3600);
+        return Math.floor(Date.now() / 1000) + WebRTCCredentialsService.CREDENTIAL_VALIDITY_HOURS * 3600;
     }
 
     private generateUsername(timestamp: number, name: string): string {
@@ -36,6 +35,6 @@ export class WebRTCCredentialsService {
         const password = hmac.digest("base64");
         return password;
     }
-} 
+}
 
 export const webRTCCredentialsService = new WebRTCCredentialsService();

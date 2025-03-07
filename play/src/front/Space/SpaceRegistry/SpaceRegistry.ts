@@ -10,7 +10,7 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
-import { defaultPeerFactory, PeerFactoryInterface } from "../SpacePeerManager/SpacePeerManager";
+import { PeerFactoryInterface } from "../SpacePeerManager/SpacePeerManager";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -189,7 +189,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
@@ -283,7 +282,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection, propertiesToSync, this._peerFactory);
+        const newSpace = new Space(spaceName, metadata, this.roomConnection, propertiesToSync);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }

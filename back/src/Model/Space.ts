@@ -84,7 +84,6 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
-        //TODO : problème quand un user quitte le space avec un etat de cam/micro si il change en dehors du space le changement n'est pas pris en compte
         const usersList = this.usersList(sourceWatcher); 
         const user = usersList.get(id);
         if (!user) {

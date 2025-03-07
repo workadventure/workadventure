@@ -178,15 +178,6 @@ export class SimplePeer {
                 this.receiveWebrtcDisconnect(user);
             })
         );
-
-        this.rxJsUnsubscribers.push(
-            this.space.observePrivateEvent("executeSwitchMessage").subscribe((message) => {
-                //TODO: check if we can move switch handling out of the SimplePeer component
-                if (message.executeSwitchMessage.strategy === CommunicationType.LIVEKIT) {
-                    this.closeAllConnections();
-                }
-            })
-        );
     }
 
     private async receiveWebrtcStart(user: UserSimplePeerInterface): Promise<void> {

@@ -30,7 +30,7 @@ export class Space implements SpaceInterface {
     private filterNumber = 0;
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
-    private peerManager: SpacePeerManager;
+    private peerManager: SpacePeerManager | undefined;
 
     public videoPeerStore: MapStore<number, VideoPeer> = new MapStore<number, VideoPeer>();
     public screenSharingPeerStore: MapStore<number, ScreenSharingPeer> = new MapStore<number, ScreenSharingPeer>();
@@ -53,12 +53,17 @@ export class Space implements SpaceInterface {
         }
         this.name = name;
 
-        this.peerManager = new SpacePeerManager(this, this._peerFactory);
-
+        
+        if (
+            this._propertiesToSync.includes("screenSharingState") ||
+            this._propertiesToSync.includes("cameraState") ||
+            this._propertiesToSync.includes("microphoneState")
+        ) {
+            this.peerManager = new SpacePeerManager(this);
+            //this.peerManager.initialize(this._propertiesToSync);
+        }
+        
         this.userJoinSpace();
-
-        this.peerManager.initialize(_propertiesToSync);
-
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
     getName(): string {
@@ -78,7 +83,9 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
-        this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        if(this.peerManager) {
+            this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        }
         return newFilter;
     }
 
@@ -87,7 +94,9 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
-        this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        if(this.peerManager) {
+            this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        }
         return newFilter;
     }
 
@@ -112,7 +121,9 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-        this.peerManager.destroy();
+        if(this.peerManager) {
+            this.peerManager.destroy();
+        }
     }
 
     private userJoinSpace() {
@@ -229,11 +240,13 @@ export class Space implements SpaceInterface {
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
 
-        this.peerManager.destroy();
+        if(this.peerManager) {
+            this.peerManager.destroy();
+        }
     }
 
     get simplePeer(): SimplePeerConnectionInterface | undefined {
-        return this.peerManager.getPeer();
+        return this.peerManager?.getPeer();
     }
 
     /**

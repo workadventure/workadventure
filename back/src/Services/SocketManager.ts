@@ -565,8 +565,6 @@ export class SocketManager {
                 propertiesToSync: ["cameraState", "microphoneState", "screenSharingState"],
             },
         });
-
-        //TODO : 
     }
 
     /**
