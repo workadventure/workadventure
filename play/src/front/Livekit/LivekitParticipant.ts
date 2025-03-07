@@ -1,9 +1,16 @@
-import { Participant, RemoteTrack, RemoteTrackPublication, TrackPublication, ConnectionQuality } from "livekit-client";
+import {
+    Participant,
+    RemoteTrack,
+    RemoteTrackPublication,
+    TrackPublication,
+    ConnectionQuality,
+    Track,
+    ParticipantEvent,
+} from "livekit-client";
 import { derived, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../WebRtc/VideoPeer";
-
 import { SpaceInterface } from "../Space/SpaceInterface";
 
 export class LiveKitParticipant {
@@ -26,51 +33,51 @@ export class LiveKitParticipant {
     }
 
     private listenToParticipantEvents() {
-        this.participant.on("trackSubscribed", this.handleTrackSubscribed.bind(this));
-        this.participant.on("trackUnsubscribed", this.handleTrackUnsubscribed.bind(this));
-        this.participant.on("trackMuted", this.handleTrackMuted.bind(this));
-        this.participant.on("trackUnmuted", this.handleTrackUnmuted.bind(this));
-        this.participant.on("connectionQualityChanged", this.handleConnectionQualityChanged.bind(this));
-        this.participant.on("isSpeakingChanged", this.handleIsSpeakingChanged.bind(this));
+        this.participant.on(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
+        this.participant.on(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
+        this.participant.on(ParticipantEvent.TrackMuted, this.handleTrackMuted.bind(this));
+        this.participant.on(ParticipantEvent.TrackUnmuted, this.handleTrackUnmuted.bind(this));
+        this.participant.on(ParticipantEvent.ConnectionQualityChanged, this.handleConnectionQualityChanged.bind(this));
+        this.participant.on(ParticipantEvent.IsSpeakingChanged, this.handleIsSpeakingChanged.bind(this));
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
-        if (publication.source === "camera") {
+        if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
             this.updateLivekitVideoStreamStore();
-        } else if (publication.source === "microphone") {
+        } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
             this._isMuted.set(track.isMuted);
             this.updateLivekitVideoStreamStore();
-        } else if (publication.source === "screen_share") {
+        } else if (publication.source === Track.Source.ScreenShare) {
             this._screenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore();
-        } else if (publication.source === "screen_share_audio") {
+        } else if (publication.source === Track.Source.ScreenShareAudio) {
             //this._screenShareAudioStreamStore.set(track.mediaStream);
         }
     }
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
-        if (publication.source === "camera") {
+        if (publication.source === Track.Source.Camera) {
             this.space.livekitVideoStreamStore.delete(this._spaceUser.id);
-        } else if (publication.source === "screen_share") {
+        } else if (publication.source === Track.Source.ScreenShare) {
             this.space.livekitScreenShareStreamStore.delete(this._spaceUser.id);
         }
     }
 
     private handleTrackMuted(publication: TrackPublication) {
-        if (publication.source === "microphone") {
+        if (publication.source === Track.Source.Microphone) {
             this._isMuted.set(true);
-        } else if (publication.source === "camera") {
+        } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(false);
         }
     }
 
     private handleTrackUnmuted(publication: TrackPublication) {
-        if (publication.source === "microphone") {
+        if (publication.source === Track.Source.Microphone) {
             this._isMuted.set(false);
-        } else if (publication.source === "camera") {
+        } else if (publication.source === Track.Source.Camera) {
             this._hasVideo.set(true);
         }
     }
@@ -147,11 +154,11 @@ export class LiveKitParticipant {
     }
 
     public destroy() {
-        this.participant.off("trackSubscribed", this.handleTrackSubscribed.bind(this));
-        this.participant.off("trackUnsubscribed", this.handleTrackUnsubscribed.bind(this));
-        this.participant.off("trackMuted", this.handleTrackMuted.bind(this));
-        this.participant.off("trackUnmuted", this.handleTrackUnmuted.bind(this));
-        this.participant.off("connectionQualityChanged", this.handleConnectionQualityChanged.bind(this));
-        this.participant.off("isSpeakingChanged", this.handleIsSpeakingChanged.bind(this));
+        this.participant.off(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
+        this.participant.off(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
+        this.participant.off(ParticipantEvent.TrackMuted, this.handleTrackMuted.bind(this));
+        this.participant.off(ParticipantEvent.TrackUnmuted, this.handleTrackUnmuted.bind(this));
+        this.participant.off(ParticipantEvent.ConnectionQualityChanged, this.handleConnectionQualityChanged.bind(this));
+        this.participant.off(ParticipantEvent.IsSpeakingChanged, this.handleIsSpeakingChanged.bind(this));
     }
 }

@@ -1,6 +1,7 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
+import { CommunicationMessageType } from "../Space/SpacePeerManager/LivekitState";
 import { LiveKitRoom } from "./LiveKitRoom";
 //TODO : trouver le moyen de l'avoir coté front et back
 export enum CommunicationType {
@@ -18,7 +19,7 @@ export class LivekitConnection {
 
     private initialize() {
         this.unsubscribers.push(
-            this.space.observePrivateEvent("livekitInvitationMessage").subscribe((message) => {
+            this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
                 this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space);
@@ -56,7 +57,7 @@ export class LivekitConnection {
             })
         );
         this.unsubscribers.push(
-            this.space.observePrivateEvent("livekitDisconnectMessage").subscribe(() => {
+            this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe(() => {
                 if (!this.livekitRoom) {
                     console.error("LivekitRoom not found");
                     Sentry.captureException(new Error("LivekitRoom not found"));
@@ -93,4 +94,3 @@ export class LivekitConnection {
         }
     }
 }
-

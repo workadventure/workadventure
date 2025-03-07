@@ -8,7 +8,6 @@ import { CommunicationState } from "./AbstractCommunicationState";
 import { LivekitState } from "./LivekitState";
 
 export class WebRTCState extends CommunicationState {
-    private MAX_USERS_FOR_WEBRTC = 4;
     protected _currentCommunicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
 

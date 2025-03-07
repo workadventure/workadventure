@@ -16,11 +16,7 @@ import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFil
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
-import {
-    PeerFactoryInterface,
-    SimplePeerConnectionInterface,
-    SpacePeerManager,
-} from "./SpacePeerManager/SpacePeerManager";
+import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -45,24 +41,21 @@ export class Space implements SpaceInterface {
         name: string,
         private _metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
-        private _propertiesToSync: string[] = [],
-        private _peerFactory: PeerFactoryInterface
+        private _propertiesToSync: string[] = []
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
 
-        
         if (
             this._propertiesToSync.includes("screenSharingState") ||
             this._propertiesToSync.includes("cameraState") ||
             this._propertiesToSync.includes("microphoneState")
         ) {
             this.peerManager = new SpacePeerManager(this);
-            //this.peerManager.initialize(this._propertiesToSync);
         }
-        
+
         this.userJoinSpace();
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
@@ -83,7 +76,7 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
-        if(this.peerManager) {
+        if (this.peerManager) {
             this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         }
         return newFilter;
@@ -94,7 +87,7 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
-        if(this.peerManager) {
+        if (this.peerManager) {
             this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         }
         return newFilter;
@@ -121,7 +114,7 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-        if(this.peerManager) {
+        if (this.peerManager) {
             this.peerManager.destroy();
         }
     }
@@ -240,7 +233,7 @@ export class Space implements SpaceInterface {
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
 
-        if(this.peerManager) {
+        if (this.peerManager) {
             this.peerManager.destroy();
         }
     }

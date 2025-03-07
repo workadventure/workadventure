@@ -28,6 +28,10 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
+    public setState(state: ICommunicationState): void {
+        this._currentState = state;
+    }
+
     private getInitialState(): ICommunicationState {
         const propertiesToSync = this.space.getPropertiesToSync();
         return this.hasMediaProperties(propertiesToSync) ? new WebRTCState(this.space, this) : new DefaultState();
@@ -36,8 +40,8 @@ export class CommunicationManager implements ICommunicationManager {
     private hasMediaProperties(properties: string[]): boolean {
         return properties.some((prop) => ["cameraState", "microphoneState", "screenSharingState"].includes(prop));
     }
-
-    setState(state: ICommunicationState): void {
-        this._currentState = state;
-    }
 }
+
+export const CommunicationConfig = {
+    MAX_USERS_FOR_WEBRTC: 4,
+};

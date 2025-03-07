@@ -2,47 +2,40 @@
 
 import { MapStore } from "@workadventure/store-utils";
 import { Observable } from "rxjs";
-import { Unsubscriber } from "svelte/store";
+import { Readable, Unsubscriber } from "svelte/store";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
-import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
-import { gameManager } from "../../Phaser/Game/GameManager";
-import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { WebRTCState } from "./WebRTCState";
-import { LivekitState } from "./LivekitState";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
 }
+
 // -------------------- Peer Manager --------------------
-//Communication manager
-//TODO : voir si on part sur des states comme dans le back / pas d'utilité de l'avoir les 2 instances en meme temps
+//Communication manager ?
+
 export class SpacePeerManager {
-    // private _peer: SimplePeerConnectionInterface;
-    // private livekitConnection: LivekitConnection;
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
-    constructor(private space: SpaceInterface) {
-            // this._peer = this.peerFactory.create(this.space);
-            // this.livekitConnection = new LivekitConnection(this.space);
-
-            //Autre maniere de savoir si on est en livekit ou webRTC c'est le back qui va décider
-            console.log("SpacePeerManager constructor");
-
-            this._communicationState = new WebRTCState(this.space, this);
-            
-            this.synchronizeMediaState();
+    constructor(
+        private space: SpaceInterface,
+        private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
+        private cameraStateStore: Readable<boolean> = requestedCameraState,
+        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
+    ) {
+        this._communicationState = new WebRTCState(this.space, this);
+        this.synchronizeMediaState();
     }
 
     private synchronizeMediaState(): void {
         //TODO : trouver un moyen d'enlever les dépendances de MediaStore
         this.unsubscribes.push(
-            requestedMicrophoneState.subscribe((state) => {
+            this.microphoneStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
                     microphoneState: state,
                 });

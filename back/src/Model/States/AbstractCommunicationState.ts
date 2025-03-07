@@ -4,6 +4,7 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
+import { CommunicationConfig } from "../CommunicationManager";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected _readyUsers: Set<number> = new Set();
@@ -15,7 +16,8 @@ export abstract class CommunicationState implements ICommunicationState {
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager,
-        protected readonly _currentStrategy: ICommunicationStrategy
+        protected readonly _currentStrategy: ICommunicationStrategy,
+        protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC
     ) {
         this.preparedSwitchAction();
     }

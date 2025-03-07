@@ -17,9 +17,7 @@ import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 
-
 const debug = Debug("space");
-
 
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
@@ -29,11 +27,11 @@ export class Space implements CustomJsonReplacerInterface {
     constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
-        this.metadata = new Map<string, unknown>(); 
+        this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
- 
+
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(sourceWatcher);
         usersList.set(spaceUser.id, spaceUser);
@@ -84,7 +82,7 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : user => updated ${spaceUser.id}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, id: number) {
-        const usersList = this.usersList(sourceWatcher); 
+        const usersList = this.usersList(sourceWatcher);
         const user = usersList.get(id);
         if (!user) {
             console.error("User not found in this space", id);
@@ -198,7 +196,6 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    
     public dispatchPublicEvent(publicEvent: PublicEvent) {
         if (!publicEvent.spaceEvent?.event) {
             // If there is no event, just forward the public event as-is
@@ -249,7 +246,7 @@ export class Space implements CustomJsonReplacerInterface {
             return;
         }
 
-        if(privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
+        if (privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
             this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
             return;
         }
@@ -283,9 +280,11 @@ export class Space implements CustomJsonReplacerInterface {
     }
     public getAllUsers(): SpaceUser[] {
         return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
-    }   
+    }
     public getUser(userId: number): SpaceUser | undefined {
-        return Array.from(this.users.values()).flatMap((users: Map<number, SpaceUser>) => Array.from(users.values())).find((user: SpaceUser) => user.id === userId);
+        return Array.from(this.users.values())
+            .flatMap((users: Map<number, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.id === userId);
     }
     public getSpaceName(): string {
         return this.name;
