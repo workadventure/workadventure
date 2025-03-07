@@ -3,6 +3,7 @@ import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, Roo
 import { Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { LiveKitParticipant } from "./LivekitParticipant";
 export class LiveKitRoom {
@@ -18,7 +19,7 @@ export class LiveKitRoom {
         private space: SpaceInterface,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
-        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStreamStore
+        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream
     ) {}
 
     public async prepareConnection(): Promise<Room> {

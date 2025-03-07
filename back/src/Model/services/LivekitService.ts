@@ -3,27 +3,22 @@ import { RoomServiceClient, AccessToken , CreateOptions, TrackSource } from 'liv
 import * as Sentry from "@sentry/node";
 import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from '../../Enum/EnvironmentVariable';
     
+const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
 export class LiveKitService {
-    private livekitHost: string;
-    private livekitApiKey: string;
-    private livekitApiSecret: string;
-    private livekitFrontendUrl: string;
+
     private roomServiceClient: RoomServiceClient;
 
-    constructor(livekitHost = LIVEKIT_HOST, livekitApiKey = LIVEKIT_API_KEY, livekitApiSecret = LIVEKIT_API_SECRET, livekitFrontendUrl = LIVEKIT_WS_URL) {
-        this.livekitHost = livekitHost;
-        this.livekitApiKey = livekitApiKey;
-        this.livekitApiSecret = livekitApiSecret;
-        this.livekitFrontendUrl = livekitFrontendUrl;
-        this.roomServiceClient = new RoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
+    constructor(createRoomServiceClient: (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => RoomServiceClient = defaultRoomServiceClient, private livekitHost = LIVEKIT_HOST, private livekitApiKey = LIVEKIT_API_KEY, private livekitApiSecret = LIVEKIT_API_SECRET, private livekitFrontendUrl = LIVEKIT_WS_URL) {
+        this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
 
 
     async createRoom(roomName: string): Promise<void> {
+        //TODO : revoir les options
         const createOptions: CreateOptions = {
             name: roomName,
             emptyTimeout: 10000,
-            maxParticipants: 10,
+            maxParticipants: 1000,
             departureTimeout: 10000,
         }
         

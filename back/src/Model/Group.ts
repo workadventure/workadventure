@@ -150,7 +150,6 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         }
     }
 
-    //TODO: delete or set a large value
     isFull(): boolean {
         return this.users.size >= MAX_PER_GROUP;
     }

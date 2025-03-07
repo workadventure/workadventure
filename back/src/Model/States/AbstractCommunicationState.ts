@@ -29,7 +29,7 @@ export abstract class CommunicationState implements ICommunicationState {
         const event: PrivateEvent = {
             spaceName: this._space.getSpaceName(),
             receiverUserId: userId,
-            senderUserId: userId, //TODO : changer trouver un id pour dire que c'est le back qui envoie le message
+            senderUserId: userId,
             spaceEvent: {
                 event: {
                     $case: eventType,

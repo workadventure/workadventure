@@ -559,7 +559,7 @@ export class Space {
         //             },
         //         });
         //     }
-        // });
+        // })
         const spaceEvent = noUndefined(message.spaceEvent);
 
         // FIXME: this should be unnecessary because of the noUndefined call above
@@ -641,6 +641,7 @@ export class Space {
             };
             this.notifyAll(subMessage, user);
         }
+
         // Let's remove any reference to the space in the watchers
         for (const watcher of this.clientWatchers.values()) {
             const socketData = watcher.getUserData();
@@ -660,4 +661,3 @@ export class Space {
         // Finally, let's send a message to the front to warn that the space is deleted
     }
 }
-
