@@ -112,7 +112,7 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-        this.peerManager.cleanup();
+        this.peerManager.destroy();
     }
 
     private userJoinSpace() {
@@ -229,7 +229,7 @@ export class Space implements SpaceInterface {
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
 
-        this.peerManager.cleanup();
+        this.peerManager.destroy();
     }
 
     get simplePeer(): SimplePeerConnectionInterface | undefined {
