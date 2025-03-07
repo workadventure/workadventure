@@ -177,5 +177,6 @@ export class LiveKitRoom {
 
     public destroy() {
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
+        this.leaveRoom();
     }
 }
