@@ -4,6 +4,9 @@ dependencies:
   version: 17.11.7
 - name: common
   repository: oci://registry-1.docker.io/bitnamicharts
-  version: 2.16.1
-digest: sha256:703dcd72c9369b53c50235892b96d15ab0d8e8fe4d31e2230f45d9cdd7f59546
-generated: "2024-03-01T09:26:19.339504712+01:00"
+  version: 2.30.0
+- name: livekit-server
+  repository: https://helm.livekit.io
+  version: 1.8.3
+digest: sha256:d17d7a8bb810041016976a43c8aab8203bd814877c31242e658ab1882d084b77
+generated: "2025-03-07T15:15:14.10287138+01:00"
