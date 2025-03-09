@@ -176,6 +176,7 @@ import { faviconManager } from "../../WebRtc/FaviconManager";
 import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -880,7 +881,9 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
-            gameManager.getChatConnection(),
+            // Wait at most 5 seconds for the chat connection to be established
+            // If not, we can still proceed starting the scene without chat fully loaded
+            raceTimeout(gameManager.getChatConnection(), 5_000),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
