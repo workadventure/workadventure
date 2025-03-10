@@ -722,7 +722,6 @@
             <Select
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
-                type="select"
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >

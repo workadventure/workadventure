@@ -494,7 +494,7 @@
                                             {/if}
                                         </div>
                                         {#if speaker.deviceId === $speakerSelectedStore}
-                                            <button class="btn btn-secondary">
+                                            <button class="btn btn-secondary" type="button">
                                                 <!-- TODO HUGO -->
                                                 <VolumeIcon />
                                             </button>

@@ -1,8 +1,9 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import InfoButton from "./InfoButton.svelte";
 
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let options: { value: string | undefined; label: string }[] = [];
     export let id: string | undefined = undefined;
     export let value: string | null | undefined;
@@ -10,7 +11,6 @@
     export let onClick = () => {};
     export let disabled = false;
     export let placeholder = "";
-    export let type: "text" | "select" = "text";
     export let variant: "light" | "" = "";
     export let optional = false;
 
@@ -20,27 +20,35 @@
 </script>
 
 <div class="flex flex--col">
-    {#if type === "select"}
-        <div class="relative flex-grow">
-            <div class="input-label">
+    <div class="relative flex-grow">
+        <div class="input-label">
+            {#if label}
                 <label for={uniqueId} class="grow font-light">{label}</label>
+            {/if}
 
-                {#if SLOTS.info}
-                    <InfoButton>
-                        <slot name="info" />
-                    </InfoButton>
-                {/if}
+            {#if SLOTS.info}
+                <InfoButton>
+                    <slot name="info" />
+                </InfoButton>
+            {/if}
 
-                {#if optional}
-                    <div class="text-xs opacity-50 ">
-                        {$LL.form.optional()}
-                    </div>
-                {/if}
-            </div>
+            {#if optional}
+                <div class="text-xs opacity-50 ">
+                    {$LL.form.optional()}
+                </div>
+            {/if}
 
+            {#if optional}
+                <div class="text-xs opacity-50 ">
+                    {$LL.form.optional()}
+                </div>
+            {/if}
+        </div>
+
+        <div class="relative flex-grow">
             <select
                 id={uniqueId}
-                class="grow w-full input-select font-light"
+                class="grow w-full input-select font-light pr-10"
                 class:input-select-light={variant === "light"}
                 bind:value
                 on:change={onChange}
@@ -54,8 +62,11 @@
 
                 <slot />
             </select>
+            <div class="absolute inset-y-0 right-0 mb-2 flex items-center pr-2 pointer-events-none">
+                <ChevronDownIcon />
+            </div>
         </div>
-    {/if}
+    </div>
 </div>
 
 {#if SLOTS.helper}

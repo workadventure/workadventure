@@ -52,8 +52,8 @@ class Menu {
 
     async closeMapEditor(page: Page) {
         //await page.locator('.map-editor .configure-my-room .close-window').click();
-        await page.locator('.map-editor .sidebar .close-window').click();
-        await expect(page.locator('.map-editor .configure-my-room .close-window')).toBeHidden();
+        await page.getByTestId('closeMapEditorButton').click();
+        await expect(page.locator('#map-editor-container .configure-my-room .close-window')).toBeHidden();
     }
 
     async toggleMegaphoneButton(page: Page) {

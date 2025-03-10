@@ -419,7 +419,7 @@ export class GameScene extends DirtyScene {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in.mp3");
+        this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in2.mp3");
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
@@ -515,9 +515,9 @@ export class GameScene extends DirtyScene {
                     } catch (error) {
                         this.handleErrorAndCleanup(
                             error,
-                            "WAM_FORMAT_ERROR",
-                            "Format error",
-                            "Invalid format while loading a WAM file"
+                            "WAM_FILE_LOAD_ISSUE",
+                            "Error when loading WAM file",
+                            "Unknown error while loading WAM file"
                         );
                         return;
                     }
@@ -545,6 +545,13 @@ export class GameScene extends DirtyScene {
         errorTitle: string,
         errorSubtitle: string
     ) {
+        console.error(error);
+
+        // In case an error is already displayed, let's do nothing. We want the first error to be kept visible.
+        if (get(errorScreenStore)) {
+            return;
+        }
+
         this.loader.removeLoader();
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
