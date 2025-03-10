@@ -5,12 +5,14 @@ class Megaphone {
     /*await page
       .locator('.map-editor .configure-my-room input[type="checkbox"]')
       .check();*/
-    await page.locator(".input-switch").click();
+    await page
+    .locator('label').getByText('Megaphone')
+    .check();
   }
 
   async isMegaphoneEnabled(page: Page) {
     await page
-      .locator('.map-editor .configure-my-room input[type="checkbox"]')
+      .locator('.configure-my-room input#megaphone')
       .isChecked();
   }
 
@@ -30,14 +32,14 @@ class Megaphone {
 
   async megaphoneSelectScope(page: Page) {
     await page
-      .locator(".map-editor .configure-my-room select")
+      .locator(".configure-my-room select")
       .first()
       .selectOption("ROOM");
   }
 
   async megaphoneAddNewRights(page: Page, tag = "test") {
     await page
-      .locator(".map-editor .configure-my-room .content .value-container input")
+      .locator(".configure-my-room .content .value-container input")
       .fill(tag);
     await page.getByText(`add a new tag: '${tag.toLowerCase()}'`).click();
   }
@@ -45,7 +47,7 @@ class Megaphone {
   async megaphoneRemoveRights(page: Page, tag = "test") {
     await page
       .locator(
-        ".map-editor .configure-my-room .content .value-container .multi-item",
+        ".configure-my-room .content .value-container .multi-item",
         { hasText: tag.toLowerCase() }
       )
       .locator(".multi-item-clear")
@@ -59,7 +61,7 @@ class Megaphone {
   async isCorrectlySaved(page: Page) {
     await expect(
       await page.locator(
-        ".map-editor .configure-my-room .content button:disabled"
+        ".configure-my-room .content button:disabled"
       )
     ).toContainText("Megaphone settings saved");
   }
@@ -67,7 +69,7 @@ class Megaphone {
   async isNotCorrectlySaved(page: Page) {
     await expect(
       await page.locator(
-        ".map-editor .configure-my-room .content button:disabled"
+        ".configure-my-room .content button:disabled"
       )
     ).toContainText("Error while saving megaphone settings");
   }
