@@ -3,14 +3,14 @@
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import InputSelect from "../../Input/InputSelect.svelte";
+    import Input from "../../Input/Input.svelte";
+    import Select from "../../Input/Select.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import PureLoader from "../../PureLoader.svelte";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import { InputTagOption } from "../../Input/InputTagOption";
     import InputSwitch from "../../Input/InputSwitch.svelte";
-    import Input from "../../Input/Input.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
@@ -91,14 +91,9 @@
     }
 </script>
 
-<div class="flex flex-wrap gap-x-4 items-center h-fit [& > *]:w-full">
-    <InputSwitch
-        id="megaphone"
-        label={$LL.mapEditor.settings.megaphone.title()}
-        bind:value={enabled}
-        on:change={partialSave}
-        disabled={loading}
-    />
+<div class="flex flex-wrap gap-x-4 items-center h-fit">
+    <InputSwitch id="" bind:value={enabled} onChange={partialSave} disabled={loading} />
+    <h3 id="megaphone" style="color: white;">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
 
 <p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
@@ -113,9 +108,17 @@
                 placeholder="MySpace"
                 bind:value={title}
                 onKeyPress={() => (dynamicStrings.error.title = "")}
+                variant="light"
             />
 
-            <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
+            <Select
+                type="select"
+                label={$LL.mapEditor.settings.megaphone.inputs.scope()}
+                options={scopes}
+                bind:value={scope}
+                variant="light"
+            />
+
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}

@@ -19,6 +19,7 @@
     export let optional = false;
     export let isValid = true;
     export let rounded = false;
+    export let onerror = () => {};
 
     const SLOTS = $$slots;
 
@@ -69,6 +70,7 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:error={onerror}
                 {disabled}
             />
 

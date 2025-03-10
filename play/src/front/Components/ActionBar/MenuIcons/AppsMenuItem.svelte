@@ -7,6 +7,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { isActivatedStore as isCalendarActivatedStore } from "../../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore } from "../../../Stores/TodoListStore";
+    import { roomListVisibilityStore } from "../../../Stores/ModalStore";
     import { externalSvelteComponentService } from "../../../Stores/Utils/externalSvelteComponentService";
     import AppsMenuContent from "./AppsMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
@@ -24,47 +25,34 @@
         //strategy: 'fixed',
     });
     const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 14] } },
-            {
-                name: "popper-arrow",
-                options: {
-                    element: ".popper-arrow",
-                    padding: 12,
-                },
-            },
-
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top-end", "top-start", "top"],
-                },
-            },
-        ],
+        modifiers: [{ name: "offset", options: { offset: [0, 14] } }],
     };
 </script>
 
 {#if !inProfileMenu}
     <ActionBarButton
         on:click={() => {
+            if ($roomListVisibilityStore) return roomListVisibilityStore.set(false);
             openedMenuStore.toggle("appMenu");
         }}
         classList="group/btn-apps"
         context="actionBar"
         tooltipTitle={$LL.actionbar.help.apps.title()}
         tooltipDesc={$LL.actionbar.help.apps.desc()}
-        disabledHelp={$openedMenuStore === "appMenu"}
-        state={$openedMenuStore === "appMenu" ? "active" : "normal"}
+        disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
+        state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
         dataTestId={undefined}
         action={popperRef}
     >
         <AppsIcon
-            strokeColor={$openedMenuStore === "appMenu" ? "stroke-white fill-white" : "stroke-white fill-transparent"}
+            strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
+                ? "stroke-white fill-white"
+                : "stroke-white fill-transparent"}
             hover="group-hover/btn-apps:fill-white"
         />
 
         {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div class="flex justify-center m-auto popper-tooltip" use:popperContent={extraOpts}>
+            <div class="flex justify-center m-[unset] popper-tooltip" use:popperContent={extraOpts}>
                 <div class="popper-arrow" data-popper-arrow />
                 <div class="bottom-action-bar">
                     <div
