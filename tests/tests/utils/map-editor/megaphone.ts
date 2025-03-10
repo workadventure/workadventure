@@ -4,8 +4,10 @@ class Megaphone {
   async toggleMegaphone(page: Page) {
     /*await page
       .locator('.map-editor .configure-my-room input[type="checkbox"]')
-      .check();*/
-    await page.locator(".input-switch").click();
+      .check();
+       await page.locator(".input-switch").click();*/
+   
+    await page.locator('text="Toggle"').click();
   }
 
   async isMegaphoneEnabled(page: Page) {

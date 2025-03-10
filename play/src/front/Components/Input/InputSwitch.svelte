@@ -29,5 +29,6 @@
                 >{label}</span
             >
         {/if}
+        <span>Toggle</span>
     </label>
 </div>
