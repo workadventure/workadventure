@@ -182,6 +182,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -887,7 +888,9 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
-            gameManager.getChatConnection(),
+            // Wait at most 5 seconds for the chat connection to be established
+            // If not, we can still proceed starting the scene without chat fully loaded
+            raceTimeout(gameManager.getChatConnection(), 5_000),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1578,6 +1581,7 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 gameManager
                     .getChatConnection()
@@ -1595,8 +1599,7 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && this._room.isChatOnlineListEnabled) {
-                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                        if (allUserSpace && this._room.isChatOnlineListEnabled && this.worldUserProvider) {
                             userProviders.push(this.worldUserProvider);
                         }
 

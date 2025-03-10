@@ -1,7 +1,7 @@
 
 # @workadventure/room-api-client
 
-Easily create a GRPC client to connect your service to the [Room API](https://github.com/thecodingmachine/workadventure/blob/master/docs/master/roomAPI.md) of a [WorkAdventure](https://workadventu.re) server.
+Easily create a GRPC client to connect your service to the [Room API](https://docs.workadventu.re/developer/room-api) of a [WorkAdventure](https://workadventu.re) server.
 
 
 ## Installation
