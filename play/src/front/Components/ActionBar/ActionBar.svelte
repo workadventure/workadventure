@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { Readable, writable } from "svelte/store";
     import { fly } from "svelte/transition";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
@@ -416,11 +416,26 @@
     let totalMessagesToSee = writable<number>(0);
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
-    const chatConnection = gameManager.chatConnection;
+    let chatHasUnreadMessage: Readable<boolean> = writable<boolean>(false);
+    try {
+        const chatConnection = gameManager.chatConnection;
+        chatHasUnreadMessage = chatConnection.hasUnreadMessages;
+    } catch (e: unknown) {
+        // Do nothing
+        console.error("Chat connection not available", e);
+    }
+
+    let chatAvailable = false;
+    gameManager
+        .getChatConnection()
+        .then(() => {
+            chatAvailable = true;
+        })
+        .catch((e) => {
+            console.error("Chat connection not available", e);
+        });
 
     const proximityChatRoomHasUnreadMessage = proximityChatRoom.hasUnreadMessages;
-
-    const chatHasUnreadMessage = chatConnection.hasUnreadMessages;
 
     onMount(() => {
         // this component is used in the picture in picture dom
@@ -876,8 +891,13 @@
                         <Tooltip text={$LL.actionbar.chat()} />
                     {/if}
 
-                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
-                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn" disabled={!chatAvailable}>
+                        <img
+                            draggable="false"
+                            src={bubbleImg}
+                            style="padding: 2px; opacity: {chatAvailable ? 1 : 0.5};"
+                            alt="Toggle chat"
+                        />
                     </button>
                     {#if $chatZoneLiveStore || $peerStore.size > 0 || $chatHasUnreadMessage || $proximityChatRoomHasUnreadMessage}
                         <div class="tw-absolute tw-top-1 tw-right-0.5">

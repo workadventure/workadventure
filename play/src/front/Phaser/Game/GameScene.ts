@@ -1573,6 +1573,7 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 gameManager
                     .getChatConnection()
@@ -1589,8 +1590,7 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && this._room.isChatOnlineListEnabled) {
-                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                        if (allUserSpace && this._room.isChatOnlineListEnabled && this.worldUserProvider) {
                             userProviders.push(this.worldUserProvider);
                         }
 
