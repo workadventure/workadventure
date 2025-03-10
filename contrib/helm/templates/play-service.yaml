@@ -12,6 +12,10 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.play.service.wsPort }}
+      targetPort: {{ .Values.play.service.wsPort }}
+      protocol: TCP
+      name: ws
   selector:
     {{- include "workadventure.selectorLabels" . | nindent 4 }}
     role: play

@@ -21,6 +21,7 @@ import { mediaManager } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
+import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -398,7 +399,7 @@ export class SimplePeer {
                 console.error(
                     'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
                 );
-                console.info("Attempt to create new peer connection");
+                customWebRTCLogger.info("Attempt to create new peer connection");
                 if (stream) {
                     await this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }

@@ -91,6 +91,10 @@ export class Space implements CustomJsonReplacerInterface {
             sourceWatcher
         );
         debug(`${this.name} : user => removed ${id}`);
+
+        if (usersList.size === 0) {
+            this.users.delete(sourceWatcher);
+        }
     }
 
     public updateMetadata(watcher: SpacesWatcher, metadata: { [key: string]: unknown }) {

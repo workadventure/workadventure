@@ -22,18 +22,16 @@ export class OpenIdProfileController extends BaseHttpController {
             const { accessToken } = query;
 
             const { email, name, profile, tags } = await openIDClient.checkTokenAuth(accessToken);
-            res.atomic(() => {
-                res.setHeader("Content-Type", "text/html");
-                res.send(
-                    this.buildHtml(
-                        OPID_CLIENT_ISSUER,
-                        email as string | undefined,
-                        name as string | undefined,
-                        profile as string | undefined,
-                        tags as string[] | undefined
-                    )
-                );
-            });
+            res.setHeader("Content-Type", "text/html");
+            res.send(
+                this.buildHtml(
+                    OPID_CLIENT_ISSUER,
+                    email as string | undefined,
+                    name as string | undefined,
+                    profile as string | undefined,
+                    tags as string[] | undefined
+                )
+            );
             return;
         });
     }

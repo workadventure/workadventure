@@ -1,4 +1,4 @@
-import type { Request, Response, Server } from "hyper-express";
+import type { Request, Response, Application } from "express";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { validateQuery } from "../services/QueryValidator";
@@ -9,7 +9,7 @@ import { BaseHttpController } from "./BaseHttpController";
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
  */
 export abstract class AuthenticatedProviderController<T> extends BaseHttpController {
-    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
+    constructor(protected app: Application, protected jwtTokenManager: JWTTokenManager) {
         super(app);
     }
     /**
@@ -18,9 +18,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
      */
     setupRoutes(endpoint: string): void {
         this.app.options(endpoint, (req: Request, res: Response) => {
-            res.atomic(() => {
-                res.status(200).send("");
-            });
+            res.status(200).send("");
             return;
         });
 
@@ -28,9 +26,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             const token = req.header("Authorization");
 
             if (!token) {
-                res.atomic(() => {
-                    res.status(401).send("Undefined authorization header");
-                });
+                res.status(401).send("Undefined authorization header");
                 return;
             }
             let uuid: string | undefined;
@@ -42,9 +38,7 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
                 Sentry.captureException(`Connection refused for token: ${token} ${e}`);
                 console.error("Connection refused for token: " + token, e);
 
-                res.atomic(() => {
-                    res.status(401).send("Invalid token sent");
-                });
+                res.status(401).send("Invalid token sent");
                 return;
             }
 
@@ -57,24 +51,18 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             );
 
             if (query === undefined) {
-                res.atomic(() => {
-                    res.status(400).send("bad roomUrl URL parameter");
-                });
+                res.status(400).send("bad roomUrl URL parameter");
                 return;
             }
 
             const data = await this.getData(decodeURIComponent(query.roomUrl), uuid);
 
             if (!data) {
-                res.atomic(() => {
-                    res.status(500).send("Error on getting data");
-                });
+                res.status(500).send("Error on getting data");
                 return;
             }
 
-            res.atomic(() => {
-                res.status(200).json(data);
-            });
+            res.status(200).json(data);
             return;
         });
     }

@@ -4,7 +4,7 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
-    import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
+    import { displayableLocales, setCurrentLocale } from "../../Utils/locales";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";

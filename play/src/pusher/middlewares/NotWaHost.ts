@@ -1,6 +1,6 @@
-import type { MiddlewareNext, MiddlewarePromise, Request, Response } from "hyper-express";
+import type { NextFunction, Request, Response } from "express";
 
-export function notWaHost(req: Request, res: Response, next: MiddlewareNext): MiddlewarePromise | void {
+export function notWaHost(req: Request, res: Response, next: NextFunction): void {
     if (req.hostname.endsWith("workadventu.re")) {
         res.status(404).send();
     }

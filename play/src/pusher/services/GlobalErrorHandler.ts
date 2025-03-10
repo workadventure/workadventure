@@ -1,10 +1,10 @@
-import type { Request, Response } from "hyper-express";
+import type { Request, Response, NextFunction } from "express";
 import { isAxiosError } from "axios";
 import { ErrorApiData } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
+//import { DEBUG_ERROR_MESSAGES } from "../enums/EnvironmentVariable";
 
-export function globalErrorHandler(request: Request, response: Response, error: unknown) {
+export function globalErrorHandler(error: unknown, request: Request, response: Response, next: NextFunction) {
     if (error instanceof Error) {
         let url: string | undefined;
         if (isAxiosError(error)) {
@@ -37,7 +37,7 @@ export function globalErrorHandler(request: Request, response: Response, error: 
         } else response.json(errorType.data);
         return;
     } else {
-        let errorMessage = "An error occurred";
+        /*let errorMessage = "An error occurred";
         if (DEBUG_ERROR_MESSAGES) {
             if (error instanceof Error) {
                 errorMessage += "\n" + error.message + "\n" + error.stack;
@@ -47,7 +47,8 @@ export function globalErrorHandler(request: Request, response: Response, error: 
         }
 
         response.status(500);
-        response.send(errorMessage);
+        response.send(errorMessage);*/
+        next(error);
         return;
     }
 }

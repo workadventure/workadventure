@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Request, Response, Server } from "hyper-express";
+import type { Request, Response, Application } from "express";
 import { AuthenticatedProviderController } from "../../src/pusher/controllers/AuthenticatedProviderController";
 
 const NOT_A_SECRET = "foo";
@@ -46,16 +46,12 @@ class FakeResponse {
     send(data: string) {
         this.lastSentData = data;
     }
-
-    atomic(cb: () => void) {
-        cb();
-    }
 }
 
 class FakeRequest {
     params: object = {};
     constructor(
-        public query_parameters: { [key: string]: string } = {},
+        public query: { [key: string]: string } = {},
         private headers: object = { Authorization: NOT_A_SECRET }
     ) {}
     header(header: string): string {
@@ -103,7 +99,7 @@ describe("AuthenticatedProviderController", () => {
 
     it("should setup correct routes and execute getData with given parameters", async () => {
         isValidToken();
-        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Server, mockTokenManager);
+        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
         subject.setupRoutes("/foo/bar");
 
@@ -121,7 +117,7 @@ describe("AuthenticatedProviderController", () => {
 
     it("should fail if roomUrl is not given", () => {
         isValidToken();
-        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Server, mockTokenManager);
+        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
         subject.setupRoutes("/foo/bar");
         const req = new FakeRequest();
@@ -134,7 +130,7 @@ describe("AuthenticatedProviderController", () => {
 
     it("should fail if Authorization header is not given", () => {
         isValidToken();
-        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Server, mockTokenManager);
+        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
         subject.setupRoutes("/foo/bar");
         const req = new FakeRequest(undefined, {});
@@ -149,7 +145,7 @@ describe("AuthenticatedProviderController", () => {
         vi.spyOn(mockTokenManager, "verifyJWTToken").mockImplementation(() => {
             throw new Error("failed to verify token");
         });
-        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Server, mockTokenManager);
+        const subject = new MockAuthenticatedProviderController(mockApp as unknown as Application, mockTokenManager);
 
         subject.setupRoutes("/foo/bar");
         const req = new FakeRequest({

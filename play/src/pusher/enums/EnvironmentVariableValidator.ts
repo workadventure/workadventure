@@ -30,6 +30,7 @@ export const EnvironmentVariables = z.object({
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional().transform((val) => toNumber(val, 80)),
     PUSHER_HTTP_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 3000)),
+    PUSHER_WS_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 3001)),
     SOCKET_IDLE_TIMER: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 120))
         .describe(
@@ -71,7 +72,7 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
-    DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
+    //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional().transform((val) => toBool(val, false)),
     START_ROOM_URL: z.string().optional(),
 
