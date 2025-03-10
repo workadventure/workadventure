@@ -112,7 +112,6 @@
             />
 
             <Select
-                type="select"
                 label={$LL.mapEditor.settings.megaphone.inputs.scope()}
                 options={scopes}
                 bind:value={scope}
