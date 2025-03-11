@@ -15,7 +15,8 @@ class Megaphone {
 
   async isMegaphoneEnabled(page: Page) {
     await page
-      .locator('.map-editor .configure-my-room input[type="checkbox"]')
+      // .locator('.map-editor .configure-my-room input[type="checkbox"]')
+      .locator('[data-testid="megaphone-switch"]')
       .isChecked();
   }
 
