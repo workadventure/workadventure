@@ -73,6 +73,7 @@ export interface ChatRoomNotificationControl {
 }
 
 export interface ChatRoomModeration {
+    readonly id: string;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly kick: (userID: string) => Promise<void>;
