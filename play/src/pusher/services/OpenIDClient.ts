@@ -2,7 +2,7 @@ import crypto from "crypto";
 import type { Client, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
 import { Issuer, generators } from "openid-client";
 import { v4 } from "uuid";
-import type { Request, Response } from "hyper-express";
+import type { Request, Response } from "express";
 import {
     OPID_CLIENT_ID,
     OPID_CLIENT_SECRET,
@@ -75,7 +75,7 @@ class OpenIDClient {
             const code_verifier = generators.codeVerifier();
             // store the code_verifier in your framework's session mechanism, if it is a cookie based solution
             // it should be httpOnly (not readable by javascript) and encrypted.
-            res.cookie("code_verifier", this.encrypt(code_verifier), undefined, {
+            res.cookie("code_verifier", this.encrypt(code_verifier), {
                 httpOnly: true, // dont let browser javascript access cookie ever
                 secure: req.secure, // only use cookie over https
             });
@@ -83,7 +83,7 @@ class OpenIDClient {
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
             // don't understand PKCE
             const state = v4();
-            res.cookie("oidc_state", state, undefined, {
+            res.cookie("oidc_state", state, {
                 httpOnly: true, // dont let browser javascript access cookie ever
                 secure: req.secure, // only use cookie over https
             });

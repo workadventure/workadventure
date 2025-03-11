@@ -11,12 +11,12 @@ services:
         condition: service_healthy
 
   play:
-    image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/play-dev-build:amd64-${GITHUB_SHA}
     build:
       context: ./
       dockerfile: play/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/play-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/play
@@ -40,12 +40,12 @@ services:
       - "traefik.http.routers.play.entryPoints=web"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
   back:
-    image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/back-dev-build:amd64-${GITHUB_SHA}
     build:
       context: ./
       dockerfile: back/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/back-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
     command: npm run runprod
@@ -58,12 +58,12 @@ services:
       STARTUP_COMMAND_2: ""
 
   map-storage:
-    image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/map-storage-dev-build:amd64-${GITHUB_SHA}
     build:
       context: ./
       dockerfile: map-storage/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/map-storage-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/map-storage
@@ -72,13 +72,19 @@ services:
     environment:
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/ping" ]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
 
   maps:
-    image: thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/maps-dev-build:amd64-${GITHUB_SHA}
     build:
       context: maps/
       cache_from:
-        - thecodingmachine/workadventure-maps:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/maps-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
     volumes: []
@@ -87,12 +93,12 @@ services:
       STARTUP_COMMAND_1: ""
 
   uploader:
-    image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
+    image: ghcr.io/workadventure/uploader-dev-build:amd64-${GITHUB_SHA}
     build:
       context: ./
       dockerfile: uploader/Dockerfile
       cache_from:
-        - thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
+        - ghcr.io/workadventure/uploader-dev-build:amd64-${GITHUB_SHA}
       args:
         BUILDKIT_INLINE_CACHE: 1
     working_dir: /usr/src/uploader
@@ -101,3 +107,21 @@ services:
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
       STARTUP_COMMAND_1: ""
+
+  synapse:
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8008" ]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
+
+  everything_started:
+    image: alpine:3.14
+    command: echo "Everything started"
+    depends_on:
+      # Actually, we only check the start of the map-storage because this is the first thing we need (to upload the maps)
+      map-storage:
+        condition: service_healthy
+      synapse:
+        condition: service_healthy

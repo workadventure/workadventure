@@ -1,6 +1,7 @@
-import { Room } from "matrix-js-sdk";
+import { Room, EventType, EventTimeline } from "matrix-js-sdk";
 import { derived, get, Readable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
+
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "ts-deferred";
@@ -192,12 +193,16 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
     async refreshFolderHierarchy() {
         await this.joinRoomDeferred.promise;
-        const { rooms: roomsHierarchy } = await this.room.client.getRoomHierarchy(this.id, 100, 1);
+        const childEvents = this.room
+            .getLiveTimeline()
+            ?.getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.SpaceChild);
 
-        roomsHierarchy.forEach((cur) => {
-            const childRoom = this.room.client.getRoom(cur.room_id);
+        childEvents?.forEach((childEvent) => {
+            const roomId = childEvent.event.state_key;
+            const childRoom = this.room.client.getRoom(roomId);
 
-            if (!childRoom || cur.room_id === this.id) return;
+            if (!childRoom || roomId === this.id) return;
 
             if (childRoom.isSpaceRoom()) {
                 this.folderList.set(childRoom.roomId, new MatrixRoomFolder(childRoom));
