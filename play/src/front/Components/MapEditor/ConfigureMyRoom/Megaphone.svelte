@@ -112,7 +112,6 @@
             />
 
             <Select
-                type="select"
                 label={$LL.mapEditor.settings.megaphone.inputs.scope()}
                 options={scopes}
                 bind:value={scope}
@@ -128,7 +127,7 @@
                 options={tags ?? []}
                 bind:value={rights}
             />
-            <p class="help-text ">
+            <p class="help-text">
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}
             </p>

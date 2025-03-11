@@ -18,6 +18,7 @@
     export let onKeyPress = () => {};
     export let optional = false;
     export let isValid = true;
+    export let rounded = false;
     export let onerror = () => {};
 
     const SLOTS = $$slots;
@@ -49,12 +50,12 @@
         {/if}
     </div>
 
-    <div class="relative flex grow">
+    <div class="relative flex flex-col grow">
         {#if type === "text"}
             <input
                 id={uniqueId}
                 type="text"
-                class="grow input-text input-icon  "
+                class="grow input-text input-icon"
                 class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
@@ -62,6 +63,7 @@
                 class:input-text-lg={size === "lg"}
                 class:error={status === "error"}
                 class:success={status === "success"}
+                class:rounded-full={rounded}
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}

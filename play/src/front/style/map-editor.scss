@@ -5,7 +5,7 @@
 //////////////////////
 */
 p.help-text{
-  @apply text-sm text-lighter-purple m-0;
+  @apply text-sm text-white/80;
   &.success {
     @apply text-pop-green text-center;
   }
@@ -17,20 +17,22 @@ p.help-text{
 ////////////////////////////
 */
 .configure-my-room {
-  @apply rounded-xl bg-dark-blue/90 backdrop-blur flex flex-wrap;
-  width: 100%;
-  min-height: 50vh;
-  height: fit-content !important;
-  top: 0;
-  transition: all 100ms ease-in-out;
-  margin-top: 25vh;
+    @apply  text-white;
+  //left: 50%;
+  //top: 0;
+  //transform: translateX(-50%);
+  //width: 100%;
+  //min-height: 50vh;
+  //height: fit-content !important;
+  //transition: all 100ms ease-in-out;
+  //margin-top: 25vh;
 
   .close-window {
     @apply top-1.5 right-2.5;
   }
 
   h3 {
-    @apply text-light-blue m-0 text-lg;
+    @apply m-0 text-lg;
   }
 
   .menu {
