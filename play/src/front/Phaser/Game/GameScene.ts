@@ -3438,7 +3438,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                gameManager.getCompanionTextureId() ? this.currentCompanionTexturePromise : undefined
+                this.currentCompanionTexturePromise
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -3552,7 +3552,9 @@ ${escapedMessage}
                 addPlayerData.visitCardUrl,
                 addPlayerData.companionTexture
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
-                    : undefined
+                    : new CancelablePromise<string>((_, reject) =>
+                          reject(new CompanionTextureError("No companion texture"))
+                      )
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {
