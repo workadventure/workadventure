@@ -343,7 +343,7 @@ class ConnectionManager {
                         if (chatId && chatRoomId) {
                             try {
                                 const chatConnection = await gameManager.getChatConnection();
-                                const room = chatConnection.getRoombyID(chatRoomId);
+                                const room = chatConnection.getRoomByID(chatRoomId);
                                 selectedRoomStore.set(room);
                                 navChat.switchToChat();
                                 chatVisibilityStore.set(true);
