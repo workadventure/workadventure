@@ -35,8 +35,7 @@ import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import { navChat, selectedRoomStore } from "../Chat/Stores/ChatStore";
-import { chatVisibilityStore } from "../Stores/ChatStore";
+import { openChatRoom } from "../Chat/Utils";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -342,11 +341,7 @@ class ConnectionManager {
 
                         if (chatId && chatRoomId) {
                             try {
-                                const chatConnection = await gameManager.getChatConnection();
-                                const room = chatConnection.getRoomByID(chatRoomId);
-                                selectedRoomStore.set(room);
-                                navChat.switchToChat();
-                                chatVisibilityStore.set(true);
+                                await openChatRoom(chatRoomId);
                             } catch (err) {
                                 console.error("Unable to open chat room or establish chat connection", err);
                                 Sentry.captureException(err);
