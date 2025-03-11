@@ -23,12 +23,11 @@
             on:change={onChange}
             {disabled}
         />
-        <div class="input-switch" class:input-switch-white={variant === "white"} />
+        <div class="input-switch" class:input-switch-white={variant === "white"} data-testid="megaphone-switch" />
         {#if labelPosition === "right" && label}
             <span class="input-label input-label-inline ml-3 text-white/50 font-regular peer-checked:text-white"
                 >{label}</span
             >
         {/if}
-        <span>Toggle</span>
     </label>
 </div>

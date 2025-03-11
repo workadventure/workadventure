@@ -7,7 +7,10 @@ class Megaphone {
       .check();
        await page.locator(".input-switch").click();*/
    
-    await page.locator('text="Toggle"').click();
+
+    await page.locator('[data-testid="megaphone-switch"]').click();
+
+    
   }
 
   async isMegaphoneEnabled(page: Page) {
