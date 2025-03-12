@@ -37,7 +37,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         direction: PositionMessage_Direction,
         moving: boolean,
         visitCardUrl: string | null,
-        companionTexturePromise?: CancelablePromise<string>,
+        companionTexturePromise: CancelablePromise<string>,
         activationRadius?: number,
         private chatID: string | undefined = undefined
     ) {
