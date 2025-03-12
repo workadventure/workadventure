@@ -20,10 +20,10 @@
     <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
     </div>
-    <div id="map-editor-right" class={`map-editor h-screen ${$mapEditorSelectedToolStore}`}>
+    <div id="map-editor-right" class={`map-editor h-dvh ${$mapEditorSelectedToolStore}`}>
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
             <div
-                class="sidebar h-screen bg-contrast/80 backdrop-blur-md"
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md"
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >

@@ -182,8 +182,8 @@
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
-    <section class="flex items-center justify-center min-h-screen ">
-        <div class="text-white container mx-auto flex flex-col items-center justify-center min-h-screen pb-24 relative">
+    <section class="flex items-center justify-center min-h-dvh ">
+        <div class="text-white container mx-auto flex flex-col items-center justify-center min-h-dvh pb-24 relative">
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
                 <p class="opacity-50 w-2/3 m-auto">
@@ -534,8 +534,8 @@
         </div>
     </section>
 </form>
-<div class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');" />
-<div class="absolute left-0 top-0 w-screen h-screen bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
+<div class="absolute left-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');" />
+<div class="absolute left-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
 
 <style lang="scss">
     .enableCameraScene {

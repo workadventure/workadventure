@@ -55,7 +55,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="menu-container fixed h-screen w-screen z-[2000] pointer-events-auto top-0 transition-all {isMobile
+    class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {isMobile
         ? 'mobile'
         : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
     bind:this={mainModal}

@@ -15,7 +15,7 @@
     });
 </script>
 
-<div class="grid place-items-center h-screen refresh">
+<div class="grid place-items-center h-dvh refresh">
     <div class="px-10 py-80 flex items-center flex-col">
         <p class="test-class">{$LL.mapEditor.map.refreshPrompt()}</p>
         <button
