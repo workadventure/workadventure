@@ -61,7 +61,7 @@
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
-    <div class="h-screen overflow-y-auto">
+    <div class="h-dvh overflow-y-auto">
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
@@ -73,7 +73,7 @@
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
-    <div class="h-screen overflow-y-auto">
+    <div class="h-dvh overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
