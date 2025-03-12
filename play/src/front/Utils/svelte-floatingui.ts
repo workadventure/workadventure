@@ -6,9 +6,11 @@ import {
     computePosition,
     flip,
     shift,
-    //offset,
+    offset,
     //arrow,
     autoUpdate,
+    ComputePositionConfig,
+    arrow,
 } from "@floating-ui/dom";
 import {
     //createPopper,
@@ -34,35 +36,77 @@ export type ContentAction<TModifier> = (
     destroy(): void;
 };
 
+export type ArrowAction = (node: HTMLElement) => {
+    destroy?(): void;
+};
+
 export function createFlotingUiActions<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TModifier extends Partial<Modifier<any, any>>
->(initOptions?: PopperOptions<TModifier>): [ReferenceAction, ContentAction<TModifier>] {
+>(initOptions?: Partial<ComputePositionConfig>): [ReferenceAction, ContentAction<TModifier>, ArrowAction] {
     let cleanup: (() => void) | null = null;
     let referenceNode: VirtualElement | Element | undefined;
     let contentNode: HTMLElement | undefined;
-    //let options: PopperOptions<TModifier> | undefined = initOptions;
+    let arrowNode: HTMLElement | undefined;
+    const options: Partial<ComputePositionConfig> | undefined = initOptions;
+
+    const updatePosition = () => {
+        if (referenceNode && contentNode) {
+            const middlewares = [flip(), shift({ padding: 5 }), offset({ mainAxis: 8 })];
+            if (arrowNode) {
+                middlewares.push(arrow({ element: arrowNode }));
+            }
+
+            computePosition(referenceNode, contentNode, {
+                placement: "top",
+                ...options,
+                middleware: middlewares,
+            })
+                .then(({ x, y, placement, middlewareData }) => {
+                    if (contentNode) {
+                        Object.assign(contentNode.style, {
+                            left: `${x}px`,
+                            top: `${y}px`,
+                        });
+
+                        if (arrowNode) {
+                            const { x: arrowX, y: arrowY } = middlewareData.arrow;
+                            const staticSide = {
+                                top: "bottom",
+                                right: "left",
+                                bottom: "top",
+                                left: "right",
+                            }[placement.split("-")[0]];
+
+                            if (staticSide === undefined) {
+                                throw new Error("Invalid placement");
+                            }
+                            Object.assign(arrowNode.style, {
+                                left: arrowX != null ? `${arrowX}px` : "",
+                                top: arrowY != null ? `${arrowY}px` : "",
+                                right: "",
+                                bottom: "",
+                                [staticSide]: "-4px",
+                            });
+                            arrowNode.classList.add("floating-ui-arrow");
+                            arrowNode.dataset.arrowPlacement = staticSide;
+                        }
+                    }
+                })
+                .catch((e) => {
+                    console.error(e);
+                });
+        }
+    };
 
     const initFloatingUi = () => {
         if (referenceNode !== undefined && contentNode !== undefined) {
+            if (cleanup) {
+                // Is this normal?
+                cleanup();
+            }
             cleanup = autoUpdate(referenceNode, contentNode, () => {
-                if (referenceNode && contentNode) {
-                    computePosition(referenceNode, contentNode, {
-                        placement: "top",
-                        middleware: [flip(), shift({ padding: 5 })],
-                    })
-                        .then(({ x, y }) => {
-                            if (contentNode) {
-                                Object.assign(contentNode.style, {
-                                    left: `${x}px`,
-                                    top: `${y}px`,
-                                });
-                            }
-                        })
-                        .catch((e) => {
-                            console.error(e);
-                        });
-                }
+                updatePosition();
             });
         }
     };
@@ -97,7 +141,7 @@ export function createFlotingUiActions<
             } else {
                 // Preserve the reference to the virtual element.
                 Object.assign(referenceNode, $node);
-                console.error("Don't know what to do here");
+                updatePosition();
                 //popperInstance?.update();
             }
         });
@@ -120,5 +164,20 @@ export function createFlotingUiActions<
         };
     };
 
-    return [referenceAction, contentAction];
+    const arrowAction: ArrowAction = (node) => {
+        if ("subscribe" in node) {
+            setupVirtualElementObserver(node);
+            return {};
+        } else {
+            arrowNode = node;
+            initFloatingUi();
+            return {
+                destroy() {
+                    deinitFloatingUi();
+                },
+            };
+        }
+    };
+
+    return [referenceAction, contentAction, arrowAction];
 }
