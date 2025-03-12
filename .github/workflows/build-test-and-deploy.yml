@@ -89,28 +89,30 @@ jobs:
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
     needs:
-      - build-play
+#      - build-play
+      - build-back
+      - build-map-storage
     steps:
-      - name: Sentry push play source maps
-        continue-on-error: true
-        env:
-          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: pusher
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-        run: |
-          docker run --rm \
-            --user 0       \
-            -e SENTRY_URL \
-            -e SENTRY_AUTH_TOKEN \
-            -e SENTRY_ORG \
-            -e SENTRY_PROJECT \
-            -e SENTRY_RELEASE \
-            -e SENTRY_ENVIRONMENT \
-            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
-            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+#      - name: Sentry push play source maps
+#        continue-on-error: true
+#        env:
+#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+#          SENTRY_PROJECT: pusher
+#          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+#          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
+#        run: |
+#          docker run --rm \
+#            --user 0       \
+#            -e SENTRY_URL \
+#            -e SENTRY_AUTH_TOKEN \
+#            -e SENTRY_ORG \
+#            -e SENTRY_PROJECT \
+#            -e SENTRY_RELEASE \
+#            -e SENTRY_ENVIRONMENT \
+#            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
+#            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
       - name: Sentry push back source maps
         env:
