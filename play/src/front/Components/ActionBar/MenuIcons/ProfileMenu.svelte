@@ -1,7 +1,6 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { createPopperActions } from "svelte-popperjs";
     import { setContext, SvelteComponentTyped } from "svelte";
     import { derived, get, Readable } from "svelte/store";
     import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
@@ -39,6 +38,7 @@
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
+    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconLogout } from "@wa-icons";
@@ -81,8 +81,8 @@
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom-end",
+    const [popperRef, popperContent] = createFlotingUiActions({
+        //placement: "bottom-end",
         //strategy: 'fixed',
     });
     const extraOpts = {
@@ -181,7 +181,7 @@
     {#if $openedMenuStore === "profileMenu"}
         <!-- before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 -->
         <div
-            class="bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white popper-tooltip"
+            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white popper-tooltip"
             data-testid="profile-menu"
             use:popperContent={extraOpts}
             use:clickOutside={() => {
