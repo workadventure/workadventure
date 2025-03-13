@@ -1,7 +1,6 @@
 // This is a port of svelte-popperjs using Floating UI instead in Svelte 3.0
 // When we later migrate to Svelte 5, we can use the new Svelte 5 version of svelte-floatingui
 
-import type { Readable } from "svelte/store";
 import {
     computePosition,
     flip,
@@ -13,27 +12,12 @@ import {
     arrow,
     limitShift,
 } from "@floating-ui/dom";
-import {
-    //createPopper,
-    //Instance,
-    OptionsGeneric,
-    Modifier,
-    type VirtualElement,
-} from "@popperjs/core";
-import { onDestroy } from "svelte";
-export type { VirtualElement } from "@popperjs/core";
 
-export type PopperOptions<TModifier> = Partial<OptionsGeneric<TModifier>> | undefined;
-
-export type ReferenceAction = (node: Element | VirtualElement | Readable<VirtualElement>) => {
+export type ReferenceAction = (node: Element) => {
     destroy?(): void;
 };
 
-export type ContentAction<TModifier> = (
-    node: HTMLElement,
-    popperOptions?: PopperOptions<TModifier>
-) => {
-    update(popperOptions: PopperOptions<TModifier>): void;
+export type ContentAction = (node: HTMLElement) => {
     destroy(): void;
 };
 
@@ -41,19 +25,23 @@ export type ArrowAction = (node: HTMLElement) => {
     destroy?(): void;
 };
 
-export function createFlotingUiActions<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TModifier extends Partial<Modifier<any, any>>
->(initOptions?: Partial<ComputePositionConfig>): [ReferenceAction, ContentAction<TModifier>, ArrowAction] {
+export function createFlotingUiActions(
+    initOptions?: Partial<ComputePositionConfig>,
+    offsetMainAxis = 0
+): [ReferenceAction, ContentAction, ArrowAction] {
     let cleanup: (() => void) | null = null;
-    let referenceNode: VirtualElement | Element | undefined;
+    let referenceNode: Element | undefined;
     let contentNode: HTMLElement | undefined;
     let arrowNode: HTMLElement | undefined;
     const options: Partial<ComputePositionConfig> | undefined = initOptions;
 
     const updatePosition = () => {
         if (referenceNode && contentNode) {
-            const middlewares = [flip(), shift({ padding: 5, limiter: limitShift() }), offset({ mainAxis: 8 })];
+            const middlewares = [
+                flip(),
+                shift({ padding: 5, limiter: limitShift() }),
+                offset({ mainAxis: offsetMainAxis }),
+            ];
             if (arrowNode) {
                 middlewares.push(arrow({ element: arrowNode }));
             }
@@ -71,7 +59,8 @@ export function createFlotingUiActions<
                         });
 
                         if (arrowNode) {
-                            const { x: arrowX, y: arrowY } = middlewareData.arrow;
+                            const arrowX = middlewareData.arrow?.x;
+                            const arrowY = middlewareData.arrow?.y;
                             const staticSide = {
                                 top: "bottom",
                                 right: "left",
@@ -120,45 +109,20 @@ export function createFlotingUiActions<
     };
 
     const referenceAction: ReferenceAction = (node) => {
-        if ("subscribe" in node) {
-            setupVirtualElementObserver(node);
-            return {};
-        } else {
-            referenceNode = node;
-            initFloatingUi();
-            return {
-                destroy() {
-                    deinitFloatingUi();
-                },
-            };
-        }
+        referenceNode = node;
+        initFloatingUi();
+        return {
+            destroy() {
+                deinitFloatingUi();
+            },
+        };
     };
 
-    const setupVirtualElementObserver = (node: Readable<VirtualElement>) => {
-        const unsubscribe = node.subscribe(($node) => {
-            if (referenceNode === undefined) {
-                referenceNode = $node;
-                initFloatingUi();
-            } else {
-                // Preserve the reference to the virtual element.
-                Object.assign(referenceNode, $node);
-                updatePosition();
-                //popperInstance?.update();
-            }
-        });
-        onDestroy(unsubscribe);
-    };
-
-    const contentAction: ContentAction<TModifier> = (node, contentOptions?) => {
+    const contentAction: ContentAction = (node) => {
         contentNode = node;
         //options = { ...initOptions, ...contentOptions };
         initFloatingUi();
         return {
-            update(newContentOptions: PopperOptions<TModifier>) {
-                //options = { ...initOptions, ...newContentOptions };
-                //popperInstance?.setOptions(options);
-                console.error("Don't know how to update options");
-            },
             destroy() {
                 deinitFloatingUi();
             },
@@ -166,18 +130,13 @@ export function createFlotingUiActions<
     };
 
     const arrowAction: ArrowAction = (node) => {
-        if ("subscribe" in node) {
-            setupVirtualElementObserver(node);
-            return {};
-        } else {
-            arrowNode = node;
-            initFloatingUi();
-            return {
-                destroy() {
-                    deinitFloatingUi();
-                },
-            };
-        }
+        arrowNode = node;
+        initFloatingUi();
+        return {
+            destroy() {
+                deinitFloatingUi();
+            },
+        };
     };
 
     return [referenceAction, contentAction, arrowAction];

@@ -20,10 +20,13 @@
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 
-    const [popperRef, popperContent, arrowAction] = createFlotingUiActions({
-        placement: "bottom-start",
-        //strategy: 'fixed',
-    });
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+        {
+            placement: "bottom-start",
+            //strategy: 'fixed',
+        },
+        8
+    );
 </script>
 
 {#if !inProfileMenu}
@@ -39,7 +42,7 @@
         disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
         state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
         dataTestId={undefined}
-        action={popperRef}
+        action={floatingUiRef}
     >
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
@@ -49,8 +52,8 @@
         />
 
         {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div class="absolute" use:popperContent>
-                <div class="flex justify-center m-[unset] popper-tooltip">
+            <div class="absolute" use:floatingUiContent>
+                <div class="flex justify-center m-[unset]">
                     <div use:arrowAction />
                     <div class="bottom-action-bar">
                         <div
