@@ -719,6 +719,24 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
     };
 });
 
+const talkIconVolumeThreshold = 10;
+
+export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, boolean>(
+    localVolumeStore,
+    ($localVolumeStore) => {
+        if ($localVolumeStore === undefined) {
+            return false;
+        }
+        const volume = $localVolumeStore;
+        if (volume === undefined) {
+            return false;
+        }
+        const averageVolume = volume.reduce((a, b) => a + b, 0);
+        return averageVolume > talkIconVolumeThreshold;
+    },
+    false
+);
+
 /**
  * Device list
  */

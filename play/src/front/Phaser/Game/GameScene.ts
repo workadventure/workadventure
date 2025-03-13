@@ -107,7 +107,7 @@ import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
     lastNewMediaDeviceDetectedStore,
-    localVolumeStore,
+    localVoiceIndicatorStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
@@ -2157,7 +2157,6 @@ export class GameScene extends DirtyScene {
             //this.reposition();
         });
 
-        const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
         let screenWakeRelease: (() => Promise<void>) | undefined;
@@ -2271,13 +2270,12 @@ export class GameScene extends DirtyScene {
 
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
-                        if (spectrum === undefined) {
-                            this.CurrentPlayer.toggleTalk(false, true);
-                            return;
-                        }
-                        const volume = spectrum.reduce((a, b) => a + b, 0);
-                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+                    this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
+                        this.tryChangeShowVoiceIndicatorState(isTalking);
+
+                        return () => {
+                            this.tryChangeShowVoiceIndicatorState(false);
+                        };
                     });
                 }
                 //this.reposition();
@@ -2285,7 +2283,7 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.toggleTalk(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
                 this.showVoiceIndicatorChangeMessageSent = false;
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
+                //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;

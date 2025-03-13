@@ -69,7 +69,6 @@
     const [floatingUiRef, floatingUiContent] = createFlotingUiActions(
         {
             placement: "bottom",
-            //strategy: 'fixed',
         },
         12
     );
@@ -114,21 +113,26 @@
                 isPlayingAudio={showVoiceIndicator}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
             >
-                <div use:floatingUiRef class="self-center">
-                    <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
-                </div>
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
-                    {#if spaceUser && showUserSubMenu}
-                        <div use:floatingUiContent class="absolute">
-                            <ActionMediaBox
-                                {embedScreen}
-                                {spaceUser}
-                                {videoEnabled}
-                                on:close={() => (showUserSubMenu = false)}
+                    {#if spaceUser}
+                        <div use:floatingUiRef class="self-center">
+                            <UpDownChevron
+                                enabled={showUserSubMenu}
+                                on:click={() => (showUserSubMenu = !showUserSubMenu)}
                             />
                         </div>
+                        {#if showUserSubMenu}
+                            <div use:floatingUiContent class="absolute">
+                                <ActionMediaBox
+                                    {embedScreen}
+                                    {spaceUser}
+                                    {videoEnabled}
+                                    on:close={() => (showUserSubMenu = false)}
+                                />
+                            </div>
+                        {/if}
                     {/if}
                 {:catch error}
                     <div class="bg-danger">{error}</div>
