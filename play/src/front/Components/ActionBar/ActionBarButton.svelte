@@ -54,11 +54,11 @@
         class:pl-2={first === true}
         class:rounded-r-lg={last === true}
         class:pr-2={last === true}
+        use:action
     >
         <button
-            use:action
             type="button"
-            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded
+            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded text-neutral-100
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'normal' ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
@@ -88,7 +88,7 @@
     </div>
 {:else}
     <button
-        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded
+        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}

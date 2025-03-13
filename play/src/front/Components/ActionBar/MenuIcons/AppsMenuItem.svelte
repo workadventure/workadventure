@@ -1,6 +1,5 @@
 <script lang="ts">
     import { getContext, setContext } from "svelte";
-    import { createPopperActions } from "svelte-popperjs";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -9,6 +8,7 @@
     import { isActivatedStore as isTodoListActivatedStore } from "../../../Stores/TodoListStore";
     import { roomListVisibilityStore } from "../../../Stores/ModalStore";
     import { externalSvelteComponentService } from "../../../Stores/Utils/externalSvelteComponentService";
+    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
     import AppsMenuContent from "./AppsMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
 
@@ -20,13 +20,10 @@
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 
-    const [popperRef, popperContent] = createPopperActions({
+    const [popperRef, popperContent, arrowAction] = createFlotingUiActions({
         placement: "bottom-start",
         //strategy: 'fixed',
     });
-    const extraOpts = {
-        modifiers: [{ name: "offset", options: { offset: [0, 14] } }],
-    };
 </script>
 
 {#if !inProfileMenu}
@@ -52,13 +49,15 @@
         />
 
         {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div class="flex justify-center m-[unset] popper-tooltip" use:popperContent={extraOpts}>
-                <div class="popper-arrow" data-popper-arrow />
-                <div class="bottom-action-bar">
-                    <div
-                        class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
-                    >
-                        <AppsMenuContent />
+            <div class="absolute" use:popperContent>
+                <div class="flex justify-center m-[unset] popper-tooltip">
+                    <div use:arrowAction />
+                    <div class="bottom-action-bar">
+                        <div
+                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
+                        >
+                            <AppsMenuContent />
+                        </div>
                     </div>
                 </div>
             </div>
