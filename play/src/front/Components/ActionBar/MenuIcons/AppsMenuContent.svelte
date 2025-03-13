@@ -46,7 +46,7 @@
 
         console.log("1showRoomList", get(openedMenuStore));
         roomListVisibilityStore.set(true);
-        openedMenuStore.close("appMenu");
+        openedMenuStore.closeAll();
         console.log("2showRoomList", get(openedMenuStore));
     }
 
@@ -55,7 +55,7 @@
         isCalendarVisibleStore.set(!$isCalendarVisibleStore);
         isTodoListVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
-        openedMenuStore.close("appMenu");
+        openedMenuStore.closeAll();
     }
 
     function openExternalModuleTodoList() {
@@ -63,7 +63,7 @@
         isTodoListVisibleStore.set(!$isTodoListVisibleStore);
         isCalendarVisibleStore.set(false);
         mapEditorModeStore.switchMode(false);
-        openedMenuStore.close("appMenu");
+        openedMenuStore.closeAll();
     }
 </script>
 
