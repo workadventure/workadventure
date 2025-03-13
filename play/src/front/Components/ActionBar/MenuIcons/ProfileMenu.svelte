@@ -82,9 +82,12 @@
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
 
-    const [popperRef, popperContent, arrowAction] = createFlotingUiActions({
-        placement: "bottom-end",
-    });
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+        {
+            placement: "bottom-end",
+        },
+        8
+    );
 
     let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
         rightActionBarMenuItems,
@@ -109,7 +112,7 @@
 <div data-testid="action-user" class="flex items-center transition-all cursor-pointer pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2"
-        use:popperRef
+        use:floatingUiRef
         on:click|preventDefault={() => {
             openedMenuStore.toggle("profileMenu");
         }}
@@ -162,9 +165,9 @@
     {#if $openedMenuStore === "profileMenu"}
         <!-- before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 -->
         <div
-            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white popper-tooltip"
+            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white"
             data-testid="profile-menu"
-            use:popperContent
+            use:floatingUiContent
             use:clickOutside={() => {
                 openedMenuStore.close("profileMenu");
             }}

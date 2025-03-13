@@ -1,6 +1,5 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
-    import { createPopperActions } from "svelte-popperjs";
     import { getContext, setContext } from "svelte";
     import { streamingMegaphoneStore } from "../../../Stores/MediaStore";
     import { mapMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
@@ -8,6 +7,7 @@
     import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
     import MegaphoneConfirm from "../MegaphoneConfirm.svelte";
+    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
 
@@ -20,29 +20,10 @@
     // Useless property. It is here only to avoid a warning because we set the "first" prop on all the right menu items
     export let first: boolean | undefined = undefined;
 
-    const [popperRef, popperContent] = createPopperActions({
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions({
         placement: "bottom-end",
         //strategy: 'fixed',
     });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "popper-arrow",
-                options: {
-                    element: ".popper-arrow",
-                    padding: 12,
-                },
-            },
-
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top-end", "top-start", "top"],
-                },
-            },
-        ],
-    };
 
     function closeMapMenu() {
         openedMenuStore.close("mapMenu");
@@ -55,7 +36,7 @@
         <div
             data-testid="map-menu"
             class="items-center relative cursor-pointer pointer-events-auto"
-            use:popperRef
+            use:floatingUiRef
             on:click|preventDefault={() => {
                 openedMenuStore.toggle("mapMenu");
             }}
@@ -83,12 +64,12 @@
         </div>
         {#if $openedMenuStore === "mapMenu"}
             <div
-                class="popper-tooltip mt-2 bg-contrast/80 backdrop-blur rounded-md w-56 text-white"
+                class="absolute mt-2 bg-contrast/80 backdrop-blur rounded-md w-56 text-white"
                 data-testid="map-sub-menu"
-                use:popperContent={extraOpts}
+                use:floatingUiContent
                 use:clickOutside={closeMapMenu}
             >
-                <div class="popper-arrow" data-popper-arrow />
+                <div use:arrowAction />
                 <div class="p-1 m-0">
                     <MapSubMenuContent />
                     <!--{#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}-->
