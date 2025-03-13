@@ -11,6 +11,7 @@ import {
     autoUpdate,
     ComputePositionConfig,
     arrow,
+    limitShift,
 } from "@floating-ui/dom";
 import {
     //createPopper,
@@ -52,7 +53,7 @@ export function createFlotingUiActions<
 
     const updatePosition = () => {
         if (referenceNode && contentNode) {
-            const middlewares = [flip(), shift({ padding: 5 }), offset({ mainAxis: 8 })];
+            const middlewares = [flip(), shift({ padding: 5, limiter: limitShift() }), offset({ mainAxis: 8 })];
             if (arrowNode) {
                 middlewares.push(arrow({ element: arrowNode }));
             }
