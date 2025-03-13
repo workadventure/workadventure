@@ -219,38 +219,46 @@
     }
 </script>
 
-<div
-    class="h-full w-full relative overflow-hidden"
-    bind:clientWidth={containerWidth}
-    bind:clientHeight={containerHeight}
->
-    <video
-        style={videoEnabled
-            ? "width: " +
-              Math.ceil(videoWidth) +
-              "px; height: " +
-              Math.ceil(videoHeight) +
-              "px; left: " +
-              Math.ceil((containerWidth - videoWidth) / 2) +
-              "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "") +
-              (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-            : ""}
-        bind:videoWidth={videoStreamWidth}
-        bind:videoHeight={videoStreamHeight}
-        bind:this={videoElement}
-        on:loadedmetadata={onLoadVideoElement}
-        class="absolute block object-fill"
-        class:h-0={!videoEnabled}
-        class:w-0={!videoEnabled}
-        class:border-solid={videoEnabled}
-        class:rounded-lg={videoEnabled}
+<div class="h-full w-full relative" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+    <div
+        class={"absolute overflow-hidden border-solid rounded-lg"}
+        class:w-full={!videoEnabled}
+        class:h-full={!videoEnabled}
         class:border-transparent={!isTalking}
         class:border-secondary={isTalking}
-        autoplay
-        playsinline
-        {muted}
-    />
+        style={videoEnabled
+            ? "width: " +
+              overlayWidth +
+              "px; height: " +
+              overlayHeight +
+              "px; left: " +
+              (containerWidth - overlayWidth) / 2 +
+              "px;" +
+              (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
+            : ""}
+    >
+        <video
+            style={videoEnabled
+                ? "width: " +
+                  Math.ceil(videoWidth) +
+                  "px; height: " +
+                  Math.ceil(videoHeight) +
+                  "px; " +
+                  (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "") +
+                  (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
+                : ""}
+            bind:videoWidth={videoStreamWidth}
+            bind:videoHeight={videoStreamHeight}
+            bind:this={videoElement}
+            on:loadedmetadata={onLoadVideoElement}
+            class="absolute block object-fill"
+            class:h-0={!videoEnabled}
+            class:w-0={!videoEnabled}
+            autoplay
+            playsinline
+            {muted}
+        />
+    </div>
     {#if displayNoVideoWarning}
         <div
             class="absolute w-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
