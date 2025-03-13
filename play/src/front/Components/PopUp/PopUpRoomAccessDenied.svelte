@@ -16,7 +16,7 @@
     });
 </script>
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     {message}
     <svelte:fragment slot="buttons">
         <button class="btn btn-secondary w-1/2 justify-center responsive-message" on:click={click}> Close </button>

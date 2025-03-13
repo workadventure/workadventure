@@ -80,7 +80,7 @@
 </script>
 
 <div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
-    <div class="w-2/3  relative h-fit">
+    <div class="w-11/12 lg:w-2/3  relative h-fit">
         <PopUpContainer extraClasses="w-full relative" fullContent={true}>
             <div class="flex flex-col items-center pointer-events-auto w-full">
                 {#if $isMoving}

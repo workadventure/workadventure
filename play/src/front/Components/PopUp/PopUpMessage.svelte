@@ -33,7 +33,7 @@
     </div>
 </div> -->
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     <div class="flex pointer-events-auto">
         <div class="grow">
             <p class="text-center text-sm font-semibold mt-0">New Message</p>
