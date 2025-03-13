@@ -215,6 +215,11 @@ export const videoConstraintStore = derived(
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
+
+            // Uncomment the lines below to simulate a mobile device
+            //height: { min: 640, ideal: 1280, max: 1920 },
+            //width: { min: 400, ideal: 720, max: 1080 },
+            //resizeMode: "none",
         } as MediaTrackConstraints;
 
         if ($cameraDeviceIdStore !== undefined) {
