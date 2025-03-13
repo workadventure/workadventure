@@ -19,3 +19,4 @@ function createForceRefreshChatStore() {
 }
 export const forceRefreshChatStore = createForceRefreshChatStore();
 export const INITIAL_SIDEBAR_WIDTH = 335;
+export const loginTokenErrorStore = writable(false);
