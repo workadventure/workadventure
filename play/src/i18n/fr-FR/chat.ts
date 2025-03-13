@@ -266,6 +266,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Gérer les participants",
         invitations: "Invitations",
         participants: "Participants",
+        roomID: "ID du salon : {roomId}",
         join: "Présent",
         invite: "Invité",
         ban: "Banni",

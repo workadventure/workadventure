@@ -245,7 +245,11 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled && get(userIsConnected)) {
+        if (
+            matrixServerUrl &&
+            ENABLE_CHAT /*&& this.getCurrentGameScene().room.isChatEnabled */ &&
+            get(userIsConnected)
+        ) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
