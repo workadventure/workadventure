@@ -2,7 +2,6 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Readable } from "svelte/store";
-    import { createPopperActions } from "svelte-popperjs";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -16,6 +15,7 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { createFlotingUiActions } from "../../Utils/svelte-floatingui";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -66,21 +66,13 @@
         highlightFullScreen.set(false);
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top", "right", "left"],
-                },
-            },
-        ],
-    };
+    const [floatingUiRef, floatingUiContent] = createFlotingUiActions(
+        {
+            placement: "bottom",
+            //strategy: 'fixed',
+        },
+        12
+    );
 </script>
 
 <div class="group/screenshare flex justify-center mx-auto h-full w-full">
@@ -122,14 +114,14 @@
                 isPlayingAudio={showVoiceIndicator}
                 position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
             >
-                <div use:popperRef class="self-center">
+                <div use:floatingUiRef class="self-center">
                     <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
                 </div>
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
                     {#if spaceUser && showUserSubMenu}
-                        <div use:popperContent={extraOpts}>
+                        <div use:floatingUiContent class="absolute">
                             <ActionMediaBox
                                 {embedScreen}
                                 {spaceUser}
