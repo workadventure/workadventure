@@ -74,7 +74,7 @@
     );
 </script>
 
-<div class="group/screenshare flex justify-center mx-auto h-full w-full">
+<div class="group/screenshare flex justify-center mx-auto h-full w-full @container/videomediabox">
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
@@ -111,7 +111,9 @@
                 name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
-                position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
+                position={videoEnabled
+                    ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                    : "absolute bottom-0.5 left-3"}
             >
                 {#await extendedSpaceUserPromise}
                     <div />
