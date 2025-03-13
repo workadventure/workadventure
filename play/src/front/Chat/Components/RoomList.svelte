@@ -27,7 +27,6 @@
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
     const chat = gameManager.chatConnection;
 
-    
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
 
