@@ -10,7 +10,7 @@
     export let refuseRequest: () => void;
 </script>
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     <div class="interact-menu blue-dialog-box outline-light text-center w-72 pointer-events-auto m-auto">
         <div class="flex flex-row justify-center items-center">
             {#if sender}

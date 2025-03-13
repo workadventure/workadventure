@@ -648,34 +648,18 @@ div.emoji-picker {
     }
 }
 
-/* Popper arrow placement */ 
+/** Floating UI arrow placement **/
 
-.popper-tooltip[data-popper-placement^='top'] .popper-arrow {
-    bottom: -4px;
-}
-  
-.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow {
-    top: -4px;
-}
-  
-.popper-tooltip[data-popper-placement^='left'] .popper-arrow {
-    right: -4px;
-}
-  
-.popper-tooltip[data-popper-placement^='right'] .popper-arrow {
-    left: -4px;
-}
-
-.popper-arrow,
-.popper-arrow::before {
+.floating-ui-arrow,
+.floating-ui-arrow::before {
     position: absolute;
 }
 
-.popper-arrow {
+.floating-ui-arrow {
     visibility: hidden;
 }
 
-.popper-arrow::before {
+.floating-ui-arrow::before {
     visibility: visible;
     content: '';
     position: absolute;
@@ -687,23 +671,23 @@ div.emoji-picker {
     border-color: transparent;
 }
 
-.popper-tooltip[data-popper-placement^='top'] .popper-arrow::before {
+.floating-ui-arrow[data-arrow-placement='bottom']::before {
     @apply border-t-contrast/80;
 
     bottom: -12px;
 }
 
-.popper-tooltip[data-popper-placement^='bottom'] .popper-arrow::before {
+.floating-ui-arrow[data-arrow-placement='top']::before {
     @apply border-b-contrast/80;
     top: -12px;
 }
 
-.popper-tooltip[data-popper-placement^='left'] .popper-arrow::before {
+.floating-ui-arrow[data-arrow-placement='right']::before {
     @apply border-l-contrast/80;
     right: -12px;
 }
 
-.popper-tooltip[data-popper-placement^='right'] .popper-arrow::before {
+.floating-ui-arrow[data-arrow-placement='left']::before {
     @apply border-r-contrast/80;
     left: -12px;
 }

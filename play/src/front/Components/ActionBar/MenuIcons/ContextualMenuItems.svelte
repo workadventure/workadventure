@@ -17,7 +17,7 @@
     // They switch automatically to the profile menu when the screen is small.
 </script>
 
-{#if (inProfileMenu && $audioManagerVisibilityStore !== "hidden" && !$silentStore) || $bottomActionBarVisibilityStore}
+{#if inProfileMenu && (($audioManagerVisibilityStore !== "hidden" && !$silentStore) || $bottomActionBarVisibilityStore)}
     <HeaderMenuItem label={$LL.menu.sub.contextualActions()} />
 {/if}
 

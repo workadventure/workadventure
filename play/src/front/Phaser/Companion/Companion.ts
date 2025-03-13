@@ -6,6 +6,7 @@ import type { PictureStore } from "../../Stores/PictureStore";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { debugRepo } from "../../Utils/Debuggers";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 
@@ -52,7 +53,7 @@ export class Companion extends Container {
                     this._pictureStore.set(htmlImageElementSrc);
                 });
             })
-            .catch((e) => console.error(e));
+            .catch((_) => debugRepo("No companion texture for this player"));
 
         this.scene.physics.world.enableBody(this);
 
