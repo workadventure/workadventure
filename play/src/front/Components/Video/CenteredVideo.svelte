@@ -76,12 +76,21 @@
             const containerRatio = containerWidth / containerHeight;
             const videoRatio = videoStreamWidth / videoStreamHeight;
 
-            if (containerRatio > videoRatio) {
+            //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
+
+            if (videoRatio < 1) {
+                // In case we are on a mobile in portrait mode, we want to display a square video.
+                videoWidth = containerHeight;
+                videoHeight = containerHeight;
+                //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
+            } else if (containerRatio > videoRatio) {
                 videoWidth = containerHeight * videoRatio;
                 videoHeight = containerHeight;
+                //debug("containerRatio > videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else {
                 videoWidth = containerWidth;
                 videoHeight = containerWidth / videoRatio;
+                //debug("containerRatio <= videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             }
         }
     }

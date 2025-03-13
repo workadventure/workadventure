@@ -6,6 +6,8 @@
         localStreamStore,
         requestedMicrophoneState,
         localVoiceIndicatorStore,
+        cameraEnergySavingStore,
+        silentStore,
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { currentPlayerWokaStore } from "../Stores/CurrentPlayerWokaStore";
@@ -38,4 +40,6 @@
     };
 </script>
 
-<VideoMediaBox {peer} isHighlighted={false} fullScreen={false} flipX={true} muted={true} />
+{#if !$cameraEnergySavingStore && !$silentStore}
+    <VideoMediaBox {peer} isHighlighted={false} fullScreen={false} flipX={true} muted={true} />
+{/if}
