@@ -210,6 +210,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -321,6 +322,7 @@ export class GameScene extends DirtyScene {
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
+    private scriptingVideoManager: ScriptingVideoManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -1100,6 +1102,7 @@ export class GameScene extends DirtyScene {
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
+        this.scriptingVideoManager?.close();
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
@@ -1807,6 +1810,8 @@ export class GameScene extends DirtyScene {
                     iframeListener
                 );
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+
+                this.scriptingVideoManager = new ScriptingVideoManager();
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 

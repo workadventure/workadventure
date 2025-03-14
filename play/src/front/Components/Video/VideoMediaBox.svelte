@@ -16,6 +16,7 @@
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { createFlotingUiActions } from "../../Utils/svelte-floatingui";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -36,6 +37,14 @@
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
     if (peer.media.type === "mediaStore") {
         streamStore = peer.media.streamStore;
+    }
+
+    // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
+    let videoUrl: string | undefined = undefined;
+    let videoConfig: VideoConfig | undefined = undefined;
+    if (peer.media.type === "scripting") {
+        videoUrl = peer.media.url;
+        videoConfig = peer.media.config;
     }
 
     let volumeStore = peer.volumeStore;
@@ -106,6 +115,8 @@
             isTalking={showVoiceIndicator}
             {flipX}
             {muted}
+            {videoUrl}
+            {videoConfig}
         >
             <UserName
                 name={$name}
