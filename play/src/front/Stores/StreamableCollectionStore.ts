@@ -8,12 +8,14 @@ import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
+import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
 import { highlightFullScreen } from "./ActionsCamStore";
+import { scriptingVideoStore } from "./ScriptingVideoStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -27,13 +29,19 @@ export interface JitsiTrackStreamable {
     jitsiTrackStreamWrapper: JitsiTrackStreamWrapper;
 }
 
+export interface ScriptingVideoStreamable {
+    type: "scripting";
+    url: string;
+    config: VideoConfig;
+}
+
 export interface AttachableVideo {
     attach: (container: HTMLElement) => void;
 }
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: MediaStoreStreamable | JitsiTrackStreamable;
+    readonly media: MediaStoreStreamable | JitsiTrackStreamable | ScriptingVideoStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;
@@ -65,8 +73,16 @@ const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
-        [broadcastTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia],
-        ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $screenSharingLocalMedia] /*, set*/) => {
+        [broadcastTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia, scriptingVideoStore],
+        (
+            [
+                $broadcastTracksStore,
+                $screenSharingStreamStore,
+                $peerStore,
+                $screenSharingLocalMedia,
+                $scriptingVideoStore,
+            ] /*, set*/
+        ) => {
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
@@ -79,6 +95,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
+            $scriptingVideoStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
                 if (trackWrapper instanceof JitsiTrackWrapper) {

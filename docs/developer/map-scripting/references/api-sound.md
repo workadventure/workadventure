@@ -16,6 +16,13 @@ Please note that `loadSound` returns an object of the `Sound` class
 
 The `Sound` class that represents a loaded sound contains two methods: `play(soundConfig : SoundConfig|undefined)` and `stop()`
 
+```ts
+class Sound {
+    play(soundConfig : SoundConfig|undefined): void;
+    stop(): void;
+}
+```
+
 The parameter soundConfig is optional, if you call play without a Sound config the sound will be played with the basic configuration.
 
 Example:

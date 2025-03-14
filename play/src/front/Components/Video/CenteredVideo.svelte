@@ -5,6 +5,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -24,6 +25,9 @@
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
+
+    export let videoUrl: string | undefined = undefined;
+    export let videoConfig: VideoConfig | undefined = undefined;
 
     // When expectVideoOutput switches to "true", the video stream should display something.
     // We are waiting for 3 seconds after the switch. If no video frame has arrived
@@ -50,10 +54,15 @@
 
     let videoElement: HTMLVideoElementExt;
 
+    let loop: boolean = videoConfig?.loop ?? false;
+
     function onLoadVideoElement() {}
 
     $: if (mediaStream && videoElement) {
         videoElement.srcObject = mediaStream;
+    }
+    $: if (videoUrl && videoElement) {
+        videoElement.src = videoUrl;
     }
 
     let containerWidth: number;
@@ -106,7 +115,7 @@
     let displayNoVideoWarning = false;
 
     $: {
-        if (expectVideoOutput && videoElement) {
+        if (expectVideoOutput && videoElement && mediaStream) {
             expectVideoWithin3Seconds();
         }
         if (!expectVideoOutput && noVideoTimeout) {
@@ -257,6 +266,7 @@
             autoplay
             playsinline
             {muted}
+            {loop}
         />
     </div>
     {#if displayNoVideoWarning}
