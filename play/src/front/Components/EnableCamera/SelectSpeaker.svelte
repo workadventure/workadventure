@@ -11,7 +11,7 @@
 </script>
 
 <div
-    class="px-4 pt-4 pb-2 mb-12 md:mb-0 rounded-lg bg-white/10 mt-4 max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
+    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 mx-2 md:mx-0 w-full max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
         <VolumeIcon height="h-8" width="w-8" />
@@ -29,7 +29,7 @@
             {#each deviceList as speaker, index (index)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="border border-solid md:min-w-[25em] rounded-lg relative items-center justify-start  m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-6 py-6 {selectedDevice ===
+                    class="border border-solid  rounded-lg relative items-center justify-start  m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-6 py-6 {selectedDevice ===
                     speaker.deviceId
                         ? 'bg-white text-secondary border-none'
                         : 'border-white hover:bg-white/10'}"

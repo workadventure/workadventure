@@ -188,7 +188,7 @@
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
     <section class="flex items-center justify-center min-h-dvh ">
         <div
-            class="text-white container mx-auto flex flex-col items-center justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative"
+            class="text-white w-[100vw] container mx-auto flex flex-col  justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative "
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -199,7 +199,7 @@
 
             <!-- MICROPHONE -->
             <div
-                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px] max-w-[450px] md:w-full md:overflow-scroll  items-center lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll  items-center lg:items-stretch lg:px-4 lg:pb-4"
             >
                 <!-- MICROPHONE -->
                 <SelectMicrophone
@@ -226,7 +226,7 @@
                     <span slot="widget">
                         {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                             <video
-                                class="myCamVideoSetup flex items-center  justify-center w-full  md:h-[230px]  aspect-video overflow-hidden scale-x-[-1]"
+                                class="myCamVideoSetup flex items-center  justify-center w-full   aspect-video overflow-hidden scale-x-[-1]"
                                 use:srcObject={$localStreamStore.stream}
                                 autoplay
                                 muted

@@ -11,7 +11,9 @@
     const dispatch = createEventDispatcher();
 </script>
 
-<div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 w-full flex flex-col lg:min-h-[24rem] items-center">
+<div
+    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 w-full max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
+>
     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
         <slot name="icon" />
         <div class="grow pr-8">
