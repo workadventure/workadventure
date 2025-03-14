@@ -57,3 +57,4 @@ export { default as IconPoint } from "~icons/tabler/point";
 export { default as IconDoorExit } from "~icons/tabler/door-exit";
 export { default as IconInbox } from "~icons/tabler/mailbox";
 export { default as IconApps } from "~icons/tabler/apps";
+export { default as IconRefresh } from "~icons/tabler/refresh";

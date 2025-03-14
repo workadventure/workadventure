@@ -450,6 +450,8 @@ const chat: BaseTranslation = {
         description: "Upload and share a file",
         featureComingSoon: "Coming soon!",
     },
+    loginTokenError: "An error occurred. Please try to reconnect",
+    reconnect: "Reconnect",
 };
 
 export default chat;

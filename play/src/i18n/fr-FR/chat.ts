@@ -450,6 +450,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
     },
+    loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
+    reconnect: "Se reconnecter",
 };
 
 export default chat;

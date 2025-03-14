@@ -6,12 +6,10 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat, selectedRoomStore } from "../Stores/ChatStore";
     import { ChatRoom } from "../Connection/ChatConnection";
-    import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
-    import messageSmileyImg from "../images/message-smiley.svg";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -22,8 +20,8 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
-    import { IconChevronUp, IconCloudLock } from "@wa-icons";
-
+    import RequireConnection from "./requireConnection.svelte";
+    import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
@@ -157,21 +155,19 @@
                 {/if}
 
                 {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
-                    <div class="tw-flex-col tw-items-center tw-justify-center tw-text-center tw-px-4 tw-py-12">
-                        <img src={messageSmileyImg} alt="Smiley happy" />
-                        <div class="tw-w-full tw-text-center tw-text-lg tw-font-bold">
-                            {$LL.chat.requiresLoginForChat()}
-                        </div>
-                        <div class="tw-flex tw-justify-center">
-                            <a
-                                class="tw-flex tw-justify-center tw-rounded-lg tw-h-10 tw-bg-secondary hover:tw-bg-secondary-800 hover:tw-no-underline hover:tw-text-white tw-no-underline tw-transition-all tw-items-center tw-my-4 tw-text-base tw-px-8 tw-text-white"
-                                href="/login"
-                                on:click={() => analyticsClient.login()}
-                            >
-                                {$LL.menu.profile.login()}
-                            </a>
-                        </div>
-                    </div>
+                    <RequireConnection />
+                {:else if $loginTokenErrorStore}
+                    <RequireConnection>
+                        <span slot="emoji">
+                            <IconRefresh font-size="50" />
+                        </span>
+                        <span slot="title">
+                            {$LL.chat.loginTokenError()}
+                        </span>
+                        <span slot="button-label">
+                            {$LL.chat.reconnect()}
+                        </span>
+                    </RequireConnection>
                 {/if}
 
                 <div
