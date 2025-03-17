@@ -188,7 +188,7 @@
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
     <section class="flex items-center justify-center min-h-dvh ">
         <div
-            class="text-white w-[100vw] container mx-auto flex flex-col  justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative "
+            class="text-white w-[100vw] container mx-auto flex flex-col justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative "
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -199,7 +199,7 @@
 
             <!-- MICROPHONE -->
             <div
-                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll  items-center lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll justify-center  items-center lg:items-stretch lg:px-4 lg:pb-4"
             >
                 <!-- MICROPHONE -->
                 <SelectMicrophone
@@ -253,7 +253,7 @@
                 {/if}
             </div>
             <div
-                class="fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
+                class="fixed bottom-0 left-0  !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
