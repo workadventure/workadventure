@@ -14,9 +14,6 @@
 
     export let streamable: Streamable;
     export let isHighlighted = false;
-    export let flipX = false;
-    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
-    export let muted = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -49,7 +46,7 @@
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<!-- Bug with tansition : transition:fly={{ y: 50, duration: 150 }} -->
+<!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
@@ -57,7 +54,7 @@
             class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
             in:fly={{ y: 50, duration: 150 }}
         >
-            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
+            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
@@ -65,20 +62,20 @@
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {:else}
     <div
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
         in:fly={{ y: 50, duration: 150 }}
     >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} {flipX} {muted} />
+        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
     </div>
 {/if}

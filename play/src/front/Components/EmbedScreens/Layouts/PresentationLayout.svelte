@@ -4,8 +4,8 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
-    import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
-    import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
+    import { proximityMeetingStore } from "../../../Stores/MyMediaStore";
+    import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
 
     let camContainer: HTMLDivElement;
@@ -100,13 +100,19 @@
     //         }
     //     }
     // }
+    let containerHeight: number;
+
+    $: oneLineMaxHeight = containerHeight * 0.25;
 </script>
 
-<div class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3">
-    {#if $streamableCollectionStore.size > 0 || $myCameraStore || $myJitsiCameraStore}
-        <div class="justify-end md:justify-center" bind:this={camContainer}>
-            {#if ($streamableCollectionStore.size > 0 && $proximityMeetingStore === true) || $myCameraStore || $myJitsiCameraStore}
-                <CamerasContainer />
+<div
+    class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
+    bind:clientHeight={containerHeight}
+>
+    {#if $streamableCollectionStore.size > 0}
+        <div class="justify-end md:justify-center max-height-quarter" bind:this={camContainer}>
+            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true}
+                <CamerasContainer {oneLineMaxHeight} />
             {/if}
         </div>
     {/if}
@@ -121,6 +127,9 @@
 </div>
 
 <style>
+    .max-height-quarter {
+        max-height: 25%;
+    }
     /*@container (min-width: 576px) {*/
     /*    .presentation-layout {*/
     /*        position: fixed;*/

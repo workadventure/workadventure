@@ -25,7 +25,7 @@ export type ArrowAction = (node: HTMLElement) => {
     destroy?(): void;
 };
 
-export function createFlotingUiActions(
+export function createFloatingUiActions(
     initOptions?: Partial<ComputePositionConfig>,
     offsetMainAxis = 0
 ): [ReferenceAction, ContentAction, ArrowAction] {

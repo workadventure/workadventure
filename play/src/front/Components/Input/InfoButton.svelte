@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { createFlotingUiActions } from "../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../Utils/svelte-floatingui";
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "top",
             //strategy: 'fixed',

@@ -38,7 +38,7 @@
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
-    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
@@ -82,7 +82,7 @@
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "bottom-end",
         },

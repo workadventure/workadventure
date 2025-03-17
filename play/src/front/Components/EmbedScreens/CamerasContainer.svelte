@@ -1,96 +1,60 @@
 <script lang="ts">
-    import { afterUpdate, onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
-    import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import MyCamera from "../MyCamera.svelte";
-    import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
-    let isHighlighted = false;
-    let isMobile: boolean;
-    let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    export let oneLineMaxHeight: number;
 
-    function updateScreenSize() {
-        if (window.innerWidth <= 768) {
-            isMobile = true;
-        } else {
-            isMobile = false;
-        }
+    let isOnOneLine = true;
+
+    let containerWidth: number;
+
+    $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
+
+    // The minimum width of a media box in pixels
+    const minMediaBoxWidth = 120;
+
+    $: {
+        console.log("minMediaBoxWidth", minMediaBoxWidth);
+        console.log(
+            "containerWidth / $streamableCollectionStore.size",
+            containerWidth / $streamableCollectionStore.size
+        );
+        console.log("maxMediaBoxWidth", maxMediaBoxWidth);
     }
-
-    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
-        checkOverflow();
-        if (value) {
-            isHighlighted = true;
-        } else {
-            isHighlighted = false;
-        }
-    });
-
-    afterUpdate(() => {
-        checkOverflow();
-    });
-
-    function checkOverflow() {
-        const camContainer = document.getElementById("cameras-container");
-        if (camContainer) {
-            if (isMobile && $highlightedEmbedScreen) {
-                if (camContainer.scrollWidth < camContainer.clientWidth) {
-                    camContainer.style.justifyContent = "center";
-                } else {
-                    camContainer.style.justifyContent = "flex-start";
-                }
-            } else {
-                if (camContainer.scrollWidth < camContainer.clientWidth) {
-                    camContainer.style.justifyContent = "flex-start";
-                } else {
-                    camContainer.style.justifyContent = "center";
-                }
-            }
-        }
-    }
-
-    onMount(() => {
-        window.addEventListener("resize", updateScreenSize);
-        window.addEventListener("load", checkOverflow);
-        window.addEventListener("resize", checkOverflow);
-    });
-
-    onDestroy(() => {
-        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
-        window.removeEventListener("load", checkOverflow);
-        window.removeEventListener("resize", checkOverflow);
-        window.removeEventListener("resize", updateScreenSize);
-    });
+    $: videoWidth = Math.max(
+        Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+        minMediaBoxWidth
+    );
 </script>
 
 <div
+    bind:clientWidth={containerWidth}
+    class={"pointer-events-none " + isOnOneLine ? "max-h-full" : ""}
     class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
-    class:flex={isHighlighted}
-    class:justify-center={isHighlighted}
-    class:gap-4={isHighlighted}
-    class:whitespace-nowrap={isHighlighted}
-    class:relative={isHighlighted}
-    class:overflow-x-auto={isHighlighted}
-    class:overflow-y-hidden={isHighlighted}
-    class:m-0={isHighlighted}
-    class:mx-auto={isHighlighted}
-    class:my-0={isHighlighted}
-    class:w-full={isHighlighted}
-    class:max-w-full={isHighlighted}
-    class:not-highlighted={!isHighlighted}
-    class:mt-0={!isHighlighted}
-    class="pointer-events-none"
+    class:flex={isOnOneLine}
+    class:justify-start={isOnOneLine}
+    class:gap-4={isOnOneLine}
+    class:whitespace-nowrap={isOnOneLine}
+    class:relative={isOnOneLine}
+    class:overflow-x-auto={isOnOneLine}
+    class:overflow-y-hidden={isOnOneLine}
+    class:m-0={isOnOneLine}
+    class:my-0={isOnOneLine}
+    class:w-full={isOnOneLine}
+    class:max-w-full={isOnOneLine}
+    class:not-highlighted={!isOnOneLine}
+    class:mt-0={!isOnOneLine}
     id="cameras-container"
 >
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         {#if $highlightedEmbedScreen !== peer}
             {#key uniqueId}
                 <div
-                    class={isHighlighted
-                        ? " pointer-events-auto w-[230px] all-cameras-highlighted camera-box"
+                    style="width: {videoWidth}px; max-width: {videoWidth}px;"
+                    class={isOnOneLine
+                        ? " pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box aspect-video first-of-type:ml-auto last-of-type:mr-auto"
                         : "w-full h-full all-cameras m-auto camera-box"}
                 >
                     <MediaBox streamable={peer} />
@@ -98,21 +62,6 @@
             {/key}
         {/if}
     {/each}
-
-    {#if $myCameraStore && !$myJitsiCameraStore}
-        <div
-            id="unique-mycam"
-            class={isHighlighted
-                ? "w-[230px] all-cameras-highlighted pointer-events-auto"
-                : "w-full h-full all-cameras m-auto pointer-event-auto"}
-        >
-            <MyCamera />
-        </div>
-    {/if}
-
-    {#if $myJitsiCameraStore}
-        <MediaBox streamable={$myJitsiCameraStore} flipX={true} muted={true} />
-    {/if}
 </div>
 
 <!-- && !$megaphoneEnabledStore TODO HUGO -->

@@ -15,7 +15,7 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
-    import { createFlotingUiActions } from "../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../Utils/svelte-floatingui";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
@@ -26,9 +26,6 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
-    export let flipX = false;
-    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
-    export let muted = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -75,7 +72,7 @@
         highlightFullScreen.set(false);
     }
 
-    const [floatingUiRef, floatingUiContent] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent] = createFloatingUiActions(
         {
             placement: "bottom",
         },
@@ -83,7 +80,7 @@
     );
 </script>
 
-<div class="group/screenshare flex justify-center mx-auto h-full w-full @container/videomediabox">
+<div class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox">
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
@@ -113,8 +110,8 @@
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
             verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
             isTalking={showVoiceIndicator}
-            {flipX}
-            {muted}
+            flipX={peer.flipX}
+            muted={peer.muteAudio}
             {videoUrl}
             {videoConfig}
         >

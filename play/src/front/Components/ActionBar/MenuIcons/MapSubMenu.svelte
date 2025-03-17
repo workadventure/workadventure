@@ -7,7 +7,7 @@
     import AdminPanIcon from "../../Icons/AdminPanIcon.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
     import MegaphoneConfirm from "../MegaphoneConfirm.svelte";
-    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
 
@@ -20,7 +20,7 @@
     // Useless property. It is here only to avoid a warning because we set the "first" prop on all the right menu items
     export let first: boolean | undefined = undefined;
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions({
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions({
         placement: "bottom-end",
         //strategy: 'fixed',
     });

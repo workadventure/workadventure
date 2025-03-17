@@ -3,13 +3,13 @@
     import { LocalizedString } from "typesafe-i18n";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
-    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
     export let tool: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString };
 
     $: activeTooltip = false;
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "left",
             //strategy: 'fixed',

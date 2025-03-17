@@ -4,7 +4,7 @@
     import EmojiSubMenu from "../EmojiSubMenu.svelte";
     import { activeSecondaryZoneActionBarStore, openedMenuStore } from "../../../Stores/MenuStore";
     import LL from "../../../../i18n/i18n-svelte";
-    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
     function toggleEmojiPicker() {
         if ($activeSecondaryZoneActionBarStore === "emote") {
@@ -15,7 +15,7 @@
         }
     }
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "bottom-start",
             //strategy: 'fixed',

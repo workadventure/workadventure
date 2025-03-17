@@ -36,13 +36,14 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly uniqueId: string;
     private readonly _streamStore: Writable<MediaStream | undefined>;
     private readonly _statusStore: Writable<PeerStatus>;
-    private readonly _hasAudio = writable<boolean>(true);
+    private readonly _hasAudio = writable<boolean>(false);
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
     // No volume in a screen sharing
     public readonly volumeStore: Readable<number[] | undefined> | undefined = undefined;
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
-
+    public readonly flipX = false;
+    public readonly muteAudio = false;
     constructor(
         user: UserSimplePeerInterface,
         initiator: boolean,
@@ -107,6 +108,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
             // Set the max bitrate for the video stream
             this.setMaxBitrate().catch((err) => console.error("setMaxBitrate error", err));
+
+            this._hasAudio.set(stream.getAudioTracks().length > 0);
         });
 
         this.on("close", () => {
@@ -136,7 +139,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             this.addStream(stream);
         }
 
-        this._hasAudio = writable<boolean>(false);
         this._hasVideo = writable<boolean>(true);
         this._isMuted = writable<boolean>(false);
 

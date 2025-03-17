@@ -8,7 +8,7 @@
     import { isActivatedStore as isTodoListActivatedStore } from "../../../Stores/TodoListStore";
     import { roomListVisibilityStore } from "../../../Stores/ModalStore";
     import { externalSvelteComponentService } from "../../../Stores/Utils/externalSvelteComponentService";
-    import { createFlotingUiActions } from "../../../Utils/svelte-floatingui";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import AppsMenuContent from "./AppsMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
 
@@ -20,7 +20,7 @@
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFlotingUiActions(
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
             placement: "bottom-start",
             //strategy: 'fixed',
