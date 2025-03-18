@@ -24,27 +24,27 @@ spec:
     - host: {{ .Values.domainName }}
       http:
         paths:
-          - path: /
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-play
-                port:
-                  number: {{ .Values.play.service.port }}
           - path: /room
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Exact
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play
                 port:
                   number: {{ .Values.play.service.wsPort }}
           - path: /admin/rooms
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Exact
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play
                 port:
                   number: {{ .Values.play.service.wsPort }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-play
+                port:
+                  number: {{ .Values.play.service.port }}
           - path: /api{{ .Values.ingress.rewritePathSuffix }}
             pathType: {{ .Values.ingress.pathType }}
             backend:
