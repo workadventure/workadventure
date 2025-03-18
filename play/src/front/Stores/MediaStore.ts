@@ -215,6 +215,11 @@ export const videoConstraintStore = derived(
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
+
+            // Uncomment the lines below to simulate a mobile device
+            //height: { min: 640, ideal: 1280, max: 1920 },
+            //width: { min: 400, ideal: 720, max: 1080 },
+            //resizeMode: "none",
         } as MediaTrackConstraints;
 
         if ($cameraDeviceIdStore !== undefined) {
@@ -718,6 +723,24 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
         }
     };
 });
+
+const talkIconVolumeThreshold = 10;
+
+export const localVoiceIndicatorStore = derived<Readable<number[] | undefined>, boolean>(
+    localVolumeStore,
+    ($localVolumeStore) => {
+        if ($localVolumeStore === undefined) {
+            return false;
+        }
+        const volume = $localVolumeStore;
+        if (volume === undefined) {
+            return false;
+        }
+        const averageVolume = volume.reduce((a, b) => a + b, 0);
+        return averageVolume > talkIconVolumeThreshold;
+    },
+    false
+);
 
 /**
  * Device list

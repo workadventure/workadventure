@@ -44,7 +44,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
         <div
             class="interact-menu text-center text-white sm:w-[500px] pointer-events-auto z-[150] m-auto rounded-lg overflow-hidden margin-bottom responsive-follow-follower mt-6"

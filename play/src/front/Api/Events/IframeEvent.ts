@@ -69,6 +69,7 @@ import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEv
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
+import { isPlayVideoEvent } from "./Ui/PlayVideoEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -719,6 +720,14 @@ export const iframeQueryMapTypeGuards = {
     getWamMapData: {
         query: z.undefined(),
         answer: isWamMapDataEvent,
+    },
+    playVideo: {
+        query: isPlayVideoEvent,
+        answer: z.string(),
+    },
+    stopVideo: {
+        query: z.string(),
+        answer: z.undefined(),
     },
 };
 

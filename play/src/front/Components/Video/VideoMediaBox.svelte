@@ -2,7 +2,6 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Readable } from "svelte/store";
-    import { createPopperActions } from "svelte-popperjs";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -16,6 +15,8 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { createFloatingUiActions } from "../../Utils/svelte-floatingui";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -25,9 +26,6 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
-    export let flipX = false;
-    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
-    export let muted = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -36,6 +34,14 @@
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
     if (peer.media.type === "mediaStore") {
         streamStore = peer.media.streamStore;
+    }
+
+    // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
+    let videoUrl: string | undefined = undefined;
+    let videoConfig: VideoConfig | undefined = undefined;
+    if (peer.media.type === "scripting") {
+        videoUrl = peer.media.url;
+        videoConfig = peer.media.config;
     }
 
     let volumeStore = peer.volumeStore;
@@ -66,24 +72,15 @@
         highlightFullScreen.set(false);
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top", "right", "left"],
-                },
-            },
-        ],
-    };
+    const [floatingUiRef, floatingUiContent] = createFloatingUiActions(
+        {
+            placement: "bottom",
+        },
+        12
+    );
 </script>
 
-<div class="group/screenshare flex justify-center mx-auto h-full w-full">
+<div class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox">
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
@@ -113,30 +110,39 @@
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
             verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
             isTalking={showVoiceIndicator}
-            {flipX}
-            {muted}
+            flipX={peer.flipX}
+            muted={peer.muteAudio}
+            {videoUrl}
+            {videoConfig}
         >
             <UserName
                 name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
-                position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
+                position={videoEnabled
+                    ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                    : "absolute bottom-0.5 left-3"}
             >
-                <div use:popperRef class="self-center">
-                    <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
-                </div>
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
-                    {#if spaceUser && showUserSubMenu}
-                        <div use:popperContent={extraOpts}>
-                            <ActionMediaBox
-                                {embedScreen}
-                                {spaceUser}
-                                {videoEnabled}
-                                on:close={() => (showUserSubMenu = false)}
+                    {#if spaceUser}
+                        <div use:floatingUiRef class="self-center">
+                            <UpDownChevron
+                                enabled={showUserSubMenu}
+                                on:click={() => (showUserSubMenu = !showUserSubMenu)}
                             />
                         </div>
+                        {#if showUserSubMenu}
+                            <div use:floatingUiContent class="absolute">
+                                <ActionMediaBox
+                                    {embedScreen}
+                                    {spaceUser}
+                                    {videoEnabled}
+                                    on:close={() => (showUserSubMenu = false)}
+                                />
+                            </div>
+                        {/if}
                     {/if}
                 {:catch error}
                     <div class="bg-danger">{error}</div>

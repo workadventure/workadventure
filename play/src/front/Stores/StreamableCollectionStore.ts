@@ -8,12 +8,26 @@ import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
+import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
+import LL from "../../i18n/i18n-svelte";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
 import { highlightFullScreen } from "./ActionsCamStore";
+import { scriptingVideoStore } from "./ScriptingVideoStore";
+import { myCameraStore } from "./MyMediaStore";
+import {
+    cameraEnergySavingStore,
+    localStreamStore,
+    localVoiceIndicatorStore,
+    localVolumeStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+    silentStore,
+} from "./MediaStore";
+import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -27,13 +41,19 @@ export interface JitsiTrackStreamable {
     jitsiTrackStreamWrapper: JitsiTrackStreamWrapper;
 }
 
+export interface ScriptingVideoStreamable {
+    type: "scripting";
+    url: string;
+    config: VideoConfig;
+}
+
 export interface AttachableVideo {
     attach: (container: HTMLElement) => void;
 }
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: MediaStoreStreamable | JitsiTrackStreamable;
+    readonly media: MediaStoreStreamable | JitsiTrackStreamable | ScriptingVideoStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;
@@ -43,6 +63,11 @@ export interface Streamable {
     readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;
     readonly pictureStore: Readable<string | undefined>;
+    readonly flipX: boolean;
+    // If set to true, the video will be muted (no sound will come out, even if the underlying stream has an audio track attached).
+    // This does not prevent the volume bar from being displayed.
+    // We use this for local camera feedback.
+    readonly muteAudio: boolean;
 }
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -60,25 +85,101 @@ const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore
     return jitsiTracks;
 });
 
+export const myJitsiCameraStore: Readable<Streamable | null> = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
+    for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
+        if (jitsiTrackWrapper.isLocal) {
+            const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
+            /*if (cameraTrackWrapper.isEmpty()) {
+                return null;
+            }*/
+            cameraTrackWrapper.flipX = true;
+            cameraTrackWrapper.muteAudio = true;
+            return cameraTrackWrapper;
+        }
+    }
+    return null;
+});
+
+const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
+    if (myLocalStream.type === "success") {
+        return myLocalStream.stream;
+    }
+    return undefined;
+});
+
+const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+    return {
+        uniqueId: "-1",
+        media: {
+            type: "mediaStore" as const,
+            streamStore: localstreamStoreValue,
+        },
+        volumeStore: localVolumeStore,
+        hasVideo: requestedCameraState,
+        // hasAudio = true because the webcam has a microphone attached and could potentially play sound
+        hasAudio: writable(true),
+        isMuted: derived(requestedMicrophoneState, (micState) => !micState),
+        statusStore: writable("connected" as const),
+        getExtendedSpaceUser: () => undefined,
+        name: writable($LL.camera.my.nameTag()),
+        showVoiceIndicator: localVoiceIndicatorStore,
+        pictureStore: currentPlayerWokaStore,
+        flipX: true,
+        muteAudio: true,
+    };
+});
+
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
 function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
-        [broadcastTracksStore, screenSharingStreamStore, peerStore, screenSharingLocalMedia],
-        ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $screenSharingLocalMedia] /*, set*/) => {
+        [
+            broadcastTracksStore,
+            screenSharingStreamStore,
+            peerStore,
+            screenSharingLocalMedia,
+            scriptingVideoStore,
+            myCameraStore,
+            myJitsiCameraStore,
+            myCameraPeerStore,
+            cameraEnergySavingStore,
+            silentStore,
+        ],
+        (
+            [
+                $broadcastTracksStore,
+                $screenSharingStreamStore,
+                $peerStore,
+                $screenSharingLocalMedia,
+                $scriptingVideoStore,
+                $myCameraStore,
+                $myJitsiCameraStore,
+                $myCameraPeerStore,
+                $cameraEnergySavingStore,
+                $silentStore,
+            ] /*, set*/
+        ) => {
             const peers = new Map<string, Streamable>();
 
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
-                // if peer is SreenSharing, change for presentation Layout mode
+                // if peer is ScreenSharing, change for presentation Layout mode
                 if (peer instanceof ScreenSharingPeer) {
+                    // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
             };
 
+            if ($myCameraStore && !$myJitsiCameraStore && !$cameraEnergySavingStore && !$silentStore) {
+                addPeer($myCameraPeerStore);
+            } else if ($myJitsiCameraStore) {
+                addPeer($myJitsiCameraStore);
+            }
+
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
+            $scriptingVideoStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
                 if (trackWrapper instanceof JitsiTrackWrapper) {
@@ -128,17 +229,4 @@ streamableCollectionStore.subscribe((streamableCollection) => {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
     }
-});
-
-export const myJitsiCameraStore = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
-    for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
-        if (jitsiTrackWrapper.isLocal) {
-            const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
-            /*if (cameraTrackWrapper.isEmpty()) {
-                return null;
-            }*/
-            return cameraTrackWrapper;
-        }
-    }
-    return null;
 });

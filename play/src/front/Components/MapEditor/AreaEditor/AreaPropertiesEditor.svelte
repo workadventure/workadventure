@@ -607,11 +607,11 @@
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
 
@@ -634,7 +634,7 @@
             onChange={onUpdateAreaSearchable}
         />
 
-        <div class="properties-container ">
+        <div class="properties-container">
             {#each properties as property (property.id)}
                 <div class="property-box mt[3rem]">
                     {#if property.type === "focusable"}

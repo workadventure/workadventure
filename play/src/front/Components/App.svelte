@@ -113,17 +113,6 @@
 
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
         const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
-        console.log("SIZE INFO :");
-        console.log("width");
-        console.log(width);
-        console.log("height");
-        console.log(height);
-        console.log("gameDiv");
-        console.log(gameDiv);
-        console.log("gameSize.width");
-        console.log(gameSize.width);
-        console.log("gameSize.height");
-        console.log(gameSize.height);
 
         const config: Phaser.Types.Core.GameConfig = {
             type: mode,
@@ -262,7 +251,7 @@
 </script>
 
 <div
-    class="h-screen w-screen flex landscape:flex-row portrait:flex-col-reverse"
+    class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
     id="main-container"
     bind:this={gameContainer}
 >

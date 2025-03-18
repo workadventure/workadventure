@@ -552,3 +552,50 @@ WA.ui.banner.openBanner({
 WA.ui.banner.closeBanner();
 ```
 
+## Play a video
+
+:::caution
+The "play a video" API is **experimental**. It means the compatibility with future versions of WorkAdventure is not
+guaranteed and we might break the signature of these methods at any moment. Use at your own risk.
+:::
+
+Plays a video. The video will be displayed as if it was a user talking to us.
+
+```ts
+WA.ui.playVideo(videoUrl: string, config: VideoConfig = {
+  loop: true,
+}): Promise<Video>;
+
+interface VideoConfig {
+  loop?: boolean;
+  name:? string;
+  avatar:? string;
+}
+```
+
+Arguments: 
+
+- `videoUrl`: the URL of the video to play.
+- `config`: an object with the following optional properties:
+  - `loop`: whether the video should loop or not. Default is `true`.
+  - `name`: The name displayed at the bottom left of the video.
+  - `avatar`: The avatar displayed at the bottom left of the video.
+
+Return value:
+
+- a `Promise` that resolves to a `Video` object. The `Video` object has a `stop` method that can be used to stop the video.
+
+```ts
+interface Video {
+  stop(): void;
+}
+```
+
+Example:
+
+```ts
+const video = await WA.ui.playVideo('https://example.com/video.mp4', { loop: true });
+
+// Later, stop the video
+await video.stop();
+```

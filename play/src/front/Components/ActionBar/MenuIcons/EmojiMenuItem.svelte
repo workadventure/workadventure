@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { createPopperActions } from "svelte-popperjs";
     import ActionBarButton from "../ActionBarButton.svelte";
     import EmojiIcon from "../../Icons/EmojiIcon.svelte";
     import EmojiSubMenu from "../EmojiSubMenu.svelte";
     import { activeSecondaryZoneActionBarStore, openedMenuStore } from "../../../Stores/MenuStore";
     import LL from "../../../../i18n/i18n-svelte";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
     function toggleEmojiPicker() {
         if ($activeSecondaryZoneActionBarStore === "emote") {
@@ -15,29 +15,13 @@
         }
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 12] } },
-            {
-                name: "popper-arrow",
-                options: {
-                    element: ".popper-arrow",
-                    padding: 12,
-                },
-            },
-
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top", "top-start", "top-end"],
-                },
-            },
-        ],
-    };
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
+        {
+            placement: "bottom-start",
+            //strategy: 'fixed',
+        },
+        8
+    );
 </script>
 
 <ActionBarButton
@@ -49,7 +33,7 @@
     tooltipDesc={$LL.actionbar.help.emoji.desc()}
     state={$activeSecondaryZoneActionBarStore === "emote" ? "active" : "normal"}
     dataTestId={undefined}
-    action={popperRef}
+    action={floatingUiRef}
 >
     <EmojiIcon
         strokeColor={$activeSecondaryZoneActionBarStore === "emote"
@@ -59,7 +43,7 @@
     />
 </ActionBarButton>
 {#if $activeSecondaryZoneActionBarStore === "emote"}
-    <div use:popperContent={extraOpts} class="popper-tooltip ">
-        <EmojiSubMenu />
+    <div use:floatingUiContent class="absolute">
+        <EmojiSubMenu {arrowAction} />
     </div>
 {/if}

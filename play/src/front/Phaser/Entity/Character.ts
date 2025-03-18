@@ -78,7 +78,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
-        companionTexturePromise?: CancelablePromise<string>,
+        companionTexturePromise: CancelablePromise<string>,
         userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);

@@ -17,6 +17,9 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
+    import { ArrowAction } from "../../Utils/svelte-floatingui";
+
+    export let arrowAction: ArrowAction;
 
     function clickEmoji(selected?: number) {
         //if open, in edit mode or playing mode
@@ -178,5 +181,5 @@
             -->
         </div>
     </div>
-    <div class="popper-arrow bg-contrast/80" data-popper-arrow />
+    <div use:arrowAction />
 </div>

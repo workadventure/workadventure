@@ -21,7 +21,7 @@
                 src={$contactPageStore}
                 allow="clipboard-read; clipboard-write self {$contactPageStore}"
                 allowfullscreen
-                class="border-0 w-full h-screen"
+                class="border-0 w-full h-dvh"
             />
         {:else}
             <section>

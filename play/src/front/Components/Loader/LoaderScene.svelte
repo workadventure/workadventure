@@ -10,11 +10,11 @@
 </script>
 
 <div
-    class="absolute top-0 left-0 z-50 h-screen w-screen"
+    class="absolute top-0 left-0 z-50 h-dvh w-dvw"
     in:fade={{ duration: 100 }}
     out:fade={{ delay: 500, duration: 300 }}
 >
-    <div class="flex items-center min-h-screen w-full w-screen bg-contrast/80 backdrop-blur relative z-30">
+    <div class="flex items-center min-h-dvh w-full w-dvw bg-contrast/80 backdrop-blur relative z-30">
         <div class="">
             <!--
             {#if gameManager.currentStartedRoom.loadingLogo && gameManager.currentStartedRoom.showPoweredBy !== false}

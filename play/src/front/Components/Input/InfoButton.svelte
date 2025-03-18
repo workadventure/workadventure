@@ -1,36 +1,20 @@
 <script lang="ts">
-    import { createPopperActions } from "svelte-popperjs";
+    import { createFloatingUiActions } from "../../Utils/svelte-floatingui";
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "top",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "popper-arrow",
-                options: {
-                    element: ".popper-arrow",
-                    padding: 6,
-                },
-            },
-
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top-start", "top-end", "right", "left"],
-                },
-            },
-        ],
-    };
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
+        {
+            placement: "top",
+            //strategy: 'fixed',
+        },
+        8
+    );
 
     let showTooltip = false;
 </script>
 
 <div>
     <svg
-        use:popperRef
+        use:floatingUiRef
         class="icon icon-tabler icon-tabler-info-square-rounded-filled fill-contrast-200 stroke-contrast-200"
         fill="none"
         height="24"
@@ -51,15 +35,11 @@
     </svg>
 
     {#if showTooltip}
-        <div
-            role="tooltip"
-            class="popper-tooltip bg-contrast-900 rounded p-3 text-white z-10 relative"
-            use:popperContent={extraOpts}
-        >
+        <div role="tooltip" class="absolute bg-contrast-900 rounded p-3 text-white z-10" use:floatingUiContent>
             <slot />
 
             <!-- Arrow -->
-            <div class="popper-arrow" data-popper-arrow />
+            <div use:arrowAction />
         </div>
     {/if}
 </div>

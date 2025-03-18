@@ -4,7 +4,8 @@ import { v4 } from "uuid";
 import type { RequireOnlyOne } from "../types";
 import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
 import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { VideoConfig } from "../Events/Ui/PlayVideoEvent";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
@@ -18,6 +19,7 @@ import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
 import buttonActionBar, { WorkAdventureButtonActionBarCommands } from "./Ui/ButtonActionBar";
 import banner, { WorkadventureBannerCommands } from "./Ui/Banner";
+import { Video } from "./Ui/Video";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -338,6 +340,24 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     get banner(): WorkadventureBannerCommands {
         return banner;
+    }
+
+    /**
+     * Plays a video as if the video was a player talking to us.
+     */
+    public async playVideo(videoUrl: string, config: VideoConfig = {}): Promise<Video> {
+        if (config.loop === undefined) {
+            config.loop = true;
+        }
+        const id = await queryWorkadventure({
+            type: "playVideo",
+            data: {
+                url: videoUrl,
+                config: config,
+            },
+        });
+
+        return new Video(id);
     }
 }
 

@@ -51,6 +51,8 @@ export class VideoPeer extends Peer implements Streamable {
     private readonly _isMuted: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
+    public readonly flipX = false;
+    public readonly muteAudio = false;
 
     constructor(
         public user: UserSimplePeerInterface,

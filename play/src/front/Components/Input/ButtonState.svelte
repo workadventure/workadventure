@@ -31,7 +31,7 @@
 <button
     type="button"
     data-testid={dataTestId}
-    class={`light mt-5 ${state} button-state`}
+    class={`${state} button-state btn btn-secondary w-full button-state`}
     on:click={click}
     disabled={state !== "ready"}
 >

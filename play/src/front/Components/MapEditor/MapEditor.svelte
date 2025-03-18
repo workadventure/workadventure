@@ -1,64 +1,47 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import {
-        mapEditorModeStore,
-        mapEditorSelectedToolStore,
-        mapEditorVisibilityStore,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
-    import { IconMinus } from "@wa-icons";
-
-    function closeMapEditor() {
-        analyticsClient.toggleMapEditor(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
-        mapEditorModeStore.switchMode(false);
-    }
-    function hideMapEditor() {
-        mapEditorVisibilityStore.set(false);
-    }
 </script>
 
-<MapEditorSideBar />
-<div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
-    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
-        <ConfigureMyRoom />
-    {:else if $mapEditorVisibilityStore}
-        <div
-            class="sidebar h-screen"
-            in:fly={{ x: 100, duration: 250, delay: 200 }}
-            out:fly={{ x: 100, duration: 200 }}
-        >
-            <button
-                class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
-                on:click={hideMapEditor}><IconMinus font-size="16" /></button
+{#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+    <ConfigureMyRoom />
+{/if}
+<div
+    id="map-editor-container"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0"
+>
+    <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
+        <MapEditorSideBar />
+    </div>
+    <div id="map-editor-right" class={`map-editor h-dvh ${$mapEditorSelectedToolStore}`}>
+        {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
+            <div
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md"
+                in:fly={{ x: 100, duration: 200, delay: 200 }}
+                out:fly={{ x: 100, duration: 200 }}
             >
-            <button
-                class="h-12 w-12 rounded   close-window hover:bg-danger aspect-square text-2xl "
-                data-testid="mapEditor-close-button"
-                on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
-            >
-            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
-                <TrashEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-                <EntityEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-                <AreaEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
-                <Explorer />
-            {/if}
-        </div>
-    {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                    <TrashEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                    <EntityEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                    <AreaEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+                    <Explorer />
+                {/if}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
@@ -67,8 +50,7 @@
         top: 0;
         right: 0;
         width: fit-content !important;
-        z-index: 800;
-
+        z-index: 1999;
         pointer-events: auto;
         color: whitesmoke;
 

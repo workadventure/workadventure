@@ -39,26 +39,24 @@
             {/if}
         </div>
 
-        <div class="relative flex-grow">
-            <select
-                id={uniqueId}
-                class="grow w-full input-select font-light pr-10"
-                class:input-select-light={variant === "light"}
-                bind:value
-                on:change={onChange}
-                on:click={onClick}
-                {placeholder}
-                {disabled}
-            >
-                {#each options as { value: optionValue, label: optionLabel } (optionValue)}
-                    <option value={optionValue}>{optionLabel}</option>
-                {/each}
+        <select
+            id={uniqueId}
+            class="grow w-full input-select font-light pr-10"
+            class:input-select-light={variant === "light"}
+            bind:value
+            on:change={onChange}
+            on:click={onClick}
+            {placeholder}
+            {disabled}
+        >
+            {#each options as { value: optionValue, label: optionLabel } (optionValue)}
+                <option value={optionValue}>{optionLabel}</option>
+            {/each}
 
-                <slot />
-            </select>
-            <div class="absolute inset-y-0 right-0 mb-2 flex items-center pr-2 pointer-events-none">
-                <ChevronDownIcon />
-            </div>
+            <slot />
+        </select>
+        <div class="absolute inset-y-0 right-0 mb-2 flex items-center pr-2 pointer-events-none">
+            <ChevronDownIcon />
         </div>
     </div>
 </div>
