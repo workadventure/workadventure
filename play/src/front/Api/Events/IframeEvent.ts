@@ -69,6 +69,7 @@ import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEv
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
+import {isAudioActivityEvent} from "./ProximityMeeting/AudioActivityEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -367,6 +368,14 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("stopListeningToStreamInBubble"),
         data: z.undefined(),
     }),
+    /*z.object({
+        type: z.literal("startListeningToAudioActivityInBubble"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("stopListeningToAudioActivityInBubble"),
+        data: z.undefined(),
+    }),*/
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -541,6 +550,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("appendPCMData"),
         data: isAppendPCMDataEvent,
+    }),
+    z.object({
+        type: z.literal("audioActivity"),
+        data: isAudioActivityEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
