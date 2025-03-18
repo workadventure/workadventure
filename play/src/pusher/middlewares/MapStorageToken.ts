@@ -1,8 +1,8 @@
-import type { MiddlewareNext, MiddlewarePromise, Request, Response } from "hyper-express";
+import type { NextFunction, Request, Response } from "express";
 import * as Sentry from "@sentry/node";
 import { MAP_STORAGE_API_TOKEN } from "../enums/EnvironmentVariable";
 
-export function mapStorageToken(req: Request, res: Response, next: MiddlewareNext): MiddlewarePromise | void {
+export function mapStorageToken(req: Request, res: Response, next: NextFunction): void {
     const token = req.header("authorization");
 
     if (!MAP_STORAGE_API_TOKEN) {

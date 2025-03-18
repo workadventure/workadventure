@@ -1,5 +1,4 @@
 import Debug from "debug";
-import type { compressors } from "hyper-express";
 import {
     AddSpaceFilterMessage,
     AdminMessage,
@@ -50,6 +49,7 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
+import { WebSocket } from "uWebSockets.js";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
@@ -70,9 +70,9 @@ import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
 
-export type AdminSocket = compressors.WebSocket<AdminSocketData>;
-export type Socket = compressors.WebSocket<SocketData>;
-export type SocketUpgradeFailed = compressors.WebSocket<UpgradeFailedData>;
+export type AdminSocket = WebSocket<AdminSocketData>;
+export type Socket = WebSocket<SocketData>;
+export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
@@ -1319,12 +1319,12 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(spaceName);
         if (space) {
             space.removeUser(client);
+            this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
                 console.error("Could not find space", spaceName, "to leave");
                 Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));
             }
-            this.deleteSpaceIfEmpty(space);
         } else {
             console.error("Could not find space", spaceName, "to leave");
             Sentry.captureException(new Error("Could not find space " + spaceName + " to leave"));

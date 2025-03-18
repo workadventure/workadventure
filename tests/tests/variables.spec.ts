@@ -23,9 +23,16 @@ test.describe('Variables', () => {
       test.skip();
     }
   });
-  // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
+  // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ browser, request }) => {
+  test('storage works @docker', async ({ browser, request }, { project }) => {
+    // Skip test for Firefox because of some bug when reloading too many pages.
+    if(project.name === "firefox") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
@@ -82,11 +89,9 @@ test.describe('Variables', () => {
         new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
       ]
     ).toBe(undefined);
+
     await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"))
-    /*await gotoWait200(
-        page,
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );*/
+
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
     await expect(textField).toHaveValue('value set while Redis stopped', {

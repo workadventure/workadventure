@@ -82,16 +82,12 @@ export class PingController extends BaseHttpController {
 
             for (const pingResult of pingsResult) {
                 if (pingResult.status === "rejected") {
-                    res.atomic(() => {
-                        res.status(503).send("ko");
-                    });
+                    res.status(503).send("ko");
                     return;
                 }
             }
 
-            res.atomic(() => {
-                res.status(200).send("pong");
-            });
+            res.status(200).send("pong");
             return;
         });
     }
