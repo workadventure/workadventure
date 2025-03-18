@@ -24,15 +24,8 @@ spec:
     - host: {{ .Values.domainName }}
       http:
         paths:
-          - path: /room
-            pathType: Exact
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-play
-                port:
-                  number: {{ .Values.play.service.wsPort }}
-          - path: /admin/rooms
-            pathType: Exact
+          - path: /ws/
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play

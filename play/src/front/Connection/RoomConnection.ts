@@ -267,7 +267,7 @@ export class RoomConnection implements RoomConnection {
         if (!url.endsWith("/")) {
             url += "/";
         }
-        url += "room";
+        url += "ws/room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
         if (token) {
             url += "&token=" + encodeURIComponent(token);
