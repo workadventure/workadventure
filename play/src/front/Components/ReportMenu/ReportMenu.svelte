@@ -2,7 +2,6 @@
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
-    import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -11,7 +10,7 @@
 
     let blockActive = true;
     let disableReport = false;
-    let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
+    let userUUID: string | undefined = get(showReportScreenStore).userUuid;
     let userName = "No name";
     let unsubscriber: Unsubscriber;
 
@@ -19,9 +18,9 @@
         unsubscriber = showReportScreenStore.subscribe((reportScreenStore) => {
             if (reportScreenStore != null) {
                 userName = reportScreenStore.userName;
-                userUUID = playersStore.getPlayerById(reportScreenStore.userId)?.userUuid;
+                userUUID = reportScreenStore.userUuid;
                 if (userUUID === undefined && reportScreenStore !== userReportEmpty) {
-                    console.error("Could not find UUID for user with ID " + reportScreenStore.userId);
+                    console.error("Could not find UUID for user with ID " + reportScreenStore.userUuid);
                 }
             }
         });

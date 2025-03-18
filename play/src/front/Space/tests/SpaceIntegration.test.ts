@@ -45,7 +45,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "kickOffUser"; kickOffUser: KickOffUserPrivateMessage }
             | undefined
         >,
-        receiverUserId: number
+        receiverUserId: string
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -124,7 +124,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "",
             playUri: "",
             color: "",
@@ -149,7 +149,7 @@ describe("", () => {
             user: userFromMessage,
         };
 
-        let users: Map<number, SpaceUserExtended> = new Map();
+        let users: Map<string, SpaceUserExtended> = new Map();
         const unsubscribe = spaceFilter.usersStore.subscribe((newUsers) => {
             users = newUsers;
         });
@@ -158,7 +158,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = users.get(userFromMessage.id);
+        const userToCompare = users.get(userFromMessage.spaceUserId);
 
         expect(userToCompare).toBeDefined();
 
@@ -175,7 +175,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "",
             playUri: "",
             color: "",
@@ -204,7 +204,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.id);
+        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -221,7 +221,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "testName",
             playUri: "",
             color: "",
@@ -251,7 +251,7 @@ describe("", () => {
         await flushPromises();
 
         const spaceUserUpdate = SpaceUser.fromPartial({
-            id: 1,
+            spaceUserId: "foo_1",
             chatID: "new@id.fr",
         });
         const updateSpaceUserMessage: UpdateSpaceUserPusherToFrontMessage = {
@@ -261,7 +261,7 @@ describe("", () => {
             filterName: spaceFilter.getName(),
         };
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.id);
+        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -274,7 +274,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
 
-        expect(get(spaceFilter.usersStore).get(userFromMessage.id)?.name).toBe("testName");
+        expect(get(spaceFilter.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
 
         unsubscriber();
     });
@@ -293,7 +293,7 @@ describe("", () => {
 
         roomConnection.spacePublicMessageEvent.next({
             spaceName: "space1",
-            senderUserId: 1,
+            senderUserId: "foo_1",
             spaceEvent: {
                 event: {
                     $case: "spaceMessage",
@@ -309,7 +309,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: 1,
+            sender: "foo_1",
             $case: "spaceMessage",
             spaceMessage: {
                 message: "Hello",
@@ -333,8 +333,8 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: 1,
-            receiverUserId: 2,
+            senderUserId: "foo_1",
+            receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
                     $case: "muteVideo",
@@ -350,7 +350,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: 1,
+            sender: "foo_1",
             $case: "muteVideo",
             muteVideo: {
                 force: true,

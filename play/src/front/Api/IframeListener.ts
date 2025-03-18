@@ -670,7 +670,7 @@ class IframeListener {
      * @param senderId The id of the sender (or undefined if the message is sent by the current user)
      * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
      */
-    sendUserInputChat(message: string, senderId: number | undefined, exceptOrigin?: Window) {
+    sendUserInputChat(message: string, senderId: string | undefined, exceptOrigin?: Window) {
         this.postMessage(
             {
                 type: "userInputChat",

@@ -53,7 +53,7 @@ export class UserProviderMerger {
                             isMember: user.isMember || acc.isMember,
                             visitCardUrl: user.visitCardUrl || acc.visitCardUrl,
                             color: user.color || acc.color,
-                            id: user.id || acc.id,
+                            spaceUserId: user.spaceUserId || acc.spaceUserId,
                         };
                     });
 
@@ -64,7 +64,7 @@ export class UserProviderMerger {
                         roomName: undefined,
                         playUri: undefined,
                         color: undefined,
-                        id: undefined,
+                        spaceUserId: undefined,
                     };
 
                     const fullUser = {

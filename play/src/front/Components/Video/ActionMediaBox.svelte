@@ -69,7 +69,12 @@
             $case: "kickOffUser",
             kickOffUser: {},
         });
-        peerStore.removePeer(spaceUser.id);
+
+        // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
+        const spaceUserId = spaceUser.spaceUserId;
+        const userId = Number(spaceUserId.split("_").pop());
+
+        peerStore.removePeer(userId);
     }
 
     function pin() {

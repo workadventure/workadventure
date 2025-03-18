@@ -1,9 +1,10 @@
 import { get, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 export interface AskDialog {
     uuid: string;
-    userId: number;
+    spaceUserId: string;
     message: string;
     userName?: string;
     avatarUrl?: string;
@@ -19,14 +20,14 @@ function createAskDialogStore() {
     return {
         subscribe,
         addAskDialog: (
-            userId: number,
+            spaceUserId: string,
             message: string,
             callback?: () => void,
             userName?: string,
             avatarUrl?: string
         ) => {
             const askDialogs = get(askDialogStore);
-            askDialogs.add({ uuid: uuidv4(), userId, message, userName, avatarUrl, callback });
+            askDialogs.add({ uuid: uuidv4(), spaceUserId, message, userName, avatarUrl, callback });
             set(askDialogs);
         },
         acceptAskDialog: (uuid: string) => {
@@ -49,9 +50,10 @@ function createAskDialogStore() {
             set(askDialogs);
         },
         closeDialogByUserId: (userId: number) => {
+            const spaceUserId = gameManager.getCurrentGameScene().roomUrl + "_" + userId;
             const askDialogs = get(askDialogStore);
             // find the askDialog with the userId
-            const askDialog = Array.from(askDialogs).find((askDialog) => askDialog.userId === userId);
+            const askDialog = Array.from(askDialogs).find((askDialog) => askDialog.spaceUserId === spaceUserId);
             if (!askDialog) return;
 
             askDialogs.delete(askDialog);

@@ -1785,7 +1785,7 @@ export class GameScene extends DirtyScene {
                 this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
-                    this.connection.getUserId(),
+                    this.connection.getSpaceUserId(),
                     this._spaceRegistry,
                     this.simplePeer,
                     iframeListener

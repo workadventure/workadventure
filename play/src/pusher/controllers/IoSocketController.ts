@@ -471,7 +471,7 @@ export class IoSocketController {
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({
-                                id: 0,
+                                spaceUserId: "",
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,

@@ -337,7 +337,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
         throw new Error("Method not implemented.");
     }
     blockOrReportUser(): void {
-        showReportScreenStore.set({ userId: this.userId, userName: this.player.name });
+        showReportScreenStore.set({ userUuid: this.userUuid, userName: this.player.name });
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
