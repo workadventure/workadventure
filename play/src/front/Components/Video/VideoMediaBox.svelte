@@ -2,6 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Readable } from "svelte/store";
+    import { onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -15,8 +16,8 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
-    import { createFloatingUiActions } from "../../Utils/svelte-floatingui";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -72,12 +73,43 @@
         highlightFullScreen.set(false);
     }
 
-    const [floatingUiRef, floatingUiContent] = createFloatingUiActions(
-        {
-            placement: "bottom",
-        },
-        12
-    );
+    let userMenuButton: HTMLDivElement;
+
+    let closeFloatingUi: (() => void) | undefined;
+
+    async function toggleUserMenu() {
+        showUserSubMenu = !showUserSubMenu;
+        if (showUserSubMenu) {
+            // See https://github.com/storybookjs/storybook/issues/21884
+            // @ts-ignore
+            closeFloatingUi = showFloatingUi(
+                userMenuButton,
+                ActionMediaBox,
+                {
+                    embedScreen,
+                    spaceUser: await extendedSpaceUserPromise,
+                    videoEnabled,
+                    onClose: () => {
+                        showUserSubMenu = false;
+                        closeFloatingUi?.();
+                    },
+                },
+                {
+                    placement: "bottom",
+                },
+                8,
+                false
+            );
+            // on:close={() => (showUserSubMenu = false)}
+        } else {
+            closeFloatingUi?.();
+            closeFloatingUi = undefined;
+        }
+    }
+
+    onDestroy(() => {
+        closeFloatingUi?.();
+    });
 </script>
 
 <div class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox">
@@ -127,22 +159,9 @@
                     <div />
                 {:then spaceUser}
                     {#if spaceUser}
-                        <div use:floatingUiRef class="self-center">
-                            <UpDownChevron
-                                enabled={showUserSubMenu}
-                                on:click={() => (showUserSubMenu = !showUserSubMenu)}
-                            />
+                        <div class="self-center" bind:this={userMenuButton}>
+                            <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                         </div>
-                        {#if showUserSubMenu}
-                            <div use:floatingUiContent class="absolute">
-                                <ActionMediaBox
-                                    {embedScreen}
-                                    {spaceUser}
-                                    {videoEnabled}
-                                    on:close={() => (showUserSubMenu = false)}
-                                />
-                            </div>
-                        {/if}
                     {/if}
                 {:catch error}
                     <div class="bg-danger">{error}</div>

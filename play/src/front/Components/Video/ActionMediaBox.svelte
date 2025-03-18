@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
@@ -20,8 +19,7 @@
     export let embedScreen: Streamable;
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
-
-    const dispatch = createEventDispatcher();
+    export let onClose: () => void;
 
     let moreActionOpened = false;
 
@@ -117,7 +115,7 @@
     }
 
     function close() {
-        dispatch("close");
+        onClose();
     }
 </script>
 
