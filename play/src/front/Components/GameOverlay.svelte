@@ -33,6 +33,7 @@
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
+    import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
 
     export let game: Game;
 
@@ -98,4 +99,6 @@
         <TodoList />
     {/if}
 {/if}
+
+<FloatingUiPopupList />
 <!-- </div> -->

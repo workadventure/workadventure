@@ -15,14 +15,6 @@
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 120;
 
-    $: {
-        console.log("minMediaBoxWidth", minMediaBoxWidth);
-        console.log(
-            "containerWidth / $streamableCollectionStore.size",
-            containerWidth / $streamableCollectionStore.size
-        );
-        console.log("maxMediaBoxWidth", maxMediaBoxWidth);
-    }
     $: videoWidth = Math.max(
         Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
         minMediaBoxWidth
@@ -40,6 +32,7 @@
     class:relative={isOnOneLine}
     class:overflow-x-auto={isOnOneLine}
     class:overflow-y-hidden={isOnOneLine}
+    class:pb-3={isOnOneLine}
     class:m-0={isOnOneLine}
     class:my-0={isOnOneLine}
     class:w-full={isOnOneLine}
