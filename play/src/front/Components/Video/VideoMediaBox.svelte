@@ -80,10 +80,10 @@
     async function toggleUserMenu() {
         showUserSubMenu = !showUserSubMenu;
         if (showUserSubMenu) {
-            // See https://github.com/storybookjs/storybook/issues/21884
-            // @ts-ignore
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
+                // See https://github.com/storybookjs/storybook/issues/21884
+                // @ts-ignore
                 ActionMediaBox,
                 {
                     embedScreen,
