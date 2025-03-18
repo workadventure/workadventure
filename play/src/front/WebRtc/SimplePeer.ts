@@ -258,7 +258,8 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            stream
+            stream,
+            this.spaceFilterDeferred.promise
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen

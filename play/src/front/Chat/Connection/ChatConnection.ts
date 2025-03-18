@@ -16,7 +16,7 @@ export interface ChatUser {
     isMember?: boolean;
     visitCardUrl?: string;
     color: string | undefined;
-    id: number | undefined;
+    spaceUserId: string | undefined;
 }
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };

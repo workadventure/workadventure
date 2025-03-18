@@ -140,9 +140,22 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
             ) {
                 return;
             }
+            // The senderId is the spaceUserId of the user, i.e. roomID_userID
+            // Let's extract the user ID and room ID from it
+            const senderId = event.senderId;
+            let roomId: string | undefined;
+            let userId: number | undefined;
+            if (senderId === undefined) {
+                const lastUnderscoreIndex = event.senderId?.lastIndexOf("_");
+                if (lastUnderscoreIndex !== undefined && lastUnderscoreIndex !== -1) {
+                    roomId = event.senderId?.substring(0, lastUnderscoreIndex);
+                    userId = Number(event.senderId?.substring(lastUnderscoreIndex + 1));
+                }
+            }
+
             callback(event.message, {
-                authorId: event.senderId,
-                author: event.senderId ? players.get(event.senderId) : undefined,
+                authorId: userId,
+                author: userId && roomId === WA.room.id ? players.get(userId) : undefined,
             });
         });
     }

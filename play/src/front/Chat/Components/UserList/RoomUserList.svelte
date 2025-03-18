@@ -29,7 +29,7 @@
 
             if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
 
-            const myId = gameManager.getCurrentGameScene().connection?.getUserId();
+            const mySpaceUserId = gameManager.getCurrentGameScene().connection?.getSpaceUserId();
 
             const users = currentRoomWithUsers.users
                 .filter(({ username }) => {
@@ -38,8 +38,8 @@
                         : false;
                 })
                 .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
-                    if (chatUserA.id === myId) return -1;
-                    if (chatUserB.id === myId) return 1;
+                    if (chatUserA.spaceUserId === mySpaceUserId) return -1;
+                    if (chatUserB.spaceUserId === mySpaceUserId) return 1;
                     return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
                 })
                 .slice(0, USERS_BY_ROOM_LIMITATION);

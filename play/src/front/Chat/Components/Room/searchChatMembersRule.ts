@@ -38,7 +38,7 @@ export const searchChatMembersRule = () => {
             }
             return chatUsers.map((user) => ({
                 value: user.chatId,
-                label: user.username ?? user.id?.toString(),
+                label: user.username ?? user.spaceUserId?.toString(),
                 verified: true,
                 created: false,
             }));

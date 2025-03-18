@@ -7,6 +7,8 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
+import { lookupUserById } from "../Space/Utils/UserLookup";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -38,7 +40,8 @@ export class ScreenSharingPeer extends Peer {
         initiator: boolean,
         public readonly player: RemotePlayerData,
         private connection: RoomConnection,
-        stream: MediaStream | null
+        stream: MediaStream | null,
+        private spaceFilter: Promise<SpaceFilterInterface>
     ) {
         const bandwidth = get(screenShareBandwidthStore);
         super({
@@ -249,5 +252,10 @@ export class ScreenSharingPeer extends Peer {
         } catch (e) {
             console.error("setMaxBitrate => Error setting max bitrate:", e);
         }
+    }
+
+    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
+        const spaceFilter = await this.spaceFilter;
+        return lookupUserById(this.userId, spaceFilter, 30_000);
     }
 }

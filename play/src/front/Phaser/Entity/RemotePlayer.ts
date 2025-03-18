@@ -140,7 +140,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             priority: -1,
             style: "is-error",
             callback: () => {
-                showReportScreenStore.set({ userId: this.userId, userName: this.playerName });
+                showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
                 actionsMenuStore.clear();
             },
         });

@@ -263,7 +263,8 @@ export class SocketManager implements ZoneEventListener {
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
-                            socketData.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
+                            socketData.spaceUser.spaceUserId =
+                                socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
@@ -420,7 +421,7 @@ export class SocketManager implements ZoneEventListener {
                                     const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
                                     const space = this.spaces.get(removeSpaceUserMessage.spaceName);
                                     if (space) {
-                                        space.localRemoveUser(removeSpaceUserMessage.userId);
+                                        space.localRemoveUser(removeSpaceUserMessage.spaceUserId);
                                     }
                                     break;
                                 }
@@ -683,7 +684,7 @@ export class SocketManager implements ZoneEventListener {
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
-                id: socketData.userId,
+                spaceUserId: socketData.spaceUser.spaceUserId,
                 chatID: playerDetailsMessage.chatID,
             });
             socketData.spaces.forEach((spaceName) => {
@@ -783,7 +784,7 @@ export class SocketManager implements ZoneEventListener {
             const space = this.spaces.get(spaceName);
             if (space) {
                 space.removeClientWatcher(socket);
-                space.removeUser(socketData.spaceUser.id);
+                space.removeUser(socketData.spaceUser.spaceUserId);
                 this.deleteSpaceIfEmpty(space);
             } else {
                 console.error(
@@ -1332,7 +1333,7 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(spaceName);
         if (space) {
             space.removeClientWatcher(client);
-            space.removeUser(socketData.spaceUser.id);
+            space.removeUser(socketData.spaceUser.spaceUserId);
             this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
@@ -1500,7 +1501,7 @@ export class SocketManager implements ZoneEventListener {
             $case: "publicEvent",
             publicEvent: {
                 ...publicEvent,
-                senderUserId: socketData.userId,
+                senderUserId: socketData.spaceUser.spaceUserId,
             },
         });
     }
@@ -1523,7 +1524,7 @@ export class SocketManager implements ZoneEventListener {
             $case: "privateEvent",
             privateEvent: {
                 ...privateEvent,
-                senderUserId: socketData.userId,
+                senderUserId: socketData.spaceUser.spaceUserId,
             },
         });
     }
