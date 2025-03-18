@@ -336,10 +336,9 @@ class ConnectionManager {
                             nextScene = "selectCompanionScene";
                         }
 
-                        const chatId = urlManager.getHashParameter("chatId");
                         const chatRoomId = urlManager.getHashParameter("chatRoomId");
 
-                        if (chatId && chatRoomId) {
+                        if (chatRoomId) {
                             try {
                                 await openChatRoom(chatRoomId);
                             } catch (err) {
