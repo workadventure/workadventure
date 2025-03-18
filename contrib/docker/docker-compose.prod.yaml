@@ -132,11 +132,11 @@ services:
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
       traefik.http.routers.play-ssl.service: "play"
 
-      traefik.http.routers.play-ws.rule: "Host(`${DOMAIN}`) && ( Path(`/admin/rooms`) || Path(`/room`) )"
+      traefik.http.routers.play-ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
       traefik.http.routers.play-ws.entryPoints: "web"
       traefik.http.services.play-ws.loadbalancer.server.port: "3001"
 
-      traefik.http.routers.play-ws-ssl.rule: "Host(`${DOMAIN}`) && ( Path(`/admin/rooms`) || Path(`/room`) )"
+      traefik.http.routers.play-ws-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
       traefik.http.routers.play-ws-ssl.entryPoints: "websecure"
       traefik.http.routers.play-ws-ssl.tls: "true"
       traefik.http.routers.play-ws-ssl.tls.certresolver: "myresolver"

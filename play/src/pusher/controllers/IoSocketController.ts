@@ -61,7 +61,7 @@ export class IoSocketController {
     }
 
     adminRoomSocket(): void {
-        this.app.ws<AdminSocketData>("/admin/rooms", {
+        this.app.ws<AdminSocketData>("/ws/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -211,7 +211,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<SocketData | UpgradeFailedData>("/room", {
+        this.app.ws<SocketData | UpgradeFailedData>("/ws/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
