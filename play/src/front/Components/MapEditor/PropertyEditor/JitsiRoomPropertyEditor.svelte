@@ -36,8 +36,9 @@
             config: property.jitsiRoomConfig,
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
         });
-        closeModal();
-
+        (newValue: boolean) => {
+            closeModal();
+        };
         jitsiConfigModalOpened = true;
     }
 </script>

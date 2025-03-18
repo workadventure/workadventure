@@ -46,7 +46,6 @@
 
 <style lang="scss">
     .map-editor {
-        position: absolute !important;
         top: 0;
         right: 0;
         width: fit-content !important;

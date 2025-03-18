@@ -55,7 +55,7 @@
 
             <slot />
         </select>
-        <div class="absolute inset-y-0 right-0 mb-2 flex items-center pr-2 pointer-events-none">
+        <div class="absolute inset-y-0  right-0 mt-6 flex items-center pr-2 pointer-events-none">
             <ChevronDownIcon />
         </div>
     </div>
