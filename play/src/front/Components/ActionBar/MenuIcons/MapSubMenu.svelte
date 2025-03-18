@@ -83,7 +83,7 @@
         </div>
         {#if $openedMenuStore === "mapMenu"}
             <div
-                class="popper-tooltip mt-2 bg-contrast/80 backdrop-blur rounded-md w-56 text-white"
+                class="popper-tooltip  mt-2 bg-contrast/80 backdrop-blur rounded-md w-auto max-w-full text-white"
                 data-testid="map-sub-menu"
                 use:popperContent={extraOpts}
                 use:clickOutside={closeMapMenu}

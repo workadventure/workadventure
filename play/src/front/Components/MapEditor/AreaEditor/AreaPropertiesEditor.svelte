@@ -35,6 +35,7 @@
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -613,12 +614,14 @@
                 <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
-                <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-                <textarea
+
+                <TextArea
                     id="objectDescription"
-                    placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                    label={$LL.mapEditor.areaEditor.areaDescription()}
+                    placeHolder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                     bind:value={areaDescription}
-                    on:change={onUpdateAreaDescription}
+                    onChange={onUpdateAreaDescription}
+                    onKeyPress={() => {}}
                 />
             {/if}
         </div>
@@ -631,9 +634,9 @@
             onChange={onUpdateAreaSearchable}
         />
 
-        <div class="properties-container">
+        <div class="properties-container ">
             {#each properties as property (property.id)}
-                <div class="property-box">
+                <div class="property-box mt[3rem]">
                     {#if property.type === "focusable"}
                         <FocusablePropertyEditor
                             {property}
@@ -766,7 +769,7 @@
     }
 
     .property-box {
-        margin-top: 5px;
+        margin-top: 35px;
     }
 
     .properties-container::-webkit-scrollbar {

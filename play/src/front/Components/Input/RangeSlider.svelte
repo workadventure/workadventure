@@ -1,6 +1,7 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
     export let label: string | undefined = undefined;
+    export let placeholder = "";
     export let min = 0;
     export let value = min;
     export let max = 100;
@@ -9,7 +10,7 @@
     //secondary = bleu   light = noir sinon par défaut la ligne est blanche
     export let variant: "secondary" | "light" | "" = "";
     export let buttonShape: "square" | "" = "";
-    export let unit = "";
+    export let unit = "%";
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
@@ -55,6 +56,7 @@
             id={uniqueId}
             type="range"
             class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            {placeholder}
             {min}
             {max}
             {step}

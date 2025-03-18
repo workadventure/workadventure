@@ -5,6 +5,8 @@
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
     import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
+    import Input from "../../Input/Input.svelte";
+    import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
 
@@ -32,28 +34,24 @@
     <span slot="content">
         {#if !isCreatingRoom && !creationRoomError && isChatIdSentToPusher}
             <div class="area-name-container">
-                <label for="objectName">{$LL.mapEditor.properties.matrixProperties.roomNameLabel()} : </label>
-                <input
+                <Input
                     id="objectName"
+                    label={$LL.mapEditor.properties.matrixProperties.roomNameLabel()}
                     type="text"
                     disabled={!property.serverData?.matrixRoomId}
                     placeholder={$LL.mapEditor.properties.matrixProperties.roomNameLabelPlaceholder()}
                     bind:value={property.displayName}
-                    on:change={onValueChange}
+                    onChange={onValueChange}
                 />
             </div>
             <div class="value-input">
-                <input
+                <InputCheckbox
                     id="openAutomaticallyChatLabel"
+                    label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
                     data-testid="shouldOpenAutomaticallyCheckbox"
-                    type="checkbox"
-                    class="w-4 h-4"
-                    bind:checked={property.shouldOpenAutomatically}
-                    on:change={onValueChange}
+                    bind:value={property.shouldOpenAutomatically}
+                    onChange={onValueChange}
                 />
-                <label for="openAutomaticallyChatLabel"
-                    >{$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}</label
-                >
             </div>
         {:else if isCreatingRoom && !creationRoomError}
             <ChatLoader label={$LL.chat.createRoom.loadingCreation()} />

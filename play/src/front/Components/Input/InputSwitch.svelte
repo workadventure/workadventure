@@ -14,7 +14,7 @@
     {#if labelPosition === "top" && label}
         <label for={uniqueId} class="input-label">{label}</label>
     {/if}
-    <label class="inline-flex cursor-pointer items-center relative">
+    <label class="inline-flex cursor-pointer items-center relative mt-3">
         <input
             id={uniqueId}
             type="checkbox"

@@ -3,9 +3,11 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { InputTagOption } from "./InputTagOption";
+    import InfoButton from "./InfoButton.svelte";
 
     const dispatch = createEventDispatcher();
 
+    export let optional = false;
     export let label: string | undefined = undefined;
     export let value: InputTagOption[] | undefined;
     export let options: InputTagOption[] = [];
@@ -18,6 +20,7 @@
         undefined;
 
     let filterText = "";
+    const SLOTS = $$slots;
 
     function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
@@ -38,11 +41,26 @@
 </script>
 
 <div class={"flex flex-col pb-5 text-dark-purple "}>
-    {#if label}
-        <label for="selector" class="text-white mb-2 ml-3">
-            {label}
-        </label>
-    {/if}
+    <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
+        {#if label}
+            <label for="selector" class="text-white relative grow mb-2 ml-1">
+                {label}
+            </label>
+        {/if}
+
+        {#if SLOTS.info}
+            <InfoButton>
+                <slot name="info" />
+            </InfoButton>
+        {/if}
+
+        {#if optional}
+            <div class="text-xs opacity-50 ">
+                {$LL.form.optional()}
+            </div>
+        {/if}
+    </div>
+
     <Select
         id="selector"
         on:filter={handleFilter}

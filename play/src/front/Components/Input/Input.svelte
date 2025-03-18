@@ -7,14 +7,17 @@
     export let placeholder = "";
     export let onChange = () => {};
     export let disabled = false;
-    export let type: "text" | "url" = "text";
-    export let value: string | null | undefined;
+    export let type: "text" | "url" | "number" = "text";
+    export let value: string | number | null | undefined;
     export let onClick = () => {};
     export let variant: "light" | "" = "";
     export let size: "xs" | "sm" | "lg" | "" = "";
     export let appendSide: "left" | "right" = "right";
     export let status: "error" | "success" | "" = "";
     export let errorHelperText: string | null = null;
+    export let min = 0;
+    export let max = 50;
+    export let step = 0;
     export let onKeyPress = () => {};
     export let optional = false;
     export let isValid = true;
@@ -92,6 +95,31 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                min="{min}.toString()"
+                {max}
+                {step}
+                {disabled}
+            />
+        {:else if type === "number"}
+            <input
+                id={uniqueId}
+                type="number"
+                class="grow input-text input-icon  "
+                class:input-icon-left={appendSide === "left"}
+                class:input-text-light={variant === "light"}
+                class:input-text-xs={size === "xs"}
+                class:input-text-sm={size === "sm"}
+                class:input-text-lg={size === "lg"}
+                class:error={status === "error"}
+                class:success={status === "success"}
+                bind:value
+                {placeholder}
+                on:change={onChange}
+                on:click={onClick}
+                on:input={validateInput}
+                {min}
+                {max}
+                {step}
                 {disabled}
             />
         {/if}

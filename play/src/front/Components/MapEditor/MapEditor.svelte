@@ -36,11 +36,12 @@
             in:fly={{ x: 100, duration: 250, delay: 200 }}
             out:fly={{ x: 100, duration: 200 }}
         >
-            <button class="absolute right-10 p-1 cursor-pointer" on:click={hideMapEditor}
-                ><IconMinus font-size="14" /></button
+            <button
+                class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
+                on:click={hideMapEditor}><IconMinus font-size="16" /></button
             >
             <button
-                class="close-window flex space-x-7"
+                class="h-12 w-12 rounded   close-window hover:bg-danger aspect-square text-2xl "
                 data-testid="mapEditor-close-button"
                 on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
             >

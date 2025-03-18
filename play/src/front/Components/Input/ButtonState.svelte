@@ -4,6 +4,7 @@
     export let promise: () => Promise<string>;
     export let initialText: string;
     export let loadingText: string;
+    export let dataTestId: string | undefined = undefined;
     let finalText: string;
 
     let state = "ready";
@@ -27,7 +28,13 @@
     }
 </script>
 
-<button type="button" class={`light mt-5 ${state} button-state`} on:click={click} disabled={state !== "ready"}>
+<button
+    type="button"
+    data-testid={dataTestId}
+    class={`light mt-5 ${state} button-state`}
+    on:click={click}
+    disabled={state !== "ready"}
+>
     {#if state === "ready"}
         {initialText}
     {:else if state === "loading"}
