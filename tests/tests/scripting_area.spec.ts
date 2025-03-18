@@ -34,7 +34,7 @@ test.describe("Scripting for Map editor @oidc", () => {
         const page = await getPage(browser, 'Admin1', Map.url("empty"));
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
-        await areaEditor.drawArea(page, {x: 6 * 32, y: 0}, {x: 20 * 32, y: 6 * 32});
+        await areaEditor.drawArea(page, {x: 0, y: 7 * 32 * 1.5}, {x: 5 * 32 * 1.5, y: 9 * 32 * 1.5});
         await areaEditor.setAreaName(page, "MyZone");
 
         await evaluateScript(page, () => {
@@ -60,7 +60,7 @@ test.describe("Scripting for Map editor @oidc", () => {
         });
 
         await menu.closeMapEditor(page);
-        await Map.teleportToPosition(page, 9 * 32, 3 * 32);
+        await Map.teleportToPosition(page, 2 * 32, 8 * 32);
         await expect(page.getByText('Welcome to MyZone')).toBeVisible();
         await page.getByRole('button', { name: 'Close' }).first().click();
         await Map.teleportToPosition(page, 9 * 32, 9 * 32);

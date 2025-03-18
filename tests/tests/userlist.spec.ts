@@ -13,7 +13,7 @@ test.describe("Walk to", () => {
     }
   });
   // FIXME: for some reason, this test fails in Helm. Find why
-  test("walk to a user @nohelm", async ({ browser }, { project }) => {
+  test("walk to a user", async ({ browser }, { project }) => {
     const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     const alicePosition = {
       x: 4 * 32,
