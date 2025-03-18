@@ -45,21 +45,23 @@ class ChatUtils {
     await page.getByTestId("VerifyWithPassphraseButton").click();
 
     //eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(1000);
-    //eslint-disable-next-line playwright/no-element-handle
-    const ssoButton = await page.$("text=Continue with SSO");
+    await page.waitForTimeout(5000);
 
-    if (ssoButton) {
+    if (await page.getByTestId("continueSSO").isVisible({timeout: 10_000})) {
       const oidcPagePromise = context.waitForEvent("page", {
         // Give ample time for the SSO redirection
         timeout: 2000,
       });
-      await page.getByText("Continue with SSO").click({
-        timeout: 1000,
+      await page.getByTestId("continueSSO").click({
+        timeout: 10000,
       });
       const oidcPage = await oidcPagePromise;
-      await oidcPage.getByText("Continue with OIDC Server Mock").click();
-      await page.getByText("Finish").click();
+      await oidcPage.getByText("Continue with OIDC Server Mock").click({
+        timeout: 10000,
+      });
+      await page.getByText("finish").click({
+        timeout: 10000,
+      });
       await oidcPage.close();
     }
 
