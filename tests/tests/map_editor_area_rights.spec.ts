@@ -53,7 +53,6 @@ test.describe("Map editor area with rights @oidc", () => {
       ["admin"],
       ["admin"]
     );
-    await page.pause();
     await Menu.closeMapEditor(page);
     const anonymLoginPromise = page.waitForResponse(
       (response) =>

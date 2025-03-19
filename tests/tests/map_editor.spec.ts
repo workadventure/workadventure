@@ -467,21 +467,16 @@ test.describe("Map editor @oidc", () => {
     });
 
 
-    test("Successfully upload and use custom entity with odd size in the map", async ({page, browser, request}) => {
+    test("Successfully upload and use custom entity with odd size in the map", async ({browser, request}) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
-        await page.goto(Map.url("empty"));
-        await login(page, "test", 3, "en-US", false);
-        await oidcAdminTagLogin(page, false);
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
         await Map.teleportToPosition(page, 0, 0);
 
         // Second browser
         const newBrowser = await browser.newContext();
-        const page2 = await newBrowser.newPage();
-        await page2.goto(Map.url("empty"));
-        await login(page2, "test2", 3, "en-US", false);
-        await oidcAdminTagLogin(page2, false);
+        const page2 = await getPage(browser, "Admin1", Map.url("empty"));
 
         // open map editor
         await page.bringToFront();
@@ -518,7 +513,7 @@ test.describe("Map editor @oidc", () => {
         await newBrowser.close();
     });
 
-    test("Successfully upload and edit asset name", async ({page, browser, request}) => {
+    test("Successfully upload and edit asset name", async ({browser, request}) => {
         // Init wam file
         await resetWamMaps(request);
 
