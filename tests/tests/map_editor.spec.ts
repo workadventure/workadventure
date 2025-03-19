@@ -480,7 +480,7 @@ test.describe("Map editor @oidc", () => {
 
         // open map editor
         await page.bringToFront();
-        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await Menu.openMapEditor(page);
         await MapEditor.openEntityEditor(page);
 
         // Click on upload asset
@@ -506,8 +506,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
         // check if the popup with application is opened on both pages
-        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
-        await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
         await newBrowser.close();
