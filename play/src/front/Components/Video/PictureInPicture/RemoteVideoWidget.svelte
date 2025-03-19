@@ -18,6 +18,7 @@
     let videoElement: HTMLVideoElementExt;
 
     let activePictureInPictureStoreUnsubscriber: Unsubscriber | undefined;
+    let streamStoreUnsubscriber: Unsubscriber | undefined;
 
     onMount(() => {
         activePictureInPictureStoreUnsubscriber = activePictureInPictureStore.subscribe((value) => {
@@ -26,10 +27,21 @@
                 videoElement.muted = false;
             }
         });
+
+        streamStoreUnsubscriber = streamStore.subscribe((stream) => {
+            // check if the video track is enabled
+            const track = stream?.getVideoTracks();
+            if (track == undefined || track.length == 0 || !track[0].enabled) {
+                videoElement.style.display = "0";
+            } else {
+                videoElement.style.opacity = "1";
+            }
+        });
     });
 
     onDestroy(() => {
         if (activePictureInPictureStoreUnsubscriber) activePictureInPictureStoreUnsubscriber();
+        if (streamStoreUnsubscriber) streamStoreUnsubscriber();
     });
 </script>
 
@@ -38,7 +50,7 @@
         id={`video-${streamable.uniqueId}`}
         bind:this={videoElement}
         use:srcObject={$streamStore}
-        class="tw-w-full tw-h-auto tw-max-h-full tw-object-cover tw-rounded-lg tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-bottom-0 tw-bg-gray-800 tw-z-40 tw-cursor-pointer"
+        class="tw-w-full tw-h-auto tw-max-h-full tw-object-cover tw-rounded-lg tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-bottom-0 tw-bg-gray-800 tw-transition-all tw-ease-in-out tw-duration-500 tw-z-40 tw-cursor-pointer"
         style={`aspect-ratio: ${$streamStore?.getVideoTracks()[0]?.getSettings().aspectRatio};`}
         autoplay
         muted
