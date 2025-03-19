@@ -193,7 +193,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                         let found = false;
                         const spaceUser = stream.getImmediateSpaceUser();
                         if (spaceUser !== undefined) {
-                            if ($users.has(spaceUser.id)) {
+                            if ($users.has(spaceUser.spaceUserId)) {
                                 filtered.set(participantId, stream);
                             }
                             continue;

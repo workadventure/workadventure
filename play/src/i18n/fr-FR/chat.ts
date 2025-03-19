@@ -266,6 +266,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Gérer les participants",
         invitations: "Invitations",
         participants: "Participants",
+        roomID: "ID du salon : {roomId}",
         join: "Présent",
         invite: "Invité",
         ban: "Banni",
@@ -449,6 +450,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
     },
+    loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
+    reconnect: "Se reconnecter",
     discord: {
         chatBand: {
             configure: "Configurer",

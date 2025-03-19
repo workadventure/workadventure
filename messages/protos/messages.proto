@@ -815,7 +815,7 @@ message PublicEventFrontToPusher {
 message PublicEvent {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
-  int32 senderUserId = 3;
+  string senderUserId = 3;
 }
 
 message SpaceEvent {
@@ -845,14 +845,14 @@ message SpaceIsTyping {
 
 message PrivateEvent {
   string spaceName = 1;
-  int32 receiverUserId = 2;
-  int32 senderUserId = 3;
+  string receiverUserId = 2;
+  string senderUserId = 3;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
 message PrivateEventFrontToPusher {
   string spaceName = 1;
-  int32 receiverUserId = 2;
+  string receiverUserId = 2;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
@@ -1235,7 +1235,7 @@ message LeaveSpaceMessage{
 }
 
 message SpaceUser{
-  int32 id = 1; // used
+  string spaceUserId = 1; // used
   string name = 2; // used
   string playUri = 3;
   string color = 4; // TO DELETE
@@ -1308,11 +1308,11 @@ message UpdateSpaceUserPusherToFrontMessage{
  */
 message RemoveSpaceUserMessage{
   string spaceName = 1;
-  int32 userId = 2;
+  string spaceUserId = 2;
 }
 message RemoveSpaceUserPusherToFrontMessage{
   string spaceName = 1;
-  int32 userId = 2;
+  string spaceUserId = 2;
   string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{

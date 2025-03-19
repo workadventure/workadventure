@@ -37,34 +37,34 @@ describe("SpaceFilter", () => {
         it("should add user when user is not exist in list  ", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-            const id = 0;
-            const user: Pick<SpaceUserExtended, "id"> = {
-                id,
+            const spaceUserId = "foo_0";
+            const user: Pick<SpaceUserExtended, "spaceUserId"> = {
+                spaceUserId,
             };
 
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
             await spaceFilter.addUser(user as SpaceUserExtended);
-            expect(get(spaceFilter.usersStore).has(user.id)).toBeTruthy();
+            expect(get(spaceFilter.usersStore).has(user.spaceUserId)).toBeTruthy();
         });
 
-        it("should not overwrite user when you add a new user and he already exist", async () => {
+        it("should not overwrite user when you add a new user and he already exists", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-            const id = 1;
+            const spaceUserId = "foo_1";
 
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
             await spaceFilter.addUser({
-                id,
+                spaceUserId,
                 name: "user-name",
             } as unknown as SpaceUserExtended);
             await spaceFilter.addUser({
-                id,
+                spaceUserId,
                 name: "user-name-overloaded",
             } as unknown as SpaceUserExtended);
 
-            const userInStore = get(spaceFilter.usersStore).get(id);
+            const userInStore = get(spaceFilter.usersStore).get(spaceUserId);
 
-            expect(userInStore?.id).toEqual(id);
+            expect(userInStore?.spaceUserId).toEqual(spaceUserId);
             expect(userInStore?.name).toBe("user-name");
         });
     });
@@ -72,10 +72,10 @@ describe("SpaceFilter", () => {
         it("should not update userdata when user object do not have id ", async () => {
             const spaceFilterName = "space-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-            const id = 0;
+            const spaceUserId = "";
 
-            const user: Pick<SpaceUserExtended, "id" | "name"> = {
-                id,
+            const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
+                spaceUserId,
                 name: "user-1",
             };
 
@@ -90,23 +90,23 @@ describe("SpaceFilter", () => {
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            const storedUser = get(spaceFilter.usersStore).get(id);
+            const storedUser = get(spaceFilter.usersStore).get(spaceUserId);
             expect(storedUser).toBeDefined();
-            expect(storedUser?.id).toBe(id);
+            expect(storedUser?.spaceUserId).toBe(spaceUserId);
             expect(storedUser?.name).toBe(user.name);
         });
         it("should update user data when user object have a id ", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-            const id = 0;
+            const spaceUserId = "";
 
-            const user: Pick<SpaceUserExtended, "id" | "name"> = {
-                id,
+            const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
+                spaceUserId,
                 name: "user-1",
             };
 
             const newData: SpaceUserExtended = {
-                id,
+                spaceUserId,
                 name: "user-2",
                 availabilityStatus: 1,
                 roomName: "world",
@@ -122,9 +122,9 @@ describe("SpaceFilter", () => {
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            const updatedUser = get(spaceFilter.usersStore).get(id);
+            const updatedUser = get(spaceFilter.usersStore).get(spaceUserId);
 
-            expect(updatedUser?.id).toBe(id);
+            expect(updatedUser?.spaceUserId).toBe(spaceUserId);
             expect(updatedUser?.name).toBe(updatedUserResult.name);
             expect(updatedUser?.availabilityStatus).toBe(updatedUserResult.availabilityStatus);
             expect(updatedUser?.roomName).toBe(updatedUserResult.roomName);
@@ -132,15 +132,15 @@ describe("SpaceFilter", () => {
         it("should not update userdata when user object have a incorrect id ", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-            const id = 0;
+            const spaceUserId = "";
 
-            const user: Pick<SpaceUserExtended, "id" | "name"> = {
-                id,
+            const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
+                spaceUserId,
                 name: "user-1",
             };
 
             const newData: SpaceUser = {
-                id: 404,
+                spaceUserId: "foo_404",
                 name: "user-2",
                 availabilityStatus: 1,
                 roomName: "world",
@@ -151,7 +151,7 @@ describe("SpaceFilter", () => {
             await spaceFilter.addUser(user as SpaceUserExtended);
             spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            const updatedUser = get(spaceFilter.usersStore).get(id);
+            const updatedUser = get(spaceFilter.usersStore).get(spaceUserId);
 
             expect(updatedUser?.name).toBe(user.name);
         });

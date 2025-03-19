@@ -36,7 +36,7 @@ export class AdminUserProvider implements UserProviderInterface {
                     isMember: currentMember.tags.includes("member"),
                     uuid: undefined,
                     color: undefined,
-                    id: undefined,
+                    spaceUserId: undefined,
                 });
             return userAcc;
         }, [] as ChatUser[]);

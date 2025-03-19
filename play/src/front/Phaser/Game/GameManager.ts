@@ -23,10 +23,10 @@ import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { ENABLE_CHAT, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
-import { isMatrixChatEnabledStore } from "../../Stores/ChatStore";
+import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { GameScene } from "./GameScene";
 
 /**
@@ -248,9 +248,20 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled && get(userIsConnected)) {
+        if (
+            matrixServerUrl &&
+            ENABLE_CHAT /*&& this.getCurrentGameScene().room.isChatEnabled */ &&
+            get(userIsConnected)
+        ) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+
+            matrixClientPromise.catch((e) => {
+                if (e instanceof InvalidLoginTokenError) {
+                    loginTokenErrorStore.set(true);
+                }
+            });
 
             const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
             this._chatConnection = matrixChatConnection;

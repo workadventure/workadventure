@@ -466,7 +466,59 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully upload and edit asset name", async ({ browser, request}) => {
+
+    test("Successfully upload and use custom entity with odd size in the map", async ({page, browser, request}) => {
+        await resetWamMaps(request);
+
+        // First browser + moved woka
+        await page.goto(Map.url("empty"));
+        await login(page, "test", 3, "en-US", false);
+        await oidcAdminTagLogin(page, false);
+        await Map.teleportToPosition(page, 0, 0);
+
+        // Second browser
+        const newBrowser = await browser.newContext();
+        const page2 = await newBrowser.newPage();
+        await page2.goto(Map.url("empty"));
+        await login(page2, "test2", 3, "en-US", false);
+        await oidcAdminTagLogin(page2, false);
+
+        // open map editor
+        await page.bringToFront();
+        await page.getByRole("button", {name: "toggle-map-editor"}).click();
+        await MapEditor.openEntityEditor(page);
+
+        // Click on upload asset
+        await EntityEditor.uploadTestAssetWithOddSize(page);
+
+        // Select uploaded entity and move it to the map
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName()+"OddSize");
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+
+        // Add open link interaction on uploaded asset
+        await EntityEditor.clearEntitySelection(page);
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.addProperty(page, "Open Link");
+
+        // fill link
+        await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
+
+        // close object selector
+        await Menu.closeMapEditor(page);
+
+        // click on the object and open popup on both pages
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
+
+        // check if the popup with application is opened on both pages
+        await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+        await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+
+        await page2.close();
+        await newBrowser.close();
+    });
+
+    test("Successfully upload and edit asset name", async ({page, browser, request}) => {
         // Init wam file
         await resetWamMaps(request);
 
