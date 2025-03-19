@@ -11,7 +11,8 @@ import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { navChat, selectedRoomStore } from "./Stores/ChatStore";
+import { navChat } from "./Stores/ChatStore";
+import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export type OpenCoWebsiteObject = {

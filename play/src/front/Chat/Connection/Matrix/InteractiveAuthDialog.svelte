@@ -5,7 +5,7 @@
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InteractiveAuthSSO from "./InteractiveAuthSSO.svelte";
-    import { INTERACTIVE_AUTH_PHASE } from "./MatrixChatConnection";
+    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
     export let isOpen: boolean;
     export let matrixClient: MatrixClient;

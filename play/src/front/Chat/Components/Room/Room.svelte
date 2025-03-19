@@ -6,7 +6,8 @@
         ChatRoomModeration,
         ChatRoomNotificationControl,
     } from "../../Connection/ChatConnection";
-    import { chatSearchBarValue, selectedRoomStore } from "../../Stores/ChatStore";
+    import { chatSearchBarValue } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
