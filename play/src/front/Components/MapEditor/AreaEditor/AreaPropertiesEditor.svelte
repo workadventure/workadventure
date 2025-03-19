@@ -636,7 +636,7 @@
 
         <div class="properties-container">
             {#each properties as property (property.id)}
-                <div class="property-box mt[3rem]">
+                <div class="property-box mt-[3rem]">
                     {#if property.type === "focusable"}
                         <FocusablePropertyEditor
                             {property}
@@ -766,10 +766,6 @@
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-    }
-
-    .property-box {
-        margin-top: 35px;
     }
 
     .properties-container::-webkit-scrollbar {

@@ -48,7 +48,7 @@
                 <InputCheckbox
                     id="openAutomaticallyChatLabel"
                     label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
-                    datatestid="shouldOpenAutomaticallyCheckbox"
+                    dataTestId="shouldOpenAutomaticallyCheckbox"
                     bind:value={property.shouldOpenAutomatically}
                     onChange={onValueChange}
                 />
