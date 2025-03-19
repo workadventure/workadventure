@@ -15,6 +15,7 @@
     export let appendSide: "left" | "right" = "right";
     export let status: "error" | "success" | "" = "";
     export let errorHelperText: string | null = null;
+    // min, max, step are used only if type == "number"
     export let min = 0;
     export let max = 50;
     export let step = 0;
