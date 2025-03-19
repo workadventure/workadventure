@@ -141,10 +141,6 @@
                 padding-top: 0.25em;
                 padding-bottom: 0.25em;
             }
-            input[type="checkbox"] {
-                margin-top: auto;
-                margin-bottom: auto;
-            }
 
             button {
                 padding: 0;
@@ -159,11 +155,6 @@
                 }
             }
         }
-    }
-
-    .tag-selector {
-        margin-top: 2.5em;
-        margin-left: 2.5em;
     }
 
     // .action-buttons {

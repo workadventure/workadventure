@@ -18,6 +18,7 @@
     const inProfileMenu = getContext("profileMenu");
 
     // Useless property. It is here only to avoid a warning because we set the "first" prop on all the right menu items
+    // svelte-ignore unused-export-let
     export let first: boolean | undefined = undefined;
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions({

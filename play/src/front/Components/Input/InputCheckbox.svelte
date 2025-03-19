@@ -7,7 +7,7 @@
     export let value = false;
     export let variant: "white" | "" = "white";
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
 
 <div class="flex items-center gap-2 p-2" data-testid={dataTestId}>

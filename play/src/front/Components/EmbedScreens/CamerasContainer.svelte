@@ -63,14 +63,6 @@
         display: none !important;
     }
 
-    .all-cameras-highlighted {
-        min-width: 230px;
-        max-width: 230px;
-        float: none;
-        display: inline-block;
-        zoom: 1;
-    }
-
     .not-highlighted {
         display: grid;
         justify-content: center;
@@ -81,13 +73,6 @@
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
-        .all-cameras-highlighted {
-            min-width: 200px;
-            max-width: 200px;
-            float: none;
-            display: inline-block;
-            zoom: 1;
-        }
         .not-highlighted {
             grid-template-columns: repeat(auto-fit, minmax(90px, 220px));
             grid-template-rows: repeat(auto-fit, 124px);

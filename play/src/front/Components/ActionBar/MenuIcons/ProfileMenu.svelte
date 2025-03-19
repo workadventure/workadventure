@@ -221,7 +221,7 @@
                     <ContextualMenuItems />
                 </div>
 
-                {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button, index (button.id)}
+                {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 
