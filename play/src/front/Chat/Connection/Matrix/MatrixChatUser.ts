@@ -15,7 +15,7 @@ export const chatUserFactory: (matrixChatUser: User, matrixClient: MatrixClient)
         playUri: undefined,
         avatarUrl: matrixClient.mxcUrlToHttp(matrixChatUser.avatarUrl ?? "", 48, 48) ?? undefined,
         color: undefined,
-        id: undefined,
+        spaceUserId: undefined,
         availabilityStatus: writable(mapMatrixPresenceToAvailabilityStatus(matrixChatUser.presence)),
     };
 };

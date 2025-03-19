@@ -9,8 +9,8 @@ import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { lookupUserById } from "../Space/Utils/UserLookup";
+import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {

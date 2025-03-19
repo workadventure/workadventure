@@ -7,7 +7,7 @@ export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
     [K in PublicSpaceEvent["$case"]]?: Subject<
-        Extract<PublicSpaceEvent, { $case: K }> & { spaceName: string; sender: number }
+        Extract<PublicSpaceEvent, { $case: K }> & { spaceName: string; sender: string }
     >;
 };
 
@@ -16,13 +16,13 @@ export type InnerPrivateSpaceEvent = NonNullable<PrivateSpaceEvent["event"]>;
 export type PrivateEvents = {
     [K in InnerPrivateSpaceEvent["$case"]]: Extract<InnerPrivateSpaceEvent, { $case: K }> & {
         spaceName: string;
-        sender: number;
+        sender: string;
     };
 };
 
 export type PrivateEventsObservables = {
     [K in InnerPrivateSpaceEvent["$case"]]?: Subject<
-        Extract<InnerPrivateSpaceEvent, { $case: K }> & { spaceName: string; sender: number }
+        Extract<InnerPrivateSpaceEvent, { $case: K }> & { spaceName: string; sender: string }
     >;
 };
 

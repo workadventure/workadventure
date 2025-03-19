@@ -152,8 +152,8 @@
                 <span
                     class="ban wa-dropdown-item text-pop-red"
                     on:click|stopPropagation={() => {
-                        if (user.username && user.id) {
-                            showReportScreenStore.set({ userId: user.id, userName: user.username });
+                        if (user.username && user.uuid) {
+                            showReportScreenStore.set({ userUuid: user.uuid, userName: user.username });
                         }
                     }}><IconForbid font-size="13" /> {$LL.chat.ban.title()}</span
                 >

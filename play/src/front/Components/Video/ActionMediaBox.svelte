@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
@@ -20,8 +19,7 @@
     export let embedScreen: Streamable;
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
-
-    const dispatch = createEventDispatcher();
+    export let onClose: () => void;
 
     let moreActionOpened = false;
 
@@ -79,7 +77,11 @@
             kickOffUser: {},
         });
         // FIXME: this works only in bubbles
-        peerStore.removePeer(spaceUser.id);
+        // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
+        const spaceUserId = spaceUser.spaceUserId;
+        const userId = Number(spaceUserId.split("_").pop());
+
+        peerStore.removePeer(userId);
         close();
     }
 
@@ -102,7 +104,7 @@
 
     function openBlockOrReportPopup(spaceUser: SpaceUserExtended) {
         analyticsClient.reportMeetingAction();
-        showReportScreenStore.set({ userId: spaceUser.id, userName: spaceUser.name });
+        showReportScreenStore.set({ userUuid: spaceUser.uuid, userName: spaceUser.name });
         close();
     }
 
@@ -113,7 +115,7 @@
     }
 
     function close() {
-        dispatch("close");
+        onClose();
     }
 </script>
 

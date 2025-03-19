@@ -271,6 +271,7 @@ const chat: BaseTranslation = {
         ban: "Banned",
         kick: "Kicked",
         leave: "Leaved",
+        roomID: "Room ID : {roomId}",
         membership: "Membership",
         permissionLevel: "Roles",
         actions: "Actions",
@@ -449,6 +450,8 @@ const chat: BaseTranslation = {
         description: "Upload and share a file",
         featureComingSoon: "Coming soon!",
     },
+    loginTokenError: "An error occurred. Please try to reconnect",
+    reconnect: "Reconnect",
     discord: {
         chatBand: {
             configure: "Configure",

@@ -11,7 +11,8 @@ import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { navChat, selectedRoomStore } from "./Stores/ChatStore";
+import { navChat } from "./Stores/ChatStore";
+import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export type OpenCoWebsiteObject = {
@@ -65,13 +66,13 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openChatRoom = async (chatID: string) => {
+export const openDirectChatRoom = async (chatID: string) => {
     try {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
             return;
         }
-        const chatConnection = gameManager.chatConnection;
+        const chatConnection = await gameManager.getChatConnection();
         let room = chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
@@ -79,6 +80,25 @@ export const openChatRoom = async (chatID: string) => {
         if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
         }
+
+        selectedRoomStore.set(room);
+        navChat.switchToChat();
+        chatVisibilityStore.set(true);
+    } catch (error) {
+        console.error(error);
+        Sentry.captureMessage("Failed to create room");
+    }
+};
+
+export const openChatRoom = async (roomId: string) => {
+    try {
+        if (!get(userIsConnected)) {
+            openModal(RequiresLoginForChatModal);
+            return;
+        }
+        const chatConnection = await gameManager.getChatConnection();
+        const room = chatConnection.getRoomByID(roomId);
+        if (!room) throw new Error("Failed to create room");
 
         selectedRoomStore.set(room);
         navChat.switchToChat();

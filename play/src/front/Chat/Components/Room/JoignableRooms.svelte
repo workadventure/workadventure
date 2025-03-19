@@ -3,7 +3,8 @@
     import { fade } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { chatSearchBarValue, joignableRoom, selectedRoomStore } from "../../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
     import { IconLoader } from "@wa-icons";
 

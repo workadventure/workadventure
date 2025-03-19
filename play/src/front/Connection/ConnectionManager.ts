@@ -35,6 +35,7 @@ import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { openChatRoom } from "../Chat/Utils";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -333,6 +334,18 @@ class ConnectionManager {
                             nextScene = "selectCharacterScene";
                         } else if (response.isCompanionTextureValid === false) {
                             nextScene = "selectCompanionScene";
+                        }
+
+                        const chatId = urlManager.getHashParameter("chatId");
+                        const chatRoomId = urlManager.getHashParameter("chatRoomId");
+
+                        if (chatId && chatRoomId) {
+                            try {
+                                await openChatRoom(chatRoomId);
+                            } catch (err) {
+                                console.error("Unable to open chat room or establish chat connection", err);
+                                Sentry.captureException(err);
+                            }
                         }
                     }
                 } catch (err) {

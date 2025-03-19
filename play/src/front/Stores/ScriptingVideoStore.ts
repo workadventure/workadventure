@@ -21,6 +21,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         showVoiceIndicator: writable(false),
         pictureStore: writable(config.avatar),
         flipX: false,
+        muteAudio: false,
     };
 }
 

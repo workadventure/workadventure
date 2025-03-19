@@ -37,7 +37,7 @@ function displayMuteDialog(
     // In case the sender leaves the space, we remove the popup
     if (senderUser) {
         subscription = spaceFilter.observeUserLeft.subscribe((user) => {
-            if (user.id === event.sender) {
+            if (user.spaceUserId === event.sender) {
                 cleanup();
             }
         });

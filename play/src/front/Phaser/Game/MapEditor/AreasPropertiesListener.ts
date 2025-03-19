@@ -51,7 +51,7 @@ import {
 } from "../../../Stores/GameStore";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { MessageUserJoined } from "../../../Connection/ConnexionModels";
-import { navChat, selectedRoomStore } from "../../../Chat/Stores/ChatStore";
+import { navChat } from "../../../Chat/Stores/ChatStore";
 import { Area } from "../../Entity/Area";
 import { extensionModuleStore } from "../../../Stores/GameSceneStore";
 import { ChatRoom } from "../../../Chat/Connection/ChatConnection";
@@ -59,7 +59,8 @@ import { userIsConnected } from "../../../Stores/MenuStore";
 import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
-import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
+import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
 
 export class AreasPropertiesListener {
     private scene: GameScene;

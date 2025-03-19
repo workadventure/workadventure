@@ -466,7 +466,54 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully upload and edit asset name", async ({ browser, request}) => {
+
+    test("Successfully upload and use custom entity with odd size in the map", async ({browser, request}) => {
+        await resetWamMaps(request);
+
+        // First browser + moved woka
+        const page = await getPage(browser, "Admin1", Map.url("empty"));
+        await Map.teleportToPosition(page, 0, 0);
+
+        // Second browser
+        const newBrowser = await browser.newContext();
+        const page2 = await getPage(browser, "Admin1", Map.url("empty"));
+
+        // open map editor
+        await page.bringToFront();
+        await Menu.openMapEditor(page);
+        await MapEditor.openEntityEditor(page);
+
+        // Click on upload asset
+        await EntityEditor.uploadTestAssetWithOddSize(page);
+
+        // Select uploaded entity and move it to the map
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName()+"OddSize");
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+
+        // Add open link interaction on uploaded asset
+        await EntityEditor.clearEntitySelection(page);
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.addProperty(page, "Open Link");
+
+        // fill link
+        await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
+
+        // close object selector
+        await Menu.closeMapEditor(page);
+
+        // click on the object and open popup on both pages
+        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
+
+        // check if the popup with application is opened on both pages
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+
+        await page2.close();
+        await newBrowser.close();
+    });
+
+    test("Successfully upload and edit asset name", async ({browser, request}) => {
         // Init wam file
         await resetWamMaps(request);
 

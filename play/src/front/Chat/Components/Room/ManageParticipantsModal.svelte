@@ -42,6 +42,14 @@
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.manageRoomUsers.title()}</h1>
     <div slot="content" class="w-full flex flex-col gap-2" data-testid="inviteParticipantsModalContent">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div
+            data-testid="roomID"
+            class="text-sm text-gray-300 text-center pb-4 cursor-pointer "
+            on:click={() => navigator.clipboard.writeText(room.id)}
+        >
+            {$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}
+        </div>
         {#if sendingInvitationsToRoom}
             <div class="animate-[spin_2s_linear_infinite] self-center">
                 <IconLoader font-size="2em" />

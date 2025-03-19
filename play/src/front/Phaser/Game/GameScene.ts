@@ -157,7 +157,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoomStore, navChat } from "../../Chat/Stores/ChatStore";
+import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -182,6 +182,7 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -1804,7 +1805,7 @@ export class GameScene extends DirtyScene {
                 this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
-                    this.connection.getUserId(),
+                    this.connection.getSpaceUserId(),
                     this._spaceRegistry,
                     this.simplePeer,
                     iframeListener

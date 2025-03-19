@@ -415,8 +415,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
 
         const entityData: WAMEntityData = {
-            x: x - this.entityPrefabPreview.displayWidth * 0.5,
-            y: y - this.entityPrefabPreview.displayHeight * 0.5,
+            x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),
+            y: Math.floor(y - this.entityPrefabPreview.displayHeight * 0.5),
             prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };

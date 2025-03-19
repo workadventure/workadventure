@@ -14,6 +14,6 @@ export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUse
         isMember: user.tags.includes("member"),
         visitCardUrl: user.visitCardUrl,
         color: user.color,
-        id: user.id,
+        spaceUserId: user.spaceUserId,
     };
 }

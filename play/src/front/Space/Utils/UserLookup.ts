@@ -1,5 +1,6 @@
 import { Unsubscriber } from "svelte/store";
 import { SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+import { gameManager } from "../../Phaser/Game/GameManager";
 
 /**
  * Waits for the user whose id is "id" to be present in the space.
@@ -14,7 +15,8 @@ export function lookupUserById(
         let unsubscribe: Unsubscriber | undefined;
         // eslint-disable-next-line prefer-const
         unsubscribe = spaceFilter.usersStore.subscribe((users) => {
-            const user = users.get(id);
+            const spaceUserId = gameManager.getCurrentGameScene().roomUrl + "_" + id;
+            const user = users.get(spaceUserId);
             if (user) {
                 resolve(user);
                 // If the user is immediately found, the unsubscribe variable is not initialized yet.

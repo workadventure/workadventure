@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/svelte";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { Deferred } from "ts-deferred";
-import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
+import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";

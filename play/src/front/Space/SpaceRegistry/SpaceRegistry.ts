@@ -74,11 +74,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.userId || !message.filterName) {
-                    throw new Error("removeSpaceUserMessage is missing a userId or a filterName");
+                if (!message.spaceUserId || !message.filterName) {
+                    throw new Error("removeSpaceUserMessage is missing a spaceUserId or a filterName");
                 }
 
-                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.userId);
+                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.spaceUserId);
             }
         );
 
