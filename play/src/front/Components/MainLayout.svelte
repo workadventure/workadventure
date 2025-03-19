@@ -253,15 +253,22 @@
         z-index: 1000;
         .popupwrapper {
             &:not(:first-child) {
-                @apply absolute w-full h-full overflow-hidden rounded-lg transition-all duration-300;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                border-radius: 0.5rem;
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
             }
             &:first-child {
-                @apply relative;
+                position: relative;
                 z-index: 505;
             }
             &:nth-child(n + 5) {
                 /* Hide popups after 4 popups */
-                @apply hidden;
+                display: none;
             }
             // For each popups but not first
             @for $i from 1 through 4 {
