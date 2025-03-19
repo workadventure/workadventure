@@ -73,6 +73,13 @@
                     minute: "2-digit",
                 })}</span
             >
+            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                >{date?.toLocaleDateString($locale, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                })}</span
+            >
         </div>
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
