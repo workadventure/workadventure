@@ -34,16 +34,12 @@ import {
     ChatRoomNotificationControl,
     memberTypingInformation,
 } from "../ChatConnection";
-import {
-    isAChatRoomIsVisible,
-    navChat,
-    selectedChatMessageToReply,
-    selectedRoomStore,
-    botsChatIds,
-} from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { MessageNotification, notificationManager } from "../../../Notification";
+import { MessageNotification } from "../../../Notification/MessageNotification";
+import { notificationManager } from "../../../Notification/NotificationManager";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";

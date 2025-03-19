@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedRoomStore } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
