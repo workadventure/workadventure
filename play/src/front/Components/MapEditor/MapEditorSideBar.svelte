@@ -131,7 +131,7 @@
             </button>
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
-            {#each availableTools as tool, i (tool.toolName)}
+            {#each availableTools as tool (tool.toolName)}
                 <!--            <div class="tool-button" use:popperRef={popperActions[i][0]}>-->
                 <div class="tool-button">
                     <button

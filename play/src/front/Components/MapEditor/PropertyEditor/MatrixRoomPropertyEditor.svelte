@@ -68,16 +68,5 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         gap: 10px;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 0;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
     }
 </style>

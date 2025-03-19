@@ -19,7 +19,7 @@
 
     const SLOTS = $$slots;
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 
     function autoResize(event: Event) {
         const textarea = event.target as HTMLTextAreaElement;

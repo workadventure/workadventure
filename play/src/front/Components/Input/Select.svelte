@@ -15,7 +15,7 @@
 
     const SLOTS = $$slots;
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
 
 <div class="flex flex--col">

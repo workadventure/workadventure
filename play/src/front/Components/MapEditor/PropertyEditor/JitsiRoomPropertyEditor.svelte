@@ -36,7 +36,7 @@
             config: property.jitsiRoomConfig,
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
         });
-        (newValue: boolean) => {
+        () => {
             closeModal();
         };
         jitsiConfigModalOpened = true;
@@ -58,25 +58,24 @@
     </span>
     <span slot="content">
         <div class="value-input">
-            <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
             <Input
                 id="roomName"
                 type="text"
+                label={$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}
                 placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
                 bind:value={property.roomName}
                 onChange={onValueChange}
             />
         </div>
-        <div class="value-switch">
-            <InputSwitch
-                id="advancedOption"
-                label={$LL.mapEditor.properties.advancedOptions()}
-                bind:value={optionAdvancedActivated}
-            />
-        </div>
+
+        <InputSwitch
+            id="advancedOption"
+            label={$LL.mapEditor.properties.advancedOptions()}
+            bind:value={optionAdvancedActivated}
+        />
 
         {#if optionAdvancedActivated}
-            <div class:active={optionAdvancedActivated} class="advanced-option ">
+            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2 ">
                 <div class="value-switch">
                     <InputCheckbox
                         id="closable"
@@ -176,17 +175,6 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
     }
 
     button {
@@ -204,17 +192,6 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-            flex-grow: 1;
-        }
-        input {
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
     }
     // .input-switch {
     //     position: relative;
