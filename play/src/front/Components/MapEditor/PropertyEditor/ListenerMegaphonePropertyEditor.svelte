@@ -56,7 +56,7 @@
                 id="speakerZoneSelector"
                 label={$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}
                 bind:value={property.speakerZoneName}
-                on:change={onValueChange}
+                onChange={onValueChange}
             >
                 {#each [...getSpeakerZoneNames()] as [id, speakerZoneName] (id)}
                     <option value={id}>{speakerZoneName}</option>

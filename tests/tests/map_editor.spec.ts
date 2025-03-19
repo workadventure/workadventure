@@ -128,7 +128,9 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
-        await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
+
+        await expect(page.getByText('You Reduce Toggle fullscreen')).toBeVisible();
+        // await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
 
         // Second browser
         const page2 = await getPage(browser, "Admin2", Map.url("empty"));
