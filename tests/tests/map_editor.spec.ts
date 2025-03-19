@@ -128,6 +128,7 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
+
         await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
 
         // Second browser

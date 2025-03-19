@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     import { StartPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import Select from "../../Input/Select.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     const dispatch = createEventDispatcher();
     export let property: StartPropertyData;
@@ -27,18 +28,17 @@
 
     <span slot="content">
         <div>
-            <label for="startTypeSelector">{$LL.mapEditor.properties.startProperties.type()}</label>
-            <select
+            <Select
                 id="startTypeSelector"
-                class="w-full"
+                label={$LL.mapEditor.properties.startProperties.type()}
                 bind:value={property.isDefault}
-                on:change={() => {
+                onChange={() => {
                     onValueChange();
                 }}
             >
                 <option value={true}>{$LL.mapEditor.properties.startProperties.defaultMenuItem()}</option>
                 <option value={false}>{$LL.mapEditor.properties.startProperties.hashMenuItem()}</option>
-            </select>
+            </Select>
         </div>
     </span>
 </PropertyEditorBase>

@@ -1,13 +1,30 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorModeStore,
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+    } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+
+    import { IconMinus } from "@wa-icons";
+
+    function closeMapEditor() {
+        analyticsClient.toggleMapEditor(false);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+        mapEditorModeStore.switchMode(false);
+    }
+    function hideMapEditor() {
+        mapEditorVisibilityStore.set(false);
+    }
 </script>
 
 {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
@@ -27,6 +44,16 @@
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >
+                <button
+                    class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
+                    on:click={hideMapEditor}><IconMinus font-size="16" /></button
+                >
+                <button
+                    class="h-12 w-12 rounded   close-window hover:bg-danger aspect-square text-2xl "
+                    data-testid="mapEditor-close-button"
+                    on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
+                >
+
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />
                 {/if}

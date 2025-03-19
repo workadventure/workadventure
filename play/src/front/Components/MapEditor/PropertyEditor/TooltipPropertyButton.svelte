@@ -2,6 +2,9 @@
     import { createEventDispatcher } from "svelte";
     import { TooltipPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import TextArea from "../../Input/TextArea.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
+    import Input from "../../Input/Input.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: TooltipPropertyData;
@@ -35,34 +38,32 @@
     </span>
     {$LL.mapEditor.properties.tooltipProperties.label()}
     <span slot="content">
-        <div class="value-input">
-            <label for="contentTooltip">{$LL.mapEditor.properties.tooltipProperties.description()}</label>
-            <textarea
-                id="contentTooltip"
-                placeholder={$LL.mapEditor.properties.tooltipProperties.contentPlaceholder()}
-                bind:value={property.content}
-                on:change={onValueChange}
-            />
-        </div>
+        <TextArea
+            id="contentTooltip"
+            label={$LL.mapEditor.properties.tooltipProperties.description()}
+            placeHolder={$LL.mapEditor.properties.tooltipProperties.contentPlaceholder()}
+            bind:value={property.content}
+            onChange={onValueChange}
+            onKeyPress={() => {}}
+        />
+
         <div class="value-switch">
-            <label for="durationInfinityTooltip">{$LL.mapEditor.properties.tooltipProperties.infinityDuration()}</label>
-            <input
+            <InputSwitch
                 id="durationInfinityTooltip"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={infinity}
-                on:change={onInfinityChange}
+                label={$LL.mapEditor.properties.tooltipProperties.infinityDuration()}
+                bind:value={infinity}
+                onChange={onInfinityChange}
             />
         </div>
         {#if !infinity}
             <div class="value-input">
                 <label for="durationTooltip">{$LL.mapEditor.properties.tooltipProperties.duration()}</label>
-                <input
+                <Input
                     id="durationTooltip"
                     type="number"
-                    min="1"
-                    step="1"
-                    max="20"
+                    min={1}
+                    step={1}
+                    max={20}
                     disabled={infinity}
                     bind:value={property.duration}
                     on:change={onValueChange}

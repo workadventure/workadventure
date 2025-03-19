@@ -14,7 +14,7 @@
         <button
             type="button"
             data-testid="closeModal"
-            class="close-window !bg-transparent !border-none"
+            class="h-7 w-7 rounded mt-2 m-3  close-window hover:bg-danger aspect-square text-2xl "
             on:click|preventDefault|stopPropagation={closeModal}
             >&times
         </button>

@@ -4,6 +4,7 @@
     export let promise: () => Promise<string>;
     export let initialText: string;
     export let loadingText: string;
+    export let dataTestId: string | undefined = undefined;
     let finalText: string;
 
     let state = "ready";
@@ -29,7 +30,8 @@
 
 <button
     type="button"
-    class="{state} btn btn-secondary w-full button-state"
+    data-testid={dataTestId}
+    class={`${state} button-state btn btn-secondary w-full button-state`}
     on:click={click}
     disabled={state !== "ready"}
 >

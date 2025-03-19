@@ -39,28 +39,32 @@
         {$LL.mapEditor.properties.restrictedRightsProperties.label()}
     </span>
     <span slot="content">
-        <p class="help-text">
-            <IconInfoCircle font-size="18" />
-            {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
-        </p>
         <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightWriteTitle()}
             options={_tag}
             bind:value={writeTags}
             handleChange={onChangeWriteReadTags}
             testId="writeTags"
-        />
-        <p class="help-text">
-            <IconInfoCircle font-size="18" />
-            {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
-        </p>
+        >
+            <span slot="info">
+                <IconInfoCircle font-size="15" />
+                {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
+            </span>
+        </InputRoomTags>
+
         <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightReadTitle()}
             options={_tag}
             bind:value={readTags}
             handleChange={onChangeWriteReadTags}
             testId="readTags"
-        />
+        >
+            <span slot="info">
+                <IconInfoCircle font-size="15" />
+                {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
+            </span></InputRoomTags
+        >
+
         {#if writeTags !== undefined && writeTags.length > 0}
             <div class="flex flex-wrap gap-1">
                 {#each writeTags as tag, index (`${index}-${tag.value}`)}

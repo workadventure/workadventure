@@ -1,9 +1,11 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    // import { createPopperActions } from "svelte-popperjs";
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import AreaToolImg from "../images/icon-tool-area.png";
@@ -11,10 +13,21 @@
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
-    import ButtonSideBar from "./Component/ButtonSideBar.svelte";
     import { IconX } from "@wa-icons";
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
+    // $: showTooltip = false;
+
+    // const [popperRef, popperContent] = createPopperActions({
+    //     placement: "left",
+    //
+    // });
+
+    // const extraOpts = {
+    //     modifiers: [
+    //         { name: "offset", options: { offset: [0, 18] } },
+    //     ],
+    // };
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
@@ -53,6 +66,8 @@
         availableTools.push(trashEditorTool);
     }
 
+    // const popperActions = availableTools.map(() => createPopperActions({ placement: "left" }));
+
     function switchTool(newTool: EditorToolName) {
         // The map sidebar is opened when the user clicks on the explorer for the first time.
         // If the user clicks on the Explorer again, we need to show the map sidebar.
@@ -64,6 +79,10 @@
         analyticsClient.openMapEditorTool(newTool);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
+
+    onMount(() => {
+        // showTooltip = true;
+    });
 </script>
 
 <!--<div-->
@@ -113,7 +132,24 @@
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool, i (tool.toolName)}
-                <ButtonSideBar {tool} on:click={() => switchTool(tool.toolName)} />
+                <!--            <div class="tool-button" use:popperRef={popperActions[i][0]}>-->
+                <div class="tool-button">
+                    <button
+                        class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
+                            ? 'bg-secondary'
+                            : 'hover:bg-white/10'}"
+                        id={tool.toolName}
+                        class:active={$mapEditorSelectedToolStore === tool.toolName}
+                        on:click|preventDefault={() => switchTool(tool.toolName)}
+                        type="button"
+                    >
+                        <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
+                    </button>
+                    <!--                    <div-->
+                    <!--                            use:popperContent={extraOpts}-->
+                    <!--                            class="tooltip popper-tooltip bg-contrast/80 backdrop-blur rounded p-2 text-white text-sm text-nowrap"-->
+                    <!--                    >-->
+                </div>
             {/each}
         </div>
     </div>

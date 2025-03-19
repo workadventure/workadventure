@@ -1,15 +1,16 @@
 <script lang="ts">
     export let id: string | undefined = undefined;
+    export let dataTestId: string | undefined = undefined;
     export let label: string | undefined = undefined;
     export let onChange = () => {};
     export let disabled = false;
     export let value = false;
-    export let variant: "light" | "" = "";
+    export let variant: "white" | "" = "white";
 
     let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
 </script>
 
-<div class="flex items-center gap-2 p-2">
+<div class="flex items-center gap-2 p-2" data-testid={dataTestId}>
     <label class="inline-flex cursor-pointer relative ">
         <input
             id={uniqueId}
@@ -20,7 +21,7 @@
             {disabled}
         />
 
-        <div class="input-checkbox" class:input-checkbox-light={variant === "light"} />
+        <div class="input-checkbox" class:input-checkbox-white={variant === "white"} />
     </label>
 
     {#if label}

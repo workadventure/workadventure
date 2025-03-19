@@ -35,6 +35,7 @@
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -613,15 +614,14 @@
                 <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
-                <label for="objectDescription" class="pl-2 pb-1 pt-3"
-                    >{$LL.mapEditor.areaEditor.areaDescription()}</label
-                >
-                <textarea
-                    class="bg-contrast border border-solid border-contrast-400 rounded-md placeholder:text-contrast-400"
+
+                <TextArea
                     id="objectDescription"
-                    placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                    label={$LL.mapEditor.areaEditor.areaDescription()}
+                    placeHolder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                     bind:value={areaDescription}
-                    on:change={onUpdateAreaDescription}
+                    onChange={onUpdateAreaDescription}
+                    onKeyPress={() => {}}
                 />
             {/if}
         </div>
@@ -636,7 +636,7 @@
 
         <div class="properties-container">
             {#each properties as property (property.id)}
-                <div class="property-box">
+                <div class="property-box mt-[3rem]">
                     {#if property.type === "focusable"}
                         <FocusablePropertyEditor
                             {property}
@@ -766,10 +766,6 @@
     .properties-container {
         overflow-y: auto;
         overflow-x: hidden;
-    }
-
-    .property-box {
-        margin-top: 5px;
     }
 
     .properties-container::-webkit-scrollbar {
