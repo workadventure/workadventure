@@ -11,8 +11,8 @@
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import UserActionButton from "./UserActionButton.svelte";
-    import { IconLoader, IconSend } from "@wa-icons";
     import ImageWithFallback from "./ImageWithFallback.svelte";
+    import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
 
