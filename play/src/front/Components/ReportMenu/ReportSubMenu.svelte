@@ -41,7 +41,7 @@
         <section class="mb-0 pb-0">
             <label class="w-full">
                 <span>{$LL.report.message.title()}</span>
-                <textarea type="text" class="w-full mb-0 pb-0" style="margin-bottom: 0;" bind:value={reportMessage} />
+                <textarea class="w-full mb-0 pb-0" style="margin-bottom: 0;" bind:value={reportMessage} />
             </label>
             {#if !hiddenError}
                 <p class="text-pop-red mb-0 pb-0">{$LL.report.message.empty()}</p>

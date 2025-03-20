@@ -24,7 +24,7 @@
                 }
             }
         });
-        disableReport = !connectionManager.currentRoom?.canReport ?? true;
+        disableReport = !connectionManager.currentRoom?.canReport;
     });
 
     onDestroy(() => {

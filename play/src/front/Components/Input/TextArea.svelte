@@ -50,14 +50,13 @@
     <div class="relative flex flex-auto ">
         <textarea
             id={uniqueId}
-            type="text"
             class="grow input-text input-icon {height}"
             class:input-text-light={variant === "light"}
             class:input-text-xs={size === "xs"}
             class:input-text-sm={size === "sm"}
             class:input-text-lg={size === "lg"}
             bind:value
-            {placeHolder}
+            placeholder={placeHolder}
             on:keypress={onKeyPress}
             on:focus={onFocus}
             on:blur={onBlur}

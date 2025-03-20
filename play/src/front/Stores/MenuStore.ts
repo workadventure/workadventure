@@ -274,10 +274,10 @@ export function getProfileUrl() {
 
 export interface CustomButtonActionBarDescriptor {
     id: string;
-    label: string | undefined;
-    tooltipTitle: string | undefined;
-    tooltipDesc: string | undefined;
-    imageSrc: string | undefined;
+    label?: string | undefined;
+    tooltipTitle?: string | undefined;
+    tooltipDesc?: string | undefined;
+    imageSrc?: string | undefined;
     state: "normal" | "active" | "forbidden" | "disabled";
 }
 
@@ -300,6 +300,7 @@ function createAdditionalButtonsMenu() {
                                 id: button.id,
                                 tooltipTitle: button.toolTip,
                                 imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
+                                state: "normal",
                             },
                         },
                     });
@@ -313,6 +314,7 @@ function createAdditionalButtonsMenu() {
                             button: {
                                 id: button.id,
                                 label: button.label,
+                                state: "normal",
                             },
                         },
                     });
@@ -366,7 +368,7 @@ const inviteMenuItem: RightMenuItem<InviteMenuItem> = {
 export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
     [additionalButtonsMenu, userIsConnected, inviteUserActivated],
     ([$additionalButtonsMenu, $userIsConnected, $inviteUserActivated]) => {
-        const menuItems = [...$additionalButtonsMenu.values()];
+        const menuItems: RightMenuItem<SvelteComponentTyped>[] = [...$additionalButtonsMenu.values()];
         if ($inviteUserActivated) {
             menuItems.push(inviteMenuItem);
         }

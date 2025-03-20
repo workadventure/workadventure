@@ -9,7 +9,7 @@
 
     export let isOpen: boolean;
     export let matrixClient: MatrixClient;
-    export let onFinished: (finished: boolean) => Promise<void>;
+    export let onFinished: (finished: boolean) => void;
     export let makeRequest: (auth: AuthDict | null) => Promise<UIAResponse<void>>;
 
     let isInteractiveAuthFinished = false;
@@ -39,22 +39,22 @@
         uiAuthPhase = newPhase;
     }
 
-    async function onCancelInteractiveAuth() {
-        await onFinished(false);
+    function onCancelInteractiveAuth() {
+        onFinished(false);
         closeModal();
     }
 
     onMount(() => {
         interactiveAuth
             .attemptAuth()
-            .then(async () => {
+            .then(() => {
                 isInteractiveAuthFinished = true;
-                await onFinished(isInteractiveAuthFinished);
+                onFinished(isInteractiveAuthFinished);
             })
-            .catch(async (error) => {
+            .catch((error) => {
                 console.error(error);
                 isInteractiveAuthFinished = false;
-                await onFinished(isInteractiveAuthFinished);
+                onFinished(isInteractiveAuthFinished);
             })
             .finally(() => {
                 closeModal();
@@ -62,7 +62,7 @@
     });
 
     onBeforeClose(() => {
-        onFinished(isInteractiveAuthFinished)?.catch((error) => console.error(error));
+        onFinished(isInteractiveAuthFinished);
     });
 </script>
 

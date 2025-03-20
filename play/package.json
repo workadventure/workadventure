@@ -28,7 +28,7 @@
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config ./vitest.config.ts --coverage",
     "svelte-check-watch": "svelte-check --fail-on-warnings --threshold error --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\" --watch",
-    "svelte-check": "svelte-check --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
+    "svelte-check": "svelte-check --fail-on-warnings --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\"",
     "lint": "eslint src/ tests/ --ext .ts,.svelte",
     "lint-fix": "eslint --fix src/ tests/ --ext .ts,.svelte",
     "pretty": "prettier --write 'src/**/*.{ts,svelte}'",
@@ -38,7 +38,7 @@
   },
   "lint-staged": {
     "*.svelte": [
-      "svelte-check"
+      "svelte-check --compiler-warnings \"a11y-media-has-caption:ignore,a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore,a11y-click-events-have-key-events:ignore,security-anchor-rel-noreferrer:ignore\""
     ],
     "*.{ts,svelte}": [
       "eslint --fix",
@@ -87,8 +87,8 @@
     "prettier": "^2.8.1",
     "prettier-plugin-svelte": "^2.9.0",
     "sass": "^1.55.0",
-    "svelte": "^3.55.0",
-    "svelte-check": "^2.10.2",
+    "svelte": "^3.59.2",
+    "svelte-check": "^3.8.6",
     "svelte-eslint-parser": "^0.33.1",
     "svelte-preprocess": "^5.1.4",
     "tailwindcss": "^3.1.8",

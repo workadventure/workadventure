@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { afterUpdate, onDestroy, onMount } from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
+    import { afterUpdate, onMount } from "svelte";
+    import { writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -10,7 +10,6 @@
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
-    let unsubscribeHighlightEmbedScreen: Unsubscriber;
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -65,10 +64,6 @@
             }
         }
     }
-
-    onDestroy(() => {
-        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
-    });
 
     // $: $rightMode, setRightMode();
 

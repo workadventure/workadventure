@@ -16,7 +16,7 @@
         {id}
         name="search-input"
         class="h-full rounded-none"
-        {placeHolder}
+        placeholder={placeHolder}
         on:input={(event) => onChangeSearchHandler(event.currentTarget.value)}
         {disabled}
     />

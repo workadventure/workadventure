@@ -9,7 +9,6 @@
 
     let audioPlayerVolumeIcon: HTMLElement;
     let audioPlayerVol: HTMLInputElement;
-    let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
     let currentVolume: number = localUserStore.getAudioPlayerVolume();
@@ -33,9 +32,6 @@
     });
 
     onDestroy(() => {
-        if (unsubscriberFileStore) {
-            unsubscriberFileStore();
-        }
         if (unsubscriberVolumeStore) {
             unsubscriberVolumeStore();
         }

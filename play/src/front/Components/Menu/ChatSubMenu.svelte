@@ -1,15 +1,12 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
     import { openModal } from "svelte-modals";
-    import { profileAvailable, userIsConnected } from "../../Stores/MenuStore";
-    import { iframeListener } from "../../Api/IframeListener";
+    import { userIsConnected } from "../../Stores/MenuStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
 
-    let profileIframe: HTMLIFrameElement;
     let chatSounds: boolean = localUserStore.getChatSounds();
     let mychatID = localUserStore.getChatId();
 
@@ -20,14 +17,6 @@
     function openResetKeyStorage() {
         openModal(resetKeyStorageConfirmationModal);
     }
-
-    onMount(() => {
-        if ($profileAvailable && profileIframe) iframeListener.registerIframe(profileIframe);
-    });
-
-    onDestroy(() => {
-        if ($profileAvailable && profileIframe) iframeListener.unregisterIframe(profileIframe);
-    });
 </script>
 
 <div class="customize-main">
