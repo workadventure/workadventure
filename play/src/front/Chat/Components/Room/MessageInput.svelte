@@ -8,6 +8,7 @@
     export let messageInput: HTMLDivElement;
     export let onKeyDown: ((event: KeyboardEvent) => void) | undefined = undefined;
     export let onInput = () => {};
+    export let disabled = false;
     export let focusin = (event: FocusEvent) => {
         console.info("Not used focusin", event);
     };
@@ -70,12 +71,13 @@
     }
 </script>
 
-<div
-    data-testid={dataTestid}
-    bind:innerHTML={message}
-    contenteditable="true"
-    bind:this={messageInput}
-    on:keydown={handleKeyDown}
+{#if !disabled}
+    <div
+        data-testid={dataTestid}
+        bind:innerHTML={message}
+        contenteditable="true"
+        bind:this={messageInput}
+        on:keydown={handleKeyDown}
     on:input={onInput}
     on:paste={onPasteHandler}
     on:focusin={focusin}
@@ -84,9 +86,18 @@
     data-text={dataText}
     role="textbox"
     tabindex="0"
-    dir="auto"
-    lang=""
-/>
+        dir="auto"
+        lang=""
+    />
+{:else}
+    <div
+        data-testid={dataTestid}
+        bind:innerHTML={message}
+        contenteditable="false"
+        bind:this={messageInput}
+        class={`${inputClass} tw-opacity-70/50 tw-cursor-not-allowed`}
+    />
+{/if}
 
 <style lang="scss">
     .message-input::before {
