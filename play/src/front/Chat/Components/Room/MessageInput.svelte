@@ -78,14 +78,14 @@
         contenteditable="true"
         bind:this={messageInput}
         on:keydown={handleKeyDown}
-    on:input={onInput}
-    on:paste={onPasteHandler}
-    on:focusin={focusin}
-    on:focusout={focusout}
-    class={inputClass}
-    data-text={dataText}
-    role="textbox"
-    tabindex="0"
+        on:input={onInput}
+        on:paste={onPasteHandler}
+        on:focusin={focusin}
+        on:focusout={focusout}
+        class={inputClass}
+        data-text={dataText}
+        role="textbox"
+        tabindex="0"
         dir="auto"
         lang=""
     />

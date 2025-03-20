@@ -1083,7 +1083,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return new MatrixChatRoom(room);
     }
 
-    retrySendingEvents = async  () => {
+    retrySendingEvents = async () => {
         try {
             const roomList = Array.from(this.roomList.values());
             await Promise.allSettled(roomList.map((room) => room.retrySendingEvents()));
@@ -1091,7 +1091,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             console.error("Unable to retry sending events", error);
             Sentry.captureException(error);
         }
-    }
+    };
 
     clearListener() {
         this.roomList.forEach((room) => {

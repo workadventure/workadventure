@@ -11,11 +11,10 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconLoader, IconMailBox, IconRefresh } from "@wa-icons";
+    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
     import TypingUsers from "./TypingUsers.svelte";
-    import Tooltip from "../../../Components/Util/Tooltip.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    
+
     export let room: ChatRoom;
 
     const chatConnection = gameManager.chatConnection;
@@ -213,18 +212,7 @@
                     {$roomName}
                 </div>
 
-                    {#if $shouldRetrySendingEvents}
-                        <button class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" on:click={chatConnection.retrySendingEvents}>
-                            <IconRefresh font-size={20} />
-                            <Tooltip
-                            text={`test tooltip`}
-                            leftPosition="true"
-                        />
-                        </button>
-                    {:else}
-                        <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
-                    {/if}
-
+                <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
             </div>
             {#if shouldDisplayLoader}
                 <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">

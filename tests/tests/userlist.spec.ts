@@ -3,6 +3,7 @@ import { login } from "./utils/roles";
 import Map from "./utils/map";
 import { publicTestMapUrl } from "./utils/urls";
 import chatUtils from "./utils/chat";
+import { oidcAdminTagLogin, oidcMemberTagLogin } from "./utils/oidc";
 
 test.describe("Walk to", () => {
   test("walk to a user ", async ({ page, browser }, { project }) => {
@@ -64,6 +65,7 @@ test.describe("Send Message from User List", () => {
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     await login(page, "Alice", 2, "en-US", isMobileTest);
+    await oidcAdminTagLogin(page);
 
     const alicePosition = {
       x: 3 * 32,
@@ -78,6 +80,7 @@ test.describe("Send Message from User List", () => {
     await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     // Login user "Bob"
     await login(userBob, "Bob", 3, "en-US", isMobileTest);
+    await oidcMemberTagLogin(userBob);
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
 
     await chatUtils.open(userBob, false);

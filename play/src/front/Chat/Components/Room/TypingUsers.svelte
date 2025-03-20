@@ -27,16 +27,12 @@
             +{typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
         </div>
     {/if}
-    <div
-        class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-contrast tw-flex tw-text-lg tw-ml-1"
-    >
+    <div class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-contrast tw-flex tw-text-lg tw-ml-1">
         <div class="animate-bounce-1">.</div>
         <div class="animate-bounce-2">.</div>
         <div class="animate-bounce-3">.</div>
     </div>
 </div>
-
-
 
 <style>
     @keyframes bounce {

@@ -3,9 +3,9 @@
     export let alt;
     export let fallback;
     export let classes;
-  
+
     let currentSrc;
-  
+
     function handleError() {
         if (currentSrc !== fallback) {
             currentSrc = fallback;
