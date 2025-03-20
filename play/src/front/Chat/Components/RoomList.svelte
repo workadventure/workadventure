@@ -22,6 +22,8 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
+    
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
@@ -121,9 +123,13 @@
     }
 
     function refreshChat() {
-        chat.retrySendingEvents().finally(() => {
-            dismissError = false;
-        });
+        chat.retrySendingEvents()
+            .catch(() => {
+                warningMessageStore.addWarningMessage(get(LL).chat.refreshChatError());
+            })
+            .finally(() => {
+                dismissError = false;
+            });
     }
 
     $: filteredDirectRoom = $directRooms
