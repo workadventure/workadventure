@@ -52,7 +52,7 @@
     $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
 
     function modifySizeCamIfScreenShare() {
-        if (camContainer) {
+        /*if (camContainer) {
             if ($highlightedEmbedScreen !== undefined && !$highlightFullScreen) {
                 camContainer.style.transform = "scale(0.7)";
                 camContainer.style.marginTop = "-24px";
@@ -62,7 +62,7 @@
                 camContainer.style.marginTop = "0px";
                 camContainer.style.marginBottom = "0px";
             }
-        }
+        }*/
     }
 
     // $: $rightMode, setRightMode();
@@ -97,29 +97,39 @@
     // }
     let containerHeight: number;
 
+    $: isOnOneLine =
+        ($streamableCollectionStore.size > 0 && $highlightedEmbedScreen !== undefined) ||
+        $streamableCollectionStore.size === 1;
+
     $: oneLineMaxHeight = containerHeight * 0.25;
 </script>
 
-<div
-    class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
-    bind:clientHeight={containerHeight}
->
-    {#if $streamableCollectionStore.size > 0}
-        <div class="justify-end md:justify-center max-height-quarter" bind:this={camContainer}>
-            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true}
-                <CamerasContainer {oneLineMaxHeight} />
-            {/if}
-        </div>
-    {/if}
+{#if $proximityMeetingStore === true}
+    <div
+        class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
+        bind:clientHeight={containerHeight}
+    >
+        {#if $streamableCollectionStore.size > 0}
+            <div
+                class="justify-end md:justify-center w-full {!isOnOneLine ? 'h-3/4' : ''}"
+                class:max-height-quarter={isOnOneLine}
+                bind:this={camContainer}
+            >
+                {#if $streamableCollectionStore.size > 0}
+                    <CamerasContainer {oneLineMaxHeight} {isOnOneLine} />
+                {/if}
+            </div>
+        {/if}
 
-    {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $highlightedEmbedScreen}
-        <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
-            {#key $highlightedEmbedScreen.uniqueId}
-                <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
-            {/key}
-        </div>
-    {/if}
-</div>
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen}
+            <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
+                {#key $highlightedEmbedScreen.uniqueId}
+                    <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
+                {/key}
+            </div>
+        {/if}
+    </div>
+{/if}
 
 <style>
     .max-height-quarter {

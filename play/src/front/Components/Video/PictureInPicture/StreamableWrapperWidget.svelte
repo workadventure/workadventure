@@ -16,8 +16,8 @@
     function getPlayerWokaPicture(): string {
         try {
             const gameScene = gameManager.getCurrentGameScene();
-            const playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(
-                ([, player]) => player.userUuid === (streamable as VideoPeer).player.userUuid
+            const playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(([, player]) =>
+                streamable instanceof VideoPeer ? player.userUuid === streamable.player.userUuid : false
             )?.[1].pictureStore;
             return playerWokaPictureStore ? (get(playerWokaPictureStore) as string) : "";
         } catch (e) {

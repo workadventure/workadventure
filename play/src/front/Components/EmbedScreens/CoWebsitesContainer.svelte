@@ -27,6 +27,17 @@
 
         resizeBar.addEventListener("mousedown", handleMouseDown);
         resizeBar.addEventListener("touchstart", handleTouchStart);
+
+        // Initialize ResizeObserver
+        resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                tabsContainerWidth = entry.contentRect.width;
+            }
+        });
+
+        if (tabBarElement) {
+            resizeObserver.observe(tabBarElement);
+        }
     });
 
     const handleMouseDown = () => {
@@ -137,12 +148,20 @@
         resizeBar.removeEventListener("touchstart", handleTouchStart);
         document.removeEventListener("touchmove", handleTouchMove);
         document.removeEventListener("touchend", handleTouchEnd);
+
+        // Cleanup ResizeObserver
+        if (resizeObserver) {
+            resizeObserver.disconnect();
+        }
     });
 
     let tabsContainer: HTMLElement | undefined;
     let tabsContainerWidth = 0;
     let tabsOverflowing = false;
     let tabsScrollX = 0;
+    let tabBarElement: HTMLElement | undefined;
+    let resizeObserver: ResizeObserver | undefined;
+
     $: tabsContainerWidth, $coWebsites, (tabsOverflowing = areTabsOverflowing());
 
     function areTabsOverflowing(): boolean {
@@ -207,7 +226,7 @@
             {/if}
             <!-- For some weird reason, we need to put a random width so that flex-1 can work and ignore the width...
                  Otherwise, flex-1 does nothing -->
-            <div class="tab-bar flex-1 w-32" bind:clientWidth={tabsContainerWidth}>
+            <div class="tab-bar flex-1 w-32" bind:this={tabBarElement}>
                 <div
                     bind:this={tabsContainer}
                     class="flex items-center overflow-x-hidden space-x-2 snap-x touch-pan-x"

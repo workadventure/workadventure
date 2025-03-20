@@ -113,7 +113,9 @@
     });
 </script>
 
-<div class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox">
+<div
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
+>
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
