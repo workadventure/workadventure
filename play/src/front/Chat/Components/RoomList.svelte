@@ -26,6 +26,7 @@
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
     const chat = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
@@ -40,6 +41,7 @@
     let displayDirectRooms = false;
     let displayRooms = false;
     let displayRoomInvitations = false;
+    let dismissError = false;
 
     //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
     //let _hasUserInProximityChat = false;
@@ -118,6 +120,12 @@
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
+    function refreshChat() {
+        chat.retrySendingEvents().finally(() => {
+            dismissError = false;
+        });
+    }
+
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -141,6 +149,36 @@
             class="tw-w-full tw-border tw-border-solid tw-border-y-0 tw-border-l-0 tw-border-white/10 tw-relative tw-overflow-y-auto tw-overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
+            {#if $shouldRetrySendingEvents}
+                <div
+                    class="{dismissError
+                        ? 'tw-bottom-0'
+                        : 'tw-h-full'} tw-absolute tw-z-[999999999] tw-gap-2 tw-py-4 tw-left-0 tw-flex tw-flex-col tw-flex-1 tw-w-full tw-backdrop-blur-2xl tw-items-center tw-justify-center"
+                >
+                    <div class="tw-flex tw-flex-col tw-gap-2 tw-items-center tw-justify-center">
+                        {#if !dismissError}
+                            <IconRefresh font-size={50} />
+                        {/if}
+                        <h3>{$LL.chat.whoops()}</h3>
+                    </div>
+                    <button
+                        class="tw-bg-danger tw-w-44 tw-text-white tw-rounded-md tw-px-4 tw-py-2"
+                        on:click={refreshChat}
+                    >
+                        <span class="tw-text-center tw-w-full">
+                            {$LL.chat.refreshChat()}
+                        </span>
+                    </button>
+                    <button
+                        class="tw-rounded-md tw-px-4 tw-py-2"
+                        on:click={() => {
+                            dismissError = true;
+                        }}
+                    >
+                        {$LL.chat.dismiss()}
+                    </button>
+                </div>
+            {/if}
             <ChatHeader />
             <div
                 class="tw-relative tw-pt-[72px] {$isEncryptionRequiredAndNotSet === true && $isGuest === false

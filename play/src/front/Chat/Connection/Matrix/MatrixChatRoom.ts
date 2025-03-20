@@ -68,10 +68,7 @@ export class MatrixChatRoom
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember>;
     private notSentEvents: MapStore<string, MatrixEvent> = new MapStore<string, MatrixEvent>();
-    shouldRetrySendingEvents = derived(
-        this.notSentEvents,
-        (notSentEvents) => notSentEvents.size > 0
-    );
+    shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
@@ -287,25 +284,26 @@ export class MatrixChatRoom
         }
     }
 
-    public retrySendingEvents() : Promise<void> {
-        if(this.notSentEvents.size === 0) return Promise.resolve();
-        
+    public async retrySendingEvents(): Promise<void> {
+        if (this.notSentEvents.size === 0) return Promise.resolve();
+
         const promises = Array.from(this.notSentEvents.values()).map((event) => {
             const eventId = event.getId();
             return this.matrixRoom.client
                 .resendEvent(event, this.matrixRoom)
-                .then(() => {
-                    if(eventId) {
-                        this.notSentEvents.delete(eventId);
-                    }
-                })
                 .catch((error: unknown) => {
+                    this.matrixRoom.client.cancelPendingEvent(event);
                     console.error("Failed to resend event", eventId, error);
                     Sentry.captureException(error);
+                })
+                .finally(() => {
+                    if (eventId) {
+                        this.notSentEvents.delete(eventId);
+                    }
                 });
         });
 
-        return Promise.all(promises);
+        await Promise.allSettled(promises);
     }
 
     private onRoomName(room: Room) {

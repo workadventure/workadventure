@@ -452,6 +452,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
     reconnect: "Se reconnecter",
+    refreshChat: "Rafraichir le chat",
+    dismiss: "Ignorer",
+    whoops: "Oups ! une erreur est survenue",
 };
 
 export default chat;
