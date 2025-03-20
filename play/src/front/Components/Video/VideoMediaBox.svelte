@@ -79,7 +79,8 @@
 
     async function toggleUserMenu() {
         showUserSubMenu = !showUserSubMenu;
-        if (showUserSubMenu) {
+        const spaceUser = await extendedSpaceUserPromise;
+        if (showUserSubMenu && spaceUser) {
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
                 // See https://github.com/storybookjs/storybook/issues/21884
@@ -87,7 +88,7 @@
                 ActionMediaBox,
                 {
                     embedScreen,
-                    spaceUser: await extendedSpaceUserPromise,
+                    spaceUser,
                     videoEnabled,
                     onClose: () => {
                         showUserSubMenu = false;

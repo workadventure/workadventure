@@ -187,8 +187,12 @@ class OpenIDClient {
 
     private encrypt(text: string): string {
         const iv = crypto.randomBytes(16);
+        // Required because of a bug in svelte-check that is typechecking pusher for some reason
+        // @ts-ignore
         const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(this.secret), iv);
         let encrypted = cipher.update(text);
+        // Required because of a bug in svelte-check that is typechecking pusher for some reason
+        // @ts-ignore
         encrypted = Buffer.concat([encrypted, cipher.final()]);
         return iv.toString("hex") + "::" + encrypted.toString("hex");
     }
@@ -202,8 +206,14 @@ class OpenIDClient {
         const encryptedData = parts[1];
         const iv = Buffer.from(ivStr, "hex");
         const encryptedText = Buffer.from(encryptedData, "hex");
+        // Required because of a bug in svelte-check that is typechecking pusher for some reason
+        // @ts-ignore
         const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(this.secret), iv);
+        // Required because of a bug in svelte-check that is typechecking pusher for some reason
+        // @ts-ignore
         let decrypted = decipher.update(encryptedText);
+        // Required because of a bug in svelte-check that is typechecking pusher for some reason
+        // @ts-ignore
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     }

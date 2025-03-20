@@ -24,7 +24,6 @@
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
     let jitsiContainer: HTMLDivElement;
-    let roomName: string;
     let playerName = gameManager.getPlayerName();
     let jwt: string | undefined;
     let jitsiApi: JitsiApi;
@@ -96,7 +95,7 @@
                 }
 
                 const options: JitsiOptions = {
-                    roomName: roomName,
+                    roomName: actualCowebsite.roomName,
                     jwt: jwt,
                     width: "100%",
                     height: "100%",

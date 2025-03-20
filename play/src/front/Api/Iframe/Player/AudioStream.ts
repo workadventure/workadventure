@@ -6,7 +6,7 @@ export class AudioStream {
             {
                 type: "appendPCMData",
                 data: {
-                    data: float32Array,
+                    data: float32Array as Float32Array<ArrayBuffer>,
                 },
             },
             [float32Array.buffer]
