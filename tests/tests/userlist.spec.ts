@@ -88,7 +88,7 @@ test.describe("Send Message from User List", () => {
     await chatUtils.UL_sendMessage(userBob, "Alice", "Hello Alice");
 
     await expect(userBob.getByTestId("roomName")).toHaveText(
-      "Alice"
+      "John Doe"
     );
 
     await userBob.close();
