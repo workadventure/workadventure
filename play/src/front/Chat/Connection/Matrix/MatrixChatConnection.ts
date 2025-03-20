@@ -56,7 +56,7 @@ export enum INTERACTIVE_AUTH_PHASE {
     POST_AUTH,
 }
 export class MatrixChatConnection implements ChatConnectionInterface {
-    private readonly roomList: MapStore<string, MatrixChatRoom> ;
+    private readonly roomList: MapStore<string, MatrixChatRoom>;
     private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
     private handleDeleteRoom: (roomId: string) => void;

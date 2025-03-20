@@ -1,6 +1,7 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
@@ -11,9 +12,8 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
     import TypingUsers from "./TypingUsers.svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
