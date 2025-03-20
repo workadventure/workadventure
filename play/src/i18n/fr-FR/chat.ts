@@ -455,6 +455,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     refreshChat: "Rafraichir le chat",
     dismiss: "Ignorer",
     whoops: "Oups ! une erreur est survenue",
+    failedToOpenRoom: "Impossible d'ouvrir la room",
+    refreshChatError: "Impossible de rafraichir le chat",
 };
 
 export default chat;

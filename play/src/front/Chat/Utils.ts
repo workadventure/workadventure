@@ -11,6 +11,8 @@ import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
+import { warningMessageStore } from "../Stores/ErrorStore";
+import { LL } from "../../i18n/i18n-svelte";
 import { navChat, selectedRoomStore } from "./Stores/ChatStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
@@ -88,6 +90,7 @@ export const openDirectChatRoom = async (chatID: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
         console.error(error);
         Sentry.captureMessage("Failed to create room");
     }
@@ -107,6 +110,7 @@ export const openChatRoom = async (roomId: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
         console.error(error);
         Sentry.captureMessage("Failed to create room");
     }
