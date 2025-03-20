@@ -192,9 +192,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         this.shouldRetrySendingEvents = derived(
             Array.from(this.roomList.values()).map((room) => room.shouldRetrySendingEvents),
-            (shouldRetrySendingEvents) => shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
+            (shouldRetrySendingEvents) =>
+                shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
         );
-
 
         this.handleRoom = this.onClientEventRoom.bind(this);
         this.handleDeleteRoom = this.onClientEventDeleteRoom.bind(this);
