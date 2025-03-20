@@ -4,7 +4,6 @@
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
     import { selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
-    import Avatar from "../Avatar.svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -12,12 +11,17 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
-
+    import { IconChevronLeft, IconLoader, IconMailBox, IconRefresh } from "@wa-icons";
+    import TypingUsers from "./TypingUsers.svelte";
+    import Tooltip from "../../../Components/Util/Tooltip.svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    
     export let room: ChatRoom;
+
+    const chatConnection = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
-    const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
     let typingMembers = room.typingMembers;
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
@@ -208,7 +212,19 @@
                 <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
                     {$roomName}
                 </div>
-                <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
+
+                    {#if $shouldRetrySendingEvents}
+                        <button class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" on:click={chatConnection.retrySendingEvents}>
+                            <IconRefresh font-size={20} />
+                            <Tooltip
+                            text={`test tooltip`}
+                            leftPosition="true"
+                        />
+                        </button>
+                    {:else}
+                        <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
+                    {/if}
+
             </div>
             {#if shouldDisplayLoader}
                 <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
@@ -283,73 +299,9 @@
         </div>
 
         {#if $typingMembers.length > 0}
-            <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
-                {#each $typingMembers
-                    .map((typingMember, index) => ({ ...typingMember, index }))
-                    .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
-                    {#if typingMember.avatarUrl || typingMember.name}
-                        <div id={`typing-user-${typingMember.id}`} class="-tw-ml-2é">
-                            <Avatar
-                                isChatAvatar={true}
-                                avatarUrl={typingMember.avatarUrl}
-                                fallbackName={typingMember.name ? typingMember.name : "Unknown"}
-                            />
-                        </div>
-                    {/if}
-                {/each}
-
-                {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    <div
-                        class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
-                    >
-                        +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    </div>
-                {/if}
-                <div
-                    class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-contrast tw-flex tw-text-lg tw-ml-1"
-                >
-                    <div class="animate-bounce-1">.</div>
-                    <div class="animate-bounce-2">.</div>
-                    <div class="animate-bounce-3">.</div>
-                </div>
-            </div>
+            <TypingUsers typingMembers={$typingMembers} />
         {/if}
-        <MessageInputBar {room} bind:this={messageInputBarRef} />
+
+        <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
-
-<style>
-    @keyframes bounce {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-25%);
-        }
-    }
-
-    .animate-bounce-1 {
-        animation: bounce 1s infinite;
-    }
-
-    .animate-bounce-2 {
-        animation: bounce 1s infinite 0.1s;
-    }
-
-    .animate-bounce-3 {
-        animation: bounce 1s infinite 0.2s;
-    }
-
-    .message {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        position: relative;
-    }
-
-    .chatAvatar {
-        border-style: solid;
-        border-color: rgb(27 42 65 / 0.95);
-        border-width: 1px;
-    }
-</style>
