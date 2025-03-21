@@ -128,7 +128,7 @@
 <div
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
-    class={"pointer-events-none gap-4 " + (isOnOneLine ? "max-h-full" : "")}
+    class={"pointer-events-none gap-4" + (isOnOneLine ? "max-h-full" : "")}
     class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
     class:flex={true}
     class:flex-wrap={!isOnOneLine}

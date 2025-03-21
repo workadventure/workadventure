@@ -27,6 +27,8 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
+    // If true, and if there is not video, the height of the video box will be 11rem
+    export let miniMode = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -120,8 +122,8 @@
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
-        class:h-full={videoEnabled}
-        class:h-11={!videoEnabled}
+        class:h-full={videoEnabled || !miniMode}
+        class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
