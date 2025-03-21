@@ -82,6 +82,8 @@ export class ProximityChatRoom implements ChatRoom {
     isRoomFolder = false;
     lastMessageTimestamp = 0;
     hasUserInProximityChat = writable(false);
+    currentMatrixRoom: ChatRoom | undefined;
+    currentChatVisibility = false;
 
     private unknownUser = {
         chatId: "0",
@@ -376,6 +378,8 @@ export class ProximityChatRoom implements ChatRoom {
             this.hasUserInProximityChat.set(users.size > 1);
         });
 
+        this.saveChatState();
+
         this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
@@ -448,6 +452,8 @@ export class ProximityChatRoom implements ChatRoom {
         }
         this.hasUserInProximityChat.set(false);
 
+        this.resetChatState();
+
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();
         if (this.usersUnsubscriber) {
@@ -459,6 +465,35 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceIsTypingSubscription?.unsubscribe();
 
         this.simplePeer.setSpaceFilter(undefined);
+    }
+
+    private resetChatState() {
+        if (get(selectedRoomStore) == this) {
+            selectedRoomStore.set(this.currentMatrixRoom);
+        }
+
+        chatVisibilityStore.set(this.currentChatVisibility);
+    }
+
+    private saveChatState() {
+        const currentChatVisibility = get(chatVisibilityStore);
+        const currentRoom = get(selectedRoomStore);
+        this.currentChatVisibility = currentChatVisibility;
+
+        if (!currentChatVisibility) {
+            this.currentMatrixRoom = currentRoom;
+
+            selectedRoomStore.set(this);
+            chatVisibilityStore.set(true);
+        } else {
+            if (currentRoom == undefined) {
+                this.currentMatrixRoom = undefined;
+                selectedRoomStore.set(this);
+                return;
+            } else {
+                this.currentMatrixRoom = currentRoom;
+            }
+        }
     }
 
     public destroy(): void {
