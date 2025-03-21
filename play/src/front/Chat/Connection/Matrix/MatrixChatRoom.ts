@@ -67,6 +67,8 @@ export class MatrixChatRoom
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember>;
+    private notSentEvents: MapStore<string, MatrixEvent> = new MapStore<string, MatrixEvent>();
+    shouldRetrySendingEvents = derived(this.notSentEvents, (notSentEvents) => notSentEvents.size > 0);
 
     private handleRoomTimeline = this.onRoomTimeline.bind(this);
     private handleRoomName = this.onRoomName.bind(this);
@@ -256,6 +258,19 @@ export class MatrixChatRoom
                 }
                 this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
                 if (event.getType() === "m.room.message") {
+                    const eventId = event.getId();
+
+                    if (event.status === EventStatus.NOT_SENT) {
+                        if (eventId && !this.notSentEvents.has(eventId)) {
+                            this.notSentEvents.set(eventId, event);
+                        }
+                        return;
+                    }
+
+                    if (eventId && this.notSentEvents.has(eventId)) {
+                        this.notSentEvents.delete(eventId);
+                    }
+
                     if (this.isEventReplacingExistingOne(event)) {
                         this.handleMessageModification(event);
                     } else {
@@ -267,6 +282,28 @@ export class MatrixChatRoom
                 }
             })().catch((error) => console.error(error));
         }
+    }
+
+    public async retrySendingEvents(): Promise<void> {
+        if (this.notSentEvents.size === 0) return Promise.resolve();
+
+        const promises = Array.from(this.notSentEvents.values()).map((event) => {
+            const eventId = event.getId();
+            return this.matrixRoom.client
+                .resendEvent(event, this.matrixRoom)
+                .catch((error: unknown) => {
+                    this.matrixRoom.client.cancelPendingEvent(event);
+                    console.error("Failed to resend event", eventId, error);
+                    Sentry.captureException(error);
+                })
+                .finally(() => {
+                    if (eventId) {
+                        this.notSentEvents.delete(eventId);
+                    }
+                });
+        });
+
+        await Promise.allSettled(promises);
     }
 
     private onRoomName(room: Room) {

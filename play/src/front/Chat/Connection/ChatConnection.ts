@@ -175,6 +175,8 @@ export interface ChatConnectionInterface {
     directRoomsUsers: Readable<ChatUser[]>;
     isUserExist: (address: string) => Promise<boolean>;
     getRoomByID(roomId: string): ChatRoom;
+    retrySendingEvents: () => Promise<void>;
+    shouldRetrySendingEvents: Readable<boolean>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

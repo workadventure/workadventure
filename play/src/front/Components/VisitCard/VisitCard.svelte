@@ -5,7 +5,7 @@
     import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { openChatRoom } from "../../Chat/Utils";
+    import { openDirectChatRoom } from "../../Chat/Utils";
     import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
@@ -24,7 +24,7 @@
 
     function openChat() {
         if (!selectPlayerChatID) return;
-        openChatRoom(selectPlayerChatID).catch((error) => console.error(error));
+        openDirectChatRoom(selectPlayerChatID).catch((error) => console.error(error));
         closeCard();
     }
 
