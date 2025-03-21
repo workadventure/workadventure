@@ -151,6 +151,7 @@
             muted={peer.muteAudio}
             {videoUrl}
             {videoConfig}
+            cover={peer.displayMode === "cover"}
         >
             <UserName
                 name={$name}
@@ -220,11 +221,7 @@
             </div>
 
             {#if $statusStore === "connected" && $hasAudioStore}
-                <div
-                    class="z-[251] absolute aspect-ratio p-2 right-1"
-                    class:top-1={videoEnabled}
-                    class:top-0={!videoEnabled}
-                >
+                <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                     {#if !$isMutedStore}
                         <SoundMeterWidget
                             volume={$volumeStore}
@@ -242,7 +239,7 @@
     <button
         class={isHighlighted || !videoEnabled
             ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
         on:click={() => analyticsClient.pinMeetingAction()}
     >

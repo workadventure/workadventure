@@ -68,6 +68,9 @@ export interface Streamable {
     // This does not prevent the volume bar from being displayed.
     // We use this for local camera feedback.
     readonly muteAudio: boolean;
+    // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
+    // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
+    readonly displayMode: "fit" | "cover";
 }
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -126,6 +129,7 @@ const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
         pictureStore: currentPlayerWokaStore,
         flipX: true,
         muteAudio: true,
+        displayMode: "cover" as const,
     };
 });
 

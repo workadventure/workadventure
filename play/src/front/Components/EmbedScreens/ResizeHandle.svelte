@@ -40,7 +40,7 @@
 </script>
 
 <div
-    class="drag-handle absolute bottom-0 left-0 right-0 h-2 bg-gray-300 cursor-ns-resize hover:bg-gray-400 transition-colors"
+    class="drag-handle mx-auto mt-1  w-48 h-2 bg-contrast hover:bg-contrast-300 cursor-ns-resize transition-colors rounded-lg"
     on:mousedown={startDragging}
 />
 

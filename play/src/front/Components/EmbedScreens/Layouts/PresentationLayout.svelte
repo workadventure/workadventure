@@ -4,15 +4,14 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
-    import { proximityMeetingStore } from "../../../Stores/MyMediaStore";
+    import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
-    import ResizeHandle from "../ResizeHandle.svelte";
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
-    let containerHeight = window.innerHeight * 0.75; // Default height at 75%
+    let containerHeight = 0;
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -72,25 +71,19 @@
     $: oneLineMaxHeight = containerHeight * 0.2;
 </script>
 
-{#if $proximityMeetingStore === true}
-    <div class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3">
+{#if $proximityMeetingStore === true && !$inExternalServiceStore}
+    <div
+        class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
+        bind:clientHeight={containerHeight}
+    >
         {#if $streamableCollectionStore.size > 0}
             <div
-                class="justify-end md:justify-center w-full relative"
+                class="justify-end md:justify-center w-full h-full relative"
                 class:max-height-quarter={$isOnOneLine}
                 bind:this={camContainer}
-                style={!$isOnOneLine ? "height: " + containerHeight + "px" : ""}
             >
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} />
-                {/if}
-                {#if !$isOnOneLine}
-                    <ResizeHandle
-                        minHeight={window.innerHeight * 0.2}
-                        maxHeight={window.innerHeight * 0.9}
-                        currentHeight={containerHeight}
-                        onResize={(height) => (containerHeight = height)}
-                    />
                 {/if}
             </div>
         {/if}

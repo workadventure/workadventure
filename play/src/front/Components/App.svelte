@@ -1,7 +1,6 @@
 <script lang="ts">
     /* eslint no-undef: 0 */
     import { onDestroy, onMount } from "svelte";
-    import { fly } from "svelte/transition";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
@@ -22,15 +21,8 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
-    import {
-        canvasSize,
-        coWebsiteManager,
-        coWebsites,
-        coWebsitesSize,
-        fullScreenCowebsite,
-    } from "../Stores/CoWebsiteStore";
+    import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
-    import { screenOrientationStore } from "../Stores/ScreenOrientationStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -259,19 +251,18 @@
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <div
-            class="flex-1"
-            transition:fly={{
-                duration: 200,
-                x:
-                    $screenOrientationStore === "portrait"
-                        ? 0
-                        : document.documentElement.dir === "rtl"
-                        ? -$coWebsitesSize.width
-                        : $coWebsitesSize.width,
-                y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,
-            }}
-        >
+        <div class="flex-1">
+            <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
+            <!--            transition:fly={{-->
+            <!--            duration: 200,-->
+            <!--            x:-->
+            <!--                $screenOrientationStore === "portrait"-->
+            <!--                    ? 0-->
+            <!--                    : document.documentElement.dir === "rtl"-->
+            <!--                        ? -$coWebsitesSize.width-->
+            <!--                        : $coWebsitesSize.width,-->
+            <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
+            <!--        }}-->
             <CoWebsitesContainer />
         </div>
     {/if}

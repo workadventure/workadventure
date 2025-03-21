@@ -42,6 +42,8 @@
     export let flipX = false;
     // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
     export let muted = false;
+    // If cover is true, the video will be stretched to cover the whole container (and some part of the video might be cropped).
+    export let cover = true;
 
     let destroyed = false;
 
@@ -96,16 +98,30 @@
                 overlayHeight = containerHeight;
                 //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else if (containerRatio > videoRatio) {
-                videoWidth = containerHeight * videoRatio;
-                videoHeight = containerHeight;
-                overlayWidth = videoWidth;
-                overlayHeight = videoHeight;
+                if (!cover) {
+                    videoWidth = containerHeight * videoRatio;
+                    videoHeight = containerHeight;
+                    overlayWidth = videoWidth;
+                    overlayHeight = videoHeight;
+                } else {
+                    videoWidth = containerWidth;
+                    videoHeight = containerWidth / videoRatio;
+                    overlayWidth = containerWidth;
+                    overlayHeight = containerHeight;
+                }
                 //debug("containerRatio > videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else {
-                videoWidth = containerWidth;
-                videoHeight = containerWidth / videoRatio;
-                overlayWidth = videoWidth;
-                overlayHeight = videoHeight;
+                if (!cover) {
+                    videoWidth = containerWidth;
+                    videoHeight = containerWidth / videoRatio;
+                    overlayWidth = videoWidth;
+                    overlayHeight = videoHeight;
+                } else {
+                    videoWidth = containerHeight * videoRatio;
+                    videoHeight = containerHeight;
+                    overlayWidth = containerWidth;
+                    overlayHeight = containerHeight;
+                }
                 //debug("containerRatio <= videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             }
         }
@@ -253,7 +269,10 @@
                   "px; height: " +
                   Math.ceil(videoHeight) +
                   "px; " +
-                  (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "") +
+                  (verticalAlign === "center"
+                      ? ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;`
+                      : "") +
+                  (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
             bind:videoWidth={videoStreamWidth}
