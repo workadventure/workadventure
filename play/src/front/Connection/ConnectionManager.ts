@@ -339,12 +339,10 @@ class ConnectionManager {
                         const chatRoomId = urlManager.getHashParameter("chatRoomId");
 
                         if (chatRoomId) {
-                            try {
-                                await openChatRoom(chatRoomId);
-                            } catch (err) {
+                            openChatRoom(chatRoomId).catch((err) => {
                                 console.error("Unable to open chat room or establish chat connection", err);
                                 Sentry.captureException(err);
-                            }
+                            });
                         }
                     }
                 } catch (err) {
