@@ -23,7 +23,7 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
-    
+
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
