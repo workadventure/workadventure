@@ -65,9 +65,9 @@
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
-        console.log("calculateOptimalLayout");
-        console.log("containerWidth", containerWidth);
-        console.log("containerHeight", containerHeight);
+        //console.log("calculateOptimalLayout");
+        //console.log("containerWidth", containerWidth);
+        //console.log("containerHeight", containerHeight);
         if (!containerWidth || !containerHeight) {
             return {
                 videoWidth: minMediaBoxWidth,
@@ -92,23 +92,46 @@
             // Check if this height would fit in the container
             if (height <= containerHeight) {
                 // Calculate how many complete rows we can fit
-                const rowsPerPage = Math.floor(containerHeight / (height + gap));
+                const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
                 const visibleVideos = rowsPerPage * vpr;
 
                 //console.log("visibleVideos", visibleVideos);
 
-                const config = {
-                    videoWidth: width,
-                };
-
-                // If we need scrolling, return the last valid config (if we have one)
+                // If we need scrolling, calculate the maximum height that would fit
                 if (visibleVideos < $streamableCollectionStore.size) {
-                    //console.log("Found config needing scrolling, returning last valid config", lastValidConfig);
-                    return lastValidConfig || config;
+                    //console.log("max width for vpr", width);
+                    //console.log('vpr', vpr);
+                    // Calculate total number of rows needed
+                    const totalRows = Math.ceil($streamableCollectionStore.size / vpr);
+                    //console.log('totalRows', totalRows);
+
+                    // There are 2 possible optimal solutions here. Either we can reduce the height of the videos
+                    // to fit in the container OR we can take the previous solution with one more video per row
+                    // Let's check which one is better (i.e. which one has the largest video size)
+
+                    // Solution 1: let's reduce video size:
+
+                    // Calculate maximum height per video that would fit
+                    const maxHeightPerVideo = (containerHeight - gap * (totalRows - 1)) / totalRows;
+
+                    // Calculate corresponding width based on aspect ratio
+                    const adjustedWidthWithReducedHeight = (maxHeightPerVideo * 16) / 9;
+
+                    // Solution 2: let's increase the number of videos per row
+                    const adjustedWidthWithOneMoreVpr = (containerWidth - gap * vpr) / (vpr + 1);
+
+                    // Check which solution is better
+                    const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
+
+                    return {
+                        videoWidth: adjustedWidth,
+                    };
                 }
 
                 // Keep this as our last valid config that doesn't need scrolling
-                lastValidConfig = config;
+                lastValidConfig = {
+                    videoWidth: width,
+                };
             }
         }
 

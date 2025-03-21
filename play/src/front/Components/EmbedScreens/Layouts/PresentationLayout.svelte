@@ -8,9 +8,11 @@
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import ResizeHandle from "../ResizeHandle.svelte";
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
+    let containerHeight = window.innerHeight * 0.75; // Default height at 75%
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -67,54 +69,28 @@
         }*/
     }
 
-    // $: $rightMode, setRightMode();
-
-    // function setRightMode() {
-    //     if ($rightMode && !isVertical) {
-    //         let containerLayoutCam = document.getElementById("right-mode");
-    //         containerLayoutCam?.classList.add("right-mode-on");
-    //         // Cette div est nul mais dans l'idéé je veux faire qqch comme cela
-    //     } else {
-    //         let containerLayoutCam = document.getElementById("right-mode");
-    //         containerLayoutCam?.classList.remove("right-mode-on");
-    //     }
-    // }
-
-    // $: if ($hideMode && $highlightedEmbedScreen) setHideMode();
-
-    // function setHideMode() {
-    //     // ATTENTION NE PLUS RENDRE CLICKABLE LE SCREENSHARE CAR SINON PLUS RIEN
-
-    //     if ($hideMode && !isVertical) {
-    //         camContainer?.classList.add("hidden");
-
-    //         if (highlightScreen) {
-    //             highlightScreen.classList.add("fullscreen");
-    //         }
-    //     } else if (!$hideMode && !isVertical) {
-    //         if (highlightScreen) {
-    //             highlightScreen.style.transform = "scale(1)";
-    //         }
-    //     }
-    // }
-    let containerHeight: number;
-
     $: oneLineMaxHeight = containerHeight * 0.2;
 </script>
 
 {#if $proximityMeetingStore === true}
-    <div
-        class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
-        bind:clientHeight={containerHeight}
-    >
+    <div class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3">
         {#if $streamableCollectionStore.size > 0}
             <div
-                class="justify-end md:justify-center w-full {!$isOnOneLine ? 'h-3/4' : ''}"
+                class="justify-end md:justify-center w-full relative"
                 class:max-height-quarter={$isOnOneLine}
                 bind:this={camContainer}
+                style={!$isOnOneLine ? "height: " + containerHeight + "px" : ""}
             >
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} />
+                {/if}
+                {#if !$isOnOneLine}
+                    <ResizeHandle
+                        minHeight={window.innerHeight * 0.2}
+                        maxHeight={window.innerHeight * 0.9}
+                        currentHeight={containerHeight}
+                        onResize={(height) => (containerHeight = height)}
+                    />
                 {/if}
             </div>
         {/if}
