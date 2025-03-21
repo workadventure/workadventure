@@ -291,6 +291,7 @@
         class:rounded-lg={!videoEnabled}
         class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
         class:border-secondary={!videoEnabled && isTalking}
+        class:hidden={videoEnabled && !overlayHeight}
         style={videoEnabled
             ? "width: " +
               overlayWidth +
