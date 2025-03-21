@@ -10,6 +10,7 @@
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -22,7 +23,6 @@
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
-    import { warningMessageStore } from "../../Stores/ErrorStore";
     
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
