@@ -1,9 +1,9 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { IconRefresh, IconLoader } from "@wa-icons";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { IconRefresh, IconLoader } from "@wa-icons";
 
     const chat = gameManager.chatConnection;
     let dismissError = false;
