@@ -220,6 +220,41 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 
+// Store to track if we are in a conversation with someone else
+export const isInRemoteConversation = derived(
+    [broadcastTracksStore, screenSharingStreamStore, peerStore, scriptingVideoStore, silentStore],
+    ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $scriptingVideoStore, $silentStore]) => {
+        // If we are silent, we are not in a conversation
+        if ($silentStore) {
+            return false;
+        }
+
+        // Check if we have any peers
+        if ($peerStore.size > 0) {
+            return true;
+        }
+
+        // Check if we have any broadcast tracks (excluding local ones)
+        for (const trackWrapper of $broadcastTracksStore.values()) {
+            if (trackWrapper instanceof JitsiTrackWrapper && !trackWrapper.isLocal) {
+                return true;
+            }
+        }
+
+        // Check if we have any screen sharing streams
+        if ($screenSharingStreamStore.size > 0) {
+            return true;
+        }
+
+        // Check if we have any scripting videos
+        if ($scriptingVideoStore.size > 0) {
+            return true;
+        }
+
+        return false;
+    }
+);
+
 // No need to unsubscribe, the store is global
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 streamableCollectionStore.subscribe((streamableCollection) => {

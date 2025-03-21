@@ -7,6 +7,7 @@
     import { proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
+    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
@@ -35,6 +36,7 @@
     onMount(() => {
         resizeHeight();
         window.addEventListener("resize", handleResize);
+
         return () => {
             window.removeEventListener("resize", handleResize);
         };
@@ -97,11 +99,7 @@
     // }
     let containerHeight: number;
 
-    $: isOnOneLine =
-        ($streamableCollectionStore.size > 0 && $highlightedEmbedScreen !== undefined) ||
-        $streamableCollectionStore.size === 1;
-
-    $: oneLineMaxHeight = containerHeight * 0.25;
+    $: oneLineMaxHeight = containerHeight * 0.2;
 </script>
 
 {#if $proximityMeetingStore === true}
@@ -111,12 +109,12 @@
     >
         {#if $streamableCollectionStore.size > 0}
             <div
-                class="justify-end md:justify-center w-full {!isOnOneLine ? 'h-3/4' : ''}"
-                class:max-height-quarter={isOnOneLine}
+                class="justify-end md:justify-center w-full {!$isOnOneLine ? 'h-3/4' : ''}"
+                class:max-height-quarter={$isOnOneLine}
                 bind:this={camContainer}
             >
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer {oneLineMaxHeight} {isOnOneLine} />
+                    <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} />
                 {/if}
             </div>
         {/if}

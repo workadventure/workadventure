@@ -117,6 +117,9 @@ const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
     });
 
     return function stop() {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
         unsubscribe();
     };
 });
