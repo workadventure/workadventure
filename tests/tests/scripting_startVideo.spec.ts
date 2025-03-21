@@ -8,7 +8,7 @@ test.describe('Scripting WA.ui.playVideo functions', () => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_start_video"));
 
         await evaluateScript(page, async () => {
-            window.myVideo = await WA.ui.playVideo("https://2050today.org/wp-content/uploads/2020/07/Video-Placeholder.mp4?_=6", { name:"Bob" });
+            window.myVideo = await WA.ui.playVideo("https://dl11.webmfiles.org/big-buck-bunny_trailer.webm", { name:"Bob" });
         });
 
         await expect(page.getByText('Bob')).toBeVisible();
