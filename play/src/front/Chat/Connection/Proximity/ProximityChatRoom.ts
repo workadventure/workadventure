@@ -82,6 +82,8 @@ export class ProximityChatRoom implements ChatRoom {
     isRoomFolder = false;
     lastMessageTimestamp = 0;
     hasUserInProximityChat = writable(false);
+    currentMatrixRoom: ChatRoom | undefined;
+    currentChatVisibility = false;
 
     private unknownUser = {
         chatId: "0",
@@ -407,6 +409,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
 
+        this.saveChatState();
+
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoomStore.set(this);
@@ -448,6 +452,8 @@ export class ProximityChatRoom implements ChatRoom {
         }
         this.hasUserInProximityChat.set(false);
 
+        this.restoreChatState();
+
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();
         if (this.usersUnsubscriber) {
@@ -459,6 +465,21 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceIsTypingSubscription?.unsubscribe();
 
         this.simplePeer.setSpaceFilter(undefined);
+    }
+
+    private restoreChatState() {
+        if (get(selectedRoomStore) == this) {
+            selectedRoomStore.set(this.currentMatrixRoom);
+        }
+
+        chatVisibilityStore.set(this.currentChatVisibility);
+    }
+
+    private saveChatState() {
+        const currentChatVisibility = get(chatVisibilityStore);
+        const currentRoom = get(selectedRoomStore);
+        this.currentChatVisibility = currentChatVisibility;
+        this.currentMatrixRoom = currentRoom;
     }
 
     public destroy(): void {
