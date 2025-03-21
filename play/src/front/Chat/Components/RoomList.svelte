@@ -10,7 +10,6 @@
     import { userIsConnected } from "../../Stores/MenuStore";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
-    import { warningMessageStore } from "../../Stores/ErrorStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -22,6 +21,7 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
+    import RefreshChat from "./RefreshChat.svelte";
     import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
@@ -43,7 +43,6 @@
     let displayDirectRooms = false;
     let displayRooms = false;
     let displayRoomInvitations = false;
-    let dismissError = false;
 
     //let proximityChatRoomHasUserInProximityChatSubscribtion: Unsubscriber | undefined;
     //let _hasUserInProximityChat = false;
@@ -122,16 +121,6 @@
         proximityChatRoom.hasUnreadMessages.set(false);
     }
 
-    function refreshChat() {
-        chat.retrySendingEvents()
-            .catch(() => {
-                warningMessageStore.addWarningMessage(get(LL).chat.refreshChatError());
-            })
-            .finally(() => {
-                dismissError = false;
-            });
-    }
-
     $: filteredDirectRoom = $directRooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
         .sort((a: ChatRoom, b: ChatRoom) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1));
@@ -156,34 +145,7 @@
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
             {#if $shouldRetrySendingEvents}
-                <div
-                    class="{dismissError
-                        ? 'tw-bottom-0'
-                        : 'tw-h-full'} tw-absolute tw-z-[999999999] tw-gap-2 tw-py-4 tw-left-0 tw-flex tw-flex-col tw-flex-1 tw-w-full tw-backdrop-blur-2xl tw-items-center tw-justify-center"
-                >
-                    <div class="tw-flex tw-flex-col tw-gap-2 tw-items-center tw-justify-center">
-                        {#if !dismissError}
-                            <IconRefresh font-size={50} />
-                        {/if}
-                        <h3>{$LL.chat.whoops()}</h3>
-                    </div>
-                    <button
-                        class="tw-bg-danger tw-w-44 tw-text-white tw-rounded-md tw-px-4 tw-py-2"
-                        on:click={refreshChat}
-                    >
-                        <span class="tw-text-center tw-w-full">
-                            {$LL.chat.refreshChat()}
-                        </span>
-                    </button>
-                    <button
-                        class="tw-rounded-md tw-px-4 tw-py-2"
-                        on:click={() => {
-                            dismissError = true;
-                        }}
-                    >
-                        {$LL.chat.dismiss()}
-                    </button>
-                </div>
+                <RefreshChat />
             {/if}
             <ChatHeader />
             <div

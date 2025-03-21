@@ -619,7 +619,7 @@
         {focusout}
         bind:message
         bind:messageInput
-        {disabled}
+        disabled={disabled && !isProximityChatRoom}
         inputClass="message-input tw-flex-grow !tw-m-0 tw-px-5 tw-py-2.5 tw-max-h-36 tw-overflow-auto  tw-h-full tw-rounded-xl wa-searchbar tw-block tw-text-white placeholder:tw-text-base tw-border-light-purple tw-border !tw-bg-transparent tw-resize-none tw-border-none tw-outline-none tw-shadow-none focus:tw-ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
