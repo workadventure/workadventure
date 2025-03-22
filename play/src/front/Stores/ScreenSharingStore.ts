@@ -244,6 +244,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         volumeStore: writable(undefined),
         flipX: false,
         muteAudio: true,
+        displayMode: "fit" as const,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {

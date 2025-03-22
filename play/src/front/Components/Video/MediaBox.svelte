@@ -7,7 +7,6 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
@@ -51,26 +50,12 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+            class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
             in:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
         </div>
     {/if}
-{:else if streamable instanceof ScreenSharingPeer}
-    <div
-        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
-        in:fly={{ y: 50, duration: 150 }}
-    >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
-    </div>
-{:else if streamable instanceof JitsiTrackStreamWrapper}
-    <div
-        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
-        in:fly={{ y: 50, duration: 150 }}
-    >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
-    </div>
 {:else}
     <div
         class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
