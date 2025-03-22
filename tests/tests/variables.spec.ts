@@ -4,10 +4,9 @@ import {
 
   rebootBack,
   rebootPlay,
-  rebootTraefik,
   resetRedis,
-  startRedis,
-  stopRedis,
+  startRedis, startTraefik,
+  stopRedis, stopTraefik,
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
@@ -51,15 +50,24 @@ test.describe('Variables', () => {
     );
     await expect(textField).toHaveValue('new value');
 
+    // Let's simulate a browser disconnection
+    await stopTraefik();
+    // Let's detect the reconnecting screen
+    await expect(page.getByTestId('camera-button')).toBeHidden();
+    await startTraefik();
+
     // Now, let's kill the reverse proxy to cut the connexion
-    console.log('Rebooting traefik');
+    /*console.log('Rebooting traefik');
     rebootTraefik();
-    console.log('Rebooting done');
+    console.log('Rebooting done');*/
 
     // Maybe we should:
     // 1: stop Traefik
     // 2: detect reconnecting screen
     // 3: start Traefik again
+
+
+
 
     await expect(textField).toHaveValue('new value', { timeout: 60000 });
 
