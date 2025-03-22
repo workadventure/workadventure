@@ -74,6 +74,14 @@ export function rebootTraefik(): void {
   dockerCompose("up --force-recreate -d reverse-proxy");
 }
 
+export function stopTraefik(): void {
+  dockerCompose("stop reverse-proxy");
+}
+
+export function startTraefik(): void {
+  dockerCompose("start reverse-proxy");
+}
+
 export async function rebootPlay(request: APIRequestContext): Promise<void> {
   dockerCompose("up --force-recreate -d play");
   let response: APIResponse;
