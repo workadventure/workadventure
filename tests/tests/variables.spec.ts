@@ -69,9 +69,11 @@ test.describe('Variables', () => {
 
 
 
+    await expect(textField).toBeVisible();
     await expect(textField).toHaveValue('new value', { timeout: 60000 });
 
     stopRedis();
+    await expect(textField).toBeVisible();
     await textField.fill('');
     await textField.fill('value set while Redis stopped');
     await textField.press('Tab');
