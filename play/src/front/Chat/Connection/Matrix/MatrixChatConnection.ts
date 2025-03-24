@@ -700,7 +700,15 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         try {
             this.roomCreationInProgress.set(true);
-            return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
+            const result = await this.client.createRoom(
+                this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions)
+            );
+
+            if (roomOptions.parentSpaceID && result) {
+                await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
+            }
+
+            return result;
         } catch (error) {
             throw this.handleMatrixError(error);
         } finally {
@@ -748,7 +756,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             if (roomOptions.parentSpaceID && result) {
                 try {
-                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id);
+                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
 
                     await this.waitForNextSync();
                     return result;
@@ -789,6 +797,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
+            power_level_content_override: {
+                suggested: roomOptions.suggested ?? false,
+            },
         };
     }
 
@@ -1025,7 +1036,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return this.matrixSecurity.openChooseDeviceVerificationMethodModal();
     }
 
-    private async addRoomToSpace(spaceRoomId: string, childRoomId: string): Promise<void> {
+    private async addRoomToSpace(spaceRoomId: string, childRoomId: string, suggested = false): Promise<void> {
         if (!this.client) {
             return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
         }
@@ -1038,7 +1049,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         try {
             // @ts-ignore
-            await this.client.sendStateEvent(spaceRoomId, EventType.SpaceChild, { via: [domain] }, childRoomId);
+            await this.client.sendStateEvent(
+                spaceRoomId,
+                EventType.SpaceChild,
+                { via: [domain], suggested },
+                childRoomId
+            );
             return;
         } catch (error) {
             console.error("Error adding room to space: ", error);

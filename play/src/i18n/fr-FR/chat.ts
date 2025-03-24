@@ -209,6 +209,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Activer le chiffrement de bout en bout",
             description: "Vous ne pourrez pas le désactiver plus tard.",
         },
+        suggested: "Salon recommandé",
+        suggestedDescription: "Ce salon sera recommandé aux utilisateurs qui rejoignent le même espace.",
         users: "Utilisateurs",
         historyVisibility: {
             label: "Qui peut lire l'historique",

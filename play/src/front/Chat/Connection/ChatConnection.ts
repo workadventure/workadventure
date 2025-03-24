@@ -138,6 +138,7 @@ export interface CreateRoomOptions {
     encrypt?: boolean;
     parentSpaceID?: string;
     description?: string;
+    suggested?: boolean;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
