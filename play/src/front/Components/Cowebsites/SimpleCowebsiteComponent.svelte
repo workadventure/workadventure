@@ -14,7 +14,12 @@
     });
 
     onDestroy(() => {
+        console.warn("AAAAAAAAAAAAAAAAAA - onDestroy called in SimpleCoWebsiteComponent.svelte");
         if (allowApi) {
+            console.warn(
+                "AAAAAAAAAAAAAAAAAA - Unregistering iframe in SimpleCoWebsiteComponent.svelte",
+                iframeSimpleCowebsite
+            );
             iframeListener.unregisterIframe(iframeSimpleCowebsite);
         }
     });
