@@ -209,6 +209,8 @@ const chat: BaseTranslation = {
             label: "Activate end to end encryption",
             description: "You won't be able to deactivate it later.",
         },
+        suggested: "Suggested room",
+        suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
             label: "Who can read history ?",
