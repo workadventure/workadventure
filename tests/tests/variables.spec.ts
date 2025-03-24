@@ -16,10 +16,10 @@ import {isMobile} from "./utils/isMobile";
 import {evaluateScript} from "./utils/scripting";
 
 async function setVariable(page: Page, value: string) {
-  await evaluateScript(page, async () => {
+  await evaluateScript(page, async (value) => {
     await WA.onInit();
     WA.state.textField = value;
-  });
+  }, value);
 }
 
 async function expectVariableToBe(page: Page, value: string) {
@@ -53,7 +53,7 @@ test.describe('Variables', () => {
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
     const page = await getPage(browser, 'Alice',
-        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
+        publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 
 //    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
 
@@ -62,7 +62,7 @@ test.describe('Variables', () => {
     await setVariable(page, 'new value');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
     await expectVariableToBe(page, 'new value');
 
@@ -96,7 +96,7 @@ test.describe('Variables', () => {
     for (const room of backDump) {
       if (
         room.roomUrl ===
-        new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
+        new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ) {
         throw new Error('Room still found in back');
       }
@@ -106,11 +106,11 @@ test.describe('Variables', () => {
     //console.log('pusherDump', pusherDump);
     await expect(
       pusherDump[
-        new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
+        new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ]
     ).toBe(undefined);
 
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"))
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"))
 
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -119,17 +119,17 @@ test.describe('Variables', () => {
 
     // Now, let's try to kill / reboot the back
     await rebootBack();
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
     /*await gotoWait200(
         page,
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );*/
     await expectVariableToBe(page, 'value set while Redis stopped');
 
     await setVariable(page, 'value set after back restart');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -138,15 +138,15 @@ test.describe('Variables', () => {
     // Now, let's try to kill / reboot the back
     await rebootPlay(request);
 
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
-    //await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
+    //await gotoWait200(page, publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
 
     await expectVariableToBe(page, 'value set after back restart');
 
     await setVariable(page, 'value set after pusher restart');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
