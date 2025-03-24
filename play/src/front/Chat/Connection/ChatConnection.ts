@@ -126,6 +126,7 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement {
     rooms: Readable<ChatRoom[]>;
     folders: Readable<RoomFolder[]>;
     invitations: Readable<ChatRoom[]>;
+    suggestedRooms: Readable<{ name: string; id: string }[]>;
 }
 
 export interface CreateRoomOptions {
@@ -138,6 +139,7 @@ export interface CreateRoomOptions {
     encrypt?: boolean;
     parentSpaceID?: string;
     description?: string;
+    suggested?: boolean;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";

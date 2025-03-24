@@ -9,11 +9,12 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
+    import RoomSuggested from "./Room/RoomSuggested.svelte";
     import { IconChevronUp } from "@wa-icons";
 
     export let rootFolder: boolean;
     export let folder: RoomFolder;
-    $: ({ name, folders, invitations, rooms, id } = folder);
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
 
     const isFoldersOpen: { [key: string]: boolean } = {};
@@ -83,6 +84,13 @@
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
+            {#if $suggestedRooms.length > 0}
+                <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                    <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
+                        <RoomSuggested roomInformation={room} />
+                    </ShowMore>
+                </div>
+            {/if}
             {#if $rooms.length === 0 && $folders.length === 0}
                 <p
                     class={`${

@@ -112,6 +112,24 @@
                     {$LL.chat.createRoom.visibility.restrictedDescription()}
                 {/if}
             </p>
+
+            {#if true}
+                <div class="tw-pl-1">
+                    <input
+                        data-testid="createRoomEncryption"
+                        bind:checked={createRoomOptions.suggested}
+                        type="checkbox"
+                        id="suggestedData"
+                        on:focusin={focusChatInput}
+                        on:focusout={unfocusChatInput}
+                    />
+                    <label class="tw-m-0" for="suggestedData">{$LL.chat.createRoom.suggested()}</label>
+                </div>
+                <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
+                    <IconHelpCircle font-size={18} />
+                    {$LL.chat.createRoom.suggestedDescription()}
+                </p>
+            {/if}
             {#if createRoomOptions.visibility === "private"}
                 <div class="tw-pl-1">
                     <input

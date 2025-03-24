@@ -1,5 +1,5 @@
 import { Room, EventType, EventTimeline } from "matrix-js-sdk";
-import { derived, get, Readable } from "svelte/store";
+import { derived, get, Readable, writable, Writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 
 import * as Sentry from "@sentry/svelte";
@@ -17,6 +17,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly rooms: Readable<MatrixChatRoom[]>;
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
+    readonly suggestedRooms: Writable<{ name: string; id: string }[]> = writable([]);
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
     private joinRoomDeferred = new Deferred<void>();
@@ -71,6 +72,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
                 await this.refreshFolderHierarchy();
+                await this.refreshSuggestedRooms();
             }
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
@@ -218,10 +220,31 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         });
     }
 
+    async refreshSuggestedRooms() {
+        const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, true);
+
+        const suggestedMatrixChatRooms: { name: string; id: string }[] = [];
+
+        rooms.forEach((room) => {
+            const roomId = room.room_id;
+
+            if (this.id === roomId) return;
+
+            const chatRoom = this.room.client.getRoom(roomId);
+
+            if (!chatRoom && !this.roomList.has(roomId) && !this.folderList.has(roomId)) {
+                suggestedMatrixChatRooms.push({ name: room.name, id: roomId });
+            }
+        });
+
+        this.suggestedRooms.set(suggestedMatrixChatRooms);
+    }
+
     protected override async onRoomMyMembership(room: Room) {
         if (room.getMyMembership() === KnownMembership.Join) {
             this.joinRoomDeferred.resolve();
             await this.refreshFolderHierarchy();
+            await this.refreshSuggestedRooms();
         }
         super.onRoomMyMembership(room);
     }
