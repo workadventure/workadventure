@@ -1,5 +1,6 @@
 <script lang="ts">
     import { LL } from "../../../i18n/i18n-svelte";
+    import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import InfoButton from "./InfoButton.svelte";
 
     export let label: string | undefined = undefined;
@@ -54,6 +55,9 @@
 
             <slot />
         </select>
+        <div class="absolute inset-y-0  right-0 mt-6 flex items-center pr-2 pointer-events-none">
+            <ChevronDownIcon />
+        </div>
     </div>
 </div>
 

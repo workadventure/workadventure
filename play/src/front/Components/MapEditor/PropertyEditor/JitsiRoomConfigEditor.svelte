@@ -64,7 +64,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <Popup {isOpen}>
-    <span slot="title">{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()} </span>
+    <span slot="title"> Plus D'Options </span>
     <!-- <div class=" fixed w-[50vw] mx-auto inset-0  items-center justify-center bg-black bg-opacity-50 z-50 "> -->
     <div slot="content" class=" w-full flex flex-col gap-2">
         <div transition:fly={{ x: 1000, duration: 500 }}>

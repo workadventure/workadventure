@@ -5,7 +5,7 @@
     export let onChange = () => {};
     export let disabled = false;
     export let value = false;
-    export let variant: "white" | "" = "white";
+    export let variant: "light" | "" = "";
 
     let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
@@ -21,7 +21,7 @@
             {disabled}
         />
 
-        <div class="input-checkbox" class:input-checkbox-white={variant === "white"} />
+        <div class="input-checkbox" class:input-checkbox-light={variant === "light"} />
     </label>
 
     {#if label}
