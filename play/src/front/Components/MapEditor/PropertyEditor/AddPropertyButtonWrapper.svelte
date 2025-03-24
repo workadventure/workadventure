@@ -358,7 +358,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.tooltipProperties.label()}
         descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
-        img={"resources/icons/icon_infobulle.png"}
+        img={"resources/icons/icon_infobulle.svg"}
         style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
