@@ -9,7 +9,7 @@
 {#if isOpen}
     <div class="absolute flex items-center justify-center w-full h-full">
         <div
-            class="popup-menu bg-contrast/75 backdrop-blur-md text-white z-[2001] w-[90%] m-auto left-0 right-0 sm:max-w-[668px] min-h-fit rounded-3xl"
+            class="bg-contrast/75 backdrop-blur-md text-white z-[2001] w-[90%] m-auto left-0 right-0 sm:max-w-[668px] rounded-3xl max-h-full overflow-y-auto pointer-events-auto"
             transition:fly={{ y: -1000, delay: 0, duration: 300 }}
         >
             <button
@@ -33,21 +33,3 @@
         </div>
     </div>
 {/if}
-
-<style lang="scss">
-    .popup-menu {
-        height: max-content !important;
-        pointer-events: auto;
-    }
-
-    /*@media (max-height: 700px) {
-      .popup-menu {
-          height: 100vh !important;
-          top: 0;
-          .footer {
-              position: fixed;
-              bottom: 0;
-          }
-      }
-  }*/
-</style>

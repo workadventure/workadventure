@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatInputFocusStore } from "../../Stores/ChatStore";
+    import { chatInputFocusStore, chatVisibilityStore } from "../../Stores/ChatStore";
 
     let searchActive = false;
     import { chatSearchBarValue, navChat, joignableRoom } from "../Stores/ChatStore";
@@ -7,6 +7,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
     const gameScene = gameManager.getCurrentGameScene();
@@ -58,6 +59,10 @@
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
     }
+
+    function closeChat() {
+        chatVisibilityStore.set(false);
+    }
 </script>
 
 <div class="p-2 flex items-center absolute w-full z-40">
@@ -92,7 +97,7 @@
             <OnlineUsersCount {searchActive} />
         {/if}
     </div>
-    <div class="">
+    <div class="flex flew-row">
         {#if $chatStatusStore !== "OFFLINE"}
             <button
                 class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
@@ -109,6 +114,15 @@
             </button>
         {:else}
             <div class="w-12" />
+        {/if}
+        {#if $hideActionBarStoreBecauseOfChatBar}
+            <button
+                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
+                data-testid="closeChatButton"
+                on:click={closeChat}
+            >
+                <IconX />
+            </button>
         {/if}
         <!-- searchbar -->
         {#if searchActive && $chatStatusStore !== "OFFLINE"}
