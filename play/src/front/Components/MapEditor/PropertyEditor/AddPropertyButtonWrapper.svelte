@@ -14,6 +14,7 @@
     import teamWhiteSvg from "../../images/applications/team_white.svg";
     import cardsPng from "../../images/applications/icon_cards.svg";
     import messageSvg from "../../images/applications/icon_message.svg";
+    import infoBulleSvg from "../../images/icon_infobulle.svg";
     import LL from "../../../../i18n/i18n-svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
@@ -358,8 +359,8 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.tooltipProperties.label()}
         descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
-        img={"resources/icons/icon_infobulle.svg"}
-        style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
+        img={infoBulleSvg}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}
