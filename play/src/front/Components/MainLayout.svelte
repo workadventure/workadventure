@@ -25,6 +25,8 @@
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { chatVisibilityStore } from "../Stores/ChatStore";
+    import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -93,6 +95,8 @@
 
     document.addEventListener("focusin", handleFocusInEvent);
     document.addEventListener("focusout", handleFocusOutEvent);
+
+    $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
 </script>
 
 <!-- Components ordered by z-index -->
@@ -101,6 +105,7 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
+    style="padding-left: {marginLeft}px;"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
