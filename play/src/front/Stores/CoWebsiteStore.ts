@@ -60,7 +60,7 @@ export const coWebsites = createCoWebsiteStore();
 
 export const fullScreenCowebsite = writable(false);
 
-const windowSize = readable({ width: window.innerWidth, height: window.innerHeight }, (set) => {
+export const windowSize = readable({ width: window.innerWidth, height: window.innerHeight }, (set) => {
     const handleResize = () => {
         set({ width: window.innerWidth, height: window.innerHeight });
     };
