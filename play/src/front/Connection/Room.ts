@@ -59,6 +59,7 @@ export class Room {
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
     private _modules: string[] = [];
+    private _isLogged: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -195,6 +196,10 @@ export class Room {
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
                 this._modules = data.modules ?? [];
+                // If the server returns a value for "isLogged", let's use it.
+                // Even if we are logged in the localUserStore, the user might not be valid for this room.
+                // If no data is passed by the server, fallback to the localUserStore value.
+                this._isLogged = data.isLogged ?? localUserStore.isLogged();
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -400,5 +405,12 @@ export class Room {
 
     get modules(): string[] {
         return this._modules;
+    }
+
+    get isLogged(): boolean {
+        if (this._isLogged === undefined) {
+            throw new Error("isLogged not yet initialized.");
+        }
+        return this._isLogged;
     }
 }
