@@ -30,20 +30,36 @@ export const navChat = createNavChatStore();
 export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");
 
+export function initializeChatVisibilitySubscription() {
+    const unsubscriber = chatVisibilityStore.subscribe((visible) => {
+        if (visible && get(selectedRoomStore)) {
+            matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
+                console.error(error);
+            });
+        }
+    });
+
+    return () => {
+        unsubscriber();
+    };
+}
+
 const createSelectedRoomStore = () => {
     const { subscribe, update } = writable<ChatRoom | undefined>(undefined);
+    let isOpen = false;
 
     const customSet = (value: ChatRoom | undefined) => {
         update((currentValue) => {
-            if (
-                currentValue !== value &&
-                value &&
-                get(value.isEncrypted) &&
-                !get(alreadyAskForInitCryptoConfiguration)
-            ) {
-                matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
-                    console.error(error);
-                });
+            if (currentValue !== value && value && get(value.isEncrypted) && !isOpen && get(chatVisibilityStore)) {
+                isOpen = true;
+                matrixSecurity
+                    .openChooseDeviceVerificationMethodModal()
+                    .catch((error) => {
+                        console.error(error);
+                    })
+                    .finally(() => {
+                        isOpen = false;
+                    });
             }
 
             return value;
