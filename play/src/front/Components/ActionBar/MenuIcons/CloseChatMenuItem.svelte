@@ -10,6 +10,6 @@
     }
 </script>
 
-<ActionBarButton on:click={closeChat} dataTestId="close-chat-btn" {last} disabledHelp={false}>
+<ActionBarButton on:click={closeChat} dataTestId="closeChatButton" {last} disabledHelp={false}>
     <IconX font-size="20" />
 </ActionBarButton>
