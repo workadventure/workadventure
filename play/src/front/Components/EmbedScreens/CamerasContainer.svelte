@@ -39,6 +39,7 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     export let oneLineMaxHeight: number;
@@ -57,11 +58,15 @@
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 120;
 
-    onMount(() => {
-        containerHeight = maxContainerHeight * 0.5;
-    });
+    onMount(() => {});
 
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
+
+    $: {
+        if (!isOnOneLine) {
+            containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
+        }
+    }
 
     $: {
         if (isOnOneLine) {
@@ -186,6 +191,11 @@
     onDestroy(() => {
         gameManager.getCurrentGameScene().reposition();
     });
+
+    function onResizeHandler(height: number) {
+        containerHeight = height;
+        localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
+    }
 </script>
 
 <div class="w-full h-full" bind:clientHeight={maxContainerHeight}>
@@ -235,7 +245,7 @@
             minHeight={maxContainerHeight * 0.1}
             maxHeight={maxContainerHeight * 0.9}
             currentHeight={containerHeight}
-            onResize={(height) => (containerHeight = height)}
+            onResize={onResizeHandler}
         />
     {/if}
 </div>
