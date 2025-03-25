@@ -34,6 +34,7 @@
     import Calendar from "./Calendar/Calendar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
 
     export let game: Game;
 
@@ -92,6 +93,8 @@
 
         <MainLayout />
     {/key}
+    <MainModal />
+
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
     {/if}

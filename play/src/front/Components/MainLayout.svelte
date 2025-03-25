@@ -48,7 +48,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
-    import MainModal from "./Modal/MainModal.svelte";
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
@@ -221,8 +220,6 @@
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
                 <ExternalComponents zone="centeredPopup" />
             </div>
-
-            <MainModal />
         </section>
         <div class="">
             <!--<ActionBar />-->
