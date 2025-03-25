@@ -9,6 +9,7 @@
         mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -48,11 +49,7 @@
                     class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
                     on:click={hideMapEditor}><IconMinus font-size="16" /></button
                 >
-                <button
-                    class="h-12 w-12 rounded   close-window hover:bg-danger aspect-square text-2xl "
-                    data-testid="mapEditor-close-button"
-                    on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
-                >
+                <ButtonClose data-testid="mapEditor-close-button" on:click={closeMapEditor} />
 
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />

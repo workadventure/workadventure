@@ -6,7 +6,7 @@
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import bgMap from "../images/map-exemple.png";
+    // import bgMap from "../images/map-exemple.png";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -57,11 +57,26 @@
     >
         {#if actionsMenuData.menuName}
             <div class="mb-4">
-                <div class="h-32 w-full bg-cover relative mb-8" style="background-image: url('{bgMap}');">
-                    <div class="w-full h-full absolute z-10 bg-contrast/50 left-0 right-0" />
-                    <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -bottom-4 left-4 z-20" />
+                <!-- Fond avec image  -->
+                <div class="h-32 w-full  bg-cover relative mb-8 ">
+                    <!-- Filtre transparent sur image de fond -->
+                    <div class="w-full h-full absolute z-10 " />
+                    <!-- Bloc qui est censée afficher le woka -->
+                    <div
+                        class="h-20 w-20 aspect-ratio bg-white rounded absolute -bottom-4 left-4 z-20 flex items-center justify-center"
+                        style="background-color: rgb(103, 185, 133);"
+                    >
+                        <img
+                            id="wokaPicture"
+                            class="h-16 w-16 "
+                            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAz5JREFUWEfFlktIVFEcxv8TIVRUpkkD5VAmGji9dJGKVDDjELYzWkQQZI9NC1cFbVq0CWrlok0PgyBahO6SGGegQtQW2kshxTTGggnTrKhAoonvjN/lzH17MzqbmTnn3PP9zvd/3AnJfx6hAPo5H8/4Ptf3RhFRwhu3VSn9aHWl+hwZmyj4jrlPU+Nk9Dzfc8PiSTkIQ1QXNAPov7FvEcRVww+AIa5b31BXKwNDw8aU+TdhvCC8AArEdRE3AH3Ny4klAeBWZmFzSOzW3VxwA7DEHWIcbknIJCWcmwu+ABjP+KaI0o9sXy+d/a8t1djWuFMyb7+o+dTHTEF1OLngGyA8v2CIe/UBQmSLi4xSDQxAO4MCMGyBAEpEZMVi/b961FNw8dPHj1iMuHWvq2Bu16EW1Td+T43LXH7F4rhjCEpEchBBrBn7G8luaYrukQe9vXL78gULwKlLV+Voc7P0jbyQs4lWIxeQG4CbCwpQ8XNcKrbG5f5Ar7TVl6uDyyr3WQBmJp6puc7BaTnW0CyT71IyuapKAgHgILoA+kR9XGV/+a98KU6vzL8L9KGvIRGTgymBi063t42J+VBAYK4yLHIwZo07hABmHo/TXTKRzc/aWc/9Xp3QOBcgdMGiZprg7d2EAwHgIS8IinvdfEkAkZqY8SckPJtWCWlnO8SReNnSmJRujsrshxHJjKb/7nUM8UhNXL7PZ2XLjgPy/s0TWVMcloWnF40YM0eK9l+x7MuMplwhXOkoviFcrRyDOCHweb61TO62HJYTPQ/lWveMZR3PfM6OiRuEJ8Du2DlDHJbCWkLU9d2R2h9fZXj1OhlqOmnM6/vw8Mv0dUcXHAFwe4hhwHLcguK4FUKCcSbZITcT7cY+uAWnAMHQYdEpH2wBUHKseyRW/7ecusHeRHsOt+egEMH0+efJjhAu0bg2pBKWfcFcmo4Aermxk+FAhoRicIM5wjlazk6Keafe4Poy4oGkhgOML23lHoaL63AAa+ykTn3BdyfEAXoI9Oy2qxYCeHXNwAAsSwjZ5cY/A0BFYDDbdQC4goEKWXYAliUBIMLScltbthAwzryhua7NEF4tmGBLygH9pWT3kvFat3PjDyquFz87TvYcAAAAAElFTkSuQmCC"
+                            loading="lazy"
+                            alt="User woka's"
+                        />
+                    </div>
+                    <!-- Nom de l'utilisateur + son rôle -->
                     <div class="px-4 flex items-center bottom-2 absolute z-20">
-                        <div class="h5 text-white ml-20 pl-4">
+                        <div class="h5 text-white ml-20 pl-4 ">
                             {actionsMenuData.menuName}
                         </div>
                         <div>
@@ -76,6 +91,7 @@
                 {/if}
             </div>
         {/if}
+        <!-- placement des boutons -->
         <div class="flex flex-col-reverse items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
             <button
                 type="button"
