@@ -44,6 +44,7 @@ const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
+const cameraContainerHeightKey = "cameraContainerHeight";
 
 const JwtAuthToken = z
     .object({
@@ -655,6 +656,18 @@ class LocalUserStore {
 
     setVolumeProximityDiscussion(value: number): void {
         localStorage.setItem(volumeProximityDiscussion, `${value}`);
+    }
+
+    setCameraContainerHeight(ratio: number): void {
+        localStorage.setItem(cameraContainerHeightKey, ratio.toString());
+    }
+
+    getCameraContainerHeight(): number {
+        const value = localStorage.getItem(cameraContainerHeightKey);
+        if (!value) {
+            return 0.75; // Default value of 75%
+        }
+        return parseFloat(value);
     }
 }
 
