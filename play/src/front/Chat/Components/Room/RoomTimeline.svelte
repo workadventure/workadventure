@@ -21,7 +21,6 @@
     const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
-    let typingMembers = room.typingMembers;
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
@@ -38,6 +37,7 @@
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
+    $: typingMembers = room.typingMembers;
 
     onMount(() => {
         initMessages()
