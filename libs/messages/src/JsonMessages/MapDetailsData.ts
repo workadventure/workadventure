@@ -240,6 +240,9 @@ export const isMapDetailsData = z.object({
     modules: extendApi(z.array(z.string()).optional().nullable(), {
         description: "List of external-modules to load",
     }),
+    isLogged: extendApi(z.boolean().optional(), {
+        description: "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
