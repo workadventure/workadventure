@@ -166,6 +166,13 @@ test.describe("matrix chat area property @matrix", () => {
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
+    try{
+      await page.getByTestId("closeModal").click();
+    }
+    catch{
+      console.log("no modal to close")
+    }
+
     await page.getByTestId("chatBackward").click();
     await page.getByTestId("name of new room").hover() ;
     await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
@@ -205,10 +212,6 @@ test.describe("matrix chat area property @matrix", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-
-
-
-    
     
     await login(page2, "test2", 3, "en-US", false);
     await oidcMemberTagLogin(page2, false);
@@ -220,6 +223,13 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page2, 4 * 32, 2 * 32);
     
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
+
+    try{
+      await page2.getByTestId("closeModal").click();
+    }
+    catch{
+      console.log("no modal to close")
+    }
 
     await page2.getByTestId("chatBackward").click();
     await page2.getByTestId("name of new room").hover() ; 
