@@ -64,8 +64,8 @@ class Chat {
 
     async UL_walkTo(page: Page, nickname: string){
         await page.locator('.user', {hasText: nickname}).locator('.wa-dropdown').click();
-        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
-        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Talk to")')).toBeVisible();
+        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Talk to")').click({ timeout: 5_000 });
     }
 
     async AT_sendMessage(page: Page, text: string){
