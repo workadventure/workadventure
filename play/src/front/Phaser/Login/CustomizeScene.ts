@@ -208,9 +208,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private initializeBackButton(): void {
-        const ratio = innerHeight / innerWidth;
-        const initializeBackButtonY = this.customWokaPreviewer.displayHeight * 0.5 + (ratio > 1.6 ? 40 : 10);
-        console.log(initializeBackButtonY);
         this.backButton = new Button(this, 50, 30, {
             width: 80,
             height: 40,
