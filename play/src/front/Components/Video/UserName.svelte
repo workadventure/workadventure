@@ -33,17 +33,20 @@
         </div>
     </div>
 {:else}
-    <div class="{position} z-30 responsive-dimension ">
-        <div class="flex justify-between  rounded {isPlayingAudio ? 'bg-secondary/90' : 'bg-contrast/90'}">
-            <div
-                class="relative backdrop-blur px-2 py-1 text-white text-sm pl-12 bold rounded text-nowrap  flex items-center"
-            >
+    <div class="{position} z-30 responsive-dimension">
+        <div class="flex justify-between rounded {isPlayingAudio ? 'bg-secondary/90' : 'bg-contrast/90'}">
+            <div class="relative backdrop-blur px-2 py-1 text-white text-sm pl-12 bold rounded text-nowrap">
                 <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                     <Woka src={$picture ?? ""} customHeight="42px" customWidth="42px" />
                 </div>
                 {name}
-                <slot />
+
+                <!--{#if $requestedScreenSharingState === true}-->
+                <!--    <ScreenShareIcon />-->
+                <!--{/if}-->
             </div>
+
+            <slot />
         </div>
     </div>
 {/if}

@@ -157,7 +157,7 @@
                 name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
-                isCameraDisabled={!videoEnabled}
+                isCameraDisabled={!videoEnabled && !miniMode}
                 position={videoEnabled
                     ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                     : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
@@ -166,7 +166,7 @@
                     <div />
                 {:then spaceUser}
                     {#if spaceUser}
-                        <div class="self-center p-2 mb-1" bind:this={userMenuButton}>
+                        <div class="flex items-center justify-center" bind:this={userMenuButton}>
                             <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                         </div>
                     {/if}
