@@ -2,7 +2,7 @@
     import Woka from "../Woka/Woka.svelte";
     import { PictureStore } from "../../Stores/PictureStore";
 
-    export let isCameraDisabled: boolean = false; // 
+    export let isCameraDisabled = false; 
 
     /**
      * A component that displays the Woka, the user's name and optionally a dropdown menu
