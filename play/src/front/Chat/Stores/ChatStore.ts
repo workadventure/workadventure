@@ -64,6 +64,8 @@ export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 
 export const joignableRoom = writable<{ id: string; name: string | undefined }[]>([]);
 
+export const shouldRestoreChatStateStore = writable(false);
+
 export const isAChatRoomIsVisible = () => {
     return get(selectedRoomStore) && get(navChat) === "chat" && get(chatVisibilityStore);
 };

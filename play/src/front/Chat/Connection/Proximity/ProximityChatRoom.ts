@@ -18,7 +18,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, selectedRoomStore } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, selectedRoomStore, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
@@ -468,11 +468,12 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     private restoreChatState() {
-        if (get(selectedRoomStore) == this) {
+        if (get(selectedRoomStore) == this && get(shouldRestoreChatStateStore)) {
             selectedRoomStore.set(this.currentMatrixRoom);
         }
 
         chatVisibilityStore.set(this.currentChatVisibility);
+        shouldRestoreChatStateStore.set(false);
     }
 
     private saveChatState() {
@@ -480,6 +481,7 @@ export class ProximityChatRoom implements ChatRoom {
         const currentRoom = get(selectedRoomStore);
         this.currentChatVisibility = currentChatVisibility;
         this.currentMatrixRoom = currentRoom;
+        shouldRestoreChatStateStore.set(true);
     }
 
     public destroy(): void {
