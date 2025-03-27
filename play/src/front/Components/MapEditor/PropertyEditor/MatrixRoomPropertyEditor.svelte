@@ -5,6 +5,7 @@
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
     import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
+    import messageSvg from "../../images/applications/icon_message.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
 
@@ -22,11 +23,7 @@
     }}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img
-            class="tw-w-6 tw-mr-1"
-            src="resources/icons/icon_focus.png"
-            alt={$LL.mapEditor.properties.matrixProperties.description()}
-        />
+        <img class="tw-w-6 tw-mr-1" src={messageSvg} alt={$LL.mapEditor.properties.matrixProperties.description()} />
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">

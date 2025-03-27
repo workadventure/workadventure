@@ -229,6 +229,13 @@
                     addFilter("focusable");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="matrixRoomPropertyData"
+                isActive={$selectFilters.includes("matrixRoomPropertyData")}
+                on:click={() => {
+                    addFilter("matrixRoomPropertyData");
+                }}
+            />
 
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
