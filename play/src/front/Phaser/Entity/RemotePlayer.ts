@@ -107,6 +107,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
+        if (this.visitCardUrl) {
+            actionsMenuStore.setVisitCardUrl(this.visitCardUrl);
+        }
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
