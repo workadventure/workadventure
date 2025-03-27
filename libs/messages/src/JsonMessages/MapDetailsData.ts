@@ -57,7 +57,7 @@ const MetaTagsData = z.object({
     }),
     provider: extendApi(z.string().optional().default("WorkAdventure"), {
         description: "Provider of the webpage",
-        example: "WorkAdventure SAAS plateform",
+        example: "WorkAdventure SAAS platform",
     }),
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
