@@ -17,8 +17,6 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
-    import { visibilityStore } from "../Stores/VisibilityStore";
-    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { silentStore } from "../Stores/MediaStore";
@@ -52,7 +50,7 @@
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
-    import PictureInPicture from "./Video/PictureInPicture.svelte";
+    //import PictureInPicture from "./Video/PictureInPicture.svelte";
     import SilentBlock from "./ActionBar/SilentBlock.svelte";
     let keyboardEventIsDisable = false;
 
@@ -227,9 +225,11 @@
         <ActionBar />
     </div>
 
+    <!-- No picture in picture implemented yet with the new design
     {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
         <PictureInPicture />
     {/if}
+    -->
 
     {#if $actionsMenuStore}
         <ActionsMenu />
