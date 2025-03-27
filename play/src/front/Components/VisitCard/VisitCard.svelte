@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { get } from "svelte/store";
     import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
@@ -41,7 +40,7 @@
     });
 </script>
 
-<section class="visitCard" transition:fly={{ y: -200, duration: 1000 }} style="width: {w}">
+<section class="visitCard" style="width: {w}">
     {#if hidden}
         <div class="loader" />
     {/if}
@@ -100,10 +99,6 @@
 
     .visitCard {
         pointer-events: all;
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 0);
-        margin-top: 200px;
         max-width: 80vw;
         z-index: 350;
 

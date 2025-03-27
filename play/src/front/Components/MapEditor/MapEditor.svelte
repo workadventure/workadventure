@@ -49,7 +49,7 @@
                     class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
                     on:click={hideMapEditor}><IconMinus font-size="16" /></button
                 >
-                <ButtonClose data-testid="mapEditor-close-button" on:click={closeMapEditor} />
+                <ButtonClose dataTestId="mapEditor-close-button" on:click={closeMapEditor} />
 
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />
