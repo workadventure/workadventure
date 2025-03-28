@@ -2,11 +2,11 @@
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
-    import { LL } from "../../../i18n/i18n-svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import VisitCard from "../VisitCard/VisitCard.svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import bgMap from "../images/map-exemple.png";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -38,6 +38,7 @@
                     return 0;
                 }
             });
+            console.log(sortedActions);
         }
     });
 
@@ -52,22 +53,25 @@
 
 {#if actionsMenuData}
     <div
-        class="absolute left-0 right-0 m-auto w-96 z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg overflow-hidden pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="absolute left-0 right-0 m-auto max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
         data-testid="actions-menu"
     >
         {#if actionsMenuData.menuName}
-            <div class="mb-4">
-                <div class="h-32 w-full bg-cover relative mb-8" style="background-image: url('{bgMap}');">
-                    <div class="w-full h-full absolute z-10 bg-contrast/50 left-0 right-0" />
-                    <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -bottom-4 left-4 z-20" />
-                    <div class="px-4 flex items-center bottom-2 absolute z-20">
-                        <div class="h5 text-white ml-20 pl-4">
+            <div>
+                <div class="w-full bg-cover relative">
+                    <div class="flex items-end justify-between p-2">
+                        <div class="text-white font-bold text-xl pl-3">
                             {actionsMenuData.menuName}
                         </div>
-                        <div>
-                            <div class="chip chip-sm chip-danger ml-2">Administrator</div>
-                        </div>
+                        <ButtonClose on:click={closeActionsMenu} />
                     </div>
+                    {#if actionsMenuData.visitCardUrl}
+                        <VisitCard
+                            visitCardUrl={actionsMenuData.visitCardUrl}
+                            isEmbedded={true}
+                            showSendMessageButton={false}
+                        />
+                    {/if}
                 </div>
                 {#if actionsMenuData.menuDescription}
                     <p class="text-sm opacity-50 text-white px-4">
@@ -76,25 +80,29 @@
                 {/if}
             </div>
         {/if}
-        <div class="flex flex-col-reverse items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
-            <button
-                type="button"
-                class="btn btn-ghost justify-center basis-1/2 m-2 w-full"
-                on:click|preventDefault|stopPropagation={closeActionsMenu}
-            >
-                {$LL.actionbar.close()}
-            </button>
+
+        <div class="flex flex-row items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
             {#if sortedActions}
                 {#each sortedActions ?? [] as action (action.actionName)}
                     <button
                         type="button"
-                        class="btn btn-danger justify-center basis-1/2 m-2 w-full {action.style ?? ''}"
+                        class="btn text-nowrap justify-center m-2 w-full {action.style ?? ''}"
                         on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
                             action.callback();
                         }}
                     >
-                        {action.actionName}
+                        <span class="flex flex-row gap-2 items-center justify-center">
+                            {#if action.actionIcon}
+                                <div
+                                    class="w-6 h-6"
+                                    style="background-color: {action.iconColor ?? 'white'};
+                                -webkit-mask: url({action.actionIcon}) no-repeat center;
+                                    mask: url({action.actionIcon}) no-repeat center;"
+                                />
+                            {/if}
+                            {action.actionName}
+                        </span>
                     </button>
                 {/each}
             {/if}
