@@ -44,6 +44,8 @@
     export let muted = false;
     // If cover is true, the video will be stretched to cover the whole container (and some part of the video might be cropped).
     export let cover = true;
+    // If true, the video will be displayed with a background is it does not cover the whole box
+    export let withBackground = false;
 
     let destroyed = false;
 
@@ -244,7 +246,11 @@
     }
 </script>
 
-<div class="h-full w-full relative" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
+<div
+    class="h-full w-full relative {!cover && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
+    bind:clientWidth={containerWidth}
+    bind:clientHeight={containerHeight}
+>
     <div
         class={"absolute overflow-hidden border-solid rounded-lg"}
         class:w-full={!videoEnabled}
@@ -269,9 +275,7 @@
                   "px; height: " +
                   Math.ceil(videoHeight) +
                   "px; " +
-                  (verticalAlign === "center"
-                      ? ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;`
-                      : "") +
+                  ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
                   (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
