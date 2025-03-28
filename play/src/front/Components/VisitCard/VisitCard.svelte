@@ -55,7 +55,7 @@
         {/if}
         {#if hidden}
             <div class="w-full flex justify-center items-center p-4">
-                <div class="loader" />
+                <div class="spinner" />
             </div>
         {/if}
         <div class={isEmbedded ? "" : "p-2"}>
@@ -95,18 +95,17 @@
 <svelte:window on:message={handleIframeMessage} />
 
 <style lang="scss">
-    /* HTML: <div class="loader"></div> */
-    .loader {
-        width: 50px;
-        aspect-ratio: 1;
+    .spinner {
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        background: radial-gradient(farthest-side, #ffffff 94%, #0000) top/8px 8px no-repeat,
-            conic-gradient(#0000 30%, #ffffff);
-        -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 8px), #000 0);
-        animation: l13 0.8s infinite linear;
+        border: 9px solid;
+        border-right-color: #ffffff;
+        animation: spinner 1s infinite linear;
     }
-    @keyframes l13 {
-        100% {
+
+    @keyframes spinner {
+        to {
             transform: rotate(1turn);
         }
     }
