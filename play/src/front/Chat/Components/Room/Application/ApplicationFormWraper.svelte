@@ -203,7 +203,7 @@
     <input
         data-testid="applicationInputLink"
         type="text"
-        class="border rounded w-full !m-0"
+        class="border rounded w-full !m-0 text-black"
         value={property.link}
         bind:this={htmlElementInput}
         on:input={() => {
