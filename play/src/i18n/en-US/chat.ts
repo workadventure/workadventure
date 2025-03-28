@@ -452,6 +452,11 @@ const chat: BaseTranslation = {
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",
+    refreshChat: "Refresh Chat",
+    dismiss: "Dismiss",
+    whoops: "Whoops ! something went wrong",
+    failedToOpenRoom: "Failed to open room",
+    refreshChatError: "Failed to refresh chat",
     discord: {
         chatBand: {
             configure: "Configure",

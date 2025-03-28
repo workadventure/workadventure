@@ -2951,7 +2951,7 @@ ${escapedMessage}
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this._room.metadata,
                 iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
-                isLogged: localUserStore.isLogged(),
+                isLogged: this.room.isLogged,
             };
         });
         this.iframeSubscriptionList.push(

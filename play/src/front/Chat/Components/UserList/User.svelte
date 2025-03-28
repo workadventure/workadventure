@@ -8,9 +8,10 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
-    import { openChatRoom } from "../../Utils";
+    import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import UserActionButton from "./UserActionButton.svelte";
+    import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
@@ -75,11 +76,11 @@
                     <div
                         class="translate-y-[3px] -translate-x-[3px] group-hover/chatItem:translate-y-[0] transition-all"
                     >
-                        <img
-                            class="w-8 h-8 cursor-default"
-                            style="image-rendering: pixelated;"
-                            src={avatarUrl ?? defaultWoka}
+                        <ImageWithFallback
+                            classes="w-8 h-8 cursor-default"
+                            src={avatarUrl}
                             alt="Avatar"
+                            fallback={defaultWoka}
                         />
                     </div>
                 </div>
@@ -140,7 +141,7 @@
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe) {
                             showRoomCreationInProgress = true;
-                            openChatRoom(chatId)
+                            openDirectChatRoom(chatId)
                                 .catch((error) => console.error(error))
                                 .finally(() => {
                                     showRoomCreationInProgress = false;

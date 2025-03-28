@@ -54,6 +54,7 @@ services:
       STARTUP_COMMAND_3: npm run typesafe-i18n
       # Uncomment to run the production build in dev
       #STARTUP_COMMAND_4: npm run build
+      #STARTUP_COMMAND_5: npm run build-iframe-api
       #NODE_OPTIONS: --max-old-space-size=16384
       DEBUG: "socket,space"
       DEBUG_COLORS: "true"
