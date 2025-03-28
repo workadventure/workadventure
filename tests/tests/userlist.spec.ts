@@ -46,7 +46,7 @@ test.describe("Walk to", () => {
 
 
 test.describe("Send Message from User List", () => {
-  test("Send Message from User List", async ({ browser }, { project }) => {
+  test("Send Message from User List @oidc", async ({ browser }, { project }) => {
     if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
