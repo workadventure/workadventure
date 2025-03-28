@@ -19,9 +19,7 @@
 {#if isCameraDisabled}
     <div class="{position} z-30 responsive-dimension ">
         <div class="flex justify-between  rounded bg-transparent">
-            <div
-                class="relative  backdrop-blur px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center "
-            >
+            <div class="relative px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center ">
                 <div class="" style="image-rendering:pixelated">
                     <Woka src={$picture ?? ""} customHeight="100px" customWidth="100px" />
                 </div>
