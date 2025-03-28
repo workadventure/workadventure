@@ -308,7 +308,7 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80")}
+        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80 backdrop-blur")}
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
         class:rounded-lg={!videoEnabled}
