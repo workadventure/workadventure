@@ -66,7 +66,11 @@
                         <ButtonClose on:click={closeActionsMenu} />
                     </div>
                     {#if actionsMenuData.visitCardUrl}
-                        <VisitCard visitCardUrl={actionsMenuData.visitCardUrl} />
+                        <VisitCard
+                            visitCardUrl={actionsMenuData.visitCardUrl}
+                            isEmbedded={true}
+                            showSendMessageButton={false}
+                        />
                     {/if}
                 </div>
                 {#if actionsMenuData.menuDescription}
