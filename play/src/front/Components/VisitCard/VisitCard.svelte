@@ -8,7 +8,7 @@
     import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
-    let w = "500px";
+    // let w = "500px";
     let h = "250px";
     let hidden = true;
     let cvIframe: HTMLIFrameElement;
@@ -29,7 +29,8 @@
 
     function handleIframeMessage(message: MessageEvent) {
         if (message.data.type === "cvIframeSize") {
-            w = message.data.data.w + "px";
+            console.log("visitCard message", message.data);
+            // w = message.data.data.w + "px";
             h = message.data.data.h + "px";
         }
     }
@@ -40,15 +41,12 @@
     });
 </script>
 
-<section class="visitCard" style="width: {w}">
+<section class="visitCard">
     {#if hidden}
         <div class="loader" />
     {/if}
     {#if !hidden}
         <div class="buttonContainer flex flex-row-reverse gap-2">
-            <button class="light cursor-pointer px-3 mb-2 mr-0" data-testid="closeVisitCard" on:click={closeCard}
-                >{$LL.menu.visitCard.close()}</button
-            >
             {#if selectPlayerChatID}
                 {#if !$roomCreationInProgress}
                     <button
@@ -67,8 +65,9 @@
     <iframe
         title="visitCard"
         src={visitCardUrl}
+        class="max-h-lg"
         allow="clipboard-read; clipboard-write self {visitCardUrl}"
-        style="width: {w}; height: {h}"
+        style="width: 100%; height: {h}"
         class:hidden
         bind:this={cvIframe}
     />
