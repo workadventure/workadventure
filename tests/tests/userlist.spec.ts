@@ -75,6 +75,5 @@ test.describe("Send Message from User List", () => {
 
     await userBob.close();
     await adminPage.close();
-    await browser.close();
   });
 });
