@@ -544,7 +544,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
         }
 
-        if (parentFolder.myMembership === KnownMembership.Join) {
+        if (get(parentFolder.myMembership) === KnownMembership.Join) {
             this.roomList.delete(roomId);
             this.roomFolders.delete(roomId);
             return;
@@ -593,7 +593,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         newFolder
             .getRoomsIdInNode()
             .then((roomIDs) => {
-                if (newFolder.myMembership === KnownMembership.Invite) {
+                if (get(newFolder.myMembership) === KnownMembership.Invite) {
                     return;
                 }
                 roomIDs.forEach((roomID) => {

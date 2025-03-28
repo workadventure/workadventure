@@ -233,21 +233,23 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
         const childEvents = room
             ?.getLiveTimeline()
-            .getState(EventTimeline.FORWARDS)
-            .getStateEvents(EventType.SpaceChild);
+            ?.getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.SpaceChild);
 
         if (!childEvents) return;
 
         const children = childEvents
             .map((ev) => {
-                const history = client.getRoomUpgradeHistory(ev.getStateKey());
+                const stateKey = ev.getStateKey();
+                if (!stateKey) return null;
 
+                const history = client.getRoomUpgradeHistory(stateKey);
                 return history[history.length - 1];
             })
             .filter((room): room is Room => {
+                if (!room) return false;
                 return (
-                    room?.getMyMembership() === KnownMembership.Join ||
-                    room?.getMyMembership() === KnownMembership.Invite
+                    room.getMyMembership() === KnownMembership.Join || room.getMyMembership() === KnownMembership.Invite
                 );
             });
 
@@ -255,10 +257,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             if (child.isSpaceRoom()) {
                 const spaceFolder = new MatrixRoomFolder(child);
                 this.folderList.set(child.roomId, spaceFolder);
-                spaceFolder.init().catch((error) => {
-                    console.error("Failed to initialize space folder:", error);
-                    Sentry.captureException(error);
-                });
+                spaceFolder.init();
             } else {
                 this.roomList.set(child.roomId, new MatrixChatRoom(child));
             }
