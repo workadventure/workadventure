@@ -5,7 +5,9 @@ export type ActionsMenuAction = {
     callback: () => void;
     protected?: boolean;
     priority?: number;
-    style?: "is-success" | "is-error" | "is-primary";
+    style?: "is-success" | "is-error" | "is-primary" | string;
+    actionIcon?: string;
+    iconColor?: string;
 };
 export interface ActionsMenuData {
     menuName: string;
