@@ -231,11 +231,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             },
         });
         this.backButton.setText("Back");
-
-        // Set the position of the back button
-        // this.backButton.setPosition(10, 10);
-
-        // Add event listener for the back button
         this.backButton.on(Phaser.Input.Events.POINTER_UP, () => {
             this.backToPreviousScene();
         });
