@@ -7,6 +7,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "ts-deferred";
 import { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
+
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     roomList: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
     folderList: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
@@ -67,10 +68,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }
 
-    async init() {
+    init() {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
-                await this.refreshFolderHierarchy();
+                this.getChildren();
             }
             this.loadRoomsAndFolderPromise.resolve();
         } catch (e) {
@@ -218,11 +219,49 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         });
     }
 
-    protected override async onRoomMyMembership(room: Room) {
+    protected override onRoomMyMembership(room: Room) {
         if (room.getMyMembership() === KnownMembership.Join) {
             this.joinRoomDeferred.resolve();
-            await this.refreshFolderHierarchy();
+            this.getChildren();
         }
         super.onRoomMyMembership(room);
+    }
+
+    public getChildren() {
+        const client = this.room.client;
+        const room = this.room;
+
+        const childEvents = room
+            ?.getLiveTimeline()
+            .getState(EventTimeline.FORWARDS)
+            .getStateEvents(EventType.SpaceChild);
+
+        if (!childEvents) return;
+
+        const children = childEvents
+            .map((ev) => {
+                const history = client.getRoomUpgradeHistory(ev.getStateKey());
+
+                return history[history.length - 1];
+            })
+            .filter((room): room is Room => {
+                return (
+                    room?.getMyMembership() === KnownMembership.Join ||
+                    room?.getMyMembership() === KnownMembership.Invite
+                );
+            });
+
+        children.forEach((child) => {
+            if (child.isSpaceRoom()) {
+                const spaceFolder = new MatrixRoomFolder(child);
+                this.folderList.set(child.roomId, spaceFolder);
+                spaceFolder.init().catch((error) => {
+                    console.error("Failed to initialize space folder:", error);
+                    Sentry.captureException(error);
+                });
+            } else {
+                this.roomList.set(child.roomId, new MatrixChatRoom(child));
+            }
+        });
     }
 }
