@@ -200,7 +200,9 @@
         <button class="btn btn-light btn-sm btn-ghost w-1/2 justify-center responsive-message"
             >View full tutorial</button
         >
-        <button data-testId="close-tutorial-button" class="btn btn-secondary btn-sm w-1/2 justify-center"
+        <button
+            data-testId="close-tutorial-button"
+            class="btn btn-secondary btn-sm w-1/2 justify-center"
             on:click={closeBanner}
         >
             Close
