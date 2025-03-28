@@ -46,21 +46,20 @@ test.describe("Walk to", () => {
 
 
 test.describe("Send Message from User List", () => {
-  test("Send Message from User List @oidc", async ({ browser }, { project }) => {
-    if (project.name === "mobilechromium") {
+  test("Send Message from User List @oidc", async ({ page, browser }, { project }) => {
+    if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
-      return;
     }
 
-    const page = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+    const adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     const alicePosition = {
       x: 3 * 32,
       y: 4 * 32,
     };
 
-    await Map.teleportToPosition(page, alicePosition.x, alicePosition.y);
+    await Map.teleportToPosition(adminPage, alicePosition.x, alicePosition.y);
 
     const userBob = await getPage(browser, "Member1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
@@ -75,7 +74,7 @@ test.describe("Send Message from User List", () => {
     );
 
     await userBob.close();
-    await page.close();
+    await adminPage.close();
     await browser.close();
   });
 });
