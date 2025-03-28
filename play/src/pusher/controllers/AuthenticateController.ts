@@ -101,7 +101,6 @@ export class AuthenticateController extends BaseHttpController {
                 z.object({
                     playUri: z.string(),
                     manuallyTriggered: z.literal("true").optional(),
-                    chatId: z.string().optional(),
                     chatRoomId: z.string().optional(),
                 })
             );
@@ -123,7 +122,6 @@ export class AuthenticateController extends BaseHttpController {
                 query.playUri,
                 req,
                 query.manuallyTriggered,
-                query.chatId,
                 query.chatRoomId
             );
             res.cookie("playUri", query.playUri, {
@@ -371,7 +369,7 @@ export class AuthenticateController extends BaseHttpController {
             const query = validateQuery(
                 req,
                 res,
-                z.object({ loginToken: z.string(), chatId: z.string().optional(), chatRoomId: z.string().optional() })
+                z.object({ loginToken: z.string(), chatRoomId: z.string().optional() })
             );
             if (query === undefined) {
                 return;
@@ -382,8 +380,7 @@ export class AuthenticateController extends BaseHttpController {
             const playUriUrl = new URL(req.cookies.playUri);
             playUriUrl.searchParams.append("matrixLoginToken", query.loginToken);
 
-            if (query.chatId && query.chatRoomId) {
-                playUriUrl.searchParams.append("chatId", query.chatId);
+            if (query.chatRoomId) {
                 playUriUrl.searchParams.append("chatRoomId", query.chatRoomId);
             }
 

@@ -5,6 +5,7 @@
     import ChatLoader from "../../../Chat/Components/ChatLoader.svelte";
     import ChatError from "../../../Chat/Components/ChatError.svelte";
     import { isChatIdSentToPusher } from "../../../Chat/Stores/ChatStore";
+    import messageSvg from "../../images/applications/icon_message.svg";
     import Input from "../../Input/Input.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
@@ -24,11 +25,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 mr-1"
-            src="resources/icons/icon_focus.png"
-            alt={$LL.mapEditor.properties.matrixProperties.description()}
-        />
+        <img class="w-6 mr-1" src={messageSvg} alt={$LL.mapEditor.properties.matrixProperties.description()} />
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">

@@ -11,7 +11,7 @@
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { showReportScreenStore } from "../../../Stores/ShowReportScreenStore";
-    import { openChatRoom } from "../../Utils";
+    import { openDirectChatRoom } from "../../Utils";
     import { IconForbid, IconMessage, IconLoader, IconDots } from "@wa-icons";
 
     export let user: ChatUser;
@@ -137,7 +137,7 @@
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
                     class="sendMessage wa-dropdown-item flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => openChatRoom(user.chatId)}
+                    on:click|stopPropagation={() => openDirectChatRoom(user.chatId)}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >
