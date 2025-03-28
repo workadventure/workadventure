@@ -166,12 +166,9 @@ test.describe("matrix chat area property @matrix", () => {
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
-    try{
+    await page.addLocatorHandler(page.getByTestId("closeModal"), async () => {
       await page.getByTestId("closeModal").click();
-    }
-    catch{
-      console.log("no modal to close")
-    }
+    });
 
     await page.getByTestId("chatBackward").click();
     await page.getByTestId("name of new room").hover() ;
@@ -224,12 +221,9 @@ test.describe("matrix chat area property @matrix", () => {
     
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
-    try{
+    await page2.addLocatorHandler(page2.getByTestId("closeModal"), async () => {
       await page2.getByTestId("closeModal").click();
-    }
-    catch{
-      console.log("no modal to close")
-    }
+    });
 
     await page2.getByTestId("chatBackward").click();
     await page2.getByTestId("name of new room").hover() ; 
