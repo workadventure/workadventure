@@ -20,7 +20,7 @@
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { IconChevronDown, IconChevronRight, IconArrowLeft } from "../../Icons";
+    import { IconChevronDown, IconArrowLeft } from "../../Icons";
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -367,8 +367,8 @@
     </div>
     <div class="entity-name-container">
         {#if !showDescriptionField}
-            <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
-                <IconChevronRight />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
+            <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}
+                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</button
             >
         {:else}
             <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>

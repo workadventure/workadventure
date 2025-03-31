@@ -109,7 +109,7 @@
                         closeChatUserMenu();
                     }}
                     ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                    {$LL.chat.userList.TalkTo()}</span
+                    {$LL.chat.userList.walkTo()}</span
                 >
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
