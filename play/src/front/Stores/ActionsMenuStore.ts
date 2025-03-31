@@ -1,6 +1,8 @@
 import { writable } from "svelte/store";
+import { v4 } from "uuid";
 
 export type ActionsMenuAction = {
+    uuid?: string;
     actionName: string;
     callback: () => void;
     protected?: boolean;
@@ -39,7 +41,8 @@ function createActionsMenuStore() {
         },
         addAction: (action: ActionsMenuAction) => {
             update((data) => {
-                data?.actions.push(action);
+                const dataWithUuid = { ...action, uuid: action.uuid ?? v4() };
+                data?.actions.push(dataWithUuid);
                 return data;
             });
         },
