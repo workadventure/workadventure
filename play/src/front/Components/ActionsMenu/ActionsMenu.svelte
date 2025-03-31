@@ -7,6 +7,7 @@
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import LL from "../../../i18n/i18n-svelte";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -38,7 +39,6 @@
                     return 0;
                 }
             });
-            console.log(sortedActions);
         }
     });
 
@@ -111,6 +111,15 @@
                         </span>
                     </button>
                 {/each}
+                {#if !actionsMenuData.menuName}
+                    <button
+                        type="button"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full"
+                        on:click|preventDefault|stopPropagation={closeActionsMenu}
+                    >
+                        {$LL.actionbar.close()}
+                    </button>
+                {/if}
             </div>
         {/if}
     </div>
