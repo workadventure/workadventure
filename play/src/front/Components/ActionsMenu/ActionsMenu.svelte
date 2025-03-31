@@ -96,12 +96,12 @@
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
             >
-                {#each sortedActions ?? [] as action (action.actionName)}
+                {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
                         class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
                         class:mx-2={buttonsLayout === "column"}
-                        on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                        on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
                             action.callback();
                         }}
