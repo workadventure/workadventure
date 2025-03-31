@@ -81,7 +81,6 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
-      
     }
     // .input-switch {
     //     position: relative;
