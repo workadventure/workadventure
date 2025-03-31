@@ -393,7 +393,7 @@
         label={$LL.mapEditor.entityEditor.objectSearchable()}
         id="searchable"
         bind:value={entitySearchable}
-        on:change={onUpdateSearchable}
+        onChange={onUpdateSearchable}
     />
 
     <div class="properties-container">
