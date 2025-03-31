@@ -81,8 +81,13 @@
             </div>
         {/if}
 
-        <div class="flex flex-row items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
-            {#if sortedActions}
+        {#if sortedActions}
+            <div
+                class="flex items-center bg-contrast"
+                class:margin-close={!actionsMenuData.menuName}
+                class:flex-col={sortedActions.length > 2}
+                class:flex-row={sortedActions.length <= 2}
+            >
                 {#each sortedActions ?? [] as action (action.actionName)}
                     <button
                         type="button"
@@ -105,8 +110,8 @@
                         </span>
                     </button>
                 {/each}
-            {/if}
-        </div>
+            </div>
+        {/if}
     </div>
 {/if}
 
