@@ -59,7 +59,7 @@ class EntityEditor {
   }
 
   async setEntityDescription(page: Page, Description: string) {
-    await page.getByText("+ Add description field").click();
+    await page.getByText("Add description field").click();
     await page.getByPlaceholder("My object is a...").click();
     await page.getByPlaceholder("My object is a...").fill(Description);
     await page.getByPlaceholder("My object is a...").press("Enter");
