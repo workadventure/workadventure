@@ -2,7 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     import { get, Unsubscriber, writable } from "svelte/store";
     import { z } from "zod";
-    import { Streamable, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { Streamable, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
@@ -20,7 +20,7 @@
     const pipWindowStore = writable<Window | undefined>(undefined);
     const highlightedStreamable = writable<Streamable | undefined>(undefined);
 
-    let streamableCollectionStoreSubscriber: Unsubscriber | undefined;
+    let streamablePictureInPictureStoreSubscriber: Unsubscriber | undefined;
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
     let pipWindowStoreSubscriber: Unsubscriber | undefined;
     let unsubscribeLocalStreamStore: Unsubscriber | undefined;
@@ -95,7 +95,7 @@
             }, 1000);
 
             // start the subscriber to the streamable collection
-            streamableCollectionStoreSubscriber = streamableCollectionStore.subscribe((value) => {
+            streamablePictureInPictureStoreSubscriber = streamablePictureInPictureStore.subscribe((value) => {
                 if (value.size == 0) {
                     destroyPictureInPictureComponent();
                     return;
@@ -103,9 +103,6 @@
                 // for each streamable in the collection, we will update ratio of the component for the video element
                 for (const streamable of value.values()) {
                     try {
-                        if (streamable.uniqueId === "localScreenSharingStream") {
-                            continue;
-                        }
                         streamablesCollectionStoreSubscriber.push(
                             (streamable as VideoPeer).streamStore.subscribe((media) => {
                                 const divMailElement = $pipWindowStore?.document.getElementById(
@@ -143,7 +140,7 @@
     }
 
     function destroyPictureInPictureComponent() {
-        if (streamableCollectionStoreSubscriber) streamableCollectionStoreSubscriber();
+        if (streamablePictureInPictureStoreSubscriber) streamablePictureInPictureStoreSubscriber();
         if (activePictureInPictureSubscriber) activePictureInPictureSubscriber();
         if (unsubscribeLocalStreamStore) unsubscribeLocalStreamStore();
 
@@ -189,7 +186,7 @@
 
         if ($pipWindowStore != undefined) return;
         // We active the picture in picture mode only if we have a streamable in the collection
-        if ($streamableCollectionStore.size == 0) return;
+        if ($streamablePictureInPictureStore.size == 0) return;
 
         // request permission to use the picture in picture mode
         // TODO: Picture in Picture element is not requested if transitient user acvtivation is not activated
@@ -202,7 +199,7 @@
 
         const options = {
             preferInitialWindowPlacement: true,
-            height: `${$streamableCollectionStore.size * 300}`,
+            height: `${$streamablePictureInPictureStore.size * 300}`,
             width: "400",
         };
 
@@ -241,9 +238,10 @@
                 <div
                     id="mozaic_highlighted-wrapper"
                     class="relative w-[98%] h-auto justify-center items-center grid content-center grid-cols-1 sm:grid-cols-2 md:w-grid-cols-3 xl:w-grid-cols-4 gap-3"
-                    class:!grid-cols-1={$streamableCollectionStore.size === 1 || $highlightedStreamable != undefined}
+                    class:!grid-cols-1={$streamablePictureInPictureStore.size === 1 ||
+                        $highlightedStreamable != undefined}
                 >
-                    {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                    {#each [...$streamablePictureInPictureStore] as [uuid, streamable] (uuid)}
                         {#if $highlightedStreamable == undefined || $highlightedStreamable.uniqueId == streamable.uniqueId}
                             <StreamableWrapperWidget {streamable} on:click={hanglerClickVideo} />
                         {/if}
@@ -253,10 +251,12 @@
             <div
                 id="mycamera_nohighlighted-wrapper"
                 class="absolute h-auto justify-center items-center right-[5%] bottom-[20%] flex flex-row gap-3"
-                style={`width: ${$highlightedStreamable != undefined ? $streamableCollectionStore.size * 20 : 20}%;`}
+                style={`width: ${
+                    $highlightedStreamable != undefined ? $streamablePictureInPictureStore.size * 20 : 20
+                }%;`}
             >
                 {#if $highlightedStreamable != undefined}
-                    {#each [...$streamableCollectionStore] as [uuid, streamable] (uuid)}
+                    {#each [...$streamablePictureInPictureStore] as [uuid, streamable] (uuid)}
                         {#if $highlightedStreamable.uniqueId != streamable.uniqueId}
                             <StreamableWrapperWidget {streamable} isMinified={true} on:click={hanglerClickVideo} />
                         {/if}
