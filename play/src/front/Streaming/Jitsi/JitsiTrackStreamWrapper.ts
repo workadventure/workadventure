@@ -29,11 +29,17 @@ export class JitsiTrackStreamWrapper implements Streamable {
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
     public flipX = false;
     public muteAudio = false;
+    public readonly displayMode: "fit" | "cover";
 
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
         public readonly target: "video/audio" | "desktop"
     ) {
+        if (target === "video/audio") {
+            this.displayMode = "cover";
+        } else {
+            this.displayMode = "fit";
+        }
         //this.uniqueId = `${target}-${jitsiTrackWrapper.uniqueId}`;
         this.getExtendedSpaceUser()
             .then((spaceUser) => {

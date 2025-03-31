@@ -68,6 +68,9 @@ export interface Streamable {
     // This does not prevent the volume bar from being displayed.
     // We use this for local camera feedback.
     readonly muteAudio: boolean;
+    // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
+    // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
+    readonly displayMode: "fit" | "cover";
 }
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -126,6 +129,7 @@ const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
         pictureStore: currentPlayerWokaStore,
         flipX: true,
         muteAudio: true,
+        displayMode: "cover" as const,
     };
 });
 
@@ -219,6 +223,41 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
+
+// Store to track if we are in a conversation with someone else
+export const isInRemoteConversation = derived(
+    [broadcastTracksStore, screenSharingStreamStore, peerStore, scriptingVideoStore, silentStore],
+    ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $scriptingVideoStore, $silentStore]) => {
+        // If we are silent, we are not in a conversation
+        if ($silentStore) {
+            return false;
+        }
+
+        // Check if we have any peers
+        if ($peerStore.size > 0) {
+            return true;
+        }
+
+        // Check if we have any broadcast tracks (excluding local ones)
+        for (const trackWrapper of $broadcastTracksStore.values()) {
+            if (trackWrapper instanceof JitsiTrackWrapper && !trackWrapper.isLocal) {
+                return true;
+            }
+        }
+
+        // Check if we have any screen sharing streams
+        if ($screenSharingStreamStore.size > 0) {
+            return true;
+        }
+
+        // Check if we have any scripting videos
+        if ($scriptingVideoStore.size > 0) {
+            return true;
+        }
+
+        return false;
+    }
+);
 
 // No need to unsubscribe, the store is global
 // eslint-disable-next-line svelte/no-ignored-unsubscribe

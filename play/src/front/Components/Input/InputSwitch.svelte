@@ -7,7 +7,7 @@
     export let labelPosition: "top" | "right" = "right";
     export let variant: "white" | "black" = "black";
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
 
 <div class="value-switch">

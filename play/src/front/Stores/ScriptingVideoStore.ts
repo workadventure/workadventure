@@ -22,6 +22,8 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         pictureStore: writable(config.avatar),
         flipX: false,
         muteAudio: false,
+        // FIXME: move this to fit after our tests
+        displayMode: "cover",
     };
 }
 

@@ -6,13 +6,13 @@
     export let value = min;
     export let max = 100;
     export let step = 0;
-    export let onChange = (v: number) => {};
+    export let onChange: (v: number) => void = () => {};
     //secondary = bleu   light = noir sinon par défaut la ligne est blanche
     export let variant: "secondary" | "light" | "" = "";
     export let buttonShape: "square" | "" = "";
     export let unit = "%";
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
 
 {#if label}

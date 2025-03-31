@@ -25,6 +25,8 @@
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
+    import { chatVisibilityStore } from "../Stores/ChatStore";
+    import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -46,7 +48,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
-    import MainModal from "./Modal/MainModal.svelte";
     import AudioPlayer from "./AudioManager/AudioPlayer.svelte";
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
@@ -93,6 +94,8 @@
 
     document.addEventListener("focusin", handleFocusInEvent);
     document.addEventListener("focusout", handleFocusOutEvent);
+
+    $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
 </script>
 
 <!-- Components ordered by z-index -->
@@ -101,6 +104,7 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
+    style="padding-left: {marginLeft}px;"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
@@ -216,8 +220,6 @@
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
                 <ExternalComponents zone="centeredPopup" />
             </div>
-
-            <MainModal />
         </section>
         <div class="">
             <!--<ActionBar />-->
@@ -253,15 +255,22 @@
         z-index: 1000;
         .popupwrapper {
             &:not(:first-child) {
-                @apply absolute w-full h-full overflow-hidden rounded-lg transition-all duration-300;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                border-radius: 0.5rem;
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
             }
             &:first-child {
-                @apply relative;
+                position: relative;
                 z-index: 505;
             }
             &:nth-child(n + 5) {
                 /* Hide popups after 4 popups */
-                @apply hidden;
+                display: none;
             }
             // For each popups but not first
             @for $i from 1 through 4 {

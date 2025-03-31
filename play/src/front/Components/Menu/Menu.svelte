@@ -1,7 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { ComponentType, onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
     import type { MenuItem } from "../../Stores/MenuStore";
@@ -26,7 +26,7 @@
     import ChatSubMenu from "./ChatSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
-    let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
+    let activeComponent: ComponentType = ProfileSubMenu;
     let props: { url: string; allowApi: boolean; allow: string | undefined };
     let unsubscriberSubMenuStore: Unsubscriber;
     let unsubscriberActiveSubMenuStore: Unsubscriber;

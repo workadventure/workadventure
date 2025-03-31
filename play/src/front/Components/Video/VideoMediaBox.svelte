@@ -27,6 +27,8 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
+    // If true, and if there is not video, the height of the video box will be 11rem
+    export let miniMode = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -79,7 +81,8 @@
 
     async function toggleUserMenu() {
         showUserSubMenu = !showUserSubMenu;
-        if (showUserSubMenu) {
+        const spaceUser = await extendedSpaceUserPromise;
+        if (showUserSubMenu && spaceUser) {
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
                 // See https://github.com/storybookjs/storybook/issues/21884
@@ -87,7 +90,7 @@
                 ActionMediaBox,
                 {
                     embedScreen,
-                    spaceUser: await extendedSpaceUserPromise,
+                    spaceUser,
                     videoEnabled,
                     onClose: () => {
                         showUserSubMenu = false;
@@ -112,13 +115,15 @@
     });
 </script>
 
-<div class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox">
+<div
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
+>
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
-        class:h-full={videoEnabled}
-        class:h-11={!videoEnabled}
+        class:h-full={videoEnabled || !miniMode}
+        class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
@@ -146,6 +151,7 @@
             muted={peer.muteAudio}
             {videoUrl}
             {videoConfig}
+            cover={peer.displayMode === "cover"}
         >
             <UserName
                 name={$name}
@@ -215,11 +221,7 @@
             </div>
 
             {#if $statusStore === "connected" && $hasAudioStore}
-                <div
-                    class="z-[251] absolute aspect-ratio p-2 right-1"
-                    class:top-1={videoEnabled}
-                    class:top-0={!videoEnabled}
-                >
+                <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                     {#if !$isMutedStore}
                         <SoundMeterWidget
                             volume={$volumeStore}
@@ -237,7 +239,7 @@
     <button
         class={isHighlighted || !videoEnabled
             ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
         on:click={() => analyticsClient.pinMeetingAction()}
     >
