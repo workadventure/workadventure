@@ -13,7 +13,9 @@ class AreaEditor {
     await page.mouse.move(1, 1);
     // If the area is towards the top of the screen, we wait for the camera to be invisible
     if (bottomRight.y < 5 * 32 * 1.5 || topLeft.y < 5 * 32 * 1.5) {
-      await expect(page.getByText("You")).toBeHidden();
+      await expect(page.getByText("You")).toBeHidden({
+        timeout: 20_000,
+      });
     }
     await page.mouse.move(topLeft.x, topLeft.y);
     await page.mouse.down();
