@@ -120,7 +120,7 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
      * Listens to messages typed in the chat history.
      * {@link https://docs.workadventu.re/map-building/api-chat.md#listening-to-messages-from-the-chat | Website documentation}
      *
-     * @param {function(message: string, event: { authorId: number|undefined, user: RemotePlayerInterface|undefined }): void} callback Function that will be called when a message is received. It contains the message typed by the user
+     * @param {function(message: string, event: { authorId: number|undefined, author: RemotePlayerInterface|undefined }): void} callback Function that will be called when a message is received. It contains the message typed by the user
      * @param {OnChatMessageOptions} options Options to decide if we listen only to messages from the local user (default) or from all users in the bubble.
      * @return {Subscription} Subscription to the chat message. Call ".unsubscribe()" to stop listening to the chat.
      */
@@ -140,9 +140,22 @@ export class WorkadventureChatCommands<PublicState extends { [key: string]: unkn
             ) {
                 return;
             }
+            // The senderId is the spaceUserId of the user, i.e. roomID_userID
+            // Let's extract the user ID and room ID from it
+            const senderId = event.senderId;
+            let roomId: string | undefined;
+            let userId: number | undefined;
+            if (senderId !== undefined) {
+                const lastUnderscoreIndex = senderId.lastIndexOf("_");
+                if (lastUnderscoreIndex !== undefined && lastUnderscoreIndex !== -1) {
+                    roomId = senderId.substring(0, lastUnderscoreIndex);
+                    userId = Number(senderId.substring(lastUnderscoreIndex + 1));
+                }
+            }
+
             callback(event.message, {
-                authorId: event.senderId,
-                author: event.senderId ? players.get(event.senderId) : undefined,
+                authorId: userId,
+                author: userId && roomId === WA.room.id ? players.get(userId) : undefined,
             });
         });
     }

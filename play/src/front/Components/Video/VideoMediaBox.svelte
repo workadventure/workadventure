@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Readable } from "svelte/store";
-    import { createPopperActions } from "svelte-popperjs";
+    import { onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -16,6 +16,8 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -25,9 +27,9 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
-    export let flipX = false;
-    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
-    export let muted = false;
+
+    // If true, and if there is not video, the height of the video box will be 11rem
+    export let miniMode = false;
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -36,6 +38,14 @@
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
     if (peer.media.type === "mediaStore") {
         streamStore = peer.media.streamStore;
+    }
+
+    // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
+    let videoUrl: string | undefined = undefined;
+    let videoConfig: VideoConfig | undefined = undefined;
+    if (peer.media.type === "scripting") {
+        videoUrl = peer.media.url;
+        videoConfig = peer.media.config;
     }
 
     let volumeStore = peer.volumeStore;
@@ -66,30 +76,55 @@
         highlightFullScreen.set(false);
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top", "right", "left"],
+    let userMenuButton: HTMLDivElement;
+
+    let closeFloatingUi: (() => void) | undefined;
+
+    async function toggleUserMenu() {
+        showUserSubMenu = !showUserSubMenu;
+        const spaceUser = await extendedSpaceUserPromise;
+        if (showUserSubMenu && spaceUser) {
+            closeFloatingUi = showFloatingUi(
+                userMenuButton,
+                // See https://github.com/storybookjs/storybook/issues/21884
+                // @ts-ignore
+                ActionMediaBox,
+                {
+                    embedScreen,
+                    spaceUser,
+                    videoEnabled,
+                    onClose: () => {
+                        showUserSubMenu = false;
+                        closeFloatingUi?.();
+                    },
                 },
-            },
-        ],
-    };
+                {
+                    placement: "bottom",
+                },
+                8,
+                false
+            );
+            // on:close={() => (showUserSubMenu = false)}
+        } else {
+            closeFloatingUi?.();
+            closeFloatingUi = undefined;
+        }
+    }
+
+    onDestroy(() => {
+        closeFloatingUi?.();
+    });
 </script>
 
-<div class="group/screenshare flex justify-center mx-auto h-full w-full">
+<div
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
+>
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
             (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
-        class:h-full={videoEnabled}
-        class:h-11={!videoEnabled}
+        class:h-full={videoEnabled || !miniMode}
+        class:h-11={!videoEnabled && miniMode}
         class:flex-col={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
@@ -113,29 +148,28 @@
             on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
             verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
             isTalking={showVoiceIndicator}
-            {flipX}
-            {muted}
+            flipX={peer.flipX}
+            muted={peer.muteAudio}
+            {videoUrl}
+            {videoConfig}
+            cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
+            withBackground={!isHighlighted}
         >
             <UserName
                 name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
-                position={videoEnabled ? "absolute bottom-4 left-4" : "absolute bottom-0.5 left-3"}
+                isCameraDisabled={!videoEnabled && !miniMode}
+                position={videoEnabled
+                    ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                    : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
             >
-                <div use:popperRef class="self-center">
-                    <UpDownChevron enabled={showUserSubMenu} on:click={() => (showUserSubMenu = !showUserSubMenu)} />
-                </div>
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
-                    {#if spaceUser && showUserSubMenu}
-                        <div use:popperContent={extraOpts}>
-                            <ActionMediaBox
-                                {embedScreen}
-                                {spaceUser}
-                                {videoEnabled}
-                                on:close={() => (showUserSubMenu = false)}
-                            />
+                    {#if spaceUser}
+                        <div class="flex items-center justify-center" bind:this={userMenuButton}>
+                            <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                         </div>
                     {/if}
                 {:catch error}
@@ -189,11 +223,7 @@
                 </div>
             </div>
             {#if $statusStore === "connected" && $hasAudioStore}
-                <div
-                    class="z-[251] absolute aspect-ratio p-2 right-1"
-                    class:top-1={videoEnabled}
-                    class:top-0={!videoEnabled}
-                >
+                <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                     {#if !$isMutedStore}
                         <SoundMeterWidget
                             volume={$volumeStore}
@@ -211,7 +241,7 @@
     <button
         class={isHighlighted || !videoEnabled
             ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
         on:click={() => analyticsClient.pinMeetingAction()}
     >

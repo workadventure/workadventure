@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import {
         CardsException,
@@ -38,6 +38,7 @@
     import Input from "../../Input/Input.svelte";
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
+    import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -497,7 +498,7 @@
     }
 
     function onClickInputHandler() {
-        // If klaxxon application, open the activity picker
+        // If Klaxoon application, open the activity picker
         if (property.application !== "klaxoon") return;
         openKlaxoonActivityPicker();
     }
@@ -511,21 +512,25 @@
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
-            property.link = KlaxoonService.getKlaxoonEmbedUrl(
-                new URL(payload.url),
-                connectionManager.klaxoonToolClientId
-            );
-            property.poster = payload.imageUrl ?? undefined;
-            property.buttonLabel = payload.title ?? undefined;
-            // check if the link is embeddable
-            checkWebsiteProperty().catch((e) => {
-                console.error("Error checking embeddable website", e);
-            });
-        });
+        windowKlaxoonActivityPicker = KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(payload.url),
+                    connectionManager.klaxoonToolClientId
+                );
+                property.poster = payload.imageUrl ?? undefined;
+                property.buttonLabel = payload.title ?? undefined;
+                // check if the link is embeddable
+                checkWebsiteProperty().catch((e) => {
+                    console.error("Error checking embeddable website", e);
+                });
+            }
+        );
     }
 
     function openPicker() {
+        closePicker();
         // if klaxoon, open Activity Picker
         if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
             openKlaxoonActivityPicker();
@@ -594,6 +599,11 @@
         }
     }
 
+    let windowKlaxoonActivityPicker: Window | null = null;
+    function closePicker() {
+        if (windowKlaxoonActivityPicker != undefined) windowKlaxoonActivityPicker.close();
+    }
+
     function openApplicationWithoutPicker() {
         if (property.application === "cards") {
             window.open("https://app.cards-microlearning.com/", "_blank");
@@ -615,6 +625,10 @@
         property.policy = policy?.reduce((policyStr, policy) => `${policyStr}${policy.value};`, "");
         onValueChange();
     }
+
+    onDestroy(() => {
+        closePicker();
+    });
 </script>
 
 <PropertyEditorBase
@@ -709,7 +723,6 @@
             <Select
                 id="trigger"
                 label={$LL.mapEditor.properties.linkProperties.trigger()}
-                type="select"
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >
@@ -732,17 +745,18 @@
                     on:keypress={onKeyPressed}
                     on:change={onValueChange}
                     on:blur={() => checkWebsiteProperty()}
-                    on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 /> -->
 
                 <Input
                     id="tabLink"
+                    type="url"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                     label={$LL.mapEditor.properties.linkProperties.linkLabel()}
-                    type="url"
+                    onKeyPress={onKeyPressed}
                     bind:value={property.link}
                     onChange={onValueChange}
+                    on:blur={() => checkWebsiteProperty()}
                     onClick={onClickInputHandler}
                     disabled={embeddableLoading}
                     bind:isValid={isLinkValid}
@@ -815,13 +829,13 @@
         />
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
-            {#if (isArea && triggerOptionActivated) || !isArea}
+            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
+                    type="text"
                     placeholder={$LL.trigger.object()}
-                    label={$LL.mapEditor.properties.linkProperties.linkLabel()}
-                    type="url"
-                    bind:value={property.link}
+                    label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                    bind:value={property.triggerMessage}
                     onChange={onValueChange}
                 />
             {/if}
@@ -835,7 +849,7 @@
             />
 
             {#if property.forceNewTab == true}
-                <div class="mb-3">
+                <div class="mb-3 ">
                     <span class="err text-warning-900 text-xs italic">
                         <IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
@@ -855,7 +869,7 @@
                 </div>
             {/if}
             {#if !property.newTab}
-                <div class="">
+                <div class="mt-3 mb-3">
                     <!-- <label for="websiteWidth"
                         >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
                     > -->
@@ -872,14 +886,14 @@
                     />
                 </div>
 
-                <InputSwitch
+                <InputCheckbox
                     id="closable"
                     label={$LL.mapEditor.properties.linkProperties.closable()}
                     bind:value={property.closable}
                     onChange={onValueChange}
                 />
 
-                <InputSwitch
+                <InputCheckbox
                     id="allowAPI"
                     label={$LL.mapEditor.properties.linkProperties.allowAPI()}
                     bind:value={property.allowAPI}
@@ -908,16 +922,6 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
 
         * {
             margin-bottom: 0;

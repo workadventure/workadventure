@@ -35,6 +35,7 @@
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -396,7 +397,7 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="overflow-auto space-y-3">
+    <div class="overflow-x-hidden space-y-3">
         <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
@@ -606,19 +607,21 @@
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <button class="pl-0 text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
-                <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-                <textarea
+
+                <TextArea
                     id="objectDescription"
-                    placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                    label={$LL.mapEditor.areaEditor.areaDescription()}
+                    placeHolder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                     bind:value={areaDescription}
-                    on:change={onUpdateAreaDescription}
+                    onChange={onUpdateAreaDescription}
+                    onKeyPress={() => {}}
                 />
             {/if}
         </div>
@@ -633,7 +636,7 @@
 
         <div class="properties-container">
             {#each properties as property (property.id)}
-                <div class="property-box">
+                <div class="property-box mt-[3rem]">
                     {#if property.type === "focusable"}
                         <FocusablePropertyEditor
                             {property}
@@ -765,10 +768,6 @@
         overflow-x: hidden;
     }
 
-    .property-box {
-        margin-top: 5px;
-    }
-
     .properties-container::-webkit-scrollbar {
         display: none;
     }
@@ -779,16 +778,6 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
 
         * {
             margin-bottom: 0;

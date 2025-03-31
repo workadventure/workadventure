@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import {expect, Locator, Page} from "@playwright/test";
 
 class AreaEditor {
   async selectMegaphoneItemInCMR(page: Page) {
@@ -10,6 +10,13 @@ class AreaEditor {
     topLeft: { x: number; y: number },
     bottomRight: { x: number; y: number }
   ) {
+    await page.mouse.move(1, 1);
+    // If the area is towards the top of the screen, we wait for the camera to be invisible
+    if (bottomRight.y < 5 * 32 * 1.5 || topLeft.y < 5 * 32 * 1.5) {
+      await expect(page.getByText("You")).toBeHidden({
+        timeout: 20_000,
+      });
+    }
     await page.mouse.move(topLeft.x, topLeft.y);
     await page.mouse.down();
     await page.mouse.move(bottomRight.x, bottomRight.y);
@@ -100,7 +107,8 @@ class AreaEditor {
   async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
     //TODO : find a better way to wait for the room to be created
     await page.waitForTimeout(4000);
-    await page.getByTestId("shouldOpenAutomaticallyCheckbox").setChecked(shouldOpenAutomatically,{timeout : 20_000});
+    await page.getByTestId("shouldOpenAutomaticallyCheckbox").click();
+
     if(roomName){
       await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
       await page.getByPlaceholder("My room").fill(roomName,{timeout : 20_000});

@@ -1,7 +1,6 @@
 <script lang="ts">
     /* eslint no-undef: 0 */
     import { onDestroy, onMount } from "svelte";
-    import { fly } from "svelte/transition";
     import * as Sentry from "@sentry/svelte";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import AwaitLoaderPlugin from "phaser3-rex-plugins/plugins/awaitloader-plugin.js";
@@ -22,15 +21,7 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
-    import {
-        canvasSize,
-        coWebsiteManager,
-        coWebsites,
-        coWebsitesSize,
-        fullScreenCowebsite,
-    } from "../Stores/CoWebsiteStore";
-    import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
-    import { screenOrientationStore } from "../Stores/ScreenOrientationStore";
+    import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -113,17 +104,6 @@
 
         const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
         const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
-        console.log("SIZE INFO :");
-        console.log("width");
-        console.log(width);
-        console.log("height");
-        console.log(height);
-        console.log("gameDiv");
-        console.log(gameDiv);
-        console.log("gameSize.width");
-        console.log(gameSize.width);
-        console.log("gameSize.height");
-        console.log(gameSize.height);
 
         const config: Phaser.Types.Core.GameConfig = {
             type: mode,
@@ -228,7 +208,6 @@
 
     let canvasSizeUnsubscriber: Unsubscriber;
     onMount(() => {
-        document.addEventListener("mousemove", detectInCameraArea);
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
             if (width < 1 || height < 1) {
                 return;
@@ -239,30 +218,12 @@
     });
 
     onDestroy(() => {
-        document.removeEventListener("mousemove", detectInCameraArea);
         canvasSizeUnsubscriber?.();
     });
-
-    let lastInTriggerArea = false;
-    // We are tracking if the mouse cursor gets near the camera trigger area
-    const detectInCameraArea = (event: MouseEvent) => {
-        // Note: in phone mode, the camera is at the bottom. But we don't need to track that because in phone mode,
-        // you cannot "hover" over the area where the camera is.
-        const rect = gameDiv.getBoundingClientRect();
-
-        const inTopCenter =
-            event.x - rect.left > rect.width / 4 &&
-            event.x + rect.left < (rect.width * 3) / 4 &&
-            event.y - rect.top < rect.height / 4;
-        if (inTopCenter !== lastInTriggerArea) {
-            lastInTriggerArea = inTopCenter;
-            mouseInCameraTriggerArea.set(inTopCenter);
-        }
-    };
 </script>
 
 <div
-    class="h-screen w-screen flex landscape:flex-row portrait:flex-col-reverse"
+    class="h-dvh w-dvw flex landscape:flex-row portrait:flex-col-reverse"
     id="main-container"
     bind:this={gameContainer}
 >
@@ -270,19 +231,18 @@
         <GameOverlay {game} />
     </div>
     {#if $coWebsites.length > 0}
-        <div
-            class="flex-1"
-            transition:fly={{
-                duration: 200,
-                x:
-                    $screenOrientationStore === "portrait"
-                        ? 0
-                        : document.documentElement.dir === "rtl"
-                        ? -$coWebsitesSize.width
-                        : $coWebsitesSize.width,
-                y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,
-            }}
-        >
+        <div class="flex-1">
+            <!-- Transitions are breaking the onDestroy lifecycle of cowebsites -->
+            <!--            transition:fly={{-->
+            <!--            duration: 200,-->
+            <!--            x:-->
+            <!--                $screenOrientationStore === "portrait"-->
+            <!--                    ? 0-->
+            <!--                    : document.documentElement.dir === "rtl"-->
+            <!--                        ? -$coWebsitesSize.width-->
+            <!--                        : $coWebsitesSize.width,-->
+            <!--            y: $screenOrientationStore === "portrait" ? -$coWebsitesSize.height : 0,-->
+            <!--        }}-->
             <CoWebsitesContainer />
         </div>
     {/if}

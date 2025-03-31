@@ -45,7 +45,7 @@ export class ScriptingInputAudioStreamManager {
                         iframeListener.postMessage(
                             {
                                 type: "appendPCMData",
-                                data: { data },
+                                data: { data: data as Float32Array<ArrayBuffer> },
                             },
                             undefined /*, [data.buffer]*/
                         );

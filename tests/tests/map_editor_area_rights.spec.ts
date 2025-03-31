@@ -273,6 +273,8 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await Menu.closeMapEditor(page);
     await oidcLogout(page);
+    await page.close();
+    await page.context().close();
 
     // Second browser with member user trying to read the object
     const page2 = await getPage(browser, 'Member1', Map.url("empty"));
@@ -303,8 +305,6 @@ test.describe("Map editor area with rights @oidc", () => {
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
-    await page.close();
-    await page.context().close();
   });
 
   test("Area with restricted write access : Trying to remove an object", async ({ browser, request }) => {
@@ -338,7 +338,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
@@ -384,7 +384,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
@@ -431,7 +431,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
     // Note: we need to use the "close button" in the tools bar because the other close button is minified.
-    await page2.getByRole('button', { name: 'open tool CloseMapEditor' }).click();
+    await page2.getByTestId('closeMapEditorButton').click();
     //await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,

@@ -243,7 +243,7 @@ export class RoomConnection implements RoomConnection {
      */
     public constructor(
         token: string | null,
-        roomUrl: string,
+        private roomUrl: string,
         name: string,
         characterTextureIds: string[],
         position: PositionInterface,
@@ -257,7 +257,7 @@ export class RoomConnection implements RoomConnection {
         if (!url.endsWith("/")) {
             url += "/";
         }
-        url += "room";
+        url += "ws/room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
         if (token) {
             url += "&token=" + encodeURIComponent(token);
@@ -839,6 +839,10 @@ export class RoomConnection implements RoomConnection {
     public getUserId(): number {
         if (this.userId === null) throw new Error("UserId cannot be null!");
         return this.userId;
+    }
+
+    public getSpaceUserId(): string {
+        return this.roomUrl + "_" + this.getUserId();
     }
 
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
@@ -1433,7 +1437,7 @@ export class RoomConnection implements RoomConnection {
                 updateSpaceUserMessage: {
                     spaceName,
                     user: SpaceUser.fromPartial({
-                        id: userId,
+                        spaceUserId: this.getSpaceUserId(),
                         ...spaceUser,
                     }),
                     updateMask: generateFieldMask(spaceUser),
@@ -1635,7 +1639,7 @@ export class RoomConnection implements RoomConnection {
     public emitPrivateSpaceEvent(
         spaceName: string,
         spaceEvent: NonNullable<PrivateSpaceEvent["event"]>,
-        receiverUserId: number
+        receiverUserId: string
     ): void {
         this.send({
             message: {

@@ -10,7 +10,8 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
-import { BasicNotification, notificationManager } from "../Notification";
+import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
+import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
 //import { mediaManager } from "./MediaManager";
@@ -18,6 +19,7 @@ import { CommunicationType } from "../Livekit/LivekitConnection";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
+import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -448,7 +450,7 @@ export class SimplePeer {
                 console.error(
                     'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
                 );
-                console.info("Attempt to create new peer connection");
+                customWebRTCLogger.info("Attempt to create new peer connection");
                 if (stream) {
                     await this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }

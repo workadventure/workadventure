@@ -30,7 +30,14 @@ test.describe("Iframe API", () => {
         await page.close();
         await page.context().close();
     });
-    test("test disable screen sharing", async ({ browser }) => {
+    test("test disable screen sharing", async ({ browser, browserName }) => {
+        if (browserName === "webkit") {
+            // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
+            // The chat masks the buttons we are interested in.
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+        }
+
         const page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );

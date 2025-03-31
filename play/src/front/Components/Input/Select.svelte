@@ -2,60 +2,59 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import InfoButton from "./InfoButton.svelte";
 
-    export let label: string;
+    export let label: string | undefined = undefined;
     export let options: { value: string | undefined; label: string }[] = [];
     export let id: string | undefined = undefined;
-    export let value: string | null | undefined;
+    export let value: string | boolean | null | undefined;
     export let onChange = () => {};
     export let onClick = () => {};
     export let disabled = false;
     export let placeholder = "";
-    export let type: "text" | "select" = "text";
     export let variant: "light" | "" = "";
     export let optional = false;
 
     const SLOTS = $$slots;
 
-    let uniqueId = id || `input-${Math.random().toString(36).substr(2, 9)} `;
+    let uniqueId = id || `input-${Math.random().toString(36).substring(2, 9)} `;
 </script>
 
 <div class="flex flex--col">
-    {#if type === "select"}
-        <div class="relative flex-grow">
-            <div class="input-label">
+    <div class="relative flex-grow">
+        <div class="input-label">
+            {#if label}
                 <label for={uniqueId} class="grow font-light">{label}</label>
+            {/if}
 
-                {#if SLOTS.info}
-                    <InfoButton>
-                        <slot name="info" />
-                    </InfoButton>
-                {/if}
+            {#if SLOTS.info}
+                <InfoButton>
+                    <slot name="info" />
+                </InfoButton>
+            {/if}
 
-                {#if optional}
-                    <div class="text-xs opacity-50 ">
-                        {$LL.form.optional()}
-                    </div>
-                {/if}
-            </div>
-
-            <select
-                id={uniqueId}
-                class="grow w-full input-select font-light"
-                class:input-select-light={variant === "light"}
-                bind:value
-                on:change={onChange}
-                on:click={onClick}
-                {placeholder}
-                {disabled}
-            >
-                {#each options as { value: optionValue, label: optionLabel } (optionValue)}
-                    <option value={optionValue}>{optionLabel}</option>
-                {/each}
-
-                <slot />
-            </select>
+            {#if optional}
+                <div class="text-xs opacity-50 ">
+                    {$LL.form.optional()}
+                </div>
+            {/if}
         </div>
-    {/if}
+
+        <select
+            id={uniqueId}
+            class="grow w-full input-select font-light pr-10"
+            class:input-select-light={variant === "light"}
+            bind:value
+            on:change={onChange}
+            on:click={onClick}
+            {placeholder}
+            {disabled}
+        >
+            {#each options as { value: optionValue, label: optionLabel } (optionValue)}
+                <option value={optionValue}>{optionLabel}</option>
+            {/each}
+
+            <slot />
+        </select>
+    </div>
 </div>
 
 {#if SLOTS.helper}

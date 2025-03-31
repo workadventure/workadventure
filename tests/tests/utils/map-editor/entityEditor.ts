@@ -77,6 +77,14 @@ class EntityEditor {
     await this.applyEntityModifications(page);
   }
 
+  async uploadTestAssetWithOddSize(page: Page) {
+    await page
+      .getByTestId("uploadCustomAsset")
+      .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFileWithOddSize()}`));
+    await page.getByTestId("floatingObject").check();
+    await this.applyEntityModifications(page);
+  }
+
   async openEditEntityForm(page: Page) {
     await page.getByTestId("editEntity").click();
   }
@@ -107,6 +115,11 @@ class EntityEditor {
   getTestAssetFile(){
     return `${this.getTestAssetName()}.png`;
   }
+
+  getTestAssetFileWithOddSize(){
+    return `${this.getTestAssetName()}OddSize.png`;
+  }
+
   getTestAssetName() {
     return "testAsset";
   }

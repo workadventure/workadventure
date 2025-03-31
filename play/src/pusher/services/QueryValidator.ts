@@ -1,7 +1,7 @@
 import type { z, ZodObject } from "zod";
 import type { ZodRawShape } from "zod/lib/types";
-import type { Request, Response } from "hyper-express";
-import type HyperExpress from "hyper-express";
+import type { Request, Response } from "express";
+import { HttpRequest, HttpResponse, us_socket_context_t } from "uWebSockets.js";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 
 function validateObject<T extends ZodObject<ZodRawShape>>(
@@ -29,19 +29,19 @@ export function validateQuery<T extends ZodObject<ZodRawShape>>(
     res: Response,
     validator: T
 ): z.infer<T> | undefined {
-    return validateObject(req.query_parameters, res, validator);
+    return validateObject(req.query, res, validator);
 }
 
 /**
  * Either validates the POST query and returns the parsed query data (according to the validator passed in parameter)
  * or fills the response with a HTTP 400 message and returns undefined.
  */
-export async function validatePostQuery<T extends ZodObject<ZodRawShape>>(
+export function validatePostQuery<T extends ZodObject<ZodRawShape>>(
     req: Request,
     res: Response,
     validator: T
-): Promise<z.infer<T> | undefined> {
-    return validateObject(await req.json(), res, validator);
+): z.infer<T> | undefined {
+    return validateObject(req.body, res, validator);
 }
 
 /**
@@ -49,9 +49,9 @@ export async function validatePostQuery<T extends ZodObject<ZodRawShape>>(
  * or fills the response with a HTTP 400 message and returns undefined.
  */
 export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
-    req: HyperExpress.compressors.HttpRequest,
-    res: HyperExpress.compressors.HttpResponse,
-    context: HyperExpress.compressors.us_socket_context_t,
+    req: HttpRequest,
+    res: HttpResponse,
+    context: us_socket_context_t,
     validator: T
 ): z.infer<T> | undefined {
     const urlSearchParams = new URLSearchParams(req.getQuery());

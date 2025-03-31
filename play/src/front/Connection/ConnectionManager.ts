@@ -33,8 +33,9 @@ import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
-import { setCurrentLocale } from "../../i18n/locales";
+import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { openChatRoom } from "../Chat/Utils";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -333,6 +334,15 @@ class ConnectionManager {
                             nextScene = "selectCharacterScene";
                         } else if (response.isCompanionTextureValid === false) {
                             nextScene = "selectCompanionScene";
+                        }
+
+                        const chatRoomId = urlManager.getHashParameter("chatRoomId");
+
+                        if (chatRoomId) {
+                            openChatRoom(chatRoomId).catch((err) => {
+                                console.error("Unable to open chat room or establish chat connection", err);
+                                Sentry.captureException(err);
+                            });
                         }
                     }
                 } catch (err) {
@@ -684,8 +694,12 @@ class ConnectionManager {
         return response;
     }
 
-    async saveName(name: string): Promise<void> {
-        if (hasCapability("api/save-name") && this.authToken !== undefined) {
+    async saveName(name: string): Promise<boolean> {
+        if (
+            hasCapability("api/save-name") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-name",
                 {
@@ -698,11 +712,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveTextures(textures: string[]): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveTextures(textures: string[]): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-textures",
                 {
@@ -715,11 +736,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveCompanionTexture(texture: string | null): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveCompanionTexture(texture: string | null): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-companion-texture",
                 {
@@ -732,6 +760,9 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 

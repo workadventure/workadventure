@@ -3,6 +3,9 @@
     import { PlayAudioPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import audioSvg from "../../images/audio-white.svg";
+    import RangeSlider from "../../Input/RangeSlider.svelte";
+    import Input from "../../Input/Input.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: PlayAudioPropertyData;
@@ -78,19 +81,19 @@
     </span>
     <span slot="content">
         <div class="value-input">
-            <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
             <div class="flex">
-                <input
+                <Input
                     id="audioLink"
+                    label={$LL.mapEditor.properties.audioProperties.audioLinkLabel()}
                     type="text"
                     placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
                     bind:value={property.audioLink}
-                    on:change={onValueChange}
+                    onChange={onValueChange}
                 />
                 {#if !playing}
-                    <button on:click={playAudio} class="m-0 pl-1 pr-0 text-xl"> ▶️ </button>
+                    <button on:click={playAudio} class="mt-7 pl-1 pr-0 text-xl"> ▶️ </button>
                 {:else}
-                    <button on:click={stopAudio} class="m-0 pl-1 pr-0 text-xl"> ⏹️ </button>
+                    <button on:click={stopAudio} class="mt-7 pl-1 pr-0 text-xl"> ⏹️ </button>
                 {/if}
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
@@ -98,43 +101,47 @@
         <div class="value-input text-danger-500" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
-        <div class="value-switch">
-            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
-        </div>
+
+        <InputSwitch
+            id="advancedOption"
+            label={$LL.mapEditor.properties.advancedOptions()}
+            bind:value={optionAdvancedActivated}
+        />
+
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if isArea === false}
                 <div class="value-input flex flex-col">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
-                    <input
+                    <Input
+                        label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
                         id="triggerMessage"
                         type="text"
                         placeholder={$LL.trigger.object()}
                         bind:value={property.triggerMessage}
-                        on:change={onValueChange}
+                        onChange={onValueChange}
                     />
                 </div>
             {/if}
             <div class="value-input">
-                <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
-                <input
+                <RangeSlider
+                    label={$LL.mapEditor.properties.audioProperties.volumeLabel()}
+                    unit=""
                     id="volume"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
+                    min={0}
+                    max={1}
+                    step={0.05}
                     bind:value={property.volume}
-                    on:change={onRangeChange}
+                    onChange={onRangeChange}
+                    buttonShape="square"
                 />
             </div>
             {#if !property.hideButtonLabel}
                 <div class="value-input">
-                    <label for="audioButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-                    <input
+                    <Input
+                        label={$LL.mapEditor.entityEditor.buttonLabel()}
                         id="audioButtonLabel"
                         type="text"
                         bind:value={property.buttonLabel}
-                        on:change={onValueChange}
+                        onChange={onValueChange}
                     />
                 </div>
             {/if}
@@ -149,33 +156,6 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
-    }
-    .value-switch {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        align-items: center;
-        height: 2.5em;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-            flex-grow: 1;
-        }
-        input {
-            min-width: 0;
-        }
         * {
             margin-bottom: 0;
         }

@@ -1,7 +1,6 @@
 <script lang="ts">
     import { clickOutside } from "svelte-outside";
     import { AvailabilityStatus } from "@workadventure/messages";
-    import { createPopperActions } from "svelte-popperjs";
     import { setContext, SvelteComponentTyped } from "svelte";
     import { derived, get, Readable } from "svelte/store";
     import { availabilityStatusStore, enableCameraSceneVisibilityStore } from "../../../Stores/MediaStore";
@@ -39,6 +38,8 @@
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import ActionBarButton from "../ActionBarButton.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconLogout } from "@wa-icons";
@@ -81,29 +82,12 @@
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
 
-    const [popperRef, popperContent] = createPopperActions({
-        placement: "bottom-end",
-        //strategy: 'fixed',
-    });
-    const extraOpts = {
-        modifiers: [
-            { name: "offset", options: { offset: [0, 8] } },
-            {
-                name: "popper-arrow",
-                options: {
-                    element: ".popper-arrow",
-                    padding: 12,
-                },
-            },
-
-            {
-                name: "flip",
-                options: {
-                    fallbackPlacements: ["top-end", "top-start", "top"],
-                },
-            },
-        ],
-    };
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
+        {
+            placement: "bottom-end",
+        },
+        8
+    );
 
     let rightActionBarMenuItemsInBurgerMenu: Readable<RightMenuItem<SvelteComponentTyped>[]> = derived(
         rightActionBarMenuItems,
@@ -128,7 +112,7 @@
 <div data-testid="action-user" class="flex items-center transition-all cursor-pointer pointer-events-auto">
     <div
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2"
-        use:popperRef
+        use:floatingUiRef
         on:click|preventDefault={() => {
             openedMenuStore.toggle("profileMenu");
         }}
@@ -181,54 +165,34 @@
     {#if $openedMenuStore === "profileMenu"}
         <!-- before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 -->
         <div
-            class="bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white popper-tooltip"
+            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white"
             data-testid="profile-menu"
-            use:popperContent={extraOpts}
+            use:floatingUiContent
             use:clickOutside={() => {
                 openedMenuStore.close("profileMenu");
             }}
         >
-            <div class="popper-arrow" data-popper-arrow />
+            <div use:arrowAction />
             <div class="p-0 m-0 list-none overflow-y-auto max-h-[calc(100vh-96px)]">
                 <ExternalComponents zone="menuTop" />
                 <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
                 <HeaderMenuItem label={$LL.menu.sub.profile()} />
                 {#if showWokaNameMenuItem()}
-                    <button
-                        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                        on:click={() => openEditNameScene()}
-                    >
-                        <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                            <ProfilIcon />
-                        </div>
-                        <div class="text-left leading-4 flex items-center">
-                            {$LL.actionbar.profil()}
-                        </div>
-                    </button>
+                    <ActionBarButton label={$LL.actionbar.profil()} on:click={() => openEditNameScene()}>
+                        <ProfilIcon />
+                    </ActionBarButton>
                 {/if}
-                <button
-                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                    on:click={() => openEditSkinScene()}
-                >
-                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                        <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
-                    </div>
-                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.woka()}</div>
-                </button>
-                <button
-                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                    on:click={() => openEditCompanionScene()}
-                >
-                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                        <Companion
-                            userId={-1}
-                            placeholderSrc="../static/images/default-companion.png"
-                            width="26px"
-                            height="26px"
-                        />
-                    </div>
-                    <div class="text-left leading-4 flex items-center">{$LL.actionbar.companion()}</div>
-                </button>
+                <ActionBarButton label={$LL.actionbar.woka()} on:click={() => openEditSkinScene()}>
+                    <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
+                </ActionBarButton>
+                <ActionBarButton label={$LL.actionbar.companion()} on:click={() => openEditCompanionScene()}>
+                    <Companion
+                        userId={-1}
+                        placeholderSrc="../static/images/default-companion.png"
+                        width="26px"
+                        height="26px"
+                    />
+                </ActionBarButton>
                 <!--                                <button-->
                 <!--                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
                 <!--                                >-->
@@ -240,36 +204,24 @@
                 <!--                                    <div class="text-left flex items-center">{$LL.actionbar.quest()}</div>-->
                 <!--                                </button>-->
                 <HeaderMenuItem label={$LL.menu.sub.settings()} />
-                <button
-                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                    on:click={openEnableCameraScene}
+                <ActionBarButton label={$LL.actionbar.editCamMic()} on:click={openEnableCameraScene}>
+                    <CamSettingsIcon />
+                </ActionBarButton>
+                <ActionBarButton
+                    label={$LL.actionbar.otherSettings()}
+                    on:click={() => {
+                        showMenuItem(SubMenusInterface.settings);
+                        openedMenuStore.close("profileMenu");
+                    }}
                 >
-                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                        <CamSettingsIcon />
-                    </div>
-                    <div class="text-left leading-4 flex items-center">
-                        {$LL.actionbar.editCamMic()}
-                    </div>
-                </button>
-                <button
-                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
-                    id="settings"
-                    on:click={() => showMenuItem(SubMenusInterface.settings)}
-                    on:click={() => openedMenuStore.close("profileMenu")}
-                >
-                    <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                        <SettingsIcon />
-                    </div>
-                    <div class="text-left leading-4 flex items-center">
-                        {$LL.actionbar.otherSettings()}
-                    </div>
-                </button>
+                    <SettingsIcon />
+                </ActionBarButton>
 
                 <div class="@sm/actions:hidden items-center">
                     <ContextualMenuItems />
                 </div>
 
-                {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button, index (button.id)}
+                {#each $rightActionBarMenuItemsInBurgerMenu ?? [] as button (button.id)}
                     <svelte:component this={button.component} {...button.props} />
                 {/each}
 

@@ -9,6 +9,7 @@
     import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { peerSizeStore } from "../../../Stores/PeerStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let last: boolean | undefined = undefined;
 
@@ -24,6 +25,16 @@
         dispatch("click");
     }
 
+    let chatAvailable = false;
+    gameManager
+        .getChatConnection()
+        .then(() => {
+            chatAvailable = true;
+        })
+        .catch((e: unknown) => {
+            console.error("Could not get chat", e);
+        });
+
     // TODO: this is always 0. Fix this.
     let totalMessagesToSee = writable<number>(0);
 </script>
@@ -38,7 +49,7 @@
     tooltipTitle={$LL.actionbar.help.chat.title()}
     tooltipDesc={$LL.actionbar.help.chat.desc()}
     dataTestId="chat-btn"
-    state={"normal"}
+    state={chatAvailable ? "normal" : "disabled"}
     {last}
     disabledHelp={false}
 >

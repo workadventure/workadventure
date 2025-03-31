@@ -18,14 +18,16 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, selectedRoomStore } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { MessageNotification, notificationManager } from "../../../Notification";
+import { MessageNotification } from "../../../Notification/MessageNotification";
+import { notificationManager } from "../../../Notification/NotificationManager";
 import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 
@@ -73,7 +75,8 @@ export class ProximityChatRoom implements ChatRoom {
     private _spaceWatcher: SpaceFilterInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
-    private users: Map<number, SpaceUserExtended> | undefined;
+    // Users by spaceUserId
+    private users: Map<string, SpaceUserExtended> | undefined;
     private usersUnsubscriber: Unsubscriber | undefined;
     private spaceWatcherUserJoinedObserver: Subscription | undefined;
     private spaceWatcherUserLeftObserver: Subscription | undefined;
@@ -92,14 +95,14 @@ export class ProximityChatRoom implements ChatRoom {
         roomName: undefined,
         playUri: undefined,
         color: undefined,
-        id: undefined,
+        spaceUserId: undefined,
     } as ChatUser;
 
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
 
     constructor(
-        private _userId: number,
+        private _spaceUserId: string,
         private spaceRegistry: SpaceRegistryInterface,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private notifyNewMessage = (message: ProximityChatMessage) => {
@@ -138,7 +141,7 @@ export class ProximityChatRoom implements ChatRoom {
             url: undefined,
         };
 
-        const spaceUser = this.users?.get(this._userId);
+        const spaceUser = this.users?.get(this._spaceUserId);
         let chatUser: ChatUser = this.unknownUser;
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
@@ -193,7 +196,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     private addOutcomingUser(spaceUser: SpaceUserExtended): void {
         this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: spaceUser.name }), "outcoming", false);
-        this.removeTypingUserbyID(spaceUser.id.toString());
+        this.removeTypingUserbyID(spaceUser.spaceUserId.toString());
 
         /*this._connection.connectedUsers.update((users) => {
             users.delete(userId);
@@ -205,9 +208,9 @@ export class ProximityChatRoom implements ChatRoom {
     /**
      * Add a message from a remote user to the proximity chat.
      */
-    private addNewMessage(message: string, senderUserId: number): void {
+    private addNewMessage(message: string, senderUserId: string): void {
         // Ignore messages from the current user
-        if (senderUserId === this._userId) {
+        if (senderUserId === this._spaceUserId) {
             return;
         }
 
@@ -316,12 +319,12 @@ export class ProximityChatRoom implements ChatRoom {
         return Promise.resolve({});
     }
 
-    private addTypingUser(senderUserId: number): void {
+    private addTypingUser(senderUserId: string): void {
         const sender = this.users?.get(senderUserId);
         if (sender === undefined) {
             return;
         }
-        const id = sender.id.toString();
+        const id = sender.spaceUserId.toString();
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === id) == undefined) {
                 typingMembers.push({
@@ -334,13 +337,13 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    private removeTypingUser(senderUserId: number): void {
+    private removeTypingUser(senderUserId: string): void {
         const sender = this.users?.get(senderUserId);
         if (sender === undefined) {
             return;
         }
 
-        const id = sender.id.toString();
+        const id = sender.spaceUserId.toString();
 
         this.typingMembers.update((typingMembers) => {
             return typingMembers.filter((user) => user.id !== id);
@@ -385,7 +388,7 @@ export class ProximityChatRoom implements ChatRoom {
         });
 
         this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
-            if (spaceUser.id === this._userId) {
+            if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
             this.addIncomingUser(spaceUser);
@@ -446,7 +449,7 @@ export class ProximityChatRoom implements ChatRoom {
                 this.sendMessage(get(LL).chat.timeLine.youLeft(), "outcoming", false);
             } else {
                 for (const user of this.users.values()) {
-                    if (user.id === this._userId) {
+                    if (user.spaceUserId === this._spaceUserId) {
                         continue;
                     }
                     this.sendMessage(get(LL).chat.timeLine.outcoming({ userName: user.name }), "outcoming", false);

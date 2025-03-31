@@ -28,7 +28,7 @@ spec:
       http:
         paths:
           - path: /
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play
@@ -37,8 +37,15 @@ spec:
     - host: {{ (include "workadventure.pusherDomainName" .) | quote }}
       http:
         paths:
+          - path: /ws/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-play
+                port:
+                  number: {{ .Values.play.service.wsPort }}
           - path: /
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-play
@@ -48,7 +55,7 @@ spec:
       http:
         paths:
           - path: /
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Prefix
             backend:
               service:
                 name: {{ include "workadventure.fullname" . }}-room-api

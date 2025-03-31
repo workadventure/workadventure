@@ -7,36 +7,30 @@ export class DebugController extends BaseHttpController {
     routes(): void {
         this.app.get("/dump", (req, res) => {
             if (!ADMIN_API_TOKEN) {
-                res.atomic(() => {
-                    res.status(401).send("No token configured!");
-                });
+                res.status(401).send("No token configured!");
                 return;
             }
             if (req.query.token !== ADMIN_API_TOKEN) {
-                res.atomic(() => {
-                    res.status(401).send("Invalid token sent!");
-                });
+                res.status(401).send("Invalid token sent!");
                 return;
             }
 
-            res.atomic(() => {
-                //res.header("Content-Type", "application/json");
+            //res.header("Content-Type", "application/json");
 
-                res.send(
-                    dumpVariable(socketManager, (originalValue) => {
-                        if (originalValue && typeof originalValue === "object" && originalValue.constructor) {
-                            if (originalValue.constructor.name === "uWS.WebSocket") {
-                                return "WebSocket";
-                            } else if (originalValue.constructor.name === "ClientDuplexStreamImpl") {
-                                return "ClientDuplexStreamImpl";
-                            } else if (originalValue.constructor.name === "ClientReadableStreamImpl") {
-                                return "ClientReadableStreamImpl";
-                            }
+            res.send(
+                dumpVariable(socketManager, (originalValue) => {
+                    if (originalValue && typeof originalValue === "object" && originalValue.constructor) {
+                        if (originalValue.constructor.name === "uWS.WebSocket") {
+                            return "WebSocket";
+                        } else if (originalValue.constructor.name === "ClientDuplexStreamImpl") {
+                            return "ClientDuplexStreamImpl";
+                        } else if (originalValue.constructor.name === "ClientReadableStreamImpl") {
+                            return "ClientReadableStreamImpl";
                         }
-                        return originalValue;
-                    })
-                );
-            });
+                    }
+                    return originalValue;
+                })
+            );
             return;
         });
     }

@@ -5,6 +5,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -25,6 +26,9 @@
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
 
+    export let videoUrl: string | undefined = undefined;
+    export let videoConfig: VideoConfig | undefined = undefined;
+
     // When expectVideoOutput switches to "true", the video stream should display something.
     // We are waiting for 3 seconds after the switch. If no video frame has arrived
     // by then, an error popup is displayed.
@@ -38,6 +42,10 @@
     export let flipX = false;
     // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
     export let muted = false;
+    // If cover is true, the video will be stretched to cover the whole container (and some part of the video might be cropped).
+    export let cover = true;
+    // If true, the video will be displayed with a background is it does not cover the whole box
+    export let withBackground = false;
 
     let destroyed = false;
 
@@ -50,11 +58,15 @@
 
     let videoElement: HTMLVideoElementExt;
 
+    let loop: boolean = videoConfig?.loop ?? false;
+
     function onLoadVideoElement() {}
 
     $: if (mediaStream && videoElement) {
-        console.warn("Setting video stream to video element", mediaStream);
         videoElement.srcObject = mediaStream;
+    }
+    $: if (videoUrl && videoElement) {
+        videoElement.src = videoUrl;
     }
 
     let containerWidth: number;
@@ -63,6 +75,8 @@
     let videoHeight: number;
     let videoStreamWidth: number;
     let videoStreamHeight: number;
+    let overlayWidth: number;
+    let overlayHeight: number;
 
     $: {
         if (
@@ -76,12 +90,41 @@
             const containerRatio = containerWidth / containerHeight;
             const videoRatio = videoStreamWidth / videoStreamHeight;
 
-            if (containerRatio > videoRatio) {
-                videoWidth = containerHeight * videoRatio;
-                videoHeight = containerHeight;
+            //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
+
+            if (videoRatio < 1) {
+                // In case we are on a mobile in portrait mode, we want to display a square video.
+                videoWidth = containerHeight;
+                videoHeight = containerHeight / videoRatio;
+                overlayWidth = containerHeight;
+                overlayHeight = containerHeight;
+                //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
+            } else if (containerRatio > videoRatio) {
+                if (!cover) {
+                    videoWidth = containerHeight * videoRatio;
+                    videoHeight = containerHeight;
+                    overlayWidth = videoWidth;
+                    overlayHeight = videoHeight;
+                } else {
+                    videoWidth = containerWidth;
+                    videoHeight = containerWidth / videoRatio;
+                    overlayWidth = containerWidth;
+                    overlayHeight = containerHeight;
+                }
+                //debug("containerRatio > videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else {
-                videoWidth = containerWidth;
-                videoHeight = containerWidth / videoRatio;
+                if (!cover) {
+                    videoWidth = containerWidth;
+                    videoHeight = containerWidth / videoRatio;
+                    overlayWidth = videoWidth;
+                    overlayHeight = videoHeight;
+                } else {
+                    videoWidth = containerHeight * videoRatio;
+                    videoHeight = containerHeight;
+                    overlayWidth = containerWidth;
+                    overlayHeight = containerHeight;
+                }
+                //debug("containerRatio <= videoRatio: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             }
         }
     }
@@ -90,7 +133,7 @@
     let displayNoVideoWarning = false;
 
     $: {
-        if (expectVideoOutput && videoElement) {
+        if (expectVideoOutput && videoElement && mediaStream) {
             expectVideoWithin3Seconds();
         }
         if (!expectVideoOutput && noVideoTimeout) {
@@ -170,7 +213,7 @@
                     dispatch("selectOutputAudioDeviceError");
                     return;
                 } else {
-                    console.info("Audio output device set to ", deviceId);
+                    debug("Audio output device set to ", deviceId);
                     // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
                     /*if (videoElement && $streamStore) {
                         videoElement.srcObject = $streamStore;
@@ -203,34 +246,52 @@
     }
 </script>
 
-<div class="h-full w-full relative" bind:clientWidth={containerWidth} bind:clientHeight={containerHeight}>
-    <video
-        style={videoEnabled
-            ? "width: " +
-              Math.ceil(videoWidth) +
-              "px; height: " +
-              Math.ceil(videoHeight) +
-              "px; left: " +
-              Math.ceil((containerWidth - videoWidth) / 2) +
-              "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "") +
-              (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-            : ""}
-        bind:videoWidth={videoStreamWidth}
-        bind:videoHeight={videoStreamHeight}
-        bind:this={videoElement}
-        on:loadedmetadata={onLoadVideoElement}
-        class="absolute block object-fill"
-        class:h-0={!videoEnabled}
-        class:w-0={!videoEnabled}
-        class:border-solid={videoEnabled}
-        class:rounded-lg={videoEnabled}
+<div
+    class="h-full w-full relative {!cover && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
+    bind:clientWidth={containerWidth}
+    bind:clientHeight={containerHeight}
+>
+    <div
+        class={"absolute overflow-hidden border-solid rounded-lg"}
+        class:w-full={!videoEnabled}
+        class:h-full={!videoEnabled}
         class:border-transparent={!isTalking}
         class:border-secondary={isTalking}
-        autoplay
-        playsinline
-        {muted}
-    />
+        style={videoEnabled
+            ? "width: " +
+              overlayWidth +
+              "px; height: " +
+              overlayHeight +
+              "px; left: " +
+              (containerWidth - overlayWidth) / 2 +
+              "px;" +
+              (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
+            : ""}
+    >
+        <video
+            style={videoEnabled
+                ? "width: " +
+                  Math.ceil(videoWidth) +
+                  "px; height: " +
+                  Math.ceil(videoHeight) +
+                  "px; " +
+                  ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                  (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
+                  (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
+                : ""}
+            bind:videoWidth={videoStreamWidth}
+            bind:videoHeight={videoStreamHeight}
+            bind:this={videoElement}
+            on:loadedmetadata={onLoadVideoElement}
+            class="absolute block object-fill"
+            class:h-0={!videoEnabled}
+            class:w-0={!videoEnabled}
+            autoplay
+            playsinline
+            {muted}
+            {loop}
+        />
+    </div>
     {#if displayNoVideoWarning}
         <div
             class="absolute w-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
@@ -247,21 +308,22 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80")}
+        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80 backdrop-blur")}
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
         class:rounded-lg={!videoEnabled}
         class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
         class:border-secondary={!videoEnabled && isTalking}
+        class:hidden={videoEnabled && !overlayHeight}
         style={videoEnabled
             ? "width: " +
-              videoWidth +
+              overlayWidth +
               "px; height: " +
-              videoHeight +
+              overlayHeight +
               "px; left: " +
-              (containerWidth - videoWidth) / 2 +
+              (containerWidth - overlayWidth) / 2 +
               "px;" +
-              (verticalAlign === "center" ? " top: " + (containerHeight - videoHeight) / 2 + "px;" : "")
+              (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
             : ""}
     >
         <slot />

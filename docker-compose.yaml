@@ -37,6 +37,8 @@ services:
   play:
     image: thecodingmachine/nodejs:v2-20-bullseye
     command: npm run dev
+    # Uncomment to run the production build in dev (along STARTUP_COMMAND_4 and NODE_OPTIONS)
+    #command: npm run start
     working_dir: /usr/src/app/play
     volumes:
       - .:/usr/src/app
@@ -50,6 +52,10 @@ services:
       STARTUP_COMMAND_1: ../wait-proto.sh
       STARTUP_COMMAND_2: ../npm-install.sh
       STARTUP_COMMAND_3: npm run typesafe-i18n
+      # Uncomment to run the production build in dev
+      #STARTUP_COMMAND_4: npm run build
+      #STARTUP_COMMAND_5: npm run build-iframe-api
+      #NODE_OPTIONS: --max-old-space-size=16384
       DEBUG: "socket,space"
       DEBUG_COLORS: "true"
       DEBUG_ERROR_MESSAGES: "true"
@@ -158,17 +164,26 @@ services:
       IFRAMELY_KEY: "$IFRAMELY_KEY"
     labels:
       - "traefik.enable=true"
+
       - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
       - "traefik.http.routers.front.service=front"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+
       - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
       - "traefik.http.routers.room-api.service=room-api"
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
       - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
+
       - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
+
+      - "traefik.http.routers.play-ws.rule=HostRegexp(`{domain:.*}`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.priority=2"
+      - "traefik.http.routers.play-ws.service=play-ws"
+      - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
     environment:

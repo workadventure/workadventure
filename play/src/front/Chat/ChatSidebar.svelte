@@ -1,14 +1,13 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { writable } from "svelte/store";
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
+    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
 
-    export const chatSidebarWidthStore = writable(INITIAL_SIDEBAR_WIDTH);
     let container: HTMLElement;
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -76,11 +75,12 @@
             container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
         }
-        chatSidebarWidthStore.set(sideBarWidth);
     };
 
+    $: chatSidebarWidthStore.set(sideBarWidth);
+
     const onresize = () => {
-        if (isChatSidebarLargerThanWindow()) {
+        if (isChatSidebarLargerThanWindow() && container) {
             container.style.maxWidth = document.documentElement.clientWidth + "px";
             container.style.width = document.documentElement.clientWidth + "px";
             chatSidebarWidthStore.set(sideBarWidth);
@@ -107,17 +107,19 @@
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class="chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
+        class=" chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
-        <div class="close-window absolute -right-[4.5rem] top-2 p-2 bg-contrast/80 rounded-2xl">
-            <button
-                class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
-                data-testid="closeChatButton"
-                on:click={closeChat}
-            >
-                <IconX font-size="20" />
-            </button>
-        </div>
+        {#if $hideActionBarStoreBecauseOfChatBar}
+            <div class="close-window absolute right-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
+                <button
+                    class="hover:bg-white/10 rounded aspect-square w-10 h-10 m-0 flex items-center justify-center"
+                    data-testid="closeChatButton"
+                    on:click={closeChat}
+                >
+                    <IconX font-size="20" />
+                </button>
+            </div>
+        {/if}
         <Chat {sideBarWidth} />
 
         <div
@@ -146,7 +148,6 @@
         min-width: 335px !important;
         width: 335px;
         pointer-events: auto;
-        max-width: calc(100vw - 82px) !important;
         height: 100dvh !important;
         z-index: 2000;
         .close-window {

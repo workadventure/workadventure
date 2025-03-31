@@ -26,7 +26,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "Dans ",
         teleport: "Se téléporter",
         search: "Il suffit de chercher !",
-        walkTo: "Marcher jusqu'à",
+        // walkTo: "Marcher jusqu'à",
+        TalkTo: "Parler à",
         teleporting: "Téléportation ...",
         businessCard: "Carte de visite",
         sendMessage: "Envoyer un message",
@@ -266,6 +267,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Gérer les participants",
         invitations: "Invitations",
         participants: "Participants",
+        roomID: "ID du salon : {roomId}",
         join: "Présent",
         invite: "Invité",
         ban: "Banni",
@@ -304,7 +306,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     e2ee: {
-        configure: "Configuré",
+        configure: "Configurer",
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
@@ -449,6 +451,13 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Téléchargez un fichier pour le partager",
         featureComingSoon: "Fonctionnalité à venir !",
     },
+    loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
+    reconnect: "Se reconnecter",
+    refreshChat: "Rafraichir le chat",
+    dismiss: "Ignorer",
+    whoops: "Oups ! une erreur est survenue",
+    failedToOpenRoom: "Impossible d'ouvrir la room",
+    refreshChatError: "Impossible de rafraichir le chat",
     discord: {
         chatBand: {
             configure: "Configurer",

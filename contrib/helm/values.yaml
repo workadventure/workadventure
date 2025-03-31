@@ -96,6 +96,7 @@ play:
   service:
     type: ClusterIP
     port: 3000
+    wsPort: 3001
 
   roomApiService:
     type: ClusterIP

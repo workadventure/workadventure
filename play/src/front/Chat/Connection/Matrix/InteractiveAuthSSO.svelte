@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { AuthDict, AuthType, MatrixClient } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
-    import { INTERACTIVE_AUTH_PHASE } from "./MatrixChatConnection";
+    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
     export let authSessionId;
     export let matrixClient: MatrixClient;

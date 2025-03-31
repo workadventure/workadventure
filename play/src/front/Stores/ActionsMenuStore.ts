@@ -1,16 +1,21 @@
 import { writable } from "svelte/store";
+import { v4 } from "uuid";
 
 export type ActionsMenuAction = {
+    uuid?: string;
     actionName: string;
     callback: () => void;
     protected?: boolean;
     priority?: number;
-    style?: "is-success" | "is-error" | "is-primary";
+    style?: "is-success" | "is-error" | "is-primary" | string;
+    actionIcon?: string;
+    iconColor?: string;
 };
 export interface ActionsMenuData {
     menuName: string;
     menuDescription?: string;
     actions: ActionsMenuAction[];
+    visitCardUrl?: string;
 }
 
 function createActionsMenuStore() {
@@ -23,11 +28,21 @@ function createActionsMenuStore() {
                 menuName,
                 menuDescription,
                 actions: new Array<ActionsMenuAction>(),
+                visitCardUrl: undefined,
+            });
+        },
+        setVisitCardUrl: (visitCardUrl: string) => {
+            update((data) => {
+                if (data) {
+                    data.visitCardUrl = visitCardUrl;
+                }
+                return data;
             });
         },
         addAction: (action: ActionsMenuAction) => {
             update((data) => {
-                data?.actions.push(action);
+                const dataWithUuid = { ...action, uuid: action.uuid ?? v4() };
+                data?.actions.push(dataWithUuid);
                 return data;
             });
         },

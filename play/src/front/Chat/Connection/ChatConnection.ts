@@ -16,7 +16,7 @@ export interface ChatUser {
     isMember?: boolean;
     visitCardUrl?: string;
     color: string | undefined;
-    id: number | undefined;
+    spaceUserId: string | undefined;
 }
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
@@ -73,6 +73,7 @@ export interface ChatRoomNotificationControl {
 }
 
 export interface ChatRoomModeration {
+    readonly id: string;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly kick: (userID: string) => Promise<void>;
@@ -173,7 +174,9 @@ export interface ChatConnectionInterface {
     clearListener: () => void;
     directRoomsUsers: Readable<ChatUser[]>;
     isUserExist: (address: string) => Promise<boolean>;
-    getRoombyID(roomId: string): ChatRoom;
+    getRoomByID(roomId: string): ChatRoom;
+    retrySendingEvents: () => Promise<void>;
+    shouldRetrySendingEvents: Readable<boolean>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

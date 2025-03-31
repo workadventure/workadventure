@@ -2,6 +2,7 @@
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
+    import TextArea from "../Input/TextArea.svelte";
 
     export let userUUID: string | undefined;
     export let userName: string | undefined;
@@ -39,10 +40,7 @@
     <p>{$LL.report.content()}</p>
     <form>
         <section class="mb-0 pb-0">
-            <label class="w-full">
-                <span>{$LL.report.message.title()}</span>
-                <textarea type="text" class="w-full mb-0 pb-0" style="margin-bottom: 0;" bind:value={reportMessage} />
-            </label>
+            <TextArea label={$LL.report.message.title()} bind:value={reportMessage} onKeyPress={() => {}} />
             {#if !hiddenError}
                 <p class="text-pop-red mb-0 pb-0">{$LL.report.message.empty()}</p>
             {/if}
@@ -51,7 +49,7 @@
             {/if}
         </section>
         <section>
-            <button type="submit" class="btn danger" on:click|preventDefault|stopPropagation={submitReport}
+            <button type="submit" class="btn btn-danger w-full" on:click|preventDefault|stopPropagation={submitReport}
                 >{$LL.report.submit()}</button
             >
         </section>

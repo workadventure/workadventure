@@ -12,7 +12,11 @@ import { Streamable } from "../../Stores/StreamableCollectionStore";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
-    readonly usersStore: Readable<Map<number, SpaceUserExtended>>;
+    //userExist(userId: number): boolean;
+    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
+    readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
+    //removeUser(userId: number): void;
+    //updateUserData(userdata: Partial<SpaceUser>): void;
     getName(): string;
 
     /**
@@ -28,9 +32,9 @@ export interface SpaceFilterInterface {
 }
 
 type ReactiveSpaceUser = {
-    [K in keyof Omit<SpaceUser, "id">]: Readonly<Readable<SpaceUser[K]>>;
+    [K in keyof Omit<SpaceUser, "spaceUserId">]: Readonly<Readable<SpaceUser[K]>>;
 } & {
-    id: number;
+    spaceUserId: string;
     playUri: string | undefined;
     roomName: string | undefined;
 };
@@ -67,9 +71,9 @@ export type Filter = SpaceFilterMessage["filter"];
 
 //TODO : mettre une fonction qui permet de récuperer les peer d'un user dans direct dans un store qui va etre dans le space
 export abstract class SpaceFilter implements SpaceFilterInterface {
-    private _setUsers: ((value: Map<number, SpaceUserExtended>) => void) | undefined;
-    readonly usersStore: Readable<Map<number, Readonly<SpaceUserExtended>>>;
-    private _users: Map<number, SpaceUserExtended> = new Map<number, SpaceUserExtended>();
+    private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
+    readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
+    private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
     private isSubscribe = false;
     private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
@@ -83,7 +87,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         private _connection: RoomConnectionForSpacesInterface,
         private _filter: Filter
     ) {
-        this.usersStore = readable(new Map<number, SpaceUserExtended>(), (set) => {
+        this.usersStore = readable(new Map<string, SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
             this._setUsers = set;
             set(this._users);
@@ -115,8 +119,9 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user);
-        if (!this._users.has(user.id)) {
-            this._users.set(user.id, extendSpaceUser);
+
+        if (!this._users.has(user.spaceUserId)) {
+            this._users.set(user.spaceUserId, extendSpaceUser);
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
@@ -131,10 +136,10 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     getUsers(): SpaceUserExtended[] {
         return Array.from(get(this.usersStore).values());
     }
-    removeUser(userId: number): void {
-        const user = this._users.get(userId);
+    removeUser(spaceUserId: string): void {
+        const user = this._users.get(spaceUserId);
         if (user) {
-            this._users.delete(userId);
+            this._users.delete(spaceUserId);
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
@@ -157,9 +162,9 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     }
 
     updateUserData(newData: SpaceUser, updateMask: string[]): void {
-        if (!newData.id && newData.id !== 0) return;
+        if (!newData.spaceUserId && newData.spaceUserId !== "") return;
 
-        const userToUpdate = this._users.get(newData.id);
+        const userToUpdate = this._users.get(newData.spaceUserId);
 
         if (!userToUpdate) return;
 
@@ -213,7 +218,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }>(),
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
-                this._connection.emitPrivateSpaceEvent(this._space.getName(), message, user.id);
+                this._connection.emitPrivateSpaceEvent(this._space.getName(), message, user.spaceUserId);
             },
             space: this._space,
             getPeerStore: () => {
@@ -256,7 +261,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         extendedUser.reactiveUser = new Proxy(
             {
-                id: extendedUser.id,
+                spaceUserId: extendedUser.spaceUserId,
                 roomName: extendedUser.roomName,
                 playUri: extendedUser.playUri,
             } as unknown as ReactiveSpaceUser,

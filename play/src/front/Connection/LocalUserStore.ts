@@ -3,6 +3,7 @@ import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWID
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
+import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils";
 
@@ -44,6 +45,8 @@ const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
+const cameraContainerHeightKey = "cameraContainerHeight";
+const chatSideBarWidthKey = "chatSideBarWidth";
 
 const JwtAuthToken = z
     .object({
@@ -655,6 +658,30 @@ class LocalUserStore {
 
     setVolumeProximityDiscussion(value: number): void {
         localStorage.setItem(volumeProximityDiscussion, `${value}`);
+    }
+
+    setCameraContainerHeight(ratio: number): void {
+        localStorage.setItem(cameraContainerHeightKey, ratio.toString());
+    }
+
+    getCameraContainerHeight(): number {
+        const value = localStorage.getItem(cameraContainerHeightKey);
+        if (!value) {
+            return 0.75; // Default value of 75%
+        }
+        return parseFloat(value);
+    }
+
+    setChatSideBarWidth(width: number): void {
+        localStorage.setItem(chatSideBarWidthKey, width.toString());
+    }
+
+    getChatSideBarWidth(): number {
+        const value = localStorage.getItem(chatSideBarWidthKey);
+        if (!value) {
+            return INITIAL_SIDEBAR_WIDTH;
+        }
+        return parseFloat(value);
     }
 }
 

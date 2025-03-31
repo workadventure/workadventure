@@ -1,116 +1,252 @@
+<!--
+    CamerasContainer.svelte
+
+    This component displays a collection of WebRTC video streams in a responsive layout.
+    It supports two display modes controlled by the isOnOneLine prop:
+
+    1. Single-line mode (isOnOneLine = true):
+       - Videos are displayed in a single horizontal line
+       - Video sizes are automatically adjusted to fit the container width
+       - If container is too narrow, videos will maintain minimum width (120px) and overflow horizontally
+       - Videos are centered in the container with equal spacing
+       - No vertical scrolling
+
+    2. Multi-line mode (isOnOneLine = false):
+       - Videos wrap to multiple lines to maximize available space
+       - Uses an optimal layout algorithm that:
+         a) Calculates maximum possible videos per row at minimum size
+         b) Works backwards to find the largest video size that fits without scrolling
+         c) Maintains 16:9 aspect ratio for all videos
+         d) Ensures videos never go below minimum width (120px)
+       - Videos are aligned to the top of the container
+       - Vertical scrolling is enabled if needed
+       - Maintains consistent gap between videos
+
+    The component automatically adjusts its layout when:
+    - Container dimensions change
+    - Number of videos changes
+    - Display mode changes
+
+    Props:
+    - oneLineMaxHeight: Maximum height for videos in single-line mode
+    - isOnOneLine: Toggle between single-line and multi-line modes
+
+-->
 <script lang="ts">
-    import { afterUpdate, onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
-    import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { onDestroy, onMount } from "svelte";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import MyCamera from "../MyCamera.svelte";
-    import { myCameraStore } from "../../Stores/MyMediaStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import ResizeHandle from "./ResizeHandle.svelte";
 
-    let isHighlighted = false;
-    let isMobile: boolean;
-    let unsubscribeHighlightEmbedScreen: Unsubscriber;
+    export let oneLineMaxHeight: number;
+    // Note: the correct gap should be 16px (gap-4 in Tailwind). But if we put 16px, it leads to instabilities.
+    // Those are likely due to negative margins in the MediaBox component.
+    // To prevent this, we use a slightly wider gap for our computations.
+    const gap = 22; // Configurable gap between videos
 
-    function updateScreenSize() {
-        if (window.innerWidth <= 768) {
-            isMobile = true;
-        } else {
-            isMobile = false;
+    export let isOnOneLine: boolean;
+    let containerWidth: number;
+    let maxContainerHeight: number;
+    let containerHeight: number;
+    let videoWidth: number;
+    let videoHeight: number | undefined;
+
+    // The minimum width of a media box in pixels
+    const minMediaBoxWidth = 120;
+
+    onMount(() => {});
+
+    $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
+
+    $: {
+        if (!isOnOneLine) {
+            containerHeight = maxContainerHeight * localUserStore.getCameraContainerHeight();
         }
     }
 
-    unsubscribeHighlightEmbedScreen = highlightedEmbedScreen.subscribe((value) => {
-        checkOverflow();
-        if (value) {
-            isHighlighted = true;
+    $: {
+        if (isOnOneLine) {
+            videoWidth = Math.max(
+                Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+                minMediaBoxWidth
+            );
+            videoHeight = undefined;
         } else {
-            isHighlighted = false;
+            const layout = calculateOptimalLayout(containerWidth, containerHeight);
+            videoWidth = layout.videoWidth;
+            videoHeight = layout.videoHeight;
         }
-    });
 
-    afterUpdate(() => {
-        checkOverflow();
-    });
+        gameManager.getCurrentGameScene().reposition();
+    }
 
-    function checkOverflow() {
-        const camContainer = document.getElementById("cameras-container");
-        if (camContainer) {
-            if (isMobile && $highlightedEmbedScreen) {
-                if (camContainer.scrollWidth < camContainer.clientWidth) {
-                    camContainer.style.justifyContent = "center";
-                } else {
-                    camContainer.style.justifyContent = "flex-start";
+    function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
+        //console.log("calculateOptimalLayout");
+        //console.log("containerWidth", containerWidth);
+        //console.log("containerHeight", containerHeight);
+        if (!containerWidth || !containerHeight) {
+            return {
+                videoWidth: minMediaBoxWidth,
+            };
+        }
+
+        // Calculate maximum number of videos that can fit in one row at minimum size
+        const maxVideosPerRow = Math.min(
+            Math.floor((containerWidth + gap) / (minMediaBoxWidth + gap)),
+            $streamableCollectionStore.size
+        );
+
+        let lastValidConfig = null;
+
+        // Start with maximum possible videos per row and work backwards
+        for (let vpr = maxVideosPerRow; vpr >= 1; vpr--) {
+            //console.log('Attempting to fit', vpr, 'videos per row');
+            // Calculate video width based on container width and gap
+            const width = (containerWidth - gap * (vpr - 1)) / vpr;
+            //console.log("width", width);
+
+            // Calculate video height maintaining aspect ratio
+            const height = (width * 9) / 16;
+
+            // Check if this height would fit in the container
+            //if (height <= containerHeight) {
+            // Calculate how many complete rows we can fit
+            const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
+            const visibleVideos = rowsPerPage * vpr;
+
+            //console.log("visibleVideos", visibleVideos);
+
+            // If we need scrolling, calculate the maximum height that would fit
+            if (visibleVideos < $streamableCollectionStore.size) {
+                //console.log("max width for vpr", width);
+                //console.log('vpr', vpr);
+                // Calculate total number of rows needed
+                const totalRows = Math.ceil($streamableCollectionStore.size / vpr);
+                //console.log('totalRows', totalRows);
+
+                // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
+                if (totalRows === 1) {
+                    const adjustedWidth = (containerHeight * 16) / 9;
+                    return {
+                        videoWidth: adjustedWidth,
+                    };
                 }
-            } else {
-                if (camContainer.scrollWidth < camContainer.clientWidth) {
-                    camContainer.style.justifyContent = "flex-start";
+
+                // There are 2 possible optimal solutions here. Either we can reduce the height of the videos
+                // to fit in the container OR we can take the previous solution with one more video per row
+                // Let's check which one is better (i.e. which one has the largest video size)
+
+                // Solution 1: let's reduce video size:
+
+                // Calculate maximum height per video that would fit
+                const maxHeightPerVideo = (containerHeight - gap * (totalRows - 1)) / totalRows;
+
+                // Calculate corresponding width based on aspect ratio
+                const adjustedWidthWithReducedHeight = (maxHeightPerVideo * 16) / 9;
+
+                // Solution 2: let's increase the number of videos per row (only possible if we have enough videos)
+                const adjustedWidthWithOneMoreVpr =
+                    $streamableCollectionStore.size >= vpr + 1 ? (containerWidth - gap * vpr) / (vpr + 1) : 0;
+
+                // Check which solution is better
+                let adjustedWidth: number;
+                let adjustedHeight: number | undefined;
+                if (adjustedWidthWithReducedHeight > adjustedWidthWithOneMoreVpr) {
+                    // if solution 1 is better
+                    adjustedWidth = adjustedWidthWithReducedHeight;
                 } else {
-                    camContainer.style.justifyContent = "center";
+                    // if solution 2 is better, the videos will not occupy all vertical space.
+                    // We can fix this by breaking the aspect ratio.
+                    adjustedWidth = adjustedWidthWithOneMoreVpr;
+                    const adjustedTotalRows = Math.ceil($streamableCollectionStore.size / (vpr + 1));
+                    adjustedHeight = (containerHeight - gap * (adjustedTotalRows - 1)) / adjustedTotalRows;
                 }
+                //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
+                //console.log('adjustedWidth', adjustedWidth, 'adjustedHeight', adjustedHeight);
+                return {
+                    videoWidth: adjustedWidth,
+                    videoHeight: adjustedHeight,
+                };
             }
-        }
-    }
 
-    onMount(() => {
-        window.addEventListener("resize", updateScreenSize);
-        window.addEventListener("load", checkOverflow);
-        window.addEventListener("resize", checkOverflow);
-    });
+            // Keep this as our last valid config that doesn't need scrolling
+            lastValidConfig = {
+                videoWidth: width,
+            };
+            //}
+        }
+
+        // If we get here, we never needed scrolling, use the last valid config
+        return (
+            lastValidConfig || {
+                videoWidth: minMediaBoxWidth,
+            }
+        );
+    }
 
     onDestroy(() => {
-        if (unsubscribeHighlightEmbedScreen) unsubscribeHighlightEmbedScreen();
-        window.removeEventListener("load", checkOverflow);
-        window.removeEventListener("resize", checkOverflow);
-        window.removeEventListener("resize", updateScreenSize);
+        gameManager.getCurrentGameScene().reposition();
     });
+
+    function onResizeHandler(height: number) {
+        containerHeight = height;
+        localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
+    }
 </script>
 
-<div
-    class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
-    class:flex={isHighlighted}
-    class:justify-center={isHighlighted}
-    class:gap-4={isHighlighted}
-    class:whitespace-nowrap={isHighlighted}
-    class:relative={isHighlighted}
-    class:overflow-x-auto={isHighlighted}
-    class:overflow-y-hidden={isHighlighted}
-    class:m-0={isHighlighted}
-    class:mx-auto={isHighlighted}
-    class:my-0={isHighlighted}
-    class:w-full={isHighlighted}
-    class:max-w-full={isHighlighted}
-    class:not-highlighted={!isHighlighted}
-    class:mt-0={!isHighlighted}
-    class="pointer-events-none"
-    id="cameras-container"
->
-    {#if $myCameraStore && !$myJitsiCameraStore}
-        <div
-            id="unique-mycam"
-            class={isHighlighted
-                ? "w-[230px] all-cameras-highlighted pointer-events-auto"
-                : "w-full h-full all-cameras m-auto pointer-event-auto"}
-        >
-            <MyCamera />
-        </div>
-    {/if}
-    {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-        {#if $highlightedEmbedScreen !== peer}
-            {#key uniqueId}
-                <div
-                    class={isHighlighted
-                        ? " pointer-events-auto w-[230px] all-cameras-highlighted camera-box"
-                        : "w-full h-full all-cameras m-auto camera-box"}
-                >
-                    <MediaBox streamable={peer} />
-                </div>
-            {/key}
-        {/if}
-    {/each}
-
-    {#if $myJitsiCameraStore}
-        <MediaBox streamable={$myJitsiCameraStore} flipX={true} muted={true} />
+<div class="w-full" bind:clientHeight={maxContainerHeight} class:h-full={!isOnOneLine}>
+    <div
+        bind:clientWidth={containerWidth}
+        class={"pointer-events-none gap-4" + (isOnOneLine ? "max-h-full" : "")}
+        class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
+        class:flex={true}
+        class:flex-wrap={!isOnOneLine}
+        class:content-start={!isOnOneLine}
+        class:justify-start={isOnOneLine}
+        class:whitespace-nowrap={isOnOneLine}
+        class:relative={true}
+        class:overflow-x-auto={isOnOneLine}
+        class:overflow-x-hidden={!isOnOneLine}
+        class:overflow-y-auto={!isOnOneLine}
+        class:overflow-y-hidden={isOnOneLine}
+        class:pb-3={isOnOneLine}
+        class:m-0={isOnOneLine}
+        class:my-0={isOnOneLine}
+        class:w-full={true}
+        class:max-w-full={true}
+        class:not-highlighted={!isOnOneLine}
+        class:mt-0={!isOnOneLine}
+        id="cameras-container"
+    >
+        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+            {#if $highlightedEmbedScreen !== peer}
+                {#key uniqueId}
+                    <div
+                        style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
+                            videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
+                        }`}
+                        class={isOnOneLine
+                            ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                            : "pointer-events-auto shrink-0 camera-box"}
+                        class:aspect-video={videoHeight === undefined}
+                    >
+                        <MediaBox streamable={peer} />
+                    </div>
+                {/key}
+            {/if}
+        {/each}
+    </div>
+    {#if !isOnOneLine}
+        <ResizeHandle
+            minHeight={maxContainerHeight * 0.1}
+            maxHeight={maxContainerHeight * 0.9}
+            currentHeight={containerHeight}
+            onResize={onResizeHandler}
+        />
     {/if}
 </div>
 
@@ -120,62 +256,28 @@
         display: none !important;
     }
 
-    .all-cameras-highlighted {
-        min-width: 230px;
-        max-width: 230px;
-        float: none;
-        display: inline-block;
-        zoom: 1;
-    }
-
     .not-highlighted {
-        display: grid;
+        display: flex;
+        flex-wrap: wrap;
         justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 280px));
-        grid-template-rows: repeat(auto-fit, 158px);
+        align-items: flex-start;
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {
-        .all-cameras-highlighted {
-            min-width: 200px;
-            max-width: 200px;
-            float: none;
-            display: inline-block;
-            zoom: 1;
-        }
         .not-highlighted {
-            grid-template-columns: repeat(auto-fit, minmax(90px, 220px));
-            grid-template-rows: repeat(auto-fit, 124px);
+            gap: 1rem;
         }
     }
 
     @container (min-width: 640px) and (max-width: 1024px) {
         .not-highlighted {
-            grid-template-columns: repeat(auto-fit, minmax(80px, 180px));
-            grid-template-rows: repeat(auto-fit, 101px);
-        }
-
-        .all-cameras-highlighted {
-            min-width: 180px;
-            max-width: 180px;
-            display: inline-block;
-            float: none;
+            gap: 0.75rem;
         }
     }
 
     @container (max-width: 640px) {
         .not-highlighted {
-            grid-template-columns: repeat(auto-fit, minmax(70px, 140px));
-            grid-template-rows: repeat(auto-fit, 79px);
-        }
-
-        .all-cameras-highlighted {
-            min-width: 180px;
-            max-width: 180px;
-            display: block;
-            float: none;
+            gap: 0.5rem;
         }
     }
 </style>

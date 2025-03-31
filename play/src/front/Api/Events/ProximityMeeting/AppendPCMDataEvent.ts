@@ -7,4 +7,6 @@ export const isAppendPCMDataEvent = z.object({
 /**
  * Appends PCM data to the stream played to all players in the current bubble.
  */
-export type AppendPCMDataEvent = z.infer<typeof isAppendPCMDataEvent>;
+export type AppendPCMDataEvent = {
+    data: Float32Array<ArrayBufferLike>;
+};

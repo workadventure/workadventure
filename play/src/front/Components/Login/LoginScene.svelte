@@ -94,7 +94,7 @@
 </section>
 
 <form
-    class="loginScene h-screen flex items-center justify-center pointer-events-auto relative z-30"
+    class="loginScene h-dvh flex items-center justify-center pointer-events-auto relative z-30"
     on:submit|preventDefault={submit}
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
@@ -106,7 +106,7 @@
             <input
                 type="text"
                 name="loginSceneName"
-                placeholder="Tapez votre prénom ou pseudo..."
+                placeholder={$LL.login.input.name.placeholder()}
                 class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}

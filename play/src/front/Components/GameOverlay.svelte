@@ -33,6 +33,8 @@
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
     import TodoList from "./TodoList/TodoList.svelte";
+    import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
 
     export let game: Game;
 
@@ -61,7 +63,7 @@
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
-    <div class="h-screen overflow-y-auto">
+    <div class="h-dvh overflow-y-auto">
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
@@ -73,7 +75,7 @@
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
-    <div class="h-screen overflow-y-auto">
+    <div class="h-dvh overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
@@ -91,6 +93,8 @@
 
         <MainLayout />
     {/key}
+    <MainModal />
+
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
     {/if}
@@ -98,4 +102,6 @@
         <TodoList />
     {/if}
 {/if}
+
+<FloatingUiPopupList />
 <!-- </div> -->

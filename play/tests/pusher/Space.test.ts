@@ -46,7 +46,7 @@ describe("Space", () => {
         applications: undefined,
         canEdit: false,
         spaceUser: SpaceUser.fromPartial({
-            id: 1,
+            spaceUserId: "foo_1",
             uuid: "",
             name: "",
             playUri: "",
@@ -112,7 +112,7 @@ describe("Space", () => {
     });
     it("should notify client and back that a new user is added", () => {
         const spaceUser = SpaceUser.fromPartial({
-            id: 1,
+            spaceUserId: "foo_1",
             uuid: "uuid-test",
             name: "test",
             playUri: "test",
@@ -138,7 +138,7 @@ describe("Space", () => {
         eventsClient = [];
         eventsWatcher = [];
         const spaceUser = SpaceUser.fromPartial({
-            id: 1,
+            spaceUserId: "foo_1",
             uuid: "uuid-test",
             name: "test2",
             playUri: "test2",
@@ -233,12 +233,12 @@ describe("Space", () => {
         }
         const removeSpaceUserMessage = subMessage.removeSpaceUserMessage;
         expect(removeSpaceUserMessage).toBeDefined();
-        expect(removeSpaceUserMessage?.userId).toBe(1);
+        expect(removeSpaceUserMessage?.spaceUserId).toBe("foo_1");
     });
     it("should notify client that have filters that match the user", () => {
         eventsClient = [];
         const spaceUser = SpaceUser.fromPartial({
-            id: 2,
+            spaceUserId: "foo_2",
             uuid: "uuid-test2",
             name: "johnny",
             playUri: "test",

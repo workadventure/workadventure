@@ -36,14 +36,13 @@ test.describe('Meeting actions test', () => {
         // The user in the bubble meeting should be visible
         //await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
         // The user in the bubble meeting should have action button
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
 
-        await expect(page.locator('#cameras-container #unique-mycam')).toBeVisible({timeout: 30_000});
-
-        // Click on the action button of "Alice"
+        // Click on the action button of "Bob" on Alice screen
         await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
 
         // Click on the mute button
-        await page.locator('#cameras-container .camera-box .video-media-box').getByRole('button', { name: 'Mute audio', exact: true }).click();
+        await page.getByRole('button', { name: 'Mute audio', exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('div').filter({ hasText: /^Can I mute your microphone\?$/ })).toBeVisible();
@@ -55,11 +54,11 @@ test.describe('Meeting actions test', () => {
         await expect(page.locator("svg[aria-label='Bob is muted.']")).toBeVisible({timeout: 20_000});
         // Click on the mute video button
 
-        // Click on the action button of "Alice"
+        // Click on the action button of "Bob" on Alice screen
         await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
 
         // Click on the mute button
-        await page.locator('#cameras-container .camera-box .video-media-box').getByRole('button', { name: 'Mute video', exact: true }).click();
+        await page.getByRole('button', { name: 'Mute video', exact: true }).click();
 
         // Check if "Bob" user receive the request to be muted
         await expect(userBob.locator('div').filter({ hasText: /^Can I mute your camera\?$/ })).toBeVisible();
@@ -67,7 +66,9 @@ test.describe('Meeting actions test', () => {
         await userBob.getByRole('button', { name: 'Yes' }).click();
 
         // Check if the user has been muted
-        await expect(page.locator('#cameras-container .camera-box .video-media-box video')).toHaveClass(/w-0/);
+        await expect(page.locator('#cameras-container .camera-box .video-media-box', {
+            hasText: "Bob",
+        }).locator('video')).toHaveClass(/w-0/);
 
         await page.close();
         await userBob.close();

@@ -9,11 +9,13 @@
         mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+
     import { IconMinus } from "@wa-icons";
 
     function closeMapEditor() {
@@ -26,48 +28,52 @@
     }
 </script>
 
-<MapEditorSideBar />
-<div class={`map-editor bg-contrast/80 backdrop-blur-md h-screen ${$mapEditorSelectedToolStore}`}>
-    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
-        <ConfigureMyRoom />
-    {:else if $mapEditorVisibilityStore}
-        <div
-            class="sidebar h-screen"
-            in:fly={{ x: 100, duration: 250, delay: 200 }}
-            out:fly={{ x: 100, duration: 200 }}
-        >
-            <button class="absolute right-10 p-1 cursor-pointer" on:click={hideMapEditor}
-                ><IconMinus font-size="14" /></button
+{#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+    <ConfigureMyRoom />
+{/if}
+<div
+    id="map-editor-container"
+    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0"
+>
+    <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
+        <MapEditorSideBar />
+    </div>
+    <div id="map-editor-right" class={`map-editor h-dvh ${$mapEditorSelectedToolStore}`}>
+        {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
+            <div
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md"
+                in:fly={{ x: 100, duration: 200, delay: 200 }}
+                out:fly={{ x: 100, duration: 200 }}
             >
-            <button
-                class="close-window flex space-x-7"
-                data-testid="mapEditor-close-button"
-                on:click|preventDefault|stopPropagation={closeMapEditor}>&#215;</button
-            >
-            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
-                <TrashEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-                <EntityEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-                <AreaEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
-                <Explorer />
-            {/if}
-        </div>
-    {/if}
+                <button
+                    class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
+                    on:click={hideMapEditor}><IconMinus font-size="16" /></button
+                >
+                <ButtonClose dataTestId="mapEditor-close-button" on:click={closeMapEditor} />
+
+                {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                    <TrashEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                    <EntityEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                    <AreaEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+                    <Explorer />
+                {/if}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
     .map-editor {
-        position: absolute !important;
         top: 0;
         right: 0;
         width: fit-content !important;
-        z-index: 800;
-
+        z-index: 1999;
         pointer-events: auto;
         color: whitesmoke;
 

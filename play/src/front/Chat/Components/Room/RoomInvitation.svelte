@@ -1,6 +1,6 @@
 <script lang="ts">
     import { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
-    import { selectedRoomStore } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
@@ -30,7 +30,7 @@
 </script>
 
 <div
-    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2"
+    class="text-md flex gap-2 flex-row items-center hover:bg-white transition-all hover:bg-opacity-10 hover:rounded hover:!cursor-pointer p-2 test-userinvitation"
     data-testid="userInvitation"
 >
     <div class="relative">

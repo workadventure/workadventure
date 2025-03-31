@@ -24,7 +24,7 @@
     });
 </script>
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     Url copied to clipboard
     <svelte:fragment slot="iconButton">
         <button

@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
+    import Debug from "debug";
     import {
         JitsiCoWebsite,
         JitsiApi,
@@ -18,10 +19,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
 
+    const debug = Debug("jitsiCowebsite");
+
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
     let jitsiContainer: HTMLDivElement;
-    let roomName: string;
     let playerName = gameManager.getPlayerName();
     let jwt: string | undefined;
     let jitsiApi: JitsiApi;
@@ -93,7 +95,7 @@
                 }
 
                 const options: JitsiOptions = {
-                    roomName: roomName,
+                    roomName: actualCowebsite.roomName,
                     jwt: jwt,
                     width: "100%",
                     height: "100%",
@@ -138,7 +140,7 @@
                 jistiMeetLoadedPromise
                     .then(() => {
                         if (cancelled) {
-                            console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
+                            debug("CLOSING BECAUSE CANCELLED AFTER LOAD");
                             return;
                         }
 

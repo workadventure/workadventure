@@ -106,7 +106,7 @@ import {
     availabilityStatusStore,
     batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
-    localVolumeStore,
+    localVoiceIndicatorStore,
     requestedCameraDeviceIdStore,
     requestedCameraState,
     requestedMicrophoneDeviceIdStore,
@@ -156,7 +156,7 @@ import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/sta
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
-import { selectedRoomStore, navChat } from "../../Chat/Stores/ChatStore";
+import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -190,6 +190,8 @@ import {
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
+import { raceTimeout } from "../../Utils/PromiseUtils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -217,6 +219,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { FollowManager } from "./FollowManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -327,6 +330,7 @@ export class GameScene extends DirtyScene {
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private proximitySpaceManager: ProximitySpaceManager | undefined;
+    private scriptingVideoManager: ScriptingVideoManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -425,7 +429,7 @@ export class GameScene extends DirtyScene {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in.mp3");
+        this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in2.mp3");
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
@@ -521,9 +525,9 @@ export class GameScene extends DirtyScene {
                     } catch (error) {
                         this.handleErrorAndCleanup(
                             error,
-                            "WAM_FORMAT_ERROR",
-                            "Format error",
-                            "Invalid format while loading a WAM file"
+                            "WAM_FILE_LOAD_ISSUE",
+                            "Error when loading WAM file",
+                            "Unknown error while loading WAM file"
                         );
                         return;
                     }
@@ -551,6 +555,13 @@ export class GameScene extends DirtyScene {
         errorTitle: string,
         errorSubtitle: string
     ) {
+        console.error(error);
+
+        // In case an error is already displayed, let's do nothing. We want the first error to be kept visible.
+        if (get(errorScreenStore)) {
+            return;
+        }
+
         this.loader.removeLoader();
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
@@ -894,7 +905,9 @@ export class GameScene extends DirtyScene {
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
             this.gameMapFrontWrapper.initializedPromise.promise,
-            gameManager.getChatConnection(),
+            // Wait at most 5 seconds for the chat connection to be established
+            // If not, we can still proceed starting the scene without chat fully loaded
+            raceTimeout(gameManager.getChatConnection(), 5_000),
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
@@ -1091,6 +1104,7 @@ export class GameScene extends DirtyScene {
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
+        this.scriptingVideoManager?.close();
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
@@ -1579,6 +1593,7 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
+                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 //TODO : solution pour éviter les dépendances circulaires et passer les stream dans les spaces
                 peerStore.set(this._spaceRegistry.peerStore);
@@ -1602,8 +1617,7 @@ export class GameScene extends DirtyScene {
                             userProviders.push(new ChatUserProvider(chatConnection));
                         }
 
-                        if (allUserSpace && this._room.isChatOnlineListEnabled) {
-                            this.worldUserProvider = new WorldUserProvider(allUserSpace);
+                        if (allUserSpace && this._room.isChatOnlineListEnabled && this.worldUserProvider) {
                             userProviders.push(this.worldUserProvider);
                         }
 
@@ -1792,12 +1806,14 @@ export class GameScene extends DirtyScene {
                 // Set up manager of audio streams received by the scripting API (useful for bots)
 
                 this._proximityChatRoom = new ProximityChatRoom(
-                    this.connection.getUserId(),
+                    this.connection.getSpaceUserId(),
                     this._spaceRegistry,
                     //this.simplePeer,
                     iframeListener
                 );
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
+
+                this.scriptingVideoManager = new ScriptingVideoManager();
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -2146,7 +2162,6 @@ export class GameScene extends DirtyScene {
             //this.reposition();
         });
 
-        const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
         let screenWakeRelease: (() => Promise<void>) | undefined;
@@ -2251,13 +2266,12 @@ export class GameScene extends DirtyScene {
 
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((spectrum) => {
-                        if (spectrum === undefined) {
-                            this.CurrentPlayer.toggleTalk(false, true);
-                            return;
-                        }
-                        const volume = spectrum.reduce((a, b) => a + b, 0);
-                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+                    this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
+                        this.tryChangeShowVoiceIndicatorState(isTalking);
+
+                        return () => {
+                            this.tryChangeShowVoiceIndicatorState(false);
+                        };
                     });
                 }
                 //this.reposition();
@@ -2265,7 +2279,7 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.toggleTalk(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
                 this.showVoiceIndicatorChangeMessageSent = false;
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
+                //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
@@ -2927,7 +2941,7 @@ ${escapedMessage}
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
                 metadata: this._room.metadata,
                 iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
-                isLogged: localUserStore.isLogged(),
+                isLogged: this.room.isLogged,
             };
         });
         this.iframeSubscriptionList.push(
@@ -3475,7 +3489,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                gameManager.getCompanionTextureId() ? this.currentCompanionTexturePromise : undefined
+                this.currentCompanionTexturePromise
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -3589,7 +3603,9 @@ ${escapedMessage}
                 addPlayerData.visitCardUrl,
                 addPlayerData.companionTexture
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
-                    : undefined
+                    : new CancelablePromise<string>((_, reject) =>
+                          reject(new CompanionTextureError("No companion texture"))
+                      )
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {

@@ -4,14 +4,13 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
-    import { chatSearchBarValue, joignableRoom, navChat, selectedRoomStore } from "../Stores/ChatStore";
+    import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
+    import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { ChatRoom } from "../Connection/ChatConnection";
-    import { INITIAL_SIDEBAR_WIDTH } from "../../Stores/ChatStore";
+    import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
-    import messageSmileyImg from "../images/message-smiley.svg";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
@@ -23,12 +22,15 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
-    import { IconChevronUp, IconCloudLock } from "@wa-icons";
+    import RequireConnection from "./requireConnection.svelte";
+    import RefreshChat from "./RefreshChat.svelte";
+    import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
 
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
     const chat = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
@@ -144,6 +146,9 @@
             class="w-full border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
+            {#if $shouldRetrySendingEvents}
+                <RefreshChat />
+            {/if}
             <ChatHeader />
             <div
                 class="relative pt-16 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
@@ -158,21 +163,19 @@
                 {/if}
 
                 {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
-                    <div class="flex-col items-center justify-center text-center px-4 py-12">
-                        <img src={messageSmileyImg} alt="Smiley happy" />
-                        <div class="w-full text-center text-lg font-bold">
-                            {$LL.chat.requiresLoginForChat()}
-                        </div>
-                        <div class="flex justify-center">
-                            <a
-                                class="flex justify-center rounded h-10 bg-secondary hover:bg-secondary-800 hover:no-underline hover:text-white no-underline transition-all items-center my-4 text-base px-8 text-white"
-                                href="/login"
-                                on:click={() => analyticsClient.login()}
-                            >
-                                {$LL.menu.profile.login()}
-                            </a>
-                        </div>
-                    </div>
+                    <RequireConnection />
+                {:else if $loginTokenErrorStore}
+                    <RequireConnection>
+                        <span slot="emoji">
+                            <IconRefresh font-size="50" />
+                        </span>
+                        <span slot="title">
+                            {$LL.chat.loginTokenError()}
+                        </span>
+                        <span slot="button-label">
+                            {$LL.chat.reconnect()}
+                        </span>
+                    </RequireConnection>
                 {/if}
 
                 <div class="px-2 py-3 border border-solid border-x-0 border-t border-y-0 border-b-0 border-white/10">
@@ -323,14 +326,14 @@
                         <button
                             data-testid="restoreEncryptionButton"
                             on:click|stopPropagation={initChatConnectionEncryption}
-                            class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:tw-brightness-100 tw-m-0 tw-rounded-none tw-py-2 tw-px-3 tw-appearance-none"
+                            class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                         >
                             <IconCloudLock font-size="20" />
-                            <div class="tw-text-sm tw-font-bold tw-grow tw-text-left">
+                            <div class="text-sm font-bold grow text-left">
                                 {$LL.chat.e2ee.encryptionNotConfigured()}
                             </div>
                             <div
-                                class="tw-text-xs tw-rounded tw-border tw-border-solid tw-border-white tw-py-0.5 tw-px-1.5 group-hover:tw-bg-white/10"
+                                class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10"
                             >
                                 {$LL.chat.e2ee.configure()}
                             </div>

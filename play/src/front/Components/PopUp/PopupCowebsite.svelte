@@ -16,17 +16,9 @@
     });
 </script>
 
-<PopUpContainer>
+<PopUpContainer reduceOnSmallScreen={true}>
     {message}
     <svelte:fragment slot="buttons">
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={click}>Open Website</button>
     </svelte:fragment>
 </PopUpContainer>
-
-<style>
-    @media (max-width: 768px) {
-        .responsive-message {
-            scale: 1.2;
-        }
-    }
-</style>

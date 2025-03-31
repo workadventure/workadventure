@@ -128,7 +128,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         widthPercent: number | undefined,
         closable: boolean | undefined,
         // FIXME: unused private variables.
-        private roomName: string,
+        public roomName: string,
         private playerName: string,
         private jwt: string | undefined,
         public readonly jitsiConfig: JitsiRoomConfigData | undefined,

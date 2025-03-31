@@ -1,6 +1,6 @@
 <script lang="ts">
     export let text: string;
-    export let height = "h-screen";
+    export let height = "h-dvh";
     export let className: string;
 </script>
 

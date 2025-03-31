@@ -50,7 +50,6 @@ test.describe('Mobile', () => {
         // check if we can pin the camera of other user
         // to do this we use the pin button to unpin the video
         await pageAlice.locator('#cameras-container').getByRole('button').nth(1).click();
-        await pageAlice.locator('#video-container-receive').getByRole('button').first().click();
         await pageAlice.getByRole('button', {name: 'Pin', exact: true }).click();
 
         // Second browser
@@ -70,7 +69,6 @@ test.describe('Mobile', () => {
         await Menu.closeMenu(pageJohn);
         
         await pageJohn.locator('#cameras-container').getByRole('button').nth(1).click();
-        await pageJohn.locator('#video-container-receive').getByRole('button').first().click();
         await pageJohn.getByRole('button', {name: 'Pin', exact: true }).click();
         
 

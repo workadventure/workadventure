@@ -21,12 +21,12 @@ const debug = Debug("space");
 
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
-    private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
+    private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
     constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
-        this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
+        this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
@@ -34,7 +34,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersList(sourceWatcher);
-        usersList.set(spaceUser.id, spaceUser);
+        usersList.set(spaceUser.spaceUserId, spaceUser);
         this.notifyWatchers(
             {
                 message: {
@@ -48,15 +48,15 @@ export class Space implements CustomJsonReplacerInterface {
             sourceWatcher
         );
         this.communicationManager.handleUserAdded(spaceUser);
-        debug(`${this.name} : user => added ${spaceUser.id}`);
+        debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
     }
 
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(sourceWatcher);
-        const user = usersList.get(spaceUser.id);
+        const user = usersList.get(spaceUser.spaceUserId);
         if (!user) {
             console.error("User not found in this space", spaceUser);
-            Sentry.captureMessage(`User not found in this space ${spaceUser.id}`);
+            Sentry.captureMessage(`User not found in this space ${spaceUser.spaceUserId}`);
             return;
         }
 
@@ -64,7 +64,7 @@ export class Space implements CustomJsonReplacerInterface {
 
         merge(user, updateValues);
 
-        usersList.set(spaceUser.id, user);
+        usersList.set(spaceUser.spaceUserId, user);
         this.notifyWatchers(
             {
                 message: {
@@ -79,17 +79,17 @@ export class Space implements CustomJsonReplacerInterface {
             sourceWatcher
         );
         this.communicationManager.handleUserUpdated(spaceUser);
-        debug(`${this.name} : user => updated ${spaceUser.id}`);
+        debug(`${this.name} : user => updated ${spaceUser.spaceUserId}`);
     }
-    public removeUser(sourceWatcher: SpacesWatcher, id: number) {
+    public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
         const usersList = this.usersList(sourceWatcher);
-        const user = usersList.get(id);
+        const user = usersList.get(spaceUserId);
         if (!user) {
-            console.error("User not found in this space", id);
-            Sentry.captureMessage(`User not found in this space ${id}`);
+            console.error("User not found in this space", spaceUserId);
+            Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
             return;
         }
-        usersList.delete(id);
+        usersList.delete(spaceUserId);
 
         this.notifyWatchers(
             {
@@ -97,14 +97,18 @@ export class Space implements CustomJsonReplacerInterface {
                     $case: "removeSpaceUserMessage",
                     removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
                         spaceName: this.name,
-                        userId: id,
+                        spaceUserId: spaceUserId,
                     }),
                 },
             },
             sourceWatcher
         );
         this.communicationManager.handleUserDeleted(user);
-        debug(`${this.name} : user => removed ${id}`);
+        debug(`${this.name} : user => removed ${spaceUserId}`);
+
+        if (usersList.size === 0) {
+            this.users.delete(sourceWatcher);
+        }
     }
 
     public updateMetadata(watcher: SpacesWatcher, metadata: { [key: string]: unknown }) {
@@ -125,7 +129,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public addWatcher(watcher: SpacesWatcher) {
-        this.users.set(watcher, new Map<number, SpaceUser>());
+        this.users.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
         for (const spaceUsers of this.users.values()) {
             for (const spaceUser of spaceUsers.values()) {
@@ -178,7 +182,7 @@ export class Space implements CustomJsonReplacerInterface {
         return this.users.size === 0;
     }
 
-    private usersList(watcher: SpacesWatcher): Map<number, SpaceUser> {
+    private usersList(watcher: SpacesWatcher): Map<string, SpaceUser> {
         const usersList = this.users.get(watcher);
         if (!usersList) {
             throw new Error("No users list associated to the watcher");

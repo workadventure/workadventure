@@ -1,19 +1,34 @@
 import fs from 'fs';
-import { expect, test } from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 import {
 
   rebootBack,
   rebootPlay,
-  rebootTraefik,
   resetRedis,
-  startRedis,
-  stopRedis,
+  startRedis, startTraefik,
+  stopRedis, stopTraefik,
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import {evaluateScript} from "./utils/scripting";
+
+async function setVariable(page: Page, value: string) {
+  await evaluateScript(page, async (value) => {
+    await WA.onInit();
+    WA.state.textField = value;
+  }, value);
+}
+
+async function expectVariableToBe(page: Page, value: string) {
+    const variable = await evaluateScript(page, async () => {
+        await WA.onInit();
+        return WA.state.textField;
+    });
+    expect(variable).toBe(value);
+}
 
 test.setTimeout(360000);
 test.describe('Variables', () => {
@@ -23,43 +38,55 @@ test.describe('Variables', () => {
       test.skip();
     }
   });
-  // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
+  // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ browser, request }) => {
+  test('storage works @docker', async ({ browser, request }, { project }) => {
+    // Skip test for Firefox because of some bug when reloading too many pages.
+    if(project.name === "firefox") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
     const page = await getPage(browser, 'Alice',
-        publicTestMapUrl("tests/Variables/shared_variables.json", "variables") + "&somerandomparam=1");
-    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
+        publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 
-    await expect(textField).toHaveValue('default value');
-    await textField.fill('');
-    await textField.fill('new value');
-    await textField.press('Tab');
+//    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
+
+    await expectVariableToBe(page, 'default value');
+
+    await setVariable(page, 'new value');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
-    await expect(textField).toHaveValue('new value');
+    await expectVariableToBe(page, 'new value');
+
+    // Let's simulate a browser disconnection
+    await stopTraefik();
+    // Let's detect the reconnecting screen
+    await expect(page.getByTestId('camera-button')).toBeHidden();
+    await startTraefik();
 
     // Now, let's kill the reverse proxy to cut the connexion
-    console.log('Rebooting traefik');
+    /*console.log('Rebooting traefik');
     rebootTraefik();
-    console.log('Rebooting done');
+    console.log('Rebooting done');*/
 
     // Maybe we should:
     // 1: stop Traefik
     // 2: detect reconnecting screen
     // 3: start Traefik again
 
-    await expect(textField).toHaveValue('new value', { timeout: 60000 });
+    await expectVariableToBe(page, 'new value');
 
     stopRedis();
-    await textField.fill('');
-    await textField.fill('value set while Redis stopped');
-    await textField.press('Tab');
+
+    await setVariable(page, 'value set while Redis stopped');
 
     startRedis();
     await page.goto(maps_test_url);
@@ -69,7 +96,7 @@ test.describe('Variables', () => {
     for (const room of backDump) {
       if (
         room.roomUrl ===
-        new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
+        new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ) {
         throw new Error('Room still found in back');
       }
@@ -79,60 +106,51 @@ test.describe('Variables', () => {
     //console.log('pusherDump', pusherDump);
     await expect(
       pusherDump[
-        new URL(`/_/global/${maps_domain}/tests/Variables/shared_variables.json`, play_url).toString()
+        new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ]
     ).toBe(undefined);
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"))
-    /*await gotoWait200(
-        page,
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
-    );*/
+
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"))
+
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
-    await expect(textField).toHaveValue('value set while Redis stopped', {
-      timeout: 60000,
-    });
+    // FIXME: we should wait for potential variable changes if Redis did not reconnect yet
+    await expectVariableToBe(page, 'value set while Redis stopped');
 
     // Now, let's try to kill / reboot the back
     await rebootBack();
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
     /*await gotoWait200(
         page,
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );*/
-    await expect(textField).toHaveValue('value set while Redis stopped', {
-      timeout: 60000,
-    });
-    await textField.fill('');
-    await textField.fill('value set after back restart');
-    await textField.press('Tab');
+    await expectVariableToBe(page, 'value set while Redis stopped');
+
+    await setVariable(page, 'value set after back restart');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
-    await expect(textField).toHaveValue('value set after back restart');
+    await expectVariableToBe(page, 'value set after back restart');
 
     // Now, let's try to kill / reboot the back
     await rebootPlay(request);
 
-    await page.goto(publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
-    //await gotoWait200(page, publicTestMapUrl("tests/Variables/shared_variables.json", "variables"));
+    await page.goto(publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
+    //await gotoWait200(page, publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables"));
 
-    await expect(textField).toHaveValue('value set after back restart', {
-      timeout: 60000,
-    });
-    await textField.fill('');
-    await textField.fill('value set after pusher restart');
-    await textField.press('Tab');
+    await expectVariableToBe(page, 'value set after back restart');
+
+    await setVariable(page, 'value set after pusher restart');
 
     await page.goto(
-      publicTestMapUrl("tests/Variables/shared_variables.json", "variables")
+      publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables")
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
-    await expect(textField).toHaveValue('value set after pusher restart');
+    await expectVariableToBe(page, 'value set after pusher restart');
 
     await page.close();
     await page.context().close();
