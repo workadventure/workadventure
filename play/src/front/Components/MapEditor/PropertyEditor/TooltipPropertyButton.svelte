@@ -86,12 +86,6 @@
             margin-right: 0.5em;
             flex-grow: 1;
         }
-        input {
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
     }
     // .input-switch {
     //     position: relative;

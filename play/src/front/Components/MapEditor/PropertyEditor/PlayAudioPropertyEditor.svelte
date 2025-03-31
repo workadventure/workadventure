@@ -108,44 +108,46 @@
             bind:value={optionAdvancedActivated}
         />
 
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
-            {#if isArea === false}
-                <div class="value-input flex flex-col">
-                    <Input
-                        label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
-                        id="triggerMessage"
-                        type="text"
-                        placeholder={$LL.trigger.object()}
-                        bind:value={property.triggerMessage}
-                        onChange={onValueChange}
-                    />
-                </div>
-            {/if}
-            <div class="value-input">
-                <RangeSlider
-                    label={$LL.mapEditor.properties.audioProperties.volumeLabel()}
-                    unit=""
-                    id="volume"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    bind:value={property.volume}
-                    onChange={onRangeChange}
-                    buttonShape="square"
-                />
-            </div>
-            {#if !property.hideButtonLabel}
+        {#if optionAdvancedActivated}
+            <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+                {#if isArea === false}
+                    <div class="value-input flex flex-col">
+                        <Input
+                            label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                            id="triggerMessage"
+                            type="text"
+                            placeholder={$LL.trigger.object()}
+                            bind:value={property.triggerMessage}
+                            onChange={onValueChange}
+                        />
+                    </div>
+                {/if}
                 <div class="value-input">
-                    <Input
-                        label={$LL.mapEditor.entityEditor.buttonLabel()}
-                        id="audioButtonLabel"
-                        type="text"
-                        bind:value={property.buttonLabel}
-                        onChange={onValueChange}
+                    <RangeSlider
+                        label={$LL.mapEditor.properties.audioProperties.volumeLabel()}
+                        unit=""
+                        id="volume"
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        bind:value={property.volume}
+                        onChange={onRangeChange}
+                        buttonShape="square"
                     />
                 </div>
-            {/if}
-        </div>
+                {#if !property.hideButtonLabel}
+                    <div class="value-input">
+                        <Input
+                            label={$LL.mapEditor.entityEditor.buttonLabel()}
+                            id="audioButtonLabel"
+                            type="text"
+                            bind:value={property.buttonLabel}
+                            onChange={onValueChange}
+                        />
+                    </div>
+                {/if}
+            </div>
+        {/if}
     </span>
 </PropertyEditorBase>
 
@@ -175,17 +177,6 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-            flex-grow: 1;
-        }
-        input {
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
     }
     // .input-switch {
     //     position: relative;
