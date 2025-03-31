@@ -722,7 +722,7 @@ message WebRtcStartMessage {
 }
 
 message WebRtcDisconnectMessage {
-  int32 userId = 1;
+  string userId = 1;
 }
 
 message WebRtcSignalToClientMessage {
