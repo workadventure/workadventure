@@ -42,10 +42,4 @@
             opacity: 1;
         }
     }
-
-    @media (max-width: 768px) {
-        .responsive {
-            scale: 0.6;
-        }
-    }
 </style>

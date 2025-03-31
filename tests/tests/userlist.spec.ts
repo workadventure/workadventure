@@ -43,3 +43,37 @@ test.describe("Walk to", () => {
     await page.context().close();
   });
 });
+
+
+test.describe("Send Message from User List", () => {
+  test("Send Message from User List @oidc", async ({ page, browser }, { project }) => {
+    if (isMobile(page)) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+    }
+
+    const adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+
+    const alicePosition = {
+      x: 3 * 32,
+      y: 4 * 32,
+    };
+
+    await Map.teleportToPosition(adminPage, alicePosition.x, alicePosition.y);
+
+    const userBob = await getPage(browser, "Member1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+
+    //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
+
+    await chatUtils.open(userBob, false);
+    await chatUtils.slideToUsers(userBob);
+    await chatUtils.UL_sendMessage(userBob, "Admin1", "Hello Alice");
+
+    await expect(userBob.getByTestId("roomName")).toHaveText(
+      "John Doe"
+    );
+
+    await userBob.close();
+    await adminPage.close();
+  });
+});

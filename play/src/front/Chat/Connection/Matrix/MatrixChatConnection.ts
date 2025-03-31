@@ -81,6 +81,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     folders: Readable<MatrixRoomFolder[]>;
     directRoomsUsers: Readable<ChatUser[]>;
     clientPromise: Promise<MatrixClient>;
+    shouldRetrySendingEvents: Readable<boolean>;
+
     constructor(
         clientPromise: Promise<MatrixClient>,
         private statusStore: Readable<
@@ -180,8 +182,15 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 );
             }
         );
+
         this.usersStatus = new MapStore<string, AvailabilityStatus>();
         this.isEncryptionRequiredAndNotSet = this.matrixSecurity.isEncryptionRequiredAndNotSet;
+
+        this.shouldRetrySendingEvents = derived(
+            Array.from(this.roomList.values()).map((room) => room.shouldRetrySendingEvents),
+            (shouldRetrySendingEvents) =>
+                shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent)
+        );
 
         this.handleRoom = this.onClientEventRoom.bind(this);
         this.handleDeleteRoom = this.onClientEventDeleteRoom.bind(this);
@@ -1066,6 +1075,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         return new MatrixChatRoom(room);
     }
+
+    retrySendingEvents = async () => {
+        try {
+            const roomList = Array.from(this.roomList.values());
+            await Promise.allSettled(roomList.map((room) => room.retrySendingEvents()));
+        } catch (error) {
+            console.error("Unable to retry sending events", error);
+            Sentry.captureException(error);
+        }
+    };
 
     clearListener() {
         this.roomList.forEach((room) => {

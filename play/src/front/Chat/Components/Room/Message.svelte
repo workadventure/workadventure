@@ -55,31 +55,35 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="container-grid justify-start {replyDepth === 0 ? 'max-w-[calc(100% - 100px)]' : ''} {!isDeleted
-            ? 'group-hover/message:pb-4'
-            : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
+        class="container-grid justify-start overflow-visible {replyDepth === 0
+            ? 'max-w-[calc(100% - 100px)]'
+            : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
+            ? 'justify-end grid-container-inverted pr-4'
+            : 'justify-start pl-3'}"
     >
-        <div
-            class="messageHeader text-gray-500 text-xxs p-0 m-0 flex justify-between items-end opacity-0 h-0 group-hover/message:pt-1 group-hover/message:h-auto group-hover/message:opacity-100 mx-2"
-            class:flex-row-reverse={isMyMessage}
-            hidden={isQuotedMessage || messageFromSystem}
-        >
-            <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
-                >{isMyMessage ? "You" : sender?.username}</span
+        <div class="messageHeader relative w-full">
+            <div
+                class="absolute w-full h-fit top-0 group-hover/message:-translate-y-[4px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
+                class:flex-row-reverse={isMyMessage}
+                hidden={isQuotedMessage || messageFromSystem}
             >
-            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                >{date?.toLocaleTimeString($locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}</span
-            >
-            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                >{date?.toLocaleDateString($locale, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                })}</span
-            >
+                <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
+                    >{isMyMessage ? "You" : sender?.username}</span
+                >
+                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
+                >
+                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleDateString($locale, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                    })}</span
+                >
+            </div>
         </div>
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
@@ -88,7 +92,7 @@
         {/if}
 
         <div
-            class="message
+            class="message group-hover/message:translate-y-[6px] transition-transform
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
@@ -155,7 +159,7 @@
     }
 
     .container-grid {
-        overflow: auto;
+        overflow: visible;
         display: grid;
         grid-gap: 4px;
         grid-template-areas: ". messageHeader" "avatar message" ". response";

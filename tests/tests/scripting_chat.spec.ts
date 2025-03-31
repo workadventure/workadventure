@@ -112,10 +112,15 @@ test.describe("#Scripting chat functions", () => {
     //await oidcMemberTagLogin(alice, false);
 
     const chatMessageReceivedPromise = evaluateScript(alice, async () => {
+      await WA.players.configureTracking();
+
       return new Promise((resolve) => {
         WA.chat.onChatMessage(
           (message, event) => {
-            resolve(message);
+            resolve({
+              message,
+              event,
+            });
           },
           {
             scope: "bubble",
@@ -146,8 +151,9 @@ test.describe("#Scripting chat functions", () => {
     });
 
     const chatMessageReceived = await chatMessageReceivedPromise;
-    expect(chatMessageReceived).toBe("Test message sent");
-
+    expect(chatMessageReceived.message).toBe("Test message sent");
+    expect(chatMessageReceived.event.authorId).toBeDefined();
+    expect(chatMessageReceived.event.author).toBeDefined();
     await alice.close();
     await alice.context().close();
     await bob.close();

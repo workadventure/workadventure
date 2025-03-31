@@ -22,6 +22,8 @@ export class VoidChatConnection implements ChatConnectionInterface {
     isGuest: Readable<boolean> = writable(false);
     hasUnreadMessages: Readable<boolean> = writable(false);
     folders: Readable<RoomFolder[]> = writable([]);
+    shouldRetrySendingEvents: Readable<boolean> = writable(false);
+    retrySendingEvents: () => Promise<void> = () => Promise.resolve();
 
     createRoom(roomOptions: CreateRoomOptions): Promise<{ room_id: string }> {
         throw new Error("VoidChatConnection: createRoom is not implemented.");

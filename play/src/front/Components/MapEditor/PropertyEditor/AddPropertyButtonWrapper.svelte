@@ -359,7 +359,7 @@
         headerText={$LL.mapEditor.properties.tooltipProperties.label()}
         descriptionText={$LL.mapEditor.properties.tooltipProperties.description()}
         img={"resources/icons/icon_infobulle.png"}
-        style={`z-index: 170;${isActive ? "background-color: #4156f6;" : ""}`}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
         }}

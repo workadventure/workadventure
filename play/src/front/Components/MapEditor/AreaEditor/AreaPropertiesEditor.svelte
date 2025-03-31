@@ -397,7 +397,7 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="overflow-auto space-y-3">
+    <div class="overflow-x-hidden space-y-3">
         <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
