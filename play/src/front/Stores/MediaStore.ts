@@ -183,9 +183,9 @@ const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
 });
 
 /**
- * A store containing whether the mouse is getting close the bottom right corner.
+ * A store containing if the mouse is over the camera button
  */
-export const mouseInCameraTriggerArea = writable(false);
+export const mouseIsHoveringCameraButton = writable(false);
 
 export const cameraNoEnergySavingStore = writable<boolean>(false);
 
@@ -271,7 +271,7 @@ export const cameraEnergySavingStore = derived(
         userMoved5SecondsAgoStore,
         peerStore,
         enabledWebCam10secondsAgoStore,
-        mouseInCameraTriggerArea,
+        mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
         streamingMegaphoneStore,
         devicesNotLoaded,
