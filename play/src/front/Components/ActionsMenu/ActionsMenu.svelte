@@ -24,6 +24,8 @@
         actionsMenuStore.clear();
     }
 
+    let buttonsLayout: "row" | "column" = "row";
+
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
         if (actionsMenuData) {
@@ -39,6 +41,12 @@
                     return 0;
                 }
             });
+            const nbButtons = sortedActions.length + (actionsMenuData.menuName ? 0 : 1);
+            if (nbButtons > 2) {
+                buttonsLayout = "column";
+            } else {
+                buttonsLayout = "row";
+            }
         }
     });
 
@@ -85,14 +93,14 @@
             <div
                 class="flex items-center bg-contrast px-2"
                 class:margin-close={!actionsMenuData.menuName}
-                class:flex-col={sortedActions.length > 2}
-                class:flex-row={sortedActions.length <= 2}
+                class:flex-col={buttonsLayout === "column"}
+                class:flex-row={buttonsLayout === "row"}
             >
                 {#each sortedActions ?? [] as action (action.actionName)}
                     <button
                         type="button"
                         class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
-                        class:mx-2={sortedActions.length > 2}
+                        class:mx-2={buttonsLayout === "column"}
                         on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
                             action.callback();
