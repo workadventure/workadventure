@@ -367,8 +367,11 @@
     </div>
     <div class="entity-name-container">
         {#if !showDescriptionField}
-            <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}
-                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</button
+            <a
+                href="#addDescriptionField"
+                class="pl-0 text-blue-500 flex flex-row items-center"
+                on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
             >
         {:else}
             <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
