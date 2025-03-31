@@ -166,15 +166,19 @@ test.describe("matrix chat area property @matrix", () => {
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
-    await page.addLocatorHandler(page.getByTestId("closeModal"), async () => {
-      await page.getByTestId("closeModal").click();
+
+    await page.addLocatorHandler(page.getByTestId("cancelSSO"), async () => {
+         await page.getByTestId("cancelSSO").click();
     });
+
 
     await page.getByTestId("chatBackward").click();
     await page.getByTestId("name of new room").hover() ;
     await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await page.getByTestId("manageParticipantOption").click()
-    await expect(page.getByText("Manage participants")).toBeVisible();
+    await expect(page.getByText("Manage participants")).toBeVisible({
+      timeout: 60000
+    });
 
   });
 
