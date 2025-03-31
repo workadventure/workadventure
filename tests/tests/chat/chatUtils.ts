@@ -42,21 +42,24 @@ class ChatUtils {
 
     await page.getByText(roomName).click();
 
-    await page.getByTestId("VerifyWithPassphraseButton").click();
+    // await page.getByTestId("VerifyWithPassphraseButton").click();
 
-    //eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(1000);
+    // //eslint-disable-next-line playwright/no-wait-for-timeout
+     await page.waitForTimeout(1000);
     //eslint-disable-next-line playwright/no-element-handle
     const ssoButton = await page.$("text=Continue with SSO");
 
     if (ssoButton) {
+
       const oidcPagePromise = context.waitForEvent("page", {
         // Give ample time for the SSO redirection
         timeout: 2000,
       });
+
       await page.getByText("Continue with SSO").click({
         timeout: 1000,
       });
+
       const oidcPage = await oidcPagePromise;
       await oidcPage.getByText("Continue with OIDC Server Mock").click();
       await page.getByText("Finish").click();
@@ -70,12 +73,12 @@ class ChatUtils {
   }
 
   public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {
-    await page.getByTestId("VerifyWithPassphraseButton").click();
+   // await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByTestId("cancelSSO").click();
   }
 
   public async restoreEncryption(page: Page) {
-    await page.getByTestId("VerifyWithPassphraseButton").click();
+   // await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByText("Confirm").click();
   }

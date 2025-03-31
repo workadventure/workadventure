@@ -4,6 +4,7 @@ import { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
 import { selectedRoomStore } from "./SelectRoomStore";
 
 type NavChatTab =
@@ -47,6 +48,20 @@ export const navChat = createNavChatStore();
 
 export const shownRoomListStore = writable<string>("");
 export const chatSearchBarValue = writable<string>("");
+
+export function initializeChatVisibilitySubscription() {
+    const unsubscriber = chatVisibilityStore.subscribe((visible) => {
+        if (visible && get(selectedRoomStore)) {
+            matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
+                console.error(error);
+            });
+        }
+    });
+
+    return () => {
+        unsubscriber();
+    };
+}
 
 export const selectedChatMessageToReply = writable<NewChatMessage | null>(null);
 
