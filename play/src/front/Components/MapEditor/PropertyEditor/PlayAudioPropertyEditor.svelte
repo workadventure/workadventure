@@ -158,26 +158,10 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
+    
+
     }
-    .value-switch {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        align-items: center;
-        height: 2.5em;
-    }
+
     // .input-switch {
     //     position: relative;
     //     top: 0px;

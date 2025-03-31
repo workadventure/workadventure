@@ -81,11 +81,7 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-            flex-grow: 1;
-        }
+      
     }
     // .input-switch {
     //     position: relative;
