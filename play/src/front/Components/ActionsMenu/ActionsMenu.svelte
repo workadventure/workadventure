@@ -83,7 +83,7 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast"
+                class="flex items-center bg-contrast px-2"
                 class:margin-close={!actionsMenuData.menuName}
                 class:flex-col={sortedActions.length > 2}
                 class:flex-row={sortedActions.length <= 2}
@@ -91,7 +91,8 @@
                 {#each sortedActions ?? [] as action (action.actionName)}
                     <button
                         type="button"
-                        class="btn text-nowrap justify-center m-2 w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
+                        class:mx-2={sortedActions.length > 2}
                         on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
                             action.callback();
