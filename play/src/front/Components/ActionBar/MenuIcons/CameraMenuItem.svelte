@@ -6,7 +6,12 @@
     import CamOnIcon from "../../Icons/CamOnIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import CamOffIcon from "../../Icons/CamOffIcon.svelte";
-    import { availabilityStatusStore, requestedCameraState, silentStore } from "../../../Stores/MediaStore";
+    import {
+        availabilityStatusStore,
+        mouseIsHoveringCameraButton,
+        requestedCameraState,
+        silentStore,
+    } from "../../../Stores/MediaStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
@@ -49,6 +54,8 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
     dataTestId="camera-button"
+    on:mouseenter={() => mouseIsHoveringCameraButton.set(true)}
+    on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
     {#if $requestedCameraState && !$silentStore}
         <CamOnIcon />
