@@ -26,6 +26,7 @@ const disableAnimations = "disableAnimations";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const allowPictureInPicture = "allowPictureInPicture";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
 const preferredAudioInputDevice = "preferredAudioInputDevice";
@@ -285,6 +286,14 @@ class LocalUserStore {
 
     getNotification(): boolean {
         return localStorage.getItem(notification) === "true";
+    }
+
+    setAllowPictureInPicture(value: boolean): void {
+        localStorage.setItem(allowPictureInPicture, value.toString());
+    }
+
+    getAllowPictureInPicture(): boolean {
+        return localStorage.getItem(allowPictureInPicture) !== "false";
     }
 
     setChatSounds(value: boolean): void {

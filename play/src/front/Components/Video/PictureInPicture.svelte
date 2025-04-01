@@ -97,6 +97,12 @@
         activePictureInPictureStore.set(false);
     }
 
+    const unsubscribeStreamablePictureInPictureStore = streamablePictureInPictureStore.subscribe((streamables) => {
+        if (streamables.size == 0) {
+            destroyPictureInPictureComponent();
+        }
+    });
+
     const unsubscribeVisibilityStore = pictureInPictureStore.subscribe((value) => {
         if (!value) {
             destroyPictureInPictureComponent();
@@ -151,6 +157,7 @@
     onDestroy(() => {
         destroyPictureInPictureComponent();
         unsubscribeVisibilityStore();
+        unsubscribeStreamablePictureInPictureStore();
         if (pipWindowStoreSubscriber) pipWindowStoreSubscriber();
     });
 </script>
