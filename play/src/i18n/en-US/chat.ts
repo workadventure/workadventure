@@ -5,6 +5,8 @@ const chat: BaseTranslation = {
     adventurers: "Users",
     onlineUsers: "Online user",
     getCloserTitle: "Get closer to someone",
+    noRoomOpen: "Open a conversation",
+    noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",
     getCloserDesc:
         "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
     noMessage: "No message sent yet!",
