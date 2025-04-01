@@ -111,7 +111,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     return undefined;
 });
 
-const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
     return {
         uniqueId: "-1",
         media: {

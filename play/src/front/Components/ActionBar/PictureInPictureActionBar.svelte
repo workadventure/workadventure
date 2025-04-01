@@ -20,7 +20,7 @@
     const dispatch = createEventDispatcher();
 
     function toggleChat() {
-        dispatch("toggleChat");
+        window.focus();
     }
 
     function toggleScreensharing() {
