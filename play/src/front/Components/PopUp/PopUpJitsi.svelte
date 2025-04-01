@@ -8,6 +8,7 @@
     export let userInputManager: UserInputManager;
 
     onMount(() => {
+        console.log("👮🏻👮🏻👮🏻 On ajoute le click: ", click);
         userInputManager.addSpaceEventListener(click);
     });
 
