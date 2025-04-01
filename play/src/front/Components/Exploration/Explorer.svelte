@@ -167,10 +167,12 @@
         <div class="flex flex-row overflow-y-hidden overflow-x-scroll">
             <AddPropertyButtonWrapper
                 property="personalAreaPropertyData"
+                isActive={$selectFilters.includes("personalAreaPropertyData")}
                 on:click={() => addFilter("personalAreaPropertyData")}
             />
             <AddPropertyButtonWrapper
                 property="restrictedRightsPropertyData"
+                isActive={$selectFilters.includes("restrictedRightsPropertyData")}
                 on:click={() => addFilter("restrictedRightsPropertyData")}
             />
             <AddPropertyButtonWrapper
@@ -219,7 +221,7 @@
                 property="start"
                 isActive={$selectFilters.includes("start")}
                 on:click={() => {
-                    addFilter("silent");
+                    addFilter("start");
                 }}
             />
             <AddPropertyButtonWrapper
@@ -227,6 +229,13 @@
                 isActive={$selectFilters.includes("focusable")}
                 on:click={() => {
                     addFilter("focusable");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="matrixRoomPropertyData"
+                isActive={$selectFilters.includes("matrixRoomPropertyData")}
+                on:click={() => {
+                    addFilter("matrixRoomPropertyData");
                 }}
             />
 

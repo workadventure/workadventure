@@ -571,7 +571,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    clicPropertykMapEditor(name: string, style?: string): void {
+    clickPropertyMapEditor(name: string, style?: string): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture(`wa_map-editor_click_property`, {

@@ -8,7 +8,7 @@
 </script>
 
 <button
-    class="user-menu-btn p-0 pt-1 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {enabled
+    class="user-menu-btn p-0 h-5 w-5 flex items-center justify-center mr-1 rounded-sm hover:bg-white/20 right-0 top-0 bottom-0 m-auto transition-all pointer-events-auto {enabled
         ? 'bg-white/20 hover:bg-white/30'
         : ''}"
     on:click={() => dispatch("click")}

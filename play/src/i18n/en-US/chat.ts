@@ -25,7 +25,8 @@ const chat: BaseTranslation = {
         in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
-        walkTo: "Walk to",
+        // walkTo: "Walk to",
+        TalkTo: "Talk To",
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
         sendMessage: "Send Message",
@@ -452,6 +453,11 @@ const chat: BaseTranslation = {
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",
+    refreshChat: "Refresh Chat",
+    dismiss: "Dismiss",
+    whoops: "Whoops ! something went wrong",
+    failedToOpenRoom: "Failed to open room",
+    refreshChatError: "Failed to refresh chat",
     discord: {
         chatBand: {
             configure: "Configure",

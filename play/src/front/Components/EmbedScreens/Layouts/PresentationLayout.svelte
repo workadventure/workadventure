@@ -78,8 +78,9 @@
     >
         {#if $streamableCollectionStore.size > 0}
             <div
-                class="justify-end md:justify-center w-full h-full relative"
+                class="justify-end md:justify-center w-full relative"
                 class:max-height-quarter={$isOnOneLine}
+                class:h-full={!$isOnOneLine}
                 bind:this={camContainer}
             >
                 {#if $streamableCollectionStore.size > 0}

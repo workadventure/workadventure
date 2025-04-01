@@ -57,7 +57,7 @@ const MetaTagsData = z.object({
     }),
     provider: extendApi(z.string().optional().default("WorkAdventure"), {
         description: "Provider of the webpage",
-        example: "WorkAdventure SAAS plateform",
+        example: "WorkAdventure SAAS platform",
     }),
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
@@ -239,6 +239,9 @@ export const isMapDetailsData = z.object({
     }),
     modules: extendApi(z.array(z.string()).optional().nullable(), {
         description: "List of external-modules to load",
+    }),
+    isLogged: extendApi(z.boolean().optional(), {
+        description: "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
     }),
 });
 

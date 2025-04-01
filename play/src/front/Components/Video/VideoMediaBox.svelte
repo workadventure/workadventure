@@ -27,6 +27,7 @@
     export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
+
     // If true, and if there is not video, the height of the video box will be 11rem
     export let miniMode = false;
 
@@ -151,21 +152,23 @@
             muted={peer.muteAudio}
             {videoUrl}
             {videoConfig}
-            cover={peer.displayMode === "cover"}
+            cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
+            withBackground={!isHighlighted}
         >
             <UserName
                 name={$name}
                 picture={pictureStore}
                 isPlayingAudio={showVoiceIndicator}
+                isCameraDisabled={!videoEnabled && !miniMode}
                 position={videoEnabled
                     ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
-                    : "absolute bottom-0.5 left-3"}
+                    : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
             >
                 {#await extendedSpaceUserPromise}
                     <div />
                 {:then spaceUser}
                     {#if spaceUser}
-                        <div class="self-center" bind:this={userMenuButton}>
+                        <div class="flex items-center justify-center" bind:this={userMenuButton}>
                             <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                         </div>
                     {/if}

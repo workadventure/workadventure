@@ -133,7 +133,12 @@
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool (tool.toolName)}
                 <!--            <div class="tool-button" use:popperRef={popperActions[i][0]}>-->
-                <div class="tool-button">
+                <div class="tool-button relative group">
+                    <div
+                        class=" bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 right-[130%] "
+                    >
+                        {tool.tooltiptext}
+                    </div>
                     <button
                         class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
                             ? 'bg-secondary'

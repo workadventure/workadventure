@@ -23,11 +23,14 @@
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
     import RequireConnection from "./requireConnection.svelte";
+    import RefreshChat from "./RefreshChat.svelte";
     import { IconChevronUp, IconCloudLock, IconRefresh } from "@wa-icons";
+
     export let sideBarWidth: number = INITIAL_SIDEBAR_WIDTH;
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
     const chat = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
     const CHAT_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 2;
@@ -143,6 +146,9 @@
             class="w-full border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
+            {#if $shouldRetrySendingEvents}
+                <RefreshChat />
+            {/if}
             <ChatHeader />
             <div
                 class="relative pt-16 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
