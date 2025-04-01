@@ -32,7 +32,15 @@ export const chatSearchBarValue = writable<string>("");
 
 export function initializeChatVisibilitySubscription() {
     const unsubscriber = chatVisibilityStore.subscribe((visible) => {
-        if (visible && get(selectedRoomStore) && get(selectedRoomStore)?.isEncrypted) {
+        const selectedRoom = get(selectedRoomStore);
+
+        if (!selectedRoom) {
+            return;
+        }
+
+        const isEncrypted = get(selectedRoom.isEncrypted);
+
+        if (visible && isEncrypted) {
             matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
                 console.error(error);
             });
