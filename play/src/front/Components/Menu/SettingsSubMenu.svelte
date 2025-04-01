@@ -1,6 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+    import {
+        audioManagerFileStore,
+        audioManagerVisibilityStore,
+        bubbleSoundStore,
+    } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
@@ -20,6 +24,7 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
+    import Select from "../Input/Select.svelte";
     import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
     import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
@@ -56,6 +61,9 @@
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+
+    let valueBubbleSound = localUserStore.getBubbleSound();
+    const sound = new Audio();
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -201,6 +209,18 @@
         analyticsClient.settingAudioVolume();
         localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
         volumeProximityDiscussionStore.set(volumeProximityDiscussion);
+    }
+
+    function changeBubbleSound() {
+        localUserStore.setBubbleSound(valueBubbleSound);
+        bubbleSoundStore.set(valueBubbleSound);
+        this.playBubbleSound();
+    }
+
+    async function playBubbleSound() {
+        sound.src = `/resources/objects/webrtc-in-${valueBubbleSound}.mp3`;
+        sound.volume = 0.2;
+        await sound.play();
     }
 </script>
 
@@ -425,6 +445,23 @@
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
             <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
             {$LL.menu.settings.otherSettings()}
+        </div>
+
+        <div class="mt-2 p-2">
+            <div class="flex items-end gap-2">
+                <Select
+                    id="bubble-sound"
+                    bind:value={valueBubbleSound}
+                    onChange={changeBubbleSound}
+                    label={$LL.menu.settings.bubbleSound()}
+                    outerClass="flex-1"
+                    options={[
+                        { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
+                        { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
+                    ]}
+                />
+                <button class="btn btn-light btn-ghost mb-2" on:click={playBubbleSound}> ▶️ </button>
+            </div>
         </div>
 
         <div class="flex cursor-pointer items-center relative m-4">
