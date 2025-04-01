@@ -53,13 +53,14 @@ test.describe("Walk to", () => {
 });
 
 
-test.describe("Send Message from User List", () => {
-  test("Send Message from User List", async ({ page, browser }, { project }) => {
+test.describe("Send Message from User List @oidc @matrix @chat", () => {
+  test("Send Message from User List @oidc @matrix @chat", async ({ page, browser }, { project }) => {
     if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
+
 
     const isMobileTest = project.name === "mobilechromium";
     await page.goto(publicTestMapUrl("tests/E2E/empty.json", "userlist"));
