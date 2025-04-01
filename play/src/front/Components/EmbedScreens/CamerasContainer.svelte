@@ -198,7 +198,7 @@
     }
 </script>
 
-<div class="w-full h-full" bind:clientHeight={maxContainerHeight}>
+<div class="w-full" bind:clientHeight={maxContainerHeight} class:h-full={!isOnOneLine}>
     <div
         bind:clientWidth={containerWidth}
         class={"pointer-events-none gap-4" + (isOnOneLine ? "max-h-full" : "")}

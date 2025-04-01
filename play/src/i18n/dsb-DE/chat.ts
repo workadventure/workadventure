@@ -17,7 +17,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "na ",
         teleport: "Teleport",
         search: "Jadnorje pytaj!",
-        walkTo: "Hyś k",
+        // walkTo: "Hyś k",
         teleporting: "Teleportěrowanje...",
         businessCard: "Wizitna kórtka",
     },

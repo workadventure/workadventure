@@ -81,7 +81,7 @@ export class MatrixChatMessage implements ChatMessage {
         }
         if (relation) {
             if (relation["m.replace"]) {
-                return { body: relation["m.replace"].content?.["m.new_content"].body, url: undefined };
+                return { body: relation["m.replace"].content?.["m.new_content"]?.body, url: undefined };
             }
         }
 
