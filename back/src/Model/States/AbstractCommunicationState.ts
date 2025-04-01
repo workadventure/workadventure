@@ -7,7 +7,7 @@ import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { CommunicationConfig } from "../CommunicationManager";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
-    protected _readyUsers: Set<number> = new Set();
+    protected _readyUsers: Set<string> = new Set();
     protected SWITCH_TIMEOUT_MS = 0;
     protected _nextState: CommunicationState | null = null;
     protected abstract _currentCommunicationType: CommunicationType;
@@ -22,7 +22,7 @@ export abstract class CommunicationState implements ICommunicationState {
         this.preparedSwitchAction();
     }
     dispatchSwitchEvent(
-        userId: number,
+        userId: string,
         eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage",
         payload: unknown
     ): void {
@@ -66,7 +66,7 @@ export abstract class CommunicationState implements ICommunicationState {
             const users = this._space.getAllUsers();
 
             users.forEach((user) => {
-                this.dispatchSwitchEvent(user.id, "executeSwitchMessage", {
+                this.dispatchSwitchEvent(user.spaceUserId, "executeSwitchMessage", {
                     strategy: this._nextCommunicationType,
                 });
             });
@@ -90,7 +90,7 @@ export abstract class CommunicationState implements ICommunicationState {
     handleUserUpdated(user: SpaceUser): void {
         this._currentStrategy.updateUser(user);
     }
-    handleUserReadyForSwitch(userId: number): void {
+    handleUserReadyForSwitch(userId: string): void {
         if (!this.isSwitching()) {
             return;
         }
@@ -104,15 +104,15 @@ export abstract class CommunicationState implements ICommunicationState {
 
     protected notifyAllUsersToPrepareSwitchToNextState(): void {
         const users = this._space.getAllUsers();
-        const usersToNotify = users.filter((user) => !this._readyUsers.has(user.id));
+        const usersToNotify = users.filter((user) => !this._readyUsers.has(user.spaceUserId));
 
         usersToNotify.forEach((user) => {
-            this.dispatchSwitchEvent(user.id, "prepareSwitchMessage", { strategy: this._nextCommunicationType });
+            this.dispatchSwitchEvent(user.spaceUserId, "prepareSwitchMessage", { strategy: this._nextCommunicationType });
         });
     }
 
     protected notifyUserOfCurrentStrategy(user: SpaceUser, strategy: CommunicationType): void {
-        this.dispatchSwitchEvent(user.id, "communicationStrategyMessage", { strategy });
+        this.dispatchSwitchEvent(user.spaceUserId, "communicationStrategyMessage", { strategy });
     }
     protected abstract shouldSwitchBackToCurrentState(): boolean;
     protected abstract shouldSwitchToNextState(): boolean;

@@ -11,7 +11,7 @@ export class DefaultState implements ICommunicationState {
     handleUserUpdated(user: SpaceUser): void {
         console.info("DefaultState handleUserUpdated", user);
     }
-    handleUserReadyForSwitch(userId: number): void {
+    handleUserReadyForSwitch(userId: string): void {
         console.info("DefaultState handleUserReadyForSwitch", userId);
     }
 }

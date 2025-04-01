@@ -60,9 +60,9 @@ export class LiveKitParticipant {
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
-            this.space.livekitVideoStreamStore.delete(this._spaceUser.id);
+            this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
         } else if (publication.source === Track.Source.ScreenShare) {
-            this.space.livekitScreenShareStreamStore.delete(this._spaceUser.id);
+            this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
         }
     }
 
@@ -91,11 +91,11 @@ export class LiveKitParticipant {
     }
 
     private updateLivekitVideoStreamStore() {
-        this.space.livekitVideoStreamStore.set(this._spaceUser.id, this.getVideoStream());
+        this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, this.getVideoStream());
     }
 
     private updateLivekitScreenShareStreamStore() {
-        this.space.livekitScreenShareStreamStore.set(this._spaceUser.id, this.getScreenShareStream());
+        this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, this.getScreenShareStream());
     }
 
     public getVideoStream(): Streamable {

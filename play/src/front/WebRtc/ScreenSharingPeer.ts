@@ -46,7 +46,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "fit";
     constructor(
-        user: UserSimplePeerInterface,
+        public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
@@ -62,7 +62,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        this.userId = user.userId;
+        this.userId = player.userId;
         this.uniqueId = "screensharing_" + this.userId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
@@ -171,7 +171,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                         signal: JSON.stringify(data),
                     },
                 },
-                this.player.userId
+                this.user.userId
             );
         } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);

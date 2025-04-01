@@ -13,18 +13,22 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserAdded(user: SpaceUser): void {
+        console.log("handleUserAdded", user.spaceUserId);
         this._currentState.handleUserAdded(user);
     }
 
     public handleUserDeleted(user: SpaceUser): void {
+        console.log("handleUserDeleted", user.spaceUserId);
         this._currentState.handleUserDeleted(user);
     }
 
     public handleUserUpdated(user: SpaceUser): void {
+        console.log("handleUserUpdated", user.spaceUserId);
         this._currentState.handleUserUpdated(user);
     }
 
-    public handleUserReadyForSwitch(userId: number): void {
+    public handleUserReadyForSwitch(userId: string): void {
+        console.log("handleUserReadyForSwitch", userId);
         this._currentState.handleUserReadyForSwitch(userId);
     }
 

@@ -6,7 +6,8 @@ import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { LiveKitService } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-    private usersReady: number[] = [];
+    //TODO : voir pourquoi array simple et pas set 
+    private usersReady: string[] = [];
 
     constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
@@ -22,8 +23,8 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
-            receiverUserId: user.id,
-            senderUserId: user.id,
+            receiverUserId: user.spaceUserId,
+            senderUserId: user.spaceUserId,
             spaceEvent: {
                 event: {
                     $case: "livekitInvitationMessage",
@@ -46,8 +47,8 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
         this.space.dispatchPrivateEvent({
             spaceName: this.space.getSpaceName(),
-            receiverUserId: user.id,
-            senderUserId: user.id,
+            receiverUserId: user.spaceUserId,
+            senderUserId: user.spaceUserId,
             spaceEvent: {
                 event: {
                     $case: "livekitDisconnectMessage",
@@ -65,13 +66,13 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         const users = this.space.getAllUsers();
         users.forEach((user) => {
             this.addUser(user, switchInProgress).catch((error) => {
-                console.error(`Error adding user ${user.id} to Livekit:`, error);
+                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
                 Sentry.captureException(error);
             });
         });
     }
 
-    addUserReady(userId: number): void {
+    addUserReady(userId: string): void {
         this.usersReady.push(userId);
     }
 
@@ -83,7 +84,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         const users = this.space.getAllUsers();
         users.forEach((user) => {
             this.deleteUser(user).catch((error) => {
-                console.error(`Error deleting user ${user.id} from Livekit:`, error);
+                console.error(`Error deleting user ${user.spaceUserId} from Livekit:`, error);
                 Sentry.captureException(error);
             });
         });

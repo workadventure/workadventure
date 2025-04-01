@@ -18,8 +18,8 @@ export interface ISwitchConfig {
 
 export interface ICommunicationEvent {
     spaceName: string;
-    receiverUserId: number;
-    senderUserId: number;
+    receiverUserId: string;
+    senderUserId: string;
     event: {
         $case: "prepareSwitchMessage" | "communicationStrategyMessage" | "executeSwitchMessage" | "webRtcStartMessage";
         [key: string]: any;

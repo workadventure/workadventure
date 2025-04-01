@@ -70,7 +70,8 @@ export class VideoPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        this.userId = user.userId;
+        //TODO : transform userId to number
+        this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
 
@@ -281,7 +282,7 @@ export class VideoPeer extends Peer implements Streamable {
                         signal: JSON.stringify(data),
                     },
                 },
-                this.player.userId
+                this.user.userId
             );
         } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);

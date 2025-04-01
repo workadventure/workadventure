@@ -22,7 +22,7 @@ import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 export interface UserSimplePeerInterface {
-    userId: number;
+    userId: string;
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
@@ -199,11 +199,28 @@ export class SimplePeer {
         this.closeConnection(user.userId);
     }
 
+    private extractUserIdFromSpaceId(spaceId: string): number {
+        const lastUnderscoreIndex = spaceId.lastIndexOf('_');
+        if (lastUnderscoreIndex === -1) {
+            throw new Error('Invalid spaceId format: no underscore found');
+        }
+        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
+        if (isNaN(userId)) {
+            throw new Error('Invalid userId format: not a number');
+        }
+        return userId;
+    }
+
     /**
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
-        const player = await this.remotePlayersRepository.getPlayer(user.userId);
+        console.log("createPeerConnection", user.userId);
+        console.log(this.remotePlayersRepository.getPlayers());
+
+        const userId = this.extractUserIdFromSpaceId(user.userId);
+        
+        const player = await this.remotePlayersRepository.getPlayer(userId);
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
 
@@ -289,7 +306,9 @@ export class SimplePeer {
             user.webRtcPassword = this.lastWebrtcPassword;
         }
 
-        const player = await this.remotePlayersRepository.getPlayer(user.userId);
+        const userId = this.extractUserIdFromSpaceId(user.userId);
+
+        const player = await this.remotePlayersRepository.getPlayer(userId);
 
         const peer = new ScreenSharingPeer(
             user,
@@ -320,14 +339,14 @@ export class SimplePeer {
         return peer;
     }
 
-    public blockedFromRemotePlayer(userId: number) {
+    public blockedFromRemotePlayer(userId: string) {
         this.closeConnection(userId);
     }
 
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public closeConnection(userId: number) {
+    public closeConnection(userId: string) {
         try {
             const peer = this.space.videoPeerStore.get(userId);
             if (!peer) {
@@ -359,7 +378,7 @@ export class SimplePeer {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    private closeScreenSharingConnection(userId: number) {
+    private closeScreenSharingConnection(userId: string) {
         try {
             const peer = this.space.screenSharingPeerStore.get(userId);
             if (!peer) {
@@ -403,12 +422,12 @@ export class SimplePeer {
     public cleanupStore() {
         this.space.videoPeerStore.forEach((peer) => {
             peer.destroy();
-            this.space.videoPeerStore.delete(peer.userId);
+            this.space.videoPeerStore.delete(peer.user.userId);
         });
 
         this.space.screenSharingPeerStore.forEach((peer) => {
             peer.destroy();
-            this.space.screenSharingPeerStore.delete(peer.userId);
+            this.space.screenSharingPeerStore.delete(peer.user.userId);
         });
     }
 
@@ -430,7 +449,8 @@ export class SimplePeer {
     }
 
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
-        const uuid = (await this.remotePlayersRepository.getPlayer(data.userId)).userUuid;
+        const userId = this.extractUserIdFromSpaceId(data.userId);
+        const uuid = (await this.remotePlayersRepository.getPlayer(userId)).userUuid;
         if (blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
@@ -462,7 +482,7 @@ export class SimplePeer {
         }
     }
 
-    private pushScreenSharingToRemoteUser(userId: number, localScreenCapture: MediaStream) {
+    private pushScreenSharingToRemoteUser(userId: string, localScreenCapture: MediaStream) {
         const PeerConnection = this.space.screenSharingPeerStore.get(userId);
         if (!PeerConnection) {
             throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
@@ -494,8 +514,9 @@ export class SimplePeer {
         }
     }
 
-    private async sendLocalScreenSharingStreamToUser(userId: number, localScreenCapture: MediaStream): Promise<void> {
-        const uuid = (await this.remotePlayersRepository.getPlayer(userId)).userUuid;
+    private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
+        const userIdNumber = this.extractUserIdFromSpaceId(userId);
+        const uuid = (await this.remotePlayersRepository.getPlayer(userIdNumber)).userUuid;
         if (blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this.space.screenSharingPeerStore.has(userId)) {
@@ -516,7 +537,7 @@ export class SimplePeer {
         }
     }
 
-    private stopLocalScreenSharingStreamToUser(userId: number, stream: MediaStream): void {
+    private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
         const PeerConnectionScreenSharing = this.space.screenSharingPeerStore.get(userId);
         if (!PeerConnectionScreenSharing || !(PeerConnectionScreenSharing instanceof ScreenSharingPeer)) {
             return;
@@ -534,7 +555,7 @@ export class SimplePeer {
             // Destroy the peer connection
             PeerConnectionScreenSharing.destroy();
             // Close the screen sharing connection
-            this.closeScreenSharingConnection(PeerConnectionScreenSharing.userId);
+            this.closeScreenSharingConnection(userId);
         }
     }
 
@@ -587,7 +608,7 @@ export class SimplePeer {
         }
     }
 
-    public removePeer(userId: number) {
+    public removePeer(userId: string) {
         this.space.videoPeerStore.delete(userId);
         this.space.screenSharingPeerStore.delete(userId);
     }

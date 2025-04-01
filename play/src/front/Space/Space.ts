@@ -28,10 +28,10 @@ export class Space implements SpaceInterface {
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private peerManager: SpacePeerManager | undefined;
 
-    public videoPeerStore: MapStore<number, VideoPeer> = new MapStore<number, VideoPeer>();
-    public screenSharingPeerStore: MapStore<number, ScreenSharingPeer> = new MapStore<number, ScreenSharingPeer>();
-    public livekitVideoStreamStore: MapStore<number, Streamable> = new MapStore<number, Streamable>();
-    public livekitScreenShareStreamStore: MapStore<number, Streamable> = new MapStore<number, Streamable>();
+    public videoPeerStore: MapStore<string, VideoPeer> = new MapStore<string, VideoPeer>();
+    public screenSharingPeerStore: MapStore<string, ScreenSharingPeer> = new MapStore<string, ScreenSharingPeer>();
+    public livekitVideoStreamStore: MapStore<string, Streamable> = new MapStore<string, Streamable>();
+    public livekitScreenShareStreamStore: MapStore<string, Streamable> = new MapStore<string, Streamable>();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -206,7 +206,7 @@ export class Space implements SpaceInterface {
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
-    public emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: number): void {
+    public emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: string): void {
         this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
     }
 
@@ -249,10 +249,10 @@ export class Space implements SpaceInterface {
         return this._connection.updateSpaceMetadataMessageStream;
     }
 
-    public getSpaceUserById(id: number): SpaceUserExtended | undefined {
+    public getSpaceUserById(id: string): SpaceUserExtended | undefined {
         for (const filter of this.filters.values()) {
             const users = filter.getUsers();
-            const user = users.find((user) => user.id === id);
+            const user = users.find((user) => user.spaceUserId === id);
             if (user) {
                 return user;
             }

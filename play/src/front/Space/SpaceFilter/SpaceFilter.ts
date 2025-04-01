@@ -148,16 +148,16 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        const peerConnection = this._space.videoPeerStore.get(userId);
+        const peerConnection = this._space.videoPeerStore.get(spaceUserId);
         if (peerConnection) {
             peerConnection.destroy();
-            this._space.videoPeerStore.delete(userId);
+            this._space.videoPeerStore.delete(spaceUserId);
         }
 
-        const screenSharingPeerConnection = this._space.screenSharingPeerStore.get(userId);
+        const screenSharingPeerConnection = this._space.screenSharingPeerStore.get(spaceUserId);
         if (screenSharingPeerConnection) {
             screenSharingPeerConnection.destroy();
-            this._space.screenSharingPeerStore.delete(userId);
+            this._space.screenSharingPeerStore.delete(spaceUserId);
         }
     }
 
@@ -225,7 +225,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 const peerStore = this._space.videoPeerStore;
                 if (peerStore) {
                     return derived(peerStore, ($peerStore) => {
-                        return $peerStore.get(user.id);
+                        return $peerStore.get(user.spaceUserId);
                     });
                 }
                 return undefined;
@@ -234,7 +234,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 const livekitVideoStreamStore = this._space.livekitVideoStreamStore;
 
                 const store = derived(livekitVideoStreamStore, ($livekitVideoStreamStore) => {
-                    return $livekitVideoStreamStore.get(user.id);
+                    return $livekitVideoStreamStore.get(user.spaceUserId);
                 });
 
                 return store;
@@ -243,7 +243,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 const livekitScreenShareStreamStore = this._space.livekitScreenShareStreamStore;
                 if (livekitScreenShareStreamStore) {
                     return derived(livekitScreenShareStreamStore, ($livekitScreenShareStreamStore) => {
-                        return $livekitScreenShareStreamStore.get(user.id);
+                        return $livekitScreenShareStreamStore.get(user.spaceUserId);
                     });
                 }
                 return undefined;
@@ -252,7 +252,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 const screenSharingPeerStore = this._space.screenSharingPeerStore;
                 if (screenSharingPeerStore) {
                     return derived(screenSharingPeerStore, ($screenSharingPeerStore) => {
-                        return $screenSharingPeerStore.get(user.id);
+                        return $screenSharingPeerStore.get(user.spaceUserId);
                     });
                 }
                 return undefined;
@@ -327,52 +327,52 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     /**
      * Returns a derived store that aggregates all peer stores from the extended users.
      */
-    public getAllPeerStores(): Readable<Map<number, Readable<VideoPeer>>> {
+    public getAllPeerStores(): Readable<Map<string, Readable<VideoPeer>>> {
         return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<number, Readable<VideoPeer>> = new Map();
+            const allPeers: Map<string, Readable<VideoPeer>> = new Map();
             for (const user of $usersStore.values()) {
                 const peerStore = user.getPeerStore();
                 if (peerStore !== undefined) {
-                    allPeers.set(user.id, peerStore);
+                    allPeers.set(user.spaceUserId, peerStore);
                 }
             }
             return allPeers;
         });
     }
 
-    public getAllScreenSharingPeerStores(): Readable<Map<number, Readable<ScreenSharingPeer>>> {
+    public getAllScreenSharingPeerStores(): Readable<Map<string, Readable<ScreenSharingPeer>>> {
         return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<number, Readable<ScreenSharingPeer>> = new Map();
+            const allPeers: Map<string, Readable<ScreenSharingPeer>> = new Map();
             for (const user of $usersStore.values()) {
                 const peerStore = user.getScreenSharingPeerStore();
                 if (peerStore !== undefined) {
-                    allPeers.set(user.id, peerStore);
+                    allPeers.set(user.spaceUserId, peerStore);
                 }
             }
             return allPeers;
         });
     }
 
-    public getAllLivekitVideoStreamStores(): Readable<Map<number, Readable<Streamable>>> {
+    public getAllLivekitVideoStreamStores(): Readable<Map<string, Readable<Streamable>>> {
         return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<number, Readable<Streamable>> = new Map();
+            const allPeers: Map<string, Readable<Streamable>> = new Map();
             for (const user of $usersStore.values()) {
                 const peerStore = user.getLivekitVideoStreamStore();
                 if (peerStore !== undefined) {
-                    allPeers.set(user.id, peerStore);
+                    allPeers.set(user.spaceUserId, peerStore);
                 }
             }
             return allPeers;
         });
     }
 
-    public getAllLivekitScreenShareStreamStores(): Readable<Map<number, Readable<Streamable>>> {
+    public getAllLivekitScreenShareStreamStores(): Readable<Map<string, Readable<Streamable>>> {
         return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<number, Readable<Streamable>> = new Map();
+            const allPeers: Map<string, Readable<Streamable>> = new Map();
             for (const user of $usersStore.values()) {
                 const peerStore = user.getLivekitScreenShareStreamStore();
                 if (peerStore !== undefined) {
-                    allPeers.set(user.id, peerStore);
+                    allPeers.set(user.spaceUserId, peerStore);
                 }
             }
             return allPeers;

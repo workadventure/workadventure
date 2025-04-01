@@ -5,7 +5,7 @@ export interface ICommunicationStrategy {
     deleteUser(user: SpaceUser): void;
     updateUser(user: SpaceUser): void;
     initialize(switchInProgress?: boolean): void;
-    addUserReady(userId: number): void;
+    addUserReady(userId: string): void;
     canSwitch(): boolean;
     cleanup(): void;
 }

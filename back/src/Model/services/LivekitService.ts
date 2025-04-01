@@ -28,10 +28,12 @@ export class LiveKitService {
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
         try {
             const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-                identity: `${user.uuid}:${user.id}`,
+                //TODO : séparateur a maintenir coté front et back : voir comment on peut changer ça 
+                //TODO : voir si on utilise pas le uuid si on peut supprimer la partie avant le ||
+                identity: `${user.uuid}||${user.spaceUserId}`,
                 name: user.name,
                 metadata: JSON.stringify({
-                    userId: user.id,
+                    userId: user.spaceUserId,
                 }),
             });
 

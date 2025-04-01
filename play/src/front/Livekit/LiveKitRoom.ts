@@ -52,9 +52,10 @@ export class LiveKitRoom {
 
             this.synchronizeMediaState();
             room.remoteParticipants.forEach((participant) => {
+                //TODO : revoir la fonction ==> spaceUser toujours undefined /mauvais
                 const id = this.getParticipantId(participant);
 
-                const spaceUser = this.space.getSpaceUserById(Number(id));
+                const spaceUser = this.space.getSpaceUserById(id);
 
                 if (!spaceUser) {
                     console.error("spaceUser not found for participant", id);
@@ -150,7 +151,7 @@ export class LiveKitRoom {
 
         this.room.on(RoomEvent.ParticipantConnected, (participant) => {
             const id = this.getParticipantId(participant);
-            const spaceUser = this.space.getSpaceUserById(Number(id));
+            const spaceUser = this.space.getSpaceUserById(id);
             if (!spaceUser) {
                 console.log("spaceUser not found for participant", id);
                 return;
@@ -163,7 +164,8 @@ export class LiveKitRoom {
     }
 
     public getParticipantId(participant: Participant) {
-        return participant.identity.split(":")[1];
+        //TODO : voir si on utilise pas le uuid si on peut supprimer la partie avant le ||
+        return participant.identity.split("||")[1];
     }
 
     public leaveRoom() {
