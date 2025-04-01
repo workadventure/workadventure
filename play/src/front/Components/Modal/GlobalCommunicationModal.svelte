@@ -36,10 +36,9 @@
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
-    import Alert from "../Ui/Alert.svelte";
+    import Alert from "../UI/Alert.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
-
+    import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
 
@@ -187,13 +186,8 @@
     bind:this={mainModal}
 >
     <div class="w-full bg-contrast/80 backdrop-blur rounded-md rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <div
-            class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square"
-            id="btn-chat"
-        >
-          
-             <ButtonClose on:click={close} hoverColor="bg-danger" />
-           
+        <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
+            <ButtonClose on:click={close} hoverColor="bg-danger" />
         </div>
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
             <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
@@ -239,7 +233,6 @@
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
-                        
 
                         <button
                             class="btn-lg btn btn-light btn-border mb-4 "
@@ -247,12 +240,13 @@
                             disabled={!$megaphoneCanBeUsedStore}>{$LL.megaphone.modal.liveMessage.button()}</button
                         >
                         {#if !$megaphoneCanBeUsedStore}
-                        <Alert> <p class="help-text flex items-center">
-                            <IconInfoCircle class="mr-2 mb-1" font-size="20" />
-                            {$LL.megaphone.modal.audioMessage.noAccess()}
-                        </p>
-                         </Alert>
-                       {/if}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="20" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
 
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
@@ -271,7 +265,11 @@
                                 <IconInfoCircle font-size="18" />
                                 {$LL.megaphone.modal.textMessage.noAccess()}
                             </p>{/if}
-                        <button class="btn-lg btn btn-light btn-border " on:click={activateInputText} disabled={!$userIsAdminStore}>
+                        <button
+                            class="btn-lg btn btn-light btn-border "
+                            on:click={activateInputText}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
@@ -291,7 +289,11 @@
                                 <IconInfoCircle font-size="18" />
                                 {$LL.megaphone.modal.audioMessage.noAccess()}
                             </p>{/if}
-                        <button class="btn-lg btn btn-light btn-border" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
+                        <button
+                            class="btn-lg btn btn-light btn-border"
+                            on:click={activateUploadAudio}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
