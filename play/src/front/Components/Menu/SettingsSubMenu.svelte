@@ -31,6 +31,7 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
+    let allowPictureInPicture: boolean = localUserStore.getAllowPictureInPicture();
     let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
@@ -131,6 +132,13 @@
         }
     }
 
+    function changePictureInPicture() {
+        // Analytics Client
+        analyticsClient.settingPictureInPicture(allowPictureInPicture ? "true" : "false");
+
+        localUserStore.setAllowPictureInPicture(allowPictureInPicture);
+    }
+
     function changeBlockAudio() {
         if (blockAudio) {
             audioManagerFileStore.unloadAudio();
@@ -202,7 +210,7 @@
             <CamArrowIcon />
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6">
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -259,7 +267,7 @@
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6">
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -433,6 +441,14 @@
                 bind:value={notification}
                 onChange={changeNotification}
                 label={$LL.menu.settings.notifications()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="picture-in-picture-toggle"
+                bind:value={allowPictureInPicture}
+                onChange={changePictureInPicture}
+                label={$LL.menu.settings.enablePictureInPicture()}
             />
         </div>
         <div class="flex cursor-pointer items-center relative m-4">

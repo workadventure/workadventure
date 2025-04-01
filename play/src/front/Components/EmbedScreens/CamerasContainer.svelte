@@ -238,7 +238,7 @@
         id="cameras-container"
     >
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if $highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal" || peer.displayInPictureInPictureMode)}
+            {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
                 {#key uniqueId}
                     <div
                         style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${

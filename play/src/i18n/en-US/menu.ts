@@ -51,6 +51,7 @@ const menu: BaseTranslation = {
         otherSettings: "Other settings",
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        enablePictureInPicture: "Enable picture-in-picture",
         chatSounds: "Chat sounds",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
