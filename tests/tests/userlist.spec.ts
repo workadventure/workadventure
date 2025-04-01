@@ -45,8 +45,8 @@ test.describe("Walk to", () => {
 });
 
 
-test.describe("Send Message from User List", () => {
-  test("Send Message from User List @oidc", async ({ page, browser }, { project }) => {
+test.describe("Send Message from User List @oidc @matrix @chat", () => {
+  test("Send Message from User List @oidc @matrix @chat", async ({ page, browser }, { project }) => {
     if (isMobile(page)) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
