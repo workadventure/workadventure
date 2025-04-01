@@ -58,6 +58,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         proximityDiscussionVolume: "Volume des bulles de discussion",
         blockAudio: "Désactiver bruits ambiants et musique",
         disableAnimations: "Désactiver les animations de la carte",
+        bubbleSound: "Son des bulles",
     },
     invite: {
         description: "Partager le lien de la salle!",
@@ -118,7 +119,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Confirmation de la réinitialisation de la clé de sauvegarde",
             content: "Vous êtes sur le point de réinitialiser la clé de sauvegarde. Êtes-vous sûr(e) ?",
             warning:
-                "La réinitialisation de la clé de sauvegarde supprimera votre session actuelle et tous les utilisateurs de confiance. Vous pourriez perdre l’accès à certains messages passés et ne serez plus reconnu en tant qu’utilisateur de confiance. Assurez-vous de bien comprendre les conséquences de cette action avant de continuer.",
+                "La réinitialisation de la clé de sauvegarde supprimera votre session actuelle et tous les utilisateurs de confiance. Vous pourriez perdre l'accès à certains messages passés et ne serez plus reconnu en tant qu'utilisateur de confiance. Assurez-vous de bien comprendre les conséquences de cette action avant de continuer.",
             cancel: "Annuler",
             continue: "Continuer",
         },

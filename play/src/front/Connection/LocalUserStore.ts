@@ -48,6 +48,7 @@ const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
+const bubbleSound = "bubbleSound";
 
 const JwtAuthToken = z
     .object({
@@ -691,6 +692,18 @@ class LocalUserStore {
             return INITIAL_SIDEBAR_WIDTH;
         }
         return parseFloat(value);
+    }
+
+    setBubbleSound(value: "ding" | "wobble"): void {
+        localStorage.setItem(bubbleSound, value);
+    }
+
+    getBubbleSound(): "ding" | "wobble" {
+        const value = localStorage.getItem(bubbleSound);
+        if (value === "wobble") {
+            return "wobble";
+        }
+        return "ding";
     }
 }
 
