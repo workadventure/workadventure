@@ -25,8 +25,6 @@
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
-    import { visibilityStore } from "../Stores/VisibilityStore";
-    import { streamablePictureInPictureStore } from "../Stores/StreamableCollectionStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -189,7 +187,9 @@
             {/if}
 
             {#if !$highlightFullScreen}
-                <PresentationLayout />
+                <PictureInPicture let:inPictureInPicture>
+                    <PresentationLayout {inPictureInPicture} />
+                </PictureInPicture>
             {/if}
 
             {#if $uiWebsitesStore}
@@ -225,12 +225,6 @@
         </div>
         <ActionBar />
     </div>
-
-    <!-- No picture in picture implemented yet with the new design -->
-    {#if !$visibilityStore && $streamablePictureInPictureStore.size > 0}
-        <PictureInPicture />
-    {/if}
-    <!-- -->
 
     {#if $actionsMenuStore}
         <ActionsMenu />
