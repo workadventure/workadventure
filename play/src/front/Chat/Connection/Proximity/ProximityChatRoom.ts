@@ -18,7 +18,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
@@ -84,6 +84,8 @@ export class ProximityChatRoom implements ChatRoom {
     isRoomFolder = false;
     lastMessageTimestamp = 0;
     hasUserInProximityChat = writable(false);
+    currentMatrixRoom: ChatRoom | undefined;
+    currentChatVisibility = false;
 
     private unknownUser = {
         chatId: "0",
@@ -409,6 +411,8 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.simplePeer.setSpaceFilter(this._spaceWatcher);
 
+        this.saveChatState();
+
         const actualStatus = get(availabilityStatusStore);
         if (!isAChatRoomIsVisible()) {
             selectedRoomStore.set(this);
@@ -450,6 +454,8 @@ export class ProximityChatRoom implements ChatRoom {
         }
         this.hasUserInProximityChat.set(false);
 
+        this.restoreChatState();
+
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();
         if (this.usersUnsubscriber) {
@@ -461,6 +467,23 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceIsTypingSubscription?.unsubscribe();
 
         this.simplePeer.setSpaceFilter(undefined);
+    }
+
+    private restoreChatState() {
+        if (get(selectedRoomStore) == this && get(shouldRestoreChatStateStore)) {
+            selectedRoomStore.set(this.currentMatrixRoom);
+        }
+
+        chatVisibilityStore.set(this.currentChatVisibility);
+        shouldRestoreChatStateStore.set(false);
+    }
+
+    private saveChatState() {
+        const currentChatVisibility = get(chatVisibilityStore);
+        const currentRoom = get(selectedRoomStore);
+        this.currentChatVisibility = currentChatVisibility;
+        this.currentMatrixRoom = currentRoom;
+        shouldRestoreChatStateStore.set(true);
     }
 
     public destroy(): void {

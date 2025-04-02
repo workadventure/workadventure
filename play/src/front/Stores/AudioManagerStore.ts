@@ -1,5 +1,6 @@
 import { get, Writable, writable } from "svelte/store";
 import { Subject } from "rxjs";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { peerStore } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
 
@@ -102,6 +103,9 @@ export const audioManagerPlayerState: Writable<"loading" | "playing" | "not_allo
     writable(undefined);
 // Store solely used to trigger a retry of the audio player (in case the browser blocked it the first time)
 export const audioManagerRetryPlaySubject = new Subject<void>();
+
+// Store for bubble sound preference
+export const bubbleSoundStore = writable<"ding" | "wobble">(localUserStore.getBubbleSound());
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
