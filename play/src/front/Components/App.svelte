@@ -22,7 +22,6 @@
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
-    import { mouseInCameraTriggerArea } from "../Stores/MediaStore";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -209,7 +208,6 @@
 
     let canvasSizeUnsubscriber: Unsubscriber;
     onMount(() => {
-        document.addEventListener("mousemove", detectInCameraArea);
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
             if (width < 1 || height < 1) {
                 return;
@@ -220,26 +218,8 @@
     });
 
     onDestroy(() => {
-        document.removeEventListener("mousemove", detectInCameraArea);
         canvasSizeUnsubscriber?.();
     });
-
-    let lastInTriggerArea = false;
-    // We are tracking if the mouse cursor gets near the camera trigger area
-    const detectInCameraArea = (event: MouseEvent) => {
-        // Note: in phone mode, the camera is at the bottom. But we don't need to track that because in phone mode,
-        // you cannot "hover" over the area where the camera is.
-        const rect = gameDiv.getBoundingClientRect();
-
-        const inTopCenter =
-            event.x - rect.left > rect.width / 4 &&
-            event.x + rect.left < (rect.width * 3) / 4 &&
-            event.y - rect.top < rect.height / 4;
-        if (inTopCenter !== lastInTriggerArea) {
-            lastInTriggerArea = inTopCenter;
-            mouseInCameraTriggerArea.set(inTopCenter);
-        }
-    };
 </script>
 
 <div

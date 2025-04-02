@@ -235,6 +235,16 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    settingPictureInPicture(value: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_picture_in_picture", {
+                    checkbox: value,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
     settingFullscreen(value: string): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -571,7 +581,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    clicPropertykMapEditor(name: string, style?: string): void {
+    clickPropertyMapEditor(name: string, style?: string): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture(`wa_map-editor_click_property`, {

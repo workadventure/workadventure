@@ -50,7 +50,7 @@
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
-    //import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import PictureInPicture from "./Video/PictureInPicture.svelte";
     import SilentBlock from "./ActionBar/SilentBlock.svelte";
     let keyboardEventIsDisable = false;
 
@@ -186,12 +186,10 @@
                 <LimitRoomModal />
             {/if}
 
-            {#if $requestVisitCardsStore}
-                <VisitCard visitCardUrl={$requestVisitCardsStore} />
-            {/if}
-
             {#if !$highlightFullScreen}
-                <PresentationLayout />
+                <PictureInPicture let:inPictureInPicture>
+                    <PresentationLayout {inPictureInPicture} />
+                </PictureInPicture>
             {/if}
 
             {#if $uiWebsitesStore}
@@ -216,6 +214,9 @@
 
             <ExternalComponents zone="popup" />
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+                {#if $requestVisitCardsStore}
+                    <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                {/if}
                 <ExternalComponents zone="centeredPopup" />
             </div>
         </section>
@@ -224,12 +225,6 @@
         </div>
         <ActionBar />
     </div>
-
-    <!-- No picture in picture implemented yet with the new design
-    {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
-        <PictureInPicture />
-    {/if}
-    -->
 
     {#if $actionsMenuStore}
         <ActionsMenu />

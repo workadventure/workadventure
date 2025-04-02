@@ -4,7 +4,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -107,6 +107,7 @@
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
         selectedRoomStore.set(undefined);
+        shouldRestoreChatStateStore.set(false);
     }
 
     function handleScroll() {

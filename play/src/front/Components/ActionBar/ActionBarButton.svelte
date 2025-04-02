@@ -71,9 +71,11 @@
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
                 helpActive = true;
+                dispatch("mouseenter");
             }}
             on:mouseleave={() => {
                 helpActive = false;
+                dispatch("mouseleave");
             }}
             data-testid={dataTestId}
         >

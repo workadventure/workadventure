@@ -387,14 +387,17 @@ export class MatrixSecurity {
 
             const currentDeviceIsVerify = verificationInformation.signedByOwner;
 
-            const someDeviceAreVerified = !myDevices
-                ? false
-                : Array.from(myDevices.values()).some(async (device) => {
-                      if (!device.getIdentityKey()) return false;
+            const devicesArray = Array.from(myDevices?.values() || []);
+            const someDeviceAreVerified = await devicesArray.reduce(async (acc, device) => {
+                const previousResult = await acc;
+                if (previousResult) return true;
 
-                      const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
-                      return !!verificationStatus?.signedByOwner;
-                  });
+                if (!device.getIdentityKey()) return false;
+                if (device.deviceId === currentDeviceID) return false;
+
+                const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
+                return !!verificationStatus?.signedByOwner;
+            }, Promise.resolve(false));
 
             if (someDeviceAreVerified && !currentDeviceIsVerify) {
                 this.isEncryptionRequiredAndNotSet.set(true);
