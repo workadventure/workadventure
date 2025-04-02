@@ -52,9 +52,7 @@
                 </div>
 
                 <div class="space-y-1 min-w-0">
-                    <div
-                        class="text-lg bold  truncate leading-tight flex  self-start"
-                    >
+                    <div class="text-lg bold  truncate leading-tight flex  self-start">
                         {#if editMode && selectedDevice}
                             <MicOffIcon height="h-4" width="w-4" />
                         {/if}
@@ -93,24 +91,24 @@
                         <div
                             class="aspect-square mr-4 h-6 rounded-full border border-solid border-white flex items-center justify-center "
                             class:bg-secondary={selectedDevice === device.deviceId}
-                        class:border-secondary={selectedDevice === device.deviceId}
-                    >
-                        {#if selectedDevice == device.deviceId}
-                            <CheckIcon width="w-4" height="h-4" />
-                        {/if}
-                    </div>
-                    <div class="space-y-1 min-w-0">
-                        <div class="text-lg bold truncate leading-tight">
-                            {StringUtils.normalizeDeviceName(device.label)}
+                            class:border-secondary={selectedDevice === device.deviceId}
+                        >
+                            {#if selectedDevice == device.deviceId}
+                                <CheckIcon width="w-4" height="h-4" />
+                            {/if}
                         </div>
-                        {#if device.deviceId === selectedDevice}
-                            <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                <span class="chip-label">{$LL.camera.active()}</span>
-                            </span>
-                        {:else}
-                            <span class="chip chip-sm chip-neutral inline rounded-sm">
-                                <span class="chip-label">{$LL.camera.disabled()}</span>
-                            </span>
+                        <div class="space-y-1 min-w-0">
+                            <div class="text-lg bold truncate leading-tight">
+                                {StringUtils.normalizeDeviceName(device.label)}
+                            </div>
+                            {#if device.deviceId === selectedDevice}
+                                <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                    <span class="chip-label">{$LL.camera.active()}</span>
+                                </span>
+                            {:else}
+                                <span class="chip chip-sm chip-neutral inline rounded-sm">
+                                    <span class="chip-label">{$LL.camera.disabled()}</span>
+                                </span>
                             {/if}
                         </div>
                     </div>

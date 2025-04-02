@@ -203,18 +203,17 @@
                 <!-- MICROPHONE -->
 
                 <SelectMicrophone
-                on:selectDevice={handleSelectMicrophone}
-                deviceList={$microphoneListStore ?? []}
-                selectedDevice={selectedMicrophone}
-            >
-                <MicOnIcon height="h-8" width="w-8" slot="icon" />
-                <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
+                    on:selectDevice={handleSelectMicrophone}
+                    deviceList={$microphoneListStore ?? []}
+                    selectedDevice={selectedMicrophone}
+                >
+                    <MicOnIcon height="h-8" width="w-8" slot="icon" />
+                    <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
 
-                <div class="absolute top-4 left-0 flex justify-center w-full " slot="widget">
+                    <div class="absolute top-4 left-0 flex justify-center w-full " slot="widget">
                         <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                     </div>
                 </SelectMicrophone>
-
 
                 <!-- CAMERA -->
                 <SelectCamera
