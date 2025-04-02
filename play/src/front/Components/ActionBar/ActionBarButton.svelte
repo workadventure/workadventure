@@ -103,6 +103,7 @@
         </div>
         <div class="text-left leading-4 flex items-center text-nowrap">
             {label ?? tooltipTitle ?? ""}
+            <slot name="end" />
         </div>
     </button>
 {/if}

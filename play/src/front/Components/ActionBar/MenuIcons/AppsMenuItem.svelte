@@ -18,7 +18,7 @@
 
     const inProfileMenu = getContext("profileMenu");
 
-    const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBar");
+    const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBarAppsMenu");
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
