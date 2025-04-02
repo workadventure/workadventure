@@ -36,6 +36,8 @@
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Tooltip from "../Util/Tooltip.svelte";
+    import Alert from "../UI/Alert.svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
@@ -183,18 +185,9 @@
         : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
     bind:this={mainModal}
 >
-    <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <div
-            class="group/btn-chat absolute bg-blue ml-4 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square"
-            id="btn-chat"
-        >
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div
-                class="h-12 w-12 rounded hover:bg-danger aspect-square flex items-center justify-center transition-all"
-                on:click={close}
-            >
-                <button type="button" class="close-window justify-center">&times</button>
-            </div>
+    <div class="w-full bg-contrast/80 backdrop-blur rounded-md rounded" transition:fly={{ x: 1000, duration: 500 }}>
+        <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
+            <ButtonClose on:click={close} hoverColor="bg-danger" />
         </div>
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
             <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
@@ -202,7 +195,7 @@
             >
         </div> -->
         <header>
-            <h3 class="p-5 text-center text-white">Global communication</h3>
+            <h2 class="p-5 text-center text-white">Global communication</h2>
 
             {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
                 <!-- svelte-ignore a11y-invalid-attribute -->
@@ -232,64 +225,90 @@
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-row justify-center">
                     <div id="content-liveMessage" class="flex flex-col px-5 w-1/3">
-                        <p class="text-white">
+                        <h4 class="text-white mb-2">
                             <img
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
-                        </p>
-                        {#if !$megaphoneCanBeUsedStore}<p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>{/if}
+                        </h4>
 
                         <button
-                            class="light max-w-fit text-black bg-white h-full"
+                            class="btn-lg btn btn-light btn-border mb-4 "
                             on:click={activateLiveMessage}
                             disabled={!$megaphoneCanBeUsedStore}>{$LL.megaphone.modal.liveMessage.button()}</button
                         >
+                        {#if !$megaphoneCanBeUsedStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="20" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
                         </p>
                     </div>
                     <div id="content-textMessage" class="flex flex-col px-5 w-1/3">
-                        <p class="text-white">
+                        <h4 class="text-white mb-2">
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                             />
                             {$LL.megaphone.modal.textMessage.title()}
-                        </p>
-                        {#if !$userIsAdminStore}<p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.textMessage.noAccess()}
-                            </p>{/if}
-                        <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
+                        </h4>
+
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4  "
+                            on:click={activateInputText}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="18" />
+                                    {$LL.megaphone.modal.textMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
                         </p>
                     </div>
                     <div id="content-soundMessage" class="flex flex-col px-5 w-1/3">
-                        <p class="text-white">
+                        <h4 class="text-white mb-2 ">
                             <img
                                 src={audioMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
-                        </p>
-                        {#if !$userIsAdminStore}<p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>{/if}
-                        <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
+                        </h4>
+
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4 "
+                            on:click={activateUploadAudio}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
+
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="18" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
                         </p>
