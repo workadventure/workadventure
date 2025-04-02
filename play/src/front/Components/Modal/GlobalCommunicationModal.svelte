@@ -261,17 +261,23 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
-                        {#if !$userIsAdminStore}<p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.textMessage.noAccess()}
-                            </p>{/if}
+
                         <button
-                            class="btn-lg btn btn-light btn-border "
+                            class="btn-lg btn btn-light btn-border mb-4  "
                             on:click={activateInputText}
                             disabled={!$userIsAdminStore}
                         >
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="18" />
+                                    {$LL.megaphone.modal.textMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
                         </p>
@@ -285,17 +291,24 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
-                        {#if !$userIsAdminStore}<p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>{/if}
+
                         <button
-                            class="btn-lg btn btn-light btn-border"
+                            class="btn-lg btn btn-light btn-border mb-4 "
                             on:click={activateUploadAudio}
                             disabled={!$userIsAdminStore}
                         >
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
+
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1" font-size="18" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
                         </p>
