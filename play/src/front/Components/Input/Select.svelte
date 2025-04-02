@@ -3,6 +3,7 @@
     import InfoButton from "./InfoButton.svelte";
 
     export let label: string | undefined = undefined;
+    export let dataTestId: string | undefined = undefined;
     export let options: { value: string | undefined; label: string }[] = [];
     export let id: string | undefined = undefined;
     export let value: string | boolean | null | undefined;
@@ -43,6 +44,7 @@
             id={uniqueId}
             class="grow w-full input-select font-light pr-10"
             class:input-select-light={variant === "light"}
+            data-testid={dataTestId}
             bind:value
             on:change={onChange}
             on:click={onClick}
