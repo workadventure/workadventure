@@ -69,7 +69,7 @@
                 class:error={status === "error"}
                 class:success={status === "success"}
                 class:rounded-full={rounded}
-                data-testid={dataTestId}
+                {...$$restProps}
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}

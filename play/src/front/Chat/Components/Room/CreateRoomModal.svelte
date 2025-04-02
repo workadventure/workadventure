@@ -92,11 +92,11 @@
                 bind:value={createRoomOptions.name}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
-                dataTestId="createRoomName"
+                data-testid="createRoomName"
             />
 
             <Select
-                dataTestId="createRoomVisibility"
+                data-testid="createRoomVisibility"
                 label={$LL.chat.createRoom.visibility.label()}
                 bind:value={createRoomOptions.visibility}
             >

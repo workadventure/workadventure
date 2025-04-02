@@ -45,6 +45,7 @@
             class="grow w-full input-select font-light pr-10"
             class:input-select-light={variant === "light"}
             data-testid={dataTestId}
+            {...$$restProps}
             bind:value
             on:change={onChange}
             on:click={onClick}
