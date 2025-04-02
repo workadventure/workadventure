@@ -609,7 +609,7 @@ export class AreasPropertiesListener {
                 JitsiPopup,
                 {
                     message: message,
-                    callback: () => {
+                    click: () => {
                         openJitsiRoomFunction().catch((e) => console.error(e));
                     },
                     userInputManager: this.scene.userInputManager,
