@@ -34,7 +34,7 @@
 -->
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -49,6 +49,7 @@
     const gap = 22; // Configurable gap between videos
 
     export let isOnOneLine: boolean;
+    export let oneLineMode: "vertical" | "horizontal" = "horizontal";
     let containerWidth: number;
     let maxContainerHeight: number;
     let containerHeight: number;
@@ -70,11 +71,16 @@
 
     $: {
         if (isOnOneLine) {
-            videoWidth = Math.max(
-                Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
-                minMediaBoxWidth
-            );
-            videoHeight = undefined;
+            if (oneLineMode === "horizontal") {
+                videoWidth = Math.max(
+                    Math.min(maxMediaBoxWidth, containerWidth / $streamableCollectionStore.size),
+                    minMediaBoxWidth
+                );
+                videoHeight = undefined;
+            } else {
+                videoWidth = containerWidth;
+                videoHeight = videoWidth * (9 / 16);
+            }
         } else {
             const layout = calculateOptimalLayout(containerWidth, containerHeight);
             videoWidth = layout.videoWidth;
@@ -198,39 +204,50 @@
     }
 </script>
 
-<div class="w-full" bind:clientHeight={maxContainerHeight} class:h-full={!isOnOneLine}>
+<div
+    class="w-full"
+    bind:clientHeight={maxContainerHeight}
+    class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
+>
     <div
         bind:clientWidth={containerWidth}
-        class={"pointer-events-none gap-4" + (isOnOneLine ? "max-h-full" : "")}
-        class:hidden={$highlightFullScreen && $highlightedEmbedScreen}
+        class="pointer-events-none gap-4"
+        class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
+        class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
+        class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
+        class:flex-col={isOnOneLine && oneLineMode === "vertical"}
         class:flex-wrap={!isOnOneLine}
         class:content-start={!isOnOneLine}
         class:justify-start={isOnOneLine}
+        class:justify-center={!isOnOneLine}
         class:whitespace-nowrap={isOnOneLine}
         class:relative={true}
-        class:overflow-x-auto={isOnOneLine}
+        class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
         class:overflow-x-hidden={!isOnOneLine}
-        class:overflow-y-auto={!isOnOneLine}
-        class:overflow-y-hidden={isOnOneLine}
+        class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
+        class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
         class:pb-3={isOnOneLine}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
         class:w-full={true}
-        class:max-w-full={true}
+        class:items-start={!isOnOneLine}
         class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
+        class:h-full={isOnOneLine && oneLineMode === "vertical"}
         id="cameras-container"
     >
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if $highlightedEmbedScreen !== peer}
+            {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
                 {#key uniqueId}
                     <div
                         style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
                             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
                         }`}
                         class={isOnOneLine
-                            ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                            ? oneLineMode === "horizontal"
+                                ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                                : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
                             : "pointer-events-auto shrink-0 camera-box"}
                         class:aspect-video={videoHeight === undefined}
                     >
@@ -239,6 +256,20 @@
                 {/key}
             {/if}
         {/each}
+        <!-- in PictureInPicture, let's finish with our video feedback in small -->
+        {#if isOnOneLine && oneLineMode === "vertical"}
+            <div class="relative">
+                <div
+                    style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
+                        videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
+                    }`}
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto absolute right-0"
+                    class:aspect-video={videoHeight === undefined}
+                >
+                    <MediaBox streamable={$myCameraPeerStore} />
+                </div>
+            </div>
+        {/if}
     </div>
     {#if !isOnOneLine}
         <ResizeHandle
@@ -254,13 +285,6 @@
 <style lang="scss">
     .hidden {
         display: none !important;
-    }
-
-    .not-highlighted {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: flex-start;
     }
 
     @container (min-width: 1024) and (max-width: 1279px) {

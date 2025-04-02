@@ -1,6 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+    import {
+        audioManagerFileStore,
+        audioManagerVisibilityStore,
+        bubbleSoundStore,
+    } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
@@ -20,6 +24,7 @@
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import RangeSlider from "../Input/RangeSlider.svelte";
+    import Select from "../Input/Select.svelte";
     import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
     import MicOnIcon from "../Icons/MicOnIcon.svelte";
     import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
@@ -31,6 +36,7 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
+    let allowPictureInPicture: boolean = localUserStore.getAllowPictureInPicture();
     let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
@@ -55,6 +61,9 @@
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+
+    let valueBubbleSound = localUserStore.getBubbleSound();
+    const sound = new Audio();
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -131,6 +140,13 @@
         }
     }
 
+    function changePictureInPicture() {
+        // Analytics Client
+        analyticsClient.settingPictureInPicture(allowPictureInPicture ? "true" : "false");
+
+        localUserStore.setAllowPictureInPicture(allowPictureInPicture);
+    }
+
     function changeBlockAudio() {
         if (blockAudio) {
             audioManagerFileStore.unloadAudio();
@@ -194,6 +210,18 @@
         localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
         volumeProximityDiscussionStore.set(volumeProximityDiscussion);
     }
+
+    function changeBubbleSound() {
+        localUserStore.setBubbleSound(valueBubbleSound);
+        bubbleSoundStore.set(valueBubbleSound);
+        this.playBubbleSound();
+    }
+
+    async function playBubbleSound() {
+        sound.src = `/resources/objects/webrtc-in-${valueBubbleSound}.mp3`;
+        sound.volume = 0.2;
+        await sound.play();
+    }
 </script>
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
@@ -202,7 +230,7 @@
             <CamArrowIcon />
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6">
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -259,7 +287,7 @@
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6">
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -419,6 +447,23 @@
             {$LL.menu.settings.otherSettings()}
         </div>
 
+        <div class="mt-2 p-2">
+            <div class="flex items-end gap-2">
+                <Select
+                    id="bubble-sound"
+                    bind:value={valueBubbleSound}
+                    onChange={changeBubbleSound}
+                    label={$LL.menu.settings.bubbleSound()}
+                    outerClass="flex-1"
+                    options={[
+                        { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
+                        { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
+                    ]}
+                />
+                <button class="btn btn-light btn-ghost mb-2" on:click={playBubbleSound}> ▶️ </button>
+            </div>
+        </div>
+
         <div class="flex cursor-pointer items-center relative m-4">
             <InputSwitch
                 id="fullscreen-toggle"
@@ -433,6 +478,14 @@
                 bind:value={notification}
                 onChange={changeNotification}
                 label={$LL.menu.settings.notifications()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="picture-in-picture-toggle"
+                bind:value={allowPictureInPicture}
+                onChange={changePictureInPicture}
+                label={$LL.menu.settings.enablePictureInPicture()}
             />
         </div>
         <div class="flex cursor-pointer items-center relative m-4">
