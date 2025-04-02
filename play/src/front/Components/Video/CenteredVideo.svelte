@@ -47,6 +47,9 @@
     // If true, the video will be displayed with a background is it does not cover the whole box
     export let withBackground = false;
 
+    // In case the user did not interact yet with the browser, the navigator will deny playing the video if it is not muted.
+    // The parent component can listen to this variable to display a message to the user.
+    export let missingUserActivation = false;
     let destroyed = false;
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -63,6 +66,10 @@
     function onLoadVideoElement() {}
 
     $: if (mediaStream && videoElement) {
+        if (navigator.userActivation && !navigator.userActivation.hasBeenActive && !muted) {
+            console.warn("User has not interacted with the browser yet. The video will be muted.");
+            missingUserActivation = true;
+        }
         videoElement.srcObject = mediaStream;
     }
     $: if (videoUrl && videoElement) {
@@ -288,13 +295,13 @@
             class:w-0={!videoEnabled}
             autoplay
             playsinline
-            {muted}
+            muted={muted || missingUserActivation}
             {loop}
         />
     </div>
     {#if displayNoVideoWarning}
         <div
-            class="absolute w-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
         >
             <div class="text-center">
                 <CameraExclamationIcon />
