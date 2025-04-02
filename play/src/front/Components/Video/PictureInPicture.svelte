@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { z } from "zod";
     import { streamableCollectionStore, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
-    import { pictureInPictureStore } from "./PictureInPicture/PictureInPictureStore";
     import PictureInPictureAudioWrapper from "./PictureInPicture/PictureInPictureAudioWrapper.svelte";
+    import {visibilityStore} from "../../Stores/VisibilityStore";
+    import {localUserStore} from "../../Connection/LocalUserStore";
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
@@ -104,62 +105,80 @@
         }
     });
 
-    const unsubscribeVisibilityStore = pictureInPictureStore.subscribe((value) => {
-        if (!value) {
-            destroyPictureInPictureComponent();
-        } else {
-            initiatePictureInPictureBuilder();
-
-            if ($pipWindowStore != undefined) return;
-            // We activate the picture in picture mode only if we have a streamable in the collection
-            if ($streamablePictureInPictureStore.size == 0) return;
-
-            // request permission to use the picture in picture mode
-            // TODO: Picture in Picture element is not requested if transient user activation is not activated
-            // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
-            const windowExtResult = WindowExtSchema.safeParse(window);
-            if (!windowExtResult.success) {
-                console.info("Picture in Picture is not supported");
-                return;
-            }
-
-            const options = {
-                preferInitialWindowPlacement: true,
-                // 227: the height of a video
-                // 80: the height of the action bar
-                // 78: the height of the video feedback of the current user
-                height: `${$streamablePictureInPictureStore.size * 227 + 80 + 78}`,
-                width: "400",
-            };
-
-            (window as unknown as WindowExt).documentPictureInPicture
-                .requestWindow(options)
-                .then((pipWindow: Window) => {
-                    // Picture in picture is possible
-                    // we store the window to start the picture in picture mode
-                    // the builder listen the pipWindowStore and will start the dom building
-                    pipWindowStore.set(pipWindow);
-
-                    // Listen the event when the user wants to close the picture in picture mode
-                    pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
-
-                    activePictureInPictureStore.set(true);
-                })
-                .catch((error: Error) => {
-                    console.info("Picture-in-Picture is not supported", error);
-                    destroyPictureInPictureComponent();
-                    // Maybe we could propose a popup to the user to activate the Picture in Picture mode
-                });
+    function requestPictureInPicture() {
+        console.log("Entering Picture in Picture mode");
+        if (!localUserStore.getAllowPictureInPicture()) {
+            return;
         }
 
+        initiatePictureInPictureBuilder();
+
+        if ($pipWindowStore != undefined) return;
+        // We activate the picture in picture mode only if we have a streamable in the collection
+        if ($streamablePictureInPictureStore.size == 0) return;
+
+        // request permission to use the picture in picture mode
+        // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
+        const windowExtResult = WindowExtSchema.safeParse(window);
+        if (!windowExtResult.success) {
+            console.info("Picture in Picture is not supported");
+            return;
+        }
+
+        const options = {
+            preferInitialWindowPlacement: true,
+            // 227: the height of a video
+            // 80: the height of the action bar
+            // 78: the height of the video feedback of the current user
+            height: `${$streamablePictureInPictureStore.size * 227 + 80 + 78}`,
+            width: "400",
+        };
+
+        (window as unknown as WindowExt).documentPictureInPicture
+            .requestWindow(options)
+            .then((pipWindow: Window) => {
+                // Picture in picture is possible
+                // we store the window to start the picture in picture mode
+                // the builder listen the pipWindowStore and will start the dom building
+                pipWindowStore.set(pipWindow);
+
+                // Listen the event when the user wants to close the picture in picture mode
+                pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
+
+                activePictureInPictureStore.set(true);
+            })
+            .catch((error: Error) => {
+                console.info("Picture-in-Picture is not supported", error);
+                destroyPictureInPictureComponent();
+                // Maybe we could propose a popup to the user to activate the Picture in Picture mode
+            });
+    }
+
+    onMount(() => {
+        try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //@ts-ignore
+            navigator.mediaSession.setActionHandler("enterpictureinpicture", requestPictureInPicture);
+        } catch (e) {
+            console.error("Could not set enterpictureinpicture handler", e);
+        }
+
+        const unsubscribe = visibilityStore.subscribe((visible) => {
+            if (visible) {
+                destroyPictureInPictureComponent();
+            }
+        })
+
         return () => {
-            destroyPictureInPictureComponent();
+            unsubscribe();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //@ts-ignore
+            navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
         };
     });
 
     onDestroy(() => {
         destroyPictureInPictureComponent();
-        unsubscribeVisibilityStore();
         unsubscribeStreamablePictureInPictureStore();
         if (pipWindowStoreSubscriber) pipWindowStoreSubscriber();
     });
@@ -167,7 +186,7 @@
 
 <div bind:this={parentDivElement} class="h-full w-full">
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
-        <slot inPictureInPicture={$pictureInPictureStore} />
+        <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
     {#if $activePictureInPictureStore}
         <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
