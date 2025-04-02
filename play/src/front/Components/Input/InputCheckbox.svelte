@@ -18,7 +18,7 @@
             type="checkbox"
             bind:checked={value}
             on:change={onChange}
-            data-testid={dataTestId}
+            {...$$restProps}
             {disabled}
         />
 

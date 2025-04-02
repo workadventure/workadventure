@@ -124,7 +124,7 @@
                 <div class="pl-1">
                     <InputCheckbox
                         label={$LL.chat.createRoom.e2eEncryption.label()}
-                        dataTestId="createRoomEncryption"
+                        data-testid="createRoomEncryption"
                         bind:value={createRoomOptions.encrypt}
                         id="encryptData"
                         on:focusin={focusChatInput}
