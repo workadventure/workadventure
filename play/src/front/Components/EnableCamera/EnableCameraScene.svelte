@@ -186,9 +186,9 @@
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
-    <section class="flex items-center justify-center min-h-dvh ">
+    <section class="flex  min-h-dvh ">
         <div
-            class="text-white w-[100vw] container mx-auto flex flex-col justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative "
+            class="text-white justify-center items-center overflow-hidden  w-[100vw] container  flex flex-col min-h-dvh pb-24 pt-8 lg:pt-0 relative "
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -197,23 +197,24 @@
                 </p>
             </section>
 
-            <!-- MICROPHONE -->
             <div
-                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll justify-center  items-center lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row  lg:items-stretch lg:px-4 lg:pb-4 "
             >
                 <!-- MICROPHONE -->
-                <SelectMicrophone
-                    on:selectDevice={handleSelectMicrophone}
-                    deviceList={$microphoneListStore ?? []}
-                    selectedDevice={selectedMicrophone}
-                >
-                    <MicOnIcon height="h-8" width="w-8" slot="icon" />
-                    <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
 
-                    <div class="absolute top-4 left-0 flex justify-center w-full " slot="widget">
+                <SelectMicrophone
+                on:selectDevice={handleSelectMicrophone}
+                deviceList={$microphoneListStore ?? []}
+                selectedDevice={selectedMicrophone}
+            >
+                <MicOnIcon height="h-8" width="w-8" slot="icon" />
+                <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
+
+                <div class="absolute top-4 left-0 flex justify-center w-full " slot="widget">
                         <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                     </div>
                 </SelectMicrophone>
+
 
                 <!-- CAMERA -->
                 <SelectCamera
