@@ -51,7 +51,15 @@ export const chatSearchBarValue = writable<string>("");
 
 export function initializeChatVisibilitySubscription() {
     const unsubscriber = chatVisibilityStore.subscribe((visible) => {
-        if (visible && get(selectedRoomStore)) {
+        const selectedRoom = get(selectedRoomStore);
+
+        if (!selectedRoom) {
+            return;
+        }
+
+        const isEncrypted = get(selectedRoom.isEncrypted);
+
+        if (visible && isEncrypted) {
             matrixSecurity.openChooseDeviceVerificationMethodModal().catch((error) => {
                 console.error(error);
             });
@@ -68,6 +76,8 @@ export const selectedChatMessageToReply = writable<NewChatMessage | null>(null);
 export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 
 export const joignableRoom = writable<{ id: string; name: string | undefined }[]>([]);
+
+export const shouldRestoreChatStateStore = writable(false);
 
 export const isAChatRoomIsVisible = () => {
     return get(selectedRoomStore) && get(navChat).key === "chat" && get(chatVisibilityStore);
