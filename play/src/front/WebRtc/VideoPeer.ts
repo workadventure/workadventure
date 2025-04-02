@@ -54,7 +54,7 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly flipX = false;
     public readonly muteAudio = false;
     public readonly displayMode = "cover";
-
+    public readonly displayInPictureInPictureMode = true;
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,

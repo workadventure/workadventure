@@ -50,7 +50,7 @@
     import MediaBox from "./Video/MediaBox.svelte";
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
-    //import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import PictureInPicture from "./Video/PictureInPicture.svelte";
     import SilentBlock from "./ActionBar/SilentBlock.svelte";
     let keyboardEventIsDisable = false;
 
@@ -187,7 +187,9 @@
             {/if}
 
             {#if !$highlightFullScreen}
-                <PresentationLayout />
+                <PictureInPicture let:inPictureInPicture>
+                    <PresentationLayout {inPictureInPicture} />
+                </PictureInPicture>
             {/if}
 
             {#if $uiWebsitesStore}
@@ -223,12 +225,6 @@
         </div>
         <ActionBar />
     </div>
-
-    <!-- No picture in picture implemented yet with the new design
-    {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
-        <PictureInPicture />
-    {/if}
-    -->
 
     {#if $actionsMenuStore}
         <ActionsMenu />
