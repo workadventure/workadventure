@@ -610,9 +610,7 @@ export class AreasPropertiesListener {
                 {
                     message: message,
                     callback: () => {
-                        console.log("🥸🥸🥸🥸");
                         openJitsiRoomFunction().catch((e) => console.error(e));
-                        console.log("😁😁😁😁");
                     },
                     userInputManager: this.scene.userInputManager,
                 },
