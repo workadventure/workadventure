@@ -1,11 +1,12 @@
 <script lang="ts">
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -238,6 +239,21 @@
         });
     }
 
+    onMount(() => {
+        // PictureInPicture has a tendency to make the no_video_stream_received message appear when it should not.
+        // Not sure why, probably a bug due to the fact the video element is moved in the DOM.
+        // We reset the displayNoVideoWarning flag when the PictureInPicture mode is changed.
+        const unsubscriber = activePictureInPictureStore.subscribe(() => {
+            clearTimeout(noVideoTimeout);
+            noVideoTimeout = undefined;
+            displayNoVideoWarning = false;
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
+
     onDestroy(() => {
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
@@ -295,7 +311,7 @@
             class:w-0={!videoEnabled}
             autoplay
             playsinline
-            muted={muted || missingUserActivation}
+            muted={muted || missingUserActivation || $activePictureInPictureStore}
             {loop}
         />
     </div>
