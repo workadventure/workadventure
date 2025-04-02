@@ -2,9 +2,10 @@
     import { onDestroy } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { z } from "zod";
-    import { streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
+    import { streamableCollectionStore, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { pictureInPictureStore } from "./PictureInPicture/PictureInPictureStore";
+    import PictureInPictureAudioWrapper from "./PictureInPicture/PictureInPictureAudioWrapper.svelte";
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
@@ -141,6 +142,8 @@
 
                     // Listen the event when the user wants to close the picture in picture mode
                     pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
+
+                    activePictureInPictureStore.set(true);
                 })
                 .catch((error: Error) => {
                     console.info("Picture-in-Picture is not supported", error);
@@ -166,4 +169,11 @@
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
         <slot inPictureInPicture={$pictureInPictureStore} />
     </div>
+    {#if $activePictureInPictureStore}
+        <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
+        <!-- So we need to play audio out of the PIP slot. -->
+        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+            <PictureInPictureAudioWrapper {peer} />
+        {/each}
+    {/if}
 </div>
