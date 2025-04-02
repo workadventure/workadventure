@@ -111,6 +111,8 @@
         }
     }
 
+    let missingUserActivation: false;
+
     onDestroy(() => {
         closeFloatingUi?.();
     });
@@ -154,6 +156,7 @@
             {videoConfig}
             cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
             withBackground={!isHighlighted}
+            bind:missingUserActivation
         >
             <UserName
                 name={$name}
@@ -243,7 +246,7 @@
     </div>
 
     <button
-        class={isHighlighted || !videoEnabled
+        class={isHighlighted || !videoEnabled || missingUserActivation
             ? "hidden"
             : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer picture-in-picture:hidden"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
@@ -251,4 +254,14 @@
     >
         <ArrowsMaximizeIcon />
     </button>
+    {#if missingUserActivation && !peer.muteAudio}
+        <div
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20"
+            on:click={() => (missingUserActivation = false)}
+        >
+            <div class="text-center">
+                <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+            </div>
+        </div>
+    {/if}
 </div>
