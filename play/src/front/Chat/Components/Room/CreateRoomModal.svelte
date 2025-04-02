@@ -87,12 +87,12 @@
             {/if}
 
             <Input
+                data-testid="createRoomName"
                 label={$LL.chat.createRoom.name()}
                 placeholder={$LL.chat.createRoom.name()}
                 bind:value={createRoomOptions.name}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
-                data-testid="createRoomName"
             />
 
             <Select
@@ -123,8 +123,8 @@
             {#if createRoomOptions.visibility === "private"}
                 <div class="pl-1">
                     <InputCheckbox
-                        label={$LL.chat.createRoom.e2eEncryption.label()}
                         data-testid="createRoomEncryption"
+                        label={$LL.chat.createRoom.e2eEncryption.label()}
                         bind:value={createRoomOptions.encrypt}
                         id="encryptData"
                         on:focusin={focusChatInput}

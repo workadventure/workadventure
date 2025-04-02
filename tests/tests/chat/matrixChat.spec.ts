@@ -352,6 +352,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
