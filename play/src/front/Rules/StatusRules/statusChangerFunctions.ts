@@ -1,3 +1,4 @@
+import { get } from "svelte/store";
 import {
     bubbleModalVisibility,
     changeStatusConfirmationModalVisibility,
@@ -14,6 +15,7 @@ export const hideBubbleConfirmationModal = () => {
 };
 
 export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null) => {
+    if (get(requestedStatusStore) === status) return;
     requestedStatusStore.set(status);
     localUserStore.setRequestedStatus(status);
 };
