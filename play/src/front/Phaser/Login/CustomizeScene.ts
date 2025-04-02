@@ -32,6 +32,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
     private bodyPartsButtons!: Record<WokaBodyPart, IconButton>;
+    private backButton!: Button;
 
     private randomizeButton!: Button;
     private finishButton!: Button;
@@ -117,6 +118,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.initializeBodyPartsButtons();
         this.initializeRandomizeButton();
         this.initializeFinishButton();
+        this.initializeBackButton();
 
         this.selectedBodyPartType = WokaBodyPart.Body;
         this.bodyPartsButtons.Body.select();
@@ -167,7 +169,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         gameManager.tryResumingGame(EnableCameraSceneName);
     }
 
-    public backToPreviousScene() {
+    public backToPreviousScene(): void {
         selectCharacterCustomizeSceneVisibleStore.set(false);
 
         this.scene.stop(CustomizeSceneName);
@@ -203,6 +205,35 @@ export class CustomizeScene extends AbstractCharacterScene {
                 i
             );
         }
+    }
+
+    private initializeBackButton(): void {
+        this.backButton = new Button(this, 50, 30, {
+            width: 80,
+            height: 40,
+            idle: {
+                color: 0x209cee,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
+            },
+            hover: {
+                color: 0x0987db,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
+            },
+            pressed: {
+                color: 0x006bb3,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
+            },
+        });
+        this.backButton.setText("Back");
+        this.backButton.on(Phaser.Input.Events.POINTER_UP, () => {
+            this.backToPreviousScene();
+        });
     }
 
     private initializeCustomWokaPreviewer(): void {
