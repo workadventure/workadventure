@@ -8,8 +8,8 @@
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
-    import { pictureInPictureStore } from "../../Video/PictureInPicture/PictureInPictureStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
+    import {activePictureInPictureStore} from "../../../Stores/PeerStore";
 
     export let inPictureInPicture: boolean;
 
@@ -106,7 +106,7 @@
             </div>
         {/if}
 
-        {#if $pictureInPictureStore}
+        {#if $activePictureInPictureStore}
             <div class="flex-none">
                 <PictureInPictureActionBar />
             </div>

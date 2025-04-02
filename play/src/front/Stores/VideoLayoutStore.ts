@@ -2,9 +2,9 @@ import { readable, derived } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { hasMovedEventName } from "../Phaser/Player/Player";
-import { pictureInPictureStore } from "../Components/Video/PictureInPicture/PictureInPictureStore";
 import { isInRemoteConversation } from "./StreamableCollectionStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
+import {activePictureInPictureStore} from "./PeerStore";
 // Time in milliseconds before switching to multi-line mode
 export const SWITCH_TO_MULTILINE_DELAY = 3500;
 
@@ -50,14 +50,14 @@ export const playerMovedInTheLast10Seconds = readable(true, function start(set) 
 
 // Store for the layout mode (derived from playerMovedInTheLast10Seconds and isInRemoteConversation and pictureInPictureStore)
 export const isOnOneLine = derived(
-    [playerMovedInTheLast10Seconds, isInRemoteConversation, highlightedEmbedScreen, pictureInPictureStore],
-    ([$playerMovedInTheLast10Seconds, $isInRemoteConversation, $highlightedEmbedScreen, $pictureInPictureStore]) => {
+    [playerMovedInTheLast10Seconds, isInRemoteConversation, highlightedEmbedScreen, activePictureInPictureStore],
+    ([$playerMovedInTheLast10Seconds, $isInRemoteConversation, $highlightedEmbedScreen, $activePictureInPictureStore]) => {
         // Show one line if we are NOT in a conversation ot the player has moved recently
         return (
             $playerMovedInTheLast10Seconds ||
             !$isInRemoteConversation ||
             $highlightedEmbedScreen !== undefined ||
-            $pictureInPictureStore
+            $activePictureInPictureStore
         );
     }
 );
