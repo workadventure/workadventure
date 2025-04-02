@@ -30,6 +30,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
     public flipX = false;
     public muteAudio = false;
     public readonly displayMode: "fit" | "cover";
+    public readonly displayInPictureInPictureMode = true;
 
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
