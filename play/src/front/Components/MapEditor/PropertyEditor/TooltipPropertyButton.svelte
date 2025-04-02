@@ -5,6 +5,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import infoBulleSvg from "../../images/icon_infobulle.svg";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: TooltipPropertyData;
@@ -29,11 +30,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img
-            class="w-6 mr-1"
-            src="resources/icons/icon_infobulle.png"
-            alt={$LL.mapEditor.properties.tooltipProperties.label()}
-        />
+        <img class="w-6 mr-1" src={infoBulleSvg} alt={$LL.mapEditor.properties.tooltipProperties.label()} />
         <label for="contentTooltip">{$LL.mapEditor.properties.tooltipProperties.label()}</label>
     </span>
     {$LL.mapEditor.properties.tooltipProperties.label()}
