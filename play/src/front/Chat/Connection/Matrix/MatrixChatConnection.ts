@@ -794,7 +794,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             name: roomName.trim(),
             visibility: roomOptions.visibility as Visibility | undefined,
             room_alias_name: slugify(roomName),
-            invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
+            invite:
+                roomOptions.invite
+                    ?.map((invitation) => invitation.value)
+                    .filter((invitation) => invitation !== undefined && invitation !== this.client?.getSafeUserId()) ??
+                [],
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
             power_level_content_override: {
@@ -813,7 +817,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             name: roomName.trim(),
             visibility: (roomOptions.visibility === "public" ? "public" : "private") as Visibility | undefined,
             room_alias_name: slugify(roomName),
-            invite: roomOptions.invite?.map((invitation) => invitation.value) ?? [],
+            invite:
+                roomOptions.invite
+                    ?.map((invitation) => invitation.value)
+                    .filter((invitation) => invitation !== undefined && invitation !== this.client?.getSafeUserId()) ??
+                [],
             initial_state: this.computeInitialState(roomOptions),
             topic: roomOptions.description,
             creation_content: {
