@@ -20,7 +20,7 @@
     type={button.type}
     bgColor={button.bgColor}
     textColor={button.textColor}
-    hasImage={button.imageSrc ?? false}
+    hasImage={!!button.imageSrc}
     on:click={() => {
         buttonActionBarTrigger(button);
     }}

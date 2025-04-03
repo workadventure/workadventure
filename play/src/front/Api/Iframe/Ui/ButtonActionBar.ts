@@ -50,7 +50,10 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      */
     addButton(descriptor: ActionBarClassicButtonDescriptor | ActionBarActionButtonDescriptor) {
         const addClassicButtonActionBar = isAddClassicButtonActionBarEvent.safeParse(descriptor);
-        if (addClassicButtonActionBar.success && (addClassicButtonActionBar.data.type === "button" || addClassicButtonActionBar.data.type === "gradient")) {
+        if (
+            addClassicButtonActionBar.success &&
+            (addClassicButtonActionBar.data.type === "button" || addClassicButtonActionBar.data.type === "gradient")
+        ) {
             if (descriptor.callback != undefined) {
                 this._callbacks.set(descriptor.id, () => descriptor.callback?.(addClassicButtonActionBar.data));
             }

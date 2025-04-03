@@ -301,6 +301,7 @@ function createAdditionalButtonsMenu() {
                             last: false,
                             button: {
                                 id: button.id,
+                                type: button.type,
                                 tooltipTitle: button.toolTip,
                                 imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
                                 state: "normal",

@@ -14,7 +14,7 @@
     // Hide the icon in the action bar (displays only the label), and only displays the icon if we are in the responsive menu.
     export let hideIconInActionBar = false;
     // An optional action that will be added to the button element.
-    export let type: "button" | "gradient" = "button"
+    export let type: "button" | "gradient" | "action" = "button";
     export let bgColor: string | undefined = undefined;
     export let textColor: string | undefined = undefined;
 
@@ -45,10 +45,9 @@
         dispatch("click");
     }
 
-    $: styleVars = [
-        bgColor ? `--bg-color: ${bgColor};` : "",
-        textColor ? `--text-color: ${textColor};` : ""
-    ].filter(Boolean).join(" ");
+    $: styleVars = [bgColor ? `--bg-color: ${bgColor};` : "", textColor ? `--text-color: ${textColor};` : ""]
+        .filter(Boolean)
+        .join(" ");
 </script>
 
 {#if !isInMenu}
@@ -65,7 +64,7 @@
         class:rounded-r-lg={last === true}
         class:pr-2={last === true}
         use:action
-        style="{styleVars}"
+        style={styleVars}
     >
         <button
             type="button"
@@ -106,7 +105,9 @@
     <button
         class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all relative cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
-                    {(state === 'active' && type !== 'gradient') ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
+                    {state === 'active' && type !== 'gradient'
+            ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'
+            : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {type === 'gradient' ? 'gradient overflow-hidden' : ''}
                     {bgColor && type !== 'gradient' ? 'bg-[var(--bg-color)]' : ''}
@@ -114,9 +115,9 @@
                     {type === 'gradient' ? 'justify-center' : ''}"
         use:action
         on:click={() => handleClick()}
-        style="{styleVars}"
+        style={styleVars}
     >
-        {#if hasImage }
+        {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                 <slot />
             </div>
@@ -129,8 +130,8 @@
 {/if}
 
 <style>
-    .gradient:before{
-        content: '';
+    .gradient:before {
+        content: "";
         z-index: -1;
         position: absolute;
         top: 0;
@@ -142,21 +143,21 @@
         /*background-color: #cdb012;*/
         background-color: var(--bg-color);
         opacity: 0.7;
-        transition: all .5s ease-in-out;
+        transition: all 0.5s ease-in-out;
     }
 
-    .gradient:hover:before{
+    .gradient:hover:before {
         opacity: 1;
         border-radius: 10%;
     }
 
-    .gradient{
+    .gradient {
         border: 1px solid rgb(from var(--bg-color) r g b / 0.3);
-        transition: all .2s ease-in-out;
-        box-shadow: 0px 0px 0px 0px var(--bg-color)/0;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0px 0px 0px 0px var(--bg-color) / 0;
     }
 
-    .gradient:hover{
+    .gradient:hover {
         box-shadow: 0px 0px 4px 2px rgb(from var(--bg-color) r g b / 0.1);
     }
 </style>
