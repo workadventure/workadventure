@@ -1,30 +1,22 @@
 <script lang="ts">
-    import {onDestroy, onMount} from "svelte";
-    import { Unsubscriber, writable } from "svelte/store";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
+    import Debug from "debug";
     import { streamableCollectionStore, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { visibilityStore } from "../../Stores/VisibilityStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import PictureInPictureAudioWrapper from "./PictureInPicture/PictureInPictureAudioWrapper.svelte";
-    import {visibilityStore} from "../../Stores/VisibilityStore";
-    import {localUserStore} from "../../Connection/LocalUserStore";
+    import {} from "./PictureInPicture/PictureInPictureWindow";
+
+    const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
-    const pipWindowStore = writable<Window | undefined>(undefined);
+    let pipWindow: Window | undefined;
 
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
-    let pipWindowStoreSubscriber: Unsubscriber | undefined;
-
-    // create interface for window with documentPictureInPicture
-    interface WindowExt extends Window {
-        documentPictureInPicture: {
-            requestWindow: (options: {
-                preferInitialWindowPlacement: boolean;
-                height: string;
-                width: string;
-            }) => Promise<Window>;
-        };
-    }
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -65,26 +57,6 @@
         });
     }
 
-    function initiatePictureInPictureBuilder() {
-        // subscribe to the picture in picture window
-        // if we have the window, we start the picture in picture mode builder
-        pipWindowStoreSubscriber = pipWindowStore.subscribe((pipWindow) => {
-            if (pipWindow == undefined) return;
-            copySteelSheet(pipWindow);
-            //pipWindow.document.body.style.backgroundColor = "black";
-            pipWindow.document.body.style.display = "flex";
-            pipWindow.document.body.style.justifyContent = "center";
-            pipWindow.document.body.style.alignItems = "start";
-            pipWindow.document.body.style.height = "100vh";
-            pipWindow.document.body.style.width = "100%";
-            pipWindow.document.body.append(divElement);
-
-            setTimeout(() => {
-                divElement.style.display = "flex";
-            }, 1000);
-        });
-    }
-
     function destroyPictureInPictureComponent() {
         if (!parentDivElement) {
             return;
@@ -93,9 +65,9 @@
 
         if (activePictureInPictureSubscriber) activePictureInPictureSubscriber();
 
-        if ($pipWindowStore) $pipWindowStore.removeEventListener("pagehide", destroyPictureInPictureComponent);
-        if ($pipWindowStore) $pipWindowStore.close();
-        pipWindowStore.set(undefined);
+        if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
+        if (pipWindow) pipWindow.close();
+        pipWindow = undefined;
         activePictureInPictureStore.set(false);
     }
 
@@ -106,22 +78,21 @@
     });
 
     function requestPictureInPicture() {
-        console.log("Entering Picture in Picture mode");
+        // We activate the picture in picture mode only if we have a streamable in the collection
+        if ($streamablePictureInPictureStore.size == 0) return;
+
+        if (pipWindow !== undefined) return;
+
+        debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
             return;
         }
-
-        initiatePictureInPictureBuilder();
-
-        if ($pipWindowStore != undefined) return;
-        // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamablePictureInPictureStore.size == 0) return;
 
         // request permission to use the picture in picture mode
         // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
         const windowExtResult = WindowExtSchema.safeParse(window);
         if (!windowExtResult.success) {
-            console.info("Picture in Picture is not supported");
+            debug("Picture in Picture is not supported");
             return;
         }
 
@@ -134,21 +105,34 @@
             width: "400",
         };
 
-        (window as unknown as WindowExt).documentPictureInPicture
+        window.documentPictureInPicture
             .requestWindow(options)
-            .then((pipWindow: Window) => {
+            .then((newPipWindow: Window) => {
                 // Picture in picture is possible
                 // we store the window to start the picture in picture mode
-                // the builder listen the pipWindowStore and will start the dom building
-                pipWindowStore.set(pipWindow);
+                // the builder listen the pipWindow and will start the dom building
+                pipWindow = newPipWindow;
 
                 // Listen the event when the user wants to close the picture in picture mode
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
 
+                copySteelSheet(pipWindow);
+                //pipWindow.document.body.style.backgroundColor = "black";
+                pipWindow.document.body.style.display = "flex";
+                pipWindow.document.body.style.justifyContent = "center";
+                pipWindow.document.body.style.alignItems = "start";
+                pipWindow.document.body.style.height = "100vh";
+                pipWindow.document.body.style.width = "100%";
+                pipWindow.document.body.append(divElement);
+
+                /*setTimeout(() => {
+                    divElement.style.display = "flex";
+                }, 1000);*/
+
                 activePictureInPictureStore.set(true);
             })
             .catch((error: Error) => {
-                console.info("Picture-in-Picture is not supported", error);
+                debug("Picture-in-Picture is not supported", error);
                 destroyPictureInPictureComponent();
                 // Maybe we could propose a popup to the user to activate the Picture in Picture mode
             });
@@ -159,15 +143,18 @@
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
             navigator.mediaSession.setActionHandler("enterpictureinpicture", requestPictureInPicture);
-        } catch (e) {
-            console.error("Could not set enterpictureinpicture handler", e);
+        } catch (e: unknown) {
+            debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
             }
-        })
+            if (window.location.protocol === "http:" && visible === false) {
+                requestPictureInPicture();
+            }
+        });
 
         return () => {
             unsubscribe();
@@ -180,7 +167,6 @@
     onDestroy(() => {
         destroyPictureInPictureComponent();
         unsubscribeStreamablePictureInPictureStore();
-        if (pipWindowStoreSubscriber) pipWindowStoreSubscriber();
     });
 </script>
 
