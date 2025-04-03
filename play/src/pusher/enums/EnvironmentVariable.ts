@@ -97,6 +97,7 @@ export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 // Map editor
 export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
 export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
+export const MAP_EDITOR_ALLOW_ALL_USERS: boolean = env.MAP_EDITOR_ALLOW_ALL_USERS;
 
 // Integration tools
 export const KLAXOON_ENABLED = env.KLAXOON_ENABLED;

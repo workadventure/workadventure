@@ -506,7 +506,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    this.canEdit = roomJoinedMessage.canEdit || this.isAdmin();
+                    this.canEdit = roomJoinedMessage.canEdit;
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it
