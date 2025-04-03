@@ -11,6 +11,7 @@ export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBa
 const ActionBarButtonType = {
     button: "button",
     action: "action",
+    gradient: "gradient",
 } as const;
 type ActionBarButtonType = (typeof ActionBarButtonType)[keyof typeof ActionBarButtonType];
 
@@ -19,6 +20,8 @@ export type ActionBarClassicButtonDescriptor = {
     label: string;
     type?: ActionBarButtonType;
     callback?: ButtonActionBarClickedCallback;
+    bgColor?: string;
+    textColor?: string;
 };
 
 export type ActionBarActionButtonDescriptor = {
@@ -47,7 +50,7 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      */
     addButton(descriptor: ActionBarClassicButtonDescriptor | ActionBarActionButtonDescriptor) {
         const addClassicButtonActionBar = isAddClassicButtonActionBarEvent.safeParse(descriptor);
-        if (addClassicButtonActionBar.success && addClassicButtonActionBar.data.type === "button") {
+        if (addClassicButtonActionBar.success && (addClassicButtonActionBar.data.type === "button" || addClassicButtonActionBar.data.type === "gradient")) {
             if (descriptor.callback != undefined) {
                 this._callbacks.set(descriptor.id, () => descriptor.callback?.(addClassicButtonActionBar.data));
             }
@@ -58,6 +61,8 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
                     id: addClassicButtonActionBar.data.id,
                     label: addClassicButtonActionBar.data.label,
                     type: addClassicButtonActionBar.data.type,
+                    bgColor: addClassicButtonActionBar.data.bgColor,
+                    textColor: addClassicButtonActionBar.data.textColor,
                 },
             });
         }

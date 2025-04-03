@@ -7,7 +7,6 @@
     export let button: CustomButtonActionBarDescriptor;
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
-
     function buttonActionBarTrigger(button: CustomButtonActionBarDescriptor) {
         analyticsClient.clickOnCustomButton(button.id, button.label, button.tooltipTitle, button.imageSrc);
         return iframeListener.sendButtonActionBarTriggered(button.id);
@@ -18,6 +17,10 @@
     label={button.label}
     tooltipTitle={button.tooltipTitle}
     tooltipDesc={button.tooltipDesc}
+    type={button.type}
+    bgColor={button.bgColor}
+    textColor={button.textColor}
+    hasImage={button.imageSrc ?? false}
     on:click={() => {
         buttonActionBarTrigger(button);
     }}
