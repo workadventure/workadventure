@@ -9,7 +9,7 @@
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
-    import {activePictureInPictureStore} from "../../../Stores/PeerStore";
+    import { activePictureInPictureStore } from "../../../Stores/PeerStore";
 
     export let inPictureInPicture: boolean;
 
