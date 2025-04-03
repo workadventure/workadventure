@@ -68,7 +68,7 @@
     >
         <button
             type="button"
-            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
+            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative font-bold
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'normal' && type !== 'gradient' ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
