@@ -8,7 +8,7 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
-import { map_storage_url } from "./utils/urls";
+import {map_storage_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
@@ -704,5 +704,21 @@ test.describe("Map editor @oidc", () => {
         await page.close();
         await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
+    });
+
+    test("assert map editor not visible on public maps @oidc", async ({ browser }) => {
+        const page = await getPage(browser, 'Admin1',
+            publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
+        );
+
+        await Menu.openMapMenu(page);
+
+        // Check if the map editor is disabled
+        await expect(
+            page.getByText("Map editor")
+        ).toBeHidden();
+
+        await page.close();
+        await page.context().close();
     });
 });
