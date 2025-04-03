@@ -78,12 +78,6 @@
                     </ShowMore>
                 </div>
             {/if}
-            {#each Array.from($folders.values()) as folder (folder.id)}
-                <svelte:self {folder} rootFolder={false} />
-            {/each}
-            <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
-                <Room {room} />
-            </ShowMore>
             {#if $suggestedRooms.length > 0}
                 <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
                     <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
@@ -91,6 +85,12 @@
                     </ShowMore>
                 </div>
             {/if}
+            {#each Array.from($folders.values()) as folder (folder.id)}
+                <svelte:self {folder} rootFolder={false} />
+            {/each}
+            <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
+                <Room {room} />
+            </ShowMore>
             {#if $rooms.length === 0 && $folders.length === 0}
                 <p
                     class={`${
