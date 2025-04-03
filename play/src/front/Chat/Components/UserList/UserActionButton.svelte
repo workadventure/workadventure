@@ -99,7 +99,10 @@
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
-        <div bind:this={popoversElement} class="wa-dropdown-menu z-10 mr-1 absolute bg-contrast/80 backdrop-blur-md rounded-md p-1">
+        <div
+            bind:this={popoversElement}
+            class="wa-dropdown-menu z-10 mr-1 absolute bg-contrast/80 backdrop-blur-md rounded-md p-1"
+        >
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
