@@ -130,14 +130,14 @@
                     {/if}
                 </div>
             </div>
-            <div class="group-hover/chatItem:opacity-100 opacity-0 transition-all">
+            <div class="transition-all">
                 {#if !isMe}
                     <UserActionButton {user} />
                 {/if}
             </div>
             {#if !isMe && !showRoomCreationInProgress}
                 <button
-                    class="transition-all group-hover/chatItem:bg-white/10 p-1 rounded-md aspect-square flex items-center justify-center text-white group-hover/chatItem:opacity-100 opacity-0 m-0"
+                    class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe) {
                             showRoomCreationInProgress = true;

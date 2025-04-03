@@ -89,7 +89,7 @@
                     </div>
                 </button>
                 {#if $shownRoomListStore === roomName}
-                    <div class="flex flex-col flex-1 overflow-auto">
+                    <div class="flex flex-col flex-1 h-fit">
                         <UserList userList={userInRoom} />
                     </div>
                 {/if}
