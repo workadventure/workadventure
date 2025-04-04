@@ -395,10 +395,10 @@ jobs:
           fi
 
           while true; do
-            RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}" \
+            RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_SAAS_READ_API_TOKEN }}" \
               "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}")
             if [[ "$(echo "$RESPONSE" | jq -r '.message')" == "401 Unauthorized" ]]; then
-              echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_TOKEN_PIPELINE secret."
+              echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_SAAS_READ_API_TOKEN secret."
               exit 1
             fi
             echo "RESPONSE=$RESPONSE"
