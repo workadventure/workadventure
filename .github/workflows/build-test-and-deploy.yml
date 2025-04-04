@@ -397,7 +397,7 @@ jobs:
             exit 1
           fi
 
-          MAX_ATTEMPTS=60  # 30 minutes with 30 second intervals
+          MAX_ATTEMPTS=120  # 60 minutes with 30 second intervals
           ATTEMPT=0
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
@@ -435,7 +435,7 @@ jobs:
               *)
                 ATTEMPT=$((ATTEMPT + 1))
                 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-                  echo "❌ Pipeline timed out after 30 minutes"
+                  echo "❌ Pipeline timed out after 60 minutes"
                   exit 1
                 fi
                 sleep 30
