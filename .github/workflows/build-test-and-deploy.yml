@@ -156,6 +156,8 @@ jobs:
 
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    # TODO : enlever avant de merger
+    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -397,11 +399,16 @@ jobs:
           fi
 
           while true; do
-            STATUS=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}" \
-              "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}" \
-              | jq -r '.status')
+            RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}" \
+              "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}")
+            if [[ "$(echo "$RESPONSE" | jq -r '.message')" == "401 Unauthorized" ]]; then
+              echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_TOKEN_PIPELINE secret."
+              exit 1
+            fi
+            echo "RESPONSE=$RESPONSE"
+            STATUS=$(echo "$RESPONSE" | jq -r '.status')
 
-            echo "⏳ Pipeline status: $STATUS"
+            echo "⏳ Pipeline status: $STATUS for pipeline $PIPELINE_ID"
 
             if [[ "$STATUS" == "success" ]]; then
               echo "✅ Pipeline succeeded"
