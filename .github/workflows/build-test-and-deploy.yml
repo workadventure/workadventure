@@ -383,7 +383,6 @@ jobs:
               }
             }")
 
-          echo "GitLab response: $RESPONSE"
           PIPELINE_ID=$(echo "$RESPONSE" | jq -r '.id')
           echo "PIPELINE_ID=$PIPELINE_ID" >> "$GITHUB_ENV"
 
@@ -405,15 +404,14 @@ jobs:
               echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_SAAS_READ_API_TOKEN secret."
               exit 1
             fi
-            echo "RESPONSE=$RESPONSE"
             STATUS=$(echo "$RESPONSE" | jq -r '.status')
 
-            echo "⏳ Pipeline status: $STATUS for pipeline $PIPELINE_ID"
+            echo "⏳ Pipeline status: $STATUS for pipeline"
 
             if [[ "$STATUS" == "success" ]]; then
               echo "✅ Pipeline succeeded"
               break
-            elif [[ "$STATUS" == "failed" || "$STATUS" == "canceled" ]]; then
+            elif [[ "$STATUS" == "failed" || "$STATUS" == "canceled" || "$STATUS" == "canceling" ]]; then
               echo "❌ Pipeline ended with status: $STATUS"
               exit 1
             fi
