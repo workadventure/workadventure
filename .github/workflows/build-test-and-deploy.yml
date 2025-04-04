@@ -334,53 +334,68 @@ jobs:
   # Vérifier que les images sont bien dans la registry
   run-gitlab-saas-tests:
     name: "Run Gitlab SaaS tests"
-    if: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+    if: >
+      ${{
+        (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') ||
+        (github.event_name != 'pull_request' && github.repository_owner == 'workadventure')
+      }}
     runs-on: ubuntu-latest
+    needs:
+      - build-play
+      - build-back
+      - build-maps
+      - build-uploader
+      - build-map-storage
     steps:
+      - name: Set target branch for GitLab pipeline
+        id: set-ref
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            LABELS=$(echo '${{ toJson(github.event.pull_request.labels.*.name) }}')
+            if echo "$LABELS" | grep -q "linked_to_saas_branch"; then
+              REF="${{ github.head_ref }}"
+            elif [[ "${{ github.event.pull_request.base.ref }}" == "develop" ]]; then
+              REF="develop"
+            else
+              REF="master"
+            fi
+          else
+            REF="master"
+          fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
       - name: Trigger GitLab Pipeline
         run: |
-          RESPONSE=$(curl -X POST \
+          REF="${{ steps.set-ref.outputs.ref }}"
+          echo "Triggering pipeline for ref: $REF"
+
+          RESPONSE=$(curl -s -X POST \
             "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/trigger/pipeline" \
             -H "Content-Type: application/json" \
             -d "{
-              \"token\": \"${{ secrets.GITLAB_TOKEN_PIPELINE }}",
-              \"ref\": \"${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || github.event.pull_request.base.ref == 'develop' && 'develop' || 'master' }}\",
+              \"token\": \"${{ secrets.GITLAB_TOKEN_PIPELINE }}\",
+              \"ref\": \"${REF}\",
               \"variables\": {
                 \"GITHUB_BRANCH_NAME\": \"${{ github.head_ref }}\",
                 \"RUN_FROM_GITHUB\": \"true\"
               }
             }")
-          echo "$RESPONSE"
+
+          echo "GitLab response: $RESPONSE"
           PIPELINE_ID=$(echo "$RESPONSE" | jq -r '.id')
-          echo "$PIPELINE_ID"
-          
+          echo "PIPELINE_ID=$PIPELINE_ID" >> "$GITHUB_ENV"
+
       - name: Long poll GitLab pipeline until finished
         run: |
-          echo "Waiting for GitLab pipeline to complete..."
+          REF="${{ steps.set-ref.outputs.ref }}"
+          echo "Polling pipeline for ref: $REF"
 
-          # Step 1: Get the latest pipeline for the given ref
-          PIPELINE_ID=""
-          for i in {1..10}; do
-            RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}" \
-              "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines?ref=${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || github.event.pull_request.base.ref == 'develop' && 'develop' || 'master' }}")
-
-            PIPELINE_ID=$(echo "$RESPONSE" | jq -r '.[0].id')
-
-            if [[ "$PIPELINE_ID" != "null" && "$PIPELINE_ID" != "" ]]; then
-              echo "Found pipeline ID: $PIPELINE_ID"
-              break
-            fi
-
-            echo "Pipeline not found yet... retrying in 5 seconds"
-            sleep 5
-          done
-
+          PIPELINE_ID="${{ env.PIPELINE_ID }}"
           if [[ -z "$PIPELINE_ID" || "$PIPELINE_ID" == "null" ]]; then
-            echo "❌ Failed to find a pipeline for ref ${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || github.event.pull_request.base.ref == 'develop' && 'develop' || 'master' }}"
+            echo "❌ No pipeline ID returned from GitLab trigger."
             exit 1
           fi
 
-          # Step 2: Long polling every 30s until status is terminal
           while true; do
             STATUS=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}" \
               "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}" \
@@ -397,14 +412,7 @@ jobs:
             fi
 
             sleep 30
-          done
-    needs:
-      - build-play
-      - build-back
-      - build-maps
-      - build-uploader
-      - build-map-storage
-      
+          done   
 
   prod-single-domain-deploy-tests:
     name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
