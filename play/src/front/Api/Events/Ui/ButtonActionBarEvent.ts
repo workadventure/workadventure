@@ -3,7 +3,9 @@ import { z } from "zod";
 export const isAddClassicButtonActionBarEvent = z.object({
     id: z.string(),
     label: z.string(),
-    type: z.enum(["button"]).optional().default("button"),
+    type: z.enum(["button", "gradient"]).optional().default("button"),
+    bgColor: z.string().optional(),
+    textColor: z.string().optional(),
 });
 
 export const isAddActionButtonActionBarEvent = z.object({

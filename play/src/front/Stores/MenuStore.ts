@@ -274,11 +274,14 @@ export function getProfileUrl() {
 
 export interface CustomButtonActionBarDescriptor {
     id: string;
+    type: "button" | "gradient" | "action";
     label?: string | undefined;
     tooltipTitle?: string | undefined;
     tooltipDesc?: string | undefined;
     imageSrc?: string | undefined;
     state: "normal" | "active" | "forbidden" | "disabled";
+    bgColor?: string | undefined;
+    textColor?: string | undefined;
 }
 
 function createAdditionalButtonsMenu() {
@@ -298,6 +301,7 @@ function createAdditionalButtonsMenu() {
                             last: false,
                             button: {
                                 id: button.id,
+                                type: button.type,
                                 tooltipTitle: button.toolTip,
                                 imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
                                 state: "normal",
@@ -313,8 +317,11 @@ function createAdditionalButtonsMenu() {
                             last: false,
                             button: {
                                 id: button.id,
+                                type: button.type,
                                 label: button.label,
                                 state: "normal",
+                                bgColor: button.bgColor,
+                                textColor: button.textColor,
                             },
                         },
                     });
