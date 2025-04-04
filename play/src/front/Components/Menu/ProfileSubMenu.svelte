@@ -22,7 +22,7 @@
                     bind:this={profileIframe}
                     title="profile"
                     src={getProfileUrl()}
-                    class="w-4/5 h-dvh border-0 border-solid border-light-blue"
+                    class="w-full h-dvh"
                 />
             {/if}
         </section>
