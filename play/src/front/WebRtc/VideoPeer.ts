@@ -152,6 +152,10 @@ export class VideoPeer extends Peer implements Streamable {
             }
         });
 
+        this.on("iceTimeout", () => {
+            this._statusStore.set("error");
+        });
+
         this.on("connect", () => {
             this._statusStore.set("connected");
 
