@@ -331,6 +331,32 @@ jobs:
           path: tests/playwright-report/
           retention-days: 30
 
+  # Vérifier que les images sont bien dans la registry
+  run-gitlab-saas-tests:
+    name: "Run Gitlab SaaS tests"
+    if: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Job
+        uses: ghcr.io/appleboy/gitlab-ci-action@v1.3.0
+        id: trigger
+        with:
+          host: ${{ secrets.GITLAB_SAAS_HOST }} 
+          token: ${{ secrets.GITLAB_TOKEN_PIPELINE }} 
+          debug: true
+          project_id: ${{ secrets.GITLAB_SAAS_PROJECT_ID }}
+          wait: true
+          variables: GITHUB_BRANCH_NAME=${{ github.ref_name }};RUN_FROM_GITHUB=true
+          ref: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.ref_name || 'master' }}
+          #interval: 1s
+    needs:
+      - build-play
+      - build-back
+      - build-maps
+      - build-uploader
+      - build-map-storage
+      
+
   prod-single-domain-deploy-tests:
     name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
