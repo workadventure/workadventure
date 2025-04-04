@@ -156,8 +156,6 @@ jobs:
 
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
-    # TODO : enlever avant de merger
-    if: false
     strategy:
       fail-fast: false
       matrix:
@@ -429,7 +427,6 @@ jobs:
                 ;;
               "failed"|"canceled"|"canceling")
                 echo "❌ Pipeline ended with status: $STATUS"
-                echo "Pipeline details: https://${{ secrets.GITLAB_SAAS_HOST }}/workadventure/workadventure-saas/-/pipelines/${PIPELINE_ID}"
                 exit 1
                 ;;
               *)
