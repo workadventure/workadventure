@@ -336,6 +336,19 @@ jobs:
     if: >
       ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
     runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Job
+        uses: digital-blueprint/gitlab-pipeline-trigger-action@v1
+        id: trigger
+        with:
+          host: ${{ secrets.GITLAB_SAAS_HOST }} 
+          trigger_token: ${{ secrets.GITLAB_TOKEN_PIPELINE }} 
+          # debug: true
+          id: ${{ secrets.GITLAB_SAAS_PROJECT_ID }} 
+          # wait: true
+          variables: '{"GITHUB_BRANCH_NAME": "${{ github.ref_name }}", "RUN_FROM_GITHUB": true}'
+          ref: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.ref_name || 'master' }}
+          #interval: 1s
     needs:
       - build-back
       - build-maps
