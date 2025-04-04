@@ -7,6 +7,7 @@ const video: BaseTranslation = {
     reduce: "Reduce",
     toggle_fullscreen: "Toggle fullscreen",
     exit_fullscreen: "Exit fullscreen",
+    click_to_unmute: "Click to unmute",
 };
 
 export default video;

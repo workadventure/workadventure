@@ -20,7 +20,10 @@
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { IconArrowLeft } from "@wa-icons";
+    import { IconChevronDown, IconArrowLeft } from "../../Icons";
+    import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -353,9 +356,9 @@
         {/each}
     </div>
     <div class="entity-name-container">
-        <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
-        <input
+        <Input
             id="objectName"
+            label={$LL.mapEditor.entityEditor.objectName()}
             type="text"
             placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
             bind:value={entityName}
@@ -364,29 +367,35 @@
     </div>
     <div class="entity-name-container">
         {#if !showDescriptionField}
-            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+            <a
+                href="#addDescriptionField"
+                class="pl-0 text-blue-500 flex flex-row items-center"
+                on:click|preventDefault|stopPropagation={toggleDescriptionField}
                 >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
             >
         {:else}
-            <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
-            <textarea
+            <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
+                <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
+            >
+
+            <TextArea
+                label={$LL.mapEditor.entityEditor.objectDescription()}
                 id="objectDescription"
-                placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
+                placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                 bind:value={entityDescription}
                 on:change={onUpdateDescription}
+                onKeyPress={() => {}}
             />
         {/if}
     </div>
-    <div class="value-switch">
-        <label for="searchable">{$LL.mapEditor.entityEditor.objectSearchable()}</label>
-        <input
-            id="searchable"
-            type="checkbox"
-            class="input-switch"
-            bind:checked={entitySearchable}
-            on:change={onUpdateSearchable}
-        />
-    </div>
+
+    <InputSwitch
+        label={$LL.mapEditor.entityEditor.objectSearchable()}
+        id="searchable"
+        bind:value={entitySearchable}
+        onChange={onUpdateSearchable}
+    />
+
     <div class="properties-container">
         {#each properties as property (property.id)}
             <div class="property-box">

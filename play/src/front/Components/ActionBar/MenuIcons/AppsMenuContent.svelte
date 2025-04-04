@@ -94,4 +94,4 @@
 </ActionBarButton>
 
 <!-- External module action bar -->
-<ExternalComponents zone="actionBar" />
+<ExternalComponents zone="actionBarAppsMenu" />

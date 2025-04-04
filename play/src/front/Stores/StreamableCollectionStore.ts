@@ -79,6 +79,7 @@ export interface Streamable {
     // In fit mode, the video will fit into the container and be fully visible, even if it does not fill the full container
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
+    readonly displayInPictureInPictureMode: boolean;
 }
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -118,7 +119,7 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     return undefined;
 });
 
-const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
     return {
         uniqueId: "-1",
         media: {
@@ -138,6 +139,7 @@ const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
         flipX: true,
         muteAudio: true,
         displayMode: "cover" as const,
+        displayInPictureInPictureMode: false,
     };
 });
 
@@ -239,6 +241,17 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
+
+/**
+ * A store containing only the streamables that should be displayed in picture-in-picture mode
+ */
+export const streamablePictureInPictureStore = derived(streamableCollectionStore, ($streamableCollectionStore) => {
+    return new Map(
+        Array.from($streamableCollectionStore.values())
+            .filter((streamable) => streamable.displayInPictureInPictureMode)
+            .map((streamable) => [streamable.uniqueId, streamable])
+    );
+});
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(

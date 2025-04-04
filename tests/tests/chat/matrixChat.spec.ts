@@ -352,6 +352,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -369,6 +370,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -389,6 +391,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -432,6 +435,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -461,7 +465,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
-    await page.getByTestId("VerifyWithPassphraseButton").click();
+    //await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByText("Cancel").click();
     await expect(page.getByText("Failed to decrypt")).toBeAttached();
     await page.getByTestId("chatBackward").click();
@@ -481,6 +485,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await page.getByText(privateChatRoom).click();
@@ -615,6 +620,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -656,6 +662,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
     await page.getByTestId("createRoomVisibility").selectOption("private");
+    await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());

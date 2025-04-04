@@ -45,6 +45,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly flipX = false;
     public readonly muteAudio = false;
     public readonly displayMode = "fit";
+    public readonly displayInPictureInPictureMode = true;
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,

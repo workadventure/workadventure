@@ -1,11 +1,12 @@
 <script lang="ts">
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -47,6 +48,9 @@
     // If true, the video will be displayed with a background is it does not cover the whole box
     export let withBackground = false;
 
+    // In case the user did not interact yet with the browser, the navigator will deny playing the video if it is not muted.
+    // The parent component can listen to this variable to display a message to the user.
+    export let missingUserActivation = false;
     let destroyed = false;
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -63,6 +67,10 @@
     function onLoadVideoElement() {}
 
     $: if (mediaStream && videoElement) {
+        if (navigator.userActivation && !navigator.userActivation.hasBeenActive && !muted) {
+            console.warn("User has not interacted with the browser yet. The video will be muted.");
+            missingUserActivation = true;
+        }
         videoElement.srcObject = mediaStream;
     }
     $: if (videoUrl && videoElement) {
@@ -231,6 +239,21 @@
         });
     }
 
+    onMount(() => {
+        // PictureInPicture has a tendency to make the no_video_stream_received message appear when it should not.
+        // Not sure why, probably a bug due to the fact the video element is moved in the DOM.
+        // We reset the displayNoVideoWarning flag when the PictureInPicture mode is changed.
+        const unsubscriber = activePictureInPictureStore.subscribe(() => {
+            clearTimeout(noVideoTimeout);
+            noVideoTimeout = undefined;
+            displayNoVideoWarning = false;
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
+
     onDestroy(() => {
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
@@ -288,13 +311,13 @@
             class:w-0={!videoEnabled}
             autoplay
             playsinline
-            {muted}
+            muted={muted || missingUserActivation || $activePictureInPictureStore}
             {loop}
         />
     </div>
     {#if displayNoVideoWarning}
         <div
-            class="absolute w-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-danger text-white rounded-lg"
         >
             <div class="text-center">
                 <CameraExclamationIcon />

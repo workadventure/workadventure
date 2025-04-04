@@ -26,6 +26,7 @@ const disableAnimations = "disableAnimations";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const allowPictureInPicture = "allowPictureInPicture";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
 const preferredAudioInputDevice = "preferredAudioInputDevice";
@@ -47,6 +48,7 @@ const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
+const bubbleSound = "bubbleSound";
 
 const JwtAuthToken = z
     .object({
@@ -285,6 +287,14 @@ class LocalUserStore {
 
     getNotification(): boolean {
         return localStorage.getItem(notification) === "true";
+    }
+
+    setAllowPictureInPicture(value: boolean): void {
+        localStorage.setItem(allowPictureInPicture, value.toString());
+    }
+
+    getAllowPictureInPicture(): boolean {
+        return localStorage.getItem(allowPictureInPicture) !== "false";
     }
 
     setChatSounds(value: boolean): void {
@@ -682,6 +692,18 @@ class LocalUserStore {
             return INITIAL_SIDEBAR_WIDTH;
         }
         return parseFloat(value);
+    }
+
+    setBubbleSound(value: "ding" | "wobble"): void {
+        localStorage.setItem(bubbleSound, value);
+    }
+
+    getBubbleSound(): "ding" | "wobble" {
+        const value = localStorage.getItem(bubbleSound);
+        if (value === "wobble") {
+            return "wobble";
+        }
+        return "ding";
     }
 }
 

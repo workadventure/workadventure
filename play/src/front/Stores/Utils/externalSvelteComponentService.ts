@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 import { ExternalSvelteComponentServiceInterface } from "../../ExternalModule/ExtensionModule";
 
 const externalComponentsByZone = {
-    actionBar: writable(
+    actionBarAppsMenu: writable(
         new Map<
             string,
             { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }

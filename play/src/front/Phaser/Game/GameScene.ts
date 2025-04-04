@@ -99,7 +99,7 @@ import {
     subMenusStore,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
-import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
+import { audioManagerFileStore, bubbleSoundStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
@@ -429,8 +429,16 @@ export class GameScene extends DirtyScene {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in2.mp3");
-        this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
+        // Load the selected bubble sound from bubbleSoundStore
+        const selectedBubbleSound = get(bubbleSoundStore);
+        this.load.audio(
+            `audio-webrtc-in-${selectedBubbleSound}`,
+            `/resources/objects/webrtc-in-${selectedBubbleSound}.mp3`
+        );
+        this.load.audio(
+            `audio-webrtc-out-${selectedBubbleSound}`,
+            `/resources/objects/webrtc-out-${selectedBubbleSound}.mp3`
+        );
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
         this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
@@ -2257,10 +2265,12 @@ export class GameScene extends DirtyScene {
             }
 
             if (newPeerNumber > oldPeersNumber) {
-                this.playSound("audio-webrtc-in");
+                const bubbleSound = get(bubbleSoundStore);
+                this.playSound(`audio-webrtc-in-${bubbleSound}`);
                 faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
-                this.playSound("audio-webrtc-out");
+                const bubbleSound = get(bubbleSoundStore);
+                this.playSound(`audio-webrtc-out-${bubbleSound}`);
                 faviconManager.pushOriginalFavicon();
             }
 
@@ -2379,6 +2389,15 @@ export class GameScene extends DirtyScene {
                 );
             }
         });
+
+        // Subscribe to bubble sound changes
+        this.unsubscribers.push(
+            bubbleSoundStore.subscribe((soundType) => {
+                this.load.audio(`audio-webrtc-in-${soundType}`, `/resources/objects/webrtc-in-${soundType}.mp3`);
+                this.load.audio(`audio-webrtc-out-${soundType}`, `/resources/objects/webrtc-out-${soundType}.mp3`);
+                this.load.start();
+            })
+        );
     }
 
     //todo: into dedicated classes

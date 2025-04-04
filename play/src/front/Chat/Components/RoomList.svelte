@@ -138,12 +138,14 @@
 </script>
 
 <div
-    class="flex-1 flex flex-row overflow-auto"
-    class:!flex-row={sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 && $navChat.key === "chat"}
+    class="overflow-auto h-full grid grid-rows-[1fr_auto] {sideBarWidth > INITIAL_SIDEBAR_WIDTH * 2 &&
+    $navChat.key === 'chat'
+        ? 'grid-cols-[auto_1fr]'
+        : 'grid-cols-[1fr]'}"
 >
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
-            class="w-full border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
+            class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
         >
             {#if $shouldRetrySendingEvents}
@@ -319,32 +321,12 @@
                     {/each}
                 {/if}
             </div>
-            <div class="fixed bottom-0 w-full flex flex-col">
-                <ExternalComponents zone="chatBand" />
-                {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-                    <div class="w-full">
-                        <button
-                            data-testid="restoreEncryptionButton"
-                            on:click|stopPropagation={initChatConnectionEncryption}
-                            class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
-                        >
-                            <IconCloudLock font-size="20" />
-                            <div class="text-sm font-bold grow text-left">
-                                {$LL.chat.e2ee.encryptionNotConfigured()}
-                            </div>
-                            <div
-                                class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10"
-                            >
-                                {$LL.chat.e2ee.configure()}
-                            </div>
-                        </button>
-                    </div>
-                {/if}
-            </div>
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}
-        <RoomTimeline room={$selectedRoomStore} />
+        <div class="overflow-y-auto">
+            <RoomTimeline room={$selectedRoomStore} />
+        </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="flex flex-col flex-1 pl-4 items-center">
             <div class="text-center px-3 max-w-md">
@@ -358,4 +340,25 @@
             <p class="self-center text-md text-gray-500">{$LL.chat.nothingToDisplay()}</p>
         </div>
     {/if}
+
+    <div class="w-full flex flex-col col-span-2 h-fit">
+        <ExternalComponents zone="chatBand" />
+        <!--{#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}-->
+        <div class="w-full">
+            <button
+                data-testid="restoreEncryptionButton"
+                on:click|stopPropagation={initChatConnectionEncryption}
+                class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
+            >
+                <IconCloudLock font-size="20" />
+                <div class="text-sm font-bold grow text-left">
+                    {$LL.chat.e2ee.encryptionNotConfigured()}
+                </div>
+                <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
+                    {$LL.chat.e2ee.configure()}
+                </div>
+            </button>
+        </div>
+        <!--{/if}-->
+    </div>
 </div>

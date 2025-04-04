@@ -19,7 +19,7 @@
     const dispatch = createEventDispatcher();
 
     function toggleChat() {
-        dispatch("toggleChat");
+        window.focus();
     }
 
     function toggleScreensharing() {
@@ -41,7 +41,7 @@
                 data-testid="chat-action"
             >
                 <div class="mr-3">
-                    <ChatMenuItem on:click={toggleChat} />
+                    <ChatMenuItem on:click={toggleChat} last={true} />
                 </div>
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
