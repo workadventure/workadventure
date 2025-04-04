@@ -5,6 +5,7 @@
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 
     export let actualCowebsite: BBBCoWebsite;
+    export let visible: boolean;
     let screenWakeRelease: (() => Promise<void>) | undefined;
 
     onMount(async () => {
@@ -34,7 +35,7 @@
     });
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full h-full" class:hidden={!visible}>
     <div class="absolute w-full h-full z-0">
         <iframe
             src={actualCowebsite.getUrl().toString()}
