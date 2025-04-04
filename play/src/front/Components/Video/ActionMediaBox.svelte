@@ -12,7 +12,6 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
-    import { peerStore } from "../../Stores/PeerStore";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
@@ -81,7 +80,7 @@
         const spaceUserId = spaceUser.spaceUserId;
         const userId = Number(spaceUserId.split("_").pop());
 
-        peerStore.removePeer(userId);
+        spaceUser.space.simplePeer?.removePeer(userId);
         close();
     }
 

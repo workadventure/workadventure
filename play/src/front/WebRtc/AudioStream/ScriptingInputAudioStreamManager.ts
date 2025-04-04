@@ -1,9 +1,8 @@
 import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import { Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { SimplePeer } from "../SimplePeer";
-import { peerStore } from "../../Stores/PeerStore";
+import { SimplePeerConnectionInterface } from "../../Space/Space";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
@@ -21,7 +20,7 @@ export class ScriptingInputAudioStreamManager {
     private videoPeerAddedUnsubscriber: Subscription;
     private videoPeerRemovedUnsubscriber: Subscription;
 
-    constructor(simplePeer: SimplePeer) {
+    constructor(simplePeer: SimplePeerConnectionInterface) {
         this.startListeningToStreamInBubbleStreamUnsubscriber =
             iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
                 (async () => {
@@ -57,7 +56,7 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    get(peerStore).forEach((peer) => {
+                    simplePeer.peerStore.forEach((peer) => {
                         this.addMediaStreamStore(peer.streamStore);
                     });
                 })().catch((e) => {
@@ -73,7 +72,7 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                get(peerStore).forEach((peer) => {
+                simplePeer.peerStore.forEach((peer) => {
                     this.removeMediaStreamStore(peer.streamStore);
                 });
 

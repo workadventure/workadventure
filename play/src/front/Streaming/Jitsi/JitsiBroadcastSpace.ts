@@ -55,7 +55,13 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         super();
         JitsiBroadcastSpace.numInstances++;
 
-        this.space = this.spaceRegistry.joinSpace(spaceName);
+        this.space = this.spaceRegistry.joinSpace(spaceName, [
+            "cameraState",
+            "microphoneState",
+            "screenSharingState",
+            "megaphoneState",
+            "jitsiParticipantId",
+        ]);
 
         this.unsubscribes.push(
             requestedCameraState.subscribe((state) => {

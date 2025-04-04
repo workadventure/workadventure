@@ -67,6 +67,10 @@
     $: videoEnabled = $hasVideoStore;
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
+    $: console.log(">>>> videoEnabled", {
+        peer,
+    });
+
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
     }
@@ -228,7 +232,6 @@
                     </button>
                 </div>
             </div>
-
             {#if $statusStore === "connected" && $hasAudioStore}
                 <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                     {#if !$isMutedStore}
