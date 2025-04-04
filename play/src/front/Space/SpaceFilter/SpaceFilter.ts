@@ -148,16 +148,20 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        const peerConnection = this._space.videoPeerStore.get(spaceUserId);
+        const peerConnection = this._space.livekitVideoStreamStore.get(spaceUserId);
         if (peerConnection) {
-            peerConnection.destroy();
-            this._space.videoPeerStore.delete(spaceUserId);
+            if(peerConnection instanceof VideoPeer) {
+                peerConnection.destroy();
+            }
+            this._space.livekitVideoStreamStore.delete(spaceUserId);
         }
 
-        const screenSharingPeerConnection = this._space.screenSharingPeerStore.get(spaceUserId);
+        const screenSharingPeerConnection = this._space.livekitScreenShareStreamStore.get(spaceUserId);
         if (screenSharingPeerConnection) {
-            screenSharingPeerConnection.destroy();
-            this._space.screenSharingPeerStore.delete(spaceUserId);
+            if(screenSharingPeerConnection instanceof ScreenSharingPeer) {
+                screenSharingPeerConnection.destroy();
+            }
+            this._space.livekitScreenShareStreamStore.delete(spaceUserId);
         }
     }
 

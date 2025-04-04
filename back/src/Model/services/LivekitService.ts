@@ -26,6 +26,9 @@ export class LiveKitService {
     }
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
+        console.log(">>>> generateToken", {
+            identity: `${user.uuid}||${user.spaceUserId}`,
+        });
         try {
             const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
                 //TODO : séparateur a maintenir coté front et back : voir comment on peut changer ça 

@@ -10,8 +10,8 @@ export interface SpaceRegistryInterface {
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): void;
     destroy(): void;
-    peerStore: Readable<Map<number, VideoPeer>>;
-    screenSharingPeerStore: Readable<Map<number, ScreenSharingPeer>>;
-    livekitVideoStreamStore: Readable<Map<number, Streamable>>;
-    livekitScreenShareStreamStore: Readable<Map<number, Streamable>>;
+    peerStore: Readable<Map<string, VideoPeer>>;
+    screenSharingPeerStore: Readable<Map<string, ScreenSharingPeer>>;
+    livekitVideoStreamStore: Readable<Map<string, Streamable>>;
+    livekitScreenShareStreamStore: Readable<Map<string, Streamable>>;
 }

@@ -50,8 +50,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
 
-    public readonly peerStore: Readable<Map<number, VideoPeer>> = derived(this.spaces, ($spaces, set) => {
-        const allPeers: Map<number, VideoPeer> = new Map();
+    //TODO : Rassembler les peerStore / livekitVideoStreamStore et screenSharingPeerStore en un seul store -
+    public readonly peerStore: Readable<Map<string, VideoPeer>> = derived(this.spaces, ($spaces, set) => {
+        const allPeers: Map<string, VideoPeer> = new Map();
         const unsubscribers: (() => void)[] = [];
 
         const updatePeers = () => {
@@ -88,10 +89,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         };
     });
 
-    public readonly screenSharingPeerStore: Readable<Map<number, ScreenSharingPeer>> = derived(
+    public readonly screenSharingPeerStore: Readable<Map<string, ScreenSharingPeer>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<number, ScreenSharingPeer> = new Map();
+            const allPeers: Map<string, ScreenSharingPeer> = new Map();
             const unsubscribers: (() => void)[] = [];
 
             const updatePeers = () => {
@@ -121,10 +122,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    public readonly livekitVideoStreamStore: Readable<Map<number, Streamable>> = derived(
+    public readonly livekitVideoStreamStore: Readable<Map<string, Streamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<number, Streamable> = new Map();
+            const allPeers: Map<string, Streamable> = new Map();
             const unsubscribers: (() => void)[] = [];
 
             const updatePeers = () => {
@@ -154,10 +155,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    public readonly livekitScreenShareStreamStore: Readable<Map<number, Streamable>> = derived(
+    public readonly livekitScreenShareStreamStore: Readable<Map<string, Streamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<number, Streamable> = new Map();
+            const allPeers: Map<string, Streamable> = new Map();
             const unsubscribers: (() => void)[] = [];
 
             const updatePeers = () => {

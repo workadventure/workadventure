@@ -192,6 +192,9 @@ export class SimplePeer {
             return;
         }
 
+        console.log(">>>> receiveWebrtcStart initiator", {
+            user,
+        });
         await this.createPeerConnection(user);
     }
 
@@ -224,13 +227,16 @@ export class SimplePeer {
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
 
-        const peerConnection = this.space.videoPeerStore.get(user.userId);
-        if (peerConnection) {
+        const peerConnection = this.space.livekitVideoStreamStore.get(user.userId);
+        if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
                 this._videoPeerRemoved.next(peerConnection);
                 peerConnection.toClose = true;
                 peerConnection.destroy();
-                this.space.videoPeerStore.delete(user.userId);
+                console.log(">>>> delete video stream", {
+                    spaceUserId: user.userId,
+                });
+                //this.space.livekitVideoStreamStore.delete(user.userId);
             } else {
                 peerConnection.toClose = false;
                 return Promise.resolve(null);
@@ -269,13 +275,17 @@ export class SimplePeer {
         });
 
         //Create a notification for first user in circle discussion
-        if (this.space.videoPeerStore.size === 0) {
+        if (this.space.livekitVideoStreamStore.size === 0) {
             const notificationText = get(LL).notification.discussion({ name });
             notificationManager.createNotification(new BasicNotification(notificationText));
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
-        this.space.videoPeerStore.set(user.userId, peer);
+       // this.space.videoPeerStore.set(user.userId, peer);
+        console.log(">>>> set video stream from simplePeer", {
+            spaceUserId: user.userId,
+        });
+        this.space.livekitVideoStreamStore.set(user.userId, peer);
         this._videoPeerAdded.next(peer);
         return peer;
     }
@@ -294,6 +304,9 @@ export class SimplePeer {
                 peerScreenSharingConnection.toClose = true;
                 peerScreenSharingConnection.destroy();
                 this.space.screenSharingPeerStore.delete(user.userId);
+                console.log(">>>> delete screen sharing stream", {
+                    spaceUserId: user.userId,
+                });
             } else {
                 peerScreenSharingConnection.toClose = false;
                 return null;
@@ -335,6 +348,7 @@ export class SimplePeer {
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         this.space.screenSharingPeerStore.set(user.userId, peer);
+       // this.space.livekitScreenShareStreamStore.set(user.userId, peer);
         this._screenSharingPeerAdded.next(peer);
         return peer;
     }
@@ -348,8 +362,8 @@ export class SimplePeer {
      */
     public closeConnection(userId: string) {
         try {
-            const peer = this.space.videoPeerStore.get(userId);
-            if (!peer) {
+            const peer = this.space.livekitVideoStreamStore.get(userId);
+            if (!peer || !(peer instanceof VideoPeer)) {
                 return;
             }
             this._videoPeerRemoved.next(peer);
@@ -366,13 +380,16 @@ export class SimplePeer {
         }
 
         //if the user left the discussion, clear screen sharing.
-        if (this.space.videoPeerStore.size === 0) {
+        if (this.space.livekitVideoStreamStore.size === 0) {
             for (const userId of this.space.screenSharingPeerStore.keys()) {
                 this.closeScreenSharingConnection(userId);
             }
         }
 
-        this.space.videoPeerStore.delete(userId);
+        //this.space.livekitVideoStreamStore.delete(userId);
+        console.log(">>>> delete video stream", {
+            spaceUserId: userId,
+        });
     }
 
     /**
@@ -393,10 +410,13 @@ export class SimplePeer {
         }
 
         this.space.screenSharingPeerStore.delete(userId);
+        console.log(">>>> delete screen sharing stream", {
+            spaceUserId: userId,
+        });
     }
 
     public closeAllConnections() {
-        for (const userId of this.space.videoPeerStore.keys()) {
+        for (const userId of this.space.livekitVideoStreamStore.keys()) {
             this.closeConnection(userId);
         }
 
@@ -420,14 +440,24 @@ export class SimplePeer {
     }
 
     public cleanupStore() {
-        this.space.videoPeerStore.forEach((peer) => {
-            peer.destroy();
-            this.space.videoPeerStore.delete(peer.user.userId);
+        this.space.livekitVideoStreamStore.forEach((peer) => {
+            if (peer instanceof VideoPeer) {
+                peer.destroy();
+                //this.space.livekitVideoStreamStore.delete(peer.user.userId);
+                console.log(">>>> delete video stream", {
+                    spaceUserId: peer.user.userId,
+                });
+            }
         });
 
         this.space.screenSharingPeerStore.forEach((peer) => {
-            peer.destroy();
-            this.space.screenSharingPeerStore.delete(peer.user.userId);
+            if (peer instanceof ScreenSharingPeer) {
+                peer.destroy();
+                this.space.screenSharingPeerStore.delete(peer.user.userId);
+                console.log(">>>> delete screen sharing stream", {
+                    spaceUserId: peer.user.userId,
+                });
+            }
         });
     }
 
@@ -437,8 +467,19 @@ export class SimplePeer {
             if (data.signal.type === "offer") {
                 await this.createPeerConnection(data);
             }
-            const peer = this.space.videoPeerStore.get(data.userId);
-            if (peer) {
+            const peer = this.space.livekitVideoStreamStore.get(data.userId);
+            console.log("peer", {
+                peer, 
+                data,
+            });
+
+            if(! (peer instanceof VideoPeer)) {
+                console.error("peer is not a VideoPeer");
+                return;
+            }
+
+            if (peer && peer instanceof VideoPeer) {
+                console.log("peer is a VideoPeer and signal ");
                 peer.signal(data.signal);
             } else {
                 console.error('Could not find peer whose ID is "' + data.userId + '" in PeerConnectionArray');
@@ -499,7 +540,7 @@ export class SimplePeer {
      */
     public sendLocalScreenSharingStream(localScreenCapture: MediaStream) {
         const promises: Promise<void>[] = [];
-        for (const userId of this.space.videoPeerStore.keys()) {
+        for (const userId of this.space.livekitVideoStreamStore.keys()) {
             promises.push(this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture));
         }
         return Promise.all(promises);
@@ -509,7 +550,7 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public stopLocalScreenSharingStream(stream: MediaStream) {
-        for (const userId of this.space.videoPeerStore.keys()) {
+        for (const userId of this.space.livekitVideoStreamStore.keys()) {
             this.stopLocalScreenSharingStreamToUser(userId, stream);
         }
     }
@@ -580,8 +621,10 @@ export class SimplePeer {
                 };
                 nbSoundPlayedInBubbleStore.soundStarted();
 
-                for (const videoPeer of this.space.videoPeerStore.values()) {
-                    videoPeer.addStream(destination.stream);
+                for (const videoPeer of this.space.livekitVideoStreamStore.values()) {
+                    if (videoPeer instanceof VideoPeer) {
+                        videoPeer.addStream(destination.stream);
+                    }
                 }
             })().catch(reject);
         });
@@ -594,8 +637,10 @@ export class SimplePeer {
      * Used to send streams generated by the scripting API.
      */
     public dispatchStream(mediaStream: MediaStream) {
-        for (const videoPeer of this.space.videoPeerStore.values()) {
-            videoPeer.addStream(mediaStream);
+        for (const videoPeer of this.space.livekitVideoStreamStore.values()) {
+            if (videoPeer instanceof VideoPeer) {
+                videoPeer.addStream(mediaStream);
+            }
         }
         this.scriptingApiStream = mediaStream;
     }
@@ -609,7 +654,10 @@ export class SimplePeer {
     }
 
     public removePeer(userId: string) {
-        this.space.videoPeerStore.delete(userId);
-        this.space.screenSharingPeerStore.delete(userId);
+        console.log(">>>> removePeer", {
+            userId,
+        });
+        //this.space.livekitVideoStreamStore.delete(userId);
+        //this.space.screenSharingPeerStore.delete(userId);
     }
 }

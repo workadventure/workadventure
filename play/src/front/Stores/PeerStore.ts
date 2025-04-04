@@ -4,18 +4,18 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { Streamable } from "./StreamableCollectionStore";
 
-export const peerStore: Writable<Readable<Map<number, VideoPeer>>> = writable<Writable<Map<number, VideoPeer>>>(
-    writable<Map<number, VideoPeer>>(new Map())
+export const peerStore: Writable<Readable<Map<string, VideoPeer>>> = writable<Writable<Map<string, VideoPeer>>>(
+    writable<Map<string, VideoPeer>>(new Map())
 );
-export const screenSharingPeerStore: Writable<Readable<Map<number, ScreenSharingPeer>>> = writable<
-    Readable<Map<number, ScreenSharingPeer>>
->(writable<Map<number, ScreenSharingPeer>>(new Map()));
-export const livekitVideoStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
-    Readable<Map<number, Streamable>>
->(writable<Map<number, Streamable>>(new Map()));
-export const livekitScreenShareStreamStore: Writable<Readable<Map<number, Streamable>>> = writable<
-    Readable<Map<number, Streamable>>
->(writable<Map<number, Streamable>>(new Map()));
+export const screenSharingPeerStore: Writable<Readable<Map<string, ScreenSharingPeer>>> = writable<
+    Readable<Map<string, ScreenSharingPeer>>
+>(writable<Map<string, ScreenSharingPeer>>(new Map()));
+export const livekitVideoStreamStore: Writable<Readable<Map<string, Streamable>>> = writable<
+    Readable<Map<string, Streamable>>
+>(writable<Map<string, Streamable>>(new Map()));
+export const livekitScreenShareStreamStore: Writable<Readable<Map<string, Streamable>>> = writable<
+    Readable<Map<string, Streamable>>
+>(writable<Map<string, Streamable>>(new Map()));
 
 export const peerSizeStore = derived(
     peerStore,

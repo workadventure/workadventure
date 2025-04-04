@@ -42,6 +42,10 @@ export class LiveKitRoom {
     public async joinRoom() {
         let room: Room;
 
+        console.log(">>>> joinRoom", {
+            room: this.room,
+        });
+        
         try {
             room = this.room ?? (await this.prepareConnection());
 

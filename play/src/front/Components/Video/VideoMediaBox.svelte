@@ -67,6 +67,10 @@
     $: videoEnabled = $hasVideoStore;
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
+    $: console.log(">>>> videoEnabled", {
+        peer,
+    });
+
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
     }
