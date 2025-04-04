@@ -622,7 +622,7 @@ test.describe("API WA.players", () => {
 
     //Swiching tabs and pages
     await page.getByTestId('tab1').click();
-    const event = getCoWebsiteIframe(page).locator('.siteA-page1')
+    const event = getCoWebsiteIframe(page).locator('.siteA-page1');
     await expect(event).toContainText('Site A Page 1');
 
     await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
