@@ -343,10 +343,10 @@ jobs:
             "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/trigger/pipeline" \
             -H "Content-Type: application/json" \
             -d '{
-              "token": "'${{ secrets.GITLAB_TOKEN_PIPELINE }}'",
-              "ref": "'${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.ref_name || 'master' }}'",
+              "token": "${{ secrets.GITLAB_TOKEN_PIPELINE }}",
+              "ref": "${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.github.head_ref || 'master' }}",
               "variables": {
-                "GITHUB_BRANCH_NAME": "'${{ github.ref_name }}'",
+                "GITHUB_BRANCH_NAME": "${{ github.head_ref }}",
                 "RUN_FROM_GITHUB": "true"
               }
             }' 
