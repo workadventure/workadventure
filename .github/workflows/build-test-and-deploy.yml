@@ -344,7 +344,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "token": "${{ secrets.GITLAB_TOKEN_PIPELINE }}",
-              "ref": "${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.github.head_ref || 'master' }}",
+              "ref": "${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || 'master' }}",
               "variables": {
                 "GITHUB_BRANCH_NAME": "${{ github.head_ref }}",
                 "RUN_FROM_GITHUB": "true"
