@@ -46,7 +46,7 @@
     });
 </script>
 
-<section class="visitCard {isEmbedded ? '' : 'w-3/4 min-w-[320px] max-w-[900px]'}">
+<section class="visitCard {isEmbedded ? 'w-full' : 'w-3/4 min-w-[320px] max-w-[900px]'}">
     <div class="{isEmbedded ? '' : 'bg-contrast/80 rounded-lg'} relative">
         {#if !isEmbedded}
             <div class="absolute top-2 {h > maxHeigth ? 'right-5' : ' right-2'}">
@@ -64,7 +64,7 @@
                 src="{visitCardUrl}&embed={isEmbedded}"
                 class="max-h-lg"
                 allow="clipboard-read; clipboard-write {visitCardUrl}"
-                style="width: {w}; height: {Math.min(h, maxHeigth)}px"
+                style="width: {isEmbedded ? '100%' : w}; height: {Math.min(h, maxHeigth)}px"
                 class:hidden
                 bind:this={cvIframe}
             />
@@ -131,12 +131,10 @@
 
     .visitCard {
         pointer-events: all;
-        max-width: 80vw;
         z-index: 350;
 
         iframe {
             border: 0;
-            max-width: 80vw;
             overflow: hidden;
 
             &.hidden {
