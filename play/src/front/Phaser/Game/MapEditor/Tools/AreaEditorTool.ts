@@ -665,6 +665,7 @@ export class AreaEditorTool extends MapEditorTool {
             this.draggingdArea = true;
             const areaData = areaPreview.getAreaData();
             this.drawAreaOldPositionPreview(areaData.x, areaData.y, areaData.width, areaData.height);
+            areaPreview.destroyText();
         });
         areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
@@ -681,6 +682,7 @@ export class AreaEditorTool extends MapEditorTool {
                 removeAreaEntities: boolean | undefined
             ) => {
                 this.executeUpdateAreaFrontCommand(newData, oldData, removeAreaEntities);
+                areaPreview.playText();
             }
         );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
@@ -689,6 +691,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.UpdateVisibility, (visibility: boolean) => {
             if (!visibility) {
                 this.areaOldPositionPreview.clear();
+                areaPreview.destroyText();
             }
         });
     }
