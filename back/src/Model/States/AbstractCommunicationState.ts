@@ -54,7 +54,7 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     protected executeFinalSwitch(): void {
-        if (!this.isSwitching) {
+        if (!this.isSwitching()) {
             return;
         }
 

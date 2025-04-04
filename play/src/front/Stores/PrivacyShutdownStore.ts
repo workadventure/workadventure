@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import { peerSizeStore } from "./PeerStore";
+import { peerElementsStore } from "./PeerStore";
 import { visibilityStore } from "./VisibilityStore";
 
 /**
@@ -13,7 +13,7 @@ function createPrivacyShutdownStore() {
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
     visibilityStore.subscribe((isVisible) => {
-        if (!isVisible && get(peerSizeStore) === 0) {
+        if (!isVisible && get(peerElementsStore).length === 0) {
             privacyEnabled = true;
             set(true);
         }
@@ -25,8 +25,8 @@ function createPrivacyShutdownStore() {
 
     // It is ok to not unsubscribe to this store because it is a singleton.
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
-    peerSizeStore.subscribe((peerSize) => {
-        if (peerSize === 0 && get(visibilityStore) === false) {
+    peerElementsStore.subscribe((peerElements) => {
+        if (peerElements.length === 0 && get(visibilityStore) === false) {
             privacyEnabled = true;
             set(true);
         }

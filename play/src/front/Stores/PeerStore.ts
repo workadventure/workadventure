@@ -17,42 +17,46 @@ export const livekitScreenShareStreamStore: Writable<Readable<Map<string, Stream
     Readable<Map<string, Streamable>>
 >(writable<Map<string, Streamable>>(new Map()));
 
-export const peerSizeStore = derived(
+export const peerElementsStore = derived(
     peerStore,
     ($peerStore, set) => {
         return $peerStore.subscribe(($innerPeerStore) => {
-            set($innerPeerStore.size);
+            set(Array.from($innerPeerStore.values()));
         });
     },
-    0
+    [] as VideoPeer[]
 );
 
-export const livekitVideoStreamSizeStore = derived(
+export const livekitVideoStreamElementsStore = derived(
     livekitVideoStreamStore,
     ($livekitVideoStreamStore, set) => {
         return $livekitVideoStreamStore.subscribe(($innerLivekitVideoStreamStore) => {
-            set($innerLivekitVideoStreamStore.size);
+            set(Array.from($innerLivekitVideoStreamStore.values()));
         });
     },
-    0
+    [] as Streamable[]
 );
 
-export const livekitScreenShareStreamSizeStore = derived(
+export const livekitScreenShareStreamElementsStore = derived(
     livekitScreenShareStreamStore,
     ($livekitScreenShareStreamStore, set) => {
         return $livekitScreenShareStreamStore.subscribe(($innerLivekitScreenShareStreamStore) => {
-            set($innerLivekitScreenShareStreamStore.size);
+            set(Array.from($innerLivekitScreenShareStreamStore.values()));
         });
     },
-    0
+    [] as Streamable[]
 );
+
+livekitVideoStreamElementsStore.subscribe((streamElements) => {
+    console.log("streamElements", streamElements.length);
+});
 
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!
  */
 
-function createScreenSharingStreamStore(): Readable<Map<number, ScreenSharingPeer>> {
-    return readable(new Map<number, ScreenSharingPeer>(), (set) => {
+function createScreenSharingStreamStore(): Readable<Map<string, ScreenSharingPeer>> {
+    return readable(new Map<string, ScreenSharingPeer>(), (set) => {
         let unsubscribes: (() => void)[] = [];
 
         const unsubscribePeers = screenSharingPeerStore.subscribe((wrappedScreenSharingPeers) => {
@@ -62,7 +66,7 @@ function createScreenSharingStreamStore(): Readable<Map<number, ScreenSharingPee
 
             unsubscribes.push(
                 wrappedScreenSharingPeers.subscribe((screenSharingPeers) => {
-                    const newPeers = new Map<number, ScreenSharingPeer>();
+                    const newPeers = new Map<string, ScreenSharingPeer>();
 
                     screenSharingPeers.forEach((screenSharingPeer, key) => {
                         if (screenSharingPeer.isReceivingScreenSharingStream()) {
@@ -76,13 +80,13 @@ function createScreenSharingStreamStore(): Readable<Map<number, ScreenSharingPee
                             } else {
                                 newPeers.delete(key);
                             }
-                            set(new Map(newPeers)); // Ensure a new Map instance for reactivity
+                            set(new Map(newPeers));
                         });
 
                         unsubscribes.push(unsub);
                     });
 
-                    set(new Map(newPeers)); // Ensure store reactivity
+                    set(new Map(newPeers));
                 })
             );
         });

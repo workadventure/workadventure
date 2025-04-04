@@ -11,7 +11,7 @@
     } from "../../Stores/MyMediaStore";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { peerSizeStore } from "../../Stores/PeerStore";
+    import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
@@ -28,7 +28,7 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$peerSizeStore > 0 &&
+    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$livekitVideoStreamElementsStore.length > 0 &&
     $highlightFullScreen
         ? 'hidden'
         : ''}"

@@ -12,11 +12,9 @@ import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import {
-    livekitScreenShareStreamSizeStore,
-    livekitScreenShareStreamStore,
-    livekitVideoStreamSizeStore,
-    livekitVideoStreamStore,
-    peerSizeStore,
+    livekitScreenShareStreamElementsStore,
+    livekitVideoStreamElementsStore,
+    peerElementsStore,
     peerStore,
     screenSharingStreamStore,
 } from "./PeerStore";
@@ -151,7 +149,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
         [
             broadcastTracksStore,
             screenSharingStreamStore,
-            peerSizeStore,
+            peerElementsStore,
             screenSharingLocalMedia,
             scriptingVideoStore,
             myCameraStore,
@@ -159,14 +157,14 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             myCameraPeerStore,
             cameraEnergySavingStore,
             silentStore,
-            livekitVideoStreamSizeStore,
-            livekitScreenShareStreamSizeStore,
+            livekitVideoStreamElementsStore,
+            livekitScreenShareStreamElementsStore,
         ],
         (
             [
                 $broadcastTracksStore,
                 $screenSharingStreamStore,
-                $peerSizeStore,
+                $peerElementsStore,
                 $screenSharingLocalMedia,
                 $scriptingVideoStore,
                 $myCameraStore,
@@ -174,8 +172,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 $myCameraPeerStore,
                 $cameraEnergySavingStore,
                 $silentStore,
-                $livekitVideoStreamSizeStore,
-                $livekitScreenShareStreamSizeStore,
+                $livekitVideoStreamElementsStore,
+                $livekitScreenShareStreamElementsStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, Streamable>();
@@ -197,7 +195,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
 
-            get(get(peerStore)).forEach(addPeer);
+            $peerElementsStore.forEach(addPeer);
             $scriptingVideoStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
@@ -225,8 +223,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 addPeer($screenSharingLocalMedia);
             }
 
-            get(get(livekitVideoStreamStore)).forEach(addPeer);
-            get(get(livekitScreenShareStreamStore)).forEach(addPeer);
+            $livekitVideoStreamElementsStore.forEach(addPeer);
+            $livekitScreenShareStreamElementsStore.forEach(addPeer);
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
@@ -255,15 +253,15 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, screenSharingStreamStore, peerStore, scriptingVideoStore, silentStore],
-    ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $scriptingVideoStore, $silentStore]) => {
+    [broadcastTracksStore, screenSharingStreamStore, peerElementsStore, scriptingVideoStore, silentStore],
+    ([$broadcastTracksStore, $screenSharingStreamStore, $peerElementsStore, $scriptingVideoStore, $silentStore]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;
         }
 
         // Check if we have any peers
-        if ($peerStore.size > 0) {
+        if ($peerElementsStore.length > 0) {
             return true;
         }
 

@@ -1,9 +1,8 @@
 import { get, Writable, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { peerStore } from "./PeerStore";
+import { peerElementsStore } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
-import { peerSizeStore } from "./PeerStore";
 
 export interface AudioManagerVolume {
     muted: boolean;
@@ -110,6 +109,9 @@ export const bubbleSoundStore = writable<"ding" | "wobble">(localUserStore.getBu
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
-peerSizeStore.subscribe((peerSize) => {
-    audioManagerVolumeStore.setTalking(peerSize > 0);
+
+//TODO : voir l'utilité de ce store et si on doit subscribe au store livekit 
+//TODO : faire un derived avec la taille des 2 si besoin 
+peerElementsStore.subscribe((peerElements) => {
+    audioManagerVolumeStore.setTalking(peerElements.length > 0);
 });

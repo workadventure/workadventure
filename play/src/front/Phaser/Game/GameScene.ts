@@ -182,7 +182,9 @@ import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcu
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import {
     livekitScreenShareStreamStore,
+    livekitVideoStreamElementsStore,
     livekitVideoStreamStore,
+    peerElementsStore,
     peerSizeStore,
     peerStore,
     screenSharingPeerStore,
@@ -2177,8 +2179,9 @@ export class GameScene extends DirtyScene {
         const pendingConnects = new Set<number>();
 
         // Store all subscriptions to be able to unsubscribe later
-        this.peerSizeSubscription = peerSizeStore.subscribe((peerSize) => {
-            const newPeerNumber = peerSize;
+        //TODO : voir les problemes de type ici 
+        this.peerSizeSubscription = peerElementsStore.subscribe((peerElements) => {
+            const newPeerNumber = peerElements.length;
             const newUsers = new Map<number, MessageUserJoined>();
             const players = this.remotePlayersRepository.getPlayers();
             const peers = get(get(peerStore));

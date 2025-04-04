@@ -13,22 +13,18 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserAdded(user: SpaceUser): void {
-        console.log("handleUserAdded", user.spaceUserId);
         this._currentState.handleUserAdded(user);
     }
 
     public handleUserDeleted(user: SpaceUser): void {
-        console.log("handleUserDeleted", user.spaceUserId);
         this._currentState.handleUserDeleted(user);
     }
 
     public handleUserUpdated(user: SpaceUser): void {
-        console.log("handleUserUpdated", user.spaceUserId);
         this._currentState.handleUserUpdated(user);
     }
 
     public handleUserReadyForSwitch(userId: string): void {
-        console.log("handleUserReadyForSwitch", userId);
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
@@ -47,5 +43,6 @@ export class CommunicationManager implements ICommunicationManager {
 }
 
 export const CommunicationConfig = {
+    //TODO: Change back to 4
     MAX_USERS_FOR_WEBRTC: 2,
 };

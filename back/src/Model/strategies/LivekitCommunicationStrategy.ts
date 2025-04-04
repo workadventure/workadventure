@@ -6,7 +6,7 @@ import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { LiveKitService } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-    //TODO : voir pourquoi array simple et pas set 
+    //TODO : voir pourquoi array simple et pas set
     private usersReady: string[] = [];
 
     constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {

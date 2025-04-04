@@ -8,7 +8,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMe
 import type {} from "../Api/Desktop";
 import { Streamable } from "./StreamableCollectionStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
-import { livekitVideoStreamSizeStore, peerSizeStore } from "./PeerStore";
+import { livekitVideoStreamElementsStore, peerElementsStore } from "./PeerStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -67,8 +67,8 @@ export const screenSharingConstraintsStore = derived(
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
-        peerSizeStore,
-        livekitVideoStreamSizeStore,
+        peerElementsStore,
+        livekitVideoStreamElementsStore,
     ],
     (
         [
@@ -76,8 +76,8 @@ export const screenSharingConstraintsStore = derived(
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
-            $peerSizeStore,
-            $livekitVideoStreamSizeStore,
+            $peerElementsStore,
+            $livekitVideoStreamElementsStore,
         ],
         set
     ) => {
@@ -97,7 +97,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($peerSizeStore === 0 && $livekitVideoStreamSizeStore === 0) {
+        if ($peerElementsStore.length === 0 && $livekitVideoStreamElementsStore.length === 0) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -222,13 +222,13 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
-export const screenSharingAvailableStore = derived(peerSizeStore, ($peerSizeStore, set) => {
+export const screenSharingAvailableStore = derived(peerElementsStore, ($peerElementsStore, set) => {
     if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
         set(false);
         return;
     }
 
-    set($peerSizeStore !== 0);
+    set($peerElementsStore.length !== 0);
 });
 
 export interface ScreenSharingLocalMedia {
