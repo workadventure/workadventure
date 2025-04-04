@@ -363,7 +363,7 @@
                 type="text"
                 placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
                 bind:value={entityName}
-                on:change={onUpdateName}
+                onChange={onUpdateName}
             />
         </div>
         <div class="entity-name-container">
