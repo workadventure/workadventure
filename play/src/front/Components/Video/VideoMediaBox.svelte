@@ -123,7 +123,11 @@
 >
     <div
         class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
-            (fullScreen || $statusStore !== "connected" ? "bg-contrast/80 backdrop-blur" : "")}
+            (fullScreen || $statusStore !== "connected"
+                ? $statusStore === "error"
+                    ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
+                    : "bg-contrast/80 backdrop-blur"
+                : "")}
         style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
         class:h-full={videoEnabled || !miniMode}
         class:h-11={!videoEnabled && miniMode}
@@ -137,7 +141,11 @@
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
-            <div class="rtc-error" />
+            <div class="absolute w-full h-full z-50">
+                <div class="w-full h-full flex justify-center items-end">
+                    <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
+                </div>
+            </div>
         {/if}
 
         <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
@@ -155,7 +163,7 @@
             {videoUrl}
             {videoConfig}
             cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
-            withBackground={!isHighlighted}
+            withBackground={!isHighlighted && $statusStore !== "error"}
             bind:missingUserActivation
         >
             <UserName
@@ -265,3 +273,60 @@
         </div>
     {/if}
 </div>
+
+<style>
+    /* Spinner */
+    .connecting-spinner {
+        display: flex;
+        left: calc(50% - 62px);
+        top: calc(50% - 62px);
+
+        width: 3rem;
+        height: 3rem;
+        padding-top: 3rem;
+    }
+
+    .connecting-spinner:after {
+        content: " ";
+        display: block;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        border: 6px solid theme("colors.light-blue");
+        border-color: theme("colors.light-blue") transparent theme("colors.light-blue") transparent;
+        animation: connecting-spinner 1.2s linear infinite;
+    }
+
+    @keyframes connecting-spinner {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .rtc-error {
+        left: calc(50% - 68px);
+        top: calc(42% - 68px);
+
+        width: 8rem;
+        height: 8rem;
+    }
+
+    .rtc-error:after {
+        content: " ";
+        display: block;
+        width: 8rem;
+        height: 8rem;
+        border-radius: 50%;
+        border: 6px solid #f00;
+        animation: blinker 1s linear infinite;
+    }
+
+    @keyframes blinker {
+        50% {
+            opacity: 0;
+        }
+    }
+</style>
