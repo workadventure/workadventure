@@ -620,7 +620,7 @@ test.describe("API WA.players", () => {
     await page.locator('.siteB-page1');
     // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
-    //Swiching tabs and pages
+    //Switching tabs and pages
     await page.getByTestId('tab1').click();
     const event = getCoWebsiteIframe(page).locator('.siteA-page1')
     await expect(event).toContainText('Site A Page 1');
