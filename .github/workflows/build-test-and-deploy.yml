@@ -338,18 +338,75 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger GitLab Pipeline
+        env: 
+          GITLAB_HOST: ${{ secrets.GITLAB_SAAS_HOST }}
+          GITLAB_PROJECT_ID: ${{ secrets.GITLAB_SAAS_PROJECT_ID }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}
         run: |
-          curl -X POST \
-            "https://${{ secrets.GITLAB_SAAS_HOST }}/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/trigger/pipeline" \
+          RESPONSE=$(curl -X POST \
+            "https://${GITLAB_HOST}/api/v4/projects/${GITLAB_PROJECT_ID}/trigger/pipeline" \
             -H "Content-Type: application/json" \
             -d '{
-              "token": "${{ secrets.GITLAB_TOKEN_PIPELINE }}",
-              "ref": "${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || 'master' }}",
+              "token": "${GITLAB_TOKEN}}",
+              "ref": "${GITHUB_REF}",
               "variables": {
-                "GITHUB_BRANCH_NAME": "${{ github.head_ref }}",
+                "GITHUB_BRANCH_NAME": "${GITHUB_REF}",
                 "RUN_FROM_GITHUB": "true"
               }
             }' 
+          echo $RESPONSE
+          PIPELINE_ID=$(echo $RESPONSE | jq -r '.id')
+          echo $PIPELINE_ID
+          
+      - name: Long poll GitLab pipeline until finished
+        env:
+          GITLAB_HOST: ${{ secrets.GITLAB_SAAS_HOST }}
+          GITLAB_PROJECT_ID: ${{ secrets.GITLAB_SAAS_PROJECT_ID }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN_PIPELINE }}
+          GITLAB_REF: ${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') && github.head_ref || github.event.pull_request.base.ref == 'develop' && 'develop' || 'master' }}
+        run: |
+          echo "Waiting for GitLab pipeline to complete..."
+
+          # Step 1: Get the latest pipeline for the given ref
+          PIPELINE_ID=""
+          for i in {1..10}; do
+            RESPONSE=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+              "https://$GITLAB_HOST/api/v4/projects/$GITLAB_PROJECT_ID/pipelines?ref=$GITLAB_REF")
+
+            PIPELINE_ID=$(echo "$RESPONSE" | jq -r '.[0].id')
+
+            if [[ "$PIPELINE_ID" != "null" && "$PIPELINE_ID" != "" ]]; then
+              echo "Found pipeline ID: $PIPELINE_ID"
+              break
+            fi
+
+            echo "Pipeline not found yet... retrying in 5 seconds"
+            sleep 5
+          done
+
+          if [[ -z "$PIPELINE_ID" || "$PIPELINE_ID" == "null" ]]; then
+            echo "❌ Failed to find a pipeline for ref $GITLAB_REF"
+            exit 1
+          fi
+
+          # Step 2: Long polling every 30s until status is terminal
+          while true; do
+            STATUS=$(curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+              "https://$GITLAB_HOST/api/v4/projects/$GITLAB_PROJECT_ID/pipelines/$PIPELINE_ID" \
+              | jq -r '.status')
+
+            echo "⏳ Pipeline status: $STATUS"
+
+            if [[ "$STATUS" == "success" ]]; then
+              echo "✅ Pipeline succeeded"
+              break
+            elif [[ "$STATUS" == "failed" || "$STATUS" == "canceled" ]]; then
+              echo "❌ Pipeline ended with status: $STATUS"
+              exit 1
+            fi
+
+            sleep 30
+          done
     needs:
       - build-back
       - build-maps
