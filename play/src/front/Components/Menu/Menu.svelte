@@ -252,7 +252,7 @@
             class="bg-contrast/80 h-[calc(100vh-20rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-none @md/main-layout:rounded-tl overflow-y-scroll @md/main-layout:overflow-none h-full"
             id="submenu"
         >
-        <svelte:component this={activeComponent} {...props} />
+            <svelte:component this={activeComponent} {...props} />
         </div>
     </div>
 </div>
