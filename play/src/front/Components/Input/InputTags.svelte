@@ -40,10 +40,10 @@
     }
 </script>
 
-<div class={"flex flex-col pb-5 text-dark-purple "}>
+<div class={"flex flex-col pb-5 text-dark-purple"}>
     <div class="input-label" class:hidden={!label && !SLOTS.info && !optional}>
         {#if label}
-            <label for="selector" class="text-white relative grow mb-2 ml-1">
+            <label for="selector" class="text-white relative grow">
                 {label}
             </label>
         {/if}
@@ -62,7 +62,7 @@
     </div>
 
     <Select
-        id="selector"
+        itemId="svelte-select"
         on:filter={handleFilter}
         bind:filterText
         loadOptions={queryOptions}
@@ -80,9 +80,9 @@
         --clear-select-color="red"
         --input-color="white"
         --chevron-icon-colour="white"
-        containerStyles="background-color:unset"
         inputStyles={"box-shadow:none !important;margin:0"}
         inputAttributes={{ "data-testid": testId }}
+        class="!bg-contrast !rounded-md !border-contrast-400 !outline-none !w-full"
     >
         <div slot="item" let:item>
             {item.created ? $LL.notification.addNewTag({ tag: filterText }) : item.label}

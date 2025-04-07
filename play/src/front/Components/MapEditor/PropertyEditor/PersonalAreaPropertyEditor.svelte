@@ -2,6 +2,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
     import { closeModal, openModal } from "svelte-modals";
+    import Select from "../../Input/Select.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InputRoomTags from "../../Input/InputRoomTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
@@ -140,33 +141,33 @@
                     </div>
                 {:else}
                     <div>
-                        <p class="p-0">
-                            {$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
-                        </p>
-                        <select
-                            data-testid="accessClaimMode"
+                        <Select
+                            id="accessClaimMode"
+                            dataTestId="accessClaimMode"
+                            label={$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
                             bind:value={personalAreaPropertyData.accessClaimMode}
                             on:change={onClaimModeChange}
-                            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
-                        >
-                            {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
+                            >
+                          {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}
-                                    >{$LL.mapEditor.properties.personalAreaConfiguration[
-                                        `${claimMode}AccessClaimMode`
+                                >{$LL.mapEditor.properties.personalAreaConfiguration[
+                                    `${claimMode}AccessClaimMode`
                                     ]()}</option
                                 >
                             {/each}
-                        </select>
-                        <p class="help-text">
-                            <IconInfoCircle font-size="18" />
-                            {$LL.mapEditor.properties.personalAreaConfiguration[
-                                `${personalAreaPropertyData.accessClaimMode}AccessDescription`
-                            ]()}
-                        </p>
+                            <div slot="helper">
+                                <div class="help-text">
+                                    <IconInfoCircle font-size="18" />
+                                    {$LL.mapEditor.properties.personalAreaConfiguration[
+                                        `${personalAreaPropertyData.accessClaimMode}AccessDescription`
+                                    ]()}
+                                </div>
+                            </div>
+                        </Select>
                     </div>
                     <div>
                         {#if personalAreaPropertyData.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
-                            <label for="allowedUserInput"
+                            <label for="allowedUserInput" class="input-label"
                                 >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
                             >
                             <MemberAutocomplete

@@ -154,7 +154,7 @@
                     </div>
                 {/if}
 
-                <button on:click={OpenPopup}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()} </button>
+                <button class="btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2" on:click={OpenPopup}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()} </button>
 
                 <!-- <JitsiRoomConfigEditor
                     bind:isOpen={jitsiConfigModalOpened}
