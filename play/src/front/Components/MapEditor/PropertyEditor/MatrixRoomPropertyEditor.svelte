@@ -57,13 +57,3 @@
         {/if}
     </span>
 </PropertyEditorBase>
-
-<style lang="scss">
-    .value-input {
-        display: flex;
-        flex-direction: row;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        gap: 10px;
-    }
-</style>
