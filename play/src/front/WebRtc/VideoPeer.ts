@@ -4,6 +4,7 @@ import { derived, get, Readable, readable, Unsubscriber, Writable, writable } fr
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
+import { z } from "zod";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -24,6 +25,8 @@ import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
+const CONNECTION_TIMEOUT = 5000;
+
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
@@ -39,7 +42,7 @@ export class VideoPeer extends Peer implements Streamable {
     private onUnBlockSubscribe: Subscription;
     private readonly _streamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     public readonly volumeStore: Readable<number[] | undefined>;
-    private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("closed");
+    private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("connecting");
     private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscription: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
@@ -55,6 +58,7 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "cover";
     public readonly displayInPictureInPictureMode = true;
+
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
@@ -74,6 +78,8 @@ export class VideoPeer extends Peer implements Streamable {
         this.userId = user.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
+
+        let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
@@ -131,6 +137,19 @@ export class VideoPeer extends Peer implements Streamable {
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
+
+            const ZodCandidate = z.object({
+                type: z.literal("candidate"),
+            });
+            if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
+                // If the signal is a candidate, we set a connection timer
+                if (connectTimeout) {
+                    clearTimeout(connectTimeout);
+                }
+                connectTimeout = setTimeout(() => {
+                    this._statusStore.set("error");
+                }, CONNECTION_TIMEOUT);
+            }
         });
 
         this.on("stream", (stream: MediaStream) => this.stream(stream));
@@ -157,6 +176,9 @@ export class VideoPeer extends Peer implements Streamable {
         });
 
         this.on("connect", () => {
+            if (connectTimeout) {
+                clearTimeout(connectTimeout);
+            }
             this._statusStore.set("connected");
 
             this._connected = true;
