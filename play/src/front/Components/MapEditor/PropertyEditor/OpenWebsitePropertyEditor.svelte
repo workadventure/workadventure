@@ -130,6 +130,7 @@
         if (property.forceNewTab == true) {
             property.newTab = true;
         }
+        console.info("👮🏻property", property);
     });
 
     function onTriggerValueChange() {

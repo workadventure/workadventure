@@ -532,6 +532,7 @@ export class GameMapPropertiesListener {
     }
 
     private onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
+        console.log('🧄 aie ça pique les yeux ', areasData, areas);
         this.areasPropertiesListener.onEnterAreasHandler(areasData, areas);
     }
 

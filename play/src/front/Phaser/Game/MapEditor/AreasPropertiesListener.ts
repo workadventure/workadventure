@@ -371,6 +371,7 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
+        console.log("🫡🫡🫡OpenWebsitePropertyData", property);
         if (!property.link) {
             return;
         }
@@ -439,6 +440,8 @@ export class AreasPropertiesListener {
 
         this.openedCoWebsites.set(property.id, coWebsiteOpen);
 
+        console.log('coWebsiteOpen', localUserStore.getForceCowebsiteTrigger());
+
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
@@ -506,7 +509,6 @@ export class AreasPropertiesListener {
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
         }
-
         if (!property.trigger) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }

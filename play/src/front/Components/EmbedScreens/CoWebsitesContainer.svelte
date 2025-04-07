@@ -60,6 +60,7 @@
                     clientX = window.innerWidth - 8;
                 }
                 coWebsiteRatio.set((window.innerWidth - clientX) / window.innerWidth);
+                console.log("clientX", clientX);
             }
         } else {
             // 8 is the number of pixels of the resize bar
