@@ -11,7 +11,7 @@
 </script>
 
 <div class="property-settings-container">
-    <div class="header">
+    <div class="header relative">
         <slot name="header">_MISSING_</slot>
         <CloseButton
             on:click={() => {
