@@ -79,7 +79,8 @@ class ChatUtils {
 
   public async restoreEncryption(page: Page) {
    // await page.getByTestId("VerifyWithPassphraseButton").click();
-    await page.getByTestId("passphraseInput").toBeVisible({
+    await page.getByTestId("passphraseInput").waitFor({
+      state: "visible",
       timeout: 20_000,
     });
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
