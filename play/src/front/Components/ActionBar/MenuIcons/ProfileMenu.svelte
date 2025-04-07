@@ -130,7 +130,7 @@
             {/if}
         </div>
         <div
-            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3 "
+            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-2 pr-3 "
         >
             <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
             <div class="grow flex flex-row @xl/actions:flex-col justify-start text-left pr-2">
