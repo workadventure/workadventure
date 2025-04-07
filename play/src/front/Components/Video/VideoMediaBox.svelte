@@ -256,7 +256,7 @@
     </button>
     {#if missingUserActivation && !peer.muteAudio}
         <div
-            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20"
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
             on:click={() => (missingUserActivation = false)}
         >
             <div class="text-center">

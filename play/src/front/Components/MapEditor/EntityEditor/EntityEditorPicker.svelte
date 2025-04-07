@@ -196,7 +196,7 @@
             <!--            />-->
         </div>
     </div>
-    <div class={`flex-1 overflow-auto ${pickedEntity ? "pt-44" : ""}`}>
+    <div class="flex-1 overflow-auto">
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
                 {#each Object.entries(getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst($entitiesPrefabsVariants)) as [tag, entitiesPrefabsVariants] (tag)}
@@ -212,7 +212,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] absolute bg-dark-purple/90 rounded-2xl w-full left-0 top-24"
+                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] bg-dark-purple/90 rounded-2xl w-full"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
@@ -254,7 +254,7 @@
                             >
                         {/if}
                         <button
-                            class="self-start absolute right-0"
+                            class="self-start absolute top-1 right-1"
                             data-testid="clearEntitySelection"
                             on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
                         >

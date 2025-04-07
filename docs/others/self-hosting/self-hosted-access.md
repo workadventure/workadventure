@@ -14,3 +14,5 @@ mechanism, but you can plug it into any "OpenID connect" compatible back end. Be
 When OpenID connect authentication is set up, you should modify the value of the `MAP_EDITOR_ALLOWED_USERS` environment
 variable (typically defined in your `.env` file) to add the list of users that are allowed to use the map editor.
 The list of users is a comma-separated list of email addresses.
+Then, set the `MAP_EDITOR_ALLOW_ALL_USERS` environment variable to `false`. This will ensure that only the users
+defined in `MAP_EDITOR_ALLOWED_USERS` will be able to access the map editor.

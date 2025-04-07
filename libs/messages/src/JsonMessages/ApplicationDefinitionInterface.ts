@@ -47,7 +47,7 @@ export const isApplicationDefinitionInterface = z.object({
     example: true,
   }),
   policy: extendApi(z.string().optional(), {
-    description: "The permission policy use by the application. Exemple: fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture...",
+    description: "The permission policy used by the application. Example: fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture...",
     example: "http://example.com/my/policy.html",
   }),
 });

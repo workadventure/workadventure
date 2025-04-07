@@ -156,7 +156,7 @@
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>
         </div>
-        <div class="flex flew-wrap justify-center">
+        <div class="flex flex-wrap justify-center">
             {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
                 <AddPropertyButtonWrapper {property} {subProperty} />
             {/each}
