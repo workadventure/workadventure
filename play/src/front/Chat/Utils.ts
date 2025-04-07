@@ -92,7 +92,7 @@ export const openDirectChatRoom = async (chatID: string) => {
     } catch (error) {
         warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
         console.error(error);
-        Sentry.captureMessage("Failed to create room");
+        Sentry.captureException(error);
     }
 };
 
@@ -104,7 +104,8 @@ export const openChatRoom = async (roomId: string) => {
         }
         const chatConnection = await gameManager.getChatConnection();
         const room = chatConnection.getRoomByID(roomId);
-        if (!room) throw new Error("Failed to create room");
+
+        if (!room) throw new Error("Failed to retrieve room");
 
         selectedRoomStore.set(room);
         navChat.switchToChat();
@@ -112,7 +113,7 @@ export const openChatRoom = async (roomId: string) => {
     } catch (error) {
         warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
         console.error(error);
-        Sentry.captureMessage("Failed to create room");
+        Sentry.captureException(error);
     }
 };
 

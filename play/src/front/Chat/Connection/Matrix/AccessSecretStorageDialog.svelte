@@ -160,6 +160,7 @@
         <button
             disabled={confirmInputDisabled || isCheckingPassphrase}
             class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+            data-testid="confirmAccessSecretStorageButton"
             on:click={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
         >
             {#if isCheckingPassphrase}
