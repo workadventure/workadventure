@@ -43,7 +43,7 @@
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
 <div
-    class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+    class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
     in:fly={{ y: 50, duration: 150 }}
 >
     <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
