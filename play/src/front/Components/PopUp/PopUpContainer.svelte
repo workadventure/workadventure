@@ -6,7 +6,7 @@
 </script>
 
 <div
-    class="bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive {SLOTS.iconButton
+    class="bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive z-20 {SLOTS.iconButton
         ? 'px-10'
         : ''} {extraClasses}"
     class:responsive={reduceOnSmallScreen}
