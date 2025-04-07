@@ -2,8 +2,7 @@
     import { fly } from "svelte/transition";
     import { type Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
-    import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -17,10 +16,6 @@
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
         constraintStore = streamable.constraintsStore;
-    }
-    let statusStore: Readable<PeerStatus> | null;
-    if (streamable instanceof VideoPeer || streamable instanceof ScreenSharingPeer) {
-        statusStore = streamable.statusStore;
     }
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -47,20 +42,9 @@
 <!-- svelte-ignore missing-declaration -->
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
-{#if streamable instanceof VideoPeer}
-    {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
-        <div
-            class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
-            in:fly={{ y: 50, duration: 150 }}
-        >
-            <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
-        </div>
-    {/if}
-{:else}
-    <div
-        class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
-        in:fly={{ y: 50, duration: 150 }}
-    >
-        <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
-    </div>
-{/if}
+<div
+    class="video-media-box pointer-events-auto media-container transition-all justify-center relative h-full w-full"
+    in:fly={{ y: 50, duration: 150 }}
+>
+    <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+</div>
