@@ -68,7 +68,7 @@
     >
         <button
             type="button"
-            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative font-bold
+            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'normal' && type !== 'gradient' ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
@@ -76,7 +76,7 @@
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
-                {type === 'gradient' ? 'gradient overflow-hidden' : ''}
+                {type === 'gradient' ? 'gradient overflow-hidden font-bold' : ''}
                 {bgColor && type !== 'gradient' ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none space-x-2"
