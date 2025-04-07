@@ -43,9 +43,7 @@
 
 {#if !isInMenu}
     <div
-        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last
-            ? 'mr-1 @md/actions:mr-2 @xl/actions:mr-4'
-            : ''} {classList}"
+        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last ? '' : ''} {classList}"
         class:first:rounded-l-lg={first === undefined}
         class:first:pl-2={first === undefined}
         class:last:rounded-r-lg={last === undefined}
@@ -66,7 +64,7 @@
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
-                    flex items-center justify-center outline-none focus:outline-none space-x-2"
+                    flex items-center justify-center outline-none focus:outline-none gap-2"
             disabled={state === "disabled"}
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
