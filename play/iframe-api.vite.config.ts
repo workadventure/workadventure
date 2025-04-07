@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
 import { resolve } from "path";
+import { defineConfig } from "vite";
 
 export default defineConfig({
     publicDir: false,
@@ -10,7 +10,7 @@ export default defineConfig({
         lib: {
             entry: resolve(__dirname, "src/iframe_api.ts"),
             name: "iframe_api",
-            formats: ["cjs"],
+            formats: ["iife"],
             fileName: () => "iframe_api.js",
         },
     },
