@@ -38,6 +38,8 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import Alert from "../UI/Alert.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Select from "../Input/Select.svelte";
+    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
@@ -183,8 +185,8 @@
     class="menu-container {isMobile
         ? 'mobile'
         : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
-    bind:this={mainModal}
->
+    bind:this={mainModal}>
+
     <div class="w-full bg-contrast/80 backdrop-blur rounded-md rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
             <ButtonClose on:click={close} hoverColor="bg-danger" />
@@ -360,7 +362,7 @@
             {#if inputSendTextActive || uploadAudioActive}
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
-                        <h3>
+                        <h3 class="text-white mb-2"> 
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
@@ -382,21 +384,20 @@
                         <AudioGlobalMessage bind:handleSending={handleSendAudio} />
                     {/if}
                     <div class="flex justify-center">
-                        <label>
-                            <input type="checkbox" bind:checked={broadcastToWorld} />
-                            <span>{$LL.menu.globalMessage.warning()}</span>
-                        </label>
+                     
+                            <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
+                    
                     </div>
                     <div class="flex justify-center">
                         <section class="centered-column">
-                            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
+                            <button class="btn btn-light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
                             >
                         </section>
                     </div>
                 </div>
             {/if}
             {#if activeLiveMessage}
-                <div id="active-liveMessage" class="flex flex-col p-5">
+                <div id="active-liveMessage" class="flex flex-col p-5 text-white ">
                     <h3>
                         <img
                             src={liveMessageImg}
@@ -406,7 +407,7 @@
                         {$LL.megaphone.modal.liveMessage.title()}
                     </h3>
                     <div class="flex flew-row justify-center">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col mr-5">
                             <video
                                 bind:this={videoElement}
                                 class="h-full w-full md:object-cover rounded-xl"
@@ -418,7 +419,7 @@
                                 muted
                                 playsinline
                             />
-                            <div class="z-[251] w-full p-4 flex items-center justify-center scale-150">
+                            <div class="z-[251] mt-3 w-full p-4 flex items-center justify-center scale-150">
                                 <SoundMeterWidget
                                     volume={$localVolumeStore}
                                     cssClass="!bg-none !bg-transparent scale-150"
@@ -427,7 +428,7 @@
                             </div>
                         </div>
                         <div class="flex flex-col pl-6">
-                            <h3>{$LL.megaphone.modal.liveMessage.settings()}</h3>
+                            <h3 class="text-white ">{$LL.megaphone.modal.liveMessage.settings()}</h3>
                             <p class="text-white text-sm">
                                 {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
                                     {$LL.warning.megaphoneNeeds()}
@@ -449,14 +450,15 @@
                                     {$LL.megaphone.modal.liveMessage.toAll()}.
                                 {/if}
                             </p>
-                            <div class="flex flex-row">
+                            <div class="flex flex-row items-center gap-3">
                                 <img
                                     draggable="false"
                                     src={cameraImg}
                                     style="padding: 2px; height: 32px; width: 32px;"
                                     alt="Turn off microphone"
                                 />
-                                <select class="w-full ml-4" bind:value={cameraDiveId} on:change={() => selectCamera()}>
+                                <div class="w-full">
+                                <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
                                     {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                         {#each $cameraListStore as camera (camera.deviceId)}
                                             <option value={camera.deviceId}>
@@ -464,17 +466,18 @@
                                             </option>
                                         {/each}
                                     {/if}
-                                </select>
+                                </Select>
                             </div>
-                            <div class="flex flex-row">
+                            </div>
+                            <div class="flex flex-row items-center gap-3 ">
                                 <img
                                     draggable="false"
                                     src={microphoneImg}
-                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    style="padding: 2px; height: 32px; width: 32px; "
                                     alt="Turn off microphone"
                                 />
-                                <select
-                                    class="w-full ml-4"
+                                <div class="w-full ">
+                                <Select 
                                     bind:value={microphoneDeviceId}
                                     on:change={() => selectMicrophone()}
                                 >
@@ -485,7 +488,8 @@
                                             </option>
                                         {/each}
                                     {/if}
-                                </select>
+                                </Select>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -524,6 +528,7 @@
 <style lang="scss">
     .menu-container {
         position: absolute !important;
+        
         &.mobile {
             width: 100% !important;
             height: 100% !important;
@@ -531,6 +536,7 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
+            
         }
     }
 

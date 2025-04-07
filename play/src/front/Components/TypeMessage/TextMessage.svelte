@@ -3,6 +3,7 @@
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+    import ButtonClose from "../Input/ButtonClose.svelte";
 
     /* eslint-disable svelte/no-at-html-tags */
 
@@ -25,12 +26,35 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="main-text-message bg-dark-purple/95 rounded absolute flex w-3/5 m-auto py-3 pl-5 pr-2 max-h-64 left-0 right-0 pointer-events-auto"
-    in:fly={{ x: -1000, duration: 500, delay: 250 }}
+    class="main-text-message bg-contrast/85 rounded absolute backdrop-blur-md flex gap-3 w-3/5 m-auto py-3 pl-5 pr-2 max-h-64 left-0 right-0 shadow-xl  pointer-events-auto animate-bounce-in"
+    in:fly={{ x: -1000, duration: 300, delay: 250 }}
     out:fade={{ duration: 150 }}
 >
-    <div class="content-text-message flex text-white max-h-60 w-full overflow-auto mt-7 mr-6">
+    <div class="icon mt-1 text-white text-xl">💬</div>
+    <div class="content-text-message flex text-white max-h-60 w-full overflow-auto  mr-6">
         {@html converter.convert()}
     </div>
-    <button type="button" class="btn close-window !right-1" on:click|preventDefault={closeTextMessage}>&times;</button>
+    <ButtonClose on:click={closeTextMessage} 
+    />
 </div>
+
+<style>
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
+
+    
+</style>

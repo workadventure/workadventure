@@ -78,27 +78,64 @@
     @import "../../style/breakpoints.scss";
     @import "quill/dist/quill.snow.css";
 
+
     section.section-input-send-text {
         --height-toolbar: 20%;
         height: 100%;
 
+        :global(.ql-editor) {
+          background-color: #1B2A41 ;
+       
+        }
+        :global(.ql-toolbar.ql-snow .ql-picker-label) {
+            color:  whitesmoke
+        }
+
+        :global(.ql-toolbar .ql-stroke ){
+            fill: none;
+            stroke: #fff;
+        }
+
+        :global(.ql-toolbar .ql-fill) {
+        fill: #fff;
+        stroke: none;
+    }
+
+        :global(.ql-toolbar.ql-snow .ql-formats button) {
+            color:  whitesmoke /* Couleur du texte des labels des dropdowns */
+        }
+    
+
+        :global(.ql-container) {
+          background-color: #1B2A41 ;
+          border-bottom-left-radius:12px;
+          border-bottom-right-radius :12px;
+          border: 1px solid #879FC2;
+          color:  whitesmoke;
+          
+        }
         :global(.ql-toolbar) {
             max-height: var(--height-toolbar);
-            background: whitesmoke;
+            border-top-left-radius:12px;
+            border-top-right-radius :12px;
         }
+    
 
         div.input-send-text {
             height: calc(100% - var(--height-toolbar));
             overflow: auto;
 
-            color: whitesmoke;
+        
             font-size: 1rem;
 
             :global(.ql-editor.ql-blank::before) {
                 color: whitesmoke;
                 font-size: 1rem;
+               
             }
 
+            
+       
             :global(.ql-tooltip) {
                 top: 40% !important;
                 left: 20% !important;
@@ -108,6 +145,8 @@
             }
         }
     }
+
+    
 
     @include media-breakpoint-up(md) {
         section.section-input-send-text {
