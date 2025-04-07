@@ -185,8 +185,8 @@
     class="menu-container {isMobile
         ? 'mobile'
         : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
-    bind:this={mainModal}>
-
+    bind:this={mainModal}
+>
     <div class="w-full bg-contrast/80 backdrop-blur rounded-md rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
             <ButtonClose on:click={close} hoverColor="bg-danger" />
@@ -362,7 +362,7 @@
             {#if inputSendTextActive || uploadAudioActive}
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
-                        <h3 class="text-white mb-2"> 
+                        <h3 class="text-white mb-2">
                             <img
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
@@ -384,13 +384,12 @@
                         <AudioGlobalMessage bind:handleSending={handleSendAudio} />
                     {/if}
                     <div class="flex justify-center">
-                     
-                            <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
-                    
+                        <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
                     </div>
                     <div class="flex justify-center">
                         <section class="centered-column">
-                            <button class="btn btn-light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
+                            <button class="btn btn-light" on:click|preventDefault={send}
+                                >{$LL.menu.globalMessage.send()}</button
                             >
                         </section>
                     </div>
@@ -458,16 +457,16 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full">
-                                <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
-                                    {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                        {#each $cameraListStore as camera (camera.deviceId)}
-                                            <option value={camera.deviceId}>
-                                                {StringUtils.normalizeDeviceName(camera.label)}
-                                            </option>
-                                        {/each}
-                                    {/if}
-                                </Select>
-                            </div>
+                                    <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
+                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                            {#each $cameraListStore as camera (camera.deviceId)}
+                                                <option value={camera.deviceId}>
+                                                    {StringUtils.normalizeDeviceName(camera.label)}
+                                                </option>
+                                            {/each}
+                                        {/if}
+                                    </Select>
+                                </div>
                             </div>
                             <div class="flex flex-row items-center gap-3 ">
                                 <img
@@ -477,19 +476,16 @@
                                     alt="Turn off microphone"
                                 />
                                 <div class="w-full ">
-                                <Select 
-                                    bind:value={microphoneDeviceId}
-                                    on:change={() => selectMicrophone()}
-                                >
-                                    {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
-                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
-                                            <option value={microphone.deviceId}>
-                                                {StringUtils.normalizeDeviceName(microphone.label)}
-                                            </option>
-                                        {/each}
-                                    {/if}
-                                </Select>
-                            </div>
+                                    <Select bind:value={microphoneDeviceId} on:change={() => selectMicrophone()}>
+                                        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
+                                            {#each $microphoneListStore as microphone (microphone.deviceId)}
+                                                <option value={microphone.deviceId}>
+                                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                                </option>
+                                            {/each}
+                                        {/if}
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -528,7 +524,7 @@
 <style lang="scss">
     .menu-container {
         position: absolute !important;
-        
+
         &.mobile {
             width: 100% !important;
             height: 100% !important;
@@ -536,7 +532,6 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
-            
         }
     }
 

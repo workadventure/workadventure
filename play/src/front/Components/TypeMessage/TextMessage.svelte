@@ -34,27 +34,24 @@
     <div class="content-text-message flex text-white max-h-60 w-full overflow-auto  mr-6">
         {@html converter.convert()}
     </div>
-    <ButtonClose on:click={closeTextMessage} 
-    />
+    <ButtonClose on:click={closeTextMessage} />
 </div>
 
 <style>
-@keyframes bounce-in {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-.animate-bounce-in {
-  animation: bounce-in 0.5s ease-out;
-}
-
-    
+    @keyframes bounce-in {
+        0% {
+            transform: scale(0.5);
+            opacity: 0;
+        }
+        60% {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+    .animate-bounce-in {
+        animation: bounce-in 0.5s ease-out;
+    }
 </style>
