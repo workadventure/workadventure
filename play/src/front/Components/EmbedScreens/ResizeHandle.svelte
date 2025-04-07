@@ -47,7 +47,7 @@
 </script>
 
 <div
-    class="drag-handle mx-auto mt-1 w-48 h-2 bg-contrast hover:bg-contrast-300 cursor-ns-resize transition-colors rounded-lg"
+    class="drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
     on:mousedown={startDragging}
     on:touchstart={startDragging}
 />

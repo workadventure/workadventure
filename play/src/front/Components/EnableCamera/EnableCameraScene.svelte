@@ -199,7 +199,7 @@
 
             <!-- MICROPHONE -->
             <div
-                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll justify-center  items-center lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex lg:space-x-4 flex-col lg:flex-row min-w-[320px]  md:overflow-scroll justify-center  items-center lg:items-stretch lg:px-4 pb-[15%] sm:pb-[8%] lg:pb-4 "
             >
                 <!-- MICROPHONE -->
                 <SelectMicrophone

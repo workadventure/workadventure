@@ -117,6 +117,8 @@
                 title={$modalIframeStore?.title}
                 src={modalUrl}
                 class="border-0 relative z-40"
+                allowtransparency
+                style="color-scheme: auto"
             />
         {/if}
     </div>

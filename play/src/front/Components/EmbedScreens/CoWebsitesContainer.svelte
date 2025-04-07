@@ -16,7 +16,7 @@
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     //let container: HTMLElement;
-    let activeCowebsite = $coWebsites[0];
+    let activeCowebsite: CoWebsite = $coWebsites[0];
     let resizeBar: HTMLElement;
     let unsubscribeCowebsitesUpdate: Unsubscriber | undefined;
 
@@ -279,13 +279,22 @@
         </div>
 
         <div class={$screenOrientationStore === "portrait" ? "flex-1 mb-3" : "h-full object-contain ml-3"}>
-            {#if activeCowebsite instanceof JitsiCoWebsite}
-                <JitsiCowebsiteComponent actualCowebsite={activeCowebsite} />
-            {:else if activeCowebsite instanceof BBBCoWebsite}
-                <BigBlueButtonCowebsiteComponent actualCowebsite={activeCowebsite} />
-            {:else if activeCowebsite instanceof SimpleCoWebsite}
-                <SimpleCowebsiteComponent actualCowebsite={activeCowebsite} allowApi={activeCowebsite.getAllowApi()} />
-            {/if}
+            {#each $coWebsites as coWebsite (coWebsite.getId())}
+                {#if coWebsite instanceof JitsiCoWebsite}
+                    <JitsiCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
+                {:else if coWebsite instanceof BBBCoWebsite}
+                    <BigBlueButtonCowebsiteComponent
+                        actualCowebsite={coWebsite}
+                        visible={coWebsite === activeCowebsite}
+                    />
+                {:else if coWebsite instanceof SimpleCoWebsite}
+                    <SimpleCowebsiteComponent
+                        actualCowebsite={coWebsite}
+                        allowApi={coWebsite.getAllowApi()}
+                        visible={coWebsite === activeCowebsite}
+                    />
+                {/if}
+            {/each}
         </div>
     </div>
     <div
