@@ -69,11 +69,13 @@
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
+        menuDrop = false;
     }
 
     function exitFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
+        menuDrop = false;
     }
 
     let userMenuButton: HTMLDivElement;
@@ -225,50 +227,52 @@
                 </UserName>
 
                 <!-- The button at the top of the video that opens the menu to go fullscreen -->
-                <button
-                    class={isHighlighted
-                        ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto picture-in-picture:hidden"
-                        : "hidden"}
-                    on:click={() => (menuDrop = !menuDrop)}
-                >
-                    {#if menuDrop}
-                        <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
-                    {:else}
-                        <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
-                    {/if}
-                </button>
+                {#if isHighlighted}
+                    <button
+                        class="w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 absolute inset-0 mx-auto picture-in-picture:hidden"
+                        on:click={() => (menuDrop = !menuDrop)}
+                    >
+                        {#if menuDrop}
+                            <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
+                        {:else}
+                            <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
+                        {/if}
+                    </button>
 
-                <!-- The menu to go fullscreen -->
-                <div
-                    class={isHighlighted && menuDrop
-                        ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 flex items-center justify-center cursor-pointer"
-                        : "hidden"}
-                >
-                    <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
-                        <button
-                            class="svg w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                            on:click={exitFullScreen}
-                            on:click={() => (menuDrop = !menuDrop)}
-                        >
-                            <ArrowsMinimizeIcon classList="mx-4" />
-                            <span class="font-bold text-white">{$LL.video.reduce()}</span>
-                        </button>
-                        <div class="h-[1px] z-30 w-full bg-white/20" />
-                        <button
-                            class="muted-video w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                            on:click={toggleFullScreen}
-                            on:click={() => (menuDrop = !menuDrop)}
-                        >
-                            {#if fullScreen}
+                    <!-- The menu to go fullscreen -->
+                    <div
+                        class={menuDrop
+                            ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                            : "hidden"}
+                    >
+                        <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
+                            <button
+                                class="svg w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                on:click={exitFullScreen}
+                            >
                                 <ArrowsMinimizeIcon classList="mx-4" />
-                                <span class="font-bold cursor-pointer text-white">{$LL.video.exit_fullscreen()}</span>
-                            {:else}
-                                <ArrowsMaximizeIcon classList="mx-4" />
-                                <span class="font-bold cursor-pointer text-white">{$LL.video.toggle_fullscreen()}</span>
-                            {/if}
-                        </button>
+                                <span class="font-bold text-white">{$LL.video.reduce()}</span>
+                            </button>
+                            <div class="h-[1px] z-30 w-full bg-white/20" />
+                            <button
+                                class="muted-video w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                on:click={toggleFullScreen}
+                            >
+                                {#if fullScreen}
+                                    <ArrowsMinimizeIcon classList="mx-4" />
+                                    <span class="font-bold cursor-pointer text-white"
+                                        >{$LL.video.exit_fullscreen()}</span
+                                    >
+                                {:else}
+                                    <ArrowsMaximizeIcon classList="mx-4" />
+                                    <span class="font-bold cursor-pointer text-white"
+                                        >{$LL.video.toggle_fullscreen()}</span
+                                    >
+                                {/if}
+                            </button>
+                        </div>
                     </div>
-                </div>
+                {/if}
 
                 {#if $statusStore === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
