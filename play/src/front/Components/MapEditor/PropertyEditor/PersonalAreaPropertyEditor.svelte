@@ -147,11 +147,11 @@
                             label={$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
                             bind:value={personalAreaPropertyData.accessClaimMode}
                             on:change={onClaimModeChange}
-                            >
-                          {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
+                        >
+                            {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}
-                                >{$LL.mapEditor.properties.personalAreaConfiguration[
-                                    `${claimMode}AccessClaimMode`
+                                    >{$LL.mapEditor.properties.personalAreaConfiguration[
+                                        `${claimMode}AccessClaimMode`
                                     ]()}</option
                                 >
                             {/each}
