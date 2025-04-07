@@ -258,10 +258,11 @@
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4 "
                 >
-                    <button type="submit" class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 
+                    <button
+                        type="submit"
+                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 
               
-                     hidden"
-                        >{$LL.actionbar.cancel()}</button
+                     hidden">{$LL.actionbar.cancel()}</button
                     >
                     <!-- TODO ACTION -->
                     <button type="submit" class="btn btn-secondary btn-lg w-full md:w-1/2 block"
