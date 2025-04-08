@@ -299,7 +299,9 @@
                   Math.ceil(videoHeight) +
                   "px; " +
                   ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                  (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
+                  (cover
+                      ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                      : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
             bind:videoWidth={videoStreamWidth}
