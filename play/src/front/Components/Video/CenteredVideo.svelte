@@ -104,7 +104,7 @@
                 // In case we are on a mobile in portrait mode, we want to display a square video.
                 videoWidth = containerHeight;
                 videoHeight = containerHeight / videoRatio;
-                overlayWidth = containerHeight;
+                overlayWidth = containerWidth;
                 overlayHeight = containerHeight;
                 //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else if (containerRatio > videoRatio) {
@@ -270,7 +270,9 @@
 </script>
 
 <div
-    class="h-full w-full relative {!cover && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
+    class="h-full w-full relative {(!cover || videoStreamWidth / videoStreamHeight < 1) && withBackground
+        ? 'bg-contrast/80 rounded-lg'
+        : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >
