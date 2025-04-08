@@ -116,7 +116,7 @@
             {#if parentID}
                 <div class="tw-pl-1">
                     <input
-                        data-testid="createRoomEncryption"
+                        data-testid="createRoomSuggested"
                         bind:checked={createRoomOptions.suggested}
                         type="checkbox"
                         id="suggestedData"

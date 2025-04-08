@@ -82,12 +82,11 @@
                     class:tw-mb-2={suggestedRoomsOpen}
                 >
                     <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
-                        <button class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0" on:click={toggleSuggestedRooms}>
+                        <button class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0" data-testid="openSuggestedRooms" on:click={toggleSuggestedRooms}>
                             <div
                                 class={`tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left`}
                             >
-                                Suggested Rooms
-                                <!-- {$LL.chat.suggestedRooms()} -->
+                                {$LL.chat.suggestedRooms()}
                             </div>
                         </button>
                     </div>
