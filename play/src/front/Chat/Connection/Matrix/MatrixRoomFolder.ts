@@ -19,7 +19,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
     readonly allSuggestedRooms: Writable<{ name: string; id: string }[]> = writable([]);
-    readonly suggestedRooms : Readable<{ name: string; id: string }[]>
+    readonly suggestedRooms: Readable<{ name: string; id: string }[]>;
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
     private joinRoomDeferred = new Deferred<void>();
@@ -71,14 +71,13 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             [this.allSuggestedRooms, this.rooms, this.invitations, this.folders],
             ([$allSuggestedRooms, $rooms, $invitations, $folders]) => {
                 const existingIds = new Set([
-                    ...$rooms.map(room => room.id),
-                    ...$invitations.map(room => room.id),
-                    ...$folders.map(folder => folder.id)
+                    ...$rooms.map((room) => room.id),
+                    ...$invitations.map((room) => room.id),
+                    ...$folders.map((folder) => folder.id),
                 ]);
-                return $allSuggestedRooms.filter(room => !existingIds.has(room.id));
+                return $allSuggestedRooms.filter((room) => !existingIds.has(room.id));
             }
         );
-
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }

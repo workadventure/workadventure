@@ -10,19 +10,19 @@
     export let roomInformation: { name: string; id: string };
     let roomName = roomInformation.name;
     let loadingInvitation = false;
-    
+
     async function joinRoom() {
         loadingInvitation = true;
         try {
             const chatconnection = await gameManager.getChatConnection();
             chatconnection
                 .joinRoom(roomInformation.id)
-            .then((room) => {
-                if (!room.isRoomFolder) selectedRoomStore.set(room);
-            })
-            .catch((error) => {
-                warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
-            })
+                .then((room) => {
+                    if (!room.isRoomFolder) selectedRoomStore.set(room);
+                })
+                .catch((error) => {
+                    warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
+                })
                 .finally(() => {
                     loadingInvitation = false;
                 });

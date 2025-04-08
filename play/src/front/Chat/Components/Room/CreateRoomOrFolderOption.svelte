@@ -9,11 +9,11 @@
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconDots, IconFolder, IconLogout, IconMessage , IconUserEdit} from "@wa-icons";
+    import { IconDots, IconFolder, IconLogout, IconMessage, IconUserEdit } from "@wa-icons";
 
     export let parentID: string | undefined = undefined;
     export let parentName = "";
-    export let folder: RoomFolder &  ChatRoomModeration | undefined;
+    export let folder: (RoomFolder & ChatRoomModeration) | undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideFolderOptions = true;
 
@@ -24,7 +24,6 @@
     const hasPermissionToBan = folder?.hasPermissionTo("ban") ?? readable(false);
 
     $: shouldDisplayManageParticipantButton = $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan;
-
 
     function toggleSpaceOption() {
         if (optionButtonRef === undefined) {
@@ -55,9 +54,8 @@
     }
 
     function openManageParticipantsModal() {
-        openModal(ManageParticipantsModal, { room : folder });
+        openModal(ManageParticipantsModal, { room: folder });
     }
-
 </script>
 
 <button
@@ -88,14 +86,13 @@
         on:click={openCreateSpace}
     />
     {#if shouldDisplayManageParticipantButton && folder}
-    <RoomOption
-        dataTestId="manageParticipantOption"
-        IconComponent={IconUserEdit}
-        title={$LL.chat.manageRoomUsers.roomOption()}
-        on:click={openManageParticipantsModal}
-    />
-{/if}
-
+        <RoomOption
+            dataTestId="manageParticipantOption"
+            IconComponent={IconUserEdit}
+            title={$LL.chat.manageRoomUsers.roomOption()}
+            on:click={openManageParticipantsModal}
+        />
+    {/if}
 
     {#if folder}
         <RoomOption
