@@ -112,6 +112,22 @@ export const openChatRoom = async (roomId: string) => {
         chatVisibilityStore.set(true);
     } catch (error) {
         warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId }));
+
+        console.trace(`
+            --------------------------------
+            --------------------------------
+            --------------------------------
+            Failed to open room -${roomId}-
+            --------------------------------
+            --------------------------------
+            --------------------------------
+
+            Error : ${error}
+
+            --------------------------------
+            --------------------------------
+            --------------------------------
+            `);
         console.error(error);
         Sentry.captureException(error);
     }
