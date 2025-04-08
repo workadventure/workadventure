@@ -25,7 +25,7 @@
                     <Woka src={$picture ?? ""} customHeight="100px" customWidth="100px" {grayscale} />
                 </div>
                 <div class="flex items-center">
-                    <span>{name}</span>
+                    <span class="select-none">{name}</span>
                     <slot />
                 </div>
             </div>
@@ -34,7 +34,7 @@
 {:else}
     <div class="{position} z-30 responsive-dimension">
         <div class="flex justify-between rounded {isPlayingAudio ? 'bg-secondary/90' : 'bg-contrast/90'}">
-            <div class="relative backdrop-blur px-2 py-1 text-white text-sm pl-12 bold rounded text-nowrap">
+            <div class="relative backdrop-blur px-2 py-1 text-white text-sm pl-12 bold rounded text-nowrap select-none">
                 <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                     <Woka src={$picture ?? ""} customHeight="42px" customWidth="42px" {grayscale} />
                 </div>

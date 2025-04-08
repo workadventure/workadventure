@@ -109,9 +109,9 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div data-testid="action-user" class="flex items-center transition-all cursor-pointer pointer-events-auto">
+<div data-testid="action-user" class="flex items-center transition-all pointer-events-auto">
     <div
-        class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2"
+        class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
         use:floatingUiRef
         on:click|preventDefault={() => {
             openedMenuStore.toggle("profileMenu");
@@ -165,7 +165,7 @@
     {#if $openedMenuStore === "profileMenu"}
         <!-- before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 -->
         <div
-            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white"
+            class="absolute top-0 left-0 bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white select-none"
             data-testid="profile-menu"
             use:floatingUiContent
             use:clickOutside={() => {

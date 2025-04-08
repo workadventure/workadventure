@@ -120,7 +120,7 @@
 </script>
 
 <div
-    class="flex flex-col p-1 w-48 bg-contrast/80 backdrop-blur-md bg-opacity-10 rounded-md max-h-max z-50 cursor-pointer"
+    class="flex flex-col p-1 w-48 bg-contrast/80 backdrop-blur-md bg-opacity-10 rounded-md max-h-max z-50 cursor-pointer select-none"
     class:mt-[0.2rem]={!videoEnabled}
     on:click={() => analyticsClient.moreActionMetting()}
     on:click|preventDefault|stopPropagation={() => toggleActionMenu(!moreActionOpened)}
