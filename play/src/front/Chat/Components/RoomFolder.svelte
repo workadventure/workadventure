@@ -16,7 +16,7 @@
     export let folder: RoomFolder;
     $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
-
+    let suggestedRoomsOpen: boolean = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
     $: filteredRoom = $rooms
@@ -36,6 +36,10 @@
         } else {
             localUserStore.removeFolderOpened(id);
         }
+    }
+
+    function toggleSuggestedRooms() {
+        suggestedRoomsOpen = !suggestedRoomsOpen;
     }
 </script>
 
@@ -71,6 +75,40 @@
 
     {#if isOpen}
         <div class="tw-flex tw-flex-col tw-overflow-auto">
+            {#if $suggestedRooms.length > 0}
+            <div class={`tw-mx-2 tw-p-1 tw-bg-contrast-300/10 tw-rounded-lg tw-mb-4`}>
+                <div
+                    class={`tw-group tw-relative tw-px-3 tw-m-0 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center`}
+                    class:tw-mb-2={suggestedRoomsOpen}
+                >
+                    <div class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0">
+                        <button class="tw-flex tw-items-center tw-space-x-2 tw-grow tw-m-0 tw-p-0" on:click={toggleSuggestedRooms}>
+                            <div
+                                class={`tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left`}
+                            >
+                                Suggested Rooms
+                                <!-- {$LL.chat.suggestedRooms()} -->
+                            </div>
+                        </button>
+                    </div>
+            
+                    <button
+                        class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
+                        on:click={toggleSuggestedRooms}
+                    >
+                        <IconChevronUp class={`tw-transform tw-transition ${! suggestedRoomsOpen ? "" : "tw-rotate-180"}`} />
+                    </button>
+
+                </div>
+                {#if suggestedRoomsOpen}
+                    <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
+                        <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
+                                <RoomSuggested roomInformation={room} />
+                            </ShowMore>
+                        </div>
+                {/if}
+            </div>
+            {/if}
             {#if $invitations.length > 0}
                 <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
                     <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
@@ -78,20 +116,13 @@
                     </ShowMore>
                 </div>
             {/if}
-            {#if $suggestedRooms.length > 0}
-                <div class="tw-flex tw-flex-col tw-overflow-auto tw-pl-3 tw-pr-4 tw-pb-3">
-                    <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
-                        <RoomSuggested roomInformation={room} />
-                    </ShowMore>
-                </div>
-            {/if}
             {#each Array.from($folders.values()) as folder (folder.id)}
-                <svelte:self {folder} rootFolder={false} />
+            <svelte:self {folder} rootFolder={false} />
             {/each}
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
-            {#if $rooms.length === 0 && $folders.length === 0}
+            {#if $rooms.length === 0 && $folders.length === 0 && $suggestedRooms.length === 0}
                 <p
                     class={`${
                         rootFolder
