@@ -457,6 +457,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Se reconnecter",
     failedToJoinRoom: "Impossible de rejoindre la room",
     failedToLeaveRoom: "Impossible de quitter la room",
+    refreshChat: "Rafraichir le chat",
+    dismiss: "Ignorer",
+    whoops: "Oups ! une erreur est survenue",
+    failedToOpenRoom: "Impossible d'ouvrir la room",
+    refreshChatError: "Impossible de rafraichir le chat",
 };
 
 export default chat;

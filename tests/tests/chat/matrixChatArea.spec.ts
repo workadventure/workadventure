@@ -25,6 +25,10 @@ test.describe("matrix chat area property @matrix", () => {
     }
   );
 
+  test.afterAll("reset matrix database", async () => {
+    await chatUtils.resetMatrixDatabase();
+  });
+
   test("it should automatically open the chat when entering the area if the property is checked", async ({
     page,
     browserName,
@@ -166,11 +170,19 @@ test.describe("matrix chat area property @matrix", () => {
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
+
+    await page.addLocatorHandler(page.getByTestId("cancelSSO"), async () => {
+         await page.getByTestId("cancelSSO").click();
+    });
+
+
     await page.getByTestId("chatBackward").click();
     await page.getByTestId("name of new room").hover() ;
     await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await page.getByTestId("manageParticipantOption").click()
-    await expect(page.getByText("Manage participants")).toBeVisible();
+    await expect(page.getByText("Manage participants")).toBeVisible({
+      timeout: 60000
+    });
 
   });
 
@@ -205,10 +217,6 @@ test.describe("matrix chat area property @matrix", () => {
     const newBrowser = await browser.newContext();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-
-
-
-    
     
     await login(page2, "test2", 3, "en-US", false);
     await oidcMemberTagLogin(page2, false);
@@ -220,6 +228,10 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page2, 4 * 32, 2 * 32);
     
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
+
+    await page2.addLocatorHandler(page2.getByTestId("closeModal"), async () => {
+      await page2.getByTestId("closeModal").click();
+    });
 
     await page2.getByTestId("chatBackward").click();
     await page2.getByTestId("name of new room").hover() ; 

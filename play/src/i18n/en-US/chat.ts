@@ -457,6 +457,11 @@ const chat: BaseTranslation = {
     reconnect: "Reconnect",
     failedToJoinRoom: "Failed to join room",
     failedToLeaveRoom: "Failed to leave room",
+    refreshChat: "Refresh Chat",
+    dismiss: "Dismiss",
+    whoops: "Whoops ! something went wrong",
+    failedToOpenRoom: "Failed to open room",
+    refreshChatError: "Failed to refresh chat",
 };
 
 export default chat;

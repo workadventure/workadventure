@@ -69,7 +69,7 @@ async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Fr
 
             // Let's only select the frames that are part of the play domain.
             const url = frame.url();
-            if (url === "about:srcdoc") {
+            if (url === "about:srcdoc" || !url) {
                 return frame;
             }
         }

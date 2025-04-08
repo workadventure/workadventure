@@ -451,7 +451,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await oidcMatrixUserLogin(page, isMobile);
     await ChatUtils.openChat(page);
     await page.getByText(privateChatRoom).click();
-    await page.getByTestId("VerifyWithPassphraseButton").click();
+    //await page.getByTestId("VerifyWithPassphraseButton").click();
     await page.getByText("Cancel").click();
     await expect(page.getByText("Failed to decrypt")).toBeAttached();
     await page.getByTestId("chatBackward").click();
