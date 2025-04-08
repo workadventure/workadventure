@@ -93,6 +93,7 @@
 
     function activateLiveMessage() {
         streamingMegaphoneStore.set(true);
+        isLiveMessageActive = true;
         activeLiveMessage = true;
         inputSendTextActive = false;
         uploadAudioActive = false;
@@ -117,6 +118,7 @@
         activeLiveMessage = false;
         inputSendTextActive = false;
         uploadAudioActive = false;
+        isLiveMessageActive = false;
     }
 
     async function send(): Promise<void> {
@@ -177,17 +179,23 @@
         requestedMegaphoneStore.set(false);
         close();
     }
+
+    let isLiveMessageActive = false;
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="menu-container {isMobile
-        ? 'mobile'
-        : 'center'} w-[90%] z-[308] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-xxl"
+    class="absolute z-[308] rounded-xxl w-full h-full top-0 left-0 right-0 bottom-0 flex items-center justify-center"
     bind:this={mainModal}
 >
-    <div class="w-full bg-contrast/80 backdrop-blur rounded-md rounded" transition:fly={{ x: 1000, duration: 500 }}>
+    <div
+        class="h-full md:h-auto md:top-auto md:left-auto md:right-auto md:bottom-auto w-full bg-contrast/80 backdrop-blur rounded-md rounded
+             {isLiveMessageActive || inputSendTextActive || uploadAudioActive
+            ? 'w-[40rem] md:w-[60rem] lg:w-[80rem]'
+            : 'w-full md:w-[90%]'}"
+        transition:fly={{ x: 1000, duration: 500 }}
+    >
         <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
             <ButtonClose on:click={close} hoverColor="bg-danger" />
         </div>
@@ -223,21 +231,23 @@
                 </a>
             {/if}
         </header>
-        <div class="h-5/6 px-5 overflow-auto">
+        <div class="overflow-auto h-5/6 px-5">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-row justify-center">
                     <div id="content-liveMessage" class="flex flex-col px-5 w-1/3">
-                        <h4 class="text-white mb-2">
-                            <img
-                                src={liveMessageImg}
-                                class="h-8 w-8 mr-1"
-                                alt={$LL.megaphone.modal.liveMessage.title()}
-                            />
-                            {$LL.megaphone.modal.liveMessage.title()}
-                        </h4>
+                        <div>
+                            <h4 class="text-white mb-2">
+                                <img
+                                    src={liveMessageImg}
+                                    class="h-8 w-8 mr-1"
+                                    alt={$LL.megaphone.modal.liveMessage.title()}
+                                />
+                                {$LL.megaphone.modal.liveMessage.title()}
+                            </h4>
+                        </div>
 
                         <button
-                            class="btn-lg btn btn-light btn-border mb-4 "
+                            class="btn-lg btn btn-light btn-border mt-2 mb-4 "
                             on:click={activateLiveMessage}
                             disabled={!$megaphoneCanBeUsedStore}>{$LL.megaphone.modal.liveMessage.button()}</button
                         >
@@ -372,16 +382,21 @@
                         </h3>
                         <TextGlobalMessage bind:handleSending={handleSendText} />
                     {/if}
+
                     {#if uploadAudioActive}
-                        <h3>
-                            <img
-                                src={audioMessageImg}
-                                class="h-8 w-8 mr-1"
-                                alt={$LL.megaphone.modal.audioMessage.title()}
-                            />
-                            {$LL.megaphone.modal.audioMessage.title()}
-                        </h3>
-                        <AudioGlobalMessage bind:handleSending={handleSendAudio} />
+                        <div class="flex  flex-col justify-center items-center">
+                            <h3 class="text-white ">
+                                <img
+                                    src={audioMessageImg}
+                                    class="h-8 w-8 mr-1"
+                                    alt={$LL.megaphone.modal.audioMessage.title()}
+                                />
+                                {$LL.megaphone.modal.audioMessage.title()}
+                            </h3>
+                            <div class="text-white">
+                                <AudioGlobalMessage bind:handleSending={handleSendAudio} />
+                            </div>
+                        </div>
                     {/if}
                     <div class="flex justify-center">
                         <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
@@ -397,15 +412,18 @@
             {/if}
             {#if activeLiveMessage}
                 <div id="active-liveMessage" class="flex flex-col p-5 text-white ">
-                    <h3>
-                        <img
-                            src={liveMessageImg}
-                            class="h-8 w-8 mr-1 text-white"
-                            alt={$LL.megaphone.modal.liveMessage.title()}
-                        />
-                        {$LL.megaphone.modal.liveMessage.title()}
-                    </h3>
-                    <div class="flex flew-row justify-center">
+                    <div>
+                        <h3>
+                            <img
+                                src={liveMessageImg}
+                                class="h-8 w-8 mr-1 text-white"
+                                alt={$LL.megaphone.modal.liveMessage.title()}
+                            />
+                            {$LL.megaphone.modal.liveMessage.title()}
+                        </h3>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-center">
                         <div class="flex flex-col mr-5">
                             <video
                                 bind:this={videoElement}
@@ -500,7 +518,7 @@
                     <div class="flex flew-row justify-center">
                         {#if !$requestedMegaphoneStore}
                             <button
-                                class="btn light  text-black bg-white rounded-md"
+                                class="btn light  text-black bg-white mt-4 rounded-md"
                                 on:click={startLive}
                                 disabled={!$requestedCameraState && !$requestedMicrophoneState}
                             >
@@ -522,19 +540,6 @@
 </div>
 
 <style lang="scss">
-    .menu-container {
-        position: absolute !important;
-
-        &.mobile {
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-        }
-    }
-
     video {
         transition: all 0.2s ease-in-out;
         &:hover {

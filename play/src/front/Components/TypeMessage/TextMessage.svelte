@@ -30,7 +30,7 @@
     in:fly={{ x: -1000, duration: 300, delay: 250 }}
     out:fade={{ duration: 150 }}
 >
-    <div class="icon mt-1 text-white text-xl">💬</div>
+    <div class="icon mt-3 text-white text-xl">💬</div>
     <div class="content-text-message flex text-white max-h-60 w-full overflow-auto  mr-6">
         {@html converter.convert()}
     </div>
