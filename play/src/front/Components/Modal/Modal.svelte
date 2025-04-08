@@ -61,8 +61,6 @@
         : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
     bind:this={mainModal}
 >
-    @apply flex h-3/4 w-full text-white pointer-events-auto z-[900] right-0 left-0 m-auto absolute top-14;
-
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
         <div
             class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 "
