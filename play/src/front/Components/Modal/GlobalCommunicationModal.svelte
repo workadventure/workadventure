@@ -186,17 +186,17 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="absolute z-[308] rounded-xxl w-full h-full top-0 left-0 right-0 bottom-0 flex items-center justify-center"
+    class="absolute z-[308] rounded-xxl w-full h-full  md:w-[90%] top-0 left-0 right-0 bottom-0 flex items-center justify-center  overflow-hidden"
     bind:this={mainModal}
 >
     <div
-        class="h-full md:h-auto md:top-auto md:left-auto md:right-auto md:bottom-auto w-full bg-contrast/80 backdrop-blur rounded-md rounded
+        class="h-full md:h-auto md:top-auto md:left-auto  md:right-auto md:bottom-auto w-full bg-contrast/80 backdrop-blur rounded-md rounded max-h-screen overflow-y-auto
              {isLiveMessageActive || inputSendTextActive || uploadAudioActive
-            ? 'w-[40rem] md:w-[60rem] lg:w-[80rem]'
+            ? 'w-[40rem] md:w-[60rem] lg:w-[80rem]   '
             : 'w-full md:w-[90%]'}"
         transition:fly={{ x: 1000, duration: 500 }}
     >
-        <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square" id="btn-chat">
+        <div class="group/btn-chat absolute right-4 top-4 transition-all rounded-lg p-2 aspect-square " id="btn-chat">
             <ButtonClose on:click={close} hoverColor="bg-danger" />
         </div>
         <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
@@ -235,16 +235,14 @@
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="flex flex-row justify-center">
                     <div id="content-liveMessage" class="flex flex-col px-5 w-1/3">
-                        <div>
-                            <h4 class="text-white mb-2">
-                                <img
-                                    src={liveMessageImg}
-                                    class="h-8 w-8 mr-1"
-                                    alt={$LL.megaphone.modal.liveMessage.title()}
-                                />
-                                {$LL.megaphone.modal.liveMessage.title()}
-                            </h4>
-                        </div>
+                        <h4 class="text-white mb-2">
+                            <img
+                                src={liveMessageImg}
+                                class="h-8 w-8 mr-1"
+                                alt={$LL.megaphone.modal.liveMessage.title()}
+                            />
+                            {$LL.megaphone.modal.liveMessage.title()}
+                        </h4>
 
                         <button
                             class="btn-lg btn btn-light btn-border mt-2 mb-4 "

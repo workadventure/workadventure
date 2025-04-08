@@ -87,15 +87,18 @@ test.describe("Map editor @oidc", () => {
         //await Menu.closeMapEditor(page);
         await Menu.toggleMegaphoneButton(page);
 
+
         // Click on the button to start live message
         await page
             .locator(".menu-container #content-liveMessage")
-            .getByRole("button", {name: "Start live message"})
-            .click({timeout: 10_000});
+        await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start live message' }).click({timeout: 10_000});
+
         await page
             .locator(".menu-container #active-liveMessage")
-            .getByRole("button", {name: "Start megaphone"})
-            .click({timeout: 10_000});
+        await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start megaphone' }).click({timeout: 10_000});
+
 
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({timeout: 15_000});
