@@ -1,5 +1,6 @@
 <script lang="ts">
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import * as Sentry from "@sentry/svelte";
     import { selectedRoomStore } from "../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
@@ -9,21 +10,28 @@
     export let roomInformation: { name: string; id: string };
     let roomName = roomInformation.name;
     let loadingInvitation = false;
-    const chatconnection = gameManager.getChatConnection();
-
-    function joinRoom() {
+    
+    async function joinRoom() {
         loadingInvitation = true;
-        chatconnection
-            .joinRoom(roomInformation.id)
+        try {
+            const chatconnection = await gameManager.getChatConnection();
+            chatconnection
+                .joinRoom(roomInformation.id)
             .then((room) => {
                 if (!room.isRoomFolder) selectedRoomStore.set(room);
             })
             .catch((error) => {
                 warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
             })
-            .finally(() => {
-                loadingInvitation = false;
-            });
+                .finally(() => {
+                    loadingInvitation = false;
+                });
+        } catch (error) {
+            loadingInvitation = false;
+            console.error(error);
+            Sentry.captureException(error);
+            warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
+        }
     }
 </script>
 

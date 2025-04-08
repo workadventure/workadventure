@@ -17,7 +17,8 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly rooms: Readable<MatrixChatRoom[]>;
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
-    readonly suggestedRooms: Writable<{ name: string; id: string }[]> = writable([]);
+    readonly allSuggestedRooms: Writable<{ name: string; id: string }[]> = writable([]);
+    readonly suggestedRooms : Readable<{ name: string; id: string }[]>
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
     private joinRoomDeferred = new Deferred<void>();
@@ -64,6 +65,19 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 ];
             }
         );
+
+        this.suggestedRooms = derived(
+            [this.allSuggestedRooms, this.rooms, this.invitations, this.folders],
+            ([$allSuggestedRooms, $rooms, $invitations, $folders]) => {
+                const existingIds = new Set([
+                    ...$rooms.map(room => room.id),
+                    ...$invitations.map(room => room.id),
+                    ...$folders.map(folder => folder.id)
+                ]);
+                return $allSuggestedRooms.filter(room => !existingIds.has(room.id));
+            }
+        );
+
 
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }
@@ -233,11 +247,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const chatRoom = this.room.client.getRoom(roomId);
 
             if (!chatRoom && !this.roomList.has(roomId) && !this.folderList.has(roomId)) {
-                suggestedMatrixChatRooms.push({ name: room.name, id: roomId });
+                suggestedMatrixChatRooms.push({ name: room.name ?? "", id: roomId });
             }
         });
 
-        this.suggestedRooms.set(suggestedMatrixChatRooms);
+        this.allSuggestedRooms.set(suggestedMatrixChatRooms);
     }
 
     protected override async onRoomMyMembership(room: Room) {
