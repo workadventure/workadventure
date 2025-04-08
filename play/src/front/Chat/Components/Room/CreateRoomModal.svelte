@@ -113,7 +113,7 @@
                 {/if}
             </p>
 
-            {#if true}
+            {#if parentID}
                 <div class="tw-pl-1">
                     <input
                         data-testid="createRoomEncryption"
