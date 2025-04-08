@@ -314,34 +314,45 @@ const website = await WA.ui.website.getById(websiteId);
 
 ```ts
 WA.ui.modal.openModal({
-    title: string,// mandatory, title of the iframe modal.
-    src: string, // mandatory, url of the iframe modal.
-    allow?: string, // optional by default null.
+    src: string,
+    allow?: string,
     allowApi?: boolean, // optional by default false.
-    position?: string, // optional by default right. Reference for position: center / left / right.
-    closeCallback?: Function // optionall, function when the user close the modal.
+    position?: string,
+    allowFullScreen?: boolean,
+    title: string,
+    closeCallback?: (event: ModalEvent) => void
 }): void
 ```
 
+- `src` (string, **mandatory**): the URL of the iframe modal (mandatory).
+- `allow` (string, *optional*, default ""): the list of [permission policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Permissions_Policy) allowed.
+- `allowApi` (boolean, *optional*, default `false`): if set to `true`, the iframe will be able to use the scripting API.
+- `position` (string, *optional*, default `right`): the position of the modal. Possible values are `center`, `left`, `right`.
+- `allowFullScreen` (boolean, *optional*, default `true`): if set to `false`, the "fullscreen" button next to the close button will be hidden.
+- `title`: the title of the iframe (note: this is mostly useless since the title is not displayed).
+- `closeCallback` (function, *optional*): a function that will be called when the modal is closed. The function will be passed the `ModalEvent` object used to configure the modal.
 
 ### Example
+
+Opening a modal in the center of the screen:
 
 ```ts
 WA.ui.modal.openModal({
     title: "WorkAdventure website",
     src: 'https://workadventu.re',
-    allow: "fullscreen",
+    allow: "geolocation",
     allowApi: true,
     position: "center",
+    allowFullScreen: false,
     () => {
         console.info('The modal was closed');
     }
 });
 ```
 
-Open modal to the center position:
-
 ![Modal Center](../images/modal/modal-center.png)
+
+Opening a modal on the right side:
 
 ```ts
     WA.ui.modal.openModal({
@@ -352,11 +363,9 @@ Open modal to the center position:
     });
 ```
 
-Open modal to the right position:
-
 ![Modal Right](../images/modal/modal-right.png)
 
-Open modal to the left position:
+Opening a modal on the left side:
 
 ```ts
     WA.ui.modal.openModal({

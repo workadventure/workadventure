@@ -66,7 +66,7 @@
             class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 "
         >
             {#if modalUrl != undefined}
-                {#if $modalIframeStore?.allow}
+                {#if $modalIframeStore?.allowFullScreen}
                     <button
                         class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
                         on:click={() => (isFullScreened = !isFullScreened)}
