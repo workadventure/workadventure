@@ -3,6 +3,7 @@
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
+    export let dataTestId: string | undefined = undefined;
     export let label: string | undefined = undefined;
     export let placeholder = "";
     export let onChange = () => {};
@@ -20,6 +21,7 @@
     export let max = 50;
     export let step = 0;
     export let onKeyPress = () => {};
+    export let onKeyDown: (event: KeyboardEvent) => void = () => {};
     export let optional = false;
     export let isValid = true;
     export let rounded = false;
@@ -68,9 +70,11 @@
                 class:error={status === "error"}
                 class:success={status === "success"}
                 class:rounded-full={rounded}
+                {...$$restProps}
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}
+                on:keydown={onKeyDown}
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
@@ -93,6 +97,7 @@
                 class:input-text-lg={size === "lg"}
                 class:error={status === "error"}
                 class:success={status === "success"}
+                data-testid={dataTestId}
                 bind:value
                 {placeholder}
                 on:change={onChange}
@@ -115,6 +120,7 @@
                 class:input-text-lg={size === "lg"}
                 class:error={status === "error"}
                 class:success={status === "success"}
+                data-testid={dataTestId}
                 bind:value
                 {placeholder}
                 on:change={onChange}

@@ -33,7 +33,7 @@
 
 -->
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, setContext } from "svelte";
     import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -41,6 +41,8 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import ResizeHandle from "./ResizeHandle.svelte";
+
+    setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
     // Note: the correct gap should be 16px (gap-4 in Tailwind). But if we put 16px, it leads to instabilities.

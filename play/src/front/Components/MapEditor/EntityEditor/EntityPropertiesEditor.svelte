@@ -256,178 +256,180 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="header-container">
-        <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
-    </div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
-        <IconArrowLeft font-size="12" class="cursor-pointer" />
-        <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
-    </p>
-    <div class="properties-buttons flex flex-row">
-        {#if !hasJitsiRoomProperty}
+    <div class="overflow-x-hidden overflow-y-auto">
+        <div class="header-container">
+            <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
+        </div>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+            <IconArrowLeft font-size="12" class="cursor-pointer" />
+            <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
+        </p>
+        <div class="properties-buttons flex flex-row">
+            {#if !hasJitsiRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="jitsiRoomProperty"
+                    on:click={() => {
+                        onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
             <AddPropertyButtonWrapper
-                property="jitsiRoomProperty"
+                property="playAudio"
                 on:click={() => {
-                    onAddProperty("jitsiRoomProperty");
+                    onAddProperty("playAudio");
                 }}
             />
-        {/if}
-        <AddPropertyButtonWrapper
-            property="playAudio"
-            on:click={() => {
-                onAddProperty("playAudio");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            on:click={() => {
-                onAddProperty("openWebsite");
-            }}
-        />
-    </div>
-    <div class="properties-buttons flex flex-row flex-wrap m-2">
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="klaxoon"
-            on:click={() => {
-                onAddProperty("openWebsite", "klaxoon");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="youtube"
-            on:click={() => {
-                onAddProperty("openWebsite", "youtube");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDrive"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDrive");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDocs"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDocs");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSheets"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSheets");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSlides"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSlides");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="eraser"
-            on:click={() => {
-                onAddProperty("openWebsite", "eraser");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="excalidraw"
-            on:click={() => {
-                onAddProperty("openWebsite", "excalidraw");
-            }}
-        />
-    </div>
-    <div class="properties-buttons flex flex-row flex-wrap m-2">
-        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
             <AddPropertyButtonWrapper
                 property="openWebsite"
-                subProperty={app.name}
                 on:click={() => {
-                    onAddSpecificProperty(app);
+                    onAddProperty("openWebsite");
                 }}
             />
-        {/each}
-    </div>
-    <div class="entity-name-container">
-        <Input
-            id="objectName"
-            label={$LL.mapEditor.entityEditor.objectName()}
-            type="text"
-            placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
-            bind:value={entityName}
-            on:change={onUpdateName}
-        />
-    </div>
-    <div class="entity-name-container">
-        {#if !showDescriptionField}
-            <a
-                href="#addDescriptionField"
-                class="pl-0 text-blue-500 flex flex-row items-center"
-                on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
-            >
-        {:else}
-            <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
-                <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
-            >
-
-            <TextArea
-                label={$LL.mapEditor.entityEditor.objectDescription()}
-                id="objectDescription"
-                placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
-                bind:value={entityDescription}
-                on:change={onUpdateDescription}
-                onKeyPress={() => {}}
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="klaxoon"
+                on:click={() => {
+                    onAddProperty("openWebsite", "klaxoon");
+                }}
             />
-        {/if}
-    </div>
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="youtube"
+                on:click={() => {
+                    onAddProperty("openWebsite", "youtube");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDrive"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDrive");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDocs"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDocs");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSheets"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSheets");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSlides"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSlides");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="eraser"
+                on:click={() => {
+                    onAddProperty("openWebsite", "eraser");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="excalidraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "excalidraw");
+                }}
+            />
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
+            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+                <AddPropertyButtonWrapper
+                    property="openWebsite"
+                    subProperty={app.name}
+                    on:click={() => {
+                        onAddSpecificProperty(app);
+                    }}
+                />
+            {/each}
+        </div>
+        <div class="entity-name-container">
+            <Input
+                id="objectName"
+                label={$LL.mapEditor.entityEditor.objectName()}
+                type="text"
+                placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
+                bind:value={entityName}
+                onChange={onUpdateName}
+            />
+        </div>
+        <div class="entity-name-container">
+            {#if !showDescriptionField}
+                <a
+                    href="#addDescriptionField"
+                    class="pl-0 text-blue-500 flex flex-row items-center"
+                    on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                    >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+                >
+            {:else}
+                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
+                    <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
+                >
 
-    <InputSwitch
-        label={$LL.mapEditor.entityEditor.objectSearchable()}
-        id="searchable"
-        bind:value={entitySearchable}
-        onChange={onUpdateSearchable}
-    />
+                <TextArea
+                    label={$LL.mapEditor.entityEditor.objectDescription()}
+                    id="objectDescription"
+                    placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
+                    bind:value={entityDescription}
+                    on:change={onUpdateDescription}
+                    onKeyPress={() => {}}
+                />
+            {/if}
+        </div>
 
-    <div class="properties-container">
-        {#each properties as property (property.id)}
-            <div class="property-box">
-                {#if property.type === "jitsiRoomProperty"}
-                    <JitsiRoomPropertyEditor
-                        {property}
-                        triggerOptionActivated={false}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "playAudio"}
-                    <PlayAudioPropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "openWebsite"}
-                    <OpenWebsitePropertyEditor
-                        {property}
-                        triggerOptionActivated={false}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {/if}
-            </div>
-        {/each}
+        <InputSwitch
+            label={$LL.mapEditor.entityEditor.objectSearchable()}
+            id="searchable"
+            bind:value={entitySearchable}
+            onChange={onUpdateSearchable}
+        />
+
+        <div class="properties-container">
+            {#each properties as property (property.id)}
+                <div class="property-box">
+                    {#if property.type === "jitsiRoomProperty"}
+                        <JitsiRoomPropertyEditor
+                            {property}
+                            triggerOptionActivated={false}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "playAudio"}
+                        <PlayAudioPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "openWebsite"}
+                        <OpenWebsitePropertyEditor
+                            {property}
+                            triggerOptionActivated={false}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {/if}
+                </div>
+            {/each}
+        </div>
     </div>
 {/if}
 

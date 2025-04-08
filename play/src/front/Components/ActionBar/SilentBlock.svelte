@@ -4,7 +4,7 @@
 </script>
 
 <div
-    class="absolute bottom-8 w-4/5 md:w-3/4 left-1/2 max-w-screen-md -translate-x-1/2 z-[250] text-white border border-solid border-danger flex flex-col items-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center"
+    class="absolute bottom-4 w-4/5 md:w-3/4 left-1/2 max-w-screen-md -translate-x-1/2 z-[250] text-white border border-solid border-danger flex flex-col items-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center"
     transition:fly={{ y: 30, duration: 400 }}
 >
     <div class="flex items-center justify-center relative">

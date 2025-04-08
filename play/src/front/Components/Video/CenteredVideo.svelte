@@ -1,11 +1,12 @@
 <script lang="ts">
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CameraExclamationIcon from "../Icons/CameraExclamationIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -103,7 +104,7 @@
                 // In case we are on a mobile in portrait mode, we want to display a square video.
                 videoWidth = containerHeight;
                 videoHeight = containerHeight / videoRatio;
-                overlayWidth = containerHeight;
+                overlayWidth = containerWidth;
                 overlayHeight = containerHeight;
                 //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else if (containerRatio > videoRatio) {
@@ -238,6 +239,21 @@
         });
     }
 
+    onMount(() => {
+        // PictureInPicture has a tendency to make the no_video_stream_received message appear when it should not.
+        // Not sure why, probably a bug due to the fact the video element is moved in the DOM.
+        // We reset the displayNoVideoWarning flag when the PictureInPicture mode is changed.
+        const unsubscriber = activePictureInPictureStore.subscribe(() => {
+            clearTimeout(noVideoTimeout);
+            noVideoTimeout = undefined;
+            displayNoVideoWarning = false;
+        });
+
+        return () => {
+            unsubscriber();
+        };
+    });
+
     onDestroy(() => {
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
@@ -254,7 +270,9 @@
 </script>
 
 <div
-    class="h-full w-full relative {!cover && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
+    class="h-full w-full relative {(!cover || videoStreamWidth / videoStreamHeight < 1) && withBackground
+        ? 'bg-contrast/80 rounded-lg'
+        : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >
@@ -283,7 +301,9 @@
                   Math.ceil(videoHeight) +
                   "px; " +
                   ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                  (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
+                  (cover
+                      ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                      : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
             bind:videoWidth={videoStreamWidth}
@@ -295,7 +315,7 @@
             class:w-0={!videoEnabled}
             autoplay
             playsinline
-            muted={muted || missingUserActivation}
+            muted={muted || missingUserActivation || $activePictureInPictureStore}
             {loop}
         />
     </div>
@@ -315,7 +335,7 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80 backdrop-blur")}
+        class={"absolute border-solid " + (videoEnabled || !withBackground ? "" : "bg-contrast/80 backdrop-blur")}
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
         class:rounded-lg={!videoEnabled}

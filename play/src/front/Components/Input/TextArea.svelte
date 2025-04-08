@@ -50,7 +50,7 @@
     <div class="relative flex flex-auto ">
         <textarea
             id={uniqueId}
-            class="grow input-text input-icon {height}"
+            class="grow input-text input-icon {height} font-sans"
             class:input-text-light={variant === "light"}
             class:input-text-xs={size === "xs"}
             class:input-text-sm={size === "sm"}

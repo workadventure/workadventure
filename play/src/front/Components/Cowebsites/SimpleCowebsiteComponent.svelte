@@ -4,6 +4,7 @@
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
     export let actualCowebsite: SimpleCoWebsite;
+    export let visible: boolean;
     let iframeSimpleCowebsite: HTMLIFrameElement;
     export let allowApi: boolean;
 
@@ -20,7 +21,7 @@
     });
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full h-full" class:hidden={!visible}>
     <div class="absolute w-full h-full z-0">
         <iframe
             bind:this={iframeSimpleCowebsite}

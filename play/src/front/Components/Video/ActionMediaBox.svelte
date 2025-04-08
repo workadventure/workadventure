@@ -132,7 +132,7 @@
     <!-- Pin -->
     {#if videoEnabled}
         <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => pin()}
         >
             <img src={PinSvg} class="w-4 h-4" alt="" />
@@ -142,7 +142,7 @@
 
     <!-- Mute audio user -->
     <button
-        class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+        class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
     >
         <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
@@ -152,7 +152,7 @@
     <!-- Mute audio every body -->
     {#if $userIsAdminStore}
         <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody(spaceUser)}
         >
             <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
@@ -163,7 +163,7 @@
     <!-- Mute video -->
     <button
         id="mute-video-user"
-        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
     >
         <img src={NoVideoSvg} class="w-4 h-4" alt="" />
@@ -173,7 +173,7 @@
     <!-- Mute video every body -->
     {#if $userIsAdminStore}
         <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteVideoEveryBody(spaceUser)}
         >
             <img src={NoVideoSvg} class="w-4 h-4" alt="" />
@@ -185,7 +185,7 @@
     {#if $userIsAdminStore}
         <button
             id="kickoff-user"
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => kickoff(spaceUser)}
         >
             <img src={banUserSvg} class="w-4 h-4" alt="" />
@@ -206,7 +206,7 @@
     <!-- Show visit card-->
     {#if spaceUser.visitCardUrl}
         <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
             on:click={() => close()}
             on:click|preventDefault|stopPropagation={() => visitCard(spaceUser)}
@@ -217,7 +217,7 @@
     {/if}
     <!-- Block or report user -->
     <button
-        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left"
+        class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup(spaceUser)}
     >
         <IconAlertTriangle />

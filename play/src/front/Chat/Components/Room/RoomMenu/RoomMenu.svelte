@@ -78,7 +78,7 @@
     data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="m-0 p-0 flex items-center justify-center h-7 w-7 invisible group-hover/chatItem:visible hover:bg-white/10 rounded"
+    class="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
 >
     <IconDots font-size="16" />
 </button>

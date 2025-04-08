@@ -31,9 +31,10 @@
         if ($modalIframeStore?.allowApi) {
             iframeListener.registerIframe(modalIframe);
         }
-        if ($modalIframeStore?.position == "center") {
+        // Note: the fullscreen functionality is not implemented yet
+        /*if ($modalIframeStore?.position == "center") {
             isFullScreened = true;
-        }
+        }*/
     });
 
     onDestroy(() => {
@@ -62,7 +63,7 @@
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
         <div
-            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 "
+            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 hover:opacity-100 opacity-25 transition-opacity duration-300"
         >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allow}
@@ -117,6 +118,8 @@
                 title={$modalIframeStore?.title}
                 src={modalUrl}
                 class="border-0 relative z-40"
+                allowtransparency
+                style="color-scheme: auto"
             />
         {/if}
     </div>
@@ -141,6 +144,15 @@
         }
         &.left {
             left: 0;
+        }
+        &.center:not(.fullscreened) {
+            width: 75%;
+            height: 75%;
+            left: 0;
+            right: 0;
+            top: 12.5%;
+            margin-right: auto;
+            margin-left: auto;
         }
     }
 </style>
