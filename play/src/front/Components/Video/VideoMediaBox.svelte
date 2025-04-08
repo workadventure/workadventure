@@ -2,7 +2,7 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Readable } from "svelte/store";
-    import { onDestroy } from "svelte";
+    import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -24,12 +24,14 @@
     import CenteredVideo from "./CenteredVideo.svelte";
     import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
-    export let isHighlighted = false;
     export let fullScreen = false;
     export let peer: Streamable;
 
     // If true, and if there is not video, the height of the video box will be 11rem
     export let miniMode = false;
+
+    // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
+    let inCameraContainer: boolean = getContext("inCameraContainer");
 
     const pictureStore = peer.pictureStore;
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
@@ -136,6 +138,12 @@
         }
     }
 
+    function highlightPeer(peer: Streamable) {
+        highlightedEmbedScreen.highlight(peer);
+        analyticsClient.pinMeetingAction();
+        window.focus();
+    }
+
     onDestroy(() => {
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
@@ -190,14 +198,14 @@
                 outputDeviceId={$speakerSelectedStore}
                 volume={$volumeProximityDiscussionStore}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
-                verticalAlign={isHighlighted && !fullScreen ? "top" : "center"}
+                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={peer.flipX}
                 muted={peer.muteAudio}
                 {videoUrl}
                 {videoConfig}
-                cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
-                withBackground={!isHighlighted && $statusStore !== "error" && $statusStore !== "connecting"}
+                cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
+                withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
                 bind:missingUserActivation
             >
                 <UserName
@@ -227,7 +235,7 @@
                 </UserName>
 
                 <!-- The button at the top of the video that opens the menu to go fullscreen -->
-                {#if isHighlighted}
+                {#if !inCameraContainer}
                     <button
                         class="w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 absolute inset-0 mx-auto picture-in-picture:hidden"
                         on:click={() => (menuDrop = !menuDrop)}
@@ -291,15 +299,14 @@
         {/if}
     </div>
 
-    <button
-        class={isHighlighted || !videoEnabled || missingUserActivation
-            ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer picture-in-picture:hidden"}
-        on:click={() => highlightedEmbedScreen.highlight(peer)}
-        on:click={() => analyticsClient.pinMeetingAction()}
-    >
-        <ArrowsMaximizeIcon />
-    </button>
+    {#if inCameraContainer && videoEnabled && !missingUserActivation}
+        <button
+            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"
+            on:click={() => highlightPeer(peer)}
+        >
+            <ArrowsMaximizeIcon />
+        </button>
+    {/if}
     {#if missingUserActivation && !peer.muteAudio}
         <div
             class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
