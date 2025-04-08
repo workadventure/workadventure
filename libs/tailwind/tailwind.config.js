@@ -58,10 +58,16 @@ module.exports = {
           '50%': { transform: 'rotate(10.0deg)' },
           '60%': { transform: 'rotate(0.0deg)' },
           '100%': { transform: 'rotate(0.0deg)' },
-        }
+        },
+        'pulse-bg': {
+          '0%': { backgroundColor: 'var(--tw-gradient-from)' },
+          '50%': { backgroundColor: 'var(--tw-gradient-to)' },
+          '100%': { backgroundColor: 'var(--tw-gradient-from)' },
+        },
       },
       animation: {
         'shake': 'shake 0.6s ease-in-out infinite',
+        'pulse-bg': 'pulse-bg 3s ease-in-out infinite',
       },
     },
   },

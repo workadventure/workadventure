@@ -2,6 +2,7 @@
     export let src: string;
     export let customWidth: string | undefined = undefined;
     export let customHeight: string | undefined = undefined;
+    export let grayscale = false;
     let width = "64px";
     let height = "64px";
 
@@ -14,6 +15,7 @@
     {src}
     alt=""
     class="noselect"
+    class:grayscale
     style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
