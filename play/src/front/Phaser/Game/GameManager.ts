@@ -249,35 +249,44 @@ export class GameManager {
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
-        try {
-            const gameScene = await waitForGameSceneStore();
+        // const gameScene = await waitForGameSceneStore();
 
-            if (matrixServerUrl && gameScene.room.isChatEnabled && get(userIsConnected)) {
-                this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+        if (matrixServerUrl && get(userIsConnected)) {
+            this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
-                const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
+            const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
-                matrixClientPromise.catch((e) => {
-                    if (e instanceof InvalidLoginTokenError) {
-                        loginTokenErrorStore.set(true);
-                    }
-                });
+            matrixClientPromise.catch((e) => {
+                if (e instanceof InvalidLoginTokenError) {
+                    loginTokenErrorStore.set(true);
+                }
+            });
 
-                const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
-                this._chatConnection = matrixChatConnection;
+            const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
+            this._chatConnection = matrixChatConnection;
 
-                this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
 
-                return this.chatConnectionPromise;
-            } else {
-                // No matrix connection? Let's fill the gap with a "void" object
-                this._chatConnection = new VoidChatConnection();
-                return this._chatConnection;
+            try {
+                const gameScene = await waitForGameSceneStore();
+
+                if (gameScene.room.isChatEnabled) {
+                    return this.chatConnectionPromise;
+                }
+            } catch (e) {
+                console.error(e);
+                Sentry.captureException(e);
             }
-        } catch (error) {
-            console.error(error);
-            Sentry.captureException(error);
+
+            matrixChatConnection.destroy().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
             return new VoidChatConnection();
+        } else {
+            // No matrix connection? Let's fill the gap with a "void" object
+            this._chatConnection = new VoidChatConnection();
+            return this._chatConnection;
         }
     }
     get chatConnection(): ChatConnectionInterface {
