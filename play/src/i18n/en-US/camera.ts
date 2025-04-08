@@ -43,7 +43,7 @@ const camera: BaseTranslation = {
     my: {
         silentZone: "Silent zone",
         silentZoneDesc:
-            "Vous êtes dans une zone silencieuse, les autres utilisateurs ne peuvent pas vous parler, votre micro et caméra est désactivé. Bonne pause !",
+            "You are in a silent zone, other users cannot talk to you, your microphone and camera are disabled. Enjoy your break!",
         nameTag: "You",
         loading: "Loading your camera...",
     },
