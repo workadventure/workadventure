@@ -808,6 +808,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
             power_level_content_override: {
+                //TODO: fix type
+                // @ts-ignore
                 suggested: roomOptions.suggested ?? false,
             },
         };
