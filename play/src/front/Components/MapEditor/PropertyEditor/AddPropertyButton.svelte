@@ -1,5 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
+    import { fade } from "svelte/transition";
+    import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
     export let headerText;
     export let descriptionText;
@@ -8,11 +10,27 @@
     export let disabled = false;
     export let testId = undefined;
     const dispatch = createEventDispatcher();
+
+    let isHovered = false;
+
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
+        {
+            placement: "bottom-center",
+        },
+        12
+    );
 </script>
 
 <button
+    on:mouseenter={() => {
+        isHovered = true;
+    }}
+    on:mouseleave={() => {
+        isHovered = false;
+    }}
     class="add-property-button tooltip p-3 flex justify-center items-center
     border border-solid border-white/25 text-gray-500 rounded-lg relative  flex-col m-[0.25rem_0.125rem]"
+    use:floatingUiRef
     data-testid={testId}
     {style}
     on:click={() => {
@@ -24,11 +42,19 @@
     <div class="w-8 h-8 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
         <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
-    <span class="tooltiptext text-xs bg-contrast text-white">
-        <p class="text-sm mb-2">{headerText}</p>
-        {descriptionText}
-    </span>
 </button>
+
+{#if isHovered}
+    <div
+        class="tooltiptext z-[310] p-2 absolute text-xs bg-contrast backdrop-blur rounded-md text-white max-w-full"
+        use:floatingUiContent
+        transition:fade={{ duration: 200 }}
+    >
+        <div use:arrowAction />
+        <p class="text-sm m-0 font-semibold">{headerText}</p>
+        {descriptionText}
+    </div>
+{/if}
 
 <style lang="scss">
     .tooltip {
@@ -41,7 +67,6 @@
         position: absolute;
         bottom: 100%;
         align-items: center;
-        border-radius: 0.25rem;
         padding: 1.25rem 0.75rem;
         text-align: center;
     }
