@@ -371,7 +371,6 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
-        console.log("🫡🫡🫡OpenWebsitePropertyData", property);
         if (!property.link) {
             return;
         }
@@ -439,8 +438,6 @@ export class AreasPropertiesListener {
         };
 
         this.openedCoWebsites.set(property.id, coWebsiteOpen);
-
-        console.log('coWebsiteOpen', localUserStore.getForceCowebsiteTrigger());
 
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;

@@ -92,6 +92,8 @@
                         placeholder="50"
                         bind:value={property.width}
                         onChange={onValueChange}
+                        variant="secondary"
+                        buttonShape="square"
                     />
                 </div>
 
