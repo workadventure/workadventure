@@ -11,7 +11,7 @@ const chat: BaseTranslation = {
     beFirst: "Be the first and send a message",
     enter: "Enter your message...",
     menu: {
-        visitCard: "Visit card",
+        visitCard: "Business card",
         addFriend: "Add friend",
     },
     loader: "Loading...",
