@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { JitsiRoomPropertyData } from "@workadventure/map-editor";
-    import { openModal, closeModal } from "svelte-modals";
+    import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Input from "../../Input/Input.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
@@ -35,10 +35,11 @@
             visibilityValue: jitsiConfigModalOpened,
             config: property.jitsiRoomConfig,
             jitsiRoomAdminTag: property.jitsiRoomAdminTag,
+            onSave: (config) => {
+                property.jitsiRoomConfig = structuredClone(config);
+                dispatch("change");
+            },
         });
-        () => {
-            closeModal();
-        };
         jitsiConfigModalOpened = true;
     }
 </script>
@@ -131,7 +132,7 @@
                             bind:value={property.trigger}
                             onChange={onTriggerValueChange}
                         >
-                            <option value={undefined}
+                            <option value="immediately"
                                 >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
                             >
                             <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
@@ -154,8 +155,12 @@
                     </div>
                 {/if}
 
-                <button on:click={OpenPopup}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()} </button>
-
+                <button
+                    class="btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+                    on:click={OpenPopup}
+                >
+                    {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
+                </button>
                 <!-- <JitsiRoomConfigEditor
                     bind:isOpen={jitsiConfigModalOpened}
                     bind:visibilityValue={jitsiConfigModalOpened}

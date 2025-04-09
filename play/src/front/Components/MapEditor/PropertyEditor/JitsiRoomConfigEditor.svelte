@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { createEventDispatcher, onMount } from "svelte";
     import { JitsiRoomConfigData } from "@workadventure/map-editor";
     import { closeModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import Popup from "../../../Components/Modal/Popup.svelte";
-    import Select from "../../Input/Select.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
+    import PopUpContainer from "../../PopUp/PopUpContainer.svelte";
+    import ButtonClose from "../../Input/ButtonClose.svelte";
     export let isOpen: boolean;
+    export let onSave: (config: JitsiRoomConfigData) => void;
 
     const dispatch = createEventDispatcher();
 
@@ -35,23 +35,15 @@
         }
     });
 
-    let selectedKey: JitsiRoomConfigDataKeys | "";
-    function onSelectedKey() {
-        if (selectedKey !== "") {
-            currentConfig[selectedKey] = defaultConfig[selectedKey];
-            currentConfig = currentConfig;
-        }
-        selectedKey = "";
-    }
-
-    function onDeleteConfig(key: JitsiRoomConfigDataKeys) {
-        delete currentConfig[key];
-        currentConfig = currentConfig;
-    }
-
     function close() {
         visibilityValue = false;
+        closeModal();
         dispatch("close");
+    }
+
+    function saveAndClose() {
+        onSave(currentConfig);
+        close();
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -62,65 +54,110 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-
-<Popup {isOpen}>
-    <span slot="title">{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()} </span>
-    <!-- <div class=" fixed w-[50vw] mx-auto inset-0  items-center justify-center bg-black bg-opacity-50 z-50 "> -->
-    <div slot="content" class=" w-full flex flex-col gap-2">
-        <div transition:fly={{ x: 1000, duration: 500 }}>
-            <Select bind:value={selectedKey} on:change={() => onSelectedKey()}>
-                <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
-                {#each defaultConfigKeys as configKey (configKey)}
-                    {#if currentConfig[configKey] === undefined}
-                        <option value={configKey}
-                            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}</option
-                        >
-                    {/if}
-                {/each}
-            </Select>
-            <div class="config-element-container mt-5">
-                {#each defaultConfigKeys as configKey (configKey)}
-                    <div class="config-element">
-                        <button on:click={() => onDeleteConfig(configKey)}
-                            ><div class="delete-button">&times</div></button
-                        >
-                        <label class="config-element-label " for={configKey}>
-                            {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}
-                        </label>
-                        {#if typeof defaultConfig[configKey] === "string"}
-                            <input id={configKey} type="text" bind:value={currentConfig[configKey]} />
-                        {:else if typeof defaultConfig[configKey] === "boolean"}
-                            <InputSwitch id={configKey} bind:value={currentConfig[configKey]} />
-                        {/if}
-                    </div>
-                {/each}
-                <div class="config-element mt-4">
-                    <Input
-                        id="jitsiAdminTag"
-                        label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
-                        type="text"
-                        bind:value={jitsiRoomAdminTag}
-                    />
+{#if isOpen}
+    <div class="absolute flex items-center justify-center w-full h-full">
+        <div
+            class="backdrop-blur-md text-white z-[2001] w-[90%] m-auto left-0 right-0 sm:max-w-[668px] rounded-3xl max-h-full overflow-y-auto pointer-events-auto"
+        >
+            <PopUpContainer fullContent={true}>
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-xl pl-4"
+                        >{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
+                    </span>
+                    <ButtonClose on:click={close} />
                 </div>
-            </div>
+                <div class="config-element-container mt-5">
+                    {#each defaultConfigKeys as configKey (configKey)}
+                        <div class="config-element">
+                            {#if typeof defaultConfig[configKey] === "string"}
+                                <input id={configKey} type="text" bind:value={currentConfig[configKey]} />
+                            {:else if typeof defaultConfig[configKey] === "boolean"}
+                                <InputSwitch
+                                    id={configKey}
+                                    bind:value={currentConfig[configKey]}
+                                    label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}
+                                />
+                            {/if}
+                        </div>
+                    {/each}
+                    <div class="config-element mt-4">
+                        <Input
+                            id="jitsiAdminTag"
+                            label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
+                            type="text"
+                            bind:value={jitsiRoomAdminTag}
+                        />
+                    </div>
+                </div>
+
+                <div slot="buttons" class="w-full flex justify-between gap-2 p-2">
+                    <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
+                        {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}
+                    </button>
+                    <button class=" btn btn-secondary w-full h-12 " on:click={saveAndClose}>
+                        {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}
+                    </button>
+                </div>
+            </PopUpContainer>
         </div>
     </div>
+{/if}
 
-    <div slot="action" class="w-full flex justify-between mt-4 space-x-2">
-        <button class=" btn btn-light btn-border w-full h-12 mt-2" on:click={closeModal}
-            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button
-        >
-        <button class=" btn btn-light m-2 w-full h-12 " on:click={closeModal}
-            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}</button
-        >
-    </div>
-</Popup>
+<!--<Popup {isOpen}>-->
+<!--    &lt;!&ndash; <div class=" fixed w-[50vw] mx-auto inset-0  items-center justify-center bg-black bg-opacity-50 z-50 "> &ndash;&gt;-->
+<!--    <div slot="content" class=" w-full flex flex-col gap-2">-->
+<!--        <div transition:fly={{ x: 1000, duration: 500 }}>-->
+<!--            <Select bind:value={selectedKey} on:change={() => onSelectedKey()}>-->
+<!--                <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>-->
+<!--                {#each defaultConfigKeys as configKey (configKey)}-->
+<!--                    {#if currentConfig[configKey] === undefined}-->
+<!--                        <option value={configKey}-->
+<!--                            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}</option-->
+<!--                        >-->
+<!--                    {/if}-->
+<!--                {/each}-->
+<!--            </Select>-->
+<!--            <div class="config-element-container mt-5">-->
+<!--                {#each defaultConfigKeys as configKey (configKey)}-->
+<!--                    <div class="config-element">-->
+<!--                        <button on:click={() => onDeleteConfig(configKey)}-->
+<!--                            ><div class="delete-button">&times</div></button-->
+<!--                        >-->
+<!--                        <label class="config-element-label " for={configKey}>-->
+<!--                            {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}-->
+<!--                        </label>-->
+<!--                        {#if typeof defaultConfig[configKey] === "string"}-->
+<!--                            <input id={configKey} type="text" bind:value={currentConfig[configKey]} />-->
+<!--                        {:else if typeof defaultConfig[configKey] === "boolean"}-->
+<!--                            <InputSwitch id={configKey} bind:value={currentConfig[configKey]} />-->
+<!--                        {/if}-->
+<!--                    </div>-->
+<!--                {/each}-->
+<!--                <div class="config-element mt-4">-->
+<!--                    <Input-->
+<!--                        id="jitsiAdminTag"-->
+<!--                        label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}-->
+<!--                        type="text"-->
+<!--                        bind:value={jitsiRoomAdminTag}-->
+<!--                    />-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+
+<!--    <div slot="action" class="w-full flex justify-between mt-4 space-x-2">-->
+<!--        <button class=" btn btn-light btn-border w-full h-12 mt-2" on:click={closeModal}-->
+<!--            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button-->
+<!--        >-->
+<!--        <button class=" btn btn-light m-2 w-full h-12 " on:click={closeModal}-->
+<!--            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}</button-->
+<!--        >-->
+<!--    </div>-->
+<!--</Popup>-->
 
 <!-- </div> -->
 <style lang="scss">
     .config-element-container {
-        margin-left: 2.5em;
-        margin-right: 2.5em;
         overflow-y: auto;
         overflow-x: hidden;
         .config-element {
