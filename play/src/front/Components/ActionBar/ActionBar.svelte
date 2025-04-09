@@ -100,14 +100,16 @@
             slot="center"
             class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
         >
-            <div class="flex justify-center relative gap-1 @md/actions:gap-2 @xl/actions:gap-4 z-[1]">
+            <div
+                class="flex justify-center relative gap-1 @md/actions:gap-2 @xl/actions:gap-4 z-[1] mx-1 @md/actions:mx-2 @xl/actions:mx-4"
+            >
                 <div class="hidden @sm/actions:flex items-center">
                     <ContextualMenuItems />
                 </div>
 
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
-                    <div class="group/hardware flex items-center relative mr-1 @md/actions:mr-2 @xl/actions:mr-4">
+                    <div class="group/hardware flex items-center relative">
                         {#if !$inExternalServiceStore && $proximityMeetingStore && $myMicrophoneStore}
                             <MicrophoneMenuItem />
                         {/if}
