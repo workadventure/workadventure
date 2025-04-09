@@ -1,13 +1,13 @@
 <script lang="ts">
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import * as Sentry from "@sentry/svelte";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader } from "@wa-icons";
 
-    export let roomInformation: { name: string; id: string };
+    export let roomInformation: { name: string; id: string; avatarUrl: string };
     let roomName = roomInformation.name;
     let loadingInvitation = false;
 
@@ -18,9 +18,9 @@
             chatconnection
                 .joinRoom(roomInformation.id)
                 .then((room) => {
-                    if (!room.isRoomFolder) selectedRoomStore.set(room);
+                    if (room && !room.isRoomFolder) selectedRoomStore.set(room);
                 })
-                .catch((error) => {
+                .catch(() => {
                     warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
                 })
                 .finally(() => {

@@ -18,8 +18,8 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly rooms: Readable<MatrixChatRoom[]>;
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
-    readonly allSuggestedRooms: Writable<{ name: string; id: string }[]> = writable([]);
-    readonly suggestedRooms: Readable<{ name: string; id: string }[]>;
+    readonly allSuggestedRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
+    readonly suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
     private joinRoomDeferred = new Deferred<void>();
@@ -240,7 +240,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     async refreshSuggestedRooms() {
         const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, true);
 
-        const suggestedMatrixChatRooms: { name: string; id: string }[] = [];
+        const suggestedMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
 
         rooms.forEach((room) => {
             const roomId = room.room_id;
@@ -249,8 +249,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
             const chatRoom = this.room.client.getRoom(roomId);
 
+            const avatarUrl = chatRoom?.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
+
             if (!chatRoom && !this.roomList.has(roomId) && !this.folderList.has(roomId)) {
-                suggestedMatrixChatRooms.push({ name: room.name ?? "", id: roomId });
+                suggestedMatrixChatRooms.push({ name: room.name ?? "", id: roomId, avatarUrl: avatarUrl ?? "" });
             }
         });
 

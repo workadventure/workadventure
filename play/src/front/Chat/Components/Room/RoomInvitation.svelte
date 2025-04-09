@@ -17,7 +17,7 @@
             .then(() => {
                 if (!room.isRoomFolder) selectedRoomStore.set(room);
             })
-            .catch((error) => {
+            .catch(() => {
                 warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
             })
             .finally(() => {
@@ -28,7 +28,7 @@
     function leaveRoom() {
         loadingInvitation = true;
         room.leaveRoom()
-            .catch((error) => {
+            .catch(() => {
                 warningMessageStore.addWarningMessage($LL.chat.failedToLeaveRoom());
             })
             .finally(() => {

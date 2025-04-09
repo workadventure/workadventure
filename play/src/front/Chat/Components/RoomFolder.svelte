@@ -1,7 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
     import { get } from "svelte/store";
-    import { RoomFolder, ChatRoom } from "../Connection/ChatConnection";
+    import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -13,10 +13,10 @@
     import { IconChevronUp } from "@wa-icons";
 
     export let rootFolder: boolean;
-    export let folder: RoomFolder;
+    export let folder: RoomFolder & ChatRoomModeration;
     $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
-    let suggestedRoomsOpen: boolean = false;
+    let suggestedRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
     $: filteredRoom = $rooms

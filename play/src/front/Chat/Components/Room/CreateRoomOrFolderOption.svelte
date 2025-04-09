@@ -1,11 +1,10 @@
 <script lang="ts">
-    import { get, readable } from "svelte/store";
+    import { readable } from "svelte/store";
     import { openModal } from "svelte-modals";
-    import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-    import { RoomFolder } from "../../Connection/ChatConnection";
-    import { ChatRoomModeration } from "../../Connection/ChatConnection";
+    import { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
     import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
@@ -16,8 +15,6 @@
     export let folder: (RoomFolder & ChatRoomModeration) | undefined;
     let optionButtonRef: HTMLButtonElement | undefined = undefined;
     let hideFolderOptions = true;
-
-    console.log(get(folder?.name));
 
     const hasPermissionToInvite = folder?.hasPermissionTo("invite") ?? readable(false);
     const hasPermissionToKick = folder?.hasPermissionTo("kick") ?? readable(false);
@@ -54,6 +51,7 @@
     }
 
     function openManageParticipantsModal() {
+        if (!folder) return;
         openModal(ManageParticipantsModal, { room: folder });
     }
 </script>
