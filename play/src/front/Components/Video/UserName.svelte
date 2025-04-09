@@ -19,9 +19,7 @@
 {#if isCameraDisabled}
     <div class="{position} z-30 responsive-dimension ">
         <div class="flex justify-between  rounded bg-transparent">
-            <div
-                class="relative  backdrop-blur px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center "
-            >
+            <div class="relative  px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center ">
                 <div
                     class="w-8 @[15rem]/videomediabox:w-16 @[25rem]/videomediabox:w-32"
                     style="image-rendering:pixelated"
@@ -40,7 +38,7 @@
         <div class="flex justify-between rounded {isPlayingAudio ? 'bg-secondary/90' : 'bg-contrast/90'}">
             <div class="relative backdrop-blur px-2 py-1 text-white text-sm pl-12 bold rounded text-nowrap">
                 <div class="absolute left-1 -top-1 z-30 " style="image-rendering:pixelated">
-                    <Woka src={$picture ?? ""} customWidth="100%" />
+                    <Woka src={$picture ?? ""} customWidth="42px" />
                 </div>
                 {name}
 
