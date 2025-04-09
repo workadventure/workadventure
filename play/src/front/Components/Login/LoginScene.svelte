@@ -94,7 +94,7 @@
 </section>
 
 <form
-    class="loginScene h-dvh flex items-center justify-center pointer-events-auto relative z-30"
+    class="loginScene h-dvh flex flex-col items-center justify-center pointer-events-auto relative z-30"
     on:submit|preventDefault={submit}
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
