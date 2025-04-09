@@ -17,7 +17,6 @@
     export let bgColor: string | undefined = undefined;
     export let textColor: string | undefined = undefined;
     export let isGradient = false;
-
     export let hasImage = true;
     export let action: Action = () => {};
 
@@ -52,9 +51,7 @@
 
 {#if !isInMenu}
     <div
-        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last
-            ? 'mr-1 @md/actions:mr-2 @xl/actions:mr-4'
-            : ''} {classList}"
+        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {classList}"
         class:first:rounded-l-lg={first === undefined}
         class:first:pl-2={first === undefined}
         class:last:rounded-r-lg={last === undefined}

@@ -112,6 +112,14 @@ export const screenSharingConstraintsStore = derived(
     } as MediaStreamConstraints
 );
 
+export function isScreenSharingSupported(): boolean {
+    if (window.WAD?.getDesktopCapturerSources) {
+        return true;
+    }
+
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+}
+
 async function getDesktopCapturerSources() {
     showDesktopCapturerSourcePicker.set(true);
     const source = await new Promise<DesktopCapturerSource | null>((resolve) => {
@@ -152,8 +160,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         let currentStreamPromise: Promise<MediaStream>;
         if (window.WAD?.getDesktopCapturerSources) {
             currentStreamPromise = getDesktopCapturerSources();
-        } else if (navigator.getDisplayMedia) {
-            currentStreamPromise = navigator.getDisplayMedia({ constraints });
         } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
             currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
         } else {

@@ -120,6 +120,23 @@
                 </span>
             </Select>
 
+            {#if parentID}
+                <div class="pl-1">
+                    <input
+                        data-testid="createRoomSuggested"
+                        bind:checked={createRoomOptions.suggested}
+                        type="checkbox"
+                        id="suggestedData"
+                        on:focusin={focusChatInput}
+                        on:focusout={unfocusChatInput}
+                    />
+                    <label class="m-0" for="suggestedData">{$LL.chat.createRoom.suggested()}</label>
+                </div>
+                <p class="text-xs m-0 p-0 text-gray-400 pl-1">
+                    <IconHelpCircle font-size={18} />
+                    {$LL.chat.createRoom.suggestedDescription()}
+                </p>
+            {/if}
             {#if createRoomOptions.visibility === "private"}
                 <div class="pl-1">
                     <InputCheckbox
