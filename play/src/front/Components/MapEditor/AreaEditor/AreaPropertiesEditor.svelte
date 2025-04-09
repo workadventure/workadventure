@@ -164,6 +164,7 @@
                     allowAPI: false,
                     forceNewTab: false,
                     policy,
+                    width: 50,
                 };
             case "playAudio":
                 return {

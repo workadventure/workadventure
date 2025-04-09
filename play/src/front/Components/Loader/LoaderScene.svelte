@@ -6,7 +6,7 @@
     import defaultLoader from "../images/Workadventure.gif";
 
     const logo = gameManager.currentStartedRoom.loadingLogo ?? defaultLoader;
-    const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
+    const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "bg-secondary";
 </script>
 
 <div
@@ -26,8 +26,8 @@
             </div>
             <div class="absolute w-full h-3 bg-contrast py-[2px]">
                 <div
-                    class="bg-secondary h-full transition-all duration-200"
-                    style="width: {$loaderProgressStore * 100}%"
+                    class="h-full transition-all duration-200"
+                    style="width: {$loaderProgressStore * 100}%; background-color: {bgColor};"
                 />
             </div>
         </div>

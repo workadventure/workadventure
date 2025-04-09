@@ -64,7 +64,7 @@ test.describe('Action bar responsiveness', () => {
         await expect(page.getByText('Invite')).toBeVisible();
         await expect(page.getByText('Login')).toBeVisible();
 
-        await page.setViewportSize({ width: 375, height: 600 });
+        await page.setViewportSize({ width: 345, height: 600 });
 
         await expect(page.getByText('Invite')).toBeHidden();
         await expect(page.getByText('Login')).toBeHidden();
