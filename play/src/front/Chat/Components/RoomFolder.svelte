@@ -1,7 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
     import { get } from "svelte/store";
-    import { RoomFolder, ChatRoom } from "../Connection/ChatConnection";
+    import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -9,13 +9,14 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
+    import RoomSuggested from "./Room/RoomSuggested.svelte";
     import { IconChevronUp } from "@wa-icons";
 
     export let rootFolder: boolean;
-    export let folder: RoomFolder;
-    $: ({ name, folders, invitations, rooms, id } = folder);
+    export let folder: RoomFolder & ChatRoomModeration;
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
-
+    let suggestedRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
     $: filteredRoom = $rooms
@@ -35,6 +36,10 @@
         } else {
             localUserStore.removeFolderOpened(id);
         }
+    }
+
+    function toggleSuggestedRooms() {
+        suggestedRoomsOpen = !suggestedRoomsOpen;
     }
 </script>
 
@@ -67,8 +72,48 @@
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
+    <div class="flex flex-col overflow-auto">
+        {#if isOpen}
+            <div class="flex flex-col overflow-auto">
+                {#if $suggestedRooms.length > 0}
+                <div class={`mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4`}>
+                    <div
+                        class={`group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center`}
+                        class:mb-2={suggestedRoomsOpen}
+                    >
+                        <div class="flex items-center space-x-2 grow m-0 p-0">
+                            <button
+                                class="flex items-center space-x-2 grow m-0 p-0"
+                                data-testid="openSuggestedRooms"
+                                on:click={toggleSuggestedRooms}
+                            >
+                                <div
+                                    class={`text-sm font-bold tracking-widest uppercase grow text-left`}
+                                >
+                                    {$LL.chat.suggestedRooms()}
+                                </div>
+                            </button>
+                        </div>
 
-    {#if isOpen}
+                        <button
+                            class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                            on:click={toggleSuggestedRooms}
+                        >
+                            <IconChevronUp
+                                class={`transform transition ${!suggestedRoomsOpen ? "" : "rotate-180"}`}
+                            />
+                        </button>
+                    </div>
+                    {#if suggestedRoomsOpen}
+                        <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                            <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
+                                <RoomSuggested roomInformation={room} />
+                            </ShowMore>
+                        </div>
+                    {/if}
+                </div>
+            {/if}
+        </div>
         <div class="flex flex-col overflow-auto">
             {#if $invitations.length > 0}
                 <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
@@ -83,7 +128,7 @@
             <ShowMore items={filteredRoom} maxNumber={8} idKey="id" let:item={room} showNothingToDisplayMessage={false}>
                 <Room {room} />
             </ShowMore>
-            {#if $rooms.length === 0 && $folders.length === 0}
+            {#if $rooms.length === 0 && $folders.length === 0 && $suggestedRooms.length === 0}
                 <p
                     class={`${
                         rootFolder ? "self-center text-md text-gray-500" : "py-2 px-3 m-0 text-white/50 italic text-sm"
@@ -93,5 +138,6 @@
                 </p>
             {/if}
         </div>
-    {/if}
+        {/if}
+    </div>
 </div>
