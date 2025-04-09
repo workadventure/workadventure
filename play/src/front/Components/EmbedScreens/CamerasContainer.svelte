@@ -260,12 +260,12 @@
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
         {#if isOnOneLine && oneLineMode === "vertical"}
-            <div class="relative">
+            <div class="fixed bottom-20 right-0 z-50">
                 <div
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                     }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto absolute right-0"
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto "
                     class:aspect-video={videoHeight === undefined}
                 >
                     <MediaBox streamable={$myCameraPeerStore} />
