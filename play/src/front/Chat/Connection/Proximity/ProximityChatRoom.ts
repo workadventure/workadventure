@@ -29,6 +29,7 @@ import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
+import { blackListManager } from "../../../WebRtc/BlackListManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -380,6 +381,11 @@ export class ProximityChatRoom implements ChatRoom {
             this.hasUserInProximityChat.set(users.size > 1);
         });
 
+        const isBlackListed = (sender: string) => {
+            const uuid = this.users?.get(sender)?.uuid;
+            return uuid && blackListManager.isBlackListed(uuid);
+        };
+
         this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
@@ -393,6 +399,9 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceMessageSubscription = this._space.observePublicEvent("spaceMessage").subscribe((event) => {
+            if (isBlackListed(event.sender)) {
+                return;
+            }
             this.addNewMessage(event.spaceMessage.message, event.sender);
 
             // if the proximity chat is not open, open it to see the message
@@ -402,6 +411,9 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = this._space.observePublicEvent("spaceIsTyping").subscribe((event) => {
+            if (isBlackListed(event.sender)) {
+                return;
+            }
             if (event.spaceIsTyping.isTyping) {
                 this.addTypingUser(event.sender);
             } else {
