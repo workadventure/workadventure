@@ -550,18 +550,22 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     // Play text on the Image entity
     public playText() {
-        console.trace("playText");
         if (this.speechDomElement) this.destroyText();
         setTimeout(() => {
             if (this.areaData.name === undefined || this.areaData.name === "") return;
-            //const x = this.x + this.width / 2;
-            console.log("x", this.x);
             const x = this.x;
-            this.speechDomElement = new SpeechDomElement("name", this.areaData.name, this.scene, x, this.y - 10, () =>
-                this.destroyText()
+            this.speechDomElement = new SpeechDomElement(
+                "name",
+                this.areaData.name,
+                this.scene,
+                x,
+                this.y - this.height / 2 - 30,
+                () => this.destroyText()
             );
             this.scene.add.existing(this.speechDomElement);
-            this.speechDomElement.play(x, this.y, -1);
+            // Need to put the element at the top because
+            // if the SpechDomElement is inside of the area, pointer mouse events will not triggered
+            this.speechDomElement.play(x, this.y - this.height / 2 - 15, -1);
         }, 10);
     }
 
