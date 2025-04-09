@@ -248,11 +248,9 @@
     });
 
     function onAddProperty(type: AreaDataPropertiesKeys, subtype?: string) {
-        console.log("🎶 onAddProperty", type, subtype);
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);
-            console.log("🎶 >>>>>>>>>> PROPERTY", property);
             $mapEditorSelectedAreaPreviewStore.addProperty(property);
 
             // if klaxoon, open Activity Picker
