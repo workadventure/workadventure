@@ -14,7 +14,8 @@
     {src}
     alt=""
     class="noselect"
-    style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
+    style="    {customWidth ? `--theme-width: ${customWidth};` : ''}
+                {customHeight ? `--theme-height: ${customHeight};` : ''}"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
 />
@@ -24,7 +25,7 @@
         display: inline-block;
         pointer-events: auto;
         width: var(--theme-width);
-        height: var(--theme-height);
+        // height: var(--theme-height);
         margin: 0;
         padding: 0;
         position: static;

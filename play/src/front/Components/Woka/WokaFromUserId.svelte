@@ -39,5 +39,5 @@
 </script>
 
 {#if src}
-    <Woka {src} {customWidth} {customHeight} />
+    <Woka {src} {customWidth} />
 {/if}

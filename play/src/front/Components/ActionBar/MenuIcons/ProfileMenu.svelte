@@ -132,7 +132,7 @@
         <div
             class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3 "
         >
-            <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
+            <Woka userId={-1} placeholderSrc="" customWidth="32px" />
             <div class="grow flex flex-row @xl/actions:flex-col justify-start text-left pr-2">
                 <div
                     class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base order-last @xl/actions:order-first flex items-center"
@@ -183,7 +183,7 @@
                     </ActionBarButton>
                 {/if}
                 <ActionBarButton label={$LL.actionbar.woka()} on:click={() => openEditSkinScene()}>
-                    <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
+                    <Woka userId={-1} placeholderSrc="" customWidth="26px" />
                 </ActionBarButton>
                 <ActionBarButton label={$LL.actionbar.companion()} on:click={() => openEditCompanionScene()}>
                     <Companion
