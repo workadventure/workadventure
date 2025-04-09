@@ -1,5 +1,6 @@
 <script lang="ts">
     import { ChatRoomMembershipManagement, ChatRoom } from "../../Connection/ChatConnection";
+    import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -16,6 +17,9 @@
             .then(() => {
                 if (!room.isRoomFolder) selectedRoomStore.set(room);
             })
+            .catch(() => {
+                warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
+            })
             .finally(() => {
                 loadingInvitation = false;
             });
@@ -23,9 +27,13 @@
 
     function leaveRoom() {
         loadingInvitation = true;
-        room.leaveRoom().finally(() => {
-            loadingInvitation = false;
-        });
+        room.leaveRoom()
+            .catch(() => {
+                warningMessageStore.addWarningMessage($LL.chat.failedToLeaveRoom());
+            })
+            .finally(() => {
+                loadingInvitation = false;
+            });
     }
 </script>
 
