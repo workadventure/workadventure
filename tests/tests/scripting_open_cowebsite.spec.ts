@@ -36,12 +36,12 @@ test.describe('Scripting WA.nav.openCoWebsite function', () => {
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toHaveValue('');
         await getCoWebsiteIframe(page).locator('[id="\\#text_input"]').fill('tab2');
 
-        await page.getByTestId('tab1').getByText('Maps', { exact: true }).click();
+        await page.getByTestId('tab1').click();
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toHaveValue('tab1');
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toBeVisible();
         await expect(page.locator('iframe[title="Cowebsite"]').nth(1)).toBeHidden();
 
-        await page.getByTestId('tab2').getByText('Maps', { exact: true }).click();
+        await page.getByTestId('tab2').click();
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toHaveValue('tab2');
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toBeVisible();
 

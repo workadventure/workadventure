@@ -19,7 +19,6 @@
     import { popupStore } from "../Stores/PopupStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { silentStore } from "../Stores/MediaStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
@@ -51,7 +50,6 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
-    import SilentBlock from "./ActionBar/SilentBlock.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -118,10 +116,10 @@
 
     <div class="flex min-h-dvh flex-col-reverse mobile:flex-col">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full relative">
-            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max max-w-[80%]">
-                <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
+            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
+                <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
-                        <div class="popupwrapper popupwrapper-{index} flex-1" in:fly={{ y: 150, duration: 550 }}>
+                        <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
                             <svelte:component
                                 this={popup.component}
                                 {...popup.props}
@@ -228,10 +226,6 @@
 
     {#if $actionsMenuStore}
         <ActionsMenu />
-    {/if}
-
-    {#if $silentStore}
-        <SilentBlock />
     {/if}
 
     <Lazy

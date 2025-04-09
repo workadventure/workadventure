@@ -3,6 +3,7 @@ import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import * as Sentry from "@sentry/svelte";
+import { z } from "zod";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
@@ -21,6 +22,8 @@ import {
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+
+const CONNECTION_TIMEOUT = 5000;
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -66,6 +69,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.userId = user.userId;
         this.uniqueId = "screensharing_" + this.userId;
 
+        let connectTimeout: ReturnType<typeof setTimeout> | undefined;
+
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
         this.on("data", (chunk: Buffer) => {
@@ -101,6 +106,19 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.on("signal", (data: SignalData) => {
             // transform sdp to force to use h264 codec
             this.sendWebrtcScreenSharingSignal(data);
+
+            const ZodCandidate = z.object({
+                type: z.literal("candidate"),
+            });
+            if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
+                // If the signal is a candidate, we set a connection timer
+                if (connectTimeout) {
+                    clearTimeout(connectTimeout);
+                }
+                connectTimeout = setTimeout(() => {
+                    this._statusStore.set("error");
+                }, CONNECTION_TIMEOUT);
+            }
         });
 
         this.on("stream", (stream: MediaStream) => {
@@ -125,6 +143,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("connect", () => {
+            if (connectTimeout) {
+                clearTimeout(connectTimeout);
+            }
             this._connected = true;
             customWebRTCLogger.info(`connect => ${this.userId}`);
             this._statusStore.set("connected");

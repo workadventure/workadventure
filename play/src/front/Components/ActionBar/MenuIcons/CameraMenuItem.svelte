@@ -21,7 +21,8 @@
             if (
                 $availabilityStatusStore === AvailabilityStatus.AWAY ||
                 $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB
+                $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+                $silentStore === true
             ) {
                 return "disabled";
             }

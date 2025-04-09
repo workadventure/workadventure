@@ -12,7 +12,7 @@
 </script>
 
 <div
-    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 w-full max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
+    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 w-full mx-2 md:mx-0 min-w-[280px] md:min-w-[400px] max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
         <slot name="icon" />
@@ -30,7 +30,7 @@
         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class=" border border-solid  border-white rounded-lg relative items-center justify-start m-2 space-x-4  transition-all overflow-hidden cursor-pointer   px-6 py-6 {!selectedDevice
+                class="border border-solid border-white w-full rounded-lg m-2  items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4  {!selectedDevice
                     ? 'bg-white text-secondary border-none'
                     : 'hover:bg-white/10'}"
                 class:hidden={!editMode && selectedDevice}
@@ -76,7 +76,7 @@
             {#each deviceList ?? [] as device (device.deviceId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="border border-solid md:min-w-[25em] rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedDevice ===
+                    class="border border-solid w-full rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedDevice ===
                     device.deviceId
                         ? 'bg-white text-secondary border-none '
                         : 'border-white hover:bg-white/10'}"
@@ -104,7 +104,7 @@
                         </div>
                         <div class="space-y-1">
                             <div
-                                class="text-lg bold  truncate text-ellipsis overflow-hidden leading-tight"
+                                class="text-lg bold  truncate  leading-tight"
                                 style:width={!editMode && selectedDevice === device.deviceId ? "251px" : "auto"}
                             >
                                 {StringUtils.normalizeDeviceName(device.label)}
@@ -115,7 +115,7 @@
                                 </span>
                             {:else}
                                 <span class="chip chip-sm chip-neutral inline rounded-sm ">
-                                    <span class="chip-label">{$LL.camera.disabled()} C</span>
+                                    <span class="chip-label">{$LL.camera.disabled()}</span>
                                 </span>
                             {/if}
                         </div>
