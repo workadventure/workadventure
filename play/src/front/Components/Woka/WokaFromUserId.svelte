@@ -7,7 +7,6 @@
     export let userId: number | string;
     export let placeholderSrc: string;
     export let customWidth: string;
-   
 
     let src: string;
     let unsubscribe: Unsubscriber | undefined;

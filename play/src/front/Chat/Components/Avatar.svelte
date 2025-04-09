@@ -22,7 +22,7 @@
         class={`rounded-full bg-amber-600 text-center uppercase text-white w-8 h-8`}
         style:background-color={`${color ? color : getColorByString(fallbackName)}`}
     >
-        <WokaFromUserId {userId} placeholderSrc={""}  customWidth="32px" />
+        <WokaFromUserId {userId} placeholderSrc={""} customWidth="32px" />
     </div>
 {:else if avatarUrl}
     <img
