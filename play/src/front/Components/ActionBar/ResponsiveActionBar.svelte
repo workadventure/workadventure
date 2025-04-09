@@ -15,12 +15,12 @@
     let leftDivWidth: number;
     let leftToCenterWidth: number;
 
-    // The 20px refers to the space-x-2 padding between the left and center divs and the right margin that must be accounted for
+    // The 8px refers to the gap-1 padding between the left and center divs and the right margin that must be accounted for
     $: if (centerPlusRightDiv)
         centerPlusRightDiv.style.minWidth = `${
             mode === "wide"
                 ? Math.min(actionBarWidth * 0.5 + centerDivWidth * 0.5, actionBarWidth - leftDivWidth)
-                : actionBarWidth - leftDivWidth - 20
+                : actionBarWidth - leftDivWidth - 8
         }px`;
     $: if (centerPlusRightDiv) centerPlusRightDiv.style.maxWidth = `${actionBarWidth - leftDivWidth}px`;
 
@@ -80,7 +80,7 @@
         : ''}"
 >
     <div
-        class="p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 flex justify-between items-center screen-blocker"
+        class="gap-1 @md/actions:gap-2 @xl/actions:gap-4 p-1 @md/actions:p-2 @xl/actions:p-4 flex justify-between items-center screen-blocker"
         bind:offsetWidth={actionBarWidth}
     >
         <!-- Left bar -->

@@ -4,6 +4,7 @@ import { publicTestMapUrl } from "./utils/urls";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import Map from "./utils/map";
 
 test.describe("Iframe API", () => {
   test.beforeEach(async ({ page }) => {
@@ -39,9 +40,7 @@ test.describe("Iframe API", () => {
   });
 
   test("disable and enable map editor @oidc", async ({ browser }) => {
-    const page = await getPage(browser, 'Admin1',
-      publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
-    );
+    const page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {

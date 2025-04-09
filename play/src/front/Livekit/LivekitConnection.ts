@@ -47,7 +47,7 @@ export class LivekitConnection {
                                         strategy: CommunicationType.LIVEKIT,
                                     },
                                 },
-                                0
+                                "0"
                             );
                         }
                     })

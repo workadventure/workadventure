@@ -8,7 +8,7 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
-import { map_storage_url } from "./utils/urls";
+import {map_storage_url, publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
@@ -87,15 +87,18 @@ test.describe("Map editor @oidc", () => {
         //await Menu.closeMapEditor(page);
         await Menu.toggleMegaphoneButton(page);
 
+
         // Click on the button to start live message
         await page
             .locator(".menu-container #content-liveMessage")
-            .getByRole("button", {name: "Start live message"})
-            .click({timeout: 10_000});
+        await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start live message' }).click({timeout: 10_000});
+
         await page
             .locator(".menu-container #active-liveMessage")
-            .getByRole("button", {name: "Start megaphone"})
-            .click({timeout: 10_000});
+        await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
+        await page.getByRole('button', { name: 'Start megaphone' }).click({timeout: 10_000});
+
 
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({timeout: 15_000});
@@ -512,6 +515,8 @@ test.describe("Map editor @oidc", () => {
 
         await page2.close();
         await newBrowser.close();
+        await page.close();
+        await page.context().close();
     });
 
     test("Successfully upload and edit asset name", async ({browser, request}) => {
@@ -621,9 +626,9 @@ test.describe("Map editor @oidc", () => {
         // Entity
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
+        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
         await EntityEditor.setEntityName(page, "My Jitsi Entity");
         await EntityEditor.setEntityDescription(
             page,
@@ -704,5 +709,21 @@ test.describe("Map editor @oidc", () => {
         await page.close();
         await page.context().close();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
+    });
+
+    test("assert map editor not visible on public maps @oidc", async ({ browser }) => {
+        const page = await getPage(browser, 'Admin1',
+            publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
+        );
+
+        await Menu.openMapMenu(page);
+
+        // Check if the map editor is disabled
+        await expect(
+            page.getByText("Map editor")
+        ).toBeHidden();
+
+        await page.close();
+        await page.context().close();
     });
 });

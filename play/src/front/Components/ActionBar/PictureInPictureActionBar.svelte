@@ -33,7 +33,7 @@
         ? 'hidden'
         : ''}"
 >
-    <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4 justify-items-center">
+    <div class="flex w-full p-2 gap-2 @xl/actions:p-4 @xl/actions:gap-4 justify-items-center">
         <div class="justify-items-center flex-1 w-32">
             <div
                 class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"

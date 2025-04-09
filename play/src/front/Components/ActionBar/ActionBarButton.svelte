@@ -43,9 +43,7 @@
 
 {#if !isInMenu}
     <div
-        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last
-            ? 'mr-1 @md/actions:mr-2 @xl/actions:mr-4'
-            : ''} {classList}"
+        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last ? '' : ''} {classList}"
         class:first:rounded-l-lg={first === undefined}
         class:first:pl-2={first === undefined}
         class:last:rounded-r-lg={last === undefined}
@@ -66,7 +64,7 @@
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
-                    flex items-center justify-center outline-none focus:outline-none space-x-2"
+                    flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
             disabled={state === "disabled"}
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
@@ -90,7 +88,7 @@
     </div>
 {:else}
     <button
-        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded
+        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}

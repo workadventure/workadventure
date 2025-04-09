@@ -8,7 +8,7 @@ services:
       OPID_CLIENT_SECRET: authorization-code-client-secret
       OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
       OPID_SCOPE: profile openid email tags-scope
-      MAP_EDITOR_ALLOWED_USERS: noUserAllowed
+      MAP_EDITOR_ALLOW_ALL_USERS: "false"
 
   # A mock server to test OpenID connect connectivity
   oidc-server-mock:

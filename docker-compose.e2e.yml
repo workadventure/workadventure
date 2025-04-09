@@ -30,7 +30,8 @@ services:
       STARTUP_COMMAND_3: ""
       STARTUP_COMMAND_4: ""
       STARTUP_COMMAND_5: ""
-      MAP_EDITOR_ALLOWED_USERS: noAllowedUser
+      MAP_EDITOR_ALLOWED_USERS: ""
+      MAP_EDITOR_ALLOW_ALL_USERS: "false"
       OPID_SCOPE: profile openid email tags-scope
       # Increasing Woka speed to make tests faster
       WOKA_SPEED: 27

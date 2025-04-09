@@ -185,10 +185,10 @@
     }
 </script>
 
-<form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
-    <section class="flex items-center justify-center min-h-dvh ">
+<form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" on:submit|preventDefault={submit}>
+    <section class="flex  min-h-dvh ">
         <div
-            class="text-white w-[100vw] container mx-auto flex flex-col justify-center min-h-dvh pb-24 pt-8 lg:pt-0 relative "
+            class="text-white justify-center items-center overflow-hidden  w-[100vw] container  flex flex-col min-h-dvh pb-24 pt-8 lg:pt-0 relative "
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -197,11 +197,11 @@
                 </p>
             </section>
 
-            <!-- MICROPHONE -->
             <div
-                class="flex lg:space-x-4 flex-col lg:flex-row  min-w-[320px]  md:overflow-scroll justify-center  items-center lg:items-stretch lg:px-4 lg:pb-4"
+                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row  lg:items-stretch lg:px-4 lg:pb-4 "
             >
                 <!-- MICROPHONE -->
+
                 <SelectMicrophone
                     on:selectDevice={handleSelectMicrophone}
                     deviceList={$microphoneListStore ?? []}
@@ -256,10 +256,13 @@
                 class="fixed bottom-0 left-0  !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
                 <section
-                    class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
+                    class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4 "
                 >
-                    <button type="submit" class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 md:block hidden"
-                        >{$LL.actionbar.cancel()}</button
+                    <button
+                        type="submit"
+                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 
+              
+                     hidden">{$LL.actionbar.cancel()}</button
                     >
                     <!-- TODO ACTION -->
                     <button type="submit" class="btn btn-secondary btn-lg w-full md:w-1/2 block"

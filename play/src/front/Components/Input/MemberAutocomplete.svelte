@@ -55,4 +55,5 @@
     loadOptions={searchMembers}
     inputAttributes={{ "data-testid": "memberAutoCompleteInput" }}
     {placeholder}
+    class="!bg-contrast !rounded-md !border-contrast-400 !outline-none !w-full"
 />

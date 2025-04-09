@@ -120,6 +120,11 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    MAP_EDITOR_ALLOW_ALL_USERS: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            'If set to true, all users can edit the map. If set to false, only the users in MAP_EDITOR_ALLOWED_USERS or users with the "admin" or "editor" tag can edit the map. Note: this setting is ignored if an Admin API is configured.'
+        ),
     WOKA_SPEED: PositiveIntAsString.optional().transform((val) => toNumber(val, 9)),
     FEATURE_FLAG_BROADCAST_AREAS: BoolAsString.optional().transform((val) => toBool(val, false)),
 

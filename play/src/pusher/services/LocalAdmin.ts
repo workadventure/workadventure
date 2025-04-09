@@ -27,6 +27,7 @@ import {
     GOOGLE_SLIDES_ENABLED,
     INTERNAL_MAP_STORAGE_URL,
     KLAXOON_ENABLED,
+    MAP_EDITOR_ALLOW_ALL_USERS,
     MAP_EDITOR_ALLOWED_USERS,
     OPID_WOKA_NAME_POLICY,
     PUBLIC_MAP_STORAGE_URL,
@@ -61,7 +62,10 @@ class LocalAdmin implements AdminInterface {
         if (
             match &&
             ENABLE_MAP_EDITOR &&
-            (MAP_EDITOR_ALLOWED_USERS.length === 0 || MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier))
+            (MAP_EDITOR_ALLOW_ALL_USERS ||
+                MAP_EDITOR_ALLOWED_USERS.includes(userIdentifier) ||
+                tags?.includes("admin") ||
+                tags?.includes("editor"))
         ) {
             canEdit = true;
         }
@@ -79,12 +83,6 @@ class LocalAdmin implements AdminInterface {
             companionTexture = await localCompanionService.fetchCompanionDetails(companionTextureId);
             if (companionTexture === undefined) {
                 isCompanionTextureValid = false;
-            }
-        }
-
-        if (tags) {
-            if (tags?.includes("admin") || tags?.includes("editor")) {
-                canEdit = true;
             }
         }
 
@@ -226,7 +224,7 @@ class LocalAdmin implements AdminInterface {
 
         let mapUrl = undefined;
         let wamUrl = undefined;
-        const canEdit = ENABLE_MAP_EDITOR;
+        let canEdit = false;
 
         let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {
@@ -236,6 +234,7 @@ class LocalAdmin implements AdminInterface {
                 });
             }
             wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+            canEdit = ENABLE_MAP_EDITOR;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {
@@ -400,7 +399,7 @@ class LocalAdmin implements AdminInterface {
     }
 
     updateChatId(userIdentifier: string, chatId: string): Promise<void> {
-        return Promise.reject(new Error("No admin backoffice to updateChatID !"));
+        return Promise.resolve();
     }
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken> {

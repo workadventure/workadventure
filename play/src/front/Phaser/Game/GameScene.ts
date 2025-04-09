@@ -2477,23 +2477,24 @@ export class GameScene extends DirtyScene {
                 }
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
                 let html =
-                    '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
+                    '<div id="container" class="relative bg-contrast/80 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
                     html += `<div class="text-xxs text-center px-2">
 ${escapedMessage}
  </div> `;
                 }
 
-                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-2 px-2 mt-2"</div>';
+                const buttonContainer =
+                    '<div class="buttonContainer flex flex-wrap gap-2 bg-contrast py-2 px-2 mt-2"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="btn btn-xs justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
+                    html += `<div class="flex w-full"><button type="button" class="btn btn-xs hover:bg-contrast-600/50 justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
                 }
-                html += "</div>";
+                html += "</div></div>";
                 const domElement = this.add.dom(objectLayerSquare.x, objectLayerSquare.y).createFromHTML(html);
 
                 const container = z.instanceof(HTMLDivElement).parse(domElement.getChildByID("container"));
