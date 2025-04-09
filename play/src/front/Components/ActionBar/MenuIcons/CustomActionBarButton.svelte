@@ -7,6 +7,7 @@
     export let button: CustomButtonActionBarDescriptor;
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
+    export let classList: string | undefined = undefined;
 
     function buttonActionBarTrigger(button: CustomButtonActionBarDescriptor) {
         analyticsClient.clickOnCustomButton(button.id, button.label, button.tooltipTitle, button.imageSrc);
@@ -23,6 +24,7 @@
     }}
     {first}
     {last}
+    {classList}
 >
     {#if button.imageSrc}
         <img draggable="false" src={button.imageSrc} alt={button.tooltipTitle} class="h-6" />
