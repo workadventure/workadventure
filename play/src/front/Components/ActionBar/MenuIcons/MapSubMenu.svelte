@@ -43,7 +43,7 @@
             }}
         >
             <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2mr">
-                <div class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded space-x-2 pl-4 pr-3">
+                <div class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded gap-2 pl-4 pr-3">
                     <AdminPanIcon />
                     <div class="pr-2">
                         <div

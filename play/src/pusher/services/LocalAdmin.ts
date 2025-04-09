@@ -399,7 +399,7 @@ class LocalAdmin implements AdminInterface {
     }
 
     updateChatId(userIdentifier: string, chatId: string): Promise<void> {
-        return Promise.reject(new Error("No admin backoffice to updateChatID !"));
+        return Promise.resolve();
     }
 
     refreshOauthToken(token: string): Promise<OauthRefreshToken> {

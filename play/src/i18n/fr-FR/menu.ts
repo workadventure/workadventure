@@ -59,6 +59,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         blockAudio: "Désactiver bruits ambiants et musique",
         disableAnimations: "Désactiver les animations de la carte",
         bubbleSound: "Son des bulles",
+        otherSettings: "Autres paramètres",
     },
     invite: {
         description: "Partager le lien de la salle!",
