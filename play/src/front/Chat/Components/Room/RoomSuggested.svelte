@@ -1,7 +1,7 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { selectedRoomStore } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
