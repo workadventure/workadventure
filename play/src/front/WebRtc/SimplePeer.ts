@@ -203,13 +203,13 @@ export class SimplePeer {
     }
 
     private extractUserIdFromSpaceId(spaceId: string): number {
-        const lastUnderscoreIndex = spaceId.lastIndexOf('_');
+        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
         if (lastUnderscoreIndex === -1) {
-            throw new Error('Invalid spaceId format: no underscore found');
+            throw new Error("Invalid spaceId format: no underscore found");
         }
         const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
         if (isNaN(userId)) {
-            throw new Error('Invalid userId format: not a number');
+            throw new Error("Invalid userId format: not a number");
         }
         return userId;
     }
@@ -222,7 +222,7 @@ export class SimplePeer {
         console.log(this.remotePlayersRepository.getPlayers());
 
         const userId = this.extractUserIdFromSpaceId(user.userId);
-        
+
         const player = await this.remotePlayersRepository.getPlayer(userId);
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
@@ -281,7 +281,7 @@ export class SimplePeer {
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
-       // this.space.videoPeerStore.set(user.userId, peer);
+        // this.space.videoPeerStore.set(user.userId, peer);
         console.log(">>>> set video stream from simplePeer", {
             spaceUserId: user.userId,
         });
@@ -348,7 +348,7 @@ export class SimplePeer {
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         this.space.screenSharingPeerStore.set(user.userId, peer);
-       // this.space.livekitScreenShareStreamStore.set(user.userId, peer);
+        // this.space.livekitScreenShareStreamStore.set(user.userId, peer);
         this._screenSharingPeerAdded.next(peer);
         return peer;
     }
@@ -469,11 +469,11 @@ export class SimplePeer {
             }
             const peer = this.space.livekitVideoStreamStore.get(data.userId);
             console.log("peer", {
-                peer, 
+                peer,
                 data,
             });
 
-            if(! (peer instanceof VideoPeer)) {
+            if (!(peer instanceof VideoPeer)) {
                 console.error("peer is not a VideoPeer");
                 return;
             }

@@ -74,8 +74,8 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$livekitVideoStreamElementsStore.length > 0 &&
-    $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$livekitVideoStreamElementsStore.length >
+        0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
 >

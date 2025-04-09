@@ -2179,7 +2179,7 @@ export class GameScene extends DirtyScene {
         const pendingConnects = new Set<number>();
 
         // Store all subscriptions to be able to unsubscribe later
-        //TODO : voir les problemes de type ici 
+        //TODO : voir les problemes de type ici
         this.peerSizeSubscription = peerElementsStore.subscribe((peerElements) => {
             const newPeerNumber = peerElements.length;
             const newUsers = new Map<number, MessageUserJoined>();

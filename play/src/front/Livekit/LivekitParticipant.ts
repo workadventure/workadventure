@@ -101,7 +101,7 @@ export class LiveKitParticipant {
     }
 
     private updateLivekitScreenShareStreamStore() {
-       this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, this.getScreenShareStream());
+        this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, this.getScreenShareStream());
     }
 
     public getVideoStream(): Streamable {

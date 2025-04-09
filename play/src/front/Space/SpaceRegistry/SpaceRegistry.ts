@@ -188,9 +188,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    constructor(
-        private roomConnection: RoomConnectionForSpacesInterface,
-    ) {
+    constructor(private roomConnection: RoomConnectionForSpacesInterface) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
                 console.error(message);

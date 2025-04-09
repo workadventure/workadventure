@@ -150,7 +150,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         const peerConnection = this._space.livekitVideoStreamStore.get(spaceUserId);
         if (peerConnection) {
-            if(peerConnection instanceof VideoPeer) {
+            if (peerConnection instanceof VideoPeer) {
                 peerConnection.destroy();
             }
             this._space.livekitVideoStreamStore.delete(spaceUserId);
@@ -158,7 +158,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         const screenSharingPeerConnection = this._space.livekitScreenShareStreamStore.get(spaceUserId);
         if (screenSharingPeerConnection) {
-            if(screenSharingPeerConnection instanceof ScreenSharingPeer) {
+            if (screenSharingPeerConnection instanceof ScreenSharingPeer) {
                 screenSharingPeerConnection.destroy();
             }
             this._space.livekitScreenShareStreamStore.delete(spaceUserId);

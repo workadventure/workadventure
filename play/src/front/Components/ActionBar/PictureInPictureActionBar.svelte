@@ -28,8 +28,8 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$livekitVideoStreamElementsStore.length > 0 &&
-    $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$livekitVideoStreamElementsStore.length >
+        0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
 >

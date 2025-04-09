@@ -45,7 +45,7 @@ export class LiveKitRoom {
         console.log(">>>> joinRoom", {
             room: this.room,
         });
-        
+
         try {
             room = this.room ?? (await this.prepareConnection());
 

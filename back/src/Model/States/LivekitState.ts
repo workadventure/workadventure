@@ -63,8 +63,8 @@ export class LivekitState extends CommunicationState {
         return this.isSwitching() && isMaxUsersReached;
     }
     protected areAllUsersReady(): boolean {
-        return true;
-        //return this._readyUsers.size === this._space.getAllUsers().length;
+        //return true;
+        return this._readyUsers.size === this._space.getAllUsers().length;
     }
 
     protected preparedSwitchAction(): void {

@@ -110,8 +110,8 @@ export const bubbleSoundStore = writable<"ding" | "wobble">(localUserStore.getBu
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 
-//TODO : voir l'utilité de ce store et si on doit subscribe au store livekit 
-//TODO : faire un derived avec la taille des 2 si besoin 
+//TODO : voir l'utilité de ce store et si on doit subscribe au store livekit
+//TODO : faire un derived avec la taille des 2 si besoin
 peerElementsStore.subscribe((peerElements) => {
     audioManagerVolumeStore.setTalking(peerElements.length > 0);
 });

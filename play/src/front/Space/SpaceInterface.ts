@@ -42,7 +42,10 @@ export interface SpaceInterface {
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
-    emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: SpaceUser["spaceUserId"]): void;
+    emitPrivateMessage(
+        message: NonNullable<PrivateSpaceEvent["event"]>,
+        receiverUserId: SpaceUser["spaceUserId"]
+    ): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
