@@ -60,7 +60,7 @@ import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
-import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
+import { isAddActionBarButtonEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
 import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
@@ -290,7 +290,7 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("addButtonActionBar"),
-        data: isAddButtonActionBarEvent,
+        data: isAddActionBarButtonEvent,
     }),
     z.object({
         type: z.literal("removeButtonActionBar"),

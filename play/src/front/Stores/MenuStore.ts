@@ -274,7 +274,6 @@ export function getProfileUrl() {
 
 export interface CustomButtonActionBarDescriptor {
     id: string;
-    type: "button" | "gradient" | "action";
     label?: string | undefined;
     tooltipTitle?: string | undefined;
     tooltipDesc?: string | undefined;
@@ -282,6 +281,7 @@ export interface CustomButtonActionBarDescriptor {
     state: "normal" | "active" | "forbidden" | "disabled";
     bgColor?: string | undefined;
     textColor?: string | undefined;
+    isGradient?: boolean | undefined;
 }
 
 function createAdditionalButtonsMenu() {
@@ -292,41 +292,28 @@ function createAdditionalButtonsMenu() {
         subscribe,
         addAdditionalButtonActionBar(button: AddButtonActionBarEvent) {
             update((additionalButtonsMenu) => {
-                if (button.type === "action") {
-                    additionalButtonsMenu.set(button.id, {
-                        id: button.id,
-                        fallsInBurgerMenuStore: writable(false),
-                        component: CustomActionBarButton,
-                        props: {
-                            last: false,
-                            button: {
-                                id: button.id,
-                                type: button.type,
-                                tooltipTitle: button.toolTip,
-                                imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
-                                state: "normal",
-                            },
-                        },
-                    });
-                } else {
-                    additionalButtonsMenu.set(button.id, {
-                        id: button.id,
-                        fallsInBurgerMenuStore: writable(false),
-                        component: CustomActionBarButton,
-                        props: {
-                            last: false,
-                            button: {
-                                id: button.id,
-                                type: button.type,
-                                label: button.label,
-                                state: "normal",
-                                bgColor: button.bgColor,
-                                textColor: button.textColor,
-                            },
-                        },
-                    });
+                let imgSrc: string | undefined = undefined;
+                if (button.imageSrc) {
+                    imgSrc = new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString();
                 }
-
+                additionalButtonsMenu.set(button.id, {
+                    id: button.id,
+                    fallsInBurgerMenuStore: writable(false),
+                    component: CustomActionBarButton,
+                    props: {
+                        last: false,
+                        button: {
+                            id: button.id,
+                            label: button.label ? button.label : undefined,
+                            tooltipTitle: button.toolTip,
+                            imageSrc: imgSrc,
+                            state: "normal",
+                            isGradient: button.isGradient,
+                            bgColor: button.bgColor,
+                            textColor: button.textColor,
+                        },
+                    },
+                });
                 return additionalButtonsMenu;
             });
         },

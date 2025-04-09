@@ -1,35 +1,18 @@
-import {
-    AddButtonActionBarEvent,
-    isAddClassicButtonActionBarEvent,
-    isAddActionButtonActionBarEvent,
-} from "../../Events/Ui/ButtonActionBarEvent";
+import { AddButtonActionBarEvent, isAddActionBarButtonEvent } from "../../Events/Ui/ButtonActionBarEvent";
 import { IframeApiContribution, sendToWorkadventure } from "../IframeApiContribution";
 import { apiCallback } from "../registeredCallbacks";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
-const ActionBarButtonType = {
-    button: "button",
-    action: "action",
-    gradient: "gradient",
-} as const;
-type ActionBarButtonType = (typeof ActionBarButtonType)[keyof typeof ActionBarButtonType];
-
-export type ActionBarClassicButtonDescriptor = {
+export type ActionBarButtonDescriptor = {
     id: string;
-    label: string;
-    type?: ActionBarButtonType;
-    callback?: ButtonActionBarClickedCallback;
-    bgColor?: string;
-    textColor?: string;
-};
-
-export type ActionBarActionButtonDescriptor = {
-    id: string;
-    type: ActionBarButtonType;
+    label?: string;
     imageSrc: string;
     toolTip: string;
     callback?: ButtonActionBarClickedCallback;
+    bgColor?: string;
+    textColor?: string;
+    isGradient?: boolean;
 };
 
 export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<WorkAdventureButtonActionBarCommands> {
@@ -48,41 +31,22 @@ export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<
      * Add action bar button
      * {@link http://workadventure.localhost/map-building/api-ui.md#add-action-bar | Website documentation}
      */
-    addButton(descriptor: ActionBarClassicButtonDescriptor | ActionBarActionButtonDescriptor) {
-        const addClassicButtonActionBar = isAddClassicButtonActionBarEvent.safeParse(descriptor);
-        if (
-            addClassicButtonActionBar.success &&
-            (addClassicButtonActionBar.data.type === "button" || addClassicButtonActionBar.data.type === "gradient")
-        ) {
+    addButton(descriptor: ActionBarButtonDescriptor) {
+        const addClassicButtonActionBar = isAddActionBarButtonEvent.safeParse(descriptor);
+        if (addClassicButtonActionBar.success) {
             if (descriptor.callback != undefined) {
                 this._callbacks.set(descriptor.id, () => descriptor.callback?.(addClassicButtonActionBar.data));
             }
-
             sendToWorkadventure({
                 type: "addButtonActionBar",
                 data: {
                     id: addClassicButtonActionBar.data.id,
                     label: addClassicButtonActionBar.data.label,
-                    type: addClassicButtonActionBar.data.type,
+                    isGradient: addClassicButtonActionBar.data.isGradient,
+                    imageSrc: addClassicButtonActionBar.data.imageSrc,
+                    toolTip: addClassicButtonActionBar.data.toolTip,
                     bgColor: addClassicButtonActionBar.data.bgColor,
                     textColor: addClassicButtonActionBar.data.textColor,
-                },
-            });
-        }
-
-        const addActionButtonActionBarEvent = isAddActionButtonActionBarEvent.safeParse(descriptor);
-        if (addActionButtonActionBarEvent.success && addActionButtonActionBarEvent.data.type === "action") {
-            if (descriptor.callback != undefined) {
-                this._callbacks.set(descriptor.id, () => descriptor.callback?.(addActionButtonActionBarEvent.data));
-            }
-
-            sendToWorkadventure({
-                type: "addButtonActionBar",
-                data: {
-                    id: addActionButtonActionBarEvent.data.id,
-                    type: addActionButtonActionBarEvent.data.type,
-                    imageSrc: addActionButtonActionBarEvent.data.imageSrc,
-                    toolTip: addActionButtonActionBarEvent.data.toolTip,
                 },
             });
         }

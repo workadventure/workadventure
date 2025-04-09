@@ -14,9 +14,9 @@
     // Hide the icon in the action bar (displays only the label), and only displays the icon if we are in the responsive menu.
     export let hideIconInActionBar = false;
     // An optional action that will be added to the button element.
-    export let type: "button" | "gradient" | "action" = "button";
     export let bgColor: string | undefined = undefined;
     export let textColor: string | undefined = undefined;
+    export let isGradient = false;
 
     export let hasImage = true;
     export let action: Action = () => {};
@@ -70,14 +70,14 @@
             type="button"
             class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
-                    {state === 'normal' && type !== 'gradient' ? 'hover:bg-white/10 cursor-pointer' : ''}
+                    {state === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {state === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {!label
                 ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
-                {type === 'gradient' ? 'gradient overflow-hidden font-bold' : ''}
-                {bgColor && type !== 'gradient' ? 'bg-[var(--bg-color)]' : ''}
+                {isGradient ? 'gradient overflow-hidden font-bold' : ''}
+                {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
             disabled={state === "disabled"}
@@ -105,14 +105,12 @@
     <button
         class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
-                    {state === 'active' && type !== 'gradient'
-            ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'
-            : ''}
+                    {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
-                    {type === 'gradient' ? 'gradient overflow-hidden' : ''}
-                    {bgColor && type !== 'gradient' ? 'bg-[var(--bg-color)]' : ''}
+                    {isGradient ? 'gradient overflow-hidden' : ''}
+                    {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
-                    {type === 'gradient' ? 'justify-center' : ''}"
+                    {isGradient ? 'justify-center relative' : ''}"
         use:action
         on:click={() => handleClick()}
         style={styleVars}
