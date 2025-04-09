@@ -499,8 +499,8 @@
 
     function onClickInputHandler() {
         // If Klaxoon application, open the activity picker
-        if (property.application !== "klaxoon") return;
-        openKlaxoonActivityPicker();
+        if (property.link != undefined && property.link != "") return;
+        openPicker();
     }
 
     function openKlaxoonActivityPicker() {
@@ -532,7 +532,7 @@
     function openPicker() {
         closePicker();
         // if klaxoon, open Activity Picker
-        if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
+        if (property.application === "klaxoon") {
             openKlaxoonActivityPicker();
         }
 
@@ -735,24 +735,14 @@
         {/if}
 
         <div class="value-input flex flex-col">
+            <label for="tabLink" class="px-3 pb-[0.375rem] grow font-light"
+                >{$LL.mapEditor.properties.linkProperties.linkLabel()}</label
+            >
             <div class="flex flex-row">
-                <!-- <input
-                    id="tabLink"
-                    type="url"
-                    bind:this={linkElement}
-                    placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
-                    bind:value={property.link}
-                    on:keypress={onKeyPressed}
-                    on:change={onValueChange}
-                    on:blur={() => checkWebsiteProperty()}
-                    disabled={embeddableLoading}
-                /> -->
-
                 <Input
                     id="tabLink"
                     type="url"
                     placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
-                    label={$LL.mapEditor.properties.linkProperties.linkLabel()}
                     onKeyPress={onKeyPressed}
                     bind:value={property.link}
                     onChange={onValueChange}
@@ -882,9 +872,9 @@
                         id="websiteWidth"
                         min={1}
                         label={$LL.mapEditor.properties.linkProperties.width()}
-                        max={75}
+                        max={100}
                         bind:value={property.width}
-                        on:change={onValueChange}
+                        onChange={onValueChange}
                         variant="secondary"
                         buttonShape="square"
                     />
@@ -920,18 +910,6 @@
 </PropertyEditorBase>
 
 <style lang="scss">
-    .value-input {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        flex-direction: column;
-
-        * {
-            margin-bottom: 0;
-        }
-    }
-
     .advanced-option {
         display: none;
 

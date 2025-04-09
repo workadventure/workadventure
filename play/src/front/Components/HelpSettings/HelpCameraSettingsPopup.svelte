@@ -2,7 +2,6 @@
     import { fly } from "svelte/transition";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import Alert from "../UI/Alert.svelte";
     import { popupStore } from "../../Stores/PopupStore";
 
@@ -18,16 +17,10 @@
     function close() {
         popupStore.removePopup("cameraAccessDenied");
     }
-
-    function getBackgroundColor() {
-        if (!gameManager.currentStartedRoom) return undefined;
-        return gameManager.currentStartedRoom.backgroundColor;
-    }
 </script>
 
 <form
     class="helpCameraSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col w-full md:w-2/3 xl:w-[380px] text-sm md:text-base overflow-hidden"
-    style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >

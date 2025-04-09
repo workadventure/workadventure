@@ -104,7 +104,7 @@
                 // In case we are on a mobile in portrait mode, we want to display a square video.
                 videoWidth = containerHeight;
                 videoHeight = containerHeight / videoRatio;
-                overlayWidth = containerHeight;
+                overlayWidth = containerWidth;
                 overlayHeight = containerHeight;
                 //debug("videoRatio < 1: videoWidth: " + videoWidth + "; videoHeight: " + videoHeight);
             } else if (containerRatio > videoRatio) {
@@ -270,7 +270,9 @@
 </script>
 
 <div
-    class="h-full w-full relative {!cover && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
+    class="h-full w-full relative {(!cover || videoStreamWidth / videoStreamHeight < 1) && withBackground
+        ? 'bg-contrast/80 rounded-lg'
+        : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >
@@ -299,7 +301,9 @@
                   Math.ceil(videoHeight) +
                   "px; " +
                   ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                  (cover ? ` left: ${(containerWidth - videoWidth) / 2}px;` : "") +
+                  (cover
+                      ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                      : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
             bind:videoWidth={videoStreamWidth}
@@ -331,7 +335,7 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class={"absolute border-solid " + (videoEnabled ? "" : "bg-contrast/80 backdrop-blur")}
+        class={"absolute border-solid " + (videoEnabled || !withBackground ? "" : "bg-contrast/80 backdrop-blur")}
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
         class:rounded-lg={!videoEnabled}
