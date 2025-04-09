@@ -406,31 +406,21 @@ WA.ui.actionBar.addButton(descriptor: {
 ```ts
 WA.ui.actionBar.addButton(descriptor: {
     id: string,
-    type: 'action',
     imageSrc: string,
     toolTip: string,
     clickCallback: (buttonActionBar: AddButtonActionBar) => void
 }): void
 ```
 
+> The main difference between the two is that the action button does not have a label field.
 - id: the id of the button action bar defined.
 - label: the label to display in the button.
-- type: the type of button ('button' / 'action'). By default is 'button'.
 - imageSrc: URL of the button's image (relative to the map file).
 - toolTip: label displayed above the action button.
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
 ```ts
-/**
- * Ennum of button type
- */
-const ActionBarButtonType = {
-    button: "button",
-    action: "action",
-} as const;
-type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
-
 interface AddButtonActionBar {
     /*
     *   the id of the button action bar defined.
@@ -443,11 +433,6 @@ interface AddButtonActionBar {
     label: string
 
     /*
-    *   the type of button ('button' / 'action'). By default is 'button'.
-    */
-    type: ActionBarButtonType,
-
-    /*
     *  the image of button associated, This parameter is nullable.
     */
     imageSrc: string
@@ -456,6 +441,22 @@ interface AddButtonActionBar {
     *   the label displayed above the action button. This parameter is nullable.
     */
     toolTip: string
+  
+    /*
+    *   specifies the background color of the button. This parameter is nullable.
+    */
+    bgColor: string
+
+    /*
+    *   specifies the button text color. This parameter can be null.    
+    */
+    textColor: string
+
+    /*
+    *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
+    */
+    isGradient: boolean
+  
 }
 ```
 
@@ -486,7 +487,6 @@ interface AddButtonActionBar {
     // Add action bar button 'Register'.
     WA.ui.actionBar.addButton({
         id: 'register-btn',
-        type: 'action',
         imageSrc: '<Your image url>',
         toolTip: 'Register',
         callback: (event) => {
