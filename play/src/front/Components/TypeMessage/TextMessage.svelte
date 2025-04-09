@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { fly, fade } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
@@ -27,7 +27,6 @@
 
 <div
     class="main-text-message bg-contrast/85 rounded absolute backdrop-blur-md flex gap-3 w-3/5 m-auto py-3 pl-5 pr-2 max-h-64 left-0 right-0 shadow-xl  pointer-events-auto animate-bounce-in"
-    in:fly={{ x: -1000, duration: 300, delay: 250 }}
     out:fade={{ duration: 150 }}
 >
     <div class="icon mt-3 text-white text-xl">💬</div>
