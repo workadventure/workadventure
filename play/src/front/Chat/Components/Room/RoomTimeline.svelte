@@ -1,11 +1,11 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-    import Avatar from "../Avatar.svelte";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -13,13 +13,15 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
+    import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
+
+    const chatConnection = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
-    const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
-    let typingMembers = room.typingMembers;
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
@@ -36,6 +38,7 @@
     $: messages = room?.messages;
     $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
+    $: typingMembers = room.typingMembers;
 
     onMount(() => {
         initMessages()
@@ -104,6 +107,7 @@
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
         selectedRoomStore.set(undefined);
+        shouldRestoreChatStateStore.set(false);
     }
 
     function handleScroll() {
@@ -207,6 +211,7 @@
                 <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
                     {$roomName}
                 </div>
+
                 <div class="p-3 rounded-2xl aspect-square w-12" />
             </div>
             {#if shouldDisplayLoader}
@@ -282,69 +287,9 @@
         </div>
 
         {#if $typingMembers.length > 0}
-            <div class="flex row w-full text-gray-300 text-sm  m-0 px-2 mb-2">
-                {#each $typingMembers
-                    .map((typingMember, index) => ({ ...typingMember, index }))
-                    .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
-                    {#if typingMember.avatarUrl || typingMember.name}
-                        <div id={`typing-user-${typingMember.id}`} class="-ml-2é">
-                            <Avatar
-                                isChatAvatar={true}
-                                avatarUrl={typingMember.avatarUrl}
-                                fallbackName={typingMember.name ? typingMember.name : "Unknown"}
-                            />
-                        </div>
-                    {/if}
-                {/each}
-
-                {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    <div class={`rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar`}>
-                        +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    </div>
-                {/if}
-                <div class="message rounded-2xl px-3 rounded-bl-none bg-contrast flex text-lg ml-1">
-                    <div class="animate-bounce-1">.</div>
-                    <div class="animate-bounce-2">.</div>
-                    <div class="animate-bounce-3">.</div>
-                </div>
-            </div>
+            <TypingUsers typingMembers={$typingMembers} />
         {/if}
-        <MessageInputBar {room} bind:this={messageInputBarRef} />
+
+        <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
-
-<style>
-    @keyframes bounce {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-25%);
-        }
-    }
-
-    .animate-bounce-1 {
-        animation: bounce 1s infinite;
-    }
-
-    .animate-bounce-2 {
-        animation: bounce 1s infinite 0.1s;
-    }
-
-    .animate-bounce-3 {
-        animation: bounce 1s infinite 0.2s;
-    }
-
-    .message {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        position: relative;
-    }
-
-    .chatAvatar {
-        border-style: solid;
-        border-color: rgb(27 42 65 / 0.95);
-        border-width: 1px;
-    }
-</style>

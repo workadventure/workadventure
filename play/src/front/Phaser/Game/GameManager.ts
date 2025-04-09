@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -27,8 +27,8 @@ import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connecti
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
+import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
 import { GameScene } from "./GameScene";
-
 /**
  * This class should be responsible for any scene starting/stopping
  */
@@ -45,11 +45,13 @@ export class GameManager {
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
+    private chatVisibilitySubscription: Unsubscriber | undefined;
 
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterTextureIds = localUserStore.getCharacterTextures();
         this.companionTextureId = localUserStore.getCompanionTextureId();
+        this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -105,11 +107,6 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        // Only save the name if the user is not logged in
-        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
-        if (!localUserStore.isLogged() || !hasCapability("api/save-name")) {
-            localUserStore.setName(name);
-        }
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {
@@ -248,11 +245,7 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (
-            matrixServerUrl &&
-            ENABLE_CHAT /*&& this.getCurrentGameScene().room.isChatEnabled */ &&
-            get(userIsConnected)
-        ) {
+        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled && get(userIsConnected)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
@@ -293,6 +286,9 @@ export class GameManager {
             try {
                 this._chatConnection.clearListener();
                 await this._chatConnection.destroy();
+                if (this.chatVisibilitySubscription) {
+                    this.chatVisibilitySubscription();
+                }
                 this.clearChatDataFromLocalStorage();
                 this._chatConnection = undefined;
                 this.chatConnectionPromise = undefined;

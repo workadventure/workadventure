@@ -759,7 +759,6 @@
                     on:blur={() => checkWebsiteProperty()}
                     onClick={onClickInputHandler}
                     disabled={embeddableLoading}
-                    bind:isValid={isLinkValid}
                 />
 
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
@@ -817,8 +816,13 @@
         </div>
         {#if !property.hideButtonLabel}
             <div class=" flex flex-col">
-                <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-                <input id="linkButton" type="text" bind:value={property.buttonLabel} on:change={onValueChange} />
+                <Input
+                    label={$LL.mapEditor.entityEditor.buttonLabel()}
+                    id="linkButton"
+                    type="text"
+                    bind:value={property.buttonLabel}
+                    on:change={onValueChange}
+                />
             </div>
         {/if}
 

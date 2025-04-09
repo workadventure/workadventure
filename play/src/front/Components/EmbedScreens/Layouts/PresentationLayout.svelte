@@ -8,6 +8,10 @@
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
+    import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
+    import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+
+    export let inPictureInPicture: boolean;
 
     let camContainer: HTMLDivElement;
     let highlightScreen: HTMLDivElement;
@@ -78,21 +82,33 @@
     >
         {#if $streamableCollectionStore.size > 0}
             <div
-                class="justify-end md:justify-center w-full h-full relative"
-                class:max-height-quarter={$isOnOneLine}
+                class="justify-end md:justify-center w-full relative"
+                class:max-height-quarter={$isOnOneLine && !inPictureInPicture}
+                class:h-full={!$isOnOneLine || inPictureInPicture}
+                class:overflow-y-auto={inPictureInPicture}
                 bind:this={camContainer}
             >
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer {oneLineMaxHeight} isOnOneLine={$isOnOneLine} />
+                    <CamerasContainer
+                        {oneLineMaxHeight}
+                        isOnOneLine={$isOnOneLine}
+                        oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
+                    />
                 {/if}
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen}
+        {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture}
             <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
                 {#key $highlightedEmbedScreen.uniqueId}
                     <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
                 {/key}
+            </div>
+        {/if}
+
+        {#if $activePictureInPictureStore}
+            <div class="flex-none">
+                <PictureInPictureActionBar />
             </div>
         {/if}
     </div>

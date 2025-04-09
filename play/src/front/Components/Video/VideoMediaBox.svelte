@@ -110,6 +110,8 @@
         }
     }
 
+    let missingUserActivation: false;
+
     onDestroy(() => {
         closeFloatingUi?.();
     });
@@ -151,7 +153,9 @@
             muted={peer.muteAudio}
             {videoUrl}
             {videoConfig}
-            cover={peer.displayMode === "cover"}
+            cover={peer.displayMode === "cover" && !isHighlighted && !fullScreen}
+            withBackground={!isHighlighted}
+            bind:missingUserActivation
         >
             <UserName
                 name={$name}
@@ -166,7 +170,10 @@
                     <div />
                 {:then spaceUser}
                     {#if spaceUser}
-                        <div class="flex items-center justify-center" bind:this={userMenuButton}>
+                        <div
+                            class="flex items-center justify-center picture-in-picture:hidden"
+                            bind:this={userMenuButton}
+                        >
                             <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                         </div>
                     {/if}
@@ -178,7 +185,7 @@
             <!-- The button at the top of the video that opens the menu to go fullscreen -->
             <button
                 class={isHighlighted
-                    ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto"
+                    ? "w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 absolute inset-0 mx-auto picture-in-picture:hidden"
                     : "hidden"}
                 on:click={() => (menuDrop = !menuDrop)}
             >
@@ -238,12 +245,22 @@
     </div>
 
     <button
-        class={isHighlighted || !videoEnabled
+        class={isHighlighted || !videoEnabled || missingUserActivation
             ? "hidden"
-            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"}
+            : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer picture-in-picture:hidden"}
         on:click={() => highlightedEmbedScreen.highlight(peer)}
         on:click={() => analyticsClient.pinMeetingAction()}
     >
         <ArrowsMaximizeIcon />
     </button>
+    {#if missingUserActivation && !peer.muteAudio}
+        <div
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+            on:click={() => (missingUserActivation = false)}
+        >
+            <div class="text-center">
+                <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+            </div>
+        </div>
+    {/if}
 </div>

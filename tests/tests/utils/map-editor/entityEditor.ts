@@ -66,6 +66,8 @@ class EntityEditor {
   }
 
   async setEntitySearcheable(page: Page, value: boolean) {
+    await expect(page.getByTestId('megaphone-switch')).toBeVisible();
+    await page.getByTestId('megaphone-switch').click();
     await page.locator(".map-editor .sidebar input#searchable").setChecked(value);
   }
 

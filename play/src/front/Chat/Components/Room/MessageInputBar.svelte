@@ -40,6 +40,7 @@
     import { IconCircleX, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
+    export let disabled = false;
 
     let message = "";
     let messageInput: HTMLDivElement;
@@ -592,6 +593,7 @@
         {focusout}
         bind:message
         bind:messageInput
+        disabled={disabled && !isProximityChatRoom}
         inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"

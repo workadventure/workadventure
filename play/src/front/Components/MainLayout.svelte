@@ -17,8 +17,6 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
-    import { visibilityStore } from "../Stores/VisibilityStore";
-    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { silentStore } from "../Stores/MediaStore";
@@ -120,10 +118,10 @@
 
     <div class="flex min-h-dvh flex-col-reverse mobile:flex-col">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full relative">
-            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max max-w-[80%]">
-                <div class="popups flex items-end relative w-full justify-center mb-4 h-[calc(100%-96px)]">
+            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
+                <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
-                        <div class="popupwrapper popupwrapper-{index} flex-1" in:fly={{ y: 150, duration: 550 }}>
+                        <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
                             <svelte:component
                                 this={popup.component}
                                 {...popup.props}
@@ -188,12 +186,10 @@
                 <LimitRoomModal />
             {/if}
 
-            {#if $requestVisitCardsStore}
-                <VisitCard visitCardUrl={$requestVisitCardsStore} />
-            {/if}
-
             {#if !$highlightFullScreen}
-                <PresentationLayout />
+                <PictureInPicture let:inPictureInPicture>
+                    <PresentationLayout {inPictureInPicture} />
+                </PictureInPicture>
             {/if}
 
             {#if $uiWebsitesStore}
@@ -218,6 +214,9 @@
 
             <ExternalComponents zone="popup" />
             <div class=" absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+                {#if $requestVisitCardsStore}
+                    <VisitCard visitCardUrl={$requestVisitCardsStore} />
+                {/if}
                 <ExternalComponents zone="centeredPopup" />
             </div>
         </section>
@@ -226,10 +225,6 @@
         </div>
         <ActionBar />
     </div>
-
-    {#if $visibilityStore == false && $streamableCollectionStore.size > 0}
-        <PictureInPicture />
-    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />

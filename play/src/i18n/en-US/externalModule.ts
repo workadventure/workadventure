@@ -28,7 +28,7 @@ const externalModule: BaseTranslation = {
         tokenNeeded: "You need to enter your Discord token. In order to perform Discord integration see",
         howToGetTokenButton: "How to get my discord login token",
         loggedIn: "Connected with:",
-        saveSync: "Save and sync 🔌",
+        saveSync: "Save and synchronize",
         logout: "Logout",
         guilds: "Discord servers",
         guildExplain: "Select channels you want to add to Workadventure chat interface.\n",

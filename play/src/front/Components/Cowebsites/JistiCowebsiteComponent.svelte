@@ -22,6 +22,7 @@
     const debug = Debug("jitsiCowebsite");
 
     export let actualCowebsite: JitsiCoWebsite;
+    export let visible: boolean;
     let domain = actualCowebsite.getDomain();
     let jitsiContainer: HTMLDivElement;
     let playerName = gameManager.getPlayerName();
@@ -191,6 +192,6 @@
     });
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full h-full" class:hidden={!visible}>
     <div bind:this={jitsiContainer} class="absolute w-full h-full z-0" />
 </div>

@@ -71,9 +71,11 @@
             on:click|preventDefault={() => handleClick()}
             on:mouseenter={() => {
                 helpActive = true;
+                dispatch("mouseenter");
             }}
             on:mouseleave={() => {
                 helpActive = false;
+                dispatch("mouseleave");
             }}
             data-testid={dataTestId}
         >
@@ -101,6 +103,7 @@
         </div>
         <div class="text-left leading-4 flex items-center text-nowrap">
             {label ?? tooltipTitle ?? ""}
+            <slot name="end" />
         </div>
     </button>
 {/if}

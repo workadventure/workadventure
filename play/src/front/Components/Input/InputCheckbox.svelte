@@ -18,6 +18,7 @@
             type="checkbox"
             bind:checked={value}
             on:change={onChange}
+            {...$$restProps}
             {disabled}
         />
 
