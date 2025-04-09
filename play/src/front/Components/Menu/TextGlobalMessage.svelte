@@ -100,7 +100,7 @@
         }
 
         :global(.ql-toolbar.ql-snow .ql-formats button) {
-            color: whitesmoke; /* Couleur du texte des labels des dropdowns */
+            color: whitesmoke; /* Droprown label text color */
         }
 
         :global(.ql-container) {
