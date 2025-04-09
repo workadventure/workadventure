@@ -93,6 +93,8 @@
                         placeholder="50"
                         bind:value={property.width}
                         onChange={onValueChange}
+                        variant="secondary"
+                        buttonShape="square"
                     />
                 </div>
 
@@ -161,6 +163,7 @@
                 >
                     {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
                 </button>
+
                 <!-- <JitsiRoomConfigEditor
                     bind:isOpen={jitsiConfigModalOpened}
                     bind:visibilityValue={jitsiConfigModalOpened}

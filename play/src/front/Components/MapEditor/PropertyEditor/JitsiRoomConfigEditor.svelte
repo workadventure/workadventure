@@ -103,59 +103,6 @@
     </div>
 {/if}
 
-<!--<Popup {isOpen}>-->
-<!--    &lt;!&ndash; <div class=" fixed w-[50vw] mx-auto inset-0  items-center justify-center bg-black bg-opacity-50 z-50 "> &ndash;&gt;-->
-<!--    <div slot="content" class=" w-full flex flex-col gap-2">-->
-<!--        <div transition:fly={{ x: 1000, duration: 500 }}>-->
-<!--            <Select bind:value={selectedKey} on:change={() => onSelectedKey()}>-->
-<!--                <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>-->
-<!--                {#each defaultConfigKeys as configKey (configKey)}-->
-<!--                    {#if currentConfig[configKey] === undefined}-->
-<!--                        <option value={configKey}-->
-<!--                            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}</option-->
-<!--                        >-->
-<!--                    {/if}-->
-<!--                {/each}-->
-<!--            </Select>-->
-<!--            <div class="config-element-container mt-5">-->
-<!--                {#each defaultConfigKeys as configKey (configKey)}-->
-<!--                    <div class="config-element">-->
-<!--                        <button on:click={() => onDeleteConfig(configKey)}-->
-<!--                            ><div class="delete-button">&times</div></button-->
-<!--                        >-->
-<!--                        <label class="config-element-label " for={configKey}>-->
-<!--                            {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}-->
-<!--                        </label>-->
-<!--                        {#if typeof defaultConfig[configKey] === "string"}-->
-<!--                            <input id={configKey} type="text" bind:value={currentConfig[configKey]} />-->
-<!--                        {:else if typeof defaultConfig[configKey] === "boolean"}-->
-<!--                            <InputSwitch id={configKey} bind:value={currentConfig[configKey]} />-->
-<!--                        {/if}-->
-<!--                    </div>-->
-<!--                {/each}-->
-<!--                <div class="config-element mt-4">-->
-<!--                    <Input-->
-<!--                        id="jitsiAdminTag"-->
-<!--                        label={$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}-->
-<!--                        type="text"-->
-<!--                        bind:value={jitsiRoomAdminTag}-->
-<!--                    />-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-
-<!--    <div slot="action" class="w-full flex justify-between mt-4 space-x-2">-->
-<!--        <button class=" btn btn-light btn-border w-full h-12 mt-2" on:click={closeModal}-->
-<!--            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button-->
-<!--        >-->
-<!--        <button class=" btn btn-light m-2 w-full h-12 " on:click={closeModal}-->
-<!--            >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}</button-->
-<!--        >-->
-<!--    </div>-->
-<!--</Popup>-->
-
-<!-- </div> -->
 <style lang="scss">
     .config-element-container {
         overflow-y: auto;

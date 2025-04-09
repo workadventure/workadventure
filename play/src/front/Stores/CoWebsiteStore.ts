@@ -20,6 +20,14 @@ export function createCoWebsiteStore() {
         } else {
             update((currentArray) => [...currentArray, coWebsite]);
         }
+        if (get({ subscribe }).length === 1) {
+            const coWebsiteWidthPercent = coWebsite.getWidthPercent();
+            if (coWebsiteWidthPercent) {
+                coWebsiteRatio.set(coWebsiteWidthPercent / 100);
+            } else {
+                coWebsiteRatio.set(0.5);
+            }
+        }
     };
 
     const remove = (coWebsite: CoWebsite) => {

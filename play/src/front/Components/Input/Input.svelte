@@ -21,6 +21,7 @@
     export let max = 50;
     export let step = 0;
     export let onKeyPress = () => {};
+    export let onKeyDown: (event: KeyboardEvent) => void = () => {};
     export let optional = false;
     export let isValid = true;
     export let rounded = false;
@@ -73,6 +74,7 @@
                 bind:value
                 {placeholder}
                 on:keypress={onKeyPress}
+                on:keydown={onKeyDown}
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}

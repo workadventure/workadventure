@@ -30,7 +30,7 @@
 
 <PopUpContainer>
     <slot />
-    <div class="buttons-wrapper flex items-center justify-center p-2 space-x-2 pointer-events-auto mt-2">
+    <div class="buttons-wrapper flex items-center justify-center p-2 gap-2 pointer-events-auto mt-2">
         <button class="btn btn-light btn-ghost btn-sm w-1/2 justify-center responsive-message" on:click={handleClose}
             >{closeLabel}</button
         >

@@ -872,9 +872,9 @@
                         id="websiteWidth"
                         min={1}
                         label={$LL.mapEditor.properties.linkProperties.width()}
-                        max={75}
+                        max={100}
                         bind:value={property.width}
-                        on:change={onValueChange}
+                        onChange={onValueChange}
                         variant="secondary"
                         buttonShape="square"
                     />

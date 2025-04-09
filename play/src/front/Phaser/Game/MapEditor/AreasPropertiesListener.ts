@@ -506,7 +506,6 @@ export class AreasPropertiesListener {
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
         }
-
         if (!property.trigger) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }
