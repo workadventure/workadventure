@@ -151,4 +151,57 @@ test.describe('Meeting actions test', () => {
     await userBob.context().close();
     await page.context().close();
   });*/
+
+    test('Block users', async ({ browser }) => {
+        if (browser.browserType().name() === "firefox") {
+            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+            test.skip();
+        }
+        // Go to the empty map
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(page, 160, 160);
+        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(userBob, 192, 160);
+
+        // The user in the bubble meeting should be visible
+        //await expect(page.locator('#container-media')).toBeVisible({timeout: 30_000});
+        // The user in the bubble meeting should have action button
+        await expect(page.locator('#cameras-container').getByText("You")).toBeVisible({timeout: 30_000});
+
+        // Click on the action button of "Bob" on Alice screen
+        await page.click('#cameras-container .camera-box .video-media-box .user-menu-btn');
+
+        // Click on the mute button
+        await page.getByRole('button', { name: 'Moderation', exact: true }).click();
+        await page.getByRole('button', { name: 'Block this user' }).click();
+
+        await userBob.getByTestId('chat-btn').click();
+        await userBob.getByTestId('messageInput').click();
+        await userBob.getByTestId('messageInput').fill('Hello banned!');
+        await userBob.getByTestId('messageInput').press('Enter');
+
+        await page.locator('canvas').click({
+            position: {
+                x: 266,
+                y: 240
+            }
+        });
+        await page.getByRole('button', { name: 'Unblock this user' }).click();
+        await page.getByRole('button', { name: 'Unblock this user' }).click();
+
+        await userBob.getByTestId('messageInput').fill('Hello unbanned!');
+        await userBob.getByTestId('messageInput').press('Enter');
+
+        await expect(page.getByText('Hello unbanned!')).toBeVisible();
+        await expect(page.getByText('Hello banned!')).toBeHidden();
+
+        await page.close();
+        await userBob.close();
+        await userBob.context().close();
+        await page.context().close();
+    });
 });
