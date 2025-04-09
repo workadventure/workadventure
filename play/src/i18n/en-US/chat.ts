@@ -42,6 +42,7 @@ const chat: BaseTranslation = {
     rooms: "Rooms",
     addNew: "Add new : ",
     invitations: "Invitations",
+    suggestedRooms: "Suggested rooms",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
@@ -209,6 +210,8 @@ const chat: BaseTranslation = {
             label: "Activate end to end encryption",
             description: "You won't be able to deactivate it later.",
         },
+        suggested: "Suggested room",
+        suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
             label: "Who can read history ?",
@@ -452,6 +455,8 @@ const chat: BaseTranslation = {
     },
     loginTokenError: "An error occurred. Please try to reconnect",
     reconnect: "Reconnect",
+    failedToJoinRoom: "Failed to join room",
+    failedToLeaveRoom: "Failed to leave room",
     refreshChat: "Refresh Chat",
     dismiss: "Dismiss",
     whoops: "Whoops ! something went wrong",
