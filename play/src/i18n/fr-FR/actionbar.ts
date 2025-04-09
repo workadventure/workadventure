@@ -60,51 +60,54 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     help: {
         chat: {
             title: "Envoyer un message par écrit",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         users: {
             title: "Afficher la liste des utilisateurs",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         emoji: {
             title: "Réagir avec un emoji",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         audioManager: {
             title: "Volume des sons ambiants",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
-            desc: "Votre navigateur a empêché les sons ambiants de jouer. Cliquez sur l'icône pour commencer à jouer des sons.",
         },
         follow: {
             title: "Demander à vous suivre",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         lock: {
             title: "Vérouiller la bulle",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         mic: {
             title: "Activer/désactiver votre micro",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         micDisabledByStatus: {
             title: "Micro désactivé",
-            desc: 'Votre micro est désactivé car vous êtes en mode "{status}".',
         },
         cam: {
             title: "Activer/désactiver votre caméra",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         camDisabledByStatus: {
             title: "Caméra désactivée",
-            desc: 'Votre caméra est désactivée car vous êtes en mode "{status}".',
         },
         share: {
             title: "Partager votre écran",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        },
+        unfollow: {
+            title: "Arrêter de suivre",
+        },
+        apps: {
+            title: "Applications tierces",
+        },
+        roomList: {
+            title: "Liste des salons",
+        },
+        calendar: {
+            title: "Calendrier",
+        },
+        todolist: {
+            title: "Liste de tâches",
         },
     },
     listStatusTitle: {
