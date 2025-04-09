@@ -117,23 +117,30 @@
         fileInput.click();
     }}
 >
-    <p class="pointer-events-none">
-        {$LL.menu.globalAudio.dragAndDrop()}
-    </p>
-    <img
-        class="clickable w-1/6 pointer-events-none"
-        class:hidden={!dropHover}
-        draggable="false"
-        src={uploadFileActive}
-        alt={$LL.menu.globalAudio.uploadInfo()}
-    />
-    <img
-        class="clickable w-1/6 pointer-events-none"
-        class:hidden={dropHover}
-        draggable="false"
-        src={uploadFile}
-        alt={$LL.menu.globalAudio.uploadInfo()}
-    />
+    <div class="flex flex-col items-center">
+        <div>
+            <p class="pointer-events-none ">
+                {$LL.menu.globalAudio.dragAndDrop()}
+            </p>
+        </div>
+
+        <div class="w-[50em] flex justify-center items-center mb-2">
+            <img
+                class="clickable w-1/6 pointer-events-none"
+                class:hidden={!dropHover}
+                draggable="false"
+                src={uploadFileActive}
+                alt={$LL.menu.globalAudio.uploadInfo()}
+            />
+            <img
+                class="clickable w-1/6 pointer-events-none"
+                class:hidden={dropHover}
+                draggable="false"
+                src={uploadFile}
+                alt={$LL.menu.globalAudio.uploadInfo()}
+            />
+        </div>
+    </div>
 
     {#if fileName !== undefined}
         <p class="p-4">{fileName} : {fileSize}</p>
