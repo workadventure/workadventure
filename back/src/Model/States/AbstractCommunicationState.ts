@@ -1,10 +1,10 @@
 import { SpaceUser, PrivateEvent } from "@workadventure/messages";
-import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { CommunicationType } from "../Types/CommunicationTypes";
-import { ICommunicationState } from "../Interfaces/ICommunicationState";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
-import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
+import { CommunicationType } from "../types/CommunicationTypes";
+import { ICommunicationState } from "../interfaces/ICommunicationState";
+import { ICommunicationStrategy } from "../interfaces/ICommunicationStrategy";
+import { ICommunicationManager } from "../interfaces/ICommunicationManager";
 import { CommunicationConfig } from "../CommunicationManager";
+import { ICommunicationSpace } from "../interfaces/ICommunicationSpace";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected _readyUsers: Set<string> = new Set();
@@ -107,7 +107,9 @@ export abstract class CommunicationState implements ICommunicationState {
         const usersToNotify = users.filter((user) => !this._readyUsers.has(user.spaceUserId));
 
         usersToNotify.forEach((user) => {
-            this.dispatchSwitchEvent(user.spaceUserId, "prepareSwitchMessage", { strategy: this._nextCommunicationType });
+            this.dispatchSwitchEvent(user.spaceUserId, "prepareSwitchMessage", {
+                strategy: this._nextCommunicationType,
+            });
         });
     }
 

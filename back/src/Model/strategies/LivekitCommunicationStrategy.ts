@@ -1,10 +1,10 @@
 import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { LiveKitService } from "../Services/LivekitService";
 
+import { ICommunicationStrategy } from "../interfaces/ICommunicationStrategy";
+import { LiveKitService } from "../services/LivekitService";
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     //TODO : voir pourquoi array simple et pas set
     private usersReady: string[] = [];
