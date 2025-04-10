@@ -14,12 +14,12 @@ import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
 
 export class LiveKitParticipant {
-    private _isSpeakingStore: Writable<boolean> = writable(this.participant.isSpeaking);
-    private _connectionQualityStore: Writable<ConnectionQuality> = writable(this.participant.connectionQuality);
+    private _isSpeakingStore: Writable<boolean>;
+    private _connectionQualityStore: Writable<ConnectionQuality>;
     private _videoStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _screenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
-    private _nameStore: Writable<string> = writable<string>(this.participant.name);
+    private _nameStore: Writable<string>;
     private _hasAudio = writable<boolean>(true);
     private _hasVideo = writable<boolean>(false);
     private _isMuted = writable<boolean>(true);
@@ -28,8 +28,9 @@ export class LiveKitParticipant {
     constructor(private participant: Participant, private space: SpaceInterface, private spaceUser: SpaceUserExtended) {
         this.listenToParticipantEvents();
         this._spaceUser = this.spaceUser;
-        this._isSpeakingStore.set(this.participant.isSpeaking);
-        this._connectionQualityStore.set(this.participant.connectionQuality);
+        this._isSpeakingStore = writable(this.participant.isSpeaking);
+        this._connectionQualityStore = writable(this.participant.connectionQuality);
+        this._nameStore = writable(this.participant.name);
     }
 
     private listenToParticipantEvents() {
@@ -114,6 +115,10 @@ export class LiveKitParticipant {
             getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
+            flipX: false,
+            muteAudio: false,
+            displayMode: "fit",
+            displayInPictureInPictureMode: true,
             media: {
                 type: "mediaStore",
                 streamStore: derived(
@@ -150,6 +155,10 @@ export class LiveKitParticipant {
             getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
             name: this._nameStore,
             showVoiceIndicator: writable(false),
+            flipX: false,
+            muteAudio: false,
+            displayMode: "fit",
+            displayInPictureInPictureMode: true,
             media: {
                 type: "mediaStore",
                 streamStore: this._screenShareStreamStore,

@@ -77,16 +77,14 @@ export class SpacePeerManager {
 
 export interface SimplePeerConnectionInterface {
     closeAllConnections(): void;
-    blockedFromRemotePlayer(userId: number): void;
+    blockedFromRemotePlayer(userId: string): void;
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
     dispatchStream(mediaStream: MediaStream): void;
     videoPeerAdded: Observable<VideoPeer>;
     videoPeerRemoved: Observable<VideoPeer>;
-    peerStore: MapStore<number, VideoPeer>;
-    screenSharingPeerStore: MapStore<number, ScreenSharingPeer>;
     cleanupStore(): void;
-    removePeer(userId: number): void;
+    removePeer(userId: string): void;
 }
 
 export interface PeerFactoryInterface {

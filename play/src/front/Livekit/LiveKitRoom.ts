@@ -59,7 +59,7 @@ export class LiveKitRoom {
                 //TODO : revoir la fonction ==> spaceUser toujours undefined /mauvais
                 const id = this.getParticipantId(participant);
 
-                const spaceUser = this.space.getSpaceUserById(id);
+                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
 
                 if (!spaceUser) {
                     console.error("spaceUser not found for participant", id);
@@ -155,7 +155,7 @@ export class LiveKitRoom {
 
         this.room.on(RoomEvent.ParticipantConnected, (participant) => {
             const id = this.getParticipantId(participant);
-            const spaceUser = this.space.getSpaceUserById(id);
+            const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
             if (!spaceUser) {
                 console.log("spaceUser not found for participant", id);
                 return;

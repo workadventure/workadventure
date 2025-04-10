@@ -208,8 +208,13 @@ export class VideoPeer extends Peer implements Streamable {
                         this.blocked = true;
                         this.toggleRemoteStream(false);
                         const simplePeer = this.space.simplePeer;
+                        const spaceUserId = this.space.getSpaceUserByUserId(this.userId)?.spaceUserId;
+                        if (!spaceUserId) {
+                            console.error("spaceUserId not found for userId", this.userId);
+                            return;
+                        }
                         if (simplePeer) {
-                            simplePeer.blockedFromRemotePlayer(this.userId);
+                            simplePeer.blockedFromRemotePlayer(spaceUserId);
                         }
                         break;
                     }

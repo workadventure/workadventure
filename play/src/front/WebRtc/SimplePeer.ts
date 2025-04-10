@@ -20,6 +20,7 @@ import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { SimplePeerConnectionInterface } from "../Space/SpacePeerManager/SpacePeerManager";
 
 export interface UserSimplePeerInterface {
     userId: string;
@@ -37,12 +38,15 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
 
 //TODO : Profiter que le simplePeer soit lié au space pour refacto et enlever les dépendance
 
-export class SimplePeer {
+export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly unsubscribers: (() => void)[] = [];
     private readonly rxJsUnsubscribers: Subscription[] = [];
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
     private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+
+    // public readonly videoPeerStore: MapStore<string, VideoPeer>;
+    // public readonly screenSharingPeerStore: MapStore<string, ScreenSharingPeer> ;
 
     private readonly _videoPeerAdded = new Subject<VideoPeer>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -62,6 +66,8 @@ export class SimplePeer {
         // peerStore.cleanupStore(this.space.getName());
         // screenSharingPeerStore.cleanupStore(this.space.getName());
         let localScreenCapture: MediaStream | undefined = undefined;
+        // this.videoPeerStore = this.space.livekitVideoStreamStore
+        // this.screenSharingPeerStore = this.space.screenSharingPeerStore
 
         //todo
         this.unsubscribers.push(
@@ -96,7 +102,17 @@ export class SimplePeer {
                     return;
                 }
 
-                this.closeConnection(user.userId);
+                console.log(">>>> closeConnection", {
+                    userId: user.userId,
+                });
+
+                const spaceUserId = this.space.getSpaceUserByUserId(user.userId)?.spaceUserId;
+                if (!spaceUserId) {
+                    console.error("spaceUserId not found for userId", user.userId);
+                    return;
+                }
+
+                this.closeConnection(spaceUserId);
             })
         );
     }
@@ -192,9 +208,6 @@ export class SimplePeer {
             return;
         }
 
-        console.log(">>>> receiveWebrtcStart initiator", {
-            user,
-        });
         await this.createPeerConnection(user);
     }
 
@@ -657,7 +670,7 @@ export class SimplePeer {
         console.log(">>>> removePeer", {
             userId,
         });
-        //this.space.livekitVideoStreamStore.delete(userId);
-        //this.space.screenSharingPeerStore.delete(userId);
+        this.space.livekitVideoStreamStore.delete(userId);
+        this.space.screenSharingPeerStore.delete(userId);
     }
 }

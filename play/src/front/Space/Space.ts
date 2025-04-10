@@ -249,7 +249,7 @@ export class Space implements SpaceInterface {
         return this._connection.updateSpaceMetadataMessageStream;
     }
 
-    public getSpaceUserById(id: string): SpaceUserExtended | undefined {
+    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
         for (const filter of this.filters.values()) {
             const users = filter.getUsers();
             const user = users.find((user) => user.spaceUserId === id);
@@ -258,5 +258,25 @@ export class Space implements SpaceInterface {
             }
         }
         return undefined;
+    }
+
+    //TODO : revoir le nom de la fonction
+    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
+        for (const filter of this.filters.values()) {
+            const users = filter.getUsers();
+            const user = users.find((user) => this.getUserIdFromSpaceUserId(user.spaceUserId) === id);
+            if (user) {
+                return user;
+            }
+        }
+        return undefined;
+    }
+    
+    //TODO : revoir le nom de la fonction
+    private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
+        const parts = spaceUserId.split("_");
+        const lastPart = parts[parts.length - 1];
+        const num = Number(lastPart);
+        return isNaN(num) ? undefined : num;
     }
 }

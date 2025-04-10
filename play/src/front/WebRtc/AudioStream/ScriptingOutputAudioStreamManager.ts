@@ -1,8 +1,8 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
-import { SimplePeerConnectionInterface } from "../../Space/Space";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
+import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
 
 /**
  * Class in charge of receiving audio streams from the scripting API and playing them.

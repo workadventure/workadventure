@@ -53,7 +53,8 @@ export interface SpaceInterface {
     screenSharingPeerStore: MapStore<SpaceUser["spaceUserId"], ScreenSharingPeer>;
     livekitVideoStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
     livekitScreenShareStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
-    getSpaceUserById(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
+    getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
 }

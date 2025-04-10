@@ -185,7 +185,6 @@ import {
     livekitVideoStreamElementsStore,
     livekitVideoStreamStore,
     peerElementsStore,
-    peerSizeStore,
     peerStore,
     screenSharingPeerStore,
 } from "../../Stores/PeerStore";
@@ -2180,14 +2179,15 @@ export class GameScene extends DirtyScene {
 
         // Store all subscriptions to be able to unsubscribe later
         //TODO : voir les problemes de type ici
-        this.peerSizeSubscription = peerElementsStore.subscribe((peerElements) => {
+        this.peerSizeSubscription = livekitVideoStreamElementsStore.subscribe((peerElements) => {
             const newPeerNumber = peerElements.length;
             const newUsers = new Map<number, MessageUserJoined>();
             const players = this.remotePlayersRepository.getPlayers();
-            const peers = get(get(peerStore));
 
             // Populate newUsers from the current space's peers
+            //TODO : VOIR SI on passe le store en videoPeer plutot qu'en streamable simple
             for (const [playerId] of peers) {
+                console.log(">>>>>>> playerId", playerId);
                 const currentPlayer = players.get(playerId);
                 if (currentPlayer) {
                     newUsers.set(playerId, currentPlayer);
@@ -3967,11 +3967,11 @@ ${escapedMessage}
         return this.worldUserProvider.userCount;
     }
 
-    get peerStore(): Readable<Map<number, VideoPeer>> {
+    get peerStore(): Readable<Map<string, VideoPeer>> {
         return this.spaceRegistry.peerStore;
     }
 
-    get screenSharingPeerStore(): Readable<Map<number, ScreenSharingPeer>> {
+    get screenSharingPeerStore(): Readable<Map<string, ScreenSharingPeer>> {
         return this.spaceRegistry.screenSharingPeerStore;
     }
 }
