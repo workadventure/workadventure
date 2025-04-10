@@ -253,7 +253,7 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, screenSharingStreamStore, peerElementsStore, scriptingVideoStore, silentStore],
+    [broadcastTracksStore, livekitVideoStreamElementsStore, livekitScreenShareStreamElementsStore, scriptingVideoStore, silentStore],
     ([$broadcastTracksStore, $screenSharingStreamStore, $peerElementsStore, $scriptingVideoStore, $silentStore]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {
@@ -273,7 +273,7 @@ export const isInRemoteConversation = derived(
         }
 
         // Check if we have any screen sharing streams
-        if ($screenSharingStreamStore.size > 0) {
+        if ($screenSharingStreamStore.length > 0) {
             return true;
         }
 
