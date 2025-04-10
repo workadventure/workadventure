@@ -2179,218 +2179,219 @@ export class GameScene extends DirtyScene {
 
         // Store all subscriptions to be able to unsubscribe later
         //TODO : voir les problemes de type ici
-        this.peerSizeSubscription = livekitVideoStreamElementsStore.subscribe((peerElements) => {
-            const newPeerNumber = peerElements.length;
-            const newUsers = new Map<number, MessageUserJoined>();
-            const players = this.remotePlayersRepository.getPlayers();
+        this.peerSizeSubscription = peerStore.subscribe((peers) => {
 
-            // Populate newUsers from the current space's peers
-            //TODO : VOIR SI on passe le store en videoPeer plutot qu'en streamable simple
-            for (const [playerId] of peers) {
-                console.log(">>>>>>> playerId", playerId);
-                const currentPlayer = players.get(playerId);
-                if (currentPlayer) {
-                    newUsers.set(playerId, currentPlayer);
-                }
-            }
+        //     const newPeerNumber = peers.size;
+        //     const newUsers = new Map<number, MessageUserJoined>();
+        //     const players = this.remotePlayersRepository.getPlayers();
+        //     // Populate newUsers from the current space's peers
+        //     //TODO : regler les problemes 
+        //     //TODO : VOIR SI on passe le store en videoPeer plutot qu'en streamable simple
+        //     for (const [playerId] of peers) {
+        //         console.log(">>>>>>> playerId", playerId);
+        //         // const currentPlayer = players.get(playerId);
+        //         // if (currentPlayer) {
+        //         //     newUsers.set(playerId, currentPlayer);
+        //         // }
+        //     }
 
-            // Handle Join
-            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                const peer = Array.from(peers.values())[0];
-                statusChanger.setUserNameInteraction(peer.player.name);
-                statusChanger.applyInteractionRules();
+        //     // Handle Join
+        //     if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
+        //         const peer = Array.from(peers.values())[0];
+        //         statusChanger.setUserNameInteraction(peer.player.name);
+        //         statusChanger.applyInteractionRules();
 
-                pendingConnects.add(peer.userId);
-                setTimeout(() => {
-                    pendingConnects.delete(peer.userId);
-                }, 5000);
+        //         pendingConnects.add(peer.userId);
+        //         setTimeout(() => {
+        //             pendingConnects.delete(peer.userId);
+        //         }, 5000);
 
-                peer.once("connect", () => {
-                    pendingConnects.delete(peer.userId);
-                    if (pendingConnects.size === 0) {
-                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                        alreadyInBubble = true;
-                    }
-                });
-            }
+        //         peer.once("connect", () => {
+        //             pendingConnects.delete(peer.userId);
+        //             if (pendingConnects.size === 0) {
+        //                 iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+        //                 alreadyInBubble = true;
+        //             }
+        //         });
+        //     }
 
-            // Left
-            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
-                // TODO: leave event can be triggered without a join if connect fails
-                hideBubbleConfirmationModal();
-                iframeListener.sendLeaveProximityMeetingEvent();
+        //     // Left
+        //     if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+        //         // TODO: leave event can be triggered without a join if connect fails
+        //         hideBubbleConfirmationModal();
+        //         iframeListener.sendLeaveProximityMeetingEvent();
 
-                if (screenWakeRelease) {
-                    screenWakeRelease()
-                        .then(() => {
-                            screenWakeRelease = undefined;
-                        })
-                        .catch((error) => console.error(error));
-                }
-            }
+        //         if (screenWakeRelease) {
+        //             screenWakeRelease()
+        //                 .then(() => {
+        //                     screenWakeRelease = undefined;
+        //                 })
+        //                 .catch((error) => console.error(error));
+        //         }
+        //     }
 
-            // Participant Join
-            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
-                const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
+        //     // Participant Join
+        //     if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
+        //         const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
-                if (newUser) {
-                    if (alreadyInBubble) {
-                        peers.get(newUser.userId)?.once("connect", () => {
-                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                        });
-                    } else {
-                        const peer = peers.get(newUser.userId);
-                        if (peer) {
-                            pendingConnects.add(newUser.userId);
-                            setTimeout(() => {
-                                pendingConnects.delete(newUser.userId);
-                            }, 5000);
-                            peer.once("connect", () => {
-                                pendingConnects.delete(newUser.userId);
-                                if (pendingConnects.size === 0) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }
-                            });
-                        }
-                    }
-                }
-            }
+        //         if (newUser) {
+        //             if (alreadyInBubble) {
+        //                 // peers.get(newUser.userId)?.once("connect", () => {
+        //                 //     iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+        //                 // });
+        //             } else {
+        //                 // const peer = peers.get(newUser.userId);
+        //                 // if (peer) {
+        //                 //     pendingConnects.add(newUser.userId);
+        //                 //     setTimeout(() => {
+        //                 //         pendingConnects.delete(newUser.userId);
+        //                 //     }, 5000);
+        //                 //     peer.once("connect", () => {
+        //                 //         pendingConnects.delete(newUser.userId);
+        //                 //         if (pendingConnects.size === 0) {
+        //                 //             iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+        //                 //             alreadyInBubble = true;
+        //                 //         }
+        //                 //     });
+        //                 // }
+        //             }
+        //         }
+        //     }
 
-            // Participant Left
-            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
-                const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
+        //     // Participant Left
+        //     if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
+        //         const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
 
-                if (oldUser) {
-                    // TODO: leave event can be triggered without a join if connect fails
-                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
-                }
-            }
+        //         if (oldUser) {
+        //             // TODO: leave event can be triggered without a join if connect fails
+        //             iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
+        //         }
+        //     }
 
-            if (newPeerNumber > oldPeersNumber) {
-                const bubbleSound = get(bubbleSoundStore);
-                this.playSound(`audio-webrtc-in-${bubbleSound}`);
-                faviconManager.pushNotificationFavicon();
-            } else if (newPeerNumber < oldPeersNumber) {
-                const bubbleSound = get(bubbleSoundStore);
-                this.playSound(`audio-webrtc-out-${bubbleSound}`);
-                faviconManager.pushOriginalFavicon();
-            }
+        //     if (newPeerNumber > oldPeersNumber) {
+        //         const bubbleSound = get(bubbleSoundStore);
+        //         this.playSound(`audio-webrtc-in-${bubbleSound}`);
+        //         faviconManager.pushNotificationFavicon();
+        //     } else if (newPeerNumber < oldPeersNumber) {
+        //         const bubbleSound = get(bubbleSoundStore);
+        //         this.playSound(`audio-webrtc-out-${bubbleSound}`);
+        //         faviconManager.pushOriginalFavicon();
+        //     }
 
-            if (newPeerNumber > 0) {
-                if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
-                        this.tryChangeShowVoiceIndicatorState(isTalking);
+        //     if (newPeerNumber > 0) {
+        //         if (!this.localVolumeStoreUnsubscriber) {
+        //             this.localVolumeStoreUnsubscriber = localVoiceIndicatorStore.subscribe((isTalking) => {
+        //                 this.tryChangeShowVoiceIndicatorState(isTalking);
 
-                        return () => {
-                            this.tryChangeShowVoiceIndicatorState(false);
-                        };
-                    });
-                }
-                //this.reposition();
-            } else {
-                this.CurrentPlayer.toggleTalk(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
-                this.showVoiceIndicatorChangeMessageSent = false;
-                //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
-                if (this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber();
-                    this.localVolumeStoreUnsubscriber = undefined;
-                }
+        //                 return () => {
+        //                     this.tryChangeShowVoiceIndicatorState(false);
+        //                 };
+        //             });
+        //         }
+        //         //this.reposition();
+        //     } else {
+        //         this.CurrentPlayer.toggleTalk(false, true);
+        //         this.connection?.emitPlayerShowVoiceIndicator(false);
+        //         this.showVoiceIndicatorChangeMessageSent = false;
+        //         //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
+        //         if (this.localVolumeStoreUnsubscriber) {
+        //             this.localVolumeStoreUnsubscriber();
+        //             this.localVolumeStoreUnsubscriber = undefined;
+        //         }
 
-                //this.reposition();
-            }
+        //         //this.reposition();
+        //     }
 
-            oldUsers = newUsers;
-            oldPeersNumber = newPeerNumber;
-        });
+        //     oldUsers = newUsers;
+        //     oldPeersNumber = newPeerNumber;
+        // });
 
-        this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
-            if (isOn) {
-                this.activatablesManager.deactivateSelectedObject();
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.disableSelectingByDistance();
-            } else {
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.activatablesManager.enableSelectingByDistance();
-                // make sure all entities are non-interactive
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
-                // add interactions back only for activatables
-                this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
-            }
-            this.markDirty();
-        });
+        // this.mapEditorModeStoreUnsubscriber = mapEditorModeStore.subscribe((isOn) => {
+        //     if (isOn) {
+        //         this.activatablesManager.deactivateSelectedObject();
+        //         this.activatablesManager.handlePointerOutActivatableObject();
+        //         this.activatablesManager.disableSelectingByDistance();
+        //     } else {
+        //         this.activatablesManager.handlePointerOutActivatableObject();
+        //         this.activatablesManager.enableSelectingByDistance();
+        //         // make sure all entities are non-interactive
+        //         this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesNonInteractive();
+        //         // add interactions back only for activatables
+        //         this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
+        //     }
+        //     this.markDirty();
+        // });
 
-        this.refreshPromptStoreStoreUnsubscriber = refreshPromptStore.subscribe((comment) => {
-            if (comment) {
-                this.userInputManager.disableControls();
-            } else {
-                this.userInputManager.restoreControls();
-            }
-        });
+        // this.refreshPromptStoreStoreUnsubscriber = refreshPromptStore.subscribe((comment) => {
+        //     if (comment) {
+        //         this.userInputManager.disableControls();
+        //     } else {
+        //         this.userInputManager.restoreControls();
+        //     }
+        // });
 
-        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
-            if (exploration) {
-                this.cameraManager.setExplorationMode();
-            } else {
-                this.input.keyboard?.enableGlobalCapture();
-            }
-        });
+        // this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
+        //     if (exploration) {
+        //         this.cameraManager.setExplorationMode();
+        //     } else {
+        //         this.input.keyboard?.enableGlobalCapture();
+        //     }
+        // });
 
-        this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
-            if (devices.length === 0) return;
-            // filter device by name tu avoid multiple notification for the same device
-            const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
-                if (
-                    devices.find((device_) => device_.label == currentDevice.label) != undefined ||
-                    get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
-                    get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
-                    get(speakerSelectedStore) == currentDevice.deviceId
-                )
-                    return devices;
+        // this.lastNewMediaDeviceDetectedStoreUnsubscriber = lastNewMediaDeviceDetectedStore.subscribe((devices) => {
+        //     if (devices.length === 0) return;
+        //     // filter device by name tu avoid multiple notification for the same device
+        //     const devicesToNotify = devices.reduce((devices: MediaDeviceInfo[], currentDevice: MediaDeviceInfo) => {
+        //         if (
+        //             devices.find((device_) => device_.label == currentDevice.label) != undefined ||
+        //             get(requestedCameraDeviceIdStore) == currentDevice.deviceId ||
+        //             get(requestedMicrophoneDeviceIdStore) == currentDevice.deviceId ||
+        //             get(speakerSelectedStore) == currentDevice.deviceId
+        //         )
+        //             return devices;
 
-                devices.push(currentDevice);
-                return devices;
-            }, []);
+        //         devices.push(currentDevice);
+        //         return devices;
+        //     }, []);
 
-            for (const device of devicesToNotify) {
-                const id = `playtext-mediadevice-${device.deviceId}`;
-                this.CurrentPlayer.destroyText(id);
-                this.CurrentPlayer.playText(
-                    id,
-                    get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
-                    5000,
-                    () => {
-                        this.CurrentPlayer.destroyText(id);
+        //     for (const device of devicesToNotify) {
+        //         const id = `playtext-mediadevice-${device.deviceId}`;
+        //         this.CurrentPlayer.destroyText(id);
+        //         this.CurrentPlayer.playText(
+        //             id,
+        //             get(LL).camera.webrtc.newDeviceDetected({ device: device.label }),
+        //             5000,
+        //             () => {
+        //                 this.CurrentPlayer.destroyText(id);
 
-                        // get all devices with the same label
-                        const devicesToUse = devices.filter((device_) => device_.label === device.label);
+        //                 // get all devices with the same label
+        //                 const devicesToUse = devices.filter((device_) => device_.label === device.label);
 
-                        for (const deviceToUse of devicesToUse) {
-                            switch (deviceToUse.kind) {
-                                case "videoinput":
-                                    requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
-                                    break;
-                                // use the new device
-                                case "audioinput":
-                                    requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
-                                    localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
-                                    break;
+        //                 for (const deviceToUse of devicesToUse) {
+        //                     switch (deviceToUse.kind) {
+        //                         case "videoinput":
+        //                             requestedCameraDeviceIdStore.set(deviceToUse.deviceId);
+        //                             localUserStore.setPreferredVideoInputDevice(deviceToUse.deviceId);
+        //                             break;
+        //                         // use the new device
+        //                         case "audioinput":
+        //                             requestedMicrophoneDeviceIdStore.set(deviceToUse.deviceId);
+        //                             localUserStore.setPreferredAudioInputDevice(deviceToUse.deviceId);
+        //                             break;
 
-                                case "audiooutput":
-                                    localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
-                                    speakerSelectedStore.set(deviceToUse.deviceId);
-                                    break;
-                                default:
-                                    console.warn("Unknown device kind: ", deviceToUse.kind);
-                            }
-                        }
-                    },
-                    true,
-                    "message"
-                );
-            }
+        //                         case "audiooutput":
+        //                             localUserStore.setSpeakerDeviceId(deviceToUse.deviceId);
+        //                             speakerSelectedStore.set(deviceToUse.deviceId);
+        //                             break;
+        //                         default:
+        //                             console.warn("Unknown device kind: ", deviceToUse.kind);
+        //                     }
+        //                 }
+        //             },
+        //             true,
+        //             "message"
+        //         );
+        //     }
         });
 
         // Subscribe to bubble sound changes
