@@ -1,25 +1,27 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     export let minHeight: number;
     export let maxHeight: number;
     export let currentHeight: number;
     export let onResize: (height: number) => void;
 
+    let dragHandle: HTMLElement;
+
     let isDragging = false;
     let startY: number;
     let startHeight: number;
 
-    function startDragging(e: MouseEvent | TouchEvent) {
+    const startDragging = (e: MouseEvent | TouchEvent) => {
         isDragging = true;
         startY = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
         startHeight = currentHeight;
 
-        document.addEventListener("mousemove", handleDragging);
-        document.addEventListener("mouseup", stopDragging);
-        document.addEventListener("touchmove", handleDragging);
-        document.addEventListener("touchend", stopDragging);
-    }
+        document.addEventListener("mousemove", handleDragging, { passive: true });
+        document.addEventListener("mouseup", stopDragging, { passive: true });
+        document.addEventListener("touchmove", handleDragging, { passive: true });
+        document.addEventListener("touchend", stopDragging, { passive: true });
+    };
 
     function handleDragging(e: MouseEvent | TouchEvent) {
         if (!isDragging) return;
@@ -38,18 +40,25 @@
         document.removeEventListener("touchend", stopDragging);
     }
 
+    onMount(() => {
+        dragHandle.addEventListener("mousedown", startDragging, { passive: true });
+        dragHandle.addEventListener("touchstart", startDragging, { passive: true });
+    });
+
     onDestroy(() => {
         document.removeEventListener("mousemove", handleDragging);
         document.removeEventListener("mouseup", stopDragging);
         document.removeEventListener("touchmove", handleDragging);
         document.removeEventListener("touchend", stopDragging);
+
+        dragHandle.removeEventListener("mousedown", startDragging);
+        dragHandle.removeEventListener("touchstart", startDragging);
     });
 </script>
 
 <div
+    bind:this={dragHandle}
     class="drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
-    on:mousedown={startDragging}
-    on:touchstart={startDragging}
 />
 
 <style>

@@ -1,12 +1,7 @@
 import { derived, get, writable, Readable, Writable } from "svelte/store";
 import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
-import {
-    AddActionButtonActionBarEvent,
-    AddButtonActionBarEvent,
-    AddClassicButtonActionBarEvent,
-    RemoveButtonActionBarEvent,
-} from "../Api/Events/Ui/ButtonActionBarEvent";
+import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -279,6 +274,9 @@ export interface CustomButtonActionBarDescriptor {
     tooltipDesc?: string | undefined;
     imageSrc?: string | undefined;
     state: "normal" | "active" | "forbidden" | "disabled";
+    bgColor?: string | undefined;
+    textColor?: string | undefined;
+    isGradient?: boolean | undefined;
 }
 
 function createAdditionalButtonsMenu() {
@@ -289,37 +287,28 @@ function createAdditionalButtonsMenu() {
         subscribe,
         addAdditionalButtonActionBar(button: AddButtonActionBarEvent) {
             update((additionalButtonsMenu) => {
-                if (button.type === "action") {
-                    additionalButtonsMenu.set(button.id, {
-                        id: button.id,
-                        fallsInBurgerMenuStore: writable(false),
-                        component: CustomActionBarButton,
-                        props: {
-                            last: false,
-                            button: {
-                                id: button.id,
-                                tooltipTitle: button.toolTip,
-                                imageSrc: new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString(),
-                                state: "normal",
-                            },
-                        },
-                    });
-                } else {
-                    additionalButtonsMenu.set(button.id, {
-                        id: button.id,
-                        fallsInBurgerMenuStore: writable(false),
-                        component: CustomActionBarButton,
-                        props: {
-                            last: false,
-                            button: {
-                                id: button.id,
-                                label: button.label,
-                                state: "normal",
-                            },
-                        },
-                    });
+                let imgSrc: string | undefined = undefined;
+                if (button.imageSrc) {
+                    imgSrc = new URL(button.imageSrc, gameManager.currentStartedRoom.mapUrl).toString();
                 }
-
+                additionalButtonsMenu.set(button.id, {
+                    id: button.id,
+                    fallsInBurgerMenuStore: writable(false),
+                    component: CustomActionBarButton,
+                    props: {
+                        last: false,
+                        button: {
+                            id: button.id,
+                            label: button.label ? button.label : undefined,
+                            tooltipTitle: button.toolTip,
+                            imageSrc: imgSrc,
+                            state: "normal",
+                            isGradient: button.isGradient,
+                            bgColor: button.bgColor,
+                            textColor: button.textColor,
+                        },
+                    },
+                });
                 return additionalButtonsMenu;
             });
         },
@@ -385,11 +374,6 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
         return menuItems;
     }
 );
-
-// @deprecated
-export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
-// @deprecated
-export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe

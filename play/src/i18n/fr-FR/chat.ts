@@ -6,6 +6,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     adventurers: "Utilisateurs",
     onlineUsers: "Utilisateurs en ligne",
     getCloserTitle: "Rapproche toi de quelqu'un",
+    noRoomOpen: "Ouvrez un conversation",
+    noRoomOpenDescription:
+        "Rien à afficher pour le moment. Commencez une discussion ou approchez quelqu'un pour voir vos messages apparaître ici.",
     getCloserDesc:
         "Lorsque tu te rapproches d’une personne dans l’espace virtuel, une bulle de conversation s’ouvre automatiquement, te permettant de discuter en direct comme si vous étiez face à face.",
     noMessage: "Aucun message envoyé pour l’instant !",
@@ -43,6 +46,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     people: "Personnes",
     rooms: "Salons",
     invitations: "Invitations",
+    suggestedRooms: "Salons recommandés",
     availableRooms: "Salon(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
@@ -210,6 +214,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Activer le chiffrement de bout en bout",
             description: "Vous ne pourrez pas le désactiver plus tard.",
         },
+        suggested: "Salon recommandé",
+        suggestedDescription: "Ce salon sera recommandé aux utilisateurs qui rejoignent le même espace.",
         users: "Utilisateurs",
         historyVisibility: {
             label: "Qui peut lire l'historique",
@@ -453,6 +459,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
     reconnect: "Se reconnecter",
+    failedToJoinRoom: "Impossible de rejoindre la room",
+    failedToLeaveRoom: "Impossible de quitter la room",
     refreshChat: "Rafraichir le chat",
     dismiss: "Ignorer",
     whoops: "Oups ! une erreur est survenue",

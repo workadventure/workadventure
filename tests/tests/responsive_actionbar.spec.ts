@@ -23,13 +23,17 @@ test.describe('Action bar responsiveness', () => {
             WA.ui.actionBar.addButton({
                 id: 'register-btn',
                 label: 'Register',
+                bgColor: '#4056F6',
                 callback: () => {
                     WA.ui.actionBar.removeButton('register-btn');
                 }
             });
             WA.ui.actionBar.addButton({
                 id: 'download-btn',
+                isGradient: true,
                 label: 'Download',
+                bgColor: '#eab127',
+
                 callback: () => {
                     WA.ui.actionBar.removeButton('download-btn');
                 }
@@ -64,7 +68,7 @@ test.describe('Action bar responsiveness', () => {
         await expect(page.getByText('Invite')).toBeVisible();
         await expect(page.getByText('Login')).toBeVisible();
 
-        await page.setViewportSize({ width: 375, height: 600 });
+        await page.setViewportSize({ width: 345, height: 600 });
 
         await expect(page.getByText('Invite')).toBeHidden();
         await expect(page.getByText('Login')).toBeHidden();

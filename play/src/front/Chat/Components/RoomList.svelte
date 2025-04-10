@@ -201,12 +201,7 @@
                                         <div
                                             class="translate-y-[3px] -translate-x-[3px] group-hover:translate-y-[0] transition-all"
                                         >
-                                            <WokaFromUserId
-                                                userId={-1}
-                                                customWidth="32px"
-                                                customHeight="32px"
-                                                placeholderSrc=""
-                                            />
+                                            <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
                                         </div>
                                     </div>
                                 </div>
@@ -328,16 +323,14 @@
             <RoomTimeline room={$selectedRoomStore} />
         </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
-        <div class="flex flex-col flex-1 pl-4 items-center">
+        <div class="flex flex-col flex-1 pl-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
                 <img src={getCloseImg} alt="Discussion bubble" />
-                <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
+                <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
-                    Et ducimus cum et dolor. Consequatur ab voluptas qui soluta. Aspernatur natus nisi illo saepe
-                    doloribus vitae.
+                    {$LL.chat.noRoomOpenDescription()}
                 </div>
             </div>
-            <p class="self-center text-md text-gray-500">{$LL.chat.nothingToDisplay()}</p>
         </div>
     {/if}
 

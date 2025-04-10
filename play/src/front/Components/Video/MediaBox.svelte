@@ -35,7 +35,6 @@
         }
     }
 
-    $: isHighlighted = $highlightedEmbedScreen === streamable;
     $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
 </script>
 
@@ -46,5 +45,5 @@
     class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
     in:fly={{ y: 50, duration: 150 }}
 >
-    <VideoMediaBox peer={streamable} {isHighlighted} {fullScreen} />
+    <VideoMediaBox peer={streamable} {fullScreen} />
 </div>

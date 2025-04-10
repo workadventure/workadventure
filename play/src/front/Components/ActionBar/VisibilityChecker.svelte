@@ -29,6 +29,6 @@
     });
 </script>
 
-<div class="" class:visible={isVisible} class:invisible={!isVisible} bind:this={divElement}>
+<div class="group/visibilitychecker" class:visible={isVisible} class:invisible={!isVisible} bind:this={divElement}>
     <slot />
 </div>

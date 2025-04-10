@@ -16,7 +16,7 @@
 
 <div id="tag" class:minimal style="background-color: {backGroundColor}; color: {textColor};">
     <div id="woka">
-        <Woka src={wokaSrc} customHeight={`${size}px`} customWidth={`${size}px`} />
+        <Woka src={wokaSrc} customWidth={`${size}px`} />
     </div>
     <span id="name">{isMe ? $LL.camera.my.nameTag() : name}</span>
 </div>

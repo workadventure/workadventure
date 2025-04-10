@@ -31,6 +31,7 @@
     import VisibilityChecker from "./VisibilityChecker.svelte";
     import ContextualMenuItems from "./MenuIcons/ContextualMenuItems.svelte";
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
+    import SilentBlock from "./SilentBlock.svelte";
     import { IconArrowDown } from "@wa-icons";
 
     let rightDiv: HTMLDivElement;
@@ -99,17 +100,20 @@
             slot="center"
             class="@xxs/actions:justify-center justify-end main-action pointer-events-auto min-w-32 @sm/actions:min-w-[192px]"
         >
-            <div class="flex justify-center relative space-x-1 @md/actions:space-x-2 @xl/actions:space-x-4">
+            <div
+                class="flex justify-center relative gap-1 @md/actions:gap-2 @xl/actions:gap-4 z-[1] mx-1 @md/actions:mx-2 @xl/actions:mx-4"
+            >
                 <div class="hidden @sm/actions:flex items-center">
                     <ContextualMenuItems />
                 </div>
 
                 <div>
                     <!-- ACTION WRAPPER : CAM & MIC -->
-                    <div class="group/hardware flex items-center relative mr-1 @md/actions:mr-2 @xl/actions:mr-4">
-                        {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && $myMicrophoneStore}
+                    <div class="group/hardware flex items-center relative">
+                        {#if !$inExternalServiceStore && $proximityMeetingStore && $myMicrophoneStore}
                             <MicrophoneMenuItem />
                         {/if}
+
                         {#if smallArrowVisible}
                             <div
                                 class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
@@ -137,7 +141,7 @@
                             <MediaSettingsList on:close={() => (mediaSettingsDisplayed = false)} />
                         {/if}
                         <!-- NAV : CAMERA START -->
-                        {#if !$inExternalServiceStore && $myCameraStore && !$silentStore}
+                        {#if !$inExternalServiceStore && $myCameraStore}
                             <CameraMenuItem />
                         {/if}
                         <!-- NAV : CAMERA END -->
@@ -206,10 +210,14 @@
                     </div>
                 </div>
             </div>
+            <!-- NAV : SILENT BLOCK -->
+            {#if $silentStore}
+                <SilentBlock />
+            {/if}
         </div>
 
-        <div slot="right" id="action-wrapper" class="flex flex-1 justify-end space-x-2">
-            <div class="flex flex-row flex-0 space-x-0">
+        <div slot="right" id="action-wrapper" class="flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4">
+            <div class="flex flex-row flex-0 gap-0">
                 {#if rightDiv}
                     {#each $rightActionBarMenuItems as button, index (button.id)}
                         <VisibilityChecker
@@ -220,13 +228,16 @@
                                 this={button.component}
                                 {...button.props}
                                 first={firstVisibleItemIndex === index}
+                                classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
+                                    ? "mr-1 @md/actions:mr-2 @xl/actions:mr-4"
+                                    : ""}
                             />
                         </VisibilityChecker>
                     {/each}
                 {/if}
             </div>
 
-            <div class="flex justify-end space-x-1 md:space-x-2 xl:space-x-4">
+            <div class="flex justify-end gap-1 md:gap-2 xl:gap-4">
                 <ProfileMenu />
             </div>
         </div>

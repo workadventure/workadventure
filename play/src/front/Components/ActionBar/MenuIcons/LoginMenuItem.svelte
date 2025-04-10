@@ -6,6 +6,7 @@
 
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
+    export let classList: string | undefined = undefined;
 
     function goToLogin() {
         analyticsClient.login();
@@ -20,6 +21,7 @@
     on:click={goToLogin}
     {first}
     {last}
+    {classList}
 >
     <IconUserCircle />
 </ActionBarButton>
