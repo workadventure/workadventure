@@ -7,6 +7,9 @@ import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
 import { mapManagerActivated } from "../../Stores/MenuStore";
+import { Emoji } from "../../Stores/Utils/emojiSchema";
+import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -81,6 +84,19 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             case "KeyR": {
                 this.gameScene.CurrentPlayer.rotate();
+                break;
+            }
+            case "Digit1":
+            case "Digit2":
+            case "Digit3":
+            case "Digit4":
+            case "Digit5":
+            case "Digit6": {
+                const emoji: Emoji | null | undefined = get(emoteDataStore).get(Number(event.code.slice(-1)));
+                if (emoji) {
+                    analyticsClient.launchEmote(emoji);
+                    emoteStore.set(emoji);
+                }
                 break;
             }
             default: {
