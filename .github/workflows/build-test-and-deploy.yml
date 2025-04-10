@@ -597,6 +597,11 @@ jobs:
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
+          LIVEKIT_HOST: ${{ env.LIVEKIT_HOST }}
+          LIVEKIT_API_KEY: ${{ env.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ env.LIVEKIT_API_SECRET }}
+          LIVEKIT_WS_URL: ${{ env.LIVEKIT_WS_URL }}
+      
 
 
 #      - name: "Printing values file"
