@@ -4,7 +4,7 @@
 </script>
 
 <div
-    class="absolute -top-[200px] @sm/actions:top-20 left-0 @md/actions:mr-2 @xl/actions:mr-4 z-0 text-white border border-solid border-danger flex flex-col items-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-lg text-center"
+    class="absolute -top-[200px] @sm/actions:top-20 left-0 z-0 text-white border border-solid border-danger flex flex-col items-center justify-between bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-lg text-center"
     transition:fly={{ y: 30, duration: 400 }}
 >
     <div class="p-2">
