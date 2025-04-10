@@ -19,6 +19,10 @@
     label={button.label}
     tooltipTitle={button.tooltipTitle}
     tooltipDesc={button.tooltipDesc}
+    bgColor={button.bgColor}
+    textColor={button.textColor}
+    hasImage={!!button.imageSrc}
+    isGradient={button.isGradient}
     on:click={() => {
         buttonActionBarTrigger(button);
     }}

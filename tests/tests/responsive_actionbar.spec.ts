@@ -23,13 +23,17 @@ test.describe('Action bar responsiveness', () => {
             WA.ui.actionBar.addButton({
                 id: 'register-btn',
                 label: 'Register',
+                bgColor: '#4056F6',
                 callback: () => {
                     WA.ui.actionBar.removeButton('register-btn');
                 }
             });
             WA.ui.actionBar.addButton({
                 id: 'download-btn',
+                isGradient: true,
                 label: 'Download',
+                bgColor: '#eab127',
+
                 callback: () => {
                     WA.ui.actionBar.removeButton('download-btn');
                 }

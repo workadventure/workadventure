@@ -393,69 +393,66 @@ WA.ui.modal.closeModal(): void
 
 ### Add a button in the action bar
 
-#### Classic button
 ```ts
 WA.ui.actionBar.addButton(descriptor: {
     id: string,
-    label: string,
-    clickCallback: (buttonActionBar: AddButtonActionBar) => void
-}): void
-```
-
-#### Action button
-```ts
-WA.ui.actionBar.addButton(descriptor: {
-    id: string,
-    type: 'action',
-    imageSrc: string,
-    toolTip: string,
+    label: string | undefined,
+    imageSrc: string | undefined,
+    toolTip: string | undefined, 
+    // Specifies the background color of the button. This parameter is nullable.
+    bgColor: string | undefined,
+    // Specifies the text color of the button. This parameter is nullable.
+    textColor: string | undefined,
+    // Specifies the background color of the button. This parameter is nullable.
+    isGradient: boolean | undefined,
     clickCallback: (buttonActionBar: AddButtonActionBar) => void
 }): void
 ```
 
 - id: the id of the button action bar defined.
 - label: the label to display in the button.
-- type: the type of button ('button' / 'action'). By default is 'button'.
 - imageSrc: URL of the button's image (relative to the map file).
 - toolTip: label displayed above the action button.
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
 ```ts
-/**
- * Ennum of button type
- */
-const ActionBarButtonType = {
-    button: "button",
-    action: "action",
-} as const;
-type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
-
 interface AddButtonActionBar {
     /*
-    *   the id of the button action bar defined.
-    */
+     *   the id of the button action bar defined.
+     */
     id: string,
 
     /*
-    *   the label to display in button action bar.
-    */
+     *   the label to display in button action bar.
+     */
     label: string
 
     /*
-    *   the type of button ('button' / 'action'). By default is 'button'.
-    */
-    type: ActionBarButtonType,
-
-    /*
-    *  the image of button associated, This parameter is nullable.
-    */
+     *  the image of button associated, This parameter is nullable.
+     */
     imageSrc: string
 
     /*
-    *   the label displayed above the action button. This parameter is nullable.
-    */
+     *   the label displayed above the action button. This parameter is nullable.
+     */
     toolTip: string
+  
+    /*
+     *   specifies the background color of the button. This parameter is nullable.
+     */
+    bgColor: string
+
+    /*
+     *   specifies the button text color. This parameter can be null.    
+     */
+    textColor: string
+
+    /*
+     *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
+     */
+    isGradient: boolean
+  
 }
 ```
 
@@ -465,39 +462,46 @@ interface AddButtonActionBar {
 ```
 - id: the id of the action bar button previously defined.
 
-### Example of an action bar button
+### Example of an icon only action bar button
+
+![Action Bar Button](../images/action_bar/button-action.png)
+
 ```ts
     // Add action bar button 'Register'.
     WA.ui.actionBar.addButton({
-        id: 'register-btn',
-        label: 'Register',
-        callback: (event) => {
-            console.log('Button clicked', event);
-            // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('register-btn');
-        }
-    });
-```
-
-![Action Bar Button](../images/action_bar/button_action_bar.png)
-
-### Example of an action bar for action button
-```ts
-    // Add action bar button 'Register'.
-    WA.ui.actionBar.addButton({
-        id: 'register-btn',
-        type: 'action',
+        id: 'icon-btn',
         imageSrc: '<Your image url>',
-        toolTip: 'Register',
+        toolTip: 'Click me',
         callback: (event) => {
             console.log('Button clicked', event);
             // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('register-btn');
+            WA.ui.actionBar.removeButton('icon-btn');
         }
     });
 ```
 
-![Action Bar Button](../images/action_bar/action_button_action_bar.png)
+### Example of an action bar button with gradient
+
+![Action Bar Button](../images/action_bar/button-gradient.png)
+
+```ts
+    // Add action bar button 'Register'.
+    WA.ui.actionBar.addButton({
+        id: 'gradient-btn',
+        label: 'Register',
+        bgColor: '#edb911',
+        isGradient: true,
+        callback: (event) => {
+            console.log('Button clicked', event);
+            // When a user clicks on the action bar button 'Register', we remove it.
+            WA.ui.actionBar.removeButton('gradient-btn');
+        }
+    });
+```
+> Note that when the screen is too small, buttons are added to the right menu of the action bar. In this case, the button is displayed with an image and a tooltip, while for the gradient button, it retains its color and its text remains centered. 
+
+![Action Bar Button](../images/action_bar/button-in-menu.png)
+
 
 ## Open / Close banner
 
