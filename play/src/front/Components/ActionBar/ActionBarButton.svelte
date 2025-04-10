@@ -43,7 +43,7 @@
 
 {#if !isInMenu}
     <div
-        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {last ? '' : ''} {classList}"
+        class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {classList} group-[.invisible]/visibilitychecker:px-2"
         class:first:rounded-l-lg={first === undefined}
         class:first:pl-2={first === undefined}
         class:last:rounded-r-lg={last === undefined}

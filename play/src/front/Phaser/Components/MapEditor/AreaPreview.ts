@@ -9,6 +9,7 @@ import _ from "lodash";
 import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
 import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
+import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
@@ -37,6 +38,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private shiftKey?: Phaser.Input.Keyboard.Key;
     private ctrlKey?: Phaser.Input.Keyboard.Key;
     private propertiesIcon: GameObjects.Image[] = [];
+
+    private speechDomElement: SpeechDomElement | null = null;
 
     constructor(
         scene: Phaser.Scene,
@@ -131,6 +134,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.showPropertiesIcon(value);
         if (!value) {
             this.showSizeAlteringSquares(false);
+            this.destroyText();
+        } else {
+            this.playText();
         }
         this.emit(AreaPreviewEvent.UpdateVisibility, value);
         return this;
@@ -184,6 +190,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public destroy(): void {
         super.destroy();
         this.squares.forEach((square) => square.destroy());
+        this.destroyText();
     }
 
     public getPosition(): { x: number; y: number } {
@@ -538,6 +545,35 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     name: "",
                     color: "FFFFFF",
                 };
+        }
+    }
+
+    // Play text on the Image entity
+    public playText() {
+        if (this.speechDomElement) this.destroyText();
+        setTimeout(() => {
+            if (this.areaData.name === undefined || this.areaData.name === "") return;
+            const x = this.x;
+            this.speechDomElement = new SpeechDomElement(
+                "name",
+                this.areaData.name,
+                this.scene,
+                x,
+                this.y - this.height / 2 - 30,
+                () => this.destroyText()
+            );
+            this.scene.add.existing(this.speechDomElement);
+            // Need to put the element at the top because
+            // if the SpechDomElement is inside of the area, pointer mouse events will not triggered
+            this.speechDomElement.play(x, this.y - this.height / 2 - 15, -1);
+        }, 10);
+    }
+
+    // Destroy text
+    public destroyText() {
+        if (this.speechDomElement) {
+            this.speechDomElement.destroy();
+            this.speechDomElement = null;
         }
     }
 }

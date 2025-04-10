@@ -201,12 +201,7 @@
                                         <div
                                             class="translate-y-[3px] -translate-x-[3px] group-hover:translate-y-[0] transition-all"
                                         >
-                                            <WokaFromUserId
-                                                userId={-1}
-                                                customWidth="32px"
-                                                customHeight="32px"
-                                                placeholderSrc=""
-                                            />
+                                            <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
                                         </div>
                                     </div>
                                 </div>

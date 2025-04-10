@@ -7,6 +7,7 @@
 
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
+    export let classList: string | undefined = undefined;
 
     function showInviteScreen() {
         analyticsClient.openInvite();
@@ -21,6 +22,7 @@
         on:click={showInviteScreen}
         {first}
         {last}
+        {classList}
     >
         <IconShare3 />
     </ActionBarButton>

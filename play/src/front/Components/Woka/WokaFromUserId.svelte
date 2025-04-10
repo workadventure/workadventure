@@ -7,7 +7,6 @@
     export let userId: number | string;
     export let placeholderSrc: string;
     export let customWidth: string;
-    export let customHeight: string;
 
     let src: string;
     let unsubscribe: Unsubscriber | undefined;
@@ -39,5 +38,5 @@
 </script>
 
 {#if src}
-    <Woka {src} {customWidth} {customHeight} />
+    <Woka {src} {customWidth} />
 {/if}
