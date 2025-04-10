@@ -384,6 +384,10 @@ jobs:
           fi
           echo "PIPELINE_ID=$PIPELINE_ID" >> "$GITHUB_ENV"
 
+          PIPELINE_URL=$(echo "$RESPONSE" | jq -r '.web_url')
+          echo "🌐 Pipeline URL: $PIPELINE_URL"
+
+          echo "PIPELINE_URL=$PIPELINE_URL" >> "$GITHUB_ENV"
       - name: Long poll GitLab pipeline until finished
         run: |
           REF="${{ steps.set-ref.outputs.ref }}"
@@ -423,16 +427,19 @@ jobs:
             case "$STATUS" in
               "success")
                 echo "✅ Pipeline succeeded"
+                echo "🌐 Pipeline URL: $PIPELINE_URL"
                 exit 0
                 ;;
               "failed"|"canceled"|"canceling")
                 echo "❌ Pipeline ended with status: $STATUS"
+                echo "🌐 Pipeline URL: $PIPELINE_URL"
                 exit 1
                 ;;
               *)
                 ATTEMPT=$((ATTEMPT + 1))
                 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
                   echo "❌ Pipeline timed out after 60 minutes"
+                  echo "🌐 Pipeline URL: $PIPELINE_URL"
                   exit 1
                 fi
                 sleep 30
