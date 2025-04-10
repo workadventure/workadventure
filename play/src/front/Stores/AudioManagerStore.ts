@@ -1,7 +1,7 @@
 import { get, Writable, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { peerElementsStore } from "./PeerStore";
+import { livekitVideoStreamElementsStore  } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
 
 export interface AudioManagerVolume {
@@ -112,6 +112,6 @@ export const bubbleSoundStore = writable<"ding" | "wobble">(localUserStore.getBu
 
 //TODO : voir l'utilité de ce store et si on doit subscribe au store livekit
 //TODO : faire un derived avec la taille des 2 si besoin
-peerElementsStore.subscribe((peerElements) => {
+livekitVideoStreamElementsStore.subscribe((peerElements) => {
     audioManagerVolumeStore.setTalking(peerElements.length > 0);
 });

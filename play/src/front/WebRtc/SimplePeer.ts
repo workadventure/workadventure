@@ -169,7 +169,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
-                console.log(">>>>> webRtcStartMessage", message);
                 const webRtcStartMessage = message.webRtcStartMessage;
 
                 const user: UserSimplePeerInterface = {
@@ -180,6 +179,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 };
 
                 this.receiveWebrtcStart(user).catch((e) => {
+                    console.trace(">>>>> receiveWebrtcStart", e);
                     console.error("Error while receiving WebRTC signal", e);
                     Sentry.captureException(e);
                 });
@@ -237,6 +237,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const userId = this.extractUserIdFromSpaceId(user.userId);
 
         const player = await this.remotePlayersRepository.getPlayer(userId);
+        console.log(">>>>> player", player);
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
 
@@ -297,9 +298,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // this.space.videoPeerStore.set(user.userId, peer);
         console.log(">>>> set video stream from simplePeer", {
             spaceUserId: user.userId,
+            peer,
+            user,
+            livekitVideoStreamStore: this.space.livekitVideoStreamStore,
+            space: this.space,
         });
         this.space.livekitVideoStreamStore.set(user.userId, peer);
         this._videoPeerAdded.next(peer);
+        console.log(">>>>> return peer added", peer);
         return peer;
     }
 
@@ -670,7 +676,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         console.log(">>>> removePeer", {
             userId,
         });
-        this.space.livekitVideoStreamStore.delete(userId);
-        this.space.screenSharingPeerStore.delete(userId);
+        // this.space.livekitVideoStreamStore.delete(userId);
+        // this.space.screenSharingPeerStore.delete(userId);
     }
 }
