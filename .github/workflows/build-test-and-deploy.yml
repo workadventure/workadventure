@@ -358,7 +358,6 @@ jobs:
             REF="master"
           fi
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
-
       - name: Trigger GitLab Pipeline
         run: |
           REF="${{ steps.set-ref.outputs.ref }}"
@@ -387,7 +386,20 @@ jobs:
           echo "🌐 Pipeline URL: $PIPELINE_URL"
 
           echo "PIPELINE_URL=$PIPELINE_URL" >> "$GITHUB_ENV"
+      - name: Add pipeline URL to the PR
+        if: github.event_name == 'pull_request' && env.PIPELINE_URL
+        uses: hasura/comment-progress@v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.number }}
+          id: deploy-progress
+          message: "⏳ GitLab SaaS pipeline in progress... [Check status](${{ env.PIPELINE_URL }})"
+          fail: false
+          recreate: true
+          
       - name: Long poll GitLab pipeline until finished
+        id: poll-pipeline
         run: |
           REF="${{ steps.set-ref.outputs.ref }}"
           echo "Polling pipeline for ref: $REF"
@@ -395,7 +407,8 @@ jobs:
           PIPELINE_ID="${{ env.PIPELINE_ID }}"
           if [[ -z "$PIPELINE_ID" || "$PIPELINE_ID" == "null" ]]; then
             echo "❌ No pipeline ID found in environment"
-            exit 1
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           MAX_ATTEMPTS=120  # 60 minutes with 30 second intervals
@@ -407,18 +420,21 @@ jobs:
             
             if [[ "$(echo "$RESPONSE" | jq -r '.message')" == "401 Unauthorized" ]]; then
               echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_SAAS_READ_API_TOKEN secret."
-              exit 1
+              echo "failed=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
 
             if [[ -z "$RESPONSE" || "$RESPONSE" == "null" ]]; then
               echo "❌ Failed to get pipeline status. Empty response from GitLab API."
-              exit 1
+              echo "failed=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
 
             STATUS=$(echo "$RESPONSE" | jq -r '.status')
             if [[ -z "$STATUS" || "$STATUS" == "null" ]]; then
               echo "❌ Invalid status response from GitLab API: $RESPONSE"
-              exit 1
+              echo "failed=true" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
 
             echo "⏳ Pipeline status: $STATUS (attempt $ATTEMPT of $MAX_ATTEMPTS)"
@@ -427,25 +443,39 @@ jobs:
               "success")
                 echo "✅ Pipeline succeeded"
                 echo "🌐 Pipeline URL: $PIPELINE_URL"
+                echo "failed=false" >> "$GITHUB_OUTPUT"
                 exit 0
                 ;;
               "failed"|"canceled"|"canceling")
                 echo "❌ Pipeline ended with status: $STATUS"
                 echo "🌐 Pipeline URL: $PIPELINE_URL"
-                exit 1
+                echo "failed=true" >> "$GITHUB_OUTPUT"
+                exit 0
                 ;;
               *)
                 ATTEMPT=$((ATTEMPT + 1))
                 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
                   echo "❌ Pipeline timed out after 60 minutes"
                   echo "🌐 Pipeline URL: $PIPELINE_URL"
-                  exit 1
+                  echo "failed=true" >> "$GITHUB_OUTPUT"
+                  exit 0
                 fi
                 sleep 30
                 ;;
             esac
           done
-
+      - name: Update comment on PR
+        if: github.event_name == 'pull_request' && env.PIPELINE_URL
+        uses: hasura/comment-progress@v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.number }}
+          id: deploy-progress
+          message: |
+            ${{ steps.wait-for-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check status](${{ env.PIPELINE_URL }})
+          fail: ${{ steps.wait-for-pipeline.outputs.failed == 'true' }}
+          recreate: true
   prod-single-domain-deploy-tests:
     name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
