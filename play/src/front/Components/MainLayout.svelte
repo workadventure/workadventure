@@ -61,7 +61,7 @@
                 target.classList.contains("block-user-action"))
         ) {
             try {
-                gameManager.getCurrentGameScene().userInputManager.disableControls();
+                gameManager.getCurrentGameScene().userInputManager.disableControls("textField");
                 keyboardEventIsDisable = true;
             } catch (error) {
                 if (error instanceof GameSceneNotFoundError) {
@@ -76,7 +76,7 @@
     const handleFocusOutEvent = () => {
         if (!keyboardEventIsDisable) return;
         try {
-            gameManager.getCurrentGameScene().userInputManager.restoreControls();
+            gameManager.getCurrentGameScene().userInputManager.restoreControls("textField");
             keyboardEventIsDisable = false;
         } catch (error) {
             if (error instanceof GameSceneNotFoundError) {
