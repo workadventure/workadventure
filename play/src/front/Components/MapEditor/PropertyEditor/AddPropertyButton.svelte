@@ -11,6 +11,10 @@
     export let testId = undefined;
     const dispatch = createEventDispatcher();
 
+    if (!testId) {
+        testId = headerText;
+    }
+
     let isHovered = false;
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
