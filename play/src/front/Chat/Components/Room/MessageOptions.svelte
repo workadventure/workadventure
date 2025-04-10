@@ -5,6 +5,7 @@
     import { IconArrowBackUp, IconArrowDown, IconPencil, IconTrash } from "@wa-icons";
 
     export let message: ChatMessage;
+    export let messageRef: HTMLDivElement | undefined;
 
     function replyToMessage() {
         selectedChatMessageToReply.set(message);
@@ -43,7 +44,7 @@
     >
         <IconArrowBackUp font-size={16} />
     </button>
-    <EmojiButton on:change={addReaction} />
+    <EmojiButton on:change={addReaction} {messageRef} />
     {#if isMyMessage && type === "text"}
         <button
             class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"

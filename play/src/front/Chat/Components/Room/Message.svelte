@@ -21,6 +21,8 @@
     export let reactions: MapStore<string, ChatMessageReaction> | undefined;
     export let replyDepth = 0;
 
+    let messageRef: HTMLDivElement | undefined;
+
     const dispatch = createEventDispatcher();
 
     const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
@@ -52,6 +54,7 @@
     class={`${isMyMessage && "self-end flex-row-reverse relative"} ${
         messageFromSystem && "justify-center"
     } select-text group/message block-user-action messageContainer items-center`}
+    bind:this={messageRef}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
@@ -136,7 +139,7 @@
 
     {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
         <div class="options pt-7 px-1.5 z-50 {!isMyMessage ? 'right-0' : 'left-0'}">
-            <MessageOptions {message} />
+            <MessageOptions {message} {messageRef} />
         </div>
     {/if}
 </div>

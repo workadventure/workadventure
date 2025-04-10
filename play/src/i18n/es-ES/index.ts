@@ -11,7 +11,6 @@ import login from "./login";
 import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
@@ -31,7 +30,6 @@ const es_ES = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,

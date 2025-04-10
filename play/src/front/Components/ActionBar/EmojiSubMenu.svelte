@@ -1,10 +1,11 @@
 <script lang="ts">
+    import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { fly } from "svelte/transition";
     import { clickOutside } from "svelte-outside";
+    import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
         emoteDataStore,
-        emoteDataStoreLoading,
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteStore,
@@ -18,8 +19,14 @@
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import { ArrowAction } from "../../Utils/svelte-floatingui";
+    import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
+
+    let emoteDataLoading = false;
 
     export let arrowAction: ArrowAction;
+
+    let triggerElement: HTMLElement | undefined = undefined;
 
     function clickEmoji(selected?: number) {
         //if open, in edit mode or playing mode
@@ -40,9 +47,45 @@
         }
     }
 
+    let closeFloatingUi: (() => void) | undefined = undefined;
+
     function edit(): void {
-        if ($emoteMenuStore) emoteMenuStore.closeEmoteMenu();
-        else emoteMenuStore.openEmoteMenu();
+        if ($emoteMenuStore) {
+            closeFloatingUi?.();
+            closeFloatingUi = undefined;
+        } else if (triggerElement) {
+            closeFloatingUi = showFloatingUi(
+                triggerElement,
+                LazyEmote,
+                {
+                    onEmojiClick: (event: EmojiClickEvent) => {
+                        const emojiObj = event.detail.emoji;
+                        emoteDataStore.pushNewEmoji({
+                            name: "annotation" in emojiObj ? emojiObj.annotation : emojiObj.name,
+                            emoji: event.detail.unicode ?? "",
+                        });
+                    },
+                    onClose: () => {
+                        closeFloatingUi?.();
+                        closeFloatingUi = undefined;
+                    },
+                    onLoad: () => {
+                        emoteDataLoading = true;
+                    },
+                    onLoaded: () => {
+                        emoteDataLoading = false;
+                    },
+                    onError: () => {
+                        emoteDataLoading = false;
+                    },
+                },
+                {
+                    placement: "bottom",
+                },
+                12,
+                true
+            );
+        }
     }
 
     function focusElement(key: number) {
@@ -88,12 +131,20 @@
         if (e.key === "6" || e.key === "F6") {
             key = 6;
         }
+        if (e.key === "Escape") {
+            activeSecondaryZoneActionBarStore.set(undefined);
+            return;
+        }
         if (!key) {
             return;
         }
         focusElement(key);
         clickEmoji(key);
     }
+
+    onDestroy(() => {
+        closeFloatingUi?.();
+    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -101,7 +152,6 @@
     class="flex justify-center m-auto w-auto z-[500]"
     transition:fly={{ y: 20, duration: 150 }}
     use:clickOutside={() => {
-        console.log("CLICKOUTSIDE");
         if (!$emoteMenuStore) {
             activeSecondaryZoneActionBarStore.set(undefined);
         }
@@ -110,7 +160,7 @@
     <div
         class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 md:flex-row"
     >
-        <div class="flex animate flex-row flex items-center">
+        <div class="flex animate flex-row flex items-center select-none">
             <div class="py-1 flex">
                 {#each [...$emoteDataStore.keys()] as key, index (index)}
                     <div class="transition-all bottom-action-button divide-x">
@@ -145,8 +195,9 @@
                     class="btn btn-sm btn-ghost btn-light flex"
                     on:click={() => analyticsClient.editEmote()}
                     on:click|stopPropagation|preventDefault={edit}
+                    bind:this={triggerElement}
                 >
-                    {#if $emoteDataStoreLoading}
+                    {#if emoteDataLoading}
                         <svg
                             class="animate-spin h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg"

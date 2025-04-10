@@ -11,7 +11,6 @@ import login from "./login";
 import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import actionbar from "./actionbar";
@@ -30,7 +29,6 @@ const zh_CN = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     actionbar,
