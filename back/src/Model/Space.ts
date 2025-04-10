@@ -15,7 +15,7 @@ import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import { ICommunicationManager } from "./InterfacesRename/ICommunicationManager";
 
 const debug = Debug("space");
 

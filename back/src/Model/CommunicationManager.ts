@@ -1,8 +1,8 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
+import { ICommunicationSpace } from "./InterfacesRename/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
-import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState } from "./Interfaces/ICommunicationState";
+import { ICommunicationManager } from "./InterfacesRename/ICommunicationManager";
+import { ICommunicationState } from "./InterfacesRename/ICommunicationState";
 import { DefaultState } from "./States/DefaultState";
 
 export class CommunicationManager implements ICommunicationManager {

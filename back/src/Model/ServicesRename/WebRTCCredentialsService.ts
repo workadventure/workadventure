@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { TURN_STATIC_AUTH_SECRET } from "../../Enum/EnvironmentVariable";
-import { IWebRTCCredentials } from "../types/CommunicationTypes";
+import { IWebRTCCredentials } from "../TypesRename/CommunicationTypes";
 
 export class WebRTCCredentialsService {
     private static readonly CREDENTIAL_VALIDITY_HOURS = 4;
