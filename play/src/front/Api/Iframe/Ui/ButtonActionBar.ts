@@ -4,15 +4,8 @@ import { apiCallback } from "../registeredCallbacks";
 
 export type ButtonActionBarClickedCallback = (buttonActionBar: AddButtonActionBarEvent) => void;
 
-export type ActionBarButtonDescriptor = {
-    id: string;
-    label?: string;
-    imageSrc: string;
-    toolTip: string;
+export type ActionBarButtonDescriptor = AddButtonActionBarEvent & {
     callback?: ButtonActionBarClickedCallback;
-    bgColor?: string;
-    textColor?: string;
-    isGradient?: boolean;
 };
 
 export class WorkAdventureButtonActionBarCommands extends IframeApiContribution<WorkAdventureButtonActionBarCommands> {

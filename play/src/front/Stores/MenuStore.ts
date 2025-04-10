@@ -1,12 +1,7 @@
 import { derived, get, writable, Readable, Writable } from "svelte/store";
 import { ComponentProps, ComponentType, SvelteComponentTyped } from "svelte";
 import type { Translation } from "../../i18n/i18n-types";
-import {
-    AddActionButtonActionBarEvent,
-    AddButtonActionBarEvent,
-    AddClassicButtonActionBarEvent,
-    RemoveButtonActionBarEvent,
-} from "../Api/Events/Ui/ButtonActionBarEvent";
+import { AddButtonActionBarEvent, RemoveButtonActionBarEvent } from "../Api/Events/Ui/ButtonActionBarEvent";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -379,11 +374,6 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
         return menuItems;
     }
 );
-
-// @deprecated
-export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
-// @deprecated
-export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
 
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe

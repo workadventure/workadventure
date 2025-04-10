@@ -10,23 +10,10 @@ export const isAddActionBarButtonEvent = z.object({
     isGradient: z.boolean().optional().default(false),
 });
 
-export const isAddClassicButtonActionBarEvent = z.object({
-    id: z.string(),
-    label: z.string(),
-    bgColor: z.string().optional(),
-    textColor: z.string().optional(),
-});
-
-export const isAddActionButtonActionBarEvent = z.object({
-    id: z.string(),
-    type: z.enum(["action"]),
-    imageSrc: z.string(),
-    toolTip: z.string(),
-});
-
 export type AddButtonActionBarEvent = z.infer<typeof isAddActionBarButtonEvent>;
-export type AddActionButtonActionBarEvent = z.infer<typeof isAddActionButtonActionBarEvent>;
-export type AddClassicButtonActionBarEvent = z.infer<typeof isAddClassicButtonActionBarEvent>;
+// Aliasing Button types for backward compatibility
+export type AddActionButtonActionBarEvent = AddButtonActionBarEvent;
+export type AddClassicButtonActionBarEvent = AddButtonActionBarEvent;
 export type AddActionsButtonActionBarEventCallback = (event: AddButtonActionBarEvent) => void;
 
 export const isRemoveButtonActionBarEvent = z.object({
