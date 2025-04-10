@@ -464,7 +464,7 @@ jobs:
                 ;;
             esac
           done
-          
+
       - name: Update comment on PR
         if: github.event_name == 'pull_request' && env.PIPELINE_URL
         uses: hasura/comment-progress@v2.3.0
@@ -474,8 +474,8 @@ jobs:
           number: ${{ github.event.number }}
           id: deploy-progress
           message: |
-            ${{ steps.wait-for-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check status](${{ env.PIPELINE_URL }})
-          fail: ${{ steps.wait-for-pipeline.outputs.failed == 'true' }}
+            ${{ steps.poll-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check status](${{ env.PIPELINE_URL }})
+          fail: ${{ steps.poll-pipeline.outputs.failed == 'true' }}
           recreate: true
   prod-single-domain-deploy-tests:
     name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
