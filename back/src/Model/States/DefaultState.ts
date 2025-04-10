@@ -1,5 +1,5 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationState } from "../InterfacesRename/ICommunicationState";
+import { ICommunicationState } from "../Interfaces/ICommunicationState";
 
 export class DefaultState implements ICommunicationState {
     handleUserAdded(user: SpaceUser): void {

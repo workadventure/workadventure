@@ -1,10 +1,10 @@
 import { SpaceUser, PrivateEvent } from "@workadventure/messages";
-import { CommunicationType } from "../TypesRename/CommunicationTypes";
-import { ICommunicationState } from "../InterfacesRename/ICommunicationState";
-import { ICommunicationStrategy } from "../InterfacesRename/ICommunicationStrategy";
-import { ICommunicationManager } from "../InterfacesRename/ICommunicationManager";
+import { CommunicationType } from "../Types/CommunicationTypes";
+import { ICommunicationState } from "../Interfaces/ICommunicationState";
+import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { CommunicationConfig } from "../CommunicationManager";
-import { ICommunicationSpace } from "../InterfacesRename/ICommunicationSpace";
+import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected _readyUsers: Set<string> = new Set();

@@ -1,8 +1,8 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationStrategy ,  } from "../InterfacesRename/ICommunicationStrategy";
-import { WebRTCCredentialsService, webRTCCredentialsService } from "../ServicesRename/WebRTCCredentialsService";
-import { ICommunicationSpace } from "../InterfacesRename/ICommunicationSpace";
-import { IWebRTCCredentials } from "../TypesRename/CommunicationTypes";
+import { ICommunicationStrategy ,  } from "../Interfaces/ICommunicationStrategy";
+import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
+import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { IWebRTCCredentials } from "../Types/CommunicationTypes";
 
 // Nouvelle classe pour gérer les connexions
 class ConnectionManager {

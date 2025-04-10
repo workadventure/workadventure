@@ -1,7 +1,7 @@
 import { WebRtcSignalToClientMessage } from "@workadventure/messages";
 import { TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { EventProcessor } from "./EventProcessor";
-import { webRTCCredentialsService } from "./ServicesRename/WebRTCCredentialsService";
+import { webRTCCredentialsService } from "./Services/WebRTCCredentialsService";
 
 export const eventProcessor = new EventProcessor();
 

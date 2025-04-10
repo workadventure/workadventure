@@ -1,9 +1,8 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationManager } from "../InterfacesRename/ICommunicationManager";
-
-import { WebRTCCommunicationStrategy } from "../StrategiesRename/WebRTCCommunicationStrategy";
-import { CommunicationType } from "../TypesRename/CommunicationTypes";
-import { ICommunicationSpace } from "../InterfacesRename/ICommunicationSpace";
+import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
+import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy";
+import { CommunicationType } from "../Types/CommunicationTypes";
+import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { LivekitState } from "./LivekitState";
 
