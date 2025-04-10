@@ -69,10 +69,6 @@
     $: videoEnabled = $hasVideoStore;
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
-    $: console.log(">>>> videoEnabled", {
-        peer,
-    });
-
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
         menuDrop = false;
@@ -179,7 +175,7 @@
         {#if $statusStore === "connecting" && showAfterDelay}
             <div class="absolute w-full h-full z-50 overflow-hidden">
                 <div
-                    class="flex w-8 h-8 flex justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
+                    class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
                     <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
