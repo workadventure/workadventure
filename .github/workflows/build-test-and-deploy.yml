@@ -641,6 +641,18 @@ jobs:
           #version: '<version>' # default is latest (stable)
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
+      
+      - name: Add comment on PR
+        if: github.event_name == 'pull_request'
+        uses: hasura/comment-progress@v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.number }}
+          id: helm-deploy-progress
+          message: "⚙️ Deploying environment... "
+          fail: false
+          recreate: true
 
       - name: "Install kubeconfig file"
         run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
@@ -755,15 +767,17 @@ jobs:
           NAMESPACE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
         working-directory: map-storage
 
-      - name: Add a comment in PR
-        uses: unsplash/comment-on-pr@master
-        if: ${{ github.event_name == 'pull_request' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update comment on PR
+        if: github.event_name == 'pull_request'
+        uses: hasura/comment-progress@v2.3.0
         with:
-          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re/tests"
-          check_for_duplicate_msg: true
-
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          number: ${{ github.event.number }}
+          id: helm-deploy-progress
+          message: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG_URL }}.test.workadventu.re/tests"
+          fail: false
+          recreate: true
   helm-test:
     name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
     needs:
