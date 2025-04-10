@@ -4,7 +4,6 @@ import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
 import companion from "./companion";
-import emoji from "./emoji";
 import error from "./error";
 import follow from "./follow";
 import login from "./login";
@@ -32,7 +31,6 @@ const dsb_DE = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,

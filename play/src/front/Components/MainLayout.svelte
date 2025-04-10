@@ -1,6 +1,5 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -227,14 +226,6 @@
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
-
-    <Lazy
-        on:onload={() => emoteDataStoreLoading.set(true)}
-        on:loaded={() => emoteDataStoreLoading.set(false)}
-        on:error={() => emoteDataStoreLoading.set(false)}
-        when={$emoteMenuStore}
-        component={() => import("./EmoteMenu/EmoteMenu.svelte")}
-    />
 </div>
 
 <style lang="scss">

@@ -16,9 +16,9 @@
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
     import { v4 as uuid } from "uuid";
+    import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -34,6 +34,8 @@
     import eraserSvg from "../../../Components/images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWraper from "./Application/ApplicationFormWraper.svelte";
@@ -44,7 +46,7 @@
 
     let message = "";
     let messageInput: HTMLDivElement;
-    let emojiButtonRef: HTMLButtonElement;
+    let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = [];
     let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = [];
@@ -143,15 +145,36 @@
     onDestroy(() => {
         selectedChatChatMessageToReplyUnsubscriber();
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
+        closeEmojiPicker?.();
+        closeEmojiPicker = undefined;
     });
 
-    const emojiPicker = getChatEmojiPicker({ right: "0" });
-    emojiPicker.on("emoji", ({ emoji }) => {
-        message += emoji;
-    });
+    let closeEmojiPicker: (() => void) | undefined = undefined;
 
     function openCloseEmojiPicker() {
-        emojiPicker.isPickerVisible() ? emojiPicker.hidePicker() : emojiPicker.showPicker(emojiButtonRef);
+        if (closeEmojiPicker) {
+            closeEmojiPicker();
+            closeEmojiPicker = undefined;
+        } else {
+            closeEmojiPicker = showFloatingUi(
+                messageBarRef,
+                LazyEmote,
+                {
+                    onEmojiClick: (event: EmojiClickEvent) => {
+                        message += event.detail.unicode ?? "";
+                    },
+                    onClose: () => {
+                        closeEmojiPicker?.();
+                        closeEmojiPicker = undefined;
+                    },
+                },
+                {
+                    placement: "top-end",
+                },
+                12,
+                true
+            );
+        }
     }
 
     export function handleFiles(event: CustomEvent<FileList>) {
@@ -584,6 +607,7 @@
 {/if}
 <div
     class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
+    bind:this={messageBarRef}
 >
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
@@ -612,7 +636,6 @@
     </button>
     <button
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
-        bind:this={emojiButtonRef}
         on:click={openCloseEmojiPicker}
     >
         <IconMoodSmile font-size={18} />
