@@ -58,11 +58,23 @@
 
 <div
     bind:this={dragHandle}
-    class="drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
+    class="relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
 />
 
 <style>
     .drag-handle {
         pointer-events: auto;
+    }
+
+    /* We make the drag handle bigger than it really is to make it more easily selectable (especially on mobile) */
+    .drag-handle:after {
+        content: "";
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        width: 122px;
+        height: 45px;
+        /*background-color: rgba(255, 0, 0, 0.5);*/
+        border-radius: 4px;
     }
 </style>
