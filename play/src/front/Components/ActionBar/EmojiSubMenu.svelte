@@ -4,19 +4,13 @@
     import { clickOutside } from "svelte-outside";
     import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
-    import {
-        emoteDataStore,
-        emoteMenuStore,
-        emoteMenuSubCurrentEmojiSelectedStore,
-        emoteStore,
-    } from "../../Stores/EmoteStore";
+    import { emoteDataStore, emoteMenuStore, emoteMenuSubCurrentEmojiSelectedStore } from "../../Stores/EmoteStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import XIcon from "../Icons/XIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
-    import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
     import { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
@@ -34,14 +28,6 @@
             //select place to change in emoji sub menu
             emoteMenuSubCurrentEmojiSelectedStore.set(selected);
         } else if (selected != undefined) {
-            //get emoji and play it
-            let emoji: Emoji | null | undefined = $emoteDataStore.get(selected);
-            if (emoji == undefined) {
-                return;
-            }
-            analyticsClient.launchEmote(emoji);
-            emoteStore.set(emoji);
-
             //play UX animation
             focusElement(selected);
         }
