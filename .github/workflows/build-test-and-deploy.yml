@@ -474,7 +474,7 @@ jobs:
           number: ${{ github.event.number }}
           id: deploy-progress
           message: |
-            ${{ steps.poll-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check status](${{ env.PIPELINE_URL }})
+            ${{ steps.poll-pipeline.outputs.failed == 'true' && '❌ GitLab SaaS pipeline failed. ' || '✅ GitLab SaaS pipeline succeeded. ' }}[Check Pipeline](${{ env.PIPELINE_URL }})
           fail: ${{ steps.poll-pipeline.outputs.failed == 'true' }}
           recreate: true
   prod-single-domain-deploy-tests:
