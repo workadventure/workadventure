@@ -44,4 +44,20 @@ test.describe('Error pages', () => {
 
     await expect(page.getByText('An error occurred')).toBeVisible();
   });
+
+  test('successfully displayed for resources not found', async ({ page }) => {
+    // Let's test a clear error message is displayed when a resource is not found
+    await page.goto(
+        publicTestMapUrl("tests/MapWithError/error.json", "error_pages")
+    );
+
+    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.click('button.loginSceneFormSubmit');
+    await page.click('button.selectCharacterSceneFormSubmit');
+    await page.click("text=Save");
+
+    await expect(page.getByText('An error occurred')).toBeVisible();
+    await expect(page.getByText('NETWORK_ERROR')).toBeVisible();
+    await expect(page.getByText('not_exists.png')).toBeVisible();
+  });
 });
