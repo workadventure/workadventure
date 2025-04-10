@@ -81,7 +81,7 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
-import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
+import { emoteStore } from "../../Stores/EmoteStore";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -131,7 +131,6 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     cameraResistanceModeStore,
@@ -282,7 +281,6 @@ export class GameScene extends DirtyScene {
     private rxJsSubscriptions: Array<Subscription> = [];
     private peerStoreUnsubscriber!: Unsubscriber;
     private emoteUnsubscriber!: Unsubscriber;
-    private emoteMenuUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
@@ -291,7 +289,6 @@ export class GameScene extends DirtyScene {
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
-    private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
     private mapExplorationStoreUnsubscriber!: Unsubscriber;
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
@@ -1071,9 +1068,7 @@ export class GameScene extends DirtyScene {
         this._proximityChatRoom?.destroy();
         this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
-        this.refreshPromptStoreStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
-        this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
         this.modalVisibilityStoreUnsubscriber?.();
         this.highlightedEmbedScreenUnsubscriber?.();
@@ -2082,11 +2077,9 @@ export class GameScene extends DirtyScene {
             this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
             this.availabilityStatusStoreUnsubscriber != undefined ||
             this.emoteUnsubscriber != undefined ||
-            this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.refreshPromptStoreStoreUnsubscriber != undefined ||
             this.mapExplorationStoreUnsubscriber != undefined ||
             this.lastNewMediaDeviceDetectedStoreUnsubscriber != undefined
         ) {
@@ -2096,11 +2089,9 @@ export class GameScene extends DirtyScene {
                 this.jitsiParticipantsCountStoreUnsubscriber,
                 this.availabilityStatusStoreUnsubscriber,
                 this.emoteUnsubscriber,
-                this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
-                this.refreshPromptStoreStoreUnsubscriber,
                 this.mapExplorationStoreUnsubscriber,
                 this.lastNewMediaDeviceDetectedStoreUnsubscriber
             );
@@ -2136,20 +2127,6 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer?.playEmote(emote.emoji);
                 this.connection?.emitEmoteEvent(emote.emoji);
                 emoteStore.set(null);
-            }
-        });
-
-        this.emoteMenuUnsubscriber = emoteMenuStore.subscribe((emoteMenu) => {
-            if (emoteMenu) {
-                this.userInputManager.disableControls();
-            } else {
-                this.userInputManager.restoreControls();
-            }
-        });
-
-        this.modalVisibilityStoreUnsubscriber = modalVisibilityStore.subscribe((visibility) => {
-            if (!visibility && !this.userInputManager.isControlsEnabled) {
-                this.userInputManager.restoreControls();
             }
         });
 
@@ -2326,14 +2303,6 @@ export class GameScene extends DirtyScene {
                 this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
             }
             this.markDirty();
-        });
-
-        this.refreshPromptStoreStoreUnsubscriber = refreshPromptStore.subscribe((comment) => {
-            if (comment) {
-                this.userInputManager.disableControls();
-            } else {
-                this.userInputManager.restoreControls();
-            }
         });
 
         this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
@@ -2672,14 +2641,22 @@ ${escapedMessage}
         );*/
 
         this.iframeSubscriptionList.push(
-            iframeListener.disablePlayerControlStream.subscribe(() => {
-                this.userInputManager.disableControls();
+            iframeListener.disablePlayerControlStream.subscribe((messageEventSource) => {
+                if (messageEventSource) {
+                    this.userInputManager.disableControls(messageEventSource);
+
+                    iframeListener.onIframeCloseEvent(messageEventSource, () => {
+                        this.userInputManager.restoreControls(messageEventSource);
+                    });
+                }
             })
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.enablePlayerControlStream.subscribe(() => {
-                this.userInputManager.restoreControls();
+            iframeListener.enablePlayerControlStream.subscribe((messageEventSource) => {
+                if (messageEventSource) {
+                    this.userInputManager.restoreControls(messageEventSource);
+                }
             })
         );
 
@@ -3806,7 +3783,7 @@ ${escapedMessage}
             })
         );
         this.cleanupClosingScene();
-        this.userInputManager.disableControls();
+        this.userInputManager.disableControls("errorScreen");
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -3814,7 +3791,7 @@ ${escapedMessage}
         this.cleanupClosingScene();
         this.scene.stop(ReconnectingSceneName);
         this.scene.remove(ReconnectingSceneName);
-        this.userInputManager.disableControls();
+        this.userInputManager.disableControls("errorScreen");
         //FIX ME to use status code
         if (message == undefined) {
             this.scene.start(ErrorSceneName, {
