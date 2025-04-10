@@ -31,6 +31,26 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
+        this.initializeTracks();
+    }
+
+    private initializeTracks() {
+        this.participant.trackPublications.forEach((publication: TrackPublication) => {
+            if (publication.track) {
+                if (publication.source === Track.Source.Camera) {
+                    this._videoStreamStore.set(publication.track.mediaStream);
+                    this._hasVideo.set(!publication.track.isMuted);
+                    this.updateLivekitVideoStreamStore();
+                } else if (publication.source === Track.Source.Microphone) {
+                    this._audioStreamStore.set(publication.track.mediaStream);
+                    this._isMuted.set(publication.track.isMuted);
+                    this.updateLivekitVideoStreamStore();
+                } else if (publication.source === Track.Source.ScreenShare) {
+                    this._screenShareStreamStore.set(publication.track.mediaStream);
+                    this.updateLivekitScreenShareStreamStore();
+                }
+            }
+        });
     }
 
     private listenToParticipantEvents() {
