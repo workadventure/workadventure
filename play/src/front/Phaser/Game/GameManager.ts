@@ -249,8 +249,6 @@ export class GameManager {
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
 
-        // const gameScene = await waitForGameSceneStore();
-
         if (matrixServerUrl && get(userIsConnected)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
