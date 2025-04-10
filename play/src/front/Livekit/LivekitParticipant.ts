@@ -134,7 +134,7 @@ export class LiveKitParticipant {
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
             muteAudio: false,
-            displayMode: "fit",
+            displayMode: "cover",
             displayInPictureInPictureMode: true,
             media: {
                 type: "mediaStore",
