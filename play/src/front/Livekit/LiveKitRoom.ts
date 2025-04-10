@@ -108,7 +108,7 @@ export class LiveKitRoom {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
+            this.screenSharingLocalStreamStore.subscribe(async (stream) => {
                 const streamResult = stream.type === "success" ? stream.stream : undefined;
 
                 if (this.localVideoTrack) {
@@ -118,29 +118,37 @@ export class LiveKitRoom {
                         return;
                     }
 
-                    this.localParticipant.unpublishTrack(this.localVideoTrack).catch((err) => {
-                        console.error("An error occurred in synchronizeMediaState", err);
+                    try {
+                        // First, unpublish the existing track
+                        await this.localParticipant.unpublishTrack(this.localVideoTrack);
+                        // Then stop the track to free up resources
+                        this.localVideoTrack?.stop();
+                        this.localVideoTrack = undefined;
+                    } catch (err) {
+                        console.error("An error occurred while unpublishing track", err);
                         Sentry.captureException(err);
-                    });
+                    }
                 }
 
                 if (streamResult) {
-                    this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
+                    try {
+                        // Create a new track instance
+                        this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
 
-                    if (!this.localParticipant) {
-                        console.error("Local participant not found");
-                        Sentry.captureException(new Error("Local participant not found"));
-                        return;
-                    }
+                        if (!this.localParticipant) {
+                            console.error("Local participant not found");
+                            Sentry.captureException(new Error("Local participant not found"));
+                            return;
+                        }
 
-                    this.localParticipant
-                        .publishTrack(this.localVideoTrack, {
+                        // Publish the new track
+                        await this.localParticipant.publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare,
-                        })
-                        .catch((err) => {
-                            console.error("An error occurred in synchronizeMediaState", err);
-                            Sentry.captureException(err);
                         });
+                    } catch (err) {
+                        console.error("An error occurred while publishing track", err);
+                        Sentry.captureException(err);
+                    }
                 }
             })
         );
