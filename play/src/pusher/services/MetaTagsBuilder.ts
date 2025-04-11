@@ -194,4 +194,13 @@ export class MetaTagsBuilder {
         }
         return undefined;
     }
+
+    public async getMapDetails(): Promise<MapDetailsData | undefined> {
+        const mapDetails = await this.fetchMapDetails();
+        const safeParse = isMapDetailsData.safeParse(mapDetails);
+        if (safeParse.success) {
+            return safeParse.data;
+        }
+        return undefined;
+    }
 }

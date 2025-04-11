@@ -168,4 +168,14 @@
         <div id="app"></div>
         <script type="module" src="/src/svelte.ts"></script>
     </body>
+    <style>
+        :root{
+        {{#secondaryPalette}}
+            --secondary{{code}}: {{color}};
+        {{/secondaryPalette}}
+        {{#contrastPalette}}
+            --contrast{{code}}: {{color}};
+        {{/contrastPalette}}
+        }
+    </style>
 </html>

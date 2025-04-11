@@ -262,7 +262,6 @@ class LocalAdmin implements AdminInterface {
             group: wamUrl ? "default" : null,
             opidLogoutRedirectUrl: null,
             opidUsernamePolicy: opidWokaNamePolicyCheck.success ? opidWokaNamePolicyCheck.data : null,
-            miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
             errorSceneLogo: null,
