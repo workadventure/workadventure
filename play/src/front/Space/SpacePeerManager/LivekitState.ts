@@ -31,13 +31,13 @@ export class LivekitState implements ICommunicationState {
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.executeSwitchMessage.strategy === CommunicationType.WEBRTC) {
-                    this.livekitConnection.destroy();
                     if (!this._nextState) {
                         //throw new Error("Next state is null");
                         console.error("Next state is null");
                         return;
                     }
-
+                    // TODO: determine if destroy() should be called here or at the end of the switch
+                    this.destroy();
                     this._nextState?.completeSwitch();
                     this.peerManager.setState(this._nextState);
                 }

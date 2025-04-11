@@ -41,14 +41,14 @@ export class WebRTCState implements ICommunicationState {
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.executeSwitchMessage.strategy === CommunicationType.LIVEKIT) {
-                    this._peer.closeAllConnections();
-                    this._peer?.unregister();
-                    this._nextState?.completeSwitch();
                     if (!this._nextState) {
                         //throw new Error("Next state is null");
                         console.error("Next state is null");
                         return;
                     }
+                    // TODO: determine if destroy() should be called here or at the end of the switch
+                    this.destroy();
+                    this._nextState?.completeSwitch();
                     this.peerManager.setState(this._nextState);
                 }
             })
