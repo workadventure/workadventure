@@ -51,7 +51,7 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
