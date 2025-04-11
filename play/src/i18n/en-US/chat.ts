@@ -460,7 +460,7 @@ const chat: BaseTranslation = {
     refreshChat: "Refresh Chat",
     dismiss: "Dismiss",
     whoops: "Whoops ! something went wrong",
-    failedToOpenRoom: "Failed to open room",
+    failedToOpenRoom: "Failed to open room : {roomId}",
     refreshChatError: "Failed to refresh chat",
 };
 

@@ -90,7 +90,7 @@ export const openDirectChatRoom = async (chatID: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId: chatID }));
         console.error(error);
         Sentry.captureException(error);
     }
@@ -111,7 +111,7 @@ export const openChatRoom = async (roomId: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId }));
         console.error(error);
         Sentry.captureException(error);
     }
