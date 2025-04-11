@@ -10,8 +10,9 @@ import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { lookupUserById } from "../Space/Utils/UserLookup";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -50,10 +51,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly displayMode = "fit";
     public readonly displayInPictureInPictureMode = true;
     constructor(
-        user: UserSimplePeerInterface,
+        public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
+        private space: SpaceInterface,
         stream: MediaStream | undefined,
         private spaceFilter: Promise<SpaceFilterInterface>
     ) {
@@ -66,7 +67,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        this.userId = user.userId;
+        this.userId = player.userId;
         this.uniqueId = "screensharing_" + this.userId;
 
         let connectTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -185,7 +186,16 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcScreenSharingSignalToServerMessage",
+                    webRtcScreenSharingSignalToServerMessage: {
+                        receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.user.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }

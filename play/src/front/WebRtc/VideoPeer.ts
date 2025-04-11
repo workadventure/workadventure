@@ -10,12 +10,12 @@ import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -63,7 +63,7 @@ export class VideoPeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
+        private space: SpaceInterface,
         private spaceFilter: Promise<SpaceFilterInterface>
     ) {
         const bandwidth = get(videoBandwidthStore);
@@ -75,7 +75,8 @@ export class VideoPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        this.userId = user.userId;
+        //TODO : transform userId to number
+        this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
 
@@ -206,8 +207,15 @@ export class VideoPeer extends Peer implements Streamable {
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
-                        const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
-                        simplePeer.blockedFromRemotePlayer(this.userId);
+                        const simplePeer = this.space.simplePeer;
+                        const spaceUserId = this.space.getSpaceUserByUserId(this.userId)?.spaceUserId;
+                        if (!spaceUserId) {
+                            console.error("spaceUserId not found for userId", this.userId);
+                            return;
+                        }
+                        if (simplePeer) {
+                            simplePeer.blockedFromRemotePlayer(spaceUserId);
+                        }
                         break;
                     }
                     case "unblocked": {
@@ -298,7 +306,16 @@ export class VideoPeer extends Peer implements Streamable {
 
     private sendWebrtcSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcSignalToServerMessage",
+                    webRtcSignalToServerMessage: {
+                        receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.user.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);
         }

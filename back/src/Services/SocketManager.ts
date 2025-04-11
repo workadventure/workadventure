@@ -41,9 +41,6 @@ import {
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage,
-    WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
@@ -69,6 +66,7 @@ import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
@@ -277,71 +275,6 @@ export class SocketManager {
     async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
         const room = await this.getOrCreateRoom(roomUrl);
         await room.setVariable(variable, newValue, "RoomApi");
-    }
-
-    emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WebRTC signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcSignalToClientMessage",
-            webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
-    }
-
-    emitScreenSharing(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcScreenSharingSignalToClientMessage",
-            webRtcScreenSharingSignalToClientMessage:
-                WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
     }
 
     leaveRoom(room: GameRoom, user: User) {
@@ -629,49 +562,9 @@ export class SocketManager {
             joinSpaceRequestMessage: {
                 // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
                 spaceName: group.spaceName,
+                propertiesToSync: ["cameraState", "microphoneState", "screenSharingState"],
             },
         });
-
-        // TODO: remove code below when WebRTC is managed in spaces
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
-                userId: otherUser.id,
-                initiator: true,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    otherUser.id.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                webrtcStartMessage1.webRtcUserName = username;
-                webrtcStartMessage1.webRtcPassword = password;
-            }
-
-            user.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
-            });
-
-            const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
-                userId: user.id,
-                initiator: false,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webRtcUserName = username;
-                webrtcStartMessage2.webRtcPassword = password;
-            }
-
-            otherUser.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
-            });
-        }
     }
 
     /**
@@ -1388,7 +1281,7 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            space = new Space(joinSpaceMessage.spaceName, eventProcessor,joinSpaceMessage.propertiesToSync);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);
