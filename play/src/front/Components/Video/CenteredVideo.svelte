@@ -144,11 +144,15 @@
         if (expectVideoOutput && videoElement && mediaStream) {
             expectVideoWithin3Seconds();
         }
+    }
+    $: {
         if (!expectVideoOutput && noVideoTimeout) {
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
         }
     }
+
+    let callbackId: number | undefined;
 
     function expectVideoWithin3Seconds() {
         if ("requestVideoFrameCallback" in videoElement) {
@@ -162,11 +166,19 @@
                 analyticsClient.noVideoStreamReceived();
             }, 3000);
 
-            videoElement.requestVideoFrameCallback(() => {
+            if (callbackId !== undefined) {
+                // We need to cancel the previous callback if it exists.
+                videoElement.cancelVideoFrameCallback(callbackId);
+            }
+            callbackId = videoElement.requestVideoFrameCallback(() => {
                 // A video frame was displayed. No need to display a warning.
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;
+                if (callbackId !== undefined) {
+                    // We need to cancel the previous callback if it exists.
+                    videoElement.cancelVideoFrameCallback(callbackId);
+                }
             });
         }
     }
