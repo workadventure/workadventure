@@ -240,6 +240,10 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 
+streamableCollectionStore.subscribe((streamableCollection) => {
+    console.log(">>>>> streamableCollectionStore", streamableCollection.size);
+});
+
 /**
  * A store containing only the streamables that should be displayed in picture-in-picture mode
  */

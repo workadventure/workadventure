@@ -80,8 +80,12 @@ export class LiveKitParticipant {
     }
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
+        console.log(">>>> handleTrackUnsubscribed", {
+            spaceUserId: this._spaceUser.spaceUserId,
+            track: track.kind,
+        });
         if (publication.source === Track.Source.Camera) {
-            //this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
+           // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
         } else if (publication.source === Track.Source.ScreenShare) {
             this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
         }

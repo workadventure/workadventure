@@ -33,6 +33,7 @@ export class WebRTCState implements ICommunicationState {
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT) {
+                    console.log(">>>>>create next state LivekitState PREPARE_SWITCH_MESSAGE", this._nextState);
                     this._nextState = new LivekitState(this.space, this.peerManager);
                 }
             })
@@ -47,8 +48,7 @@ export class WebRTCState implements ICommunicationState {
                         return;
                     }
                     // TODO: determine if destroy() should be called here or at the end of the switch
-                    this.destroy();
-                    this._nextState?.completeSwitch();
+                    console.log(">>>>> set next state EXECUTE_SWITCH_MESSAGE", this._nextState);
                     this.peerManager.setState(this._nextState);
                 }
             })
@@ -59,8 +59,8 @@ export class WebRTCState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
-                        this.destroy();
                         const nextState = new LivekitState(this.space, this.peerManager);
+                        console.log(">>>>> set next state COMMUNICATION_STRATEGY_MESSAGE", nextState);
                         this.peerManager.setState(nextState);
                     }
                 })
@@ -72,7 +72,8 @@ export class WebRTCState implements ICommunicationState {
     }
 
     destroy() {
-        this._peer.closeAllConnections();
+        console.log(">>>>> destroy WebRTCState");
+        this._peer.closeAllConnections(false);
         this._peer?.unregister();
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();

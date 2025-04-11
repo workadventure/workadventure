@@ -206,10 +206,6 @@
         containerHeight = height;
         localUserStore.setCameraContainerHeight(containerHeight / maxContainerHeight);
     }
-
-    $: console.log(">>>> streamableCollectionStore", {
-        $streamableCollectionStore,
-    });
 </script>
 
 <div

@@ -91,7 +91,9 @@ export class LivekitConnection {
             Sentry.captureException(new Error("LivekitRoom not found"));
             return;
         }
+
         this.livekitRoom.destroy();
+        
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();
         }

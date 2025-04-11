@@ -14,6 +14,7 @@ import { WebRTCState } from "./WebRTCState";
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
+    completeSwitch(): void;
 }
 
 // -------------------- Peer Manager --------------------
@@ -25,8 +26,6 @@ export class SpacePeerManager {
     constructor(
         private space: SpaceInterface,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
-        private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
         this._communicationState = new WebRTCState(this.space, this);
         this.synchronizeMediaState();
@@ -59,7 +58,9 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
-        this._communicationState?.destroy();
+        if(this._communicationState) {
+            this._communicationState.destroy();
+        }
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
@@ -70,13 +71,17 @@ export class SpacePeerManager {
     }
 
     setState(state: ICommunicationState): void {
+        if(this._communicationState) {
+            this._communicationState.destroy();
+        }
+        state.completeSwitch();
         this._communicationState = state;
     }
 }
 // -------------------- Interfaces --------------------
 
 export interface SimplePeerConnectionInterface {
-    closeAllConnections(): void;
+    closeAllConnections(needToDelete?: boolean): void;
     blockedFromRemotePlayer(userId: string): void;
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;

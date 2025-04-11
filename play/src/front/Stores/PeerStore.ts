@@ -47,8 +47,12 @@ export const livekitScreenShareStreamElementsStore = derived(
     [] as Streamable[]
 );
 
+livekitScreenShareStreamElementsStore.subscribe((streamElements) => {
+    console.log(">>>>> livekitScreenShareStreamElementsStore", streamElements.length);
+});
+
 livekitVideoStreamElementsStore.subscribe((streamElements) => {
-    console.log("streamElements", streamElements.length);
+    console.log(">>>>> livekitVideoStreamElementsStore", streamElements.length);
 });
 
 /**

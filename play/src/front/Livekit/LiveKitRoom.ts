@@ -43,10 +43,6 @@ export class LiveKitRoom {
     public async joinRoom() {
         let room: Room;
 
-        console.log(">>>> joinRoom", {
-            room: this.room,
-        });
-
         try {
             room = this.room ?? (await this.prepareConnection());
 
@@ -113,7 +109,7 @@ export class LiveKitRoom {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe(async (stream) => {
+            this.screenSharingLocalStreamStore.subscribe((stream) => {
                 const streamResult = stream.type === "success" ? stream.stream : undefined;
 
                 if (this.localVideoTrack) {
@@ -123,20 +119,22 @@ export class LiveKitRoom {
                         return;
                     }
 
-                    try {
+
                         // First, unpublish the existing track
-                        await this.localParticipant.unpublishTrack(this.localVideoTrack);
-                        // Then stop the track to free up resources
-                        this.localVideoTrack?.stop();
-                        this.localVideoTrack = undefined;
-                    } catch (err) {
-                        console.error("An error occurred while unpublishing track", err);
-                        Sentry.captureException(err);
-                    }
+                        console.trace(">>>>>>> unpublishTrack");
+                        this.localParticipant.unpublishTrack(this.localVideoTrack,true).then(() => {
+                            // Then stop the track to free up resources
+                            this.localVideoTrack?.stop();
+                            this.localVideoTrack = undefined;
+                        }).catch((err) => {
+                            console.error("An error occurred while unpublishing track", err);
+                            Sentry.captureException(err);
+                        });
+
                 }
 
                 if (streamResult) {
-                    try {
+    
                         // Create a new track instance
                         this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
 
@@ -147,13 +145,16 @@ export class LiveKitRoom {
                         }
 
                         // Publish the new track
-                        await this.localParticipant.publishTrack(this.localVideoTrack, {
+                        console.trace(">>>>>>> publishTrack");
+                        this.localParticipant.publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare,
+                        }).then(() => {
+                            console.log(">>>>>>> publishTrack success");
+                        }).catch((err) => {
+                            console.error("An error occurred while publishing track", err);
+                            Sentry.captureException(err);
                         });
-                    } catch (err) {
-                        console.error("An error occurred while publishing track", err);
-                        Sentry.captureException(err);
-                    }
+
                 }
             })
         );
@@ -192,7 +193,7 @@ export class LiveKitRoom {
             return;
         }
 
-        this.room.disconnect(true).catch((err) => {
+        this.room.disconnect(false).catch((err) => {
             console.error("An error occurred in leaveRoom", err);
             Sentry.captureException(err);
         });
