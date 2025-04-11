@@ -370,8 +370,7 @@ jobs:
               \"token\": \"${{ secrets.GITLAB_TOKEN_PIPELINE }}\",
               \"ref\": \"${REF}\",
               \"variables\": {
-                \"GITHUB_BRANCH_NAME\": \"${{ github.head_ref }}\",
-                \"RUN_FROM_GITHUB\": \"true\"
+                \"GITHUB_BRANCH_NAME\": \"${{ github.head_ref }}\"
               }
             }")
 
