@@ -114,7 +114,7 @@
 
     <AudioPlayer />
 
-    <div class="flex min-h-dvh flex-col-reverse mobile:flex-col">
+    <div class="flex min-h-full flex-col-reverse mobile:flex-col">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full relative">
             <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
