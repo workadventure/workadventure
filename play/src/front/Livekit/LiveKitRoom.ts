@@ -28,8 +28,9 @@ export class LiveKitRoom {
             adaptiveStream: true,
             dynacast: true,
             videoCaptureDefaults: {
-                resolution: VideoPresets.h720.resolution,
-            },
+                resolution: VideoPresets.h2160.resolution,
+            }
+            
         });
 
         this.localParticipant = this.room.localParticipant;
@@ -85,7 +86,11 @@ export class LiveKitRoom {
                     return;
                 }
 
-                this.localParticipant.setCameraEnabled(state).catch((err) => {
+                this.localParticipant.setCameraEnabled(state, {
+                    //TODO : voir la résolution qu'on décide d'envoyer 
+                    resolution: VideoPresets.h2160.resolution,
+                
+                }).catch((err) => {
                     console.error("An error occurred in synchronizeMediaState", err);
                     Sentry.captureException(err);
                 });
