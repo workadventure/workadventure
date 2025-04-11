@@ -219,28 +219,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.close();
     await page.context().close();
   });
-  test("React to message", async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page);
-    await ChatUtils.openChat(page);
-    await ChatUtils.openCreateRoomDialog(page);
-    const publicChatRoomName = ChatUtils.getRandomName();
-    await page.getByTestId("createRoomName").fill(publicChatRoomName);
-    await page.getByTestId("createRoomButton").click();
-    await page.getByText(publicChatRoomName).click();
-    const chatMessageContent = "This is a test message";
-    await page.getByTestId("messageInput").fill(chatMessageContent);
-    await page.getByTestId("sendMessageButton").click();
-    await page.getByText(chatMessageContent).hover();
-    await page.getByTestId("openEmojiPickerButton").click();
-    const reactionKey = "😀";
-    await page.locator(".emoji-picker__emojis").getByText(reactionKey).nth(1).click();
-    await expect(page.locator('.reactions-bar').getByText('😀')).toBeVisible();
-    await page.close();
-    await page.context().close();
-  });
 
-  test("Remove reaction to message", async ({ browser }) => {
+  test("React to message and remove reaction to message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
@@ -254,8 +234,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("sendMessageButton").click();
     await page.getByText(chatMessageContent).hover();
     await page.getByTestId("openEmojiPickerButton").click();
-    const reactionKey = "😀";
-    await page.locator(".emoji-picker__emojis").getByText(reactionKey).nth(1).click();
+    await page.getByLabel('😀, grinning face, grinning,').click();
+    await expect(page.locator('.reactions-bar').getByText('😀')).toBeVisible();
     await page.locator('.reactions-bar').getByText('😀').click();
     await expect(
         page.locator('.reactions-bar').getByText('😀')
