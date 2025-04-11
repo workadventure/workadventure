@@ -120,12 +120,13 @@ export type ChatMessageContent = {
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
-export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement {
+export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
     rooms: Readable<ChatRoom[]>;
     folders: Readable<RoomFolder[]>;
     invitations: Readable<ChatRoom[]>;
+    suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 }
 
 export interface CreateRoomOptions {
@@ -138,6 +139,7 @@ export interface CreateRoomOptions {
     encrypt?: boolean;
     parentSpaceID?: string;
     description?: string;
+    suggested?: boolean;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";

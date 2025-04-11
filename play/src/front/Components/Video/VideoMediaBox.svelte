@@ -26,7 +26,6 @@
 
     export let fullScreen = false;
     export let peer: Streamable;
-
     // If true, and if there is not video, the height of the video box will be 11rem
     export let miniMode = false;
 

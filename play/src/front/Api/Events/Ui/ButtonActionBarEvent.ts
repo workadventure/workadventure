@@ -1,22 +1,19 @@
 import { z } from "zod";
 
-export const isAddClassicButtonActionBarEvent = z.object({
+export const isAddActionBarButtonEvent = z.object({
     id: z.string(),
-    label: z.string(),
-    type: z.enum(["button"]).optional().default("button"),
+    label: z.string().optional(),
+    toolTip: z.string().optional(),
+    bgColor: z.string().optional(),
+    textColor: z.string().optional(),
+    imageSrc: z.string().optional(),
+    isGradient: z.boolean().optional().default(false),
 });
 
-export const isAddActionButtonActionBarEvent = z.object({
-    id: z.string(),
-    type: z.enum(["action"]),
-    imageSrc: z.string(),
-    toolTip: z.string(),
-});
-
-export const isAddButtonActionBarEvent = z.union([isAddClassicButtonActionBarEvent, isAddActionButtonActionBarEvent]);
-export type AddButtonActionBarEvent = z.infer<typeof isAddButtonActionBarEvent>;
-export type AddActionButtonActionBarEvent = z.infer<typeof isAddActionButtonActionBarEvent>;
-export type AddClassicButtonActionBarEvent = z.infer<typeof isAddClassicButtonActionBarEvent>;
+export type AddButtonActionBarEvent = z.infer<typeof isAddActionBarButtonEvent>;
+// Aliasing Button types for backward compatibility
+export type AddActionButtonActionBarEvent = AddButtonActionBarEvent;
+export type AddClassicButtonActionBarEvent = AddButtonActionBarEvent;
 export type AddActionsButtonActionBarEventCallback = (event: AddButtonActionBarEvent) => void;
 
 export const isRemoveButtonActionBarEvent = z.object({

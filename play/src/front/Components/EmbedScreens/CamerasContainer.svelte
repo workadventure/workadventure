@@ -61,6 +61,8 @@
     // The minimum width of a media box in pixels
     const minMediaBoxWidth = 120;
 
+    const gameScene = gameManager.getCurrentGameScene();
+
     onMount(() => {});
 
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
@@ -89,7 +91,7 @@
             videoHeight = layout.videoHeight;
         }
 
-        gameManager.getCurrentGameScene().reposition();
+        gameScene.reposition();
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
@@ -197,7 +199,7 @@
     }
 
     onDestroy(() => {
-        gameManager.getCurrentGameScene().reposition();
+        gameScene.reposition();
     });
 
     function onResizeHandler(height: number) {

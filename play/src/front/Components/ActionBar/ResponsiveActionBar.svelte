@@ -15,12 +15,11 @@
     let leftDivWidth: number;
     let leftToCenterWidth: number;
 
-    // The 8px refers to the gap-1 padding between the left and center divs and the right margin that must be accounted for
     $: if (centerPlusRightDiv)
         centerPlusRightDiv.style.minWidth = `${
             mode === "wide"
                 ? Math.min(actionBarWidth * 0.5 + centerDivWidth * 0.5, actionBarWidth - leftDivWidth)
-                : actionBarWidth - leftDivWidth - 8
+                : actionBarWidth - leftDivWidth
         }px`;
     $: if (centerPlusRightDiv) centerPlusRightDiv.style.maxWidth = `${actionBarWidth - leftDivWidth}px`;
 
@@ -79,39 +78,38 @@
         ? 'hidden'
         : ''}"
 >
-    <div
-        class="gap-1 @md/actions:gap-2 @xl/actions:gap-4 p-1 @md/actions:p-2 @xl/actions:p-4 flex justify-between items-center screen-blocker"
-        bind:offsetWidth={actionBarWidth}
-    >
-        <!-- Left bar -->
-        <div class="flex-1 flex">
-            <div class="flex-none" bind:offsetWidth={leftDivWidth}>
-                <slot name="left" />
+    <div class="gap-1 @md/actions:gap-2 @xl/actions:gap-4 p-1 @md/actions:p-2 @xl/actions:p-4 screen-blocker">
+        <div class="w-full flex justify-between items-center" bind:offsetWidth={actionBarWidth}>
+            <!-- Left bar -->
+            <div class="flex-1 flex">
+                <div class="flex-none" bind:offsetWidth={leftDivWidth}>
+                    <slot name="left" />
+                </div>
+                {#if mode === "wide"}
+                    <div class="w-0 flex-1 min-w-0 flex justify-end" bind:offsetWidth={leftToCenterWidth} />
+                {/if}
             </div>
-            {#if mode === "wide"}
-                <div class="w-0 flex-1 min-w-0 flex justify-end" bind:offsetWidth={leftToCenterWidth} />
-            {/if}
-        </div>
-        <!-- Center + right bar -->
-        <div
-            class="flex justify-between items-center"
-            class:flex-none={mode === "wide"}
-            class:flex-1={mode === "shrunk"}
-            bind:this={centerPlusRightDiv}
-        >
-            <!-- Center bar -->
-            <div class="flex justify-end" bind:offsetWidth={centerDivWidth}>
-                <slot name="center" />
-            </div>
-            <!-- Right bar -->
+            <!-- Center + right bar -->
             <div
-                class="flex flex-row justify-end overflow-hidden"
+                class="flex justify-between items-center"
                 class:flex-none={mode === "wide"}
                 class:flex-1={mode === "shrunk"}
-                bind:this={rightDiv}
+                bind:this={centerPlusRightDiv}
             >
-                <div class="flex flew-row flex-none h-full" bind:this={rightDivContent}>
-                    <slot name="right" />
+                <!-- Center bar -->
+                <div class="flex justify-end" bind:offsetWidth={centerDivWidth}>
+                    <slot name="center" />
+                </div>
+                <!-- Right bar -->
+                <div
+                    class="flex flex-row justify-end overflow-hidden"
+                    class:flex-none={mode === "wide"}
+                    class:flex-1={mode === "shrunk"}
+                    bind:this={rightDiv}
+                >
+                    <div class="flex flew-row flex-none h-full" bind:this={rightDivContent}>
+                        <slot name="right" />
+                    </div>
                 </div>
             </div>
         </div>

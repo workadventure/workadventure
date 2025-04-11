@@ -8,7 +8,7 @@
 
     import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
     import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
-    import { requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
+    import { isScreenSharingSupported, requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 
     const dispatch = createEventDispatcher();
 
@@ -24,22 +24,24 @@
     }
 </script>
 
-<ActionBarButton
-    on:click={screenSharingClick}
-    classList="group/btn-screen-share"
-    tooltipTitle={$LL.actionbar.help.share.title()}
-    tooltipDesc={$LL.actionbar.help.share.desc()}
-    disabledHelp={$openedMenuStore !== undefined}
-    state={!$screenSharingActivatedStore
-        ? "disabled"
-        : $requestedScreenSharingState && !$silentStore
-        ? "active"
-        : "normal"}
-    dataTestId="screenShareButton"
->
-    {#if $requestedScreenSharingState && !$silentStore}
-        <ScreenShareOffIcon />
-    {:else}
-        <ScreenShareIcon />
-    {/if}
-</ActionBarButton>
+{#if isScreenSharingSupported()}
+    <ActionBarButton
+        on:click={screenSharingClick}
+        classList="group/btn-screen-share"
+        tooltipTitle={$LL.actionbar.help.share.title()}
+        tooltipDesc={$LL.actionbar.help.share.desc()}
+        disabledHelp={$openedMenuStore !== undefined}
+        state={!$screenSharingActivatedStore
+            ? "disabled"
+            : $requestedScreenSharingState && !$silentStore
+            ? "active"
+            : "normal"}
+        dataTestId="screenShareButton"
+    >
+        {#if $requestedScreenSharingState && !$silentStore}
+            <ScreenShareOffIcon />
+        {:else}
+            <ScreenShareIcon />
+        {/if}
+    </ActionBarButton>
+{/if}
