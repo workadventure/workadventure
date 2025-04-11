@@ -127,7 +127,7 @@
                 );
             }
         } catch (error) {
-            console.error(error);
+            console.error("Error while analyzing a link:", error);
             link = "";
             errorLink = getErrorFromPropertyName() ?? errorLink ?? (error as Error).message;
         } finally {
@@ -162,6 +162,7 @@
 
     // Permit to broadcast update of the link after 2 seconds of inactivity and have a draft of the link
     function input() {
+        errorLink = undefined;
         if (timeOutToHtmlInpuElement) clearTimeout(timeOutToHtmlInpuElement);
         timeOutToHtmlInpuElement = setTimeout(() => {
             unFocus().catch((error) => {
@@ -221,7 +222,7 @@
         placeholder={property.placeholder}
     />
 
-    {#if errorLink != undefined && errorLink != ""}
+    {#if errorLink}
         <p data-testid="applicationLinkError" class="text-xs text-red-500 p-0 m-0 h-fit w-full">
             {errorLink}
         </p>
