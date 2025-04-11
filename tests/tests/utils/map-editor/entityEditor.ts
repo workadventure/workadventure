@@ -49,7 +49,7 @@ class EntityEditor {
   }
 
   async addProperty(page: Page, property: string) {
-    await page.locator(".map-editor .sidebar .properties-buttons .add-property-button", { hasText: property }).click();
+    await page.getByTestId(property).click();
   }
 
   async setEntityName(page: Page, name: string) {

@@ -28,11 +28,7 @@ class AreaEditor {
         await page.locator('.map-editor .sidebar');
         await page.locator('.map-editor .sidebar .item-picker-container');
         await page.locator('select#speakerZoneSelector');
-
-        await page.locator(".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: property }
-      )
-      .click();
+        await page.getByTestId(property).click();
   }
 
   async setSpeakerMegaphoneProperty(page: Page, name: string) {
