@@ -14,7 +14,6 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
     import { v4 as uuid } from "uuid";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
@@ -36,7 +35,7 @@
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
-    import ApplicationFormWraper from "./Application/ApplicationFormWraper.svelte";
+    import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import { IconCircleX, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
@@ -53,7 +52,7 @@
     let applicationComponentOpened = false;
     let fileAttachmentComponentOpened = false;
     let fileAttachementEnabled = false;
-    const applicationProperty = writable<ApplicationProperty | undefined>(undefined);
+    let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
@@ -107,11 +106,11 @@
     }
 
     function sendMessage(messageToSend: string) {
-        if ($applicationProperty != undefined && $applicationProperty.link.length !== 0) {
-            room?.sendMessage($applicationProperty.link);
+        if (applicationProperty && applicationProperty.link.length !== 0) {
+            room?.sendMessage(applicationProperty.link);
         }
         // close application part
-        applicationProperty.set(undefined);
+        applicationProperty = undefined;
         applicationComponentOpened = false;
 
         // send message
@@ -206,27 +205,27 @@
     function openFileAttachmentComponent() {
         fileAttachmentComponentOpened = true;
         applicationComponentOpened = false;
-        applicationProperty.set(undefined);
+        applicationProperty = undefined;
     }
     function closeFileAttachmentComponent() {
         fileAttachmentComponentOpened = false;
         applicationComponentOpened = false;
-        applicationProperty.set(undefined);
+        applicationProperty = undefined;
     }
     // This function open the application part to propose to the user to add a new application or close application part
     function toggleApplicationComponent() {
         applicationComponentOpened = !applicationComponentOpened;
-        applicationProperty.set(undefined);
+        applicationProperty = undefined;
     }
     // This function open form to send a link to the user
     let setTimeOutProperty: ReturnType<typeof setTimeout>;
     function openLinkForm(appName: string) {
-        applicationProperty.set(undefined);
+        applicationProperty = undefined;
         // Use setTimeout to force the component to be updated
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
         setTimeOutProperty = setTimeout(() => {
-            applicationProperty.set(getPropertyFromType(appName));
-        }, 100);
+            applicationProperty = getPropertyFromType(appName);
+        }, 0);
     }
 
     function getPropertyFromType(subtype: string) {
@@ -339,7 +338,7 @@
     }
 
     function onUpdatApplicationProperty(applicationPropertyEvent: CustomEvent<ApplicationProperty>) {
-        applicationProperty.set(applicationPropertyEvent.detail);
+        applicationProperty = applicationPropertyEvent.detail;
     }
 
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
@@ -406,7 +405,7 @@
                 data-testid="youtubeApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("youtube")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "youtube"}
+                class:bg-secondary-800={applicationProperty?.name === "youtube"}
                 disabled={!connectionManager.youtubeToolActivated}
             >
                 <img draggable="false" class="w-8" src={youtubeSvg} alt="info icon" />
@@ -422,7 +421,7 @@
                 data-testid="klaxoonApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("klaxoon")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "klaxoon"}
+                class:bg-secondary-800={applicationProperty?.name === "klaxoon"}
                 disabled={!connectionManager.klaxoonToolActivated}
             >
                 <img draggable="false" class="w-8" src={klaxoonSvg} alt="info icon" />
@@ -438,8 +437,7 @@
                 data-testid="googleSheetsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleSheets")}
-                class:bg-secondary-800={$applicationProperty != undefined &&
-                    $applicationProperty.name === "googleSheets"}
+                class:bg-secondary-800={applicationProperty?.name === "googleSheets"}
                 disabled={!connectionManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSheetsSvg} alt="info icon" />
@@ -455,7 +453,7 @@
                 data-testid="googleDocsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleDocs")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "googleDocs"}
+                class:bg-secondary-800={applicationProperty?.name === "googleDocs"}
                 disabled={!connectionManager.googleDocsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDocsSvg} alt="info icon" />
@@ -471,8 +469,7 @@
                 data-testid="googleSlidesApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleSlides")}
-                class:bg-secondary-800={$applicationProperty != undefined &&
-                    $applicationProperty.name === "googleSlides"}
+                class:bg-secondary-800={applicationProperty?.name === "googleSlides"}
                 disabled={!connectionManager.googleSlidesToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleSlidesSvg} alt="info icon" />
@@ -488,8 +485,7 @@
                 data-testid="googleDriveApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("googleDrive")}
-                class:bg-secondary-800={$applicationProperty != undefined &&
-                    $applicationProperty.name === "googleDrive"}
+                class:bg-secondary-800={applicationProperty?.name === "googleDrive"}
                 disabled={!connectionManager.googleSheetsToolActivated}
             >
                 <img draggable="false" class="w-8" src={googleDriveSvg} alt="info icon" />
@@ -505,7 +501,7 @@
                 data-testid="eraserApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("eraser")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "eraser"}
+                class:bg-secondary-800={applicationProperty?.name === "eraser"}
                 disabled={!connectionManager.eraserToolActivated}
             >
                 <img draggable="false" class="w-8" src={eraserSvg} alt="info icon" />
@@ -521,7 +517,7 @@
                 data-testid="excalidrawApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("excalidraw")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "excalidraw"}
+                class:bg-secondary-800={applicationProperty?.name === "excalidraw"}
                 disabled={!connectionManager.excalidrawToolActivated}
             >
                 <img draggable="false" class="w-8" src={excalidrawSvg} alt="info icon" />
@@ -537,7 +533,7 @@
                 data-testid="cardsApplicationButton"
                 class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
                 on:click={() => openLinkForm("cards")}
-                class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === "cards"}
+                class:bg-secondary-800={applicationProperty?.name === "cards"}
                 disabled={!connectionManager.cardsToolActivated}
             >
                 <img draggable="false" class="w-8" src={cardsPng} alt="info icon" />
@@ -555,7 +551,7 @@
                 <button
                     data-testid="{app.name}ApplicationButton"
                     class="p-2 m-0 flex flex-col w-36 items-center justify-center hover:bg-white/10 rounded-2xl gap-2 disabled:opacity-50"
-                    class:bg-secondary-800={$applicationProperty != undefined && $applicationProperty.name === app.name}
+                    class:bg-secondary-800={applicationProperty?.name === app.name}
                     on:click={() => openLinkForm(app.name)}
                 >
                     <img draggable="false" class="w-8" src={app.image} alt="info icon" />
@@ -568,13 +564,13 @@
         </div>
     </div>
 {/if}
-{#if $applicationProperty}
+{#if applicationProperty}
     <div
         class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
     >
-        <ApplicationFormWraper
-            property={$applicationProperty}
-            on:close={() => applicationProperty.set(undefined)}
+        <ApplicationFormWrapper
+            property={applicationProperty}
+            on:close={() => (applicationProperty = undefined)}
             on:update={onUpdatApplicationProperty}
         />
     </div>
@@ -617,13 +613,13 @@
     >
         <IconMoodSmile font-size={18} />
     </button>
-    {#if message.trim().length !== 0 || files.length !== 0 || ($applicationProperty != undefined && $applicationProperty.link.length !== 0)}
+    {#if message.trim().length !== 0 || files.length !== 0 || (applicationProperty && applicationProperty.link.length !== 0)}
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
             disabled={message.trim().length === 0 &&
                 files.length === 0 &&
-                ($applicationProperty == undefined || $applicationProperty.link.length === 0)}
+                (!applicationProperty || applicationProperty.link.length === 0)}
             on:click={() => sendMessage(message)}
         >
             <IconSend />
