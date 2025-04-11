@@ -18,7 +18,7 @@
     let startValidating = false;
     let errorName = "";
 
-    let logo = gameManager.currentStartedRoom?.loginSceneLogo ?? logoImg;
+    let logo = gameManager.currentStartedRoom.loadingLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
     let legalStrings: string[] = [];

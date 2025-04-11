@@ -34,7 +34,6 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
-    private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
@@ -48,6 +47,7 @@ export class Room {
     private _enableChatDisconnectedList: boolean | undefined;
     private _legals: LegalsData | undefined;
     private _backgroundColor: string | undefined;
+    private _primaryColor: string | undefined;
     private _iconClothes: string | undefined;
     private _iconAccessory: string | undefined;
     private _iconHat: string | undefined;
@@ -164,12 +164,12 @@ export class Room {
                 }
                 this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? OPID_WOKA_NAME_POLICY;
                 this._canReport = data.canReport ?? false;
-                this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
                 this._backgroundColor = data.backgroundColor ?? undefined;
+                this._primaryColor = data.primaryColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
 
                 this._roomName = data.roomName ?? undefined;
@@ -303,10 +303,6 @@ export class Room {
         return this._loadingLogo;
     }
 
-    get miniLogo(): string | undefined {
-        return this._miniLogo;
-    }
-
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
     }
@@ -361,6 +357,10 @@ export class Room {
 
     get backgroundColor(): string | undefined {
         return this._backgroundColor;
+    }
+
+    get primaryColor(): string | undefined {
+        return this._primaryColor;
     }
 
     get iconClothes(): string | undefined {
