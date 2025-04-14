@@ -33,3 +33,11 @@ export const getStringPalette = (hex: string | null | undefined, prefix: string)
     }
     return stringPalette;
 };
+
+export const wrapWithStyleTag = (stringPalette: string): string => {
+    return `<style>\n
+        :root {\n
+            ${stringPalette}
+            }\n
+        </style>`;
+};

@@ -5,7 +5,7 @@ import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import { adminService } from "../services/AdminService";
-import { getStringPalette } from "../services/GenerateCustomColors";
+import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
 import {
@@ -248,6 +248,7 @@ export class FrontController extends BaseHttpController {
             let option = {};
             const secondaryPalette = getStringPalette(mapDetails?.primaryColor, "secondary");
             const contrastPalette = getStringPalette(mapDetails?.backgroundColor, "contrast");
+            const cssVariablesOverride = wrapWithStyleTag(`${secondaryPalette}\n${contrastPalette}`);
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
                     ...option,
@@ -264,8 +265,7 @@ export class FrontController extends BaseHttpController {
                 script: await this.getScript(),
                 authToken: authToken,
                 googleDrivePickerClientId: GOOGLE_DRIVE_PICKER_CLIENT_ID,
-                secondaryPalette,
-                contrastPalette,
+                cssVariablesOverride,
                 ...option,
             });
         } catch (e) {
