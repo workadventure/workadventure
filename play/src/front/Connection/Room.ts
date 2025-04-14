@@ -8,6 +8,7 @@ import {
     ENABLE_CHAT_DISCONNECTED_LIST,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
+    ENABLE_OPENID,
     OPID_WOKA_NAME_POLICY,
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
@@ -177,7 +178,7 @@ export class Room {
                 this._pricingUrl = data.pricingUrl ?? undefined;
                 this._legals = data.legals ?? undefined;
 
-                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
+                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT && ENABLE_OPENID;
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =

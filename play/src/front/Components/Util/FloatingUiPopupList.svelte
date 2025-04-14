@@ -6,7 +6,7 @@
     {@const valueProps = value.props ?? {}}
     {@const action = value.action}
     {@const arrowAction = value.arrowAction}
-    <div class="absolute z-50" use:action>
+    <div class="absolute z-[3000]" use:action>
         {#if arrowAction}
             <div use:arrowAction />
         {/if}

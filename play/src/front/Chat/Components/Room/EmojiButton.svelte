@@ -1,30 +1,44 @@
 <script lang="ts">
-    import { EmojiButton } from "@joeattardi/emoji-button";
     import { createEventDispatcher } from "svelte";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
+    import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { IconMoodSmile } from "@wa-icons";
 
     const dispatch = createEventDispatcher();
 
-    let picker: EmojiButton | undefined;
+    export let messageRef: HTMLDivElement | undefined;
+
     let trigger: HTMLButtonElement;
 
+    let closeEmojiPicker: (() => void) | undefined = undefined;
+
     function togglePicker() {
-        // Lazy instantiation of the emoji picker. It takes ~250ms to load so we don't want to load it if we don't need it.
-        if (!picker) {
-            picker = getChatEmojiPicker(
-                // FIXME: The position is not working as expected after migration to the new design.
-                // We should probably migrate to a supported Emoji picker once we migrate to Svelte 5
+        if (closeEmojiPicker) {
+            closeEmojiPicker();
+            closeEmojiPicker = undefined;
+        } else if (messageRef) {
+            closeEmojiPicker = showFloatingUi(
+                messageRef,
+                LazyEmote,
                 {
-                    bottom: "0",
-                    right: "0",
-                }
+                    onEmojiClick: (event: EmojiClickEvent) => {
+                        dispatch("change", event.detail.unicode ?? "");
+                        closeEmojiPicker?.();
+                        closeEmojiPicker = undefined;
+                    },
+                    onClose: () => {
+                        closeEmojiPicker?.();
+                        closeEmojiPicker = undefined;
+                    },
+                },
+                {
+                    placement: "top-end",
+                },
+                12,
+                true
             );
-            picker.on("emoji", (selection: { emoji: string; name: string }) => {
-                dispatch("change", selection.emoji);
-            });
         }
-        picker.togglePicker(trigger);
     }
 </script>
 

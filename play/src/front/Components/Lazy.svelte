@@ -28,6 +28,6 @@
 
 {#if when}
     {#await loading then { default: Component }}
-        <Component />
+        <Component {...$$restProps} />
     {/await}
 {/if}

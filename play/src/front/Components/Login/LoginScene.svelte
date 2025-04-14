@@ -133,6 +133,15 @@
                 >{$LL.login.continue()}</button
             >
         </section>
+        {#if legalString}
+            <section class="terms-and-conditions h-fit text-center w-full">
+                <p class="text-white text-xs italic opacity-50">
+                    {@html $LL.login.terms({
+                        links: legalString,
+                    })}
+                </p>
+            </section>
+        {/if}
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-right flex powered-by justify-center items-end">
@@ -145,14 +154,3 @@
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
 />
 <div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');" />
-
-{#if legalString}
-    <section class="terms-and-conditions h-fit absolute z-40 bottom-0 text-center w-full">
-        <a style="display: none;" href="traduction">Need for traduction</a>
-        <p class="text-white text-xs italic opacity-50">
-            {@html $LL.login.terms({
-                links: legalString,
-            })}
-        </p>
-    </section>
-{/if}

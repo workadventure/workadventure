@@ -104,10 +104,10 @@ class IframeListener {
     private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
     public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
-    private readonly _disablePlayerControlStream: Subject<void> = new Subject();
+    private readonly _disablePlayerControlStream: Subject<MessageEventSource | null> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
-    private readonly _enablePlayerControlStream: Subject<void> = new Subject();
+    private readonly _enablePlayerControlStream: Subject<MessageEventSource | null> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
 
     private readonly _disablePlayerProximityMeetingStream: Subject<void> = new Subject();
@@ -399,9 +399,9 @@ class IframeListener {
                     } else if (iframeEvent.type === "loadSound") {
                         this._loadSoundStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "disablePlayerControls") {
-                        this._disablePlayerControlStream.next();
+                        this._disablePlayerControlStream.next(message.source);
                     } else if (iframeEvent.type === "restorePlayerControls") {
-                        this._enablePlayerControlStream.next();
+                        this._enablePlayerControlStream.next(message.source);
                     } else if (iframeEvent.type === "turnOffMicrophone") {
                         this._turnOffMicrophoneStream.next();
                     } else if (iframeEvent.type === "turnOffWebcam") {
