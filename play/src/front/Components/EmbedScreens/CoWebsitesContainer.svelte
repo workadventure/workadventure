@@ -297,10 +297,11 @@
             {/each}
         </div>
     </div>
+    <!-- We make the drag handle bigger than it really is to make it more easily selectable (especially on mobile) with "after" pseudo element -->
     <div
         class={$screenOrientationStore === "portrait"
-            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize"
-            : "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize"}
+            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-left-4 after:-top-1  after:w-48 after:h-6"
+            : "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize after:content-[''] after:absolute after:-left-4 after:-top-4 after:h-48 after:w-6"}
         class:hidden={$fullScreenCowebsite}
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
