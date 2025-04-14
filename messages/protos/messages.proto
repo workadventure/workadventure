@@ -716,14 +716,14 @@ message MegaphoneSettings{
 }
 
 message WebRtcStartMessage {
-  int32 userId = 1;
+  string userId = 1;
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
-  int32 userId = 1;
+  string userId = 1;
 }
 
 message WebRtcSignalToClientMessage {

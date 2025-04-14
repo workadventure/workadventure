@@ -1,5 +1,5 @@
 import { SpaceUser } from "@workadventure/messages";
-import { ICommunicationStrategy ,  } from "../Interfaces/ICommunicationStrategy";
+import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { IWebRTCCredentials } from "../Types/CommunicationTypes";
@@ -58,7 +58,6 @@ class ConnectionManager {
 }
 
 export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
-
     constructor(
         private readonly _space: ICommunicationSpace,
         private readonly _credentialsService: WebRTCCredentialsService = webRTCCredentialsService,
@@ -115,7 +114,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, true);
     }
 
-
     private cleanupUserMessages(userId: string): void {
         this._connections.removeUser(userId);
     }
@@ -157,6 +155,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                 event: {
                     $case: "webRtcStartMessage",
                     webRtcStartMessage: {
+                        userId: senderId,
                         initiator: isInitiator,
                         ...credentials,
                     },

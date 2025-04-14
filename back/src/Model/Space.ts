@@ -285,10 +285,10 @@ export class Space implements CustomJsonReplacerInterface {
     public getAllUsers(): SpaceUser[] {
         return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
     }
-    public getUser(userId: number): SpaceUser | undefined {
+    public getUser(spaceUserId: string): SpaceUser | undefined {
         return Array.from(this.users.values())
-            .flatMap((users: Map<number, SpaceUser>) => Array.from(users.values()))
-            .find((user: SpaceUser) => user.id === userId);
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
     }
     public getSpaceName(): string {
         return this.name;
