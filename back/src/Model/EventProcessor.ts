@@ -1,10 +1,10 @@
 import { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
-type PrivateProcessor = (event: CorePrivateEvent, senderId: number, receiverId: number) => CorePrivateEvent;
+type PrivateProcessor = (event: CorePrivateEvent, senderId: string, receiverId: string) => CorePrivateEvent;
 
 type CorePublicEvent = NonNullable<SpaceEvent["event"]>;
-type PublicProcessor = (event: CorePublicEvent, sender: number) => CorePublicEvent;
+type PublicProcessor = (event: CorePublicEvent, sender: string) => CorePublicEvent;
 
 /**
  * This class is in charge of processing some public/private events sent in spaces on the server side.
@@ -17,7 +17,7 @@ export class EventProcessor {
         this.privateEventProcessors.set(eventCase, processor);
     }
 
-    public processPrivateEvent(event: CorePrivateEvent, senderId: number, receiverId: number): CorePrivateEvent {
+    public processPrivateEvent(event: CorePrivateEvent, senderId: string, receiverId: string): CorePrivateEvent {
         const processor = this.privateEventProcessors.get(event.$case);
         if (processor) {
             return processor(event, senderId, receiverId);
@@ -29,7 +29,7 @@ export class EventProcessor {
         this.publicEventProcessors.set(eventCase, processor);
     }
 
-    public processPublicEvent(event: CorePublicEvent, senderId: number): CorePublicEvent {
+    public processPublicEvent(event: CorePublicEvent, senderId: string): CorePublicEvent {
         const processor = this.publicEventProcessors.get(event.$case);
         if (processor) {
             return processor(event, senderId);
