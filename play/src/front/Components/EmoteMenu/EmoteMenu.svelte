@@ -1,78 +1,210 @@
 <script lang="ts">
+    import "emoji-picker-element";
+    import type { Picker } from "emoji-picker-element";
+    import { clickOutside } from "svelte-outside";
     import { onDestroy, onMount } from "svelte";
-    import { EmojiButton } from "@joeattardi/emoji-button";
-    import { emoteMenuStore, emoteDataStore } from "../../Stores/EmoteStore";
-    import { LL } from "../../../i18n/i18n-svelte";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
+    import { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { emoteMenuStore } from "../../Stores/EmoteStore";
+    import { locale } from "../../../i18n/i18n-svelte";
 
-    let emojiContainer: HTMLElement;
-    let picker: EmojiButton;
+    export let onEmojiClick: (event: EmojiClickEvent) => void = () => {};
+    // onClose is triggered when the "Esc" key is pressed
+    export let onClose: () => void = () => {};
+
+    let emojiPicker: Picker;
+
+    const emojiClickEventHandler = onEmojiClick;
+
+    $: {
+        const language = $locale.split("-")[0];
+        const country = $locale.split("-")[1];
+
+        switch (language) {
+            // See list of supported languages here: https://github.com/nolanlawson/emoji-picker-element/tree/master/src/picker/i18n
+            case "ar": {
+                import("emoji-picker-element/i18n/ar.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "de": {
+                import("emoji-picker-element/i18n/de.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "es": {
+                import("emoji-picker-element/i18n/es.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "fa": {
+                import("emoji-picker-element/i18n/fa.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "fr": {
+                import("emoji-picker-element/i18n/fr.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "hi": {
+                import("emoji-picker-element/i18n/hi.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "id": {
+                import("emoji-picker-element/i18n/id.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "it": {
+                import("emoji-picker-element/i18n/it.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "ja": {
+                import("emoji-picker-element/i18n/ja.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "ms": {
+                if (country === "MY") {
+                    import("emoji-picker-element/i18n/ms_MY.js")
+                        .then((module) => {
+                            emojiPicker.i18n = module.default;
+                        })
+                        .catch((e) => console.error(e));
+                }
+                break;
+            }
+            case "nl": {
+                import("emoji-picker-element/i18n/nl.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "pl": {
+                import("emoji-picker-element/i18n/pl.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "pt": {
+                if (country === "BR") {
+                    import("emoji-picker-element/i18n/pt_BR.js")
+                        .then((module) => {
+                            emojiPicker.i18n = module.default;
+                        })
+                        .catch((e) => console.error(e));
+                } else {
+                    import("emoji-picker-element/i18n/pt_PT.js")
+                        .then((module) => {
+                            emojiPicker.i18n = module.default;
+                        })
+                        .catch((e) => console.error(e));
+                }
+                break;
+            }
+            case "ru": {
+                import("emoji-picker-element/i18n/ru_RU.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "tr": {
+                import("emoji-picker-element/i18n/tr.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "vi": {
+                import("emoji-picker-element/i18n/vi.js")
+                    .then((module) => {
+                        emojiPicker.i18n = module.default;
+                    })
+                    .catch((e) => console.error(e));
+                break;
+            }
+            case "zh": {
+                if (country === "CN") {
+                    import("emoji-picker-element/i18n/zh_CN.js")
+                        .then((module) => {
+                            emojiPicker.i18n = module.default;
+                        })
+                        .catch((e) => console.error(e));
+                }
+                break;
+            }
+            default: {
+                // Use default English
+            }
+        }
+    }
 
     onMount(() => {
-        picker = new EmojiButton({
-            rootElement: emojiContainer,
-            styleProperties: {
-                "--font": "Roboto Condensed",
-                "--text-color": "#ffffff",
-                "--secondary-text-color": "#ffffff",
-                "--category-button-color": "#ffffff",
-                "--category-button-active-color": "rgb(103, 233, 123)",
-            },
-            position: {
-                top: "8.5rem",
-            },
-            emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
-            autoFocusSearch: false,
-            style: "native",
-            showPreview: false,
-            autoHide: false,
-            i18n: {
-                search: $LL.emoji.search(),
-                categories: {
-                    recents: $LL.emoji.categories.recents(),
-                    smileys: $LL.emoji.categories.smileys(),
-                    people: $LL.emoji.categories.people(),
-                    animals: $LL.emoji.categories.animals(),
-                    food: $LL.emoji.categories.food(),
-                    activities: $LL.emoji.categories.activities(),
-                    travel: $LL.emoji.categories.travel(),
-                    objects: $LL.emoji.categories.objects(),
-                    symbols: $LL.emoji.categories.symbols(),
-                    flags: $LL.emoji.categories.flags(),
-                    custom: $LL.emoji.categories.custom(),
-                },
-                notFound: $LL.emoji.notFound(),
-            },
-        });
-        //the timeout is here to prevent the menu from flashing
-        setTimeout(() => picker.showPicker(emojiContainer), 100);
-
-        picker.on("emoji", (selection) => {
-            emoteDataStore.pushNewEmoji(selection);
-        });
-
-        picker.on("hidden", () => {
-            emoteMenuStore.closeEmoteMenu();
-        });
+        emojiPicker.addEventListener("emoji-click", emojiClickEventHandler);
+        emoteMenuStore.openEmoteMenu();
     });
-
-    /*function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            emoteMenuStore.closeEmoteMenu();
-        }
-    }*/
 
     onDestroy(() => {
-        picker.destroyPicker();
+        emojiPicker.removeEventListener("emoji-click", emojiClickEventHandler);
+        emoteMenuStore.closeEmoteMenu();
     });
+
+    function close() {
+        emoteMenuStore.closeEmoteMenu();
+        onClose();
+    }
 </script>
 
-<div class="flex w-full h-full justify-center items-center absolute z-[300]">
-    <div
-        class="flex flex-col items-center pointer-events-auto justify-center m-auto bottom-1 z-[251] transition-transform duration-300 sm:flex-row {$bottomActionBarVisibilityStore
-            ? 'active-discussion'
-            : ''}"
-        bind:this={emojiContainer}
-    />
-</div>
+<svelte:window
+    on:keydown={(e) => {
+        if (e.key === "Escape") {
+            close();
+        }
+    }}
+/>
+<emoji-picker id="emoji-picker" class="pointer-events-auto" use:clickOutside={close} bind:this={emojiPicker} />
+
+<style>
+    @media screen and (max-width: 640px) {
+        emoji-picker {
+            --num-columns: 6;
+            --category-emoji-size: 1.125rem;
+        }
+    }
+</style>
