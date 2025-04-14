@@ -7,6 +7,7 @@
     export let label: string | undefined = undefined;
     export let placeholder = "";
     export let onChange = () => {};
+    export let onBlur = () => {};
     export let disabled = false;
     export let type: "text" | "url" | "number" = "text";
     export let value: string | number | null | undefined;
@@ -79,6 +80,7 @@
                 on:click={onClick}
                 on:input={validateInput}
                 on:error={onerror}
+                on:blur={onBlur}
                 {disabled}
             />
 
@@ -103,6 +105,7 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:blur={onBlur}
                 min="{min}.toString()"
                 {max}
                 {step}
@@ -126,6 +129,7 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:blur={onBlur}
                 {min}
                 {max}
                 {step}
