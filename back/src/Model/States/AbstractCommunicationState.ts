@@ -53,7 +53,13 @@ export abstract class CommunicationState implements ICommunicationState {
         this._switchTimeout = setTimeout(() => this.executeFinalSwitch(), this.SWITCH_TIMEOUT_MS);
     }
 
-    protected executeFinalSwitch(): void {
+    protected executeFinalSwitch(): void {  
+        
+        if (this._switchTimeout) {
+            clearTimeout(this._switchTimeout);
+            this._switchTimeout = null;
+        }
+
         if (!this.isSwitching()) {
             return;
         }
@@ -74,10 +80,6 @@ export abstract class CommunicationState implements ICommunicationState {
             this._communicationManager.setState(this._nextState);
             this._nextState.afterSwitchAction();
             this._readyUsers.clear();
-            if (this._switchTimeout) {
-                clearTimeout(this._switchTimeout);
-                this._switchTimeout = null;
-            }
         }
     }
 

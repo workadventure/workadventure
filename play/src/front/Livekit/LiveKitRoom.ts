@@ -109,27 +109,16 @@ export class LiveKitRoom {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
+            this.screenSharingLocalStreamStore.subscribe(async (stream) => {
                 const streamResult = stream.type === "success" ? stream.stream : undefined;
-
+                
+                if (!this.localParticipant) {
+                    console.error("Local participant not found");
+                    Sentry.captureException(new Error("Local participant not found"));
+                    return;
+                }
                 if (this.localVideoTrack) {
-                    if (!this.localParticipant) {
-                        console.error("Local participant not found");
-                        Sentry.captureException(new Error("Local participant not found"));
-                        return;
-                    }
-
-
-                        // First, unpublish the existing track
-                        console.trace(">>>>>>> unpublishTrack");
-                        this.localParticipant.unpublishTrack(this.localVideoTrack,true).then(() => {
-                            // Then stop the track to free up resources
-                            this.localVideoTrack?.stop();
-                            this.localVideoTrack = undefined;
-                        }).catch((err) => {
-                            console.error("An error occurred while unpublishing track", err);
-                            Sentry.captureException(err);
-                        });
+                    await this.unpublishAllScreenShareTrack();
 
                 }
 
@@ -137,17 +126,11 @@ export class LiveKitRoom {
     
                         // Create a new track instance
                         this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
+                        
+                        const dimensions = await this.localVideoTrack.waitForDimensions();
 
-                        if (!this.localParticipant) {
-                            console.error("Local participant not found");
-                            Sentry.captureException(new Error("Local participant not found"));
-                            return;
-                        }
-
-                        // Publish the new track
-                        console.trace(">>>>>>> publishTrack");
                         this.localParticipant.publishTrack(this.localVideoTrack, {
-                            source: Track.Source.ScreenShare,
+                            source: Track.Source.ScreenShare
                         }).then(() => {
                             console.log(">>>>>>> publishTrack success");
                         }).catch((err) => {
@@ -160,6 +143,23 @@ export class LiveKitRoom {
         );
     }
 
+    private async unpublishAllScreenShareTrack() {
+        if (!this.localParticipant) {
+            console.error("Local participant not found");
+            Sentry.captureException(new Error("Local participant not found"));
+            return;
+        }
+        
+        for (const publication of this.localParticipant.trackPublications.values()) {
+            const track = publication.track;
+          
+            // Optional: You can use naming or source tagging to distinguish screen sharing
+            if (track && publication.source === 'screen_share') {
+              await this.localParticipant.unpublishTrack(track);
+              track.stop(); // Optional: stop the media track to release resources
+            }
+          }
+    }
     private handleRoomEvents() {
         if (!this.room) {
             console.error("Room not found");
@@ -200,7 +200,10 @@ export class LiveKitRoom {
     }
 
     public destroy() {
+        console.log(">>>>> destroy LiveKitRoom");
+        console.count("destroy LiveKitRoom");
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
+        this.participants.forEach((participant) => participant.destroy());  
         this.leaveRoom();
     }
 }

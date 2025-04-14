@@ -60,10 +60,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         //TODO : voir si besoin
     }
 
-    initialize(switchInProgress?: boolean): void {
+    initialize(): void {
         const users = this.space.getAllUsers();
         users.forEach((user) => {
-            this.addUser(user, switchInProgress).catch((error) => {
+            this.addUser(user, true).catch((error) => {
                 console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
                 Sentry.captureException(error);
             });

@@ -68,6 +68,6 @@ export class LivekitState extends CommunicationState {
     }
 
     protected preparedSwitchAction(): void {
-        this._currentStrategy.initialize(false);
+        this._currentStrategy.initialize();
     }
 }

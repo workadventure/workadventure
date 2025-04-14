@@ -49,8 +49,9 @@ export class LiveKitService {
                 TrackSource.CAMERA,
                 TrackSource.MICROPHONE,
                 TrackSource.SCREEN_SHARE,
+                TrackSource.SCREEN_SHARE_AUDIO,
             ],
-
+            
         });
             return token.toJwt();
         } catch (error) {

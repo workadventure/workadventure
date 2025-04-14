@@ -52,10 +52,10 @@ export class WebRTCState extends CommunicationState {
 
     private switchToNextState(user: SpaceUser): void {
         this._nextState = new LivekitState(this._space, this._communicationManager);
-        if (user) {
-            this._readyUsers.add(user.spaceUserId);
-            this.notifyUserOfCurrentStrategy(user, this._nextCommunicationType);
-        }
+
+        this._readyUsers.add(user.spaceUserId);
+        this.notifyUserOfCurrentStrategy(user, this._nextCommunicationType);
+        this._nextState.handleUserAdded(user, false);
 
         this.notifyAllUsersToPrepareSwitchToNextState();
         this.setupSwitchTimeout();

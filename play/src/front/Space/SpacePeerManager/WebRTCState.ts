@@ -32,7 +32,7 @@ export class WebRTCState implements ICommunicationState {
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
-                if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT) {
+                if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState === null) {
                     console.log(">>>>>create next state LivekitState PREPARE_SWITCH_MESSAGE", this._nextState);
                     this._nextState = new LivekitState(this.space, this.peerManager);
                 }
@@ -74,7 +74,7 @@ export class WebRTCState implements ICommunicationState {
     destroy() {
         console.log(">>>>> destroy WebRTCState");
         this._peer.closeAllConnections(false);
-        this._peer?.unregister();
+        this._peer.unregister();
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();
         }
