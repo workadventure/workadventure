@@ -746,7 +746,7 @@
                     onKeyPress={onKeyPressed}
                     bind:value={property.link}
                     onChange={onValueChange}
-                    on:blur={() => checkWebsiteProperty()}
+                    onBlur={() => checkWebsiteProperty()}
                     onClick={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
