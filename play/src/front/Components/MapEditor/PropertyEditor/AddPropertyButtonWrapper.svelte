@@ -70,6 +70,7 @@
         descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
         img={"resources/icons/icon_focus.png"}
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="focusable"
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -84,6 +85,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="addSilentProperty"
     />
 {/if}
 {#if property === "jitsiRoomProperty"}
@@ -97,6 +99,7 @@
                 dispatch("click", event);
             }}
             disabled={true}
+            testId="jitsiRoomProperty"
         />
     {:else}
         <AddPropertyButton
@@ -107,6 +110,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            testId="jitsiRoomProperty"
         />
     {/if}
 {/if}
@@ -121,6 +125,7 @@
                 dispatch("click", event);
             }}
             disabled={true}
+            testId="speakerMegaphone"
         />
     {:else}
         <AddPropertyButton
@@ -131,6 +136,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            testId="speakerMegaphone"
         />
     {/if}
 {/if}
@@ -145,6 +151,7 @@
                 dispatch("click", event);
             }}
             disabled={true}
+            testId="listenerMegaphone"
         />
     {:else}
         <AddPropertyButton
@@ -155,6 +162,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            testId="listenerMegaphone"
         />
     {/if}
 {/if}
@@ -167,6 +175,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="startAreaProperty"
     />
 {/if}
 {#if property === "exit"}
@@ -178,6 +187,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="exitAreaProperty"
     />
 {/if}
 {#if property === "playAudio"}
@@ -189,6 +199,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="playAudio"
     />
 {/if}
 {#if property === "openWebsite" && (subProperty == undefined || subProperty === "website")}
@@ -200,6 +211,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsite"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "klaxoon"}
@@ -214,6 +226,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteKlaxoon"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "youtube"}
@@ -228,6 +241,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteYoutube"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "googleDrive"}
@@ -242,6 +256,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteGoogleDrive"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "googleDocs"}
@@ -256,6 +271,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteGoogleDocs"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "googleSheets"}
@@ -270,6 +286,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteGoogleSheets"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "googleSlides"}
@@ -284,6 +301,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteGoogleSlides"
     />
 {/if}
 {#if property === "openWebsite" && subProperty === "eraser"}
@@ -298,6 +316,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteEraser"
     />
 {/if}
 
@@ -313,6 +332,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteExcalidraw"
     />
 {/if}
 
@@ -328,6 +348,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="openWebsiteCards"
     />
 {/if}
 
@@ -364,6 +385,7 @@
         on:click={(event) => {
             dispatch("click", event);
         }}
+        testId="addTooltipProperty"
     />
 {/if}
 
@@ -377,6 +399,7 @@
             on:click={(event) => {
                 dispatch("click", event);
             }}
+            testId={`openWebsite${app.name}`}
         />
     {/if}
 {/each}

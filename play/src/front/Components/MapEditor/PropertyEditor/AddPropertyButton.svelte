@@ -8,12 +8,8 @@
     export let img;
     export let style;
     export let disabled = false;
-    export let testId = undefined;
+    export let testId;
     const dispatch = createEventDispatcher();
-
-    if (!testId) {
-        testId = headerText;
-    }
 
     let isHovered = false;
 
