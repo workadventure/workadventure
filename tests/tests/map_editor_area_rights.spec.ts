@@ -248,10 +248,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("Open Link")
     ).not.toBeAttached();
     await page2.close();
     await page2.context().close();
@@ -298,10 +295,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("Open Link")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
@@ -485,10 +479,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("Open Link")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
