@@ -145,7 +145,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         isInitiator: boolean
     ): void {
         this._connections.addConnection(senderId, receiverId);
-        console.log(">>>>>>>> sendWebRTCStart", senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
@@ -197,7 +196,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     cleanup(): void {
         for (const [senderId, receiverId] of this._connections.getAllConnections()) {
-            console.log(">>>>>>>> cleanup", senderId, receiverId);
             this._space.dispatchPrivateEvent({
                 spaceName: this._space.getSpaceName(),
                 receiverUserId: receiverId,

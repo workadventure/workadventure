@@ -169,6 +169,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
+                console.log(">>>>> receiveWebrtcStart", message);
                 const webRtcStartMessage = message.webRtcStartMessage;
 
                 const user: UserSimplePeerInterface = {
@@ -189,6 +190,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         //receive message start
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent("webRtcDisconnectMessage").subscribe((message) => {
+                console.log(">>>>> receiveWebrtcDisconnect", message);
                 const user: UserSimplePeerInterface = {
                     userId: message.sender,
                 };
@@ -464,9 +466,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     public cleanupStore() {
+        //TODO : mettre un paramètre pour savoir si on doit vraiment destroy ou pas / si on est en train de faire un switch ou pas
+        //TODO : ou quand on switch on ne doit pas appeler cette fonction
         this.space.livekitVideoStreamStore.forEach((peer) => {
             if (peer instanceof VideoPeer) {
-                peer.destroy();
+                //peer.destroy();
                 //this.space.livekitVideoStreamStore.delete(peer.user.userId);
                 console.log(">>>> delete video stream", {
                     spaceUserId: peer.user.userId,
@@ -476,7 +480,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         this.space.livekitScreenShareStreamStore.forEach((peer) => {
             if (peer instanceof ScreenSharingPeer) {
-                peer.destroy();
+                //peer.destroy();
                 //this.space.livekitScreenShareStreamStore.delete(peer.user.userId);
                 console.log(">>>> delete screen sharing stream", {
                     spaceUserId: peer.user.userId,

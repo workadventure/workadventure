@@ -109,15 +109,16 @@ export class LiveKitRoom {
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe((stream) => {
+            this.screenSharingLocalStreamStore.subscribe(async (stream) => {
+                console.log(">>>>>>>>> screenSharingLocalStreamStore", stream);
                 const streamResult = stream.type === "success" ? stream.stream : undefined;
-
+                
+                if (!this.localParticipant) {
+                    console.error("Local participant not found");
+                    Sentry.captureException(new Error("Local participant not found"));
+                    return;
+                }
                 if (this.localVideoTrack) {
-                    if (!this.localParticipant) {
-                        console.error("Local participant not found");
-                        Sentry.captureException(new Error("Local participant not found"));
-                        return;
-                    }
 
 
                         // First, unpublish the existing track
@@ -137,17 +138,15 @@ export class LiveKitRoom {
     
                         // Create a new track instance
                         this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
+                        
+                        const dimensions = await this.localVideoTrack.waitForDimensions();
 
-                        if (!this.localParticipant) {
-                            console.error("Local participant not found");
-                            Sentry.captureException(new Error("Local participant not found"));
-                            return;
-                        }
+                        console.log(">>>>>>> dimensions", dimensions);
 
-                        // Publish the new track
+                        // Publish the new track with screen share source
                         console.trace(">>>>>>> publishTrack");
                         this.localParticipant.publishTrack(this.localVideoTrack, {
-                            source: Track.Source.ScreenShare,
+                            source: Track.Source.ScreenShare
                         }).then(() => {
                             console.log(">>>>>>> publishTrack success");
                         }).catch((err) => {
