@@ -40,7 +40,33 @@ export class UserProviderMerger {
                 // Step 2: merge users with same chatId
                 const mergedUsers = new Map<chatId, ChatUser>();
                 for (const chatUserList of usersByChatId.values()) {
+                    const UUIDs: Map<number, Partial<PartialChatUser>> = new Map();
+
+                    if (chatUserList[0].id)
+                        UUIDs.set(chatUserList[0].id, {
+                            uuid: chatUserList[0].uuid,
+                            availabilityStatus: chatUserList[0].availabilityStatus,
+                            avatarUrl: chatUserList[0].avatarUrl,
+                            roomName: chatUserList[0].roomName,
+                            playUri: chatUserList[0].playUri,
+                            id: chatUserList[0].id,
+                            color: chatUserList[0].color,
+                            username: chatUserList[0].username,
+                        });
+
                     const mergedUser = chatUserList.reduce((acc, user) => {
+                        if (user.id)
+                            UUIDs.set(user.id, {
+                                uuid: user.uuid,
+                                availabilityStatus: user.availabilityStatus,
+                                avatarUrl: user.avatarUrl,
+                                roomName: user.roomName,
+                                playUri: user.playUri,
+                                id: user.id,
+                                color: user.color,
+                                username: user.username,
+                            });
+
                         return {
                             chatId: user.chatId,
                             uuid: user.uuid || acc.uuid,
@@ -67,14 +93,17 @@ export class UserProviderMerger {
                         spaceUserId: undefined,
                     };
 
-                    const fullUser = {
-                        ...defaultUser,
-                        ...mergedUser,
-                        username: mergedUser.username ?? "",
-                        availabilityStatus: mergedUser.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
-                    };
+                    Array.from(UUIDs.values()).forEach((user) => {
+                        const fullUser = {
+                            ...defaultUser,
+                            ...mergedUser,
+                            ...user,
+                            availabilityStatus: user.availabilityStatus ?? writable(AvailabilityStatus.UNCHANGED),
+                        };
 
-                    mergedUsers.set(mergedUser.chatId, fullUser);
+                        mergedUsers.set(mergedUser.chatId, fullUser);
+                        mergedUsers.set(fullUser.id?.toString() ?? mergedUser.chatId, fullUser);
+                    });
                 }
 
                 // Step 3: sort users by room
