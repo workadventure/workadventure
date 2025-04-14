@@ -26,6 +26,9 @@
     export let isValid = true;
     export let rounded = false;
     export let onerror = () => {};
+    export let onInput = () => {};
+    export let onFocusin = (event: FocusEvent) => {};
+    export let onFocusout = (event: FocusEvent) => {};
 
     const SLOTS = $$slots;
 
@@ -34,6 +37,9 @@
     function validateInput(event: Event) {
         const inputElement = event.target as HTMLInputElement;
         isValid = inputElement.checkValidity();
+        if (onInput) {
+            onInput();
+        }
     }
 </script>
 
@@ -78,6 +84,8 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:focusin={onFocusin}
+                on:focusout={onFocusout}
                 on:error={onerror}
                 {disabled}
             />
