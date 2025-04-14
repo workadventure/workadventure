@@ -8,6 +8,16 @@ export class InputPCMStreamer {
     private isWorkletLoaded = false;
     private readonly _pcmDataStream: Subject<Float32Array> = new Subject();
     public readonly pcmDataStream = this._pcmDataStream.asObservable();
+    private readonly _voiceEvent: Subject<{
+        event: "voiceStart" | "voiceStop";
+        userId: number;
+    }> = new Subject();
+    public readonly voiceEvent = this._voiceEvent.asObservable();
+    private readonly inputUserIds: Map<MediaStream, number> = new Map();
+    private readonly voiceState: Map<number, {
+        startDate: Date,
+        timeout: ReturnType<typeof setTimeout>|undefined,
+    }> = new Map();
 
     constructor(sampleRate = 24000) {
         this.audioContext = new AudioContext({ sampleRate });
@@ -19,13 +29,48 @@ export class InputPCMStreamer {
             try {
                 await this.audioContext.resume();
                 await this.audioContext.audioWorklet.addModule(audioWorkletProcessorUrl);
-                this.workletNode = new AudioWorkletNode(this.audioContext, "input-pcm-worklet-processor");
+                this.workletNode = new AudioWorkletNode(this.audioContext, "input-pcm-worklet-processor", {
+                    // FIXME: hard coded max number of inputs
+                    numberOfInputs: 4,
+                });
                 this.isWorkletLoaded = true;
 
                 this.workletNode.port.onmessage = (event: MessageEvent) => {
                     const data = event.data.pcmData;
                     if (data instanceof Float32Array) {
                         this._pcmDataStream.next(data);
+                    } else if (event.data.event === "voiceStart" || event.data.event === "voiceStop") {
+                        const channel = event.data.channel;
+                        const userId = Array.from(this.inputUserIds.values())[channel];
+                        if (userId === undefined) {
+                            console.error("User ID not found for channel", channel);
+                            return;
+                        }
+
+                        if (event.data.event === "voiceStart") {
+                            const oldVoiceState = this.voiceState.get(userId);
+                            if (oldVoiceState) {
+                                clearTimeout(oldVoiceState.timeout);
+                                oldVoiceState.timeout = undefined;
+                                oldVoiceState.startDate = new Date();
+                            } else {
+                                this.voiceState.set(userId, {
+                                    startDate: new Date(),
+                                    timeout: undefined,
+                                });
+                                this._voiceEvent.next({ event: "voiceStart", userId });
+                            }
+                        } else if (event.data.event === "voiceStop") {
+                            const startVoiceState = this.voiceState.get(userId);
+                            if (startVoiceState) {
+                                clearTimeout(startVoiceState.timeout);
+                                startVoiceState.timeout = undefined;
+                                startVoiceState.timeout = setTimeout(() => {
+                                    this._voiceEvent.next({ event: "voiceStop", userId });
+                                    this.voiceState.delete(userId);
+                                }, 1000 /*Math.min(startVoiceState.startDate.getTime() + 1000 - new Date().getTime(), 0)*/);
+                            }
+                        }
                     } else {
                         console.error("Invalid data type received in worklet", event.data);
                     }
@@ -39,7 +84,7 @@ export class InputPCMStreamer {
     private mediaStreams: Map<MediaStream, MediaStreamAudioSourceNode> = new Map();
 
     // Method to get the MediaStream that can be added to WebRTC
-    public addMediaStream(mediaStream: MediaStream): void {
+    public addMediaStream(mediaStream: MediaStream, userId: number): void {
         if (!this.isWorkletLoaded || !this.workletNode) {
             console.error("AudioWorklet is not loaded yet.");
             return;
@@ -47,6 +92,7 @@ export class InputPCMStreamer {
 
         const sourceNode = this.audioContext.createMediaStreamSource(mediaStream);
         this.mediaStreams.set(mediaStream, sourceNode);
+        this.inputUserIds.set(mediaStream, userId);
         sourceNode.connect(this.workletNode);
     }
 
@@ -63,6 +109,7 @@ export class InputPCMStreamer {
 
         sourceNode.disconnect(this.workletNode);
         this.mediaStreams.delete(mediaStream);
+        this.inputUserIds.delete(mediaStream);
     }
 
     // Method to close the AudioWorkletNode and clean up resources
