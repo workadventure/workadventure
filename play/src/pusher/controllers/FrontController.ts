@@ -248,7 +248,10 @@ export class FrontController extends BaseHttpController {
             let option = {};
             const secondaryPalette = getStringPalette(mapDetails?.primaryColor, "secondary");
             const contrastPalette = getStringPalette(mapDetails?.backgroundColor, "contrast");
-            const cssVariablesOverride = wrapWithStyleTag(`${secondaryPalette}\n${contrastPalette}`);
+            let cssVariablesOverride = "";
+            if (secondaryPalette || contrastPalette) {
+                cssVariablesOverride = wrapWithStyleTag(`${secondaryPalette}\n${contrastPalette}`);
+            }
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
                     ...option,
