@@ -21,10 +21,7 @@ export class ReconnectingScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image(
-            ReconnectingTextures.icon,
-            gameManager.currentStartedRoom.miniLogo ?? "static/images/favicons/favicon-32x32.png"
-        );
+        this.load.image(ReconnectingTextures.icon);
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(ReconnectingTextures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
         this.load.spritesheet("cat", "resources/characters/pipoya/Cat 01-1.png", { frameWidth: 32, frameHeight: 32 });
