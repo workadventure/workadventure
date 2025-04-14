@@ -5,7 +5,7 @@ import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import { adminService } from "../services/AdminService";
-import { getPalette } from "../services/GenerateCustomColors";
+import { getStringPalette } from "../services/GenerateCustomColors";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
 import {
@@ -246,8 +246,8 @@ export class FrontController extends BaseHttpController {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
             const mapDetails = await builder.getMapDetails();
             let option = {};
-            const secondaryPalette = getPalette(mapDetails?.primaryColor);
-            const contrastPalette = getPalette(mapDetails?.backgroundColor);
+            const secondaryPalette = getStringPalette(mapDetails?.primaryColor, "secondary");
+            const contrastPalette = getStringPalette(mapDetails?.backgroundColor, "contrast");
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
                     ...option,
