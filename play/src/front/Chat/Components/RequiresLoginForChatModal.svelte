@@ -21,9 +21,12 @@
     </div>
 
     <svelte:fragment slot="action">
-        <button class="flex-1 justify-center" on:click={closeModal}>{$LL.chat.createFolder.buttons.cancel()}</button>
         <button
-            class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+            class="btn border border-solid border-white/10 hover:bg-white/10 flex-1 justify-center"
+            on:click={closeModal}>{$LL.chat.createFolder.buttons.cancel()}</button
+        >
+        <button
+            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
             on:click={goToLoginPage}
             >{$LL.menu.profile.login()}
         </button>
