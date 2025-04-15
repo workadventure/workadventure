@@ -8,8 +8,9 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
-    import { openDirectChatRoom } from "../../Utils";
+    import { openDirectChatRoom, openModalRemoteUserNotConnected } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { scriptUtils } from "../../../Api/ScriptUtils";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
@@ -55,6 +56,15 @@
     }
 
     let loadingDirectRoomAccess = false;
+
+    const { connection } = gameManager.getCurrentGameScene();
+    const goTo = (type: string, playUri: string, uuid: string) => {
+        if (type === "room") {
+            scriptUtils.goToPage(`${playUri}#moveToUser=${uuid}`);
+        } else if (type === "user") {
+            if (user.uuid && connection && user.playUri) connection.emitAskPosition(user.uuid, user.playUri);
+        }
+    };
 </script>
 
 {#if loadingDirectRoomAccess}
@@ -138,6 +148,7 @@
             {#if !isMe && !showRoomCreationInProgress}
                 <button
                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
+                    data-testId={`send-message-${user.username}`}
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe) {
                             showRoomCreationInProgress = true;
@@ -146,6 +157,10 @@
                                 .finally(() => {
                                     showRoomCreationInProgress = false;
                                 });
+                        } else {
+                            openModalRemoteUserNotConnected(user.username ?? "", () => {
+                                goTo("user", user.playUri ?? "", user.uuid ?? "");
+                            });
                         }
                     }}
                 >
