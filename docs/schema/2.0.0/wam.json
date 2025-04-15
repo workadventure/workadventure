@@ -60,6 +60,7 @@
                         "trigger": {
                           "type": "string",
                           "enum": [
+                            "onenter",
                             "onaction",
                             "onicon"
                           ]
@@ -182,6 +183,7 @@
                         "trigger": {
                           "type": "string",
                           "enum": [
+                            "onenter",
                             "onaction",
                             "onicon"
                           ]
