@@ -39,11 +39,16 @@
     import Select from "../../Input/Select.svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
+    import {
+        ON_ACTION_TRIGGER_BUTTON,
+        ON_ACTION_TRIGGER_ENTER,
+        ON_ICON_TRIGGER_BUTTON,
+    } from "../../../WebRtc/LayoutManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import { IconAlertTriangle } from "@wa-icons";
 
     export let property: OpenWebsitePropertyData;
-    export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let triggerOnActionChoosen: boolean = property.trigger === ON_ACTION_TRIGGER_BUTTON;
     export let triggerOptionActivated = true;
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
@@ -133,14 +138,14 @@
     });
 
     function onTriggerValueChange() {
-        triggerOnActionChoosen = property.trigger === "onaction";
+        triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;
         dispatch("change");
     }
 
     function onNewTabValueChange() {
         if (property.newTab) {
-            if (property.trigger === "onicon") {
-                property.trigger = undefined;
+            if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+                property.trigger = ON_ACTION_TRIGGER_ENTER;
             }
             // remove embed link
             if (property.link) {
@@ -700,25 +705,6 @@
             </div>
         {/if}
 
-        <!-- {#if isArea}
-            <div>
-                <label class="m-0 " for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-                <select
-                    id="trigger"
-                    class="w-full m-0 px-4 py-2 text-black "
-                    bind:value={property.trigger}
-                    on:change={onTriggerValueChange}
-                >
-                    <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
-                    >
-                    {#if !property.newTab}
-                        <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
-                    {/if}
-                    <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
-                </select>
-            </div>
-        {/if} -->
-
         {#if isArea}
             <Select
                 id="trigger"
@@ -726,11 +712,17 @@
                 bind:value={property.trigger}
                 onChange={onTriggerValueChange}
             >
-                <option value="">{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
+                <option value={ON_ACTION_TRIGGER_ENTER}
+                    >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
+                >
                 {#if !property.newTab}
-                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                    <option value={ON_ICON_TRIGGER_BUTTON}
+                        >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
+                    >
                 {/if}
-                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
+                <option value={ON_ACTION_TRIGGER_BUTTON}
+                    >{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
+                >
             </Select>
         {/if}
 
