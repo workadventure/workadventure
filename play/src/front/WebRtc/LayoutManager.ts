@@ -14,6 +14,5 @@ export enum DivImportance {
 
 export const ON_ACTION_TRIGGER_BUTTON = "onaction";
 export const ON_ICON_TRIGGER_BUTTON = "onicon";
-export const ON_ACTION_TRIGGER_ENTER = "onenter";
 
 export type Box = { xStart: number; yStart: number; xEnd: number; yEnd: number };

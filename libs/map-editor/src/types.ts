@@ -53,7 +53,7 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
     roomName: z.string(),
     jitsiUrl: z.string().optional(),
     closable: z.boolean().optional(),
-    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     noPrefix: z.boolean().optional(),
     width: z.number().min(1).max(100).default(50).optional(),
@@ -74,7 +74,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
     allowAPI: z.boolean().optional(),
-    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
+    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     width: z.number().min(1).max(100).default(50).optional(),
     policy: z

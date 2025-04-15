@@ -36,7 +36,6 @@
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
-    import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -112,7 +111,6 @@
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
-                    trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             case "openWebsite":
                 // TODO refactore and use the same code than EntityPropertiesEditor
@@ -167,7 +165,6 @@
                     forceNewTab: false,
                     policy,
                     width: 50,
-                    trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             case "playAudio":
                 return {
@@ -340,7 +337,6 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
-        console.log("mapEditorSelectedAreaPreviewStore", $mapEditorSelectedAreaPreviewStore);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }

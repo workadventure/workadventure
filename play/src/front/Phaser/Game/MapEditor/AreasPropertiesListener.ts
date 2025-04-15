@@ -39,11 +39,7 @@ import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
-import {
-    ON_ACTION_TRIGGER_BUTTON,
-    ON_ACTION_TRIGGER_ENTER,
-    ON_ICON_TRIGGER_BUTTON,
-} from "../../../WebRtc/LayoutManager";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
@@ -510,7 +506,7 @@ export class AreasPropertiesListener {
             //user in zone to open cowesite with only icon
             inOpenWebsite.set(true);
         }
-        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+        if (!property.trigger) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }
     }
@@ -600,8 +596,9 @@ export class AreasPropertiesListener {
              */
         };
 
+        const jitsiTriggerValue = property.trigger;
         const forceTrigger = localUserStore.getForceCowebsiteTrigger();
-        if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+        if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
                 message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.jitsiRoom() : get(LL).trigger.jitsiRoom();
@@ -756,6 +753,7 @@ export class AreasPropertiesListener {
 
     private handleOpenWebsitePropertiesOnLeave(property: OpenWebsitePropertyData): void {
         const openWebsiteProperty: string | null = property.link;
+        const websiteTriggerProperty: string | undefined = property.trigger;
 
         if (!openWebsiteProperty) {
             return;
@@ -775,7 +773,7 @@ export class AreasPropertiesListener {
 
         inOpenWebsite.set(false);
 
-        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+        if (!websiteTriggerProperty) {
             return;
         }
 

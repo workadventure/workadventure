@@ -8,16 +8,11 @@
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Select from "../../Input/Select.svelte";
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
-    import {
-        ON_ACTION_TRIGGER_BUTTON,
-        ON_ACTION_TRIGGER_ENTER,
-        ON_ICON_TRIGGER_BUTTON,
-    } from "../../../WebRtc/LayoutManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
 
     export let property: JitsiRoomPropertyData;
-    export let triggerOnActionChoosen: boolean = property.trigger === ON_ACTION_TRIGGER_BUTTON;
+    export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     export let triggerOptionActivated = true;
     export let isArea = false;
     let optionAdvancedActivated = false;
@@ -25,7 +20,7 @@
     const dispatch = createEventDispatcher();
 
     function onTriggerValueChange() {
-        triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;
+        triggerOnActionChoosen = property.trigger === "onaction";
         dispatch("change");
     }
 
@@ -139,13 +134,11 @@
                             bind:value={property.trigger}
                             onChange={onTriggerValueChange}
                         >
-                            <option value={ON_ACTION_TRIGGER_ENTER}
+                            <option value="immediately"
                                 >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
                             >
-                            <option value={ON_ICON_TRIGGER_BUTTON}
-                                >{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option
-                            >
-                            <option value={ON_ACTION_TRIGGER_BUTTON}
+                            <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
+                            <option value="onaction"
                                 >{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option
                             >
                         </Select>

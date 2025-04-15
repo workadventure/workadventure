@@ -7,7 +7,7 @@ import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsites } from "../../Stores/CoWebsiteStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import { ON_ACTION_TRIGGER_BUTTON, ON_ACTION_TRIGGER_ENTER, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
@@ -722,7 +722,7 @@ export class GameMapPropertiesListener {
             inOpenWebsite.set(true);
         }
 
-        if (!websiteTriggerProperty || websiteTriggerProperty === ON_ACTION_TRIGGER_ENTER) {
+        if (!websiteTriggerProperty) {
             openCoWebsiteFunction();
         }
     }
