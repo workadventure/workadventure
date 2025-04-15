@@ -295,7 +295,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.getByTestId("Open Link")
+      page2.getByTestId("openWebsite")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
@@ -479,7 +479,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.getByTestId("Open Link")
+      page2.getByTestId("openWebsite")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
