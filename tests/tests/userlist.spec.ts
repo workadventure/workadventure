@@ -90,14 +90,14 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await chatUtils.open(userBob, false);
     await chatUtils.slideToUsers(userBob);
     // Click on chat button
-    await userBob.getByTestId('chat').getByRole('button').nth(3).click();
+    await userBob.getByTestId(`send-message-Alice`).click();
 
     // Check that the modal user not connected is opened
     await expect(userBob.getByText('User not connected 💬')).toBeVisible();
     // From the modal click on the button to walk to the user
     await userBob.getByRole('button', { name: 'Call Alice' }).click();
 
-    // Check that the bubble discussion is opened with linebar to reduce (.justify-end > div > div:nth-child(3))
-    await expect(userBob.locator('.justify-end > div > div:nth-child(3)')).toBeVisible();
+    // Check that the user is in bubble discussion to see the media's action button
+    await expect(userBob.locator('#cameras-container .camera-box .video-media-box .user-menu-btn')).toBeVisible({timeout: 30_000});
   });
 });

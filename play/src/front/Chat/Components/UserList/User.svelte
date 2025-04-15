@@ -148,6 +148,7 @@
             {#if !isMe && !showRoomCreationInProgress}
                 <button
                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
+                    data-testId={`send-message-${user.username}`}
                     on:click|stopPropagation={() => {
                         if (user.chatId !== user.uuid && !isMe) {
                             showRoomCreationInProgress = true;
