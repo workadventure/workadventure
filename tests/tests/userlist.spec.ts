@@ -76,4 +76,28 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await userBob.close();
     await adminPage.close();
   });
+
+  test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ browser }, { project }) => {
+    // Alice is not connected
+    const userAlice = await getPage(browser, 'Alice', Map.url("empty"));
+    const alicePosition = {
+      x: 4 * 32,
+      y: 5 * 32,
+    };
+    await Map.teleportToPosition(userAlice, alicePosition.x, alicePosition.y);
+    
+    const userBob = await getPage(browser, 'Bob', Map.url("empty"));
+    await chatUtils.open(userBob, false);
+    await chatUtils.slideToUsers(userBob);
+    // Click on chat button
+    await userBob.getByTestId('chat').getByRole('button').nth(3).click();
+
+    // Check that the modal user not connected is opened
+    await expect(userBob.getByText('User not connected 💬')).toBeVisible();
+    // From the modal click on the button to walk to the user
+    await userBob.getByRole('button', { name: 'Call Alice' }).click();
+
+    // Check that the bubble discussion is opened with linebar to reduce (.justify-end > div > div:nth-child(3))
+    await expect(userBob.locator('.justify-end > div > div:nth-child(3)')).toBeVisible();
+  });
 });
