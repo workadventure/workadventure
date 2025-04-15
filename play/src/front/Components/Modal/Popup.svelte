@@ -13,7 +13,7 @@
             class="bg-contrast/75 backdrop-blur-md text-white z-[2001] w-[90%] m-auto left-0 right-0 sm:max-w-[668px] rounded-3xl max-h-full overflow-y-auto pointer-events-auto"
             transition:fly={{ y: -1000, delay: 0, duration: 300 }}
         >
-            <div class=" absolute top-2 right-2">
+            <div class=" absolute top-4 right-4">
                 <ButtonClose
                     dataTestId="closeModal"
                     on:click={(event) => {
@@ -30,7 +30,9 @@
                 <slot name="content" />
             </div>
             {#if withAction}
-                <div class="footer flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
+                <div
+                    class="footer flex flex-row justify-evenly items-center bg-contrast w-full p-4 gap-3 rounded-b-3xl"
+                >
                     <slot name="action" />
                 </div>
             {/if}
