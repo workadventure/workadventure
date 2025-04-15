@@ -65,14 +65,14 @@
         {#if showNavBar}
             {#if $navChat.key === "chat"}
                 <button
-                    class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
+                    class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white"
                     on:click={() => navChat.switchToUserList()}
                 >
                     <IconUsers font-size="20" />
                 </button>
             {:else}
                 <button
-                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12"
+                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white"
                     on:click={() => navChat.switchToChat()}
                 >
                     <IconMessageCircle2 font-size="20" />
