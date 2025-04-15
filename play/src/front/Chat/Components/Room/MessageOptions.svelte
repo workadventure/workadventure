@@ -31,14 +31,14 @@
         <a
             href={$content.url}
             download={$content.body}
-            class="p-0 m-0 text-white/50 hover:text-white transition-all"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all flex"
             target="_blank"
         >
             <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
     <button
-        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
+        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
         data-testid="replyToMessageButton"
         on:click={replyToMessage}
     >
@@ -47,7 +47,7 @@
     <EmojiButton on:change={addReaction} {messageRef} />
     {#if isMyMessage && type === "text"}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="editMessageButton"
             on:click={selectMessageToEdit}
         >
@@ -56,7 +56,7 @@
     {/if}
     {#if $canDelete}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer"
+            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
             data-testid="removeMessageButton"
             on:click={removeMessage}
         >

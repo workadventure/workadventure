@@ -65,7 +65,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await EntityEditor.addProperty(page, "Open Link");
+    await EntityEditor.addProperty(page, "openWebsite");
     await page
       .getByPlaceholder("https://workadventu.re")
       .first()
@@ -76,7 +76,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    await expect(page.getByTestId("openWebsite")).toBeVisible();
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page) {
@@ -93,7 +93,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await EntityEditor.addProperty(page, "Open Link");
+    await EntityEditor.addProperty(page, "openWebsite");
     await page
       .getByPlaceholder("https://workadventu.re")
       .first()
@@ -104,7 +104,7 @@ class AreaAccessRights {
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+    await expect(page.getByTestId("openWebsite")).toBeVisible();
   }
 }
 

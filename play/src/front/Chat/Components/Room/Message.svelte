@@ -58,7 +58,7 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="container-grid justify-start overflow-visible {replyDepth === 0
+        class="container-grid relative justify-start overflow-visible {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
             : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
@@ -135,13 +135,16 @@
                 </div>
             {/if}
         </div>
+        {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+            <div
+                class="options z-50 top-full {!isMyMessage
+                    ? 'right-0'
+                    : ''} absolute bg-contrast/80 backdrop-blur p-1 rounded-md"
+            >
+                <MessageOptions {message} {messageRef} />
+            </div>
+        {/if}
     </div>
-
-    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-        <div class="options pt-7 px-1.5 z-50 {!isMyMessage ? 'right-0' : 'left-0'}">
-            <MessageOptions {message} {messageRef} />
-        </div>
-    {/if}
 </div>
 
 <style>

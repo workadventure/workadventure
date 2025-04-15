@@ -448,7 +448,7 @@ test.describe("Map editor @oidc", () => {
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
-        await EntityEditor.addProperty(page, "Open Link");
+        await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -461,8 +461,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
 
         // check if the popup with application is opened on both pages
-        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
-        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page.getByTestId("openWebsite")).toBeVisible();
+        await expect(page2.getByTestId("openWebsite")).toBeVisible();
 
         await page2.close();
         await page2.context().close();
@@ -497,7 +497,7 @@ test.describe("Map editor @oidc", () => {
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
-        await EntityEditor.addProperty(page, "Open Link");
+        await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -510,8 +510,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
         // check if the popup with application is opened on both pages
-        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
-        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page.getByTestId("openWebsite")).toBeVisible();
+        await expect(page2.getByTestId("openWebsite")).toBeVisible();
 
         await page2.close();
         await newBrowser.close();
