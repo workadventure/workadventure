@@ -171,6 +171,7 @@ const chat: BaseTranslation = {
     },
     said: "said :",
     reply: "Reply",
+    replyTo: "Reply to",
     react: "React",
     copy: "Copy",
     copied: "Copied!",

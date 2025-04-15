@@ -53,40 +53,38 @@
     tabindex="-1"
     class={`${isMyMessage && "self-end flex-row-reverse relative"} ${
         messageFromSystem && "justify-center"
-    } select-text group/message block-user-action messageContainer items-center`}
+    } select-text block-user-action messageContainer items-center`}
     bind:this={messageRef}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="container-grid justify-start overflow-visible {replyDepth === 0
+        class="container-grid justify-start overflow-visible relative group/message {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
             : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
     >
-        <div class="messageHeader relative w-full">
-            <div
-                class="absolute w-full h-fit top-0 group-hover/message:-translate-y-[4px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
-                class:flex-row-reverse={isMyMessage}
-                hidden={isQuotedMessage || messageFromSystem}
+        <div
+            class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
+            class:flex-row-reverse={isMyMessage}
+            hidden={isQuotedMessage || messageFromSystem}
+        >
+            <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
+                >{isMyMessage ? "You" : sender?.username}</span
             >
-                <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
-                    >{isMyMessage ? "You" : sender?.username}</span
-                >
-                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleTimeString($locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</span
-                >
-                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleDateString($locale, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                    })}</span
-                >
-            </div>
+            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                >{date?.toLocaleTimeString($locale, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })}</span
+            >
+            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                >{date?.toLocaleDateString($locale, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                })}</span
+            >
         </div>
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
@@ -95,7 +93,7 @@
         {/if}
 
         <div
-            class="message group-hover/message:translate-y-[6px] transition-transform
+            class="message group-hover/message:-translate-y-[6px] transition-transform
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
@@ -135,13 +133,16 @@
                 </div>
             {/if}
         </div>
+        {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+            <div
+                class="options absolute top-0 z-50 bg-contrast/80 rounded p-1 -translate-y-2/3 {!isMyMessage
+                    ? 'right-0 translate-x-1/3'
+                    : 'left-0 -translate-x-1/3'}"
+            >
+                <MessageOptions {message} {messageRef} />
+            </div>
+        {/if}
     </div>
-
-    {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-        <div class="options pt-7 px-1.5 z-50 {!isMyMessage ? 'right-0' : 'left-0'}">
-            <MessageOptions {message} {messageRef} />
-        </div>
-    {/if}
 </div>
 
 <style>
@@ -165,7 +166,7 @@
         overflow: visible;
         display: grid;
         grid-gap: 4px;
-        grid-template-areas: ". messageHeader" "avatar message" ". response";
+        grid-template-areas: "avatar message" ". response" ". messageHeader";
     }
 
     .messageHeader {
