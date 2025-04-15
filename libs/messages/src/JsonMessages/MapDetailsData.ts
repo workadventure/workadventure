@@ -166,7 +166,6 @@ export const isMapDetailsData = z.object({
         description: "The URL of the image to be used on the cowebsite loading page",
         example: "https://example.com/logo.gif",
     }),
-    miniLogo: z.string().nullable().optional(),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the loading page",
@@ -223,6 +222,10 @@ export const isMapDetailsData = z.object({
     }),
     backgroundColor: extendApi(z.string().nullable().optional(), {
         description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
+        example: "#330033",
+    }),
+    primaryColor: extendApi(z.string().nullable().optional(), {
+        description: "The primary color used on configuration scenes (enter your name, select a woka, etc...)",
         example: "#330033",
     }),
     reportIssuesUrl: extendApi(z.string().nullable().optional(), {
