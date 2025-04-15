@@ -14,7 +14,7 @@
 
 <Popup {isOpen}>
     <h3 slot="title">{$LL.chat.requiresLoginForChatModal.title()}</h3>
-    <div slot="content" class="w-full flex flex-col gap-2 text-center">
+    <div slot="content" class="w-full flex flex-col gap-2 text-left">
         {$LL.chat.requiresLoginForChatModal.content_1()} <br />
         {$LL.chat.requiresLoginForChatModal.content_2()}<br />
         {$LL.chat.requiresLoginForChatModal.content_3()}
