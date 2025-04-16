@@ -1,8 +1,8 @@
 import { MapStore } from "@workadventure/store-utils";
 import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
-import { Readable, Unsubscriber } from "svelte/store";
+import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { LocalStreamStoreValue, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+import { LocalStreamStoreValue, requestedMicrophoneDeviceIdStore , requestedCameraDeviceIdStore,  requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -17,10 +17,15 @@ export class LiveKitRoom {
         private serverUrl: string,
         private token: string,
         private space: SpaceInterface,
+        //TODO : voir si on ne doit pas utiliser le requestedCameraIdStore a la place de requestedCameraState / meme chose pour le reste
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
-        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream
-    ) {}
+        private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
+        private cameraDeviceIdStore: Readable<string> = requestedCameraDeviceIdStore,
+        private microphoneDeviceIdStore: Readable<string> = requestedMicrophoneDeviceIdStore
+    ) {
+
+    }
 
     public async prepareConnection(): Promise<Room> {
         //TODO : revoir les paramètres de la room
@@ -30,7 +35,7 @@ export class LiveKitRoom {
             videoCaptureDefaults: {
                 resolution: VideoPresets.h2160.resolution,
             }
-            
+            // reconnectPolicy: {
         });
 
         this.localParticipant = this.room.localParticipant;
@@ -75,6 +80,9 @@ export class LiveKitRoom {
     private synchronizeMediaState() {
         this.unsubscribers.push(
             this.cameraStateStore.subscribe((state) => {
+
+                console.log("cameraStateStore", state);
+                
                 //TODO : voir si on a la permission de partager l'ecran
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
@@ -82,7 +90,11 @@ export class LiveKitRoom {
                     return;
                 }
 
+                const deviceId = get(this.cameraDeviceIdStore);
+                //TODO : voir si utile de subscribe directement au requestedCameraDeviceIdStore
+
                 this.localParticipant.setCameraEnabled(state, {
+                    deviceId: deviceId,
                     //TODO : voir la résolution qu'on décide d'envoyer 
                     resolution: VideoPresets.h2160.resolution,
                 
@@ -101,7 +113,10 @@ export class LiveKitRoom {
                     Sentry.captureException(new Error("Local participant not found"));
                     return;
                 }
-                this.localParticipant.setMicrophoneEnabled(state).catch((err) => {
+                const deviceId = get(this.microphoneDeviceIdStore);
+                this.localParticipant.setMicrophoneEnabled(state,{
+                    deviceId: deviceId,
+                }).catch((err) => {
                     console.error("An error occurred in synchronizeMediaState", err);
                     Sentry.captureException(err);
                 });
@@ -128,6 +143,7 @@ export class LiveKitRoom {
                         this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
                         
                         const dimensions = await this.localVideoTrack.waitForDimensions();
+
 
                         this.localParticipant.publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare
