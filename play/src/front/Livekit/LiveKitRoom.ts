@@ -1,5 +1,5 @@
 import { MapStore } from "@workadventure/store-utils";
-import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
+import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track, LocalAudioTrack } from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { LocalStreamStoreValue, requestedMicrophoneDeviceIdStore , requestedCameraDeviceIdStore,  requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
@@ -11,6 +11,7 @@ export class LiveKitRoom {
     private localParticipant: LocalParticipant | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localVideoTrack: LocalVideoTrack | undefined;
+    private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
     constructor(
@@ -21,8 +22,8 @@ export class LiveKitRoom {
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
-        private cameraDeviceIdStore: Readable<string> = requestedCameraDeviceIdStore,
-        private microphoneDeviceIdStore: Readable<string> = requestedMicrophoneDeviceIdStore
+        private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
+        private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore
     ) {
 
     }
@@ -157,6 +158,41 @@ export class LiveKitRoom {
                 }
             })
         );
+
+        this.unsubscribers.push(
+            this.cameraDeviceIdStore.subscribe(async(deviceId) => {
+
+                if (!this.localParticipant) {
+                    console.error("Local participant not found");
+                    Sentry.captureException(new Error("Local participant not found"));
+                    return;
+                }
+
+                console.log("cameraDeviceIdStore", deviceId);
+                const state = get(this.cameraStateStore);
+
+                if(!state || !deviceId) return;
+
+                this.room?.switchActiveDevice("videoinput", deviceId);
+            })
+        );
+
+        this.unsubscribers.push(
+            this.microphoneDeviceIdStore.subscribe((deviceId) => {
+                if (!this.localParticipant) {
+                    console.error("Local participant not found");
+                    Sentry.captureException(new Error("Local participant not found"));
+                    return;
+                }
+
+                const state = get(this.microphoneStateStore);
+                
+                if(!state || !deviceId) return;
+                
+                this.room?.switchActiveDevice("audioinput", deviceId);
+            })
+        );
+        
     }
 
     private async unpublishAllScreenShareTrack() {
