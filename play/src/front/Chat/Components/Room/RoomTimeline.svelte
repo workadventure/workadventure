@@ -15,6 +15,7 @@
     import MessageSystem from "./MessageSystem.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
+    import {MapStore} from "@workadventure/store-utils";
 
     export let room: ChatRoom;
 
@@ -36,7 +37,6 @@
     let messageInputBarRef: MessageInputBar;
 
     $: messages = room?.messages;
-    $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
 
@@ -278,7 +278,6 @@
                             <Message
                                 on:updateMessageBody={onUpdateMessageBody}
                                 {message}
-                                reactions={$messageReaction.get(message.id)}
                             />
                         {/if}
                     </li>

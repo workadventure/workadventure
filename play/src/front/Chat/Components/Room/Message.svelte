@@ -16,16 +16,16 @@
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
     import { IconTrash } from "@wa-icons";
+    import {derived} from "svelte/store";
 
     export let message: ChatMessage;
-    export let reactions: MapStore<string, ChatMessageReaction> | undefined;
     export let replyDepth = 0;
 
     let messageRef: HTMLDivElement | undefined;
 
     const dispatch = createEventDispatcher();
 
-    const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified } =
+    const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified, reactions } =
         message;
 
     const updateMessageBody = () => {
@@ -46,6 +46,14 @@
         outcoming: MessageOutcoming as ComponentType,
         proximity: MessageText as ComponentType,
     };
+
+    const reactionsWithUsers = derived(
+        [reactions,...Array.from(reactions.values()).map((reaction) => reaction.users)],
+        ([$reactions, ...$users]) => {
+            return Array.from($reactions.values()).filter((reaction)=> reaction.users.size>0 )
+        }
+    );
+
 </script>
 
 <div
@@ -101,8 +109,8 @@
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
-                    {type === 'audio' || type === 'file' ? 'rounded-full' : 'rounded-md'}
-                    {reactions !== undefined && !$isDeleted && replyDepth === 0 ? 'mb-4 p-1' : ''}"
+                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-1' : ''}
+                    { !isQuotedMessage ? 'group-hover/message:-translate-y-[6px]' : ''}"
         >
             {#if $isDeleted}
                 <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
@@ -118,8 +126,8 @@
 
                 <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
 
-                {#if reactions !== undefined}
-                    <MessageReactions classes={isMyMessage ? "bg-secondary right-2" : "bg-contrast"} {reactions} />
+                {#if $reactionsWithUsers.length > 0 }
+                    <MessageReactions classes={isMyMessage ? "bg-secondary right-2" : "bg-contrast"} reactions={$reactionsWithUsers} />
                 {/if}
                 {#if $isModified}
                     <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
