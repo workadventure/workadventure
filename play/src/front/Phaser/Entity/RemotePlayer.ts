@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
+import type { PositionMessage, PositionMessage_Direction, SayMessage } from "@workadventure/messages";
 import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
@@ -39,7 +39,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         visitCardUrl: string | null,
         companionTexturePromise: CancelablePromise<string>,
         activationRadius?: number,
-        private chatID: string | undefined = undefined
+        private chatID: string | undefined = undefined,
+        private sayMessage?: SayMessage
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise);
 
@@ -49,6 +50,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.visitCardUrl = visitCardUrl;
         this.setClickable(this.getDefaultActionsMenuActions().length > 0);
         this.activationRadius = activationRadius ?? 96;
+
+        if (sayMessage) {
+            this.say(sayMessage.message);
+        }
 
         this.bindEventHandlers();
     }

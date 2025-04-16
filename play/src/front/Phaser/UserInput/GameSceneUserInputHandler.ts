@@ -10,6 +10,8 @@ import { mapManagerActivated } from "../../Stores/MenuStore";
 import { Emoji } from "../../Stores/Utils/emojiSchema";
 import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { popupStore } from "../../Stores/PopupStore";
+import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -106,11 +108,19 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private openSayPopup(): void {
+        popupStore.addPopup(SayPopUp, {}, "say");
+    }
+
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
             // SPACE
             case " ": {
                 this.handleActivableEntity();
+                break;
+            }
+            case "Enter": {
+                this.openSayPopup();
                 break;
             }
             default: {

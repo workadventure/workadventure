@@ -379,14 +379,31 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     say(text: string) {
-        if (this.bubble) return;
-        this.bubble = new SpeechBubble(this.scene, this, text);
-        setTimeout(() => {
-            if (this.bubble !== null) {
-                this.bubble.destroy();
-                this.bubble = null;
-            }
-        }, 3000);
+        if (this.bubble !== null) {
+            this.remove(this.bubble);
+            this.bubble.destroy();
+        }
+        // If text is empty, let's just remove the previous bubble and say nothing.
+        if (!text) {
+            return;
+        }
+        this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
+
+        /*this.bubble = new ThinkingCloud(this.scene, 0, 0, {
+            text: "Hello, I'm thinking about something quite long. It should wrap nicely!",
+            maxWidth: 200,
+            fontSize: 18,
+            tailX: 280,
+            tailY: 400, // maybe near your character's head
+            lumpsCount: 5,
+            lumpsSize: 10,
+            cornerRadius: 20,
+            padding: 20,
+            fillAlpha: 0.8,
+            fillColor: 0xffffff
+        });*/
+
+        this.add(this.bubble);
     }
 
     destroy(): void {

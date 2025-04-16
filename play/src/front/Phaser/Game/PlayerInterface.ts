@@ -1,4 +1,4 @@
-import type { AvailabilityStatus } from "@workadventure/messages";
+import type { AvailabilityStatus, SayMessage } from "@workadventure/messages";
 import { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 
@@ -15,6 +15,7 @@ export interface PlayerInterface {
     outlineColor?: number;
     isLogged?: boolean;
     chatID?: string;
+    sayMessage?: SayMessage;
     //chat interface
     //companion: string | null;
     //wokaSrc?: string;

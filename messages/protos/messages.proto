@@ -92,6 +92,11 @@ message SetPlayerDetailsMessage {
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
   string chatID = 8;
+  SayMessage sayMessage = 9;
+}
+
+message SayMessage {
+  string message = 1;
 
 }
 
@@ -652,6 +657,7 @@ message UserJoinedMessage {
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
   optional string chatID = 13;
+  SayMessage sayMessage = 14;
 }
 
 message UserLeftMessage {
@@ -944,6 +950,7 @@ message UserJoinedZoneMessage {
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
   optional string chatID = 14;
+  SayMessage sayMessage = 15;
 }
 
 message UserLeftZoneMessage {
