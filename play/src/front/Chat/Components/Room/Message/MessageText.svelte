@@ -81,6 +81,13 @@
 >
     {@html sanitizeHTML(html)}
     <style>
+        .response .message-bubble p:last-of-type {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+        }
         .message-bubble p:last-of-type {
             margin: 0;
         }

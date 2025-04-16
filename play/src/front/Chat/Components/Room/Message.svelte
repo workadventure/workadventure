@@ -63,29 +63,32 @@
             : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
+
     >
-        <div
-            class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
-            class:flex-row-reverse={isMyMessage}
-            hidden={isQuotedMessage || messageFromSystem}
-        >
-            <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
-                >{isMyMessage ? "You" : sender?.username}</span
+        {#if replyDepth <= 0}
+            <div
+                class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
+                class:flex-row-reverse={isMyMessage}
+                hidden={isQuotedMessage || messageFromSystem}
             >
-            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                >{date?.toLocaleTimeString($locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })}</span
-            >
-            <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                >{date?.toLocaleDateString($locale, {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                })}</span
-            >
-        </div>
+                <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
+                    >{isMyMessage ? "You" : sender?.username}</span
+                >
+                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
+                >
+                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleDateString($locale, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                    })}</span
+                >
+            </div>
+        {/if}
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
                 <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
@@ -93,7 +96,7 @@
         {/if}
 
         <div
-            class="message group-hover/message:-translate-y-[6px] transition-transform
+            class="message transition-transform rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
