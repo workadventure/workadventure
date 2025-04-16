@@ -2,7 +2,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track, LocalAudioTrack } from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { LocalStreamStoreValue, requestedMicrophoneDeviceIdStore , requestedCameraDeviceIdStore,  requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+import { LocalStreamStoreValue, requestedMicrophoneDeviceIdStore , requestedCameraDeviceIdStore,  requestedCameraState, requestedMicrophoneState, speakerSelectedStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -11,7 +11,6 @@ export class LiveKitRoom {
     private localParticipant: LocalParticipant | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localVideoTrack: LocalVideoTrack | undefined;
-    private localMicrophoneTrack: LocalAudioTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
     constructor(
@@ -23,7 +22,8 @@ export class LiveKitRoom {
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
-        private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore
+        private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
+        private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore
     ) {
 
     }
@@ -176,7 +176,7 @@ export class LiveKitRoom {
                 this.room?.switchActiveDevice("videoinput", deviceId);
             })
         );
-
+        //TODO : voir si on a besoin de set la sortie audio
         this.unsubscribers.push(
             this.microphoneDeviceIdStore.subscribe((deviceId) => {
                 if (!this.localParticipant) {
@@ -190,6 +190,14 @@ export class LiveKitRoom {
                 if(!state || !deviceId) return;
                 
                 this.room?.switchActiveDevice("audioinput", deviceId);
+            })
+        );
+
+        this.unsubscribers.push(
+            this.speakerDeviceIdStore.subscribe((deviceId) => {
+                if(!deviceId) return;
+
+                this.room?.switchActiveDevice("audiooutput", deviceId);
             })
         );
         
