@@ -1,6 +1,20 @@
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { Player } from "../../Player/Player";
 
+let lastSayPopupCloseDate: number | undefined = undefined;
+
+export function popupJustClosed(): void {
+    lastSayPopupCloseDate = Date.now();
+}
+
+export function isPopupJustClosed(): boolean {
+    if (lastSayPopupCloseDate) {
+        const timeSinceLastClose = Date.now() - lastSayPopupCloseDate;
+        return timeSinceLastClose < 500;
+    }
+    return false;
+}
+
 export class SayManager {
     private bubbleDestroyTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
