@@ -1,10 +1,11 @@
 import { Direction, EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { MapStore } from "@workadventure/store-utils";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
 import { chatUserFactory } from "./MatrixChatUser";
-import {MapStore} from "@workadventure/store-utils";
-import {MatrixChatMessageReaction} from "./MatrixChatMessageReaction";
+import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
+import { MatrixChatRelation } from "./MatrixChatRelation";
 
 export class MatrixChatMessage implements ChatMessage {
     id: string;
@@ -18,6 +19,7 @@ export class MatrixChatMessage implements ChatMessage {
     isDeleted: Writable<boolean>;
     isModified: Writable<boolean>;
     reactions: MapStore<string, MatrixChatMessageReaction>;
+    relations: MatrixChatRelation | undefined;
     readonly canDelete: Writable<boolean>;
 
     constructor(private event: MatrixEvent, private room: Room, isQuotedMessage?: boolean) {
@@ -57,6 +59,8 @@ export class MatrixChatMessage implements ChatMessage {
         event.on(MatrixEventEvent.Decrypted, () => {
             this.updateMessageContentOnDecryptedEvent();
         });
+
+        this.initReactions();
     }
 
     private getSender() {
@@ -108,6 +112,23 @@ export class MatrixChatMessage implements ChatMessage {
         }
 
         return { body: content.body, url: undefined };
+    }
+
+    public initReactions() {
+        this.reactions.clear();
+        const reactionByKey = this.room
+            .getUnfilteredTimelineSet()
+            .relations.getChildEventsForEvent(this.id, RelationType.Annotation, EventType.Reaction);
+        if (!reactionByKey) return;
+        if (!this.relations) {
+            this.relations = new MatrixChatRelation(this, reactionByKey);
+        }
+        const sortedReactionByKey = reactionByKey.getSortedAnnotationsByKey() ?? [];
+        sortedReactionByKey.forEach(([reactionKey, events]) => {
+            events.forEach((event) => {
+                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event));
+            });
+        });
     }
 
     private getQuotedMessage() {

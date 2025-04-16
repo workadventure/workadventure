@@ -37,16 +37,16 @@
     {#if editError}
         <p class="text-red-500 text-xxs p-0 m-0">{$LL.chat.messageEditedError()}</p>
     {/if}
-    <div class="flex flew-row gap-2 justify-end mt-0.5">
+    <div class="flex flew-row gap-1 justify-center p-1">
         <button
-            class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-20 text-center items-center justify-center"
+            class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="cancelMessageEditionButton"
             on:click={() => selectedChatMessageToEdit.set(null)}
         >
             {$LL.chat.createRoom.buttons.cancel()}
         </button>
         <button
-            class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-20 text-center items-center justify-center"
+            class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="saveMessageEditionButton"
             on:click={() => editMessage(inputValue)}
         >

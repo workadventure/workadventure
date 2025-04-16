@@ -1,7 +1,7 @@
 <script lang="ts">
     import { ComponentType, createEventDispatcher } from "svelte";
-    import { MapStore } from "@workadventure/store-utils";
-    import { ChatMessage, ChatMessageReaction, ChatMessageType } from "../../Connection/ChatConnection";
+    import { derived } from "svelte/store";
+    import { ChatMessage, ChatMessageType } from "../../Connection/ChatConnection";
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
@@ -16,7 +16,6 @@
     import MessageIncoming from "./Message/MessageIncoming.svelte";
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
     import { IconTrash } from "@wa-icons";
-    import {derived} from "svelte/store";
 
     export let message: ChatMessage;
     export let replyDepth = 0;
@@ -25,8 +24,19 @@
 
     const dispatch = createEventDispatcher();
 
-    const { id, sender, isMyMessage, date, content, quotedMessage, isQuotedMessage, type, isDeleted, isModified, reactions } =
-        message;
+    const {
+        id,
+        sender,
+        isMyMessage,
+        date,
+        content,
+        quotedMessage,
+        isQuotedMessage,
+        type,
+        isDeleted,
+        isModified,
+        reactions,
+    } = message;
 
     const updateMessageBody = () => {
         dispatch("updateMessageBody", {
@@ -48,12 +58,11 @@
     };
 
     const reactionsWithUsers = derived(
-        [reactions,...Array.from(reactions.values()).map((reaction) => reaction.users)],
+        [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
         ([$reactions, ...$users]) => {
-            return Array.from($reactions.values()).filter((reaction)=> reaction.users.size>0 )
+            return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
     );
-
 </script>
 
 <div
@@ -66,37 +75,12 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="container-grid justify-start overflow-visible relative group/message {replyDepth === 0
+        class="message-grid container-grid justify-start overflow-visible relative {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
             : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
-
     >
-        {#if replyDepth <= 0}
-            <div
-                class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 transition-all left-0 text-gray-500 text-xxs px-2 flex justify-between items-end"
-                class:flex-row-reverse={isMyMessage}
-                hidden={isQuotedMessage || messageFromSystem}
-            >
-                <span hidden={messageFromSystem} class="text-white {!isMyMessage ? 'text-white font-bold' : ''}"
-                    >{isMyMessage ? "You" : sender?.username}</span
-                >
-                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleTimeString($locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</span
-                >
-                <span class={`text-xxs ${isMyMessage ? "mr-1" : "ml-1"}`}
-                    >{date?.toLocaleDateString($locale, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                    })}</span
-                >
-            </div>
-        {/if}
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0}
             <div class="avatar pt-1.5">
                 <Avatar avatarUrl={sender?.avatarUrl} fallbackName={sender?.username} />
@@ -104,13 +88,13 @@
         {/if}
 
         <div
-            class="message transition-transform rounded-md
+            class="message rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
                     {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-1' : ''}
-                    { !isQuotedMessage ? 'group-hover/message:-translate-y-[6px]' : ''}"
+                    {!isQuotedMessage ? 'my' : ''}"
         >
             {#if $isDeleted}
                 <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
@@ -126,8 +110,11 @@
 
                 <svelte:component this={messageType[type]} on:updateMessageBody={updateMessageBody} {content} />
 
-                {#if $reactionsWithUsers.length > 0 }
-                    <MessageReactions classes={isMyMessage ? "bg-secondary right-2" : "bg-contrast"} reactions={$reactionsWithUsers} />
+                {#if $reactionsWithUsers.length > 0}
+                    <MessageReactions
+                        classes={isMyMessage ? "bg-secondary/30 right-2" : "bg-contrast/30"}
+                        reactions={$reactionsWithUsers}
+                    />
                 {/if}
                 {#if $isModified}
                     <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
@@ -144,6 +131,32 @@
                 </div>
             {/if}
         </div>
+        {#if replyDepth <= 0}
+            <div
+                class="messageHeader w-full absolute bottom-0 h-fit group-hover/message:translate-y-[2px] opacity-0 group-hover/message:opacity-100 left-0 text-gray-500 text-xxs px-2 flex justify-between items-end gap-2"
+                class:flex-row-reverse={isMyMessage}
+                hidden={isQuotedMessage || messageFromSystem}
+            >
+                <span
+                    hidden={messageFromSystem}
+                    class="text-white text-nowrap {!isMyMessage ? 'text-white font-bold' : ''}"
+                    >{isMyMessage ? "You" : sender?.username}</span
+                >
+                <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleTimeString($locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    })}</span
+                >
+                <span class={`text-xxs text-nowrap ${isMyMessage ? "mr-1" : "ml-1"}`}
+                    >{date?.toLocaleDateString($locale, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                    })}</span
+                >
+            </div>
+        {/if}
         {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
             <div
                 class="options absolute top-0 z-50 bg-contrast/80 rounded p-1 -translate-y-2/3 {!isMyMessage
@@ -167,10 +180,13 @@
         display: flex;
         flex-direction: row;
         gap: 2px;
+        transition-delay: 0.5s;
+        opacity: 1;
     }
 
     .options {
-        display: none;
+        transition: all 0.2s ease-in-out;
+        opacity: 0;
     }
 
     .container-grid {
@@ -182,6 +198,7 @@
 
     .messageHeader {
         grid-area: messageHeader;
+        transition: all 0.2s ease-in-out 0s;
     }
 
     .message {
@@ -189,6 +206,17 @@
         min-width: 180px;
         overflow-wrap: anywhere;
         position: relative;
+        transition: all 0.2s ease-in-out 0s;
+    }
+
+    .message.my:hover {
+        transform: translateY(-6px);
+        transition-delay: 0.5s;
+    }
+    .message.my:hover + .messageHeader {
+        transform: translateY(2px);
+        transition-delay: 0.5s;
+        opacity: 1;
     }
 
     .avatar {

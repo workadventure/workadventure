@@ -204,7 +204,7 @@ export class MatrixChatRoom
             return new MatrixChatMessage(event, this.matrixRoom);
         }
         if (event.getType() === "m.reaction") {
-            console.count(`new reaction :  ${get(this.name)}`)
+            console.count(`new reaction :  ${get(this.name)}`);
             this.handleNewMessageReaction(event, messages);
             this.addEventContentInMemory(event);
         }
@@ -334,10 +334,7 @@ export class MatrixChatRoom
         this.addEventContentInMemory(event);
     }
 
-    private handleNewMessageReaction(
-        event: MatrixEvent,
-        messages: SearchableArrayStore<string, MatrixChatMessage>
-    ) {
+    private handleNewMessageReaction(event: MatrixEvent, messages: SearchableArrayStore<string, MatrixChatMessage>) {
         const reactionEvent = this.getReactionEvent(event);
 
         if (reactionEvent !== undefined) {
@@ -350,10 +347,13 @@ export class MatrixChatRoom
                     existingMessageReaction.addUser(event.getSender(), event.getId());
                     return;
                 }
-                existingMessageWithReactions.reactions.set(reactionKey, new MatrixChatMessageReaction(this.matrixRoom, event));
+                existingMessageWithReactions.reactions.set(
+                    reactionKey,
+                    new MatrixChatMessageReaction(this.matrixRoom, event)
+                );
                 return;
             }
-            console.log('👮🏻Messages sans reactions', messages);
+            console.log("👮🏻Messages sans reactions", messages);
             //TODO : voir si reaction arrive avant le message
             // const newMessageReactionMap = new MapStore<string, MatrixChatMessageReaction>();
             // newMessageReactionMap.set(reactionKey, new MatrixChatMessageReaction(this.matrixRoom, event));
@@ -408,7 +408,6 @@ export class MatrixChatRoom
             return;
         }
 
-        console.trace(">>>>>>>>>>>> reaction deletion ")
         if (reactionEventContent === undefined) {
             console.error("No reaction event in memory to proceed deletion");
             return;
@@ -467,7 +466,7 @@ export class MatrixChatRoom
 
     private getReactionEvent(event: MatrixEvent) {
         const relation = event.getRelation();
-        console.log({relation});
+        console.log({ relation });
         if (relation) {
             if (relation.rel_type === "m.annotation") {
                 const targetEventId = relation.event_id;
@@ -683,6 +682,9 @@ export class MatrixChatRoom
         this.matrixRoom.off(RoomStateEvent.NewMember, this.handleNewMember);
         get(this.members).forEach((member) => {
             member.destroy();
+        });
+        this.messages.forEach((message) => {
+            message.relations?.destroy();
         });
     }
 
