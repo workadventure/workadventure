@@ -379,6 +379,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     say(text: string) {
+        this.scene.markDirty();
         if (this.bubble !== null) {
             this.remove(this.bubble);
             this.bubble.destroy();
