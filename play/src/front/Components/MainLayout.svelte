@@ -18,7 +18,6 @@
     import { popupStore } from "../Stores/PopupStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
@@ -49,46 +48,6 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
-    let keyboardEventIsDisable = false;
-
-    const handleFocusInEvent = (event: FocusEvent) => {
-        const target = event.target as HTMLElement | null;
-        if (
-            target &&
-            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true" ||
-                target.classList.contains("block-user-action"))
-        ) {
-            try {
-                gameManager.getCurrentGameScene().userInputManager.disableControls("textField");
-                keyboardEventIsDisable = true;
-            } catch (error) {
-                if (error instanceof GameSceneNotFoundError) {
-                    keyboardEventIsDisable = false;
-                    return;
-                }
-                throw error;
-            }
-        }
-    };
-
-    const handleFocusOutEvent = () => {
-        if (!keyboardEventIsDisable) return;
-        try {
-            gameManager.getCurrentGameScene().userInputManager.restoreControls("textField");
-            keyboardEventIsDisable = false;
-        } catch (error) {
-            if (error instanceof GameSceneNotFoundError) {
-                keyboardEventIsDisable = false;
-                return;
-            }
-            throw error;
-        }
-    };
-
-    document.addEventListener("focusin", handleFocusInEvent);
-    document.addEventListener("focusout", handleFocusOutEvent);
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
 </script>

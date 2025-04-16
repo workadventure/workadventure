@@ -12,6 +12,7 @@ import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
+import { isPopupJustClosed } from "../Game/Say/SayManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -109,6 +110,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     private openSayPopup(): void {
+        // Don't open if we just closed.
+        if (isPopupJustClosed() || popupStore.hasPopup("say")) {
+            return;
+        }
         popupStore.addPopup(SayPopUp, {}, "say");
     }
 

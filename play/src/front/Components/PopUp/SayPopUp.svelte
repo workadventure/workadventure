@@ -1,8 +1,10 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MessageInput from "../../Chat/Components/Room/MessageInput.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { inputFormFocusStore } from "../../Stores/UserInputStore";
+    import { popupJustClosed } from "../../Phaser/Game/Say/SayManager";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     let message = "";
@@ -20,6 +22,16 @@
 
     onMount(() => {
         messageInput.focus();
+    });
+
+    onDestroy(() => {
+        // Firefox does not trigger the "blur" event when the input is removed from the DOM.
+        // So we need to manually set the focus to false when the component is destroyed.
+        inputFormFocusStore.set(false);
+        // When we press "Enter", since the enter key is the key to open the popup,
+        // the popup closes and opens again. We use this lastSayPopupCloseDate trick to
+        // prevent the popup from opening again if it just closed.
+        popupJustClosed();
     });
 
     const onKeyDown = (e: KeyboardEvent) => {
