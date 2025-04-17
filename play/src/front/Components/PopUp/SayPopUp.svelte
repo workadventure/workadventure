@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { SayMessageType } from "@workadventure/messages";
+    import { AvailabilityStatus, SayMessageType } from "@workadventure/messages";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MessageInput from "../../Chat/Components/Room/MessageInput.svelte";
@@ -7,6 +7,7 @@
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import { popupJustClosed } from "../../Phaser/Game/Say/SayManager";
     import Select from "../Input/Select.svelte";
+    import { availabilityStatusStore } from "../../Stores/MediaStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     let message = "";
@@ -26,6 +27,31 @@
     onMount(() => {
         messageInput.focus();
     });
+
+    $: {
+        switch ($availabilityStatusStore) {
+            case AvailabilityStatus.JITSI:
+            case AvailabilityStatus.BBB:
+            case AvailabilityStatus.DENY_PROXIMITY_MEETING:
+            case AvailabilityStatus.SPEAKER: {
+                type = "say";
+                break;
+            }
+            case AvailabilityStatus.SILENT:
+            case AvailabilityStatus.AWAY:
+            case AvailabilityStatus.DO_NOT_DISTURB:
+            case AvailabilityStatus.BACK_IN_A_MOMENT:
+            case AvailabilityStatus.BUSY: {
+                type = "think";
+                break;
+            }
+            default: {
+                console.warn("Say: unknown status ", $availabilityStatusStore);
+                type = "say";
+                break;
+            }
+        }
+    }
 
     onDestroy(() => {
         // Firefox does not trigger the "blur" event when the input is removed from the DOM.
