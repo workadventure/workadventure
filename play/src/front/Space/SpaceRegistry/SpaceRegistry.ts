@@ -5,6 +5,7 @@ import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 
 /**
@@ -44,8 +45,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
-
-    constructor(private roomConnection: RoomConnectionForSpacesInterface) {
+    private roomConnectionStreamSubscription: Subscription;
+    constructor(
+        private roomConnection: RoomConnectionForSpacesInterface,
+        private connectStream = connectionManager.roomConnectionStream
+    ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user || !message.filterName) {
                 console.error(message);
@@ -130,6 +134,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
             // TODO: implement a retry mechanism.
         });
+
+        this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
+            this.reconnect(connection);
+        });
     }
 
     joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
@@ -161,6 +169,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
+    reconnect(connection: RoomConnectionForSpacesInterface) {
+        this.roomConnection = connection;
+        this.spaces.forEach((space) => {
+            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
+            this.spaces.set(newSpace.getName(), newSpace);
+        });
+    }
+
     destroy() {
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
@@ -169,6 +185,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();
+        this.roomConnectionStreamSubscription.unsubscribe();
 
         // Technically, all spaces should have been destroyed by now.
         // If a space is not destroyed, it means that there is a bug in the code.
