@@ -147,6 +147,7 @@ export class ThinkingCloud extends Phaser.GameObjects.RenderTexture {
         this.draw(textObject, Math.round((bubbleWidth - textWidth) / 2) + adjustedRadius, adjustedRadius + padding);
         textObject.destroy(); // Destroy the temporary Text object
 
+        this.setAlpha(0.8);
         // Add the RenderTexture to the scene
         scene.add.existing(this);
     }
