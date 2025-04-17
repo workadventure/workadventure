@@ -16,13 +16,13 @@ import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { ENABLE_CHAT, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
+import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
@@ -245,7 +245,8 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled && get(userIsConnected)) {
+
+        if (matrixServerUrl && get(userIsConnected)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
 
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
@@ -262,7 +263,22 @@ export class GameManager {
             this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
             isMatrixChatEnabledStore.set(true);
 
-            return this.chatConnectionPromise;
+            try {
+                const gameScene = await waitForGameSceneStore();
+
+                if (gameScene.room.isChatEnabled) {
+                    return this.chatConnectionPromise;
+                }
+            } catch (e) {
+                console.error(e);
+                Sentry.captureException(e);
+            }
+
+            matrixChatConnection.destroy().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            return new VoidChatConnection();
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();

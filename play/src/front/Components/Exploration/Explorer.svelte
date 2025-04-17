@@ -17,7 +17,8 @@
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
-    import { IconChevronDown, IconChevronUp } from "@wa-icons";
+    import Input from "../Input/Input.svelte";
+    import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -34,6 +35,7 @@
     }
 
     function onChangeFilterHandle() {
+        console.log("on filterrrrrrrrrrrrrr");
         entitiesListFiltered.set(new Map());
         for (let [key, entity] of $mapExplorationEntitiesStore) {
             // Check filter by name
@@ -151,19 +153,17 @@
     <div class="header-container">
         <h3 class="text-l text-left">{$LL.mapEditor.explorer.title()}</h3>
     </div>
-    <div class="flex flex-col justify-center">
-        <div class="flex flex-col justify-center items-center">
-            <input
-                class="filter-input h-8 m-5"
-                type="search"
+    <div class="flex flex-col gap-2 justify-center">
+        <div class="flex *:w-full">
+            <Input
+                rounded
                 bind:value={filter}
-                on:input={onChangeFilterHandle}
-                on:focusin={focusin}
-                on:focusout={focusout}
+                onInput={onChangeFilterHandle}
+                onFocusin={focusin}
+                onFocusout={focusout}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
-
         <div class="flex flex-row overflow-y-hidden overflow-x-scroll">
             <AddPropertyButtonWrapper
                 property="personalAreaPropertyData"
@@ -250,113 +250,123 @@
             {/each}
         </div>
 
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="entities p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
-            on:click={toggleEntityList}
-        >
-            <img class="w-10 h-auto mr-2 pointer-events-none" src={EntityToolImg} alt="link icon" />
-            {#if $entitiesListFiltered.size > 0}
-                <span class="pointer-events-none"
-                    >{$entitiesListFiltered.size}
-                    {$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size > 1)}</span
-                >
-                {#if entityListActive}
-                    <IconChevronDown class="pointer-events-none" font-size="32" />
-                {:else}
-                    <IconChevronUp class="pointer-events-none" font-size="32" />
-                {/if}
-            {:else}
-                <p class="m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
-            {/if}
-        </div>
-
-        {#if entityListActive && $entitiesListFiltered.size > 0}
-            <div class="entity-items p-4 flex flex-col">
-                {#each [...$entitiesListFiltered] as [key, entity] (key)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        id={entity.entityId}
-                        on:mouseenter={() => highlightEntity(entity)}
-                        on:mouseleave={() => unhighlightEntity(entity)}
-                        on:click={() => mapExplorationObjectSelectedStore.set(entity)}
-                        class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
-                    >
-                        <img
-                            class="w-10 h-auto mr-2 pointer-events-none"
-                            src={entity.getPrefab().imagePath}
-                            alt="link icon"
-                        />
-                        <span class="pointer-events-none font-bold"
-                            >{entity.getEntityData().name ?? entity.getPrefab().name}</span
+        <div class="flex flex-col gap-2">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="entities p-2 rounded-2xl flex flex-row justify-between items-center cursor-pointer {entityListActive
+                    ? ''
+                    : 'hover:bg-white/10'}"
+                on:click={toggleEntityList}
+                class:bg-secondary={entityListActive}
+            >
+                <div class="flex flex-row items-center justify-start gap-2">
+                    <img class="w-10 h-auto pointer-events-none" src={EntityToolImg} alt="link icon" />
+                    {#if $entitiesListFiltered.size > 0}
+                        <span class="pointer-events-none flex flex-row items-center gap-2">
+                            <span
+                                class="flex items-center justify-center p-2 aspect-square rounded-md h-8 font-bold bg-white text-secondary"
+                            >
+                                {$entitiesListFiltered.size}
+                            </span>
+                            {$LL.mapEditor.explorer.entitiesFound($entitiesListFiltered.size > 1)}</span
                         >
-                    </div>
-                {/each}
-            </div>
-        {/if}
-
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="areas p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
-            on:click={toggleAreaList}
-        >
-            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
-            {#if $areasListFiltered.size > 0}
-                <span class="pointer-events-none"
-                    >{$areasListFiltered.size}
-                    {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
-                >
-                {#if areaListActive}
-                    <IconChevronDown class="pointer-events-none" font-size="32" />
+                    {:else}
+                        <p class="m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
+                    {/if}
+                </div>
+                {#if entityListActive}
+                    <IconChevronDown class="pointer-events-none" font-size="20" />
                 {:else}
-                    <IconChevronUp class="pointer-events-none" font-size="32" />
+                    <IconChevronRight class="pointer-events-none" font-size="20" />
                 {/if}
-            {:else}
-                <p class="m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
-            {/if}
-        </div>
-        {#if areaListActive && $areasListFiltered.size > 0}
-            <div class="area-items p-4 flex flex-col">
-                {#if $areasListFiltered.size > 0}
-                    {#each [...$areasListFiltered] as [key, area] (key)}
+            </div>
+
+            {#if entityListActive && $entitiesListFiltered.size > 0}
+                <div class="entity-items p-2 flex flex-col">
+                    {#each [...$entitiesListFiltered] as [key, entity] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            id={key}
-                            on:mouseenter={() => highlightArea(area)}
-                            on:mouseleave={() => unhighlightArea(area)}
-                            on:click={() => mapExplorationObjectSelectedStore.set(area)}
-                            class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
+                            id={entity.entityId}
+                            on:mouseenter={() => highlightEntity(entity)}
+                            on:mouseleave={() => unhighlightEntity(entity)}
+                            on:click={() => mapExplorationObjectSelectedStore.set(entity)}
+                            class="item p-2 rounded-2xl flex flex-row justify-start items-center cursor-pointer hover:bg-white/10 transition-all"
                         >
-                            <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
-                            <span
-                                class="pointer-events-none w-32"
-                                class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
-                                class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                            <img
+                                class="w-6 max-h-10 h-auto mr-2 pointer-events-none object-contain"
+                                src={entity.getPrefab().imagePath}
+                                alt="link icon"
+                            />
+                            <span class="pointer-events-none font-bold"
+                                >{entity.getEntityData().name && entity.getEntityData().name !== ""
+                                    ? entity.getEntityData().name
+                                    : entity.getPrefab().name}</span
                             >
-                                {area.getAreaData().name || "No name"}
-                            </span>
                         </div>
                     {/each}
+                </div>
+            {/if}
+
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="areas p-2 rounded-2xl flex flex-row justify-between items-center cursor-pointer {areaListActive
+                    ? ''
+                    : 'hover:bg-white/10'} transition-all"
+                on:click={toggleAreaList}
+                class:bg-secondary={areaListActive}
+            >
+                <div class="flex flex-row items-center justify-start gap-2">
+                    <img class="w-10 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
+                    {#if $areasListFiltered.size > 0}
+                        <span class="pointer-events-none flex flex-row items-center gap-2">
+                            <span
+                                class="flex items-center justify-center p-2 aspect-square rounded-md h-8 font-bold bg-white text-secondary"
+                            >
+                                {$areasListFiltered.size}
+                            </span>
+                            {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
+                        >
+                    {:else}
+                        <p class="m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
+                    {/if}
+                </div>
+                {#if areaListActive}
+                    <IconChevronDown class="pointer-events-none" font-size="20" />
+                {:else}
+                    <IconChevronRight class="pointer-events-none" font-size="20" />
                 {/if}
             </div>
-        {/if}
+            {#if areaListActive && $areasListFiltered.size > 0}
+                <div class="area-items p-2 flex flex-col">
+                    {#if $areasListFiltered.size > 0}
+                        {#each [...$areasListFiltered] as [key, area] (key)}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                id={key}
+                                on:mouseenter={() => highlightArea(area)}
+                                on:mouseleave={() => unhighlightArea(area)}
+                                on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                                class="item p-2 rounded-2xl flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
+                                title={area.getAreaData().name || "No name"}
+                            >
+                                <img class="w-6 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
+                                <span
+                                    class="pointer-events-none w-full text-nowrap text-ellipsis overflow-hidden whitespace-nowrap"
+                                    class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
+                                    class:font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                                >
+                                    {area.getAreaData().name || "No name"}
+                                </span>
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            {/if}
+        </div>
     </div>
 </div>
 
 <style lang="scss">
-    .entities,
-    .areas {
-        &:hover {
-            background-color: #4156f6;
-        }
-    }
-    .entity-items,
-    .area-items {
-        div:hover {
-            background-color: #4156f6;
-        }
-    }
-
     .mapexplorer {
         scrollbar-width: 20px;
         scrollbar-color: rgb(0 0 0 / 0.8) rgb(0 0 0 / 0.2);

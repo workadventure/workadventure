@@ -464,7 +464,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     refreshChat: "Rafraichir le chat",
     dismiss: "Ignorer",
     whoops: "Oups ! une erreur est survenue",
-    failedToOpenRoom: "Impossible d'ouvrir la room",
+    failedToOpenRoom: "Impossible d'ouvrir la room : {roomId}",
     refreshChatError: "Impossible de rafraichir le chat",
     discord: {
         chatBand: {
@@ -473,6 +473,13 @@ const chat: DeepPartial<Translation["chat"]> = {
             dismiss: "Fermer",
             discordNotConfigured: "Synchronisation Discord",
         },
+    },
+    remoteUserNotConnected: {
+        title: "Utilisateur non connecté 💬",
+        descriptionNotConnected:
+            "L'utilisateur n'est pas connecté au monde. Vous ne pouvez pas lui envoyer de message pour le moment 😭",
+        descriptionWalkToCallHim: "Vous pouvez marcher jusqu'à lui pour l'appeler.",
+        call: "Appel {userName}",
     },
 };
 

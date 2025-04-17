@@ -84,7 +84,7 @@
                 <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
                     {#if !$chatVisibilityStore}
                         {#if showChatButton}
-                            <ChatMenuItem last={isSmallScreen} />
+                            <ChatMenuItem last={isSmallScreen ? true : undefined} />
                         {/if}
                         {#if showUserListButton && !isSmallScreen}
                             <UserListMenuItem />

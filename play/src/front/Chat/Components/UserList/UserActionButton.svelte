@@ -91,7 +91,7 @@
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
-        class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent"
+        class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent !text-white"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
     >

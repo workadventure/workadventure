@@ -463,7 +463,7 @@ const chat: BaseTranslation = {
     refreshChat: "Refresh Chat",
     dismiss: "Dismiss",
     whoops: "Whoops ! something went wrong",
-    failedToOpenRoom: "Failed to open room",
+    failedToOpenRoom: "Failed to open room : {roomId}",
     refreshChatError: "Failed to refresh chat",
     discord: {
         chatBand: {
@@ -472,6 +472,12 @@ const chat: BaseTranslation = {
             dismiss: "Dismiss",
             discordNotConfigured: "Connect to Discord",
         },
+    },
+    remoteUserNotConnected: {
+        title: "User not connected 💬",
+        descriptionNotConnected: "The user is not connected. You're not bale to start message discussion with him 😭 ",
+        descriptionWalkToCallHim: "But you may walk to him and call him to start a discussion.",
+        call: "Call {userName}",
     },
 };
 

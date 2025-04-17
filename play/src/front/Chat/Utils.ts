@@ -16,6 +16,7 @@ import { LL } from "../../i18n/i18n-svelte";
 import { navChat } from "./Stores/ChatStore";
 import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
+import RemoteUserNotConnected from "./Components/RemoteUserNotConnected.svelte";
 
 export type OpenCoWebsiteObject = {
     url: string;
@@ -87,7 +88,7 @@ export const openDirectChatRoom = async (chatID: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId: chatID }));
         console.error(error);
         Sentry.captureException(error);
     }
@@ -108,7 +109,7 @@ export const openChatRoom = async (roomId: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId }));
         console.error(error);
         Sentry.captureException(error);
     }
@@ -147,4 +148,11 @@ export const closeCoWebsite = (coWebsiteId: string) => {
     }
 
     coWebsites.remove(coWebsite);
+};
+
+export const openModalRemoteUserNotConnected = (userName: string, callUserCallback: () => void) => {
+    openModal(RemoteUserNotConnected, {
+        userName,
+        callUserCallback,
+    });
 };

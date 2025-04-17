@@ -7,6 +7,7 @@
     export let label: string | undefined = undefined;
     export let placeholder = "";
     export let onChange = () => {};
+    export let onBlur = () => {};
     export let disabled = false;
     export let type: "text" | "url" | "number" = "text";
     export let value: string | number | null | undefined;
@@ -26,6 +27,9 @@
     export let isValid = true;
     export let rounded = false;
     export let onerror = () => {};
+    export let onInput = () => {};
+    export let onFocusin = (event: FocusEvent) => {};
+    export let onFocusout = (event: FocusEvent) => {};
 
     const SLOTS = $$slots;
 
@@ -34,6 +38,9 @@
     function validateInput(event: Event) {
         const inputElement = event.target as HTMLInputElement;
         isValid = inputElement.checkValidity();
+        if (onInput) {
+            onInput();
+        }
     }
 </script>
 
@@ -78,7 +85,10 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:focusin={onFocusin}
+                on:focusout={onFocusout}
                 on:error={onerror}
+                on:blur={onBlur}
                 {disabled}
             />
 
@@ -103,6 +113,7 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:blur={onBlur}
                 min="{min}.toString()"
                 {max}
                 {step}
@@ -126,6 +137,7 @@
                 on:change={onChange}
                 on:click={onClick}
                 on:input={validateInput}
+                on:blur={onBlur}
                 {min}
                 {max}
                 {step}
