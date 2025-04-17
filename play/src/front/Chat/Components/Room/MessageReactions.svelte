@@ -8,7 +8,7 @@
 </script>
 
 <div
-    class="reactions-bar absolute -bottom-4 flex flex-row flex-nowrap overflow-x-scroll overflow-y-hidden rounded-3xl border border-solid border-white/10 {classes}"
+    class="reactions-bar empty:hidden absolute -bottom-4 flex flex-row flex-nowrap overflow-x-scroll overflow-y-hidden rounded-3xl border border-solid border-white/10 {classes}"
     style="width: {reactionBarWidth}; transition: width 0.3s ease;"
 >
     {#each reactions as reaction (reaction.key)}

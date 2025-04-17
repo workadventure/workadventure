@@ -6,18 +6,20 @@
     const { reacted, key, users } = reaction;
 </script>
 
-<div
-    on:click={() => reaction.react()}
-    class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 hover:bg-white/20 text-white hover:cursor-pointer rounded-full"
-    data-testid={`${key}_reactionButton`}
->
-    <div class="group-hover:scale-[2] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
-        {key}
+{#if $users.size > 0}
+    <div
+        on:click={() => reaction.react()}
+        class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 hover:bg-white/20 text-white hover:cursor-pointer rounded-full"
+        data-testid={`${key}_reactionButton`}
+    >
+        <div class="group-hover:scale-[2] group-hover:rotate-3 transition-all text-xs p-0 m-0 hover:cursor-pointer">
+            {key}
+        </div>
+        <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
+            {$users.size}
+        </div>
     </div>
-    <div class="text-xs p-0 m-0 hover:cursor-pointer text-white" class:font-extrabold={$reacted}>
-        {$users.size}
-    </div>
-</div>
+{/if}
 
 <style>
     @keyframes fall-in {
