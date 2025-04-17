@@ -1,14 +1,17 @@
 <script lang="ts">
+    import { SayMessageType } from "@workadventure/messages";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MessageInput from "../../Chat/Components/Room/MessageInput.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import { popupJustClosed } from "../../Phaser/Game/Say/SayManager";
+    import Select from "../Input/Select.svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     let message = "";
     let messageInput: HTMLDivElement;
+    let type: "say" | "think" = "say";
 
     const dispatch = createEventDispatcher();
 
@@ -59,7 +62,11 @@
 
     function sendMessage(message: string) {
         const gameScene = gameManager.getCurrentGameScene();
-        gameScene.sayManager.say(message, 5000);
+        gameScene.sayManager.say(
+            message,
+            type === "say" ? SayMessageType.SpeechBubble : SayMessageType.ThinkingCloud,
+            type === "say" ? 5000 : undefined
+        );
         message = "";
         closeBanner();
     }
@@ -68,7 +75,21 @@
 <svelte:window on:keydown={onKeyDown} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
     <div class="flex flex-row w-full items-center gap-2 min-w-80">
-        <div class="flex-0">Say:</div>
+        <div class="flex-none w-24">
+            <Select
+                bind:value={type}
+                options={[
+                    {
+                        value: "say",
+                        label: "Say",
+                    },
+                    {
+                        value: "think",
+                        label: "Think",
+                    },
+                ]}
+            />
+        </div>
         <div
             class="flex-1 flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
         >
