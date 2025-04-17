@@ -41,6 +41,16 @@
         if (e.key === "Escape") {
             //handleClose();
             closeBanner();
+        } else if (e.key === "Control") {
+            // Let's invert the type of the message when the user presses Ctrl.
+            type = type === "say" ? "think" : "say";
+        }
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+        if (e.key === "Control") {
+            // Let's invert the type of the message when the user presses Ctrl.
+            type = type === "say" ? "think" : "say";
         }
     };
 
@@ -72,7 +82,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
     <div class="flex flex-row w-full items-center gap-2 min-w-80">
         <div class="flex-none w-24">
