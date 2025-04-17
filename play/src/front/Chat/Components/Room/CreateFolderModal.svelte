@@ -124,7 +124,7 @@
                 >{$LL.chat.createFolder.buttons.cancel()}</button
             >
             <button
-                data-testid="btn createFolderButton"
+                data-testid="createFolderButton"
                 class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 disabled={createFolderOptions.name === undefined || createFolderOptions.name?.trim().length === 0}
                 on:click={() => createNewFolder(createFolderOptions)}
