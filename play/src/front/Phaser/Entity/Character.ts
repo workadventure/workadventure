@@ -2,8 +2,12 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import { Unsubscriber, Writable, get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
-import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
-import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
+import {
+    AvailabilityStatus as AvailabilityStatusType,
+    SayMessageType,
+    AvailabilityStatus,
+    PositionMessage_Direction,
+} from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
@@ -24,10 +28,12 @@ import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
+import { ThinkingCloud } from "./ThinkingCloud";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -25;
 const interactiveRadius = 25;
@@ -38,7 +44,7 @@ export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export abstract class Character extends Container implements OutlineableInterface {
-    private bubble: SpeechBubble | null = null;
+    private bubble: RenderTexture | null = null;
     private playerNameText: Text | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
@@ -378,7 +384,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.playAnimation(this._lastDirection, false);
     }
 
-    say(text: string) {
+    say(text: string, type: SayMessageType) {
         this.scene.markDirty();
         if (this.bubble !== null) {
             this.remove(this.bubble);
@@ -388,23 +394,32 @@ export abstract class Character extends Container implements OutlineableInterfac
         if (!text) {
             return;
         }
-        this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
 
-        /*this.bubble = new ThinkingCloud(this.scene, 0, 0, {
-            text: "Hello, I'm thinking about something quite long. It should wrap nicely!",
-            maxWidth: 200,
-            fontSize: 18,
-            tailX: 280,
-            tailY: 400, // maybe near your character's head
-            lumpsCount: 5,
-            lumpsSize: 10,
-            cornerRadius: 20,
-            padding: 20,
-            fillAlpha: 0.8,
-            fillColor: 0xffffff
-        });*/
-
-        this.add(this.bubble);
+        switch (type) {
+            case SayMessageType.SpeechBubble:
+            case SayMessageType.UNRECOGNIZED: {
+                this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
+                this.add(this.bubble);
+                break;
+            }
+            case SayMessageType.ThinkingCloud: {
+                this.bubble = new ThinkingCloud(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, {
+                    text: text, //"Hello, I'm thinking about something quite long. It should wrap nicely!",
+                    maxWidth: 200,
+                    fontSize: 11,
+                    cornerRadius: 10,
+                    padding: 0,
+                    fillAlpha: 1,
+                    fillColor: 0xffffff,
+                });
+                this.add(this.bubble);
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = type;
+            }
+        }
+        //this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
     }
 
     destroy(): void {

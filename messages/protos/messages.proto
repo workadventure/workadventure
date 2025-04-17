@@ -97,8 +97,14 @@ message SetPlayerDetailsMessage {
 
 message SayMessage {
   string message = 1;
-
+  SayMessageType type = 2;
 }
+
+enum SayMessageType {
+  SpeechBubble = 0;
+  ThinkingCloud = 1;
+}
+
 
 message UserMovesMessage {
   PositionMessage position = 1;

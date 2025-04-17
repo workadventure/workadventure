@@ -1292,7 +1292,7 @@ export class GameScene extends DirtyScene {
             character.toggleTalk(update.player.showVoiceIndicator);
         }
         if (update.updated.sayMessage) {
-            character.say(update.player.sayMessage?.message ?? "");
+            character.say(update.player.sayMessage?.message ?? "", update.player.sayMessage?.type ?? 0);
         }
     }
 

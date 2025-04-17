@@ -52,7 +52,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.activationRadius = activationRadius ?? 96;
 
         if (sayMessage) {
-            this.say(sayMessage.message);
+            this.say(sayMessage.message, sayMessage.type);
         }
 
         this.bindEventHandlers();
