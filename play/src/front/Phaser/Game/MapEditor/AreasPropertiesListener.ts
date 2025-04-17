@@ -64,7 +64,8 @@ import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
-import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
+import { contextualMenuItemsStore } from "../../../Stores/ContextuaMenuAdditionalItems"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -489,26 +490,35 @@ export class AreasPropertiesListener {
                 actionId
             );*/
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
-            let url = property.link ?? "";
-            try {
-                url = scriptUtils.getWebsiteUrl(property.link ?? "");
-            } catch (e) {
-                console.error("Error on getWebsiteUrl: ", e);
-            }
-            const coWebsite = new SimpleCoWebsite(
-                new URL(url, this.scene.mapUrlFile),
-                property.allowAPI,
-                property.policy,
-                property.width,
-                property.closable
-            );
-
-            coWebsiteOpen.coWebsite = coWebsite;
-
-            coWebsites.add(coWebsite);
-
-            //user in zone to open cowesite with only icon
-            inOpenWebsite.set(true);
+            console.log('>>>>>>>>>> on doit afficher dans l\'action bar')
+            contextualMenuItemsStore.addItem({
+                id: actionId,
+                label: property.triggerMessage ?? 'Open Website',
+                coWebsiteUrl: property.link,
+                callback: () => {
+                    this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                },
+            })
+            // let url = property.link ?? "";
+            // try {
+            //     url = scriptUtils.getWebsiteUrl(property.link ?? "");
+            // } catch (e) {
+            //     console.error("Error on getWebsiteUrl: ", e);
+            // }
+            // const coWebsite = new SimpleCoWebsite(
+            //     new URL(url, this.scene.mapUrlFile),
+            //     property.allowAPI,
+            //     property.policy,
+            //     property.width,
+            //     property.closable
+            // );
+            //
+            // coWebsiteOpen.coWebsite = coWebsite;
+            //
+            // coWebsites.add(coWebsite);
+            //
+            // //user in zone to open cowesite with only icon
+            // inOpenWebsite.set(true);
         }
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
@@ -758,6 +768,12 @@ export class AreasPropertiesListener {
         const openWebsiteProperty: string | null = property.link;
 
         if (!openWebsiteProperty) {
+            return;
+        }
+        console.log("😳On sort de la zone", property)
+        if (property.trigger === ON_ICON_TRIGGER_BUTTON){
+            console.log('hehehe hé oui on est la')
+            contextualMenuItemsStore.removeItem(property.id);
             return;
         }
 
