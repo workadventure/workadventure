@@ -601,6 +601,8 @@ class ConnectionManager {
                         availabilityStatus,
                         lastCommandId
                     ).then((connection) => resolve(connection));
+
+                    //TODO : au niveau de la reconnexion trouver un moyen de se reconnecter aux spaces
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });
