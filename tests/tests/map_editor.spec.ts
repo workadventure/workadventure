@@ -351,10 +351,10 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // check if the popup with application is opened and can be close
-        await expect(page.getByTestId("openWebsiteGoogleDrive")).toBeVisible();
-        await expect(page.getByTestId('openWebsiteGoogleSlides')).toBeVisible();
-        await expect(page.getByTestId('openWebsiteGoogleSheets')).toBeVisible();
-        await expect(page.getByTestId('openWebsiteGoogleDocs')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Drive' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Slides' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Sheets' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Google Docs' })).toBeVisible();
         await page.getByTestId('actions-menu').getByRole('button', { name: 'Close' }).click();
 
         await page.close();
@@ -390,7 +390,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // check if the popup with application is opened and can be closed
-        await expect(page.getByTestId('openWebsiteKlaxoon')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
         await page.getByRole('button', { name: 'Close', exact: true}).click();
 
         await page.close();
@@ -461,8 +461,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
 
         // check if the popup with application is opened on both pages
-        await expect(page.getByTestId("openWebsite")).toBeVisible();
-        await expect(page2.getByTestId("openWebsite")).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
         await page2.context().close();
@@ -510,8 +510,8 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
         // check if the popup with application is opened on both pages
-        await expect(page.getByTestId("openWebsite")).toBeVisible();
-        await expect(page2.getByTestId("openWebsite")).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
+        await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
         await page2.close();
         await newBrowser.close();

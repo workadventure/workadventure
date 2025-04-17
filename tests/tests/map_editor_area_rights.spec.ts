@@ -204,8 +204,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page2.getByTestId("openWebsite")).toBeVisible();
-
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
     await page2.context().close();
     await page.close();
@@ -339,7 +338,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page2.getByTestId("openWebsite")).toBeVisible();
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
     await page2.context().close();
     await page.close();
@@ -433,7 +432,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
 
-    await expect(page2.getByTestId("openWebsite")).toBeVisible();
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
     await page2.close();
     await page2.context().close();
     await page.close();
