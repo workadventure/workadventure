@@ -93,6 +93,7 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : user => removed ${spaceUserId}`);
 
         if (usersList.size === 0) {
+            debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
             this.users.delete(sourceWatcher);
         }
     }
@@ -171,7 +172,7 @@ export class Space implements CustomJsonReplacerInterface {
     private usersList(watcher: SpacesWatcher): Map<string, SpaceUser> {
         const usersList = this.users.get(watcher);
         if (!usersList) {
-            throw new Error("No users list associated to the watcher");
+            throw new Error("No users list associated to the watcher :" + this.name);
         }
         return usersList;
     }
