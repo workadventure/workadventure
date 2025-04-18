@@ -367,17 +367,6 @@
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
-{#if $selectedChatMessageToReply !== null}
-    <div class="flex py-2 px-3 items-center gap-2 bg-contrast/50 absolute">
-        <p class="bg-contrast-800 rounded-md p-2 text-sm m-0 truncate w-full " style:overflow-wrap="anywhere">
-            {$quotedMessageContent?.body}
-        </p>
-        <button class="p-0 m-0" on:click={unselectChatMessageToReply}>
-            <IconCircleX />
-        </button>
-    </div>
-{/if}
-
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
     <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
         <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-lg ">
@@ -602,9 +591,34 @@
     <MessageFileInput {room} on:fileUploaded={() => closeFileAttachmentComponent()} />
 {/if}
 <div
-    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
+    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
     bind:this={messageBarRef}
 >
+    {#if $selectedChatMessageToReply !== null}
+        <div class="flex p-2 items-start absolute top-0 -translate-y-full w-full">
+            <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded w-full backdrop-blur">
+                <div class="flex flex-col p-2 rounded w-full">
+                    <span class="flex flex-row justify-between">
+                        <span class="text-sm text-gray-400">
+                            {$LL.chat.replyTo()}
+                        </span>
+                        <button class="p-2 m-0" on:click={unselectChatMessageToReply}>
+                            <!--<IconCircleX />-->
+                            <IconX font-size={18} />
+                        </button>
+                    </span>
+                    <div class="flex row w-full border-l border-l-white/10 ml-1 border-solid border-0">
+                        <p
+                            class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
+                            style:overflow-wrap="anywhere"
+                        >
+                            {$quotedMessageContent?.body}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
         onInput={onInputHandler}

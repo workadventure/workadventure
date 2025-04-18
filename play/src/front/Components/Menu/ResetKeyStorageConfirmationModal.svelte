@@ -14,11 +14,11 @@
         <p class="w-full text-center">{$LL.menu.chat.resetKeyStorageConfirmationModal.warning()}</p>
     </div>
     <svelte:fragment slot="action">
-        <button class="flex-1 justify-center" on:click={() => closeModal()}
+        <button class="btn flex-1 justify-center" on:click={() => closeModal()}
             >{$LL.menu.chat.resetKeyStorageConfirmationModal.cancel()}
         </button>
         <button
-            class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+            class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
             on:click={() => {
                 closeModal();
                 matrixSecurity.setupNewKeyStorage().catch(() => {

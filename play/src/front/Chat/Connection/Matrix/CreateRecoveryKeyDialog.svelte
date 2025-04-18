@@ -96,14 +96,14 @@
         {#if generatedSecretStorageKey === undefined}
             <button
                 disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
-                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 on:click={() => generateRecoveryKey(passphraseInput)}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
             </button>
         {:else}
             <button
                 disabled={!isPrivateKeyDownloaded}
-                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 on:click={closeModalAndContinueToWorkAdventure}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
             </button>

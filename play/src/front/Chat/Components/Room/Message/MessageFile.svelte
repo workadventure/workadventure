@@ -9,7 +9,7 @@
 <a
     href={$content.url}
     download
-    class="flex items-center text-white hover:bg-white/10 px-4 py-2 rounded-full hover:no-underline hover:text-white font-bold cursor-pointer"
+    class="flex items-center text-white hover:bg-white/10 px-2 py-2 rounded-md hover:no-underline hover:text-white font-bold cursor-pointer"
 >
     <div class="flex items-center justify-center p-2 bg-white/10 rounded-full">
         <IconInbox font-size="20" />
