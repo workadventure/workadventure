@@ -58,7 +58,7 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
 
     react() {
         const userWithReactionEventId = this.users.get(this.matrixRoom.myUserId);
-        console.log('>>>>>> userWithReactionEventId', userWithReactionEventId);
+        console.log(">>>>>> userWithReactionEventId", userWithReactionEventId);
         if (userWithReactionEventId === undefined) {
             this.sendMyReaction().catch((error) => console.error(error));
         } else {

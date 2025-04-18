@@ -168,7 +168,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     
-    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
+    await expect(page2.getByTestId("openWebsite")).toBeHidden();
 
     await page2.close();
     await page.close();
@@ -205,7 +205,6 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
-
     await page2.close();
     await page2.context().close();
     await page.close();
@@ -248,10 +247,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("Open Link")
     ).not.toBeAttached();
     await page2.close();
     await page2.context().close();
@@ -298,10 +294,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("openWebsite")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();
@@ -392,7 +385,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
 
-    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeHidden();
+    await expect(page2.getByTestId("openWebsite")).toBeHidden();
     await page2.close();
     await page2.context().close();
     await page.close();
@@ -485,10 +478,7 @@ test.describe("Map editor area with rights @oidc", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
-      page2.locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: "Open Link" }
-      )
+      page2.getByTestId("openWebsite")
     ).toBeAttached();
     await page2.close();
     await page2.context().close();

@@ -124,10 +124,10 @@ test.describe("Map editor @oidc", () => {
         await MapEditor.openAreaEditor(page);
     // await expect(page.locator('canvas')).toBeVisible();
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
-        await AreaEditor.addProperty(page, "Speaker zone");
+        await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
         await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 6 * 32 * 1.5}, {x: 9 * 32 * 1.5, y: 9 * 32 * 1.5});
-        await AreaEditor.addProperty(page, "Attendees zone");
+        await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
@@ -168,7 +168,7 @@ test.describe("Map editor @oidc", () => {
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 13 * 32, y: 0}, {x: 15 * 32, y: 2 * 32});
         await AreaEditor.setAreaName(page, "MyStartZone");
-        await AreaEditor.addProperty(page, "Start area");
+        await AreaEditor.addProperty(page, "startAreaProperty");
         await Menu.closeMapEditor(page);
         await page.close();
         await page.context().close();
@@ -181,7 +181,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
-        await AreaEditor.addProperty(page, "Exit area");
+        await AreaEditor.addProperty(page, "exitAreaProperty");
         await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
         await Menu.closeMapEditor(page);
 
@@ -217,7 +217,7 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Klaxoon
-        await AreaEditor.addProperty(page, "Open Klaxoon");
+        await AreaEditor.addProperty(page, "openWebsiteKlaxoon");
 
         // insert klaxoon link
         await page.getByPlaceholder("https://app.klaxoon.com/").first().fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
@@ -245,7 +245,7 @@ test.describe("Map editor @oidc", () => {
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Google Docs
-        await AreaEditor.addProperty(page, "Open Google Docs");
+        await AreaEditor.addProperty(page, "openWebsiteGoogleDocs");
         // fill Google Docs link
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
@@ -253,7 +253,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
         // add property Google Sheets
-        await AreaEditor.addProperty(page, "Open Google Sheets");
+        await AreaEditor.addProperty(page, "openWebsiteGoogleSheets");
         // fill Google Sheets link
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
@@ -261,7 +261,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
         // add property Google Slides
-        await AreaEditor.addProperty(page, "Open Google Slides");
+        await AreaEditor.addProperty(page, "openWebsiteGoogleSlides");
         // fill Google Slides link
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
@@ -269,7 +269,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
         // add property Google Slides
-        await AreaEditor.addProperty(page, "Open Google Drive");
+        await AreaEditor.addProperty(page, "openWebsiteGoogleDrive");
         // fill Google Slides link
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
@@ -313,7 +313,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // add property Google Docs
-        await EntityEditor.addProperty(page, "Open Google Docs");
+        await EntityEditor.addProperty(page, "openWebsiteGoogleDocs");
         // fill Google Docs link
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
@@ -321,7 +321,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
         // add property Google Sheets
-        await EntityEditor.addProperty(page, "Open Google Sheets");
+        await EntityEditor.addProperty(page, "openWebsiteGoogleSheets");
         // fill Google Sheets link
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
@@ -329,7 +329,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
         // add property Google Slides
-        await EntityEditor.addProperty(page, "Open Google Slides");
+        await EntityEditor.addProperty(page, "openWebsiteGoogleSlides");
         // fill Google Slides link
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
@@ -337,7 +337,7 @@ test.describe("Map editor @oidc", () => {
             .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
         // add property Google Drive
-        await EntityEditor.addProperty(page, "Open Google Drive");
+        await EntityEditor.addProperty(page, "openWebsiteGoogleDrive");
         // fill Google Drive link
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
@@ -378,7 +378,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
 
         // add property Klaxoon
-        await EntityEditor.addProperty(page, "Open Klaxoon");
+        await EntityEditor.addProperty(page, "openWebsiteKlaxoon");
 
         // fill Klaxoon link
         await page.getByPlaceholder("https://app.klaxoon.com/").first().fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
@@ -448,7 +448,7 @@ test.describe("Map editor @oidc", () => {
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 2 * 32 * 1.5, 8.5 * 32 * 1.5 - 16);
-        await EntityEditor.addProperty(page, "Open Link");
+        await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -497,7 +497,7 @@ test.describe("Map editor @oidc", () => {
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
-        await EntityEditor.addProperty(page, "Open Link");
+        await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
         await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
@@ -621,7 +621,7 @@ test.describe("Map editor @oidc", () => {
             "This is a focus zone to test the search feature in the exploration mode. It should be searchable."
         );
         await AreaEditor.setAreaSearcheable(page, true);
-        await AreaEditor.addProperty(page, "Focusable");
+        await AreaEditor.addProperty(page, "focusable");
 
         // Entity
         await MapEditor.openEntityEditor(page);
@@ -635,7 +635,7 @@ test.describe("Map editor @oidc", () => {
             "This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable."
         );
         await EntityEditor.setEntitySearcheable(page, true);
-        await EntityEditor.addProperty(page, "Jitsi Room");
+        await EntityEditor.addProperty(page, "jitsiRoomProperty");
 
         // Open the map exploration mode
         await MapEditor.openExploration(page);
