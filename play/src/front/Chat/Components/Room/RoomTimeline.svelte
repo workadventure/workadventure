@@ -15,7 +15,6 @@
     import MessageSystem from "./MessageSystem.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
-    import {MapStore} from "@workadventure/store-utils";
 
     export let room: ChatRoom;
 
@@ -275,10 +274,7 @@
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message
-                                on:updateMessageBody={onUpdateMessageBody}
-                                {message}
-                            />
+                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
                         {/if}
                     </li>
                 {/each}
