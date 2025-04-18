@@ -22,6 +22,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import form from "./form";
+import say from "./say";
 
 const de_DE = merge(en_US, {
     area,
@@ -46,6 +47,7 @@ const de_DE = merge(en_US, {
     video,
     statusModal,
     form,
+    say,
 });
 
 export default de_DE;
