@@ -51,7 +51,18 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                },
+                sourceWatcher
+            );
         }
     }
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
@@ -87,7 +98,18 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while updating user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                },
+                sourceWatcher
+            );
         }
     }
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
