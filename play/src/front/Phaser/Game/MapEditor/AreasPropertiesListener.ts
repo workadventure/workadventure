@@ -490,15 +490,14 @@ export class AreasPropertiesListener {
                 actionId
             );*/
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
-            console.log('>>>>>>>>>> on doit afficher dans l\'action bar')
             contextualMenuItemsStore.addItem({
-                id: actionId,
-                label: property.triggerMessage ?? 'Open Website',
+                id: property.id,
+                label: property.triggerMessage ?? "Open Website",
                 coWebsiteUrl: property.link,
                 callback: () => {
                     this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
                 },
-            })
+            });
             // let url = property.link ?? "";
             // try {
             //     url = scriptUtils.getWebsiteUrl(property.link ?? "");
@@ -770,11 +769,8 @@ export class AreasPropertiesListener {
         if (!openWebsiteProperty) {
             return;
         }
-        console.log("😳On sort de la zone", property)
-        if (property.trigger === ON_ICON_TRIGGER_BUTTON){
-            console.log('hehehe hé oui on est la')
+        if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             contextualMenuItemsStore.removeItem(property.id);
-            return;
         }
 
         const coWebsiteOpen = this.openedCoWebsites.get(property.id);
