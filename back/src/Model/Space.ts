@@ -65,10 +65,22 @@ export class Space implements CustomJsonReplacerInterface {
             }
 
             const updateValues = applyFieldMask(spaceUser, updateMask);
-
             merge(user, updateValues);
-
             usersList.set(spaceUser.spaceUserId, user);
+
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: {
+                            spaceName: this.name,
+                            user: spaceUser,
+                            updateMask,
+                        },
+                    },
+                },
+                sourceWatcher
+            );
         } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
