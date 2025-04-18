@@ -368,17 +368,17 @@
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
-        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-lg ">
+    <div class="w-full p-1">
+        <div class="flex flex-row gap-2 w-full overflow-x-auto rounded-lg p-2 bg-contrast/80">
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-xl backdrop-opacity-10"
+                    class="relative content-center h-16 w-16 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
-                    <button class="absolute right-1 top-1 !pr-0" on:click={() => deleteFile(preview.id)}>
-                        <IconCircleX class="hover:cursor-pointer hover:opacity-10" font-size="24" />
+                    <button class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-1 -right-1 -top-1" on:click={() => deleteFile(preview.id)}>
+                        <IconX font-size="12"/>
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="w-full h-full" src={preview.url} alt={preview.name} />
+                        <img class="w-full h-full object-cover rounded-md" src={preview.url} alt={preview.name} />
                     {:else}
                         <div class="text-center">
                             {preview.name}
