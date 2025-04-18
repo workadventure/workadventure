@@ -13,6 +13,9 @@ import {
 import Debug from "debug";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
+import { EventProcessor } from "./EventProcessor";
+import { CommunicationManager } from "./CommunicationManager";
+import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 
 const debug = Debug("space");
 
@@ -20,11 +23,12 @@ export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
-
-    constructor(name: string) {
+    private communicationManager: ICommunicationManager;
+    constructor(name: string, private eventProcessor: EventProcessor, private propertiesToSync: string[]) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
+        this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
     }
 
@@ -43,8 +47,10 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.handleUserAdded(spaceUser);
         debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
     }
+
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(sourceWatcher);
         const user = usersList.get(spaceUser.spaceUserId);
@@ -72,10 +78,17 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.handleUserUpdated(spaceUser);
         debug(`${this.name} : user => updated ${spaceUser.spaceUserId}`);
     }
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
         const usersList = this.usersList(sourceWatcher);
+        const user = usersList.get(spaceUserId);
+        if (!user) {
+            console.error("User not found in this space", spaceUserId);
+            Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
+            return;
+        }
         usersList.delete(spaceUserId);
 
         this.notifyWatchers(
@@ -90,6 +103,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
             sourceWatcher
         );
+        this.communicationManager.handleUserDeleted(user);
         debug(`${this.name} : user => removed ${spaceUserId}`);
 
         if (usersList.size === 0) {
@@ -187,26 +201,99 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
+        if (!publicEvent.spaceEvent?.event) {
+            // If there is no event, just forward the public event as-is
+            this.notifyWatchers({
+                message: {
+                    $case: "publicEvent",
+                    publicEvent,
+                },
+            });
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPublicEvent(
+            publicEvent.spaceEvent.event,
+            publicEvent.senderUserId
+        );
+
+        // Create new public event with processed event
+        const processedPublicEvent: PublicEvent = {
+            ...publicEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
-                publicEvent,
+                publicEvent: processedPublicEvent,
             },
         });
     }
-
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         // Let's notify the watcher that contains the user
+        if (!privateEvent.spaceEvent?.event) {
+            // If there is no event, just forward the private event as-is
+            for (const [watcher, users] of this.users.entries()) {
+                if (users.has(privateEvent.receiverUserId)) {
+                    watcher.write({
+                        message: {
+                            $case: "privateEvent",
+                            privateEvent,
+                        },
+                    });
+                }
+            }
+            return;
+        }
+
+        if (privateEvent.spaceEvent.event.$case === "userReadyForSwitchEvent") {
+            this.communicationManager.handleUserReadyForSwitch(privateEvent.senderUserId);
+            return;
+        }
+
+        // Process the event
+        const processedEvent = this.eventProcessor.processPrivateEvent(
+            privateEvent.spaceEvent.event,
+            privateEvent.senderUserId,
+            privateEvent.receiverUserId
+        );
+
+        // Create new private event with processed event
+        const processedPrivateEvent: PrivateEvent = {
+            ...privateEvent,
+            spaceEvent: {
+                event: processedEvent,
+            },
+        };
+
+        // Send to target user
         for (const [watcher, users] of this.users.entries()) {
             if (users.has(privateEvent.receiverUserId)) {
                 watcher.write({
                     message: {
                         $case: "privateEvent",
-                        privateEvent,
+                        privateEvent: processedPrivateEvent,
                     },
                 });
             }
         }
+    }
+    public getAllUsers(): SpaceUser[] {
+        return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
+    }
+    public getUser(spaceUserId: string): SpaceUser | undefined {
+        return Array.from(this.users.values())
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
+    public getSpaceName(): string {
+        return this.name;
+    }
+    public getPropertiesToSync(): string[] {
+        return this.propertiesToSync;
     }
 }

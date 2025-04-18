@@ -4,9 +4,10 @@ import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { SpaceSocket } from "../src/SpaceManager";
+import { EventProcessor } from "../src/Model/EventProcessor";
 
 describe("Space", () => {
-    const space = new Space("test");
+    const space = new Space("test", mock<EventProcessor>(), []);
     let eventsWatcher1: BackToPusherSpaceMessage[] = [];
     const spaceSocketToPusher1 = mock<SpaceSocket>({
         write(chunk: BackToPusherSpaceMessage): boolean {
