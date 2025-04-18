@@ -109,11 +109,11 @@
     </div>
     <svelte:fragment slot="action">
         {#if !errorLabel}
-            <button class="flex-1 justify-center bg-danger-900 mx-4" on:click={refuseToStartVerification}>
+            <button class="btn flex-1 justify-center bg-danger-900" on:click={refuseToStartVerification}>
                 {$LL.chat.askStartVerificationModal.ignore()}
             </button>
             <button
-                class="flex-1 justify-center  bg-secondary mx-4"
+                class="btn btn-secondary flex-1 justify-center  bg-secondary"
                 data-testid="VerifyTheSessionButton"
                 on:click={acceptToStartVerification}
             >

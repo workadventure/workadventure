@@ -29,13 +29,13 @@
     <svelte:fragment slot="action">
         <button
             data-testid="VerifyWithAnotherDeviceButton"
-            class=" bg-secondary flex-1 justify-center mx-4"
+            class="btn btn-secondary bg-secondary flex-1 justify-center"
             on:click={startVerificationWithOtherDevice}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
         </button>
         <button
             data-testid="VerifyWithPassphraseButton"
-            class=" bg-secondary flex-1 justify-center mx-4"
+            class="btn btn-secondary bg-secondary flex-1 justify-center"
             on:click={startVerificationWithPassphrase}
             >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
         </button>
