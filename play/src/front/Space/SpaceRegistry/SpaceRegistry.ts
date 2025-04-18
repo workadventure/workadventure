@@ -172,6 +172,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
         this.spaces.forEach((space) => {
+            this.leaveSpace(space);
             const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
             this.spaces.set(newSpace.getName(), newSpace);
         });
