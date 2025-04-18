@@ -8,6 +8,7 @@
     import { popupJustClosed } from "../../Phaser/Game/Say/SayManager";
     import Select from "../Input/Select.svelte";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
+    import LL from "../../../i18n/i18n-svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     let message = "";
@@ -117,11 +118,11 @@
                 options={[
                     {
                         value: "say",
-                        label: "Say",
+                        label: $LL.say.type.say(),
                     },
                     {
                         value: "think",
-                        label: "Think",
+                        label: $LL.say.type.think(),
                     },
                 ]}
             />
