@@ -51,11 +51,11 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            //this.removeUser(sourceWatcher, spaceUser.spaceUserId);
         }
     }
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
-        try{
+        try {
             const usersList = this.usersList(sourceWatcher);
             const user = usersList.get(spaceUser.spaceUserId);
             if (!user) {
@@ -69,17 +69,17 @@ export class Space implements CustomJsonReplacerInterface {
             merge(user, updateValues);
 
             usersList.set(spaceUser.spaceUserId, user);
-        }catch (e) {
+        } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
             debug("Error while updating user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            //this.removeUser(sourceWatcher, spaceUser.spaceUserId);
         }
     }
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
-        try{
+        try {
             const usersList = this.usersList(sourceWatcher);
             usersList.delete(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
@@ -88,11 +88,11 @@ export class Space implements CustomJsonReplacerInterface {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
             }
-        }catch (e) {
+        } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
             debug("Error while removing user", e);
-        }finally {
+        } finally {
             this.notifyWatchers(
                 {
                     message: {
