@@ -172,6 +172,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     said: "a dit :",
     reply: "Répondre",
+    replyTo: "Répondre à",
     react: "Réagir",
     copy: "Copier",
     copied: "Copié !",
