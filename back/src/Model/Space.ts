@@ -29,21 +29,40 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
-        const usersList = this.usersList(sourceWatcher);
-        usersList.set(spaceUser.spaceUserId, spaceUser);
-        this.notifyWatchers(
-            {
-                message: {
-                    $case: "addSpaceUserMessage",
-                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        user: spaceUser,
-                    }),
+        try {
+            const usersList = this.usersList(sourceWatcher);
+            usersList.set(spaceUser.spaceUserId, spaceUser);
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            user: spaceUser,
+                        }),
+                    },
                 },
-            },
-            sourceWatcher
-        );
-        debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
+                sourceWatcher
+            );
+            debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
+        } catch (e) {
+            console.error("Error while adding user", e);
+            Sentry.captureException(e);
+            debug("Error while adding user", e);
+            // If we have an error, it means that the user list is not initialized
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                },
+                sourceWatcher
+            );
+        }
     }
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         const usersList = this.usersList(sourceWatcher);
