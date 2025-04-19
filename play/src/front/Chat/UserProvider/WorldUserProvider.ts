@@ -20,7 +20,10 @@ export class WorldUserProvider implements UserProviderInterface {
             },
             []
         );
-        this.userCount = derived(this.users, (users) => users.length);
+        this.userCount = derived(this.users, (users) => {
+            // TOOD FIXME: this is workaround for the fact that we are not using the uuid as the key in the map
+            return new Set(users.map((user) => user.uuid)).size;
+        });
     }
 
     setFilter(searchText: string): Promise<void> {

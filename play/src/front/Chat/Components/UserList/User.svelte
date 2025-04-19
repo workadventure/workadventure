@@ -140,7 +140,7 @@
                     <UserActionButton {user} />
                 {/if}
             </div>
-            {#if !isMe && !showRoomCreationInProgress}
+            {#if !isMe && !showRoomCreationInProgress && user.chatId !== user.uuid}
                 <button
                     class="tw-transition-all group-hover/chatItem:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white group-hover/chatItem:tw-opacity-100 tw-opacity-0 tw-m-0"
                     on:click|stopPropagation={() => {
