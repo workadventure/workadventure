@@ -29,71 +29,116 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
-        const usersList = this.usersList(sourceWatcher);
-        usersList.set(spaceUser.spaceUserId, spaceUser);
-        this.notifyWatchers(
-            {
-                message: {
-                    $case: "addSpaceUserMessage",
-                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        user: spaceUser,
-                    }),
-                },
-            },
-            sourceWatcher
-        );
-        debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
-    }
-    public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
-        const usersList = this.usersList(sourceWatcher);
-        const user = usersList.get(spaceUser.spaceUserId);
-        if (!user) {
-            console.error("User not found in this space", spaceUser);
-            Sentry.captureMessage(`User not found in this space ${spaceUser.spaceUserId}`);
-            return;
-        }
-
-        const updateValues = applyFieldMask(spaceUser, updateMask);
-
-        merge(user, updateValues);
-
-        usersList.set(spaceUser.spaceUserId, user);
-        this.notifyWatchers(
-            {
-                message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: {
-                        spaceName: this.name,
-                        user: spaceUser,
-                        updateMask,
+        try {
+            const usersList = this.usersList(sourceWatcher);
+            usersList.set(spaceUser.spaceUserId, spaceUser);
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            user: spaceUser,
+                        }),
                     },
                 },
-            },
-            sourceWatcher
-        );
-        debug(`${this.name} : user => updated ${spaceUser.spaceUserId}`);
+                sourceWatcher
+            );
+            debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
+        } catch (e) {
+            console.error("Error while adding user", e);
+            Sentry.captureException(e);
+            debug("Error while adding user", e);
+            // If we have an error, it means that the user list is not initialized
+            // So we need to remove user from the source watcher
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                },
+                sourceWatcher
+            );
+        }
+    }
+    public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
+        try {
+            const usersList = this.usersList(sourceWatcher);
+            const user = usersList.get(spaceUser.spaceUserId);
+            if (!user) {
+                console.error("User not found in this space", spaceUser);
+                Sentry.captureMessage(`User not found in this space ${spaceUser.spaceUserId}`);
+                return;
+            }
+
+            const updateValues = applyFieldMask(spaceUser, updateMask);
+            merge(user, updateValues);
+            usersList.set(spaceUser.spaceUserId, user);
+
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: {
+                            spaceName: this.name,
+                            user: spaceUser,
+                            updateMask,
+                        },
+                    },
+                },
+                sourceWatcher
+            );
+        } catch (e) {
+            console.error("Error while updating user", e);
+            Sentry.captureException(e);
+            debug("Error while updating user", e);
+            // If we have an error, it means that the user list is not initialized
+            // So we need to remove user from the source watcher
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                },
+                sourceWatcher
+            );
+        }
     }
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
-        const usersList = this.usersList(sourceWatcher);
-        usersList.delete(spaceUserId);
+        try {
+            const usersList = this.usersList(sourceWatcher);
+            usersList.delete(spaceUserId);
+            debug(`${this.name} : user => removed ${spaceUserId}`);
 
-        this.notifyWatchers(
-            {
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        spaceUserId: spaceUserId,
-                    }),
+            if (usersList.size === 0) {
+                debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
+                this.users.delete(sourceWatcher);
+            }
+        } catch (e) {
+            console.error("Error while removing user", e);
+            Sentry.captureException(e);
+            debug("Error while removing user", e);
+        } finally {
+            this.notifyWatchers(
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUserId,
+                        }),
+                    },
                 },
-            },
-            sourceWatcher
-        );
-        debug(`${this.name} : user => removed ${spaceUserId}`);
-
-        if (usersList.size === 0) {
-            this.users.delete(sourceWatcher);
+                sourceWatcher
+            );
         }
     }
 
@@ -171,7 +216,7 @@ export class Space implements CustomJsonReplacerInterface {
     private usersList(watcher: SpacesWatcher): Map<string, SpaceUser> {
         const usersList = this.users.get(watcher);
         if (!usersList) {
-            throw new Error("No users list associated to the watcher");
+            throw new Error("No users list associated to the watcher :" + this.name);
         }
         return usersList;
     }
