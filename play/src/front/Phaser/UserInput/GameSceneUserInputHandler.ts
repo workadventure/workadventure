@@ -110,6 +110,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     private openSayPopup(): void {
+        if (!this.gameScene.room.isSayEnabled) {
+            return;
+        }
         // Don't open if we just closed.
         if (isPopupJustClosed() || popupStore.hasPopup("say")) {
             return;
