@@ -225,6 +225,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             duration: "Duration (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
         },
+        openPdfProperties: {
+            label: "Ouvrir un PDF",
+            description: "Ouvrir un PDF dans l'application.",
+            error: "Veuillez entrer une URL PDF valide",
+            disabled: "L'intégration PDF est désactivée.",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
