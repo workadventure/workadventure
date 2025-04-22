@@ -38,7 +38,7 @@
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
-    import { IconCircleX, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -92,19 +92,19 @@
             const messageToSend = message.replace(/<br>/g, "\n");
             sendMessage(messageToSend);
         }
-        if (keyDownEvent.key === "Enter" && files && files.length > 0) {
-            if (files && !(room instanceof ProximityChatRoom)) {
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
-
-                room.sendFiles(fileList).catch((error) => console.error(error));
-                files = [];
-                filesPreview = [];
-            }
-            return;
-        }
+        // if (keyDownEvent.key === "Enter" && files && files.length > 0) {
+        //     if (files && !(room instanceof ProximityChatRoom)) {
+        //         const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+        //             fileListAcc.items.add(currentFile.file);
+        //             return fileListAcc;
+        //         }, new DataTransfer()).files;
+        //
+        //         room.sendFiles(fileList).catch((error) => console.error(error));
+        //         files = [];
+        //         filesPreview = [];
+        //     }
+        //     return;
+        // }
     }
 
     function sendMessage(messageToSend: string) {
@@ -114,6 +114,20 @@
         // close application part
         applicationProperty = undefined;
         applicationComponentOpened = false;
+
+        // send files
+        if (files && files.length > 0) {
+            if (!(room instanceof ProximityChatRoom)) {
+                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                    fileListAcc.items.add(currentFile.file);
+                    return fileListAcc;
+                }, new DataTransfer()).files;
+
+                room.sendFiles(fileList).catch((error) => console.error(error));
+                files = [];
+                filesPreview = [];
+            }
+        }
 
         // send message
         if (messageToSend.trim().length !== 0) {
@@ -371,11 +385,12 @@
     <div class="w-full p-1">
         <div class="flex flex-row gap-2 w-full overflow-x-auto rounded-lg p-2 bg-contrast/80">
             {#each filesPreview as preview (preview.id)}
-                <div
-                    class="relative content-center h-16 w-16 rounded-md backdrop-opacity-10 bg-white p-0.5"
-                >
-                    <button class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-1 -right-1 -top-1" on:click={() => deleteFile(preview.id)}>
-                        <IconX font-size="12"/>
+                <div class="relative content-center h-16 w-16 rounded-md backdrop-opacity-10 bg-white p-0.5">
+                    <button
+                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-1 -right-1 -top-1"
+                        on:click={() => deleteFile(preview.id)}
+                    >
+                        <IconX font-size="12" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
                         <img class="w-full h-full object-cover rounded-md" src={preview.url} alt={preview.name} />
