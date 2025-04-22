@@ -136,11 +136,25 @@
                 >
             {/if}
 
-            {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}
+            {#if !$roomCreationInProgress}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
                     class="sendMessage wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
-                    on:click|stopPropagation={() => openDirectChatRoom(user.chatId)}
+                    on:click|stopPropagation={() => {
+                        openDirectChatRoom(user.uuid != user.chatId ? user.chatId : undefined, user.username, () =>
+                            goTo("user", user.playUri ?? "", user.uuid ?? "")
+                        ).catch((error) => {
+                            console.error("Error opening direct chat room:", error);
+                            Sentry.captureException(error, {
+                                extra: {
+                                    userId: user.uuid,
+                                    chatId: user.chatId,
+                                    playUri: user.playUri,
+                                    username: user.username,
+                                },
+                            });
+                        });
+                    }}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >
