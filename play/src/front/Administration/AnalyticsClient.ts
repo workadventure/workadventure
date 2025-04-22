@@ -301,42 +301,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    switchMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_switch");
-            })
-            .catch((e) => console.error(e));
-    }
-
     openedWebsite(url: URL): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_opened_website", { url: url.toString() });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    closeMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_close");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    fullScreenMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_fullscreen");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    stackOpenCloseMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_stack_open_close");
             })
             .catch((e) => console.error(e));
     }
