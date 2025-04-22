@@ -227,6 +227,13 @@ const mapEditor: BaseTranslation = {
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
         },
+        openPdfProperties: {
+            label: "Open PDF",
+            description: "Open PDF within WorkAdventure.",
+            error: "Please enter a valid PDF URL",
+            disabled: "PDF integration is disabled.",
+            pdfUrlLabel: "PDF URL",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
