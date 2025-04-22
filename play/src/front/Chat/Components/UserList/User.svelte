@@ -11,6 +11,7 @@
     import { openDirectChatRoom, openModalRemoteUserNotConnected } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
@@ -162,6 +163,7 @@
                                 goTo("user", user.playUri ?? "", user.uuid ?? "");
                             });
                         }
+                        analyticsClient.sendMessageFromUserList();
                     }}
                 >
                     <IconSend font-size="16" />

@@ -5,6 +5,7 @@ import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { selectedRoomStore } from "./SelectRoomStore";
 
 type NavChatTab =
@@ -37,6 +38,7 @@ function createNavChatStore() {
             if (isChatOnlineListEnabled || isChatDisconnectedListEnabled) {
                 set({ key: "users" });
             }
+            analyticsClient.openUserList();
         },
         switchToCustomComponent(component: ComponentType, props?: Record<string, unknown>) {
             set({ key: "externalModule", component, props });

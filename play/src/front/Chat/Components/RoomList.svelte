@@ -12,6 +12,7 @@
     import WokaFromUserId from "../../Components/Woka/WokaFromUserId.svelte";
     import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -83,6 +84,7 @@
         } catch (error) {
             console.error("Failed to initChatConnectionEncryption", error);
         }
+        analyticsClient.startMatrixEncryptionConfiguration();
     }
 
     $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
