@@ -38,6 +38,12 @@
         "name": "cat3",
         "behavior": "cat",
         "url": "resources/characters/pipoya/Cat 01-3.png"
+      },
+      {
+        "id": "chicken1",
+        "name": "chicken1",
+        "behavior": "cat",
+        "url": "resources/characters/pipoya/Chicken 01-1.png"
       }
     ]
   }
