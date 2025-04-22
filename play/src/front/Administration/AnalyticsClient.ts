@@ -843,6 +843,14 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    openMessageList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_message_list");
+            })
+            .catch((e) => console.error(e));
+    }
+
     sendMessageFromUserList(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -878,6 +886,13 @@ class AnalyticsClient {
                     externalModuleName,
                     action,
                 });
+            })
+            .catch((e) => console.error(e));
+    }
+    camLayoutChange(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_camera_layout_change");
             })
             .catch((e) => console.error(e));
     }

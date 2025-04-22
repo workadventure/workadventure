@@ -29,6 +29,7 @@ function createNavChatStore() {
         subscribe,
         switchToChat() {
             set({ key: "chat" });
+            analyticsClient.openMessageList();
         },
         switchToUserList() {
             const room = gameManager.getCurrentGameScene().room;
