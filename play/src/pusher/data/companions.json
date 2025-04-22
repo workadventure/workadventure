@@ -38,6 +38,18 @@
         "name": "cat3",
         "behavior": "cat",
         "url": "resources/characters/pipoya/Cat 01-3.png"
+      },
+      {
+        "id": "chicken2",
+        "name": "brown chicken",
+        "behavior": "cat",
+        "url": "resources/characters/pipoya/chicken 01-2.png"
+      },
+      {
+        "id": "chicken3",
+        "name": "gray chicken",
+        "behavior": "cat",
+        "url": "resources/characters/pipoya/chicken 01-3.png"
       }
     ]
   }
