@@ -43,6 +43,8 @@
         state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
         dataTestId={undefined}
         action={floatingUiRef}
+        media="./static/images/tooltip-exemple.gif"
+        desc="Vous avez la liberté de naviguer sur des applications externes tout en restant dans notre application, pour une expérience fluide et enrichie."
     >
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore

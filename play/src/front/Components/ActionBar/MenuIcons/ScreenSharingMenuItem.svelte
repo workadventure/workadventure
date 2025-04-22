@@ -37,6 +37,8 @@
             ? "active"
             : "normal"}
         dataTestId="screenShareButton"
+        media="./static/images/tooltip-exemple.gif"
+        desc="Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique."
     >
         {#if $requestedScreenSharingState && !$silentStore}
             <ScreenShareOffIcon />

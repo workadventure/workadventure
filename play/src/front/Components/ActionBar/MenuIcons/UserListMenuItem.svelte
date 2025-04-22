@@ -25,6 +25,9 @@
     state={"normal"}
     dataTestId="user-list-button"
     disabledHelp={false}
+    media="./static/Videos/UserList.mp4"
+    helpVideo={true}
+    desc="Voyez qui est présent, accédez à leur carte de visite, envoyez-leur un message ou marchez jusqu’à eux en un clic"
 >
     <UsersIcon />
 </ActionBarButton>

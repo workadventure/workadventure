@@ -19,6 +19,9 @@
     export let isGradient = false;
     export let hasImage = true;
     export let action: Action = () => {};
+    export let media = "";
+    export let helpVideo = false;
+    export let desc = "";
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -95,7 +98,7 @@
             {#if label}<span>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} />
+            <HelpTooltip title={tooltipTitle} {media} {helpVideo} {desc} />
         {/if}
     </div>
 {:else}

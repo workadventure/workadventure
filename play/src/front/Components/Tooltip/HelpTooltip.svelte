@@ -3,7 +3,9 @@
     import tooltipArrow from "../images/arrow-top.svg";
     export let hasImage = true;
     export let hasDesc = true;
-    export let image = "./static/images/tooltip-exemple.gif";
+    // export let image = "./static/images/tooltip-exemple.gif";
+    export let media = "";
+    export let helpVideo = false;
     export let title = "Find people and navigate to them";
     export let desc =
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -25,7 +27,14 @@
     />
     <div class="relative z-10 pb-4 rounded-lg overflow-hidden">
         {#if hasImage}
-            <img alt="Help GIF" src={image} class="w-full -mt-[2px]" loading="lazy" />
+            {#if helpVideo}
+                <video autoplay muted loop class="w-full -mt-[2px]">
+                    <source src={media} type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            {:else}
+                <img alt="Help GIF" src={media} class="w-full -mt-[2px]" loading="lazy" />
+            {/if}
         {/if}
         <div class="text-lg bold px-4 pt-2 leading-5 {hasImage && hasDesc ? 'pb-1' : ''}">
             {title}

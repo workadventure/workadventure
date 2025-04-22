@@ -52,6 +52,9 @@
     state={chatAvailable ? "normal" : "disabled"}
     {last}
     disabledHelp={false}
+    media="./static/Videos/Chat.mp4"
+    helpVideo={true}
+    desc="Partagez vos idées ou démarrez une discussion, directement par écrit. Simple, clair, efficace."
 >
     <MessageCircleIcon />
 </ActionBarButton>

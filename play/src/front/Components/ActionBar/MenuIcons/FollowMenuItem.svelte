@@ -36,6 +36,9 @@
     tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
     disabledHelp={$openedMenuStore !== undefined}
     state={$followStateStore === "active" ? "active" : "normal"}
+    media="./static/Videos/Follow.mp4"
+    helpVideo={true}
+    desc="Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide."
 >
     <FollowIcon />
 </ActionBarButton>

@@ -34,10 +34,13 @@
     state={$activeSecondaryZoneActionBarStore === "emote" ? "active" : "normal"}
     dataTestId={undefined}
     action={floatingUiRef}
+    media="./static/Videos/Smileys.mp4"
+    helpVideo={true}
+    desc="Exprimez ce que vous ressentez en un clic grâce aux réactions emoji. Un simple tap, et c’est parti !"
 >
     <EmojiIcon
         strokeColor={$activeSecondaryZoneActionBarStore === "emote"
-            ? "stroke-white fill-white"
+            ? "stroke-contrast fill-white"
             : "stroke-white fill-transparent"}
         hover="group-hover/btn-emoji:fill-white"
     />
