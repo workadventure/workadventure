@@ -59,10 +59,28 @@ const actionbar: BaseTranslation = {
         chat: {
             title: "Send text message",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            disabled: {
+                title: "Chat is disabled",
+                desc: "You cannot send messages in this room. Ask the administrator to enable it.",
+            },
+            disabledAdmin: {
+                title: "Chat is disabled",
+                desc: "Chat is disabled in this world. You can enable it in the world settings in the admin back office.",
+                goToAdmin: "Go to admin back office",
+            },
         },
         users: {
             title: "Display user's list",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            disabled: {
+                title: "User's list is disabled",
+                desc: "You cannot see the user's list in this room. Ask the administrator to enable it.",
+            },
+            disabledAdmin: {
+                title: "User's list is disabled",
+                desc: "User's list is disabled in this world. You can enable it in the world settings in the admin back office.",
+                goToAdmin: "Go to admin back office",
+            },
         },
         emoji: {
             title: "Display an emoji",

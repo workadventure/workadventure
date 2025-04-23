@@ -41,8 +41,8 @@
     let actionBarWidth: number;
 
     const gameScene = gameManager.getCurrentGameScene();
-    const showChatButton = gameScene.room.isChatOnlineListEnabled;
-    const showUserListButton = gameScene.room.isChatDisconnectedListEnabled;
+    const showChatButton = gameScene.room.isChatEnabled;
+    const showUserListButton = gameScene.room.isChatOnlineListEnabled;
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -80,20 +80,16 @@
 {#if !$hideActionBarStoreBecauseOfChatBar}
     <ResponsiveActionBar bind:rightDiv bind:actionBarWidth>
         <div slot="left" class="justify-start flex-none">
-            {#if showChatButton || showUserListButton}
-                <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
-                    {#if !$chatVisibilityStore}
-                        {#if showChatButton}
-                            <ChatMenuItem last={isSmallScreen ? true : undefined} />
-                        {/if}
-                        {#if showUserListButton && !isSmallScreen}
-                            <UserListMenuItem />
-                        {/if}
-                    {:else}
-                        <CloseChatMenuItem />
+            <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
+                {#if !$chatVisibilityStore}
+                    <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
+                    {#if !isSmallScreen}
+                        <UserListMenuItem state={showUserListButton ? "normal" : "disabled"} />
                     {/if}
-                </div>
-            {/if}
+                {:else}
+                    <CloseChatMenuItem />
+                {/if}
+            </div>
         </div>
 
         <div

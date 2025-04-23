@@ -23,17 +23,18 @@
         src={tooltipArrow}
         class="content-[''] absolute -top-1 left-9 m-auto w-2 h-1"
     />
-    <div class="relative z-10 pb-4 rounded-lg overflow-hidden">
+    <div class="relative z-10 p-2 rounded-lg overflow-hidden min-w-48">
         {#if hasImage}
             <img alt="Help GIF" src={image} class="w-full -mt-[2px]" loading="lazy" />
         {/if}
-        <div class="text-lg bold px-4 pt-2 leading-5 {hasImage && hasDesc ? 'pb-1' : ''}">
+        <div class="text-lg bold px-2 leading-5 text-nowrap text-left {hasImage && hasDesc ? 'pb-1' : ''}">
             {title}
         </div>
         {#if hasDesc}
-            <div class="px-4 text-xs italic opacity-80 leading-4">
+            <div class="px-2 text-xs italic opacity-80 leading-4 text-left pt-1">
                 {desc}
             </div>
         {/if}
+        <slot name="end" />
     </div>
 </div>

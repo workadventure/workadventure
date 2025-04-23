@@ -7,6 +7,7 @@
     export let label: string | undefined = undefined;
     export let tooltipTitle = "";
     export let tooltipDesc = "";
+    export let tooltipImage = false;
     export let disabledHelp = false;
     export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
     export let dataTestId: string | undefined = undefined;
@@ -95,7 +96,11 @@
             {#if label}<span>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} />
+            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} hasImage={tooltipImage}>
+                <div slot="end" class="w-full px-4 pt-2">
+                    <slot name="tooltipEnd" />
+                </div>
+            </HelpTooltip>
         {/if}
     </div>
 {:else}
