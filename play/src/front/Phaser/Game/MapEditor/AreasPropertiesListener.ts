@@ -7,6 +7,7 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
+    OpenPdfPropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
@@ -148,6 +149,7 @@ export class AreasPropertiesListener {
 
     public onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         for (const areaData of areasData) {
+            console.log("Leave area: ", areaData);
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
 
@@ -236,6 +238,11 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(property);
                 break;
             }
+            case "openPdf": {
+                this.handleOpenPdfOnEnter(property);
+                break;
+            }
+
             default: {
                 break;
             }
@@ -309,6 +316,12 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
+            case "openPdf": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleOpenPdfOnLeave(oldProperty);
+                this.handleOpenPdfOnEnter(newProperty);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -360,6 +373,10 @@ export class AreasPropertiesListener {
             }
             case "tooltipPropertyData": {
                 this.handleTooltipPropertyOnLeave(property);
+                break;
+            }
+            case "openPdf": {
+                this.handleOpenPdfOnLeave(property);
                 break;
             }
             default: {
@@ -917,7 +934,7 @@ export class AreasPropertiesListener {
     }
 
     private openCoWebsiteFunction(
-        property: OpenWebsitePropertyData,
+        property: OpenWebsitePropertyData | OpenPdfPropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
@@ -1068,5 +1085,13 @@ export class AreasPropertiesListener {
     private handleTooltipPropertyOnLeave(property: TooltipPropertyData): void {
         // Implement the logic to hide the info bulle
         this.scene.CurrentPlayer.destroyText(property.id);
+    }
+
+    private handleOpenPdfOnEnter(property: OpenPdfPropertyData): void {
+        console.log("handleOpenPdfOnEnter");
+    }
+
+    private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
+        console.log("handleOpenPdfOnLeave");
     }
 }
