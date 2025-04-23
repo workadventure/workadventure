@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { navChat } from "../../../Chat/Stores/ChatStore";
+    import { navChat, userListTooltipStore } from "../../../Chat/Stores/ChatStore";
     import UsersIcon from "../../Icons/UsersIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -45,12 +45,32 @@
 
 <ActionBarButton
     on:click={toggleUserList}
-    classList="group/btn-users hidden @sm/actions:flex"
+    classList="group/btn-users hidden @sm/actions:flex {$userListTooltipStore ? 'z-[9999]' : ''}"
     tooltipTitle={getTooltipTitle()}
     tooltipDesc={getTooltipDesc()}
     {state}
     dataTestId="user-list-button"
     disabledHelp={false}
+    showToolTipCondition={$userListTooltipStore}
+    toolTipDelay={$userListTooltipStore ? 0 : 500}
 >
     <UsersIcon />
+    <div
+        class=" absolute w-full h-full z-50 rounded-md bg-white/50 top-0 left-0  {$userListTooltipStore
+            ? 'pulse'
+            : 'hidden'}"
+    />
 </ActionBarButton>
+
+<style>
+    .pulse {
+        animation: pulse 0.8s infinite ease-in-out;
+    }
+    @keyframes pulse {
+        75%,
+        100% {
+            transform: scale(1.2);
+            opacity: 0;
+        }
+    }
+</style>

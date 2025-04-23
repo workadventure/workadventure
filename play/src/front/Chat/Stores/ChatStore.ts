@@ -86,3 +86,27 @@ export const isAChatRoomIsVisible = () => {
 export const isChatIdSentToPusher = writable(false);
 
 export const botsChatIds = writable<string[]>([]);
+
+export const chatButtonTooltipStore = writable(false);
+export const userListTooltipStore = writable(false);
+export function showChatButtonTooltip(time = 5000) {
+    if (get(chatButtonTooltipStore)) {
+        chatButtonTooltipStore.set(false);
+        return;
+    }
+    chatButtonTooltipStore.set(true);
+    setTimeout(() => {
+        chatButtonTooltipStore.set(false);
+    }, time);
+}
+
+export function showUserListTooltip(time = 5000) {
+    if (get(userListTooltipStore)) {
+        userListTooltipStore.set(false);
+        return;
+    }
+    userListTooltipStore.set(true);
+    setTimeout(() => {
+        userListTooltipStore.set(false);
+    }, time);
+}

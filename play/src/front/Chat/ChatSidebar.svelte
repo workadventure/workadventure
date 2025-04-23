@@ -6,6 +6,7 @@
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
+    import { navChat, showChatButtonTooltip, showUserListTooltip } from "./Stores/ChatStore";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement;
@@ -20,11 +21,38 @@
         chatVisibilityStore.set(false);
     }
 
+    const isChatEnabled = gameScene.room.isChatEnabled;
+    const isUserListEnabled = gameScene.room.isChatOnlineListEnabled;
+
     function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape" && $chatVisibilityStore) {
-            closeChat();
-        } else if (e.key === "c" && !$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
-            chatVisibilityStore.set(true);
+        if (e.key === "c") {
+            if (!isChatEnabled) {
+                showChatButtonTooltip();
+                return;
+            }
+            if ($navChat.key === "users" && $chatVisibilityStore) {
+                navChat.switchToChat();
+            } else if (!$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
+                navChat.switchToChat();
+                chatVisibilityStore.set(true);
+            } else if ($chatVisibilityStore) {
+                chatVisibilityStore.set(false);
+            }
+        } else if (e.key === "u") {
+            if (!isUserListEnabled) {
+                showUserListTooltip();
+                return;
+            }
+            if (!$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
+                navChat.switchToUserList();
+                chatVisibilityStore.set(true);
+            } else if ($chatVisibilityStore) {
+                if ($navChat.key === "chat") {
+                    navChat.switchToUserList();
+                } else {
+                    chatVisibilityStore.set(false);
+                }
+            }
         }
     }
 

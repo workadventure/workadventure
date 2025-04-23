@@ -31,6 +31,8 @@
     export let last: boolean | undefined = undefined;
     // Can be used to force the context. If not set, the context is deduced from the "inMenu" Svelte context.
     export let context: "actionBar" | "menu" | undefined = undefined;
+    export let showToolTipCondition: boolean | undefined = undefined;
+    export let toolTipDelay = 500;
 
     $: isInMenu = context !== undefined ? context === "menu" : getContext("inMenu");
 
@@ -95,12 +97,8 @@
             {/if}
             {#if label}<span>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} hasImage={tooltipImage}>
-                <div slot="end" class="w-full px-4 pt-2">
-                    <slot name="tooltipEnd" />
-                </div>
-            </HelpTooltip>
+        {#if (helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)) || showToolTipCondition}
+            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} delayBeforeAppear={toolTipDelay} />
         {/if}
     </div>
 {:else}

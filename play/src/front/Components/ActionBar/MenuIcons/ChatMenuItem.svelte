@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { createEventDispatcher } from "svelte";
-    import { navChat } from "../../../Chat/Stores/ChatStore";
+    import { chatButtonTooltipStore, navChat } from "../../../Chat/Stores/ChatStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import MessageCircleIcon from "../../Icons/MessageCircleIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -11,8 +11,6 @@
     import { peerStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { userIsAdminStore } from "../../../Stores/GameStore";
-    // import {ADMIN_BO_URL} from "../../../Enum/EnvironmentVariable";
-    // import AdjustmentsIcon from "../../Icons/AdjustmentsIcon.svelte";
 
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = true;
@@ -65,15 +63,6 @@
             }
         }
     }
-
-    // function openBo() {
-    //     if (!ADMIN_BO_URL) {
-    //         throw new Error("ADMIN_BO_URL not set");
-    //     }
-    //     const url = new URL(ADMIN_BO_URL, window.location.href);
-    //     url.searchParams.set("playUri", window.location.href);
-    //     window.open(url, "_blank");
-    // }
 </script>
 
 <ActionBarButton
@@ -82,22 +71,24 @@
         navChat.switchToChat();
         analyticsClient.openedChat();
     }}
-    classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
+    classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0 {$chatButtonTooltipStore
+        ? 'z-[9999]'
+        : ''}"
     tooltipTitle={getTooltipTitle()}
     tooltipDesc={getTooltipDesc()}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}
     disabledHelp={false}
+    showToolTipCondition={$chatButtonTooltipStore}
+    toolTipDelay={$chatButtonTooltipStore ? 0 : 500}
 >
     <MessageCircleIcon />
-
-    <!--    <div slot="tooltipEnd">-->
-    <!--        <button class="btn btn-secondary btn-sm w-full" on:click|stopPropagation={openBo}>-->
-    <!--            <AdjustmentsIcon />-->
-    <!--            {$LL.actionbar.help.chat.disabledAdmin.goToAdmin()}-->
-    <!--        </button>-->
-    <!--    </div>-->
+    <div
+        class=" absolute w-full h-full z-50 rounded-md bg-white/50 top-0 left-0  {$chatButtonTooltipStore
+            ? 'pulse'
+            : 'hidden'}"
+    />
 </ActionBarButton>
 {#if $chatZoneLiveStore || $peerStore.size > 0}
     <div>
@@ -111,3 +102,16 @@
         {$totalMessagesToSee}
     </div>
 {/if}
+
+<style>
+    .pulse {
+        animation: pulse 0.8s infinite ease-in-out;
+    }
+    @keyframes pulse {
+        75%,
+        100% {
+            transform: scale(1.2);
+            opacity: 0;
+        }
+    }
+</style>
