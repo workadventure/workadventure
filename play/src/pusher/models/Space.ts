@@ -102,6 +102,8 @@ export class Space {
     public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
         this.users.set(spaceUser.spaceUserId, user);
+
+        console.log(`${this.name} : user added ${spaceUser.spaceUserId}. User count ${this.users.size}`);
         debug(`${this.name} : user added ${spaceUser.spaceUserId}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
@@ -179,6 +181,7 @@ export class Space {
         const user = this.users.get(spaceUserId);
         if (user) {
             this.users.delete(spaceUserId);
+            console.log(`${this.name} : user removed ${spaceUserId}. User count ${this.users.size}`);
             debug(`${this.name} : user removed ${spaceUserId}. User count ${this.users.size}`);
 
             const subMessage: SubMessage = {

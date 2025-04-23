@@ -374,10 +374,13 @@ export class SocketManager implements ZoneEventListener {
     public async handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string): Promise<void> {
         const socketData = client.getUserData();
 
+        console.log("handleJoinSpace", spaceName, localSpaceName);
+
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToBackPromise = this.spaceStreamsToBack.get(backId);
             if (!spaceStreamToBackPromise) {
+                console.log("handleJoinSpace => spaceStreamToBackPromise not found");
                 spaceStreamToBackPromise = (async () => {
                     const cleanupSpaceStreamToBack = () => {
                         this.spaceStreamsToBack.delete(backId);
@@ -393,6 +396,7 @@ export class SocketManager implements ZoneEventListener {
                     const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
                     spaceStreamToBack
                         .on("data", (message: BackToPusherSpaceMessage) => {
+                            console.log("handleJoinSpace => spaceStreamToBack => data", message);
                             if (!message.message) {
                                 console.warn("spaceStreamToBack => Empty message received.", message);
                                 return;
@@ -539,6 +543,7 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
+                console.log("handleJoinSpace => space not found, creating new space");
                 space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor);
 
                 this.spaces.set(spaceName, space);
@@ -552,8 +557,11 @@ export class SocketManager implements ZoneEventListener {
                     },
                 });
             }
+
+            console.log("handleJoinSpace => adding client watcher");
             space.addClientWatcher(client);
 
+            console.log("handleJoinSpace => adding user");
             space.addUser(socketData.spaceUser, client);
             if (socketData.spaces.has(spaceName)) {
                 console.error(`User ${socketData.name} is trying to join a space he is already in.`);
@@ -561,6 +569,7 @@ export class SocketManager implements ZoneEventListener {
                     new Error(`User ${socketData.name} is trying to join a space he is already in.`)
                 );
             }
+
             socketData.spaces.add(space.name);
 
             // Notify the client of the space metadata
