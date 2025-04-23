@@ -69,10 +69,14 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openDirectChatRoom = async (chatID: string) => {
+export const openDirectChatRoom = async (chatID?: string, userName?: string, callUserCallback?: () => void) => {
     try {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
+            return;
+        }
+        if (!chatID) {
+            openModalRemoteUserNotConnected(userName ?? "", callUserCallback ?? (() => {}));
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
