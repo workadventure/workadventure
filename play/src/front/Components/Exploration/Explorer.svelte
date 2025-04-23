@@ -18,6 +18,7 @@
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { mapExplorerSearchinputFocusStore } from "../../Stores/UserInputStore";
     import Input from "../Input/Input.svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { IconChevronDown, IconChevronRight } from "@wa-icons";
 
     let filter = "";
@@ -35,7 +36,6 @@
     }
 
     function onChangeFilterHandle() {
-        console.log("on filterrrrrrrrrrrrrr");
         entitiesListFiltered.set(new Map());
         for (let [key, entity] of $mapExplorationEntitiesStore) {
             // Check filter by name
@@ -83,6 +83,7 @@
                 }
             }
         }
+        analyticsClient.filterInMapExplorer();
     }
 
     function addFilter(filterName: string) {

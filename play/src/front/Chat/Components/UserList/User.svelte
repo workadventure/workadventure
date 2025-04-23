@@ -12,6 +12,7 @@
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
@@ -146,7 +147,7 @@
                     <UserActionButton {user} />
                 {/if}
             </div>
-            {#if !isMe && !showRoomCreationInProgress}
+            {#if !isMe && !showRoomCreationInProgress && user.chatId !== user.uuid}
                 <button
                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
                     data-testId={`send-message-${user.username}`}
@@ -164,6 +165,7 @@
                                 },
                             });
                         });
+                        analyticsClient.sendMessageFromUserList();
                     }}
                 >
                     <IconSend font-size="16" />
