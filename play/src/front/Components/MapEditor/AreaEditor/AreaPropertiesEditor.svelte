@@ -19,6 +19,7 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import OpenPdfPropertyEditor from "../PropertyEditor/OpenPdfPropertyEditor.svelte";
     import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
     import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
@@ -55,6 +56,7 @@
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
     let hasTooltipPropertyData: boolean;
+    let hasOpenPdf: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -241,6 +243,15 @@
                     content: "",
                     duration: 2,
                 };
+            case "openPdf":
+                return {
+                    id,
+                    type,
+                    link: "https://workadventu.re",
+                    closable: true,
+                    allowAPI: false,
+                    policy,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -363,6 +374,7 @@
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
+        hasOpenPdf = hasProperty("openPdf");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -503,6 +515,14 @@
                     property="tooltipPropertyData"
                     on:click={() => {
                         onAddProperty("tooltipPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasOpenPdf}
+                <AddPropertyButtonWrapper
+                    property="openPdf"
+                    on:click={() => {
+                        onAddProperty("openPdf");
                     }}
                 />
             {/if}
@@ -753,6 +773,14 @@
                         />
                     {:else if property.type === "tooltipPropertyData"}
                         <TooltipPropertyButton
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "openPdf"}
+                        <OpenPdfPropertyEditor
                             {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);

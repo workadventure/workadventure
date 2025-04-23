@@ -392,6 +392,18 @@
         testId="addTooltipProperty"
     />
 {/if}
+{#if property === "openPdf"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.openPdfProperties.label()}
+        descriptionText={$LL.mapEditor.properties.openPdfProperties.description()}
+        img={"resources/icons/icon_pdf.png"}
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="openPdf"
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
 
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}
