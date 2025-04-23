@@ -234,7 +234,7 @@ test.describe("Map editor @oidc", () => {
     });
 
     test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({browser, request}) => {
-        //await resetWamMaps(request);
+        await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
