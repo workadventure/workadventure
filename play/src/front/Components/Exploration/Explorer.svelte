@@ -238,6 +238,13 @@
                     addFilter("matrixRoomPropertyData");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openPdf"
+                isActive={$selectFilters.includes("openPdf")}
+                on:click={() => {
+                    addFilter("openPdf");
+                }}
+            />
 
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper

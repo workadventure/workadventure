@@ -92,6 +92,21 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     forceNewTab: z.boolean().optional().default(false),
 });
 
+export const OpenPdfPropertyData = PropertyBase.extend({
+    type: z.literal("openPdf"),
+    link: z.string().nullable().default("https://workadventu.re"),
+    allowAPI: z.boolean().optional(),
+    closable: z.boolean().optional(),
+    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
+    triggerMessage: z.string().optional(),
+    policy: z
+        .string()
+        .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
+        .optional(),
+    width: z.number().min(1).max(100).default(50).optional(),
+    position: z.number().optional(),
+});
+
 export const ExtensionModuleAreaProperty = PropertyBase.extend({
     type: z.literal("extensionModule"),
     subtype: z.string(),
@@ -162,6 +177,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
+    OpenPdfPropertyData,
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
@@ -196,6 +212,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
+    OpenPdfPropertyData,
     EntityDescriptionPropertyData,
 ]);
 
@@ -353,7 +370,7 @@ export type EntityDimensions = z.infer<typeof EntityDimensions>;
 export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openPdf";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
@@ -368,6 +385,7 @@ export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
+export type OpenPdfPropertyData = z.infer<typeof OpenPdfPropertyData>;
 export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
