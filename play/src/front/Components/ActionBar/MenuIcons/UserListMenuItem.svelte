@@ -21,13 +21,12 @@
     on:click={toggleUserList}
     classList="group/btn-users hidden @sm/actions:flex"
     tooltipTitle={$LL.actionbar.help.users.title()}
-    tooltipDesc={$LL.actionbar.help.users.desc()}
     state={"normal"}
     dataTestId="user-list-button"
     disabledHelp={false}
     media="./static/Videos/UserList.mp4"
     helpVideo={true}
-    desc="Voyez qui est présent, accédez à leur carte de visite, envoyez-leur un message ou marchez jusqu’à eux en un clic"
+    desc={$LL.actionbar.help.users.desc()}
 >
     <UsersIcon />
 </ActionBarButton>

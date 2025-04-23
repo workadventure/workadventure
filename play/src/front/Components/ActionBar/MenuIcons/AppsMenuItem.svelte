@@ -38,13 +38,12 @@
         classList="group/btn-apps"
         context="actionBar"
         tooltipTitle={$LL.actionbar.help.apps.title()}
-        tooltipDesc={$LL.actionbar.help.apps.desc()}
         disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
         state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
         dataTestId={undefined}
         action={floatingUiRef}
         media="./static/images/tooltip-exemple.gif"
-        desc="Vous avez la liberté de naviguer sur des applications externes tout en restant dans notre application, pour une expérience fluide et enrichie."
+        desc={$LL.actionbar.help.apps.desc()}
     >
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore

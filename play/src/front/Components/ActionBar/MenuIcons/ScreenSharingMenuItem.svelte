@@ -29,7 +29,6 @@
         on:click={screenSharingClick}
         classList="group/btn-screen-share"
         tooltipTitle={$LL.actionbar.help.share.title()}
-        tooltipDesc={$LL.actionbar.help.share.desc()}
         disabledHelp={$openedMenuStore !== undefined}
         state={!$screenSharingActivatedStore
             ? "disabled"
@@ -38,7 +37,7 @@
             : "normal"}
         dataTestId="screenShareButton"
         media="./static/images/tooltip-exemple.gif"
-        desc="Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique."
+        desc={$LL.actionbar.help.share.desc()}
     >
         {#if $requestedScreenSharingState && !$silentStore}
             <ScreenShareOffIcon />

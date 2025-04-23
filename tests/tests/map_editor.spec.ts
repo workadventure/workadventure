@@ -286,7 +286,7 @@ test.describe("Map editor @oidc", () => {
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
         await page.locator('.flex-0 > .w-10').click();
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
-        // await page.getByTestId('tab3').getByText('Docs', { exact: true }).click();
+        await page.getByTestId('tab3').getByText('Docs', { exact: true }).click();
         await page.locator('div:nth-child(3) > .w-10').click();
         await page.getByText('Drive', { exact: true }).click();
         await page.locator('div:nth-child(3) > .w-10').click();

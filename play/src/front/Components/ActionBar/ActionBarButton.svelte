@@ -98,7 +98,7 @@
             {#if label}<span>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} {media} {helpVideo} {desc} />
+            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} />
         {/if}
     </div>
 {:else}

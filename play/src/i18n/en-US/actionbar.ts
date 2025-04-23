@@ -58,15 +58,15 @@ const actionbar: BaseTranslation = {
     help: {
         chat: {
             title: "Send text message",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Share your ideas or start a discussion, directly in writing. Simple, clear, effective.",
         },
         users: {
             title: "Display user's list",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "See who's there, access their business card, send them a message, or walk up to them with one click !",
         },
         emoji: {
             title: "Display an emoji",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Express how you feel with just one click using emoji reactions. Just tap and go!",
         },
         audioManager: {
             title: "Ambient sounds volume",
@@ -78,15 +78,15 @@ const actionbar: BaseTranslation = {
         },
         follow: {
             title: "Ask to follow",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "You can ask a user to follow you, and if this request is accepted, their Woka will automatically follow you, thus establishing a seamless connection.",
         },
         unfollow: {
             title: "Stop following",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "You can choose to unfollow a user at any time. Your Woka will then stop following them, giving you back your freedom of movement.",
         },
         lock: {
             title: "Lock conversation",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "By enabling this feature, you ensure that no one can join the discussion. You are the master of your space, and only those already present can interact.",
         },
         mic: {
             title: "Enable/disable your microphone",
@@ -106,11 +106,11 @@ const actionbar: BaseTranslation = {
         },
         share: {
             title: "Share your screen",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "Want to share your screen with other users? You can! You can show your screen to everyone in the chat, and you can choose to share your entire screen or just a specific window.",
         },
         apps: {
             title: "Third party applications",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            desc: "You have the freedom to navigate external applications while remaining in our application, for a smooth and enriched experience.",
         },
         roomList: {
             title: "Room list",
