@@ -29,7 +29,6 @@
         on:click={screenSharingClick}
         classList="group/btn-screen-share"
         tooltipTitle={$LL.actionbar.help.share.title()}
-        tooltipDesc={$LL.actionbar.help.share.desc()}
         disabledHelp={$openedMenuStore !== undefined}
         state={!$screenSharingActivatedStore
             ? "disabled"
@@ -37,6 +36,8 @@
             ? "active"
             : "normal"}
         dataTestId="screenShareButton"
+        media="./static/images/tooltip-exemple.gif"
+        desc={$LL.actionbar.help.share.desc()}
     >
         {#if $requestedScreenSharingState && !$silentStore}
             <ScreenShareOffIcon />
