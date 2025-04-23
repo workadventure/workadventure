@@ -231,24 +231,30 @@
                 </a>
             {/if}
         </header>
-        <div class="overflow-auto h-5/6 px-5">
+        <div class="overflow-auto h-5/6 px-5 h-full ">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
-                <div class="flex flex-row justify-center">
-                    <div id="content-liveMessage" class="flex flex-col px-5 w-1/3">
+                <div class="flex flex-col md:flex-row md:justify-center h-full">
+                    <div
+                        id="content-liveMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6  h-full justify-between"
+                    >
                         <h4 class="text-white mb-2">
                             <img
                                 src={liveMessageImg}
-                                class="h-8 w-8 mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
 
                         <button
-                            class="btn-lg btn btn-light btn-border mt-2 mb-4 "
+                            class="btn-lg btn btn-light btn-border mt-2 mb-4"
                             on:click={activateLiveMessage}
-                            disabled={!$megaphoneCanBeUsedStore}>{$LL.megaphone.modal.liveMessage.button()}</button
+                            disabled={!$megaphoneCanBeUsedStore}
                         >
+                            {$LL.megaphone.modal.liveMessage.button()}
+                        </button>
+
                         {#if !$megaphoneCanBeUsedStore}
                             <Alert>
                                 <p class="help-text flex items-center">
@@ -261,24 +267,41 @@
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
                         </p>
+
+                        <div class="mt-auto pt-4">
+                            <video
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
+                                class="w-full cursor-pointer rounded-xl"
+                                controls
+                                muted
+                                on:mouseover={playVideo}
+                                on:mouseout={stopVideo}
+                                on:click={fullScreenVideo}
+                            />
+                        </div>
                     </div>
-                    <div id="content-textMessage" class="flex flex-col px-5 w-1/3">
+
+                    <div
+                        id="content-textMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6  h-full justify-between"
+                    >
                         <h4 class="text-white mb-2">
                             <img
                                 src={textMessageImg}
-                                class="h-8 w-8 mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
 
                         <button
-                            class="btn-lg btn btn-light btn-border mb-4  "
+                            class="btn-lg btn btn-light btn-border mb-4"
                             on:click={activateInputText}
                             disabled={!$userIsAdminStore}
                         >
-                            {$LL.megaphone.modal.textMessage.button()}</button
-                        >
+                            {$LL.megaphone.modal.textMessage.button()}
+                        </button>
+
                         {#if !$userIsAdminStore}
                             <Alert>
                                 <p class="help-text flex items-center">
@@ -291,24 +314,40 @@
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
                         </p>
+
+                        <div class="mt-auto pt-4">
+                            <video
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
+                                class="w-full cursor-pointer rounded-xl"
+                                controls
+                                muted
+                                on:mouseover={playVideo}
+                                on:mouseout={stopVideo}
+                                on:click={fullScreenVideo}
+                            />
+                        </div>
                     </div>
-                    <div id="content-soundMessage" class="flex flex-col px-5 w-1/3">
-                        <h4 class="text-white mb-2 ">
+
+                    <div
+                        id="content-soundMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
+                    >
+                        <h4 class="text-white mb-2">
                             <img
                                 src={audioMessageImg}
-                                class="h-8 w-8 mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
 
                         <button
-                            class="btn-lg btn btn-light btn-border mb-4 "
+                            class="btn-lg btn btn-light btn-border mb-4"
                             on:click={activateUploadAudio}
                             disabled={!$userIsAdminStore}
                         >
-                            {$LL.megaphone.modal.audioMessage.button()}</button
-                        >
+                            {$LL.megaphone.modal.audioMessage.button()}
+                        </button>
 
                         {#if !$userIsAdminStore}
                             <Alert>
@@ -322,37 +361,8 @@
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
                         </p>
-                    </div>
-                </div>
-                <div class="flex flex-row justify-center">
-                    <div class="flex flex-col p-5 w-1/3">
-                        <div class="flex align-middle justify-center p-5">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
-                                class="w-full cursor-pointer rounded-xl"
-                                controls
-                                muted
-                                on:mouseover={playVideo}
-                                on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
-                            />
-                        </div>
-                    </div>
-                    <div class="flex flex-col p-5 w-1/3">
-                        <div class="flex align-middle justify-center p-5">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
-                                class="w-full cursor-pointer rounded-xl"
-                                controls
-                                muted
-                                on:mouseover={playVideo}
-                                on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
-                            />
-                        </div>
-                    </div>
-                    <div class="flex flex-col p-5 w-1/3">
-                        <div class="flex align-middle justify-center p-5">
+
+                        <div class="mt-auto pt-4">
                             <video
                                 src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_audio_message.mp4"
                                 class="w-full cursor-pointer rounded-xl"
