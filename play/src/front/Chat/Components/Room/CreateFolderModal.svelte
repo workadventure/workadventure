@@ -35,8 +35,8 @@
             }
         } finally {
             loadingFolderCreation = false;
+            analyticsClient.createMatrixFolder();
         }
-        analyticsClient.createMatrixFolder();
     }
 
     function notifyUserForFolderCreation() {
