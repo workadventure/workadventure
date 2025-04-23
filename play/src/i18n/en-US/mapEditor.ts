@@ -233,6 +233,14 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid PDF URL",
             disabled: "PDF integration is disabled.",
             pdfUrlLabel: "PDF URL",
+            uploadFile: {
+                title: "Add your file",
+                description: "Drag and drop or choose your file",
+                dragDrop: "Drag and Drop or",
+                chooseFile: "Choose file",
+                errorOnFileFormat: "File format not supported",
+                errorOnFileNumber: "Multiple file drop is not supported",
+            },
         },
     },
     areaEditor: {

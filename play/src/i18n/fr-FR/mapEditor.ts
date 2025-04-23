@@ -230,6 +230,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Ouvrir un PDF dans l'application.",
             error: "Veuillez entrer une URL PDF valide",
             disabled: "L'intégration PDF est désactivée.",
+            uploadFile: {
+                title: "Ajouter votre image",
+                description: "Glissez-déposer ou choisissez votre image afin de l'ajouter sur la carte",
+                dragDrop: "Glissez-déposer ou",
+                chooseFile: "Choisir ",
+                errorOnFileFormat: "Format du fichier non supporté",
+                errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            },
         },
     },
     areaEditor: {
