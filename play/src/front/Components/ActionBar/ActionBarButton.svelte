@@ -20,7 +20,6 @@
     export let hasImage = true;
     export let action: Action = () => {};
     export let media = "";
-    export let helpVideo = false;
     export let desc = "";
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.

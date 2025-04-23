@@ -34,7 +34,6 @@
     dataTestId={undefined}
     action={floatingUiRef}
     media="./static/Videos/Smileys.mp4"
-    helpVideo={true}
     desc={$LL.actionbar.help.emoji.desc()}
 >
     <EmojiIcon

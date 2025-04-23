@@ -25,7 +25,6 @@
     dataTestId="user-list-button"
     disabledHelp={false}
     media="./static/Videos/UserList.mp4"
-    helpVideo={true}
     desc={$LL.actionbar.help.users.desc()}
 >
     <UsersIcon />

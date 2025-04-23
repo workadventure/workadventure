@@ -52,7 +52,6 @@
     {last}
     disabledHelp={false}
     media="./static/Videos/Chat.mp4"
-    helpVideo={true}
     desc={$LL.actionbar.help.chat.desc()}
 >
     <MessageCircleIcon />
