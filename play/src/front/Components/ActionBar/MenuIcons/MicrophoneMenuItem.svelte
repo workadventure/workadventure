@@ -49,7 +49,9 @@
     {/if}
 </ActionBarButton>
 
-<!-- <ActionBarButton
+<!--
+version avec le tooltip potentiellement à supprimer définitivement
+<ActionBarButton
     on:click={microphoneClick}
     classList="group/btn-mic peer/mic"
     tooltipTitle={$microphoneButtonStateStore === "disabled"
