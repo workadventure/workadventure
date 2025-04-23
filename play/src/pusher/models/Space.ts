@@ -170,6 +170,7 @@ export class Space {
                 },
             },
         };
+
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user remove sent ${spaceUserId}`);
         this.localRemoveUser(spaceUserId);
