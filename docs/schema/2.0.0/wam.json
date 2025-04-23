@@ -272,6 +272,17 @@
                         "closable": {
                           "type": "boolean"
                         },
+                        "trigger": {
+                          "type": "string",
+                          "enum": [
+                            "onenter",
+                            "onaction",
+                            "onicon"
+                          ]
+                        },
+                        "triggerMessage": {
+                          "type": "string"
+                        },
                         "policy": {
                           "type": "string",
                           "default": "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
