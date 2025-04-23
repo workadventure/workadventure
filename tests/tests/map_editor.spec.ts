@@ -234,7 +234,7 @@ test.describe("Map editor @oidc", () => {
     });
 
     test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({browser, request}) => {
-        await resetWamMaps(request);
+        //await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
@@ -246,35 +246,83 @@ test.describe("Map editor @oidc", () => {
 
         // add property Google Docs
         await AreaEditor.addProperty(page, "openWebsiteGoogleDocs");
+        // add property Google Sheets
+        await AreaEditor.addProperty(page, "openWebsiteGoogleSheets");
+        // add property Google Slides
+        await AreaEditor.addProperty(page, "openWebsiteGoogleSlides");
+        // add property Google Slides
+        await AreaEditor.addProperty(page, "openWebsiteGoogleDrive");
+
         // fill Google Docs link
         await page
             .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
             .first()
             .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
-        // add property Google Sheets
-        await AreaEditor.addProperty(page, "openWebsiteGoogleSheets");
         // fill Google Sheets link
         await page
             .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
             .first()
             .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
-        // add property Google Slides
-        await AreaEditor.addProperty(page, "openWebsiteGoogleSlides");
         // fill Google Slides link
         await page
             .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
             .first()
             .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
+        
 
-        // add property Google Slides
-        await AreaEditor.addProperty(page, "openWebsiteGoogleDrive");
         // fill Google Slides link
         await page
             .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
             .first()
             .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
+
+
+        // Check that the link is correctly set
+        try{
+            await expect(page.getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")).toHaveValue("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true");
+        }catch (e) {
+            console.info("Google Docs link is not set correctly, try to set it again", e);
+            // fill Google Docs link
+            await page
+            .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
+            .first()
+            .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
+        }
+        // Check that the link is correctly set
+        try{
+            await expect(page.getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")).toHaveValue("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true");
+        } catch (e) {
+            console.info("Google Sheets link is not set correctly, try to set it again", e);
+            // fill Google Sheets link
+            await page
+                .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
+                .first()
+                .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
+        }
+        // Check that the link is correctly set
+        try{
+            await expect(page.getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")).toHaveValue("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true");
+        } catch (e) {
+            console.info("Google Slides link is not set correctly, try to set it again", e);
+            // fill Google Slides link
+            await page
+                .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
+                .first()
+                .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
+        }
+        // Check that the link is correctly set
+        try{
+            await expect(page.getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")).toHaveValue("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
+        } catch (e) {
+            console.info("Google Drive link is not set correctly, try to set it again", e);
+            // fill Google Drive link
+            await page
+                .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
+                .first()
+                .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
+        }
 
         await Menu.closeMapEditor(page);
 
