@@ -59,6 +59,7 @@ export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataPrope
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
 
 export const mapEditorEntityUploadEventStore = writable<UploadEntityMessage | undefined>(undefined);
+//export const mapEditorFileUploadEventStore = writable<UploadFileMessage | undefined>(undefined);
 export const mapEditorModifyCustomEntityEventStore = writable<ModifyCustomEntityMessage | undefined>(undefined);
 export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntityMessage | undefined>(undefined);
 
