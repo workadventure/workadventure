@@ -75,7 +75,8 @@
         ? 'z-[9999]'
         : ''}"
     tooltipTitle={getTooltipTitle()}
-    tooltipDesc={getTooltipDesc()}
+    desc={getTooltipDesc()}
+    media="./static/Videos/Chat.mp4"
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}
@@ -102,16 +103,3 @@
         {$totalMessagesToSee}
     </div>
 {/if}
-
-<style>
-    .pulse {
-        animation: pulse 0.8s infinite ease-in-out;
-    }
-    @keyframes pulse {
-        75%,
-        100% {
-            transform: scale(1.2);
-            opacity: 0;
-        }
-    }
-</style>

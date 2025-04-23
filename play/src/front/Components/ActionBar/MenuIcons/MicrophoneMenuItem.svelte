@@ -2,10 +2,8 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { derived, Readable } from "svelte/store";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { availabilityStatusStore, requestedMicrophoneState, silentStore } from "../../../Stores/MediaStore";
-    import LL from "../../../../i18n/i18n-svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
@@ -40,6 +38,22 @@
 <ActionBarButton
     on:click={microphoneClick}
     classList="group/btn-mic peer/mic"
+    disabledHelp={$openedMenuStore !== undefined}
+    state={$microphoneButtonStateStore}
+    dataTestId="microphone-button"
+>
+    {#if $requestedMicrophoneState && !$silentStore}
+        <MicOnIcon />
+    {:else}
+        <MicOffIcon />
+    {/if}
+</ActionBarButton>
+
+<!--
+version avec le tooltip potentiellement à supprimer définitivement
+<ActionBarButton
+    on:click={microphoneClick}
+    classList="group/btn-mic peer/mic"
     tooltipTitle={$microphoneButtonStateStore === "disabled"
         ? $LL.actionbar.help.micDisabledByStatus.title()
         : $LL.actionbar.help.mic.title()}
@@ -57,4 +71,4 @@
     {:else}
         <MicOffIcon />
     {/if}
-</ActionBarButton>
+</ActionBarButton> -->

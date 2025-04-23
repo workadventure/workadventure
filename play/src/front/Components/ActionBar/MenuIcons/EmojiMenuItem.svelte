@@ -30,14 +30,15 @@
     }}
     classList="group/btn-emoji"
     tooltipTitle={$LL.actionbar.help.emoji.title()}
-    tooltipDesc={$LL.actionbar.help.emoji.desc()}
     state={$activeSecondaryZoneActionBarStore === "emote" ? "active" : "normal"}
     dataTestId={undefined}
     action={floatingUiRef}
+    media="./static/Videos/Smileys.mp4"
+    desc={$LL.actionbar.help.emoji.desc()}
 >
     <EmojiIcon
         strokeColor={$activeSecondaryZoneActionBarStore === "emote"
-            ? "stroke-white fill-white"
+            ? "stroke-contrast fill-white"
             : "stroke-white fill-transparent"}
         hover="group-hover/btn-emoji:fill-white"
     />

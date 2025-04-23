@@ -47,10 +47,11 @@
     on:click={toggleUserList}
     classList="group/btn-users hidden @sm/actions:flex {$userListTooltipStore ? 'z-[9999]' : ''}"
     tooltipTitle={getTooltipTitle()}
-    tooltipDesc={getTooltipDesc()}
+    desc={getTooltipDesc()}
     {state}
     dataTestId="user-list-button"
     disabledHelp={false}
+    media="./static/Videos/UserList.mp4"
     showToolTipCondition={$userListTooltipStore}
     toolTipDelay={$userListTooltipStore ? 0 : 500}
 >
