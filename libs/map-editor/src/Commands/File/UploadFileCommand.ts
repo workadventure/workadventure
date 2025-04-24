@@ -1,13 +1,13 @@
-//import { UploadFileMessage } from "@workadventure/messages";
+import { UploadFileMessage } from "@workadventure/messages";
 import { Command } from "../Command";
 
 export class UploadFileCommand extends Command {
-    //protected uploadfileMessage: UploadFileMessage;
+    protected uploadFileMessage: UploadFileMessage;
     protected hostname: string | undefined;
 
-    constructor(/*uploadEntityMessage: UploadFileMessage,*/ hostname?: string) {
+    constructor(uploadFileMessage: UploadFileMessage, hostname?: string) {
         super();
-        //this.uploadFileMessage = uploadFileMessage;
+        this.uploadFileMessage = uploadFileMessage;
         this.hostname = hostname;
     }
 

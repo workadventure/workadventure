@@ -1,19 +1,16 @@
 <script lang="ts">
-    import { CustomEntityDirection, UploadEntityMessage } from "@workadventure/messages";
+    import { UploadFileMessage } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import { v4 as uuidv4 } from "uuid";
     import { Direction, FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
     import { get } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
-    import {
-        mapEditorEntityUploadEventStore as mapEditorFileUploadEventStore,
-        selectCategoryStore,
-    } from "../../../../Stores/MapEditorStore";
+    import { mapEditorFileUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import { IconCloudUpload } from "@wa-icons";
 
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
-    let customEntityToUpload: EntityPrefab | undefined = undefined;
+    let fileToUpload: EntityPrefab | undefined = undefined;
     let errorOnFile: string | undefined;
     let tagUploadInProcess: string | undefined;
 
@@ -26,8 +23,8 @@
         if (files) {
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
-                customEntityToUpload = {
-                    collectionName: "custom entities",
+                fileToUpload = {
+                    collectionName: "c",
                     name: file.name,
                     imagePath: URL.createObjectURL(file),
                     id: uuidv4(),
@@ -38,7 +35,7 @@
                 };
             } else {
                 console.error("File format not supported");
-                errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileFormat();
+                errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
             }
         }
     }
@@ -50,7 +47,7 @@
     function isASupportedFormat(format: string): boolean {
         return format.trim().length > 0 && FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(format);
     }
-    function completeAndResetUpload(uploadFileMessage: UploadEntityMessage | undefined) {
+    function completeAndResetUpload(uploadFileMessage: UploadFileMessage | undefined) {
         if (uploadFileMessage === undefined && files !== undefined) {
             initFileUpload();
         }
@@ -61,7 +58,7 @@
 
     function initFileUpload() {
         files = undefined;
-        customEntityToUpload = undefined;
+        fileToUpload = undefined;
         mapEditorFileUploadEventStore.set(undefined);
         errorOnFile = undefined;
     }
@@ -86,26 +83,18 @@
     }
 
     async function setFileUploadStore() {
-        const fileToUpload = files?.item(0);
-        if (fileToUpload && customEntityToUpload) {
-            const fileBuffer = await fileToUpload.arrayBuffer();
+        const file = files?.item(0);
+        if (fileToUpload && file) {
+            const fileBuffer = await file.arrayBuffer();
             const fileAsUint8Array = new Uint8Array(fileBuffer);
             const generatedId = uuidv4();
-            tagUploadInProcess =
-                customEntityToUpload.tags && customEntityToUpload.tags.length > 0
-                    ? customEntityToUpload.tags[0]
-                    : BASIC_TYPE;
+            tagUploadInProcess = fileToUpload.tags && fileToUpload.tags.length > 0 ? fileToUpload.tags[0] : BASIC_TYPE;
             console.log("tagUploadInProcess", tagUploadInProcess, get(mapEditorFileUploadEventStore));
             mapEditorFileUploadEventStore.set({
                 id: generatedId,
                 file: fileAsUint8Array,
-                direction: CustomEntityDirection.Down,
-                name: customEntityToUpload.name,
-                tags: customEntityToUpload.tags,
-                imagePath: `${generatedId}-${fileToUpload.name}`,
-                collisionGrid: customEntityToUpload.collisionGrid,
-                depthOffset: customEntityToUpload.depthOffset,
-                color: "",
+                name: fileToUpload.name,
+                propertyId: fileToUpload.id,
             });
             console.log("mapEditorEntityUploadEventStore", get(mapEditorFileUploadEventStore));
         }
