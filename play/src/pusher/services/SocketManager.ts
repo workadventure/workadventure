@@ -811,6 +811,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private deleteSpaceIfEmpty(space: Space) {
+        console.log(`deleteSpaceIfEmpty ${space.name} : ${space.isEmpty()}`);
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);

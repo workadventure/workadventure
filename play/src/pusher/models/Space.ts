@@ -457,6 +457,8 @@ export class Space {
     }
 
     public isEmpty() {
+        console.log(`Sapce ${this.name} : isEmpty users : ${this.users.size} / watchers : ${this.clientWatchers.size}`);
+        //TODO : si on ne supprime jamais les spaces parce que notre pusher n'a plus de watcher, mais il reste des users dans le spaces
         return this.users.size === 0 && this.clientWatchers.size === 0;
     }
 
