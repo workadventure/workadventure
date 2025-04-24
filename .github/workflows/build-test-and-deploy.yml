@@ -338,9 +338,9 @@ jobs:
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'release') ||
         (github.event_name == 'pull_request' && 
-         (github.event.pull_request.labels | contains('deploy') || 
-          github.event.pull_request.labels | contains('build') || 
-          github.event.pull_request.labels | contains('linked_to_saas_branch')))
+         (contains(github.event.pull_request.labels.*.name, 'deploy') || 
+          contains(github.event.pull_request.labels.*.name, 'build') || 
+          contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')))
       }}
     runs-on: ubuntu-latest
     needs:
@@ -349,6 +349,18 @@ jobs:
       - build-uploader
       - build-map-storage
     steps:
+      - name: Debug conditions
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Is push to main: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}"
+          echo "Is release: ${{ github.event_name == 'release' }}"
+          echo "Is PR: ${{ github.event_name == 'pull_request' }}"
+          echo "PR labels: ${{ toJson(github.event.pull_request.labels.*.name) }}"
+          echo "Has deploy label: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}"
+          echo "Has build label: ${{ contains(github.event.pull_request.labels.*.name, 'build') }}"
+          echo "Has linked_to_saas_branch label: ${{ contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch') }}"
+          echo "Final condition result: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'release') || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}"
       - name: Set target branch for GitLab pipeline
         id: set-ref
         run: |
