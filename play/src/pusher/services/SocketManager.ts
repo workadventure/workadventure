@@ -682,6 +682,11 @@ export class SocketManager implements ZoneEventListener {
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
+
+        console.log(
+            `handleSetPlayerDetails new status : ${playerDetailsMessage.availabilityStatus} //// old status : ${socketData.spaceUser.availabilityStatus}`
+        );
+
         if (
             socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
             playerDetailsMessage.availabilityStatus !== 0
@@ -1241,6 +1246,13 @@ export class SocketManager implements ZoneEventListener {
         const message = noUndefined(updateSpaceUserMessage);
         const socketData = client.getUserData();
         const toUpdateValues = applyFieldMask(message.user, message.updateMask);
+        console.log(
+            `handleUpdateSpaceUser ${message.spaceName} => ${message.user.spaceUserId} => ${message.updateMask.join(
+                ", "
+            )} //// new status : ${message.user.availabilityStatus} ---- old status : ${
+                socketData.spaceUser.availabilityStatus
+            }`
+        );
         merge(socketData.spaceUser, toUpdateValues);
         this.checkClientIsPartOfSpace(client, message.spaceName);
         const space = this.spaces.get(message.spaceName);
