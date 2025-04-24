@@ -1089,9 +1089,129 @@ export class AreasPropertiesListener {
 
     private handleOpenPdfOnEnter(property: OpenPdfPropertyData): void {
         console.log("handleOpenPdfOnEnter");
+        if (!property.link) {
+            return;
+        }
+
+        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+
+        if (this.openedCoWebsites.has(property.id)) {
+            return;
+        }
+
+        const coWebsiteOpen: OpenCoWebsite = {
+            actionId: actionId,
+        };
+
+        this.openedCoWebsites.set(property.id, coWebsiteOpen);
+
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            let message = property.triggerMessage;
+            if (!message) {
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+            }
+
+            this.coWebsitesActionTriggers.set(property.id, actionId);
+
+            popupStore.addPopup(
+                PopupCowebsite,
+                {
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId
+            );
+        } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+            let url = property.link ?? "";
+            try {
+                url = scriptUtils.getWebsiteUrl(property.link ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
+            const coWebsite = new SimpleCoWebsite(
+                new URL(url, this.scene.mapUrlFile),
+                property.allowAPI,
+                property.policy,
+                property.width,
+                property.closable
+            );
+
+            coWebsiteOpen.coWebsite = coWebsite;
+
+            coWebsites.add(coWebsite);
+
+            //user in zone to open cowesite with only icon
+            inOpenWebsite.set(true);
+        }
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+        }
     }
 
     private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
         console.log("handleOpenPdfOnLeave");
+        const openWebsiteProperty: string | null = property.link;
+
+        if (!openWebsiteProperty) {
+            return;
+        }
+
+        const coWebsiteOpen = this.openedCoWebsites.get(property.id);
+
+        if (coWebsiteOpen) {
+            const coWebsite = coWebsiteOpen.coWebsite;
+
+            if (coWebsite) {
+                coWebsites.remove(coWebsite);
+            }
+        }
+
+        this.openedCoWebsites.delete(property.id);
+
+        inOpenWebsite.set(false);
+
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            return;
+        }
+
+        const actionStore = get(popupStore);
+        const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
+        if (!actionTriggerUuid) {
+            return;
+        }
+
+        const action =
+            actionStore && actionStore.length > 0
+                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                : undefined;
+
+        if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+        }
+
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         const actionStore = get(layoutManagerActionStore);
+         const action =
+         actionStore && actionStore.length > 0
+         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+         : undefined;
+
+         if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+         }
+         */
+
+        this.coWebsitesActionTriggers.delete(property.id);
     }
 }

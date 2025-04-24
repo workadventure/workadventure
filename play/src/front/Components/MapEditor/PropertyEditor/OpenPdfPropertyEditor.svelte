@@ -15,6 +15,7 @@
 
     let selectedFile: File | null = null;
     let fileToUpload: UploadFileMessage | undefined = undefined;
+    let files: FileList | undefined = undefined;
 
     async function handleFileChange(event: Event) {
         console.log("porperty", property);
@@ -46,6 +47,8 @@
             const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
             uploadFileCommand.emitEvent(roomConnection);
         }
+
+        property.link = "https://workadventure.com";
     }
 </script>
 
@@ -70,6 +73,6 @@
             <p>Fichier sélectionné : {selectedFile.name}</p>
         {/if}
 
-        <FileUpload />
+        <FileUpload {files} />
     </span>
 </PropertyEditorBase>
