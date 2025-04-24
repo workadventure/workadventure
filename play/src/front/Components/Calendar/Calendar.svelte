@@ -7,6 +7,7 @@
     import LL from "../../../i18n/i18n-svelte";
 
     import calendarSvg from "../images/applications/outlook.svg";
+    import ButtonClose from "../Input/ButtonClose.svelte";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -38,21 +39,32 @@
     }
 </script>
 
-<div class="calendar bg-dark-blue/95 select-text">
-    <div class="sidebar " in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-        <button class="close-window" data-testid="mapEditor-close-button" on:click={closeCalendar}>&#215;</button>
-
+<div class="calendar p-1 @md/actions:p-2  select-text">
+    <div
+        class="sidebar bg-contrast/80 rounded-lg backdrop-blur"
+        in:fly={{ x: 100, duration: 250, delay: 200 }}
+        out:fly={{ x: 100, duration: 200 }}
+    >
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
-                <h3 class="text-l text-left">
-                    <img draggable="false" src={calendarSvg} class="w-8 mx-2" alt={$LL.menu.icon.open.calendar()} />
-                    {new Date().toLocaleString("en-EN", {
-                        month: "long",
-                        day: "2-digit",
-                        year: "numeric",
-                    })} (beta)
-                </h3>
-                <h4 class="text-l text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                <div class="flex flex-row items-start justify-between">
+                    <h3 class="text-xl text-left">
+                        <img
+                            draggable="false"
+                            src={calendarSvg}
+                            class="w-8 mx-2 -mb-1"
+                            alt={$LL.menu.icon.open.calendar()}
+                        />
+                        {new Date().toLocaleString("en-EN", {
+                            month: "long",
+                            day: "2-digit",
+                            year: "numeric",
+                        })} (beta)
+                    </h3>
+                    <ButtonClose on:click={closeCalendar} />
+                </div>
+                <div class="bg-white/20 h-[1px] w-full my-2" />
+                <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
             <div class="flex flex-col justify-center gap-4">
                 {#if $calendarEventsStore.size > 0}
@@ -113,7 +125,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1.5em;
+            padding: 1em;
             width: 23em !important;
         }
     }

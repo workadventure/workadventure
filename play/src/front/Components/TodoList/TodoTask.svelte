@@ -1,9 +1,13 @@
 <script lang="ts">
     import { TodoTaskInterface } from "@workadventure/shared-utils";
     export let task: TodoTaskInterface;
+
+    export let oddColor: string | boolean = "odd:bg-white/5";
+    export let evenColor: string | boolean = false;
+
 </script>
 
-<div class="flex flex-col text-left p-2 hover:border-white hover:border hover:border-solid">
+<div class="flex flex-col text-left p-2 box-border hover:bg-white/15 transition-all {oddColor ?? ''} {evenColor ?? ''}">
     <p class="text-lg m-0 p-0" class:line-through={task.status === "completed"}>
         {task.title}
         {#if task.end}<span class="text-sm">({task.end.toLocaleDateString()})</span>{/if}
