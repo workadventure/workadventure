@@ -4,6 +4,8 @@
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
     import todoListPng from "../images/applications/todolist.png";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import TodoTask from "./TodoTask.svelte";
     import { IconArrowDown } from "@wa-icons";
 
@@ -23,6 +25,11 @@
         }
         totoListOpenedId.set(new Set($totoListOpenedId));
     }
+
+    function goToLoginPage() {
+        analyticsClient.login();
+        window.location.href = "/login";
+    }
 </script>
 
 <div class="totolist bg-dark-blue/95 select-text">
@@ -37,6 +44,17 @@
                 </h3>
             </div>
             <div class="flex flex-col justify-center gap-4">
+                {#if $userIsConnected}
+                    <div class="flex flex-col justify-center items-center">
+                        <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
+                        <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
+                        <button
+                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            on:click={goToLoginPage}
+                            >{$LL.menu.profile.login()}
+                        </button>
+                    </div>
+                {/if}
                 {#each [...$todoListsStore.entries()] as [key, todoList] (key)}
                     <div class="flex flex-col gap-2">
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
