@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { PersonalAreaPropertyData } from "@workadventure/map-editor";
     import { mapEditorAskToClaimPersonalAreaStore } from "../../Stores/MapEditorStore";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -34,7 +33,7 @@
         gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData").forEach((area) => {
             const property = area.areaData.properties.find(
                 (property) => property.type === "personalAreaPropertyData"
-            ) as PersonalAreaPropertyData | undefined;
+            );
             if (property !== undefined && property.ownerId === userUUID) {
                 // If the user already has a personal area, we do not allow him to claim another one
                 notificationPlayingStore.playNotification($LL.area.personalArea.alreadyHavePersonalArea());

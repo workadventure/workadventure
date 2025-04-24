@@ -154,6 +154,7 @@ function createSubMenusStore() {
          * Returns a translated menu item by its key.
          * Throw an error if the key was not found.
          */
+        // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
         findByKey(key: MenuKeys | string): MenuItem {
             const menuItem = get(store).find((menu) => menu.key === key);
             if (menuItem === undefined) {
@@ -454,6 +455,7 @@ function createOpenedMenuStore() {
 
 export const openedMenuStore = createOpenedMenuStore();
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export function showMenuItem(key: MenuKeys | string) {
     const menuItem = subMenusStore.findByKey(key);
     if (get(menuVisiblilityStore)) {

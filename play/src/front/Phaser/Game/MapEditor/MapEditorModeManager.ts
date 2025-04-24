@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import { Command, PersonalAreaPropertyData, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
@@ -496,7 +496,7 @@ export class MapEditorModeManager {
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
             const property = area.areaData.properties.find(
                 (property) => property.type === "personalAreaPropertyData"
-            ) as PersonalAreaPropertyData | undefined;
+            );
             if (!property || property.ownerId !== userUUID) continue;
 
             // The user already has a personal area, revoke it

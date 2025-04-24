@@ -3,7 +3,6 @@
         EntityDataProperties,
         EntityDataPropertiesKeys,
         EntityDataProperty,
-        EntityDescriptionPropertyData,
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
@@ -46,8 +45,8 @@
                     searchable: false,
                 });
             } else {
-                entityDescription = (descriptionProperty as EntityDescriptionPropertyData).description ?? "";
-                entitySearchable = (descriptionProperty as EntityDescriptionPropertyData).searchable ?? false;
+                entityDescription = descriptionProperty.description ?? "";
+                entitySearchable = descriptionProperty.searchable ?? false;
             }
         }
     });

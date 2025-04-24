@@ -1,5 +1,5 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import {get, Readable, Unsubscriber, Writable, writable} from "svelte/store";
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 // eslint-disable-next-line import/no-unresolved
@@ -10,26 +10,27 @@ import Debug from "debug";
 // eslint-disable-next-line import/no-unresolved
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
 // eslint-disable-next-line import/no-unresolved
-import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
-import { TurnCredentialsAnswer } from "@workadventure/messages";
+import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
+import {TurnCredentialsAnswer} from "@workadventure/messages";
+import {VideoType} from "lib-jitsi-meet/types/hand-crafted/service/RTC/VideoType";
 import {
     requestedCameraDeviceIdStore,
-    requestedMicrophoneDeviceIdStore,
     requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
     usedCameraDeviceIdStore,
     usedMicrophoneDeviceIdStore,
     videoConstraintStore,
 } from "../../Stores/MediaStore";
-import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
-import { gameManager } from "../../Phaser/Game/GameManager";
-import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
-import { notificationPlayingStore } from "../../Stores/NotificationStore";
-import { getIceServersConfig } from "../../Components/Video/utils";
-import { screenWakeLock } from "../../Utils/ScreenWakeLock";
-import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
-import { JitsiLocalTracks } from "./JitsiLocalTracks";
+import {liveStreamingEnabledStore} from "../../Stores/MegaphoneStore";
+import {gameManager} from "../../Phaser/Game/GameManager";
+import {requestedScreenSharingState} from "../../Stores/ScreenSharingStore";
+import {DeviceBroadcastable} from "../Common/ConferenceWrapper";
+import {notificationPlayingStore} from "../../Stores/NotificationStore";
+import {getIceServersConfig} from "../../Components/Video/utils";
+import {screenWakeLock} from "../../Utils/ScreenWakeLock";
+import {JitsiTrackWrapper} from "./JitsiTrackWrapper";
+import {JitsiLocalTracks} from "./JitsiLocalTracks";
 
 const debug = Debug("JitsiConferenceWrapper");
 
@@ -267,7 +268,7 @@ export class JitsiConferenceWrapper {
                     // TODO : Remove track that is stopped and update all other users
                     debug("local track stopped", track);
 
-                    if (track.isVideoTrack() && track.getVideoType() === "desktop") {
+                    if (track.isVideoTrack() && track.getVideoType() === VideoType.DESKTOP) {
                         requestedScreenSharingState.disableScreenSharing();
                     }
                 });
@@ -472,7 +473,7 @@ export class JitsiConferenceWrapper {
                             })
                         );
                     } else if (track.isVideoTrack()) {
-                        if (track.getVideoType() === "desktop") {
+                        if (track.getVideoType() === VideoType.DESKTOP) {
                             promises.push(
                                 this.handleTrack(this.tracks.screenSharing, track).then(() => {
                                     this.tracks.screenSharing = track;
@@ -613,7 +614,7 @@ export class JitsiConferenceWrapper {
                     jitsiTrackWrapper.muteAudio();
                 }
                 if (track.isVideoTrack()) {
-                    if (track.getVideoType() === "desktop") {
+                    if (track.getVideoType() === VideoType.DESKTOP) {
                         jitsiTrackWrapper.muteScreenSharing();
                     } else {
                         jitsiTrackWrapper.muteVideo();

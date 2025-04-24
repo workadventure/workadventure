@@ -26,7 +26,7 @@ module.exports = {
         project: "./tsconfig.json",
         extraFileExtensions: [".svelte"],
     },
-    plugins: ["@typescript-eslint", "rxjs"],
+    plugins: ["@typescript-eslint", "rxjs", "unused-imports"],
     overrides: [
         {
             files: ["*.svelte"],
@@ -57,6 +57,8 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/no-unsafe-enum-comparison": "off",
+        "@typescript-eslint/no-redundant-type-constituents": "off",
         "import/order": "error",
 
         "no-async-promise-executor": "error",
@@ -74,6 +76,7 @@ module.exports = {
         "import/no-named-as-default": "off",
         "import/no-named-as-default-member": "off",
         "svelte/no-ignored-unsubscribe": "error",
+        "unused-imports/no-unused-imports": "error",
     },
     settings: {
         /*"svelte3/typescript": () => require('typescript'),

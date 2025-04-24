@@ -157,7 +157,10 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
 
-        gameManager.logout().finally(() => window.location.assign(redirectUrl));
+        gameManager.logout().catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        }).finally(() => window.location.assign(redirectUrl));
     }
 
     /**

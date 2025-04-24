@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AvailabilityStatus,
     BackToPusherSpaceMessage,
     BanMessage,
     BanPlayerMessage,
@@ -17,56 +18,56 @@ import {
     GetMemberQuery,
     JoinRoomMessage,
     MemberData,
+    NonUndefinedFields,
+    noUndefined,
+    OauthRefreshTokenAnswer,
+    OauthRefreshTokenQuery,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEventFrontToPusher,
+    PublicEventFrontToPusher,
     PusherToBackMessage,
     PusherToBackSpaceMessage,
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
     SearchMemberAnswer,
-    SearchTagsAnswer,
     SearchMemberQuery,
+    SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
+    SpaceUser,
+    SubMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
-    SpaceUser,
-    noUndefined,
-    NonUndefinedFields,
-    PublicEventFrontToPusher,
-    PrivateEventFrontToPusher,
-    UpdateSpaceUserMessage,
-    OauthRefreshTokenQuery,
-    OauthRefreshTokenAnswer,
-    SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, { AxiosResponse, isAxiosError } from "axios";
-import { z } from "zod";
-import { WebSocket } from "uWebSockets.js";
-import { PusherRoom } from "../models/PusherRoom";
-import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
+import axios, {AxiosResponse, isAxiosError} from "axios";
+import {z} from "zod";
+import {WebSocket} from "uWebSockets.js";
+import {PusherRoom} from "../models/PusherRoom";
+import type {BackSpaceConnection, SocketData} from "../models/Websocket/SocketData";
 
-import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
-import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
-import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
-import { Space } from "../models/Space";
-import { UpgradeFailedData } from "../controllers/IoSocketController";
-import { eventProcessor } from "../models/eventProcessorInit";
-import { emitInBatch } from "./IoSocketHelpers";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { apiClientRepository } from "./ApiClientRepository";
-import { adminService } from "./AdminService";
-import { ShortMapDescription } from "./ShortMapDescription";
-import { matrixProvider } from "./MatrixProvider";
+import {ProtobufUtils} from "../models/Websocket/ProtobufUtils";
+import type {GroupDescriptor, UserDescriptor, ZoneEventListener} from "../models/Zone";
+import type {AdminConnection, AdminSocketData} from "../models/Websocket/AdminSocketData";
+import {EMBEDDED_DOMAINS_WHITELIST} from "../enums/EnvironmentVariable";
+import {Space} from "../models/Space";
+import {UpgradeFailedData} from "../controllers/IoSocketController";
+import {eventProcessor} from "../models/eventProcessorInit";
+import {emitInBatch} from "./IoSocketHelpers";
+import {clientEventsEmitter} from "./ClientEventsEmitter";
+import {gaugeManager} from "./GaugeManager";
+import {apiClientRepository} from "./ApiClientRepository";
+import {adminService} from "./AdminService";
+import {ShortMapDescription} from "./ShortMapDescription";
+import {matrixProvider} from "./MatrixProvider";
 
 const debug = Debug("socket");
 
@@ -666,7 +667,7 @@ export class SocketManager implements ZoneEventListener {
         const oldStatus = socketData.spaceUser.availabilityStatus;
         const newStatus = playerDetailsMessage.availabilityStatus;
 
-        if (newStatus !== oldStatus && newStatus !== 0) {
+        if (newStatus !== oldStatus && newStatus !== AvailabilityStatus.UNCHANGED) {
             fieldMask.push("availabilityStatus");
             socketData.spaceUser.availabilityStatus = newStatus;
         }
@@ -1381,7 +1382,7 @@ export class SocketManager implements ZoneEventListener {
             if (isAxiosError(error) && error.response?.status === 999) {
                 emitAnswerMessage(true, false);
             } else {
-                debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                debug(`SocketManager => embeddableUrl : ${url} ${JSON.stringify(error)}`);
                 // If the URL is not reachable, we send a message to the client
                 // Catch is used to avoid crash if the client is disconnected
                 try {

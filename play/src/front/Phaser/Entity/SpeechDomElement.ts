@@ -43,7 +43,13 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         const textTransformed = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
         const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
-        span.innerHTML = textMarked.toString();
+        if (textMarked instanceof Promise) {
+            textMarked.then((resolvedText) => {
+                span.innerHTML = resolvedText;
+            }).catch(e => console.error(e));
+        } else {
+            span.innerHTML = textMarked;
+        }
         span.id = `spanText-${id}`;
         span.classList.add("characterTriggerAction");
         span.addEventListener("click", callback);

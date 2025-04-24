@@ -21,6 +21,7 @@ export interface ChatUser {
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
 
 export enum ChatPermissionLevel {

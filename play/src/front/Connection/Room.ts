@@ -38,7 +38,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
-    private _metadata: unknown | undefined;
+    private _metadata: unknown;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;

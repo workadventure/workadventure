@@ -97,7 +97,7 @@ export class IoSocketController {
                             console.error(err.issues);
                             Sentry.captureException(err.issues);
                         }
-                        Sentry.captureException(`Invalid message received. ${message}`);
+                        Sentry.captureException(`Invalid message received. ${JSON.stringify(message)}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -930,6 +930,7 @@ export class IoSocketController {
                                     error: {
                                         message:
                                             error !== null && typeof error === "object"
+                                                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                                                 ? error.toString()
                                                 : typeof error === "string"
                                                 ? error

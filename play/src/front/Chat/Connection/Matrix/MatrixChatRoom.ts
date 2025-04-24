@@ -184,7 +184,7 @@ export class MatrixChatRoom
         });
 
         const result = await Promise.all(decryptMessagesPromises);
-        const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+        const messages = result.filter((message) => message !== undefined);
         this.messages.push(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -455,7 +455,7 @@ export class MatrixChatRoom
 
             const result = await Promise.all(tempMatrixChatMessages);
 
-            const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+            const messages = result.filter((message) => message !== undefined);
             this.messages.unshift(...messages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (messages.length === 0) {

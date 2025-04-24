@@ -6,7 +6,7 @@
 
     export let authSessionId;
     export let matrixClient: MatrixClient;
-    export let onPhaseChange: (nextStage: number) => void;
+    export let onPhaseChange: (nextStage: INTERACTIVE_AUTH_PHASE) => void;
     export let onCancel: () => void;
     export let submitAuthDict: (auth: AuthDict) => void;
     export let errorText: string | undefined = undefined;

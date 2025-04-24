@@ -1,13 +1,14 @@
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
-import { Subscription } from "rxjs";
-import { Deferred } from "ts-deferred";
-import { SoundMeter } from "../../Phaser/Components/SoundMeter";
-import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-import { TrackWrapper } from "../Common/TrackWrapper";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
-import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
+import {Readable, readable, Unsubscriber, Writable, writable} from "svelte/store";
+import {Subscription} from "rxjs";
+import {Deferred} from "ts-deferred";
+import {VideoType} from "lib-jitsi-meet/types/hand-crafted/service/RTC/VideoType";
+import {SoundMeter} from "../../Phaser/Components/SoundMeter";
+import {highlightedEmbedScreen} from "../../Stores/HighlightedEmbedScreenStore";
+import {TrackWrapper} from "../Common/TrackWrapper";
+import {SpaceUserExtended} from "../../Space/SpaceFilter/SpaceFilter";
+import {JitsiTrackStreamWrapper} from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper implements TrackWrapper {
     /**
@@ -112,7 +113,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
         } else if (jitsiTrack.isVideoTrack()) {
             // The jitsiTrack.getVideoType() return is a lie.
             // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
-            if (jitsiTrack.getVideoType() === "desktop") {
+            if (jitsiTrack.getVideoType() === VideoType.DESKTOP) {
                 const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
                 if (oldScreenSharingTrack != undefined) {
                     if (!allowOverride) {
@@ -137,7 +138,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
                     if (
                         this.cameraTrackWrapper.getVideoTrack() === jitsiTrack &&
-                        jitsiTrack.getVideoType() === "desktop"
+                        jitsiTrack.getVideoType() === VideoType.DESKTOP
                     ) {
                         const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
                         if (oldScreenSharingTrack != undefined) {

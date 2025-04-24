@@ -109,8 +109,7 @@ export const cameraResistanceModeStore = derived(
     }
 );
 
-export type CustomTag = "Custom";
-export type SelectableTag = string | CustomTag | undefined;
+export type SelectableTag = string | undefined;
 export const selectCategoryStore = writable<SelectableTag>(undefined);
 
 export const mapEditorRestrictedPropertiesStore = writable<string[]>([]);

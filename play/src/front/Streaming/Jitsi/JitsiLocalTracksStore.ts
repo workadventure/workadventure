@@ -3,14 +3,15 @@
 // - a webcam or microphone is up
 // - at least one Jitsi conference requires to be broadcast
 
-import { derived, Readable } from "svelte/store";
+import {derived, Readable} from "svelte/store";
 // eslint-disable-next-line import/no-unresolved
-import { CreateLocalTracksOptions } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
-import { failure, Result, success } from "@workadventure/map-editor";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
-import { jitsiConferencesStore } from "./JitsiConferencesStore";
-import { JitsiLocalTracks } from "./JitsiLocalTracks";
+import {CreateLocalTracksOptions} from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
+import {failure, Result, success} from "@workadventure/map-editor";
+import {VideoType} from "lib-jitsi-meet/types/hand-crafted/service/RTC/VideoType";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
+import {DeviceBroadcastable} from "../Common/ConferenceWrapper";
+import {jitsiConferencesStore} from "./JitsiConferencesStore";
+import {JitsiLocalTracks} from "./JitsiLocalTracks";
 
 /**
  * This stores is aggregating the broadcastDevicesStore of all Jitsi conferences.
@@ -114,7 +115,7 @@ export const jitsiLocalTracksStore = derived<
                 if (track.isAudioTrack()) {
                     tracks.audio = track;
                 } else if (track.isVideoTrack()) {
-                    if (track.getVideoType() === "desktop") {
+                    if (track.getVideoType() === VideoType.DESKTOP) {
                         tracks.screenSharing = track;
                     } else {
                         tracks.video = track;

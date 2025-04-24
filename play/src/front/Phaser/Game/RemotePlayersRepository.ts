@@ -1,11 +1,15 @@
-import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
-import { availabilityStatusToJSON } from "@workadventure/messages";
-import { Deferred } from "ts-deferred";
-import type { MessageUserJoined } from "../../Connection/ConnexionModels";
-import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
-import { iframeListener } from "../../Api/IframeListener";
-import { RoomConnection } from "../../Connection/RoomConnection";
-import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import {
+    AvailabilityStatus,
+    availabilityStatusToJSON,
+    PlayerDetailsUpdatedMessage,
+    UserMovedMessage
+} from "@workadventure/messages";
+import {Deferred} from "ts-deferred";
+import type {MessageUserJoined} from "../../Connection/ConnexionModels";
+import type {AddPlayerEvent} from "../../Api/Events/AddPlayerEvent";
+import {iframeListener} from "../../Api/IframeListener";
+import {RoomConnection} from "../../Connection/RoomConnection";
+import {debugAddPlayer, debugRemovePlayer} from "../../Utils/Debuggers";
 
 export interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
@@ -136,7 +140,7 @@ export class RemotePlayersRepository {
             player.showVoiceIndicator = details.showVoiceIndicator;
             updateStruct.updated.showVoiceIndicator = true;
         }
-        if (details.availabilityStatus !== 0) {
+        if (details.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             player.availabilityStatus = details.availabilityStatus;
             updateStruct.updated.availabilityStatus = true;
         }

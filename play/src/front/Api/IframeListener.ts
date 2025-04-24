@@ -307,7 +307,7 @@ class IframeListener {
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
                         } else if (typeof reason === "object") {
-                            reasonMsg = reason ? reason.toString() : "";
+                            reasonMsg = reason ? JSON.stringify(reason) : "";
                         } else if (typeof reason === "string") {
                             reasonMsg = reason;
                         }

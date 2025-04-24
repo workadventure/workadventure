@@ -36,7 +36,7 @@
                 searchAccessibleRooms();
             }
 
-            userProviderMerger.setFilter($chatSearchBarValue).finally(() => {
+            userProviderMerger.setFilter($chatSearchBarValue).catch(e => console.error(e)).finally(() => {
                 searchLoader = false;
             });
         }, DONE_TYPING_INTERVAL);
@@ -47,6 +47,7 @@
             .then((chatRooms: { id: string; name: string | undefined }[]) => {
                 joignableRoom.set(chatRooms);
             })
+            .catch(e => console.error(e))
             .finally(() => {
                 searchLoader = false;
             });

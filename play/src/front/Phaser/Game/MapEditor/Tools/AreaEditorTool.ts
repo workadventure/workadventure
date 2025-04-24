@@ -340,7 +340,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const mode = get(mapEditorAreaModeStore);
-        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
+        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj))).sort(
             (a1, a2) => {
                 return a1.getSize() - a2.getSize();
             }
@@ -459,8 +459,8 @@ export class AreaEditorTool extends MapEditorTool {
     private getAreaEditorToolObjectsFromGameObjects(
         gameObjects: Phaser.GameObjects.GameObject[]
     ): (AreaPreview | SizeAlteringSquare)[] {
-        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[];
-        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj)) as SizeAlteringSquare[];
+        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
+        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
         return [...areaPreviews, ...sizeAlteringSquares];
     }
 
