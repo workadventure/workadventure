@@ -39,9 +39,9 @@
     }
 </script>
 
-<div class="calendar p-1 @md/actions:p-2  select-text">
+<div class="calendar p-1 @md/actions:p-2 max-h-screen select-text flex">
     <div
-        class="sidebar bg-contrast/80 rounded-lg backdrop-blur"
+        class="sidebar p-2 [&>*]:p-1 max-h-full bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
     >
@@ -76,7 +76,7 @@
                             </div>
                             <div
                                 id={`event-id-${eventId}`}
-                                class="flex flex-col justify-center p-2 bg-dark-blue/90 rounded-md"
+                                class="flex flex-col justify-center p-2 bg-white/5 border border-white/10 border-solid rounded-md"
                             >
                                 <div class="flex flex-col justify-between items-center">
                                     <h4 class="text-l text-left font-bold">{event.title}</h4>
@@ -87,7 +87,7 @@
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
                                             on:click|preventDefault|stopPropagation={() => openMeeting(event)}
-                                            class="text-xs text-right"
+                                            class="text-xs text-right text-secondary-500"
                                             target="_blank">Click here to join the meeting</a
                                         >
                                     {/if}
@@ -125,8 +125,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1em;
-            width: 23em !important;
         }
     }
 </style>
