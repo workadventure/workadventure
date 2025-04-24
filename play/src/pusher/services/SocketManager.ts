@@ -384,6 +384,7 @@ export class SocketManager implements ZoneEventListener {
                 spaceStreamToBackPromise = (async () => {
                     const cleanupSpaceStreamToBack = () => {
                         this.spaceStreamsToBack.delete(backId);
+                        console.log(`handleJoinSpace => spaceStreamToBackPromise => cleanupSpaceStreamToBack`);
                         for (const space of this.spaces.values()) {
                             if (space.backId === backId) {
                                 space.cleanup();
@@ -813,13 +814,14 @@ export class SocketManager implements ZoneEventListener {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
-            console.log(`Space ${space.name} is empty. Deleting.`);
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
+                console.log(`Space ${space.name} is empty. Deleting.`);
                 const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
                 if (spaceStreamBack) {
                     spaceStreamBack
                         .then((connection) => connection.end())
                         .catch((e) => console.error("ERROR WHILE CLOSING CONNECTION", e));
+                    console.log(`Space ${space.name} is empty. Deleting. spaceStreamBack ${spaceStreamBack}`);
                     this.spaceStreamsToBack.delete(space.backId);
                     debug("Connection to back %d useless. Ending.", space.backId);
                 }

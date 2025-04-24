@@ -1425,7 +1425,7 @@ export class SocketManager {
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
-            watcher.unwatchSpace(space.name);
+            //watcher.unwatchSpace(space.name);
         }
     }
 
@@ -1465,7 +1465,7 @@ export class SocketManager {
             if (space.canBeDeleted()) {
                 debug("[space] Space %s => deleted", space.name);
                 this.spaces.delete(space.name);
-                pusher.unwatchSpace(space.name);
+                //pusher.unwatchSpace(space.name);
             }
         }
     }
