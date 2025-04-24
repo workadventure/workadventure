@@ -120,7 +120,6 @@ export class Space implements CustomJsonReplacerInterface {
 
             if (usersList.size === 0) {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
-                console.log(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
             }
         } catch (e) {
@@ -162,9 +161,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     public addWatcher(watcher: SpacesWatcher) {
         this.users.set(watcher, new Map<string, SpaceUser>());
-        console.log(`${this.name} => watcher added ${watcher.id}`);
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
-        // Send all users to the new watcher
         for (const spaceUsers of this.users.values()) {
             for (const spaceUser of spaceUsers.values()) {
                 watcher.write({
@@ -198,7 +195,6 @@ export class Space implements CustomJsonReplacerInterface {
 
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
-        console.log(`${this.name} => watcher removed ${watcher.id}`);
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
@@ -237,7 +233,6 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",

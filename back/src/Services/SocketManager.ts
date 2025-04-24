@@ -1405,11 +1405,7 @@ export class SocketManager {
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
-        //TODO : voir si on arrive jusqu'ici et si on ne supprime pas le watcher avant donc pas de fermeture de la connexion
-        //TODO : dans la logique c'est le pusher qui donne l'information au back qui ne suit plus aucun space
-        //TODO : peut etre que les delete au moment des can be deleted sont fait trop tot
         pusher.spacesWatched.forEach((spaceName) => {
-            console.log(`handleUnwatchAllSpaces ${pusher.id} => ${spaceName}`);
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error("Cant unwatch space, space not found");
@@ -1432,9 +1428,6 @@ export class SocketManager {
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
         const space = this.spaces.get(addSpaceUserMessage.spaceName);
         if (space && addSpaceUserMessage.user) {
-            console.log(
-                `${space.name} => adding user ${addSpaceUserMessage.user.name} / ${addSpaceUserMessage.user.spaceUserId}`
-            );
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
@@ -1460,7 +1453,6 @@ export class SocketManager {
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
-            console.log(`${space.name} => removing user ${removeSpaceUserMessage.spaceUserId}`);
             space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
             if (space.canBeDeleted()) {
                 debug("[space] Space %s => deleted", space.name);

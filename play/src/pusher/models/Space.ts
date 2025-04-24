@@ -96,15 +96,12 @@ export class Space {
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user add sent ${spaceUser.spaceUserId}`);
-        console.log(`${this.name} : user add sent ${spaceUser.spaceUserId} / ${spaceUser.name}`);
         this.localAddUser(spaceUser, client);
     }
 
     public localAddUser(spaceUser: SpaceUser, client: Socket | undefined) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase(), client };
         this.users.set(spaceUser.spaceUserId, user);
-
-        console.log(`${this.name} : user added (local) ${spaceUser.spaceUserId}. User count ${this.users.size}`);
         debug(`${this.name} : user added ${spaceUser.spaceUserId}. User count ${this.users.size}`);
 
         const subMessage: SubMessage = {
@@ -176,14 +173,12 @@ export class Space {
 
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user remove sent ${spaceUserId}`);
-        console.log(`${this.name} : user remove sent ${spaceUserId}`);
         this.localRemoveUser(spaceUserId);
     }
     public localRemoveUser(spaceUserId: string) {
         const user = this.users.get(spaceUserId);
         if (user) {
             this.users.delete(spaceUserId);
-            console.log(`${this.name} : user removed (local) ${spaceUserId}. User count ${this.users.size}`);
             debug(`${this.name} : user removed ${spaceUserId}. User count ${this.users.size}`);
 
             const subMessage: SubMessage = {
@@ -457,9 +452,6 @@ export class Space {
     }
 
     public isEmpty() {
-        console.log(`Sapce ${this.name} : isEmpty users : ${this.users.size} / watchers : ${this.clientWatchers.size}`);
-        //TODO : si on ne supprime jamais les spaces parce que notre pusher n'a plus de watcher, mais il reste des users dans le spaces
-        //return this.users.size === 0 && this.clientWatchers.size === 0;
         return this.clientWatchers.size === 0;
     }
 

@@ -52,12 +52,6 @@ export class SpacesWatcher {
     public unwatchSpace(spaceName: string) {
         this._spacesWatched = this._spacesWatched.filter((space) => space !== spaceName);
         debug(`SpacesWatcher ${this.id} => unwatch ${spaceName}`);
-        console.log(`SpacesWatcher ${this.id} => unwatch ${spaceName} ==> size : ${this._spacesWatched.length}`);
-        // voir si on garde des spacesWatcher que ne watch pas de space ==> on peut les supprimer
-        // probleme si on garde la connexion ouverte alors qu'on a deja supp la userlist on ne la recrée pas
-        // 1) soit on supprimer le watcher ==> creationn d'une nouvelle connexion a chaque fois
-        // 2) soit on garde le watcher et quand on a l'erreur on recrée la userlist
-        // 3) le message leave space coté pusher n'est pas envoyé au back ??
     }
 
     get spacesWatched(): string[] {
