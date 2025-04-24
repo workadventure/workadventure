@@ -8,7 +8,7 @@
     import { mapEditorFileUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import { IconCloudUpload } from "@wa-icons";
 
-    let files: FileList | undefined = undefined;
+    export let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let fileToUpload: EntityPrefab | undefined = undefined;
     let errorOnFile: string | undefined;
