@@ -1405,7 +1405,11 @@ export class SocketManager {
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
+        //TODO : voir si on arrive jusqu'ici et si on ne supprime pas le watcher avant donc pas de fermeture de la connexion
+        //TODO : dans la logique c'est le pusher qui donne l'information au back qui ne suit plus aucun space
+        //TODO : peut etre que les delete au moment des can be deleted sont fait trop tot
         pusher.spacesWatched.forEach((spaceName) => {
+            console.log(`handleUnwatchAllSpaces ${pusher.id} => ${spaceName}`);
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error("Cant unwatch space, space not found");

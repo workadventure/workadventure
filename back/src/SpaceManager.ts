@@ -90,12 +90,15 @@ const spaceManager = {
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);
                 Sentry.captureException(`Error on watchSpace ${JSON.stringify(e)}`);
+                //TODO : voir si on ne peut pas etre en erreur et garder la connection coté avec le pusher
+                //TODO : faire le scénario ou on est en error et on reçoit un message juste après
                 socketManager.handleUnwatchAllSpaces(pusher);
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);
                 pusher.end();
                 debug("watchSpace => ended %s", pusher.id);
+                console.log(`watchSpace => ended ${pusher.id}`);
                 call.end();
             });
     },

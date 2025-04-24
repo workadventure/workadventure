@@ -813,6 +813,7 @@ export class SocketManager implements ZoneEventListener {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
+            console.log(`Space ${space.name} is empty. Deleting.`);
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
                 const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
                 if (spaceStreamBack) {
