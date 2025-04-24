@@ -7,7 +7,6 @@
     export let label: string | undefined = undefined;
     export let tooltipTitle = "";
     export let tooltipDesc = "";
-    export let tooltipImage = false;
     export let disabledHelp = false;
     export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
     export let dataTestId: string | undefined = undefined;
@@ -33,8 +32,6 @@
     export let last: boolean | undefined = undefined;
     // Can be used to force the context. If not set, the context is deduced from the "inMenu" Svelte context.
     export let context: "actionBar" | "menu" | undefined = undefined;
-    export let showToolTipCondition: boolean | undefined = undefined;
-    export let toolTipDelay = 500;
 
     $: isInMenu = context !== undefined ? context === "menu" : getContext("inMenu");
 
@@ -100,7 +97,7 @@
             {#if label}<span>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} delayBeforeAppear={toolTipDelay} />
+            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} />
         {/if}
     </div>
 {:else}

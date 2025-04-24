@@ -6,7 +6,7 @@
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
-    import { navChat, showChatButtonTooltip, showUserListTooltip } from "./Stores/ChatStore";
+    import { navChat } from "./Stores/ChatStore";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement;
@@ -27,7 +27,6 @@
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "c") {
             if (!isChatEnabled) {
-                showChatButtonTooltip();
                 return;
             }
             if ($navChat.key === "users" && $chatVisibilityStore) {
@@ -40,7 +39,6 @@
             }
         } else if (e.key === "u") {
             if (!isUserListEnabled) {
-                showUserListTooltip();
                 return;
             }
             if (!$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
