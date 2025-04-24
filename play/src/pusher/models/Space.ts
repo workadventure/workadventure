@@ -170,6 +170,7 @@ export class Space {
                 },
             },
         };
+
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user remove sent ${spaceUserId}`);
         this.localRemoveUser(spaceUserId);
@@ -451,7 +452,7 @@ export class Space {
     }
 
     public isEmpty() {
-        return this.users.size === 0 && this.clientWatchers.size === 0;
+        return this.clientWatchers.size === 0;
     }
 
     public sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {

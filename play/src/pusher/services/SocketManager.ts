@@ -552,6 +552,7 @@ export class SocketManager implements ZoneEventListener {
                     },
                 });
             }
+
             space.addClientWatcher(client);
 
             space.addUser(socketData.spaceUser, client);
@@ -561,6 +562,7 @@ export class SocketManager implements ZoneEventListener {
                     new Error(`User ${socketData.name} is trying to join a space he is already in.`)
                 );
             }
+
             socketData.spaces.add(space.name);
 
             // Notify the client of the space metadata
@@ -672,21 +674,26 @@ export class SocketManager implements ZoneEventListener {
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
-        if (
-            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
-            playerDetailsMessage.availabilityStatus !== 0
-        ) {
+        const oldStatus = socketData.spaceUser.availabilityStatus;
+        const newStatus = playerDetailsMessage.availabilityStatus;
+
+        if (newStatus !== oldStatus && newStatus !== 0) {
             fieldMask.push("availabilityStatus");
+            socketData.spaceUser.availabilityStatus = newStatus;
         }
-        if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
+
+        if (playerDetailsMessage.chatID !== socketData.spaceUser.chatID && playerDetailsMessage.chatID !== "") {
             fieldMask.push("chatID");
+            socketData.spaceUser.chatID = playerDetailsMessage.chatID;
         }
+
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 spaceUserId: socketData.spaceUser.spaceUserId,
                 chatID: playerDetailsMessage.chatID,
             });
+
             socketData.spaces.forEach((spaceName) => {
                 const space = this.spaces.get(spaceName);
                 if (space) {
@@ -804,6 +811,7 @@ export class SocketManager implements ZoneEventListener {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
+
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
                 const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
                 if (spaceStreamBack) {
