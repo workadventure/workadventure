@@ -9,6 +9,7 @@ import {
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
     ENABLE_OPENID,
+    ENABLE_SAY,
     OPID_WOKA_NAME_POLICY,
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
@@ -46,6 +47,7 @@ export class Room {
     private _enableChatUpload: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
+    private _enableSay: boolean | undefined;
     private _legals: LegalsData | undefined;
     private _backgroundColor: string | undefined;
     private _primaryColor: string | undefined;
@@ -183,7 +185,7 @@ export class Room {
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =
                     (data.enableChatDisconnectedList ?? true) && ENABLE_CHAT_DISCONNECTED_LIST;
-
+                this._enableSay = (data.enableSay ?? true) && ENABLE_SAY;
                 this._iconClothes = data.customizeWokaScene?.clothesIcon ?? undefined;
                 this._iconAccessory = data.customizeWokaScene?.accessoryIcon ?? undefined;
                 this._iconBody = data.customizeWokaScene?.bodyIcon ?? undefined;
@@ -350,6 +352,13 @@ export class Room {
             return true;
         }
         return this._enableChatDisconnectedList;
+    }
+
+    get isSayEnabled(): boolean {
+        if (this._enableSay === undefined) {
+            return true;
+        }
+        return this._enableSay;
     }
 
     get legals(): LegalsData | undefined {
