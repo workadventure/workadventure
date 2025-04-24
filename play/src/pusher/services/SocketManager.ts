@@ -682,26 +682,26 @@ export class SocketManager implements ZoneEventListener {
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
+        const oldStatus = socketData.spaceUser.availabilityStatus;
+        const newStatus = playerDetailsMessage.availabilityStatus;
 
-        console.log(
-            `handleSetPlayerDetails new status : ${playerDetailsMessage.availabilityStatus} //// old status : ${socketData.spaceUser.availabilityStatus}`
-        );
-
-        if (
-            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
-            playerDetailsMessage.availabilityStatus !== 0
-        ) {
+        if (newStatus !== oldStatus && newStatus !== 0) {
             fieldMask.push("availabilityStatus");
+            socketData.spaceUser.availabilityStatus = newStatus;
         }
-        if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
+
+        if (playerDetailsMessage.chatID !== socketData.spaceUser.chatID && playerDetailsMessage.chatID !== "") {
             fieldMask.push("chatID");
+            socketData.spaceUser.chatID = playerDetailsMessage.chatID;
         }
+
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 spaceUserId: socketData.spaceUser.spaceUserId,
                 chatID: playerDetailsMessage.chatID,
             });
+
             socketData.spaces.forEach((spaceName) => {
                 const space = this.spaces.get(spaceName);
                 if (space) {
