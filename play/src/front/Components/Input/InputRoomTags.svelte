@@ -39,6 +39,10 @@
     }
 </script>
 
-<div>
-    <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props} />
+<div class="flex flex-col w-full">
+    <div>
+        <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props}>
+            <span slot="info"> <slot name="info" /> </span>
+        </InputTags>
+    </div>
 </div>

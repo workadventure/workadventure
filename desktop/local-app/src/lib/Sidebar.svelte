@@ -21,7 +21,7 @@
         return serverColors[i % serverColors.length];
     }
 
-    $: serverWithSelection = $servers.map((s) => ({ ...s, isSelected: $selectedServer === s._id }))
+    $: serverWithSelection = $servers.map((s) => ({ ...s, isSelected: $selectedServer === s._id }));
 
     onMount(async () => {
         await loadServers();
@@ -37,8 +37,12 @@
                     class={`w-16 h-16 p-1 rounded-md flex cursor-pointer text-light-50 border-4 border-transparent text-gray-200 hover:text-gray-500`}
                     class:bg-gray-400={server.isSelected}
                 >
-                    <div class={`flex w-full h-full text-center items-center justify-center rounded-md ${getServerColor(i)}`}>
-                        {server.name.slice(0,2).toLocaleUpperCase()}
+                    <div
+                        class={`flex w-full h-full text-center items-center justify-center rounded-md ${getServerColor(
+                            i
+                        )}`}
+                    >
+                        {server.name.slice(0, 2).toLocaleUpperCase()}
                     </div>
                 </div>
             </Link>
@@ -49,10 +53,7 @@
         class="flex justify-center items-center text-4xl no-underline text-gray-200 cursor-pointer hover:text-gray-500"
         >+</Link
     >
-    <Link
-        to="/settings"
-        class="flex mt-auto mb-4 justify-center items-center text-4xl no-underline cursor-pointer"
-    >
+    <Link to="/settings" class="flex mt-auto mb-4 justify-center items-center text-4xl no-underline cursor-pointer">
         <CogIcon width="30" height="30" class="fill-gray-200 hover:fill-gray-500" />
     </Link>
     {#if isDevelopment}

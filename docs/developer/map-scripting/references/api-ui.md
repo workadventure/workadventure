@@ -314,34 +314,45 @@ const website = await WA.ui.website.getById(websiteId);
 
 ```ts
 WA.ui.modal.openModal({
-    title: string,// mandatory, title of the iframe modal.
-    src: string, // mandatory, url of the iframe modal.
-    allow?: string, // optional by default null.
+    src: string,
+    allow?: string,
     allowApi?: boolean, // optional by default false.
-    position?: string, // optional by default right. Reference for position: center / left / right.
-    closeCallback?: Function // optionall, function when the user close the modal.
+    position?: string,
+    allowFullScreen?: boolean,
+    title: string,
+    closeCallback?: (event: ModalEvent) => void
 }): void
 ```
 
+- `src` (string, **mandatory**): the URL of the iframe modal (mandatory).
+- `allow` (string, *optional*, default ""): the list of [permission policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Permissions_Policy) allowed.
+- `allowApi` (boolean, *optional*, default `false`): if set to `true`, the iframe will be able to use the scripting API.
+- `position` (string, *optional*, default `right`): the position of the modal. Possible values are `center`, `left`, `right`.
+- `allowFullScreen` (boolean, *optional*, default `true`): if set to `false`, the "fullscreen" button next to the close button will be hidden.
+- `title`: the title of the iframe (note: this is mostly useless since the title is not displayed).
+- `closeCallback` (function, *optional*): a function that will be called when the modal is closed. The function will be passed the `ModalEvent` object used to configure the modal.
 
 ### Example
+
+Opening a modal in the center of the screen:
 
 ```ts
 WA.ui.modal.openModal({
     title: "WorkAdventure website",
     src: 'https://workadventu.re',
-    allow: "fullscreen",
+    allow: "geolocation",
     allowApi: true,
     position: "center",
+    allowFullScreen: false,
     () => {
         console.info('The modal was closed');
     }
 });
 ```
 
-Open modal to the center position:
-
 ![Modal Center](../images/modal/modal-center.png)
+
+Opening a modal on the right side:
 
 ```ts
     WA.ui.modal.openModal({
@@ -352,11 +363,9 @@ Open modal to the center position:
     });
 ```
 
-Open modal to the right position:
-
 ![Modal Right](../images/modal/modal-right.png)
 
-Open modal to the left position:
+Opening a modal on the left side:
 
 ```ts
     WA.ui.modal.openModal({
@@ -384,69 +393,66 @@ WA.ui.modal.closeModal(): void
 
 ### Add a button in the action bar
 
-#### Classic button
 ```ts
 WA.ui.actionBar.addButton(descriptor: {
     id: string,
-    label: string,
-    clickCallback: (buttonActionBar: AddButtonActionBar) => void
-}): void
-```
-
-#### Action button
-```ts
-WA.ui.actionBar.addButton(descriptor: {
-    id: string,
-    type: 'action',
-    imageSrc: string,
-    toolTip: string,
+    label: string | undefined,
+    imageSrc: string | undefined,
+    toolTip: string | undefined, 
+    // Specifies the background color of the button. This parameter is nullable.
+    bgColor: string | undefined,
+    // Specifies the text color of the button. This parameter is nullable.
+    textColor: string | undefined,
+    // Specifies the background color of the button. This parameter is nullable.
+    isGradient: boolean | undefined,
     clickCallback: (buttonActionBar: AddButtonActionBar) => void
 }): void
 ```
 
 - id: the id of the button action bar defined.
 - label: the label to display in the button.
-- type: the type of button ('button' / 'action'). By default is 'button'.
-- imageSrc: image of button associated.
+- imageSrc: URL of the button's image (relative to the map file).
 - toolTip: label displayed above the action button.
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
 ```ts
-/**
- * Ennum of button type
- */
-const ActionBarButtonType = {
-    button: "button",
-    action: "action",
-} as const;
-type ActionBarButtonType = typeof ActionBarButtonType[keyof typeof ActionBarButtonType];
-
 interface AddButtonActionBar {
     /*
-    *   the id of the button action bar defined.
-    */
+     *   the id of the button action bar defined.
+     */
     id: string,
 
     /*
-    *   the label to display in button action bar.
-    */
+     *   the label to display in button action bar.
+     */
     label: string
 
     /*
-    *   the type of button ('button' / 'action'). By default is 'button'.
-    */
-    type: ActionBarButtonType,
-
-    /*
-    *  the image of button associated, This parameter is nullable.
-    */
+     *  the image of button associated, This parameter is nullable.
+     */
     imageSrc: string
 
     /*
-    *   the label displayed above the action button. This parameter is nullable.
-    */
+     *   the label displayed above the action button. This parameter is nullable.
+     */
     toolTip: string
+  
+    /*
+     *   specifies the background color of the button. This parameter is nullable.
+     */
+    bgColor: string
+
+    /*
+     *   specifies the button text color. This parameter can be null.    
+     */
+    textColor: string
+
+    /*
+     *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
+     */
+    isGradient: boolean
+  
 }
 ```
 
@@ -456,39 +462,46 @@ interface AddButtonActionBar {
 ```
 - id: the id of the action bar button previously defined.
 
-### Example of an action bar button
+### Example of an icon only action bar button
+
+![Action Bar Button](../images/action_bar/button-action.png)
+
 ```ts
     // Add action bar button 'Register'.
     WA.ui.actionBar.addButton({
-        id: 'register-btn',
-        label: 'Register',
-        callback: (event) => {
-            console.log('Button clicked', event);
-            // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('register-btn');
-        }
-    });
-```
-
-![Action Bar Button](../images/action_bar/button_action_bar.png)
-
-### Example of an action bar for action button
-```ts
-    // Add action bar button 'Register'.
-    WA.ui.actionBar.addButton({
-        id: 'register-btn',
-        type: 'action',
+        id: 'icon-btn',
         imageSrc: '<Your image url>',
-        toolTip: 'Register',
+        toolTip: 'Click me',
         callback: (event) => {
             console.log('Button clicked', event);
             // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('register-btn');
+            WA.ui.actionBar.removeButton('icon-btn');
         }
     });
 ```
 
-![Action Bar Button](../images/action_bar/action_button_action_bar.png)
+### Example of an action bar button with gradient
+
+![Action Bar Button](../images/action_bar/button-gradient.png)
+
+```ts
+    // Add action bar button 'Register'.
+    WA.ui.actionBar.addButton({
+        id: 'gradient-btn',
+        label: 'Register',
+        bgColor: '#edb911',
+        isGradient: true,
+        callback: (event) => {
+            console.log('Button clicked', event);
+            // When a user clicks on the action bar button 'Register', we remove it.
+            WA.ui.actionBar.removeButton('gradient-btn');
+        }
+    });
+```
+> Note that when the screen is too small, buttons are added to the right menu of the action bar. In this case, the button is displayed with an image and a tooltip, while for the gradient button, it retains its color and its text remains centered. 
+
+![Action Bar Button](../images/action_bar/button-in-menu.png)
+
 
 ## Open / Close banner
 
@@ -552,3 +565,50 @@ WA.ui.banner.openBanner({
 WA.ui.banner.closeBanner();
 ```
 
+## Play a video
+
+:::caution
+The "play a video" API is **experimental**. It means the compatibility with future versions of WorkAdventure is not
+guaranteed and we might break the signature of these methods at any moment. Use at your own risk.
+:::
+
+Plays a video. The video will be displayed as if it was a user talking to us.
+
+```ts
+WA.ui.playVideo(videoUrl: string, config: VideoConfig = {
+  loop: true,
+}): Promise<Video>;
+
+interface VideoConfig {
+  loop?: boolean;
+  name:? string;
+  avatar:? string;
+}
+```
+
+Arguments: 
+
+- `videoUrl`: the URL of the video to play.
+- `config`: an object with the following optional properties:
+  - `loop`: whether the video should loop or not. Default is `true`.
+  - `name`: The name displayed at the bottom left of the video.
+  - `avatar`: The avatar displayed at the bottom left of the video.
+
+Return value:
+
+- a `Promise` that resolves to a `Video` object. The `Video` object has a `stop` method that can be used to stop the video.
+
+```ts
+interface Video {
+  stop(): void;
+}
+```
+
+Example:
+
+```ts
+const video = await WA.ui.playVideo('https://example.com/video.mp4', { loop: true });
+
+// Later, stop the video
+await video.stop();
+```

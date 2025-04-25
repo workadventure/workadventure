@@ -75,14 +75,21 @@
 </script>
 
 <div
-    class="message-bubble tw-m-0 {hasDepth ? 'tw-text-xs tw-leading-4' : 'tw-text-sm'} tw-text-white tw-py-1 tw-px-2"
+    class="message-bubble m-0 {hasDepth ? 'text-xs leading-4' : 'text-sm'} text-white py-1 px-2"
     style="padding-top: 7px;"
     lang=""
 >
     {@html sanitizeHTML(html)}
     <style>
+        .response .message-bubble p:last-of-type {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+        }
         .message-bubble p:last-of-type {
-            margin-bottom: 0;
+            margin: 0;
         }
         .message-bubble a {
             text-decoration: underline;

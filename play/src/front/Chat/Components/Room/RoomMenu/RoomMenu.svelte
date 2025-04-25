@@ -78,15 +78,15 @@
     data-testid="toggleRoomMenu"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleRoomOptions}
-    class="tw-m-0 tw-p-0 tw-flex tw-items-center tw-justify-center tw-h-7 tw-w-7 tw-invisible group-hover/chatItem:tw-visible hover:tw-bg-white/10 tw-rounded-lg"
+    class="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
 >
     <IconDots font-size="16" />
 </button>
 <div
     on:mouseleave={toggleRoomOptions}
-    class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-[1] tw-w-max tw-right-2 tw-top-10 tw-p-1"
-    class:tw-absolute={optionButtonRef !== undefined}
-    class:tw-hidden={hideOptions}
+    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[1] w-max right-2 top-10 p-1"
+    class:absolute={optionButtonRef !== undefined}
+    class:hidden={hideOptions}
 >
     {#if shouldDisplayManageParticipantButton}
         <RoomOption
@@ -106,7 +106,7 @@
     <RoomOption
         IconComponent={IconLogout}
         title={$LL.chat.roomMenu.leaveRoom.label()}
-        bg="tw-bg-danger/50 hover:tw-bg-danger"
+        bg="bg-danger-900 hover:bg-danger"
         on:click={closeMenuAndLeaveRoom}
     />
 </div>

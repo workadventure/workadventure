@@ -4,8 +4,8 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply, selectedRoomStore, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
-    // import Avatar from "../Avatar.svelte";
+    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -36,7 +36,6 @@
     let messageInputBarRef: MessageInputBar;
 
     $: messages = room?.messages;
-    $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
 
@@ -194,46 +193,44 @@
 </script>
 
 <div
-    class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full"
+    class="flex flex-col flex-auto h-full w-full max-w-full"
     on:dragover|preventDefault
     on:drop|preventDefault|stopPropagation={onDropFiles}
 >
     {#if room !== undefined}
-        <div class="tw-flex tw-flex-col tw-gap-2">
-            <div
-                class="tw-p-2 tw-flex tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-b tw-border-t-0 tw-border-white/10"
-            >
+        <div class="flex flex-col gap-2">
+            <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
                 <button
-                    class="back-roomlist tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
+                    class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
                     data-testid="chatBackward"
                     on:click={goBackAndClearSelectedChatMessage}
                 >
                     <IconChevronLeft font-size="20" />
                 </button>
-                <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
+                <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
                     {$roomName}
                 </div>
 
-                <div class="tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12" />
+                <div class="p-3 rounded-2xl aspect-square w-12" />
             </div>
             {#if shouldDisplayLoader}
-                <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
-                    <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={25} />
+                <div class="flex justify-center items-center w-full pb-1 bg-transparent">
+                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
                 </div>
             {/if}
         </div>
         <div
             bind:this={messageListRef}
-            class="tw-flex tw-overflow-auto tw-h-full tw-justify-center tw-items-end tw-relative"
+            class="flex overflow-auto h-full justify-center items-end relative"
             on:scroll={handleScroll}
         >
             <ul
-                class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full tw-pt-10 {$messages.length === 0
-                    ? 'tw-items-center tw-justify-center tw-pb-4'
-                    : 'tw-max-w-6xl'}"
+                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 {$messages.length === 0
+                    ? 'items-center justify-center pb-4'
+                    : 'max-w-6xl'}"
             >
                 <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
-                <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
+                <!--    <div class="flex flex-row items-center gap-2">-->
                 <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
                 <!--            <div class="avatar">-->
                 <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
@@ -243,19 +240,19 @@
                 <!--{/if}-->
                 {#if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
-                        <li class="tw-text-center tw-px-3 tw-max-w-md">
+                        <li class="text-center px-3 max-w-md">
                             <img src={getCloseImg} alt="Discussion bubble" />
-                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.getCloserTitle()}</div>
-                            <div class="tw-text-sm tw-opacity-50 tw-text-center">
+                            <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
+                            <div class="text-sm opacity-50 text-center">
                                 {$LL.chat.getCloserDesc()}
                             </div>
                         </li>
                     {:else}
-                        <li class="tw-text-center tw-px-3 tw-max-w-md tw-relative">
+                        <li class="text-center px-3 max-w-md relative">
                             <IconMailBox font-size="40" />
-                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.noMessage()}</div>
-                            <div class="tw-text-sm tw-opacity-50 tw-text-center">{$LL.chat.beFirst()}</div>
-                            <div class="tw-absolute tw-w-10 tw-h-10 -tw-bottom-1.5 -tw-left-10">
+                            <div class="text-lg font-bold text-center">{$LL.chat.noMessage()}</div>
+                            <div class="text-sm opacity-50 text-center">{$LL.chat.beFirst()}</div>
+                            <div class="absolute w-10 h-10 -bottom-1.5 -left-10">
                                 <svg
                                     width="51"
                                     height="45"
@@ -273,15 +270,11 @@
                     {/if}
                 {/if}
                 {#each $messages as message (message.id)}
-                    <li class="last:tw-pb-3" data-event-id={message.id}>
+                    <li class="last:pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message
-                                on:updateMessageBody={onUpdateMessageBody}
-                                {message}
-                                reactions={$messageReaction.get(message.id)}
-                            />
+                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
                         {/if}
                     </li>
                 {/each}

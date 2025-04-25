@@ -17,7 +17,7 @@ export class ScriptingInputAudioStreamManager {
     private pcmStreamerResolved = false;
     private pcmStreamerResolving = false;
     private isListening = false;
-    private streams: Map<Readable<MediaStream | null>, Unsubscriber> = new Map();
+    private streams: Map<Readable<MediaStream | undefined>, Unsubscriber> = new Map();
     private videoPeerAddedUnsubscriber: Subscription;
     private videoPeerRemovedUnsubscriber: Subscription;
 
@@ -46,7 +46,7 @@ export class ScriptingInputAudioStreamManager {
                         iframeListener.postMessage(
                             {
                                 type: "appendPCMData",
-                                data: { data },
+                                data: { data: data as Float32Array<ArrayBuffer> },
                             },
                             undefined /*, [data.buffer]*/
                         );
@@ -108,7 +108,7 @@ export class ScriptingInputAudioStreamManager {
         });
     }
 
-    private addMediaStreamStore(streamStore: Readable<MediaStream | null>): void {
+    private addMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
         let lastValue: MediaStream | undefined = undefined;
         const unsubscriber = streamStore.subscribe((stream) => {
             if (stream) {
@@ -136,7 +136,7 @@ export class ScriptingInputAudioStreamManager {
         this.streams.set(streamStore, unsubscriber);
     }
 
-    private removeMediaStreamStore(streamStore: Readable<MediaStream | null>): void {
+    private removeMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
         const unsubscriber = this.streams.get(streamStore);
         if (unsubscriber) {
             unsubscriber();

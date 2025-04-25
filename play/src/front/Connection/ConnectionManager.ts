@@ -11,7 +11,7 @@ import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
+import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -401,9 +401,6 @@ class ConnectionManager {
 
         this.serviceWorker = new _ServiceWorker();
 
-        // add report issue menu
-        subMenusStore.addReportIssuesMenu();
-
         return Promise.resolve({
             room: this._currentRoom,
             nextScene,
@@ -704,8 +701,12 @@ class ConnectionManager {
         return response;
     }
 
-    async saveName(name: string): Promise<void> {
-        if (hasCapability("api/save-name") && this.authToken !== undefined) {
+    async saveName(name: string): Promise<boolean> {
+        if (
+            hasCapability("api/save-name") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-name",
                 {
@@ -718,11 +719,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveTextures(textures: string[]): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveTextures(textures: string[]): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-textures",
                 {
@@ -735,11 +743,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveCompanionTexture(texture: string | null): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveCompanionTexture(texture: string | null): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-companion-texture",
                 {
@@ -752,6 +767,9 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 

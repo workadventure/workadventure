@@ -2,18 +2,19 @@
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { Notification, notificationPlayingStore } from "../../Stores/NotificationStore";
-    import microphoneOffImg from "../images/microphone-off.png";
-    import cameraOffImg from "../images/camera-off.png";
+    import microphoneOffImg from "../images/mic.svg";
+    import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
     import AreaToolImg from "../images/icon-tool-area.png";
+    import megaphoneImg from "./images/megaphone.svg";
 
     const icons = new Map<string, string>([
         ["microphone-off.png", microphoneOffImg],
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
-        ["jitsi.png", jistiImg],
         ["icon-tool-area.png", AreaToolImg],
+        ["megaphone", megaphoneImg],
     ]);
 
     export let notification: Notification;
@@ -26,11 +27,14 @@
     });
 </script>
 
-<div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
+<div
+    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-2"
+    transition:fly={{ x: 210, duration: 500 }}
+>
     <img
         src={notification.icon ? icons.get(notification.icon) ?? notification.icon : waImg}
         alt="Audio playing"
-        class="tw-bg-medium-purple tw-rounded-full tw-h-14"
+        class="bg-white/10 rounded-md h-12"
     />
     <p>{notification.text}</p>
 </div>
@@ -38,19 +42,16 @@
 <style lang="scss">
     /*audio html when audio message playing*/
     .notification-playing {
-        height: 54px;
-        right: 0;
         top: 40px;
         transition: all 0.1s ease-out;
         //background-color: black;
-        border-radius: 30px 0 0 30px;
         display: inline-flex;
         align-items: center;
         z-index: 750;
 
         img {
             //border-radius: 50%;
-            padding: 10px;
+            padding: 5px;
         }
 
         p {

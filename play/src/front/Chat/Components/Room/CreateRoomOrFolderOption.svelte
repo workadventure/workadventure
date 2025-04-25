@@ -58,18 +58,16 @@
 
 <button
     data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
-    class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 {hideFolderOptions
-        ? 'tw-bg-transparent'
-        : 'tw-bg-secondary'}"
+    class="m-0 p-1 rounded-lg hover:bg-white/10 {hideFolderOptions ? 'bg-transparent' : 'bg-secondary'}"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
 >
     <IconDots />
 </button>
 <div
-    class="tw-bg-contrast/50 tw-backdrop-blur-md tw-rounded-lg tw-overflow-hidden tw-z-50 tw-w-max tw-right-4 tw-top-10 tw-p-1"
-    class:tw-absolute={optionButtonRef !== undefined}
-    class:tw-hidden={hideFolderOptions}
+    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-50 w-max right-4 top-10 p-1"
+    class:absolute={optionButtonRef !== undefined}
+    class:hidden={hideFolderOptions}
 >
     <RoomOption
         dataTestId={`openCreateRoomModalButton${parentName}`}
@@ -96,7 +94,7 @@
         <RoomOption
             IconComponent={IconLogout}
             title={$LL.chat.folderMenu.leaveFolder.label()}
-            bg="tw-bg-danger/50 hover:tw-bg-danger"
+            bg="bg-danger/50 hover:bg-danger"
             on:click={closeMenuAndLeaveFolder}
         />
     {/if}

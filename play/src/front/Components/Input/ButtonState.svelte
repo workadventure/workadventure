@@ -4,6 +4,7 @@
     export let promise: () => Promise<string>;
     export let initialText: string;
     export let loadingText: string;
+    export let dataTestId: string | undefined = undefined;
     let finalText: string;
 
     let state = "ready";
@@ -27,14 +28,20 @@
     }
 </script>
 
-<button type="button" class={`light tw-mt-5 ${state} button-state`} on:click={click} disabled={state !== "ready"}>
+<button
+    type="button"
+    data-testid={dataTestId}
+    class={`${state} button-state btn btn-secondary w-full button-state`}
+    on:click={click}
+    disabled={state !== "ready"}
+>
     {#if state === "ready"}
         {initialText}
     {:else if state === "loading"}
         <svg
             aria-hidden="true"
             role="status"
-            class="tw-inline tw-w-4 tw-h-4 tw-mr-3 tw-text-gray-200 tw-animate-spin"
+            class="inline w-4 h-4 mr-3 text-gray-200 animate-spin"
             viewBox="0 0 100 101"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -47,9 +54,9 @@
         {loadingText}
     {:else}
         {#if state === "success"}
-            <IconInfoCircle class="tw-mr-3" />
+            <IconInfoCircle class="mr-3" />
         {:else}
-            <IconCircleX class="tw-mr-3" />
+            <IconCircleX class="mr-3" />
         {/if}
         {finalText}
     {/if}

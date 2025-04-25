@@ -4,18 +4,18 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 </script>
 
-<div class="tw-flex-col tw-items-center tw-justify-center tw-text-center tw-px-4 tw-py-12">
+<div class="flex-col items-center justify-center text-center px-4 py-12">
     <slot name="emoji">
         <img src={messageSmileyImg} alt="Smiley happy" />
     </slot>
-    <div class="tw-w-full tw-text-center tw-text-lg tw-font-bold">
+    <div class="w-full text-center text-lg font-bold">
         <slot name="title">
             {$LL.chat.requiresLoginForChat()}
         </slot>
     </div>
-    <div class="tw-flex tw-justify-center">
+    <div class="flex justify-center">
         <a
-            class="tw-flex tw-justify-center tw-rounded-lg tw-h-10 tw-bg-secondary hover:tw-bg-secondary-800 hover:tw-no-underline hover:tw-text-white tw-no-underline tw-transition-all tw-items-center tw-my-4 tw-text-base tw-px-8 tw-text-white"
+            class="flex justify-center rounded-lg h-10 bg-secondary hover:bg-secondary-800 hover:no-underline hover:text-white no-underline transition-all items-center my-4 text-base px-8 text-white"
             href="/login"
             on:click={() => analyticsClient.login()}
         >

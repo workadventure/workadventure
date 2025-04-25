@@ -5,10 +5,10 @@ import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/status
 import { localUserStore } from "../Connection/LocalUserStore";
 import { ChatRoom } from "../Chat/Connection/ChatConnection";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { selectedRoomStore } from "../Chat/Stores/ChatStore";
+import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { NotificationWA } from ".";
+import { NotificationWA } from "./Notification";
 
 type SelectedRoomStore = {
     subscribe: (this: void, run: Subscriber<ChatRoom | undefined>) => Unsubscriber;

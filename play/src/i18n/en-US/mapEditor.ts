@@ -220,6 +220,13 @@ const mapEditor: BaseTranslation = {
             roomNameLabelPlaceholder: "My room",
             defaultChatRoomAreaName: "Room Area",
         },
+        tooltipProperties: {
+            label: "Info Bulle",
+            description: "Add an information bubble to your area ℹ️",
+            contentPlaceholder: "Write content here ✍️",
+            duration: "Duration (in seconds) ⏱️",
+            infinityDuration: "Infinite duration ⏱️",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -379,7 +386,7 @@ const mapEditor: BaseTranslation = {
         close: "Close",
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
-        searchPlaceholder: "Write...",
+        searchPlaceholder: "Type keywords...",
     },
 };
 

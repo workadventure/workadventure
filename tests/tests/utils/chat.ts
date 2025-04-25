@@ -1,5 +1,4 @@
 import {expect, Page} from "@playwright/test";
-import {expectInViewport} from "./viewport";
 
 class Chat {
     async slideToChat(page: Page){
@@ -16,14 +15,25 @@ class Chat {
     async open(page: Page, isMobile: boolean) {
         if(isMobile){
             await expect(page.locator('button#burgerIcon')).toBeVisible();
-            const mobileMenuVisible = await page.locator('button#burgerIcon img.tw-rotate-0').isVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.rotate-0').isVisible();
             if(mobileMenuVisible){
                 await page.click('button#burgerIcon');
             }
         }
-        await expect(page.locator("button#menuIcon")).toBeVisible();
-        await page.click('button.chat-btn');
-        await expectInViewport('#chatModal', page);
+        await page.getByTestId('chat-btn').click();
+        await expect(page.getByTestId('chat')).toBeVisible();
+    }
+
+    async openUserList(page: Page, isMobile: boolean){
+        if(isMobile){
+            /*await expect(page.locator('button#burgerIcon')).toBeVisible();
+            const mobileMenuVisible = await page.locator('button#burgerIcon img.rotate-0').isVisible();
+            if(mobileMenuVisible){
+                await page.click('button#burgerIcon');
+            }*/
+        }
+        await page.getByTestId('user-list-button').click();
+        await expect(page.getByText('Users')).toBeVisible();
     }
 
     get(page: Page){
@@ -54,8 +64,8 @@ class Chat {
 
     async UL_walkTo(page: Page, nickname: string){
         await page.locator('.user', {hasText: nickname}).locator('.wa-dropdown').click();
-        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")')).toBeVisible();
-        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Talk to")')).toBeVisible();
+        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Talk to")').click({ timeout: 5_000 });
     }
 
     async UL_sendMessage(page: Page, nickname: string, text: string){
@@ -139,9 +149,9 @@ class Chat {
     }
 
     async expandUsers(page: Page){
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/rotate-180/);
     }
 
     async forumExist(page: Page, name: string) {

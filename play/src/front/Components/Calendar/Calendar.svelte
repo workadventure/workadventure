@@ -38,57 +38,52 @@
     }
 </script>
 
-<div class="calendar tw-bg-dark-blue/95 tw-select-text">
+<div class="calendar bg-dark-blue/95 select-text">
     <div class="sidebar " in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
         <button class="close-window" data-testid="mapEditor-close-button" on:click={closeCalendar}>&#215;</button>
 
-        <div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
+        <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
-                <h3 class="tw-text-l tw-text-left">
-                    <img
-                        draggable="false"
-                        src={calendarSvg}
-                        class="tw-w-8 tw-mx-2"
-                        alt={$LL.menu.icon.open.calendar()}
-                    />
+                <h3 class="text-l text-left">
+                    <img draggable="false" src={calendarSvg} class="w-8 mx-2" alt={$LL.menu.icon.open.calendar()} />
                     {new Date().toLocaleString("en-EN", {
                         month: "long",
                         day: "2-digit",
                         year: "numeric",
                     })} (beta)
                 </h3>
-                <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                <h4 class="text-l text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
-            <div class="tw-flex tw-flex-col tw-justify-center tw-gap-4">
+            <div class="flex flex-col justify-center gap-4">
                 {#if $calendarEventsStore.size > 0}
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
-                        <div class="tw-flex tw-flex-col tw-justify-center">
-                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
-                                <span class="tw-text-xs">{formatHour(event.start)}</span>
-                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                        <div class="flex flex-col justify-center">
+                            <div class="flex flex-row justify-start w-full">
+                                <span class="text-xs">{formatHour(event.start)}</span>
+                                <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
                             </div>
                             <div
                                 id={`event-id-${eventId}`}
-                                class="tw-flex tw-flex-col tw-justify-center tw-p-2 tw-bg-dark-blue/90 tw-rounded-md"
+                                class="flex flex-col justify-center p-2 bg-dark-blue/90 rounded-md"
                             >
-                                <div class="tw-flex tw-flex-col tw-justify-between tw-items-center">
-                                    <h4 class="tw-text-l tw-text-left tw-font-bold">{event.title}</h4>
-                                    <p class="tw-text-xs tw-w-full tw-whitespace-pre-line tw-overflow-x-hidden">
+                                <div class="flex flex-col justify-between items-center">
+                                    <h4 class="text-l text-left font-bold">{event.title}</h4>
+                                    <p class="text-xs w-full whitespace-pre-line overflow-x-hidden">
                                         {event.description}
                                     </p>
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
                                             on:click|preventDefault|stopPropagation={() => openMeeting(event)}
-                                            class="tw-text-xs tw-text-right"
+                                            class="text-xs text-right"
                                             target="_blank">Click here to join the meeting</a
                                         >
                                     {/if}
                                 </div>
                             </div>
-                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
-                                <span class="tw-text-xs">{formatHour(event.end)}</span>
-                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                            <div class="flex flex-row justify-start w-full">
+                                <span class="text-xs">{formatHour(event.end)}</span>
+                                <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
                             </div>
                         </div>
                     {/each}

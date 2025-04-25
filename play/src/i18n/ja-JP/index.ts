@@ -4,7 +4,6 @@ import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
 import companion from "./companion";
-import emoji from "./emoji";
 import error from "./error";
 import follow from "./follow";
 import login from "./login";
@@ -22,6 +21,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
+import form from "./form";
 
 const ja_JP = merge(en_US, {
     area,
@@ -36,7 +36,6 @@ const ja_JP = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,
@@ -46,6 +45,7 @@ const ja_JP = merge(en_US, {
     video,
     statusModal,
     externalModule,
+    form,
 });
 
 export default ja_JP;

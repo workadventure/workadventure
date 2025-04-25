@@ -7,7 +7,7 @@
     }
 </script>
 
-<div class="limit-map nes-container" transition:fly={{ y: -900, duration: 500 }}>
+<div class="limit-map" transition:fly={{ y: -900, duration: 500 }}>
     <section>
         <h2>Limit of your room</h2>
         <p>Register your account!</p>
@@ -17,7 +17,7 @@
         </p>
     </section>
     <section>
-        <button class="nes-btn is-primary" on:click|preventDefault={register}>Register</button>
+        <button class="btn" on:click|preventDefault={register}>Register</button>
     </section>
 </div>
 

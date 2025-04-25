@@ -1,13 +1,17 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    import { blur } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import XIcon from "../Icons/XIcon.svelte";
+    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
 
     let modalIframe: HTMLIFrameElement;
     let mainModal: HTMLDivElement;
+
+    let isFullScreened = false;
 
     function close() {
         modalVisibilityStore.set(false);
@@ -27,6 +31,10 @@
         if ($modalIframeStore?.allowApi) {
             iframeListener.registerIframe(modalIframe);
         }
+        // Note: the fullscreen functionality is not implemented yet
+        /*if ($modalIframeStore?.position == "center") {
+            isFullScreened = true;
+        }*/
     });
 
     onDestroy(() => {
@@ -47,14 +55,59 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainModal}>
-    <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button
-            type="button"
-            data-testid="close-modal-button"
-            class="close-window"
-            on:click|preventDefault|stopPropagation={close}>&times</button
+<div
+    class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {isMobile
+        ? 'mobile'
+        : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
+    bind:this={mainModal}
+>
+    <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
+        <div
+            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 hover:opacity-100 opacity-25 transition-opacity duration-300"
         >
+            {#if modalUrl != undefined}
+                {#if $modalIframeStore?.allowFullScreen}
+                    <button
+                        class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
+                        on:click={() => (isFullScreened = !isFullScreened)}
+                    >
+                        {#if isFullScreened}
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-arrows-minimize"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 9l4 0l0 -4" />
+                                <path d="M3 3l6 6" />
+                                <path d="M5 15l4 0l0 4" />
+                                <path d="M3 21l6 -6" />
+                                <path d="M19 9l-4 0l0 -4" />
+                                <path d="M15 9l6 -6" />
+                                <path d="M19 15l-4 0l0 4" />
+                                <path d="M15 15l6 6" />
+                            </svg>
+                        {:else}
+                            <FullScreenIcon />
+                        {/if}
+                    </button>
+                {/if}
+            {/if}
+            <button
+                on:click|preventDefault|stopPropagation={close}
+                class="btn btn-danger rounded"
+                data-testid="close-modal-button"
+            >
+                <XIcon />
+            </button>
+        </div>
         {#if modalUrl != undefined}
             <iframe
                 id="modalIframe"
@@ -64,7 +117,9 @@
                 allow={$modalIframeStore?.allow}
                 title={$modalIframeStore?.title}
                 src={modalUrl}
-                class="tw-border-0"
+                class="border-0 relative z-40"
+                allowtransparency
+                style="color-scheme: auto"
             />
         {/if}
     </div>
@@ -79,6 +134,25 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
+        }
+        &.right:not(.fullscreened),
+        &.left:not(.fullscreened) {
+            width: 33%;
+        }
+        &.right {
+            right: 0;
+        }
+        &.left {
+            left: 0;
+        }
+        &.center:not(.fullscreened) {
+            width: 75%;
+            height: 75%;
+            left: 0;
+            right: 0;
+            top: 12.5%;
+            margin-right: auto;
+            margin-left: auto;
         }
     }
 </style>

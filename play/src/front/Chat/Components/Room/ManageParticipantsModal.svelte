@@ -41,22 +41,22 @@
 
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.manageRoomUsers.title()}</h1>
-    <div slot="content" class="tw-w-full tw-flex tw-flex-col tw-gap-2" data-testid="inviteParticipantsModalContent">
+    <div slot="content" class="w-full flex flex-col gap-2" data-testid="inviteParticipantsModalContent">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             data-testid="roomID"
-            class="tw-text-sm tw-text-gray-300 tw-text-center tw-pb-4 tw-cursor-pointer "
+            class="text-sm text-gray-300 text-center pb-4 cursor-pointer "
             on:click={() => navigator.clipboard.writeText(room.id)}
         >
             {$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}
         </div>
         {#if sendingInvitationsToRoom}
-            <div class="tw-animate-[spin_2s_linear_infinite] tw-self-center">
+            <div class="animate-[spin_2s_linear_infinite] self-center">
                 <IconLoader font-size="2em" />
             </div>
         {:else}
             {#if invitationToRoomError}
-                <div transition:fade class="tw-bg-red-500 tw-p-2 tw-rounded-md tw-text-ellipsis tw-overflow-hidden">
+                <div transition:fade class="bg-red-500 p-2 rounded text-ellipsis overflow-hidden">
                     {$LL.chat.manageRoomUsers.error()} : <b><i>{invitationToRoomError}</i></b>
                 </div>
             {/if}
@@ -65,14 +65,14 @@
                 bind:value={invitations}
                 placeholder={$LL.chat.createRoom.users()}
             />
-            <div class="tw-max-h-96 tw-overflow-auto">
-                <table class="tw-w-full tw-border-separate tw-border-spacing-2">
+            <div class="max-h-96 overflow-auto">
+                <table class="w-full border-separate border-spacing-2">
                     <thead>
                         <tr>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.participants()}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.membership()}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.permissionLevel()}</th>
-                            <th class="tw-text-center">{$LL.chat.manageRoomUsers.actions()}</th>
+                            <th class="text-center">{$LL.chat.manageRoomUsers.participants()}</th>
+                            <th class="text-center">{$LL.chat.manageRoomUsers.membership()}</th>
+                            <th class="text-center">{$LL.chat.manageRoomUsers.permissionLevel()}</th>
+                            <th class="text-center">{$LL.chat.manageRoomUsers.actions()}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,12 +94,12 @@
         {#if sendingInvitationsToRoom}
             <p>{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <button class="tw-flex-1 tw-justify-center" on:click={closeModal}
+            <button class="flex-1 justify-center" on:click={closeModal}
                 >{$LL.chat.manageRoomUsers.buttons.cancel()}</button
             >
             <button
                 data-testid="createRoomButton"
-                class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
                 on:click={inviteUsersAndCloseModalOnSuccess}
                 >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}

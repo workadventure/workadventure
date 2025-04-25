@@ -95,7 +95,7 @@
         bind:innerHTML={message}
         contenteditable="false"
         bind:this={messageInput}
-        class={`${inputClass} tw-opacity-70/50 tw-cursor-not-allowed`}
+        class={`${inputClass} opacity-70/50 cursor-not-allowed`}
     />
 {/if}
 

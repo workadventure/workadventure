@@ -25,45 +25,31 @@ class EntityEditor {
   }
 
   async moveAndClick(page: Page, x: number, y: number) {
-    await page.evaluate(async () => {
-      await window.e2eHooks.waitForNextFrame();
-      await window.e2eHooks.waitForNextFrame();
-    });
+    await this.wait2Frames(page);
     await page.mouse.move(x, y);
     await page.mouse.move(x, y);
     await page.mouse.down({ button: "left" });
     await page.mouse.up({ button: "left" });
-    await page.evaluate(async () => {
-      await window.e2eHooks.waitForNextFrame();
-      await window.e2eHooks.waitForNextFrame();
-    });
+    await this.wait2Frames(page);
   }
 
   async moveAndRightClick(page: Page, x: number, y: number) {
-    await page.evaluate(async () => {
-      await window.e2eHooks.waitForNextFrame();
-      await window.e2eHooks.waitForNextFrame();
-    });
+    await this.wait2Frames(page);
     await page.mouse.move(x, y);
     await page.mouse.move(x, y);
     await page.mouse.down({ button: "right" });
     await page.mouse.up({ button: "right" });
-    await page.evaluate(async () => {
-      await window.e2eHooks.waitForNextFrame();
-      await window.e2eHooks.waitForNextFrame();
-    });
+    await this.wait2Frames(page);
   }
 
   async clearEntitySelection(page: Page) {
     await page.getByTestId("clearEntitySelection").click();
     await expect(page.getByTestId("clearEntitySelection")).toHaveCount(0);
-    // That's bad, but we need to wait a bit for the canvas to put the object.
-    // eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(2000);
+    await this.wait2Frames(page);
   }
 
   async addProperty(page: Page, property: string) {
-    await page.locator(".map-editor .sidebar .properties-buttons .add-property-button", { hasText: property }).click();
+    await page.getByTestId(property).click();
   }
 
   async setEntityName(page: Page, name: string) {
@@ -80,6 +66,8 @@ class EntityEditor {
   }
 
   async setEntitySearcheable(page: Page, value: boolean) {
+    await expect(page.getByTestId('megaphone-switch')).toBeVisible();
+    await page.getByTestId('megaphone-switch').click();
     await page.locator(".map-editor .sidebar input#searchable").setChecked(value);
   }
 
@@ -136,6 +124,13 @@ class EntityEditor {
 
   getTestAssetName() {
     return "testAsset";
+  }
+
+  private async wait2Frames(page: Page) {
+    await page.evaluate(async () => {
+      await window.e2eHooks.waitForNextFrame();
+      await window.e2eHooks.waitForNextFrame();
+    });
   }
 }
 

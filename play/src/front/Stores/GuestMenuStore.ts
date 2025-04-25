@@ -1,6 +1,5 @@
 import { get, writable } from "svelte/store";
 import { gameManager } from "../Phaser/Game/GameManager";
-import { startLayerNamesStore } from "./StartLayerNamesStore";
 
 export const walkAutomaticallyStore = writable<boolean>(false);
 
@@ -15,8 +14,8 @@ export async function copyLink() {
 }
 
 export function getLink(): string {
-    const startLayerName: string[] = get(startLayerNamesStore);
-    const entryPoint: string | null = startLayerName.length > 0 ? startLayerName[0] : null;
+    const startLayerNames: string[] = gameManager.getCurrentGameScene().getStartPositionNames();
+    const entryPoint: string | null = startLayerNames.length > 0 ? startLayerNames[0] : null;
     try {
         const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
         const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };

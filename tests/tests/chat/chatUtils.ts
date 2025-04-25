@@ -5,7 +5,7 @@ const DEFAULT_PASSPHRASE = "defaultPassphrase";
 
 class ChatUtils {
   public async openChat(page: Page) {
-    await page.click("button.chat-btn");
+    await page.getByTestId('chat-btn').click();
   }
 
   public async openCreateRoomDialog(page: Page, folderName = "") {
@@ -84,6 +84,7 @@ class ChatUtils {
       timeout: 20_000,
     });
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
+    await page.getByTestId("passphraseInput").blur();
     await page.getByTestId("confirmAccessSecretStorageButton").click();
   }
 

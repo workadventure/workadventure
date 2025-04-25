@@ -5,12 +5,12 @@
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
 </script>
 
-<div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
+<div class="flex row w-full text-gray-300 text-sm  m-0 px-2 mb-2">
     {#each typingMembers
         .map((typingMember, index) => ({ ...typingMember, index }))
         .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
         {#if typingMember.avatarUrl || typingMember.name}
-            <div id={`typing-user-${typingMember.id}`} class="-tw-ml-2">
+            <div id={`typing-user-${typingMember.id}`} class="-ml-2">
                 <Avatar
                     isChatAvatar={true}
                     avatarUrl={typingMember.avatarUrl}
@@ -21,13 +21,11 @@
     {/each}
 
     {#if typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-        <div
-            class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
-        >
+        <div class={`rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar`}>
             +{typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
         </div>
     {/if}
-    <div class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-contrast tw-flex tw-text-lg tw-ml-1">
+    <div class="message rounded-2xl px-3 rounded-bl-none bg-contrast flex text-lg ml-1">
         <div class="animate-bounce-1">.</div>
         <div class="animate-bounce-2">.</div>
         <div class="animate-bounce-3">.</div>

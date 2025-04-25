@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
+import { showHelpCameraSettings } from "../../Stores/HelpSettingsStore";
 import {
     availabilityStatusStore,
     requestedCameraDeviceIdStore,
@@ -26,7 +26,7 @@ import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
-import { loginTokenErrorStore } from "../../Stores/ChatStore";
+import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
 import { GameScene } from "./GameScene";
 /**
@@ -107,11 +107,6 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        // Only save the name if the user is not logged in
-        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
-        if (!localUserStore.isLogged() || !hasCapability("api/save-name")) {
-            localUserStore.setName(name);
-        }
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {
@@ -176,7 +171,7 @@ export class GameManager {
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))
         ) {
-            helpCameraSettingsVisibleStore.set(true);
+            showHelpCameraSettings();
             localUserStore.setHelpCameraSettingsShown();
         }
     }
@@ -191,21 +186,23 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
-        gameSceneIsLoadedStore.set(false);
+        this.closeGameScene();
+        if (!this.scenePlugin.get(targetSceneName)) {
+            this.scenePlugin.add(targetSceneName, sceneClass, false);
+        }
+        this.scenePlugin.run(targetSceneName);
+    }
 
+    closeGameScene(): void {
+        gameSceneIsLoadedStore.set(false);
         const gameScene = this.scenePlugin.get(this.currentGameSceneName ?? "default");
 
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
-
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
-        if (!this.scenePlugin.get(targetSceneName)) {
-            this.scenePlugin.add(targetSceneName, sceneClass, false);
-        }
-        this.scenePlugin.run(targetSceneName);
     }
 
     /**
@@ -264,6 +261,7 @@ export class GameManager {
             this._chatConnection = matrixChatConnection;
 
             this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            isMatrixChatEnabledStore.set(true);
 
             try {
                 const gameScene = await waitForGameSceneStore();
@@ -284,6 +282,7 @@ export class GameManager {
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
+            isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
         }
     }

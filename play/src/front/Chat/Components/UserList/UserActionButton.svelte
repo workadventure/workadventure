@@ -91,7 +91,7 @@
 <svelte:window on:click={handleClickOutside} on:touchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
-        class="tw-m-0 tw-p-1 tw-rounded-lg hover:tw-bg-white/10 tw-bg-transparent"
+        class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent !text-white"
         bind:this={buttonElement}
         on:click|stopPropagation={toggleChatUSerMenu}
     >
@@ -99,22 +99,25 @@
     </button>
     <!-- on:mouseleave={closeChatUserMenu} -->
     {#if chatMenuActive}
-        <div bind:this={popoversElement} class={`wa-dropdown-menu tw-mr-1 tw-absolute`}>
+        <div
+            bind:this={popoversElement}
+            class="wa-dropdown-menu z-10 mr-1 absolute bg-contrast/80 backdrop-blur-md rounded-md p-1"
+        >
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="walk-to wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
                     ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                    {$LL.chat.userList.walkTo()}</span
+                    {$LL.chat.userList.TalkTo()}</span
                 >
             {:else if user.playUri}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="teleport wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
@@ -126,33 +129,45 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if user.visitCardUrl}
                 <span
-                    class="businessCard wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
+                    class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
                     ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
                     {$LL.chat.userList.businessCard()}</span
                 >
             {/if}
 
-            {#if user.chatId && user.chatId !== user.uuid && !$roomCreationInProgress}
+            {#if !$roomCreationInProgress}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="sendMessage wa-dropdown-item tw-flex tw-gap-2 tw-items-center hover:tw-bg-white/10 tw-m-0 tw-p-2 tw-w-full tw-text-sm tw-rounded"
-                    on:click|stopPropagation={() => openDirectChatRoom(user.chatId)}
+                    class="sendMessage wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    on:click|stopPropagation={() => {
+                        openDirectChatRoom(user.uuid != user.chatId ? user.chatId : undefined, user.username, () =>
+                            goTo("user", user.playUri ?? "", user.uuid ?? "")
+                        ).catch((error) => {
+                            console.error("Error opening direct chat room:", error);
+                            Sentry.captureException(error, {
+                                extra: {
+                                    userId: user.uuid,
+                                    chatId: user.chatId,
+                                    playUri: user.playUri,
+                                    username: user.username,
+                                },
+                            });
+                        });
+                    }}
                     ><IconMessage font-size="13" />
                     {$LL.chat.userList.sendMessage()}</span
                 >
             {:else if $roomCreationInProgress}
-                <div
-                    class="tw-min-h-[30px] tw-text-md tw-flex tw-gap-2 tw-justify-center tw-flex-row tw-items-center tw-p-1"
-                >
-                    <IconLoader class="tw-animate-spin" />
+                <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
+                    <IconLoader class="animate-spin" />
                 </div>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             {#if iAmAdmin}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
-                    class="ban wa-dropdown-item tw-text-pop-red"
+                    class="ban wa-dropdown-item text-pop-red text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => {
                         if (user.username && user.uuid) {
                             showReportScreenStore.set({ userUuid: user.uuid, userName: user.username });

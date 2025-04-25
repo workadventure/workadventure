@@ -47,10 +47,10 @@
     });
 </script>
 
-<div class="tw-relative">
+<div class="relative">
     <input
         id="upload"
-        class="tw-hidden"
+        class="hidden"
         disabled={isProximityChatRoom}
         type="file"
         multiple
@@ -62,23 +62,21 @@
     <label
         id="labelUpload"
         for="upload"
-        class="tw-p-0 tw-m-0 tw-h-11 tw-w-11 tw-flex tw-items-center tw-justify-center hover:tw-bg-white/10 tw-rounded-none"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"
     >
         {#if files !== undefined}
-            <IconLoader class="tw-animate-spin" font-size={18} />
+            <IconLoader class="animate-spin" font-size={18} />
         {:else}
             <IconPaperclip
-                class="hover:!tw-cursor-pointer {room instanceof ProximityChatRoom
-                    ? 'tw-opacity-30 !tw-cursor-none'
-                    : ''}"
+                class="hover:!cursor-pointer {room instanceof ProximityChatRoom ? 'opacity-30 !cursor-none' : ''}"
                 font-size={18}
             />
         {/if}
     </label>
     <button
-        class="tw-absolute tw-top-0 tw-right-0 tw-m-1 hover:tw-bg-white/10 tw-cursor-pointer"
+        class="absolute top-0 right-0 m-1 hover:bg-white/10 cursor-pointer"
         on:click={() => unselectChatMessageToReplyIfSelected()}
     >
-        <IconX class=" tw-text-white/50 hover:tw-text-white tw-transition-all" font-size={16} />
+        <IconX class=" text-white/50 hover:text-white transition-all" font-size={16} />
     </button>
 </div>

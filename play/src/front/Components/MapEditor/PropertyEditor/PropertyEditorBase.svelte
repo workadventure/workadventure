@@ -11,7 +11,7 @@
 </script>
 
 <div class="property-settings-container">
-    <div class="header">
+    <div class="header relative">
         <slot name="header">_MISSING_</slot>
         <CloseButton
             on:click={() => {
@@ -19,7 +19,7 @@
             }}
         />
     </div>
-    <div class="content tw-p-2">
+    <div class="content p-2">
         <slot name="content">No content</slot>
     </div>
 </div>

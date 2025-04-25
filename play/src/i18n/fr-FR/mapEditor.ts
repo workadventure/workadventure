@@ -218,6 +218,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabelPlaceholder: "Mon Salon",
             defaultChatRoomAreaName: "Salon de zone",
         },
+        tooltipProperties: {
+            label: "Info Bulle",
+            description: "Afficher une info bulle lors de l'interaction avec l'objet ℹ️",
+            contentPlaceholder: "Contenu de l'info bulle 📝",
+            duration: "Duration (en secondes) ⏱️",
+            infinityDuration: "Infini ⏱️",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

@@ -35,36 +35,40 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         {$LL.mapEditor.properties.restrictedRightsProperties.label()}
     </span>
     <span slot="content">
-        <p class="help-text">
-            <IconInfoCircle font-size="18" />
-            {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
-        </p>
         <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightWriteTitle()}
             options={_tag}
             bind:value={writeTags}
             handleChange={onChangeWriteReadTags}
             testId="writeTags"
-        />
-        <p class="help-text">
-            <IconInfoCircle font-size="18" />
-            {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
-        </p>
+        >
+            <span slot="info">
+                <IconInfoCircle font-size="15" />
+                {$LL.mapEditor.properties.restrictedRightsProperties.rightWriteDescription()}
+            </span>
+        </InputRoomTags>
+
         <InputRoomTags
             label={$LL.mapEditor.properties.restrictedRightsProperties.rightReadTitle()}
             options={_tag}
             bind:value={readTags}
             handleChange={onChangeWriteReadTags}
             testId="readTags"
-        />
+        >
+            <span slot="info">
+                <IconInfoCircle font-size="15" />
+                {$LL.mapEditor.properties.restrictedRightsProperties.rightReadDescription()}
+            </span></InputRoomTags
+        >
+
         {#if writeTags !== undefined && writeTags.length > 0}
-            <div class="tw-flex tw-flex-wrap tw-gap-1">
+            <div class="flex flex-wrap gap-1">
                 {#each writeTags as tag, index (`${index}-${tag.value}`)}
-                    <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
+                    <span class="py-1 px-2 bg-gray-400 text-black rounded-lg">{tag.label}</span>
                 {/each}
             </div>
         {/if}

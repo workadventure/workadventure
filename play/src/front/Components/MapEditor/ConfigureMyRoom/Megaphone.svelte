@@ -3,13 +3,14 @@
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import InputText from "../../Input/InputText.svelte";
-    import InputSelect from "../../Input/InputSelect.svelte";
+    import Input from "../../Input/Input.svelte";
+    import Select from "../../Input/Select.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import PureLoader from "../../PureLoader.svelte";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
     import { InputTagOption } from "../../Input/InputTagOption";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import { IconInfoCircle } from "@wa-icons";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
@@ -90,24 +91,33 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-wrap tw-gap-x-4 tw-items-center tw-h-fit">
-    <input type="checkbox" class="input-switch" bind:checked={enabled} on:change={partialSave} disabled={loading} />
-    <h3>{$LL.mapEditor.settings.megaphone.title()}</h3>
+<div class="flex flex-wrap gap-x-4 items-center h-fit">
+    <InputSwitch id="" bind:value={enabled} onChange={partialSave} disabled={loading} />
+    <h3 id="megaphone" style="color: white;">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
-<p class="help-text tw-h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
+
+<p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
 {#if enabled}
-    <div class="settings tw-flex-grow tw-flex-auto tw-flex-shrink" transition:fade={{ duration: 200 }}>
+    <div class="settings space-y-4 flex-grow flex-auto flex-shrink" transition:fade={{ duration: 200 }}>
         {#await getTags()}
-            <PureLoader size={12} color="lighter-purple" customClass="tw-h-full" />
+            <PureLoader size={12} color="lighter-purple" customClass="h-full" />
         {:then tags}
-            <InputText
+            <Input
                 errorHelperText={dynamicStrings.error.title}
                 label={$LL.mapEditor.settings.megaphone.inputs.spaceName()}
-                placeHolder="MySpace"
+                placeholder="MySpace"
                 bind:value={title}
                 onKeyPress={() => (dynamicStrings.error.title = "")}
+                variant="light"
             />
-            <InputSelect label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
+
+            <Select
+                label={$LL.mapEditor.settings.megaphone.inputs.scope()}
+                options={scopes}
+                bind:value={scope}
+                variant="light"
+            />
+
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
                 {$LL.mapEditor.settings.megaphone.inputs.spaceNameHelper()}

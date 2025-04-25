@@ -1,9 +1,7 @@
 <script lang="ts">
     export let src: string;
-    export let customWidth: string;
-    export let customHeight: string;
-    let width = "62px";
-    let height = "62px";
+    export let customWidth: string | undefined = undefined;
+    export let grayscale = false;
 
     function noDrag() {
         return false;
@@ -13,8 +11,9 @@
 <img
     {src}
     alt=""
-    class="nes-pointer noselect"
-    style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
+    class="noselect"
+    class:grayscale
+    style="    {customWidth ? `--theme-width: ${customWidth};` : ''}"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
 />
@@ -24,7 +23,6 @@
         display: inline-block;
         pointer-events: auto;
         width: var(--theme-width);
-        height: var(--theme-height);
         margin: 0;
         padding: 0;
         position: static;

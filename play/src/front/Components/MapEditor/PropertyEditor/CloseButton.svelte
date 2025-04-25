@@ -15,9 +15,11 @@
 
 <style lang="scss">
     .close-button {
-        float: right;
+        position: absolute;
         padding: 3px;
         border-radius: 8px;
+        top: 0;
+        right: 0;
         cursor: pointer;
     }
 </style>

@@ -235,6 +235,16 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    settingPictureInPicture(value: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_setting_picture_in_picture", {
+                    checkbox: value,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
     settingFullscreen(value: string): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -291,42 +301,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    switchMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_switch");
-            })
-            .catch((e) => console.error(e));
-    }
-
     openedWebsite(url: URL): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_opened_website", { url: url.toString() });
-            })
-            .catch((e) => console.error(e));
-    }
-
-    closeMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_close");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    fullScreenMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_fullscreen");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    stackOpenCloseMultiIframe(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_multiiframe_stack_open_close");
             })
             .catch((e) => console.error(e));
     }
@@ -469,6 +447,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    selectCompanion(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_companionscene_select");
+            })
+            .catch((e) => console.error(e));
+    }
+
     selectCustomWoka(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -563,7 +549,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    clicPropertykMapEditor(name: string, style?: string): void {
+    clickPropertyMapEditor(name: string, style?: string): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture(`wa_map-editor_click_property`, {
@@ -790,6 +776,123 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_map-editor_open_application", { applicationName });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openCowebsiteInNewTab(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_cowebsite_in_new_tab");
+            })
+            .catch((e) => console.error(e));
+    }
+    copyCowebsiteLink(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_copy_cowebsite_link");
+            })
+            .catch((e) => console.error(e));
+    }
+    closeCowebsite(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_close_cowebsite");
+            })
+            .catch((e) => console.error(e));
+    }
+    fullScreenCowebsite(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_fullscreen_cowebsite");
+            })
+            .catch((e) => console.error(e));
+    }
+    switchCowebsite(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_switch_cowebsite");
+            })
+            .catch((e) => console.error(e));
+    }
+    openProfileMenu(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_profile_menu");
+            })
+            .catch((e) => console.error(e));
+    }
+    filterInMapExplorer(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_filter_in_map_explorer");
+            })
+            .catch((e) => console.error(e));
+    }
+    resizeCameraLayout(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_resize_camera_layout");
+            })
+            .catch((e) => console.error(e));
+    }
+    openUserList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_user_list");
+            })
+            .catch((e) => console.error(e));
+    }
+    openMessageList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_open_message_list");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    sendMessageFromUserList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_send_message_from_user_list");
+            })
+            .catch((e) => console.error(e));
+    }
+    createMatrixRoom(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_create_matrix_room");
+            })
+            .catch((e) => console.error(e));
+    }
+    createMatrixFolder(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_create_matrix_folder");
+            })
+            .catch((e) => console.error(e));
+    }
+    startMatrixEncryptionConfiguration(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_start_matrix_encryption_configuration");
+            })
+            .catch((e) => console.error(e));
+    }
+    externalModuleChatBandClick(externalModuleName: string, action: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_external_module_chat_band_click", {
+                    externalModuleName,
+                    action,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+    camLayoutChange(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_camera_layout_change");
             })
             .catch((e) => console.error(e));
     }

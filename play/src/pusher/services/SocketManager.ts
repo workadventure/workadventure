@@ -49,8 +49,6 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
-import { applyFieldMask } from "protobuf-fieldmask";
-import merge from "lodash/merge";
 import { WebSocket } from "uWebSockets.js";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
@@ -521,14 +519,7 @@ export class SocketManager implements ZoneEventListener {
                                     "':",
                                 err
                             );
-                            Sentry.captureException(
-                                "Error in connection to back server '" +
-                                    apiSpaceClient.getChannel().getTarget() +
-                                    "' for space '" +
-                                    spaceName +
-                                    "':" +
-                                    err
-                            );
+                            Sentry.captureException(err);
                         });
                     return spaceStreamToBack;
                 })();
@@ -552,8 +543,6 @@ export class SocketManager implements ZoneEventListener {
                     },
                 });
             }
-
-            space.addClientWatcher(client);
 
             space.addUser(socketData.spaceUser, client);
             if (socketData.spaces.has(spaceName)) {
@@ -686,12 +675,19 @@ export class SocketManager implements ZoneEventListener {
             fieldMask.push("chatID");
             socketData.spaceUser.chatID = playerDetailsMessage.chatID;
         }
-
+        if (
+            playerDetailsMessage.showVoiceIndicator !== undefined &&
+            socketData.spaceUser.showVoiceIndicator !== playerDetailsMessage.showVoiceIndicator
+        ) {
+            fieldMask.push("showVoiceIndicator");
+            socketData.spaceUser.showVoiceIndicator = playerDetailsMessage.showVoiceIndicator;
+        }
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
                 spaceUserId: socketData.spaceUser.spaceUserId,
                 chatID: playerDetailsMessage.chatID,
+                showVoiceIndicator: playerDetailsMessage.showVoiceIndicator,
             });
 
             socketData.spaces.forEach((spaceName) => {
@@ -790,8 +786,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                space.removeClientWatcher(socket);
-                space.removeUser(socketData.spaceUser.spaceUserId);
+                space.removeUser(socket);
                 this.deleteSpaceIfEmpty(space);
             } else {
                 console.error(
@@ -1203,36 +1198,27 @@ export class SocketManager implements ZoneEventListener {
         removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        const socketData = client.getUserData();
         this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleRemoveFilter(client, removeSpaceFilterMessage);
-            const spacesFilter = socketData.spacesFilters.get(space.name);
-            if (spacesFilter) {
-                socketData.spacesFilters.set(
-                    space.name,
-                    spacesFilter.filter((filter) => filter.filterName !== oldFilter.filterName)
-                );
-            } else {
-                console.trace(
-                    `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
-                );
-            }
             this.deleteSpaceIfEmpty(space);
         } else {
-            console.error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`);
+            // This function is called when the userStore of a space in front is unsubscribed.
+            // This could happen after we leave the space. Therefore, we don't display an error here.
+            // When leaving the space, we take care of removing the filters anyway.
+            /*console.error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`);
             Sentry.captureException(
                 new Error(`Remove space filter called on a space (${oldFilter.spaceName}) that does not exist`)
-            );
+            );*/
         }
     }
 
     handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const message = noUndefined(updateSpaceUserMessage);
-        const socketData = client.getUserData();
-        const toUpdateValues = applyFieldMask(message.user, message.updateMask);
-        merge(socketData.spaceUser, toUpdateValues);
+        //const socketData = client.getUserData();
+        //const toUpdateValues = applyFieldMask(message.user, message.updateMask);
+        //merge(socketData.spaceUser, toUpdateValues);
         this.checkClientIsPartOfSpace(client, message.spaceName);
         const space = this.spaces.get(message.spaceName);
         if (!space) {
@@ -1340,8 +1326,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
-            space.removeClientWatcher(client);
-            space.removeUser(socketData.spaceUser.spaceUserId);
+            space.removeUser(client);
             this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {

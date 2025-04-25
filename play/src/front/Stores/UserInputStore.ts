@@ -1,7 +1,9 @@
 import { derived, writable } from "svelte/store";
-import { menuInputFocusStore } from "./MenuStore";
+import { menuInputFocusStore } from "./MenuInputFocusStore";
 import { chatInputFocusStore } from "./ChatStore";
 import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
+import { emoteMenuStore } from "./EmoteStore";
+import { refreshPromptStore } from "./RefreshPromptStore";
 
 export const inputFormFocusStore = writable(false);
 
@@ -43,6 +45,8 @@ export const enableUserInputsStore = derived(
         showReportScreenStore,
         inputFormFocusStore,
         mapExplorerSearchinputFocusStore,
+        emoteMenuStore,
+        refreshPromptStore,
     ],
     ([
         $menuInputFocusStore,
@@ -50,13 +54,17 @@ export const enableUserInputsStore = derived(
         $showReportScreenStore,
         $inputFormFocusStore,
         $mapExplorerSearchinputFocusStore,
+        $emoteMenuStore,
+        $refreshPromptStore,
     ]) => {
         return (
             !$menuInputFocusStore &&
             !$chatInputFocusStore &&
             !($showReportScreenStore !== userReportEmpty) &&
             !$inputFormFocusStore &&
-            !$mapExplorerSearchinputFocusStore
+            !$mapExplorerSearchinputFocusStore &&
+            !$emoteMenuStore &&
+            !$refreshPromptStore
         );
     }
 );

@@ -60,6 +60,7 @@
                         "trigger": {
                           "type": "string",
                           "enum": [
+                            "onenter",
                             "onaction",
                             "onicon"
                           ]
@@ -182,6 +183,7 @@
                         "trigger": {
                           "type": "string",
                           "enum": [
+                            "onenter",
                             "onaction",
                             "onicon"
                           ]
@@ -746,6 +748,43 @@
                         "type",
                         "shouldOpenAutomatically",
                         "displayName"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "resourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/resourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "tooltipPropertyData"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "duration": {
+                          "type": "number",
+                          "default": 5000
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "content"
                       ],
                       "additionalProperties": false
                     }

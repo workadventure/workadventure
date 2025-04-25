@@ -148,7 +148,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: undefined,
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
@@ -199,7 +200,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: "chat@id.fr",
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
@@ -245,7 +247,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: "chat@id.fr",
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,

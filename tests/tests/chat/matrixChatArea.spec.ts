@@ -3,9 +3,11 @@ import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";
 import Map from "../utils/map";
-import { hideNoCamera, login } from "../utils/roles";
+import { hideNoCamera } from "../utils/hideNoCamera";
 import { oidcMatrixUserLogin, oidcMemberTagLogin } from "../utils/oidc";
 import { resetWamMaps } from "../utils/map-editor/uploader";
+import { getPage } from "../utils/auth";
+import {isMobile} from "../utils/isMobile";
 import chatUtils from "./chatUtils";
 
 test.describe("matrix chat area property @matrix", () => {
@@ -13,15 +15,13 @@ test.describe("matrix chat area property @matrix", () => {
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {
       //Map Editor not available on mobile / WebKit has issue with camera
-      if (project.name === "mobilechromium" || project.name === "webkit") {
+      if (isMobile(page) || project.name === "webkit") {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
       }
       await chatUtils.resetMatrixDatabase();
       await resetWamMaps(request);
-
-      await page.goto(Map.url("empty"));
     }
   );
 
@@ -30,12 +30,11 @@ test.describe("matrix chat area property @matrix", () => {
   });
 
   test("it should automatically open the chat when entering the area if the property is checked", async ({
-    page,
-    browserName,
+    browserName, browser
   }) => {
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, "test", 3, "en-US", false);
-    await oidcMatrixUserLogin(page, false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await oidcMatrixUserLogin(page);
 
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if (browserName === "webkit") {
@@ -43,7 +42,6 @@ test.describe("matrix chat area property @matrix", () => {
     }
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
-    // await chatUtils.openChat(page);
 
     await Menu.openMapEditor(page);
 
@@ -53,7 +51,7 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
@@ -63,14 +61,16 @@ test.describe("matrix chat area property @matrix", () => {
     expect(await page.getByTestId("roomName").textContent()).toBe(
       "name of new room"
     );
+    await page.close();
+    await page.context().close();
   });
 
   test("it should automatically close the chat when the user leaves the area", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
-    await oidcMatrixUserLogin(page, false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -86,7 +86,7 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
@@ -97,14 +97,16 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page, 1, 1);
 
     expect(await chatUtils.isChatSidebarOpen(page)).toBeFalsy();
+    await page.close();
+    await page.context().close();
   });
 
   test("it should leave the matrix room when the user quits the room from an area with a matrix chat room link", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
-    await oidcMatrixUserLogin(page, false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -120,7 +122,7 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
@@ -133,13 +135,17 @@ test.describe("matrix chat area property @matrix", () => {
     await chatUtils.openRoomAreaList(page);
 
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
+
+    await page.close();
+      await page.context().close();
   });
+
   test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
-    page,
+    browser,
     browserName,
   }) => {
-    await login(page, "test", 3, "en-US", false);
-    await oidcMatrixUserLogin(page, false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -155,7 +161,7 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     
     //TODO : find a better way to wait for the room to be created
 
@@ -187,12 +193,11 @@ test.describe("matrix chat area property @matrix", () => {
   });
 
   test("it shouldn't be moderator in room when he don't have a admin tag ", async ({
-    page,
     browserName,
     browser
   }) => {
-    await login(page, "test", 3, "en-US", false);
-    await oidcMatrixUserLogin(page, false);
+    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -208,18 +213,13 @@ test.describe("matrix chat area property @matrix", () => {
       { x: 1 * 32 * 1.5, y: 5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
-    await AreaEditor.addProperty(page, "Link Matrix room");
+    await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
     //await page.close()
-
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-    await page2.goto(Map.url("empty"));
-    
-    await login(page2, "test2", 3, "en-US", false);
-    await oidcMemberTagLogin(page2, false);
+    const page2 = await getPage(browser, 'Bob', Map.url("empty"));
+    await oidcMemberTagLogin(page2);
     
     if (browserName === "webkit") {
       await hideNoCamera(page2);
@@ -237,7 +237,5 @@ test.describe("matrix chat area property @matrix", () => {
     await page2.getByTestId("name of new room").hover() ; 
     await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
     await expect(page2.getByTestId("manageParticipantOption")).not.toBeAttached();
-
   });
-  
 });

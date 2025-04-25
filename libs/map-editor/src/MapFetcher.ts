@@ -1,5 +1,4 @@
-import { Resolver } from "dns";
-import { promisify } from "util";
+import dnsPromises from "dns/promises";
 import path from "path";
 import ipaddr from "ipaddr.js";
 import axios from "axios";
@@ -143,9 +142,10 @@ class MapFetcher {
         }
 
         let addresses = [];
-        if (!ipaddr.isValid(urlObj.hostname)) {
-            const resolver = new Resolver();
-            addresses = await promisify(resolver.resolve).bind(resolver)(urlObj.hostname);
+        if (urlObj.hostname.startsWith("[") && urlObj.hostname.endsWith("]")) {
+            addresses = [urlObj.hostname.slice(1, -1)];
+        } else if (!ipaddr.isValid(urlObj.hostname)) {
+            addresses = (await dnsPromises.lookup(urlObj.hostname, { all: true })).map((x) => x.address);
         } else {
             addresses = [urlObj.hostname];
         }

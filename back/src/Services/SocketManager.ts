@@ -291,7 +291,6 @@ export class SocketManager {
             return;
         }
 
-        console.log("emitVideo => data", room.id);
         const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
             userId: user.id,
             signal: data.signal,

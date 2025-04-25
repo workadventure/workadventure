@@ -5,6 +5,8 @@ const chat: BaseTranslation = {
     adventurers: "Users",
     onlineUsers: "Online user",
     getCloserTitle: "Get closer to someone",
+    noRoomOpen: "Open a conversation",
+    noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",
     getCloserDesc:
         "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
     noMessage: "No message sent yet!",
@@ -25,7 +27,8 @@ const chat: BaseTranslation = {
         in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
-        walkTo: "Walk to",
+        // walkTo: "Walk to",
+        TalkTo: "Talk To",
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
         sendMessage: "Send Message",
@@ -168,6 +171,7 @@ const chat: BaseTranslation = {
     },
     said: "said :",
     reply: "Reply",
+    replyTo: "Reply to",
     react: "React",
     copy: "Copy",
     copied: "Copied!",
@@ -351,7 +355,7 @@ const chat: BaseTranslation = {
     },
     connectionError: "Chat not available",
     requiresLoginForChatModal: {
-        title: "Log in to unlock the chat !",
+        title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
         content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
         content_3: " Please log in to proceed with the experience.",
@@ -462,6 +466,20 @@ const chat: BaseTranslation = {
     whoops: "Whoops ! something went wrong",
     failedToOpenRoom: "Failed to open room : {roomId}",
     refreshChatError: "Failed to refresh chat",
+    discord: {
+        chatBand: {
+            configure: "Configure",
+            open: "Open",
+            dismiss: "Dismiss",
+            discordNotConfigured: "Connect to Discord",
+        },
+    },
+    remoteUserNotConnected: {
+        title: "User not connected 💬",
+        descriptionNotConnected: "The user is not connected. You're not bale to start message discussion with him 😭 ",
+        descriptionWalkToCallHim: "But you may walk to him and call him to start a discussion.",
+        call: "Call {userName}",
+    },
 };
 
 export default chat;

@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { AuthDict, AuthType, MatrixClient } from "matrix-js-sdk";
     import LL from "../../../../i18n/i18n-svelte";
-    import { INTERACTIVE_AUTH_PHASE } from "./MatrixChatConnection";
+    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
     export let authSessionId;
     export let matrixClient: MatrixClient;
@@ -51,18 +51,18 @@
 </script>
 
 {#if errorText}
-    <div class="tw-text-red-500" role="alert">{errorText}</div>
+    <div class="text-red-500" role="alert">{errorText}</div>
 {/if}
 
-<button class="tw-flex-1 tw-justify-center" on:click={onCancel} data-testid="cancelSSO">
+<button class="flex-1 justify-center" on:click={onCancel} data-testid="cancelSSO">
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
 {#if phase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}
-    <button class="tw-bg-secondary tw-flex-1 tw-justify-center" on:click={onStartAuthClick}>
+    <button class="bg-secondary flex-1 justify-center" on:click={onStartAuthClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.continueSSO()}
     </button>
 {:else}
-    <button class="tw-bg-secondary tw-flex-1 tw-justify-center" on:click={onConfirmClick}>
+    <button class="bg-secondary flex-1 justify-center" on:click={onConfirmClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.finish()}
     </button>
 {/if}

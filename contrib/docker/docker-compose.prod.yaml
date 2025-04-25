@@ -36,6 +36,7 @@ services:
       - JITSI_PRIVATE_MODE
       - ENABLE_MAP_EDITOR
       - MAP_EDITOR_ALLOWED_USERS
+      - MAP_EDITOR_ALLOW_ALL_USERS
       - PUSHER_URL=https://${DOMAIN}/
       - ICON_URL=/icon
       - TURN_SERVER
@@ -124,6 +125,7 @@ services:
 
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
       traefik.http.routers.play.entryPoints: "web"
+      traefik.http.routers.play.service: play
       traefik.http.services.play.loadbalancer.server.port: "3000"
 
       traefik.http.routers.play-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -134,6 +136,7 @@ services:
 
       traefik.http.routers.play-ws.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
       traefik.http.routers.play-ws.entryPoints: "web"
+      traefik.http.routers.play-ws.service: play-ws
       traefik.http.services.play-ws.loadbalancer.server.port: "3001"
 
       traefik.http.routers.play-ws-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/ws/`)"
@@ -150,6 +153,7 @@ services:
       traefik.http.routers.room-api.tls: "true"
       traefik.http.routers.room-api.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
+
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
     environment:

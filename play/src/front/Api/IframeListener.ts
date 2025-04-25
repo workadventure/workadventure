@@ -5,7 +5,7 @@ import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils
 import { get } from "svelte/store";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
-    additionnalButtonsMenu,
+    additionalButtonsMenu,
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
@@ -52,7 +52,6 @@ import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinPr
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
-import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
 
@@ -105,10 +104,10 @@ class IframeListener {
     private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
     public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
-    private readonly _disablePlayerControlStream: Subject<void> = new Subject();
+    private readonly _disablePlayerControlStream: Subject<MessageEventSource | null> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
-    private readonly _enablePlayerControlStream: Subject<void> = new Subject();
+    private readonly _enablePlayerControlStream: Subject<MessageEventSource | null> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
 
     private readonly _disablePlayerProximityMeetingStream: Subject<void> = new Subject();
@@ -400,9 +399,9 @@ class IframeListener {
                     } else if (iframeEvent.type === "loadSound") {
                         this._loadSoundStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "disablePlayerControls") {
-                        this._disablePlayerControlStream.next();
+                        this._disablePlayerControlStream.next(message.source);
                     } else if (iframeEvent.type === "restorePlayerControls") {
-                        this._enablePlayerControlStream.next();
+                        this._enablePlayerControlStream.next(message.source);
                     } else if (iframeEvent.type === "turnOffMicrophone") {
                         this._turnOffMicrophoneStream.next();
                     } else if (iframeEvent.type === "turnOffWebcam") {
@@ -488,9 +487,9 @@ class IframeListener {
                         modalVisibilityStore.set(false);
                         modalIframeStore.set(null);
                     } else if (iframeEvent.type == "addButtonActionBar") {
-                        additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
+                        additionalButtonsMenu.addAdditionalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
-                        additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
+                        additionalButtonsMenu.removeAdditionalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "openBanner") {
                         warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
@@ -966,10 +965,10 @@ class IframeListener {
         }*/
     }
 
-    sendButtonActionBarTriggered(buttonActionBar: AddButtonActionBarEvent): void {
+    sendButtonActionBarTriggered(id: string): void {
         this.postMessage({
-            type: "buttonActionBarTrigger",
-            data: buttonActionBar,
+            type: "buttonActionBarTriggered",
+            data: id,
         });
     }
     sendModalCloseTriggered(modal: ModalEvent): void {

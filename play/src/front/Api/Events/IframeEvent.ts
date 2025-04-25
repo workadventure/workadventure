@@ -60,7 +60,7 @@ import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
-import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
+import { isAddActionBarButtonEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
 import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
@@ -69,6 +69,7 @@ import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEv
 import { isStartStreamInBubbleEvent } from "./ProximityMeeting/StartStreamInBubbleEvent";
 import { isAppendPCMDataEvent } from "./ProximityMeeting/AppendPCMDataEvent";
 import { isWamMapDataEvent } from "./WamMapDataEvent";
+import { isPlayVideoEvent } from "./Ui/PlayVideoEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -289,7 +290,7 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("addButtonActionBar"),
-        data: isAddButtonActionBarEvent,
+        data: isAddActionBarButtonEvent,
     }),
     z.object({
         type: z.literal("removeButtonActionBar"),
@@ -527,8 +528,8 @@ export const isIframeResponseEvent = z.union([
         data: isUpdateWritingStatusChatListEvent,
     }),
     z.object({
-        type: z.literal("buttonActionBarTrigger"),
-        data: isAddButtonActionBarEvent,
+        type: z.literal("buttonActionBarTriggered"),
+        data: z.string(),
     }),
     z.object({
         type: z.literal("modalCloseTrigger"),
@@ -719,6 +720,14 @@ export const iframeQueryMapTypeGuards = {
     getWamMapData: {
         query: z.undefined(),
         answer: isWamMapDataEvent,
+    },
+    playVideo: {
+        query: isPlayVideoEvent,
+        answer: z.string(),
+    },
+    stopVideo: {
+        query: z.string(),
+        answer: z.undefined(),
     },
 };
 

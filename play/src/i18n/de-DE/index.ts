@@ -12,7 +12,6 @@ import menu from "./menu";
 import report from "./report";
 import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
@@ -22,6 +21,7 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import form from "./form";
 
 const de_DE = merge(en_US, {
     area,
@@ -37,7 +37,6 @@ const de_DE = merge(en_US, {
     report,
     refreshPrompt,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,
@@ -46,6 +45,7 @@ const de_DE = merge(en_US, {
     megaphone,
     video,
     statusModal,
+    form,
 });
 
 export default de_DE;

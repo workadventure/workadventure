@@ -30,23 +30,23 @@
         bind:message={inputValue}
         bind:messageInput
         dataTestid="editMessageInput"
-        inputClass=" tw-p-1  !tw-m-0 tw-px-2 tw-max-h-36 tw-overflow-auto tw-w-full tw-h-full tw-rounded-xl !tw-leading-6 tw-block !tw-text-sm !tw-text-white !tw-bg-white/20 placeholder:tw-text-sm  !tw-text-black tw-border  tw-resize-none  tw-shadow-none focus:tw-ring-0"
+        inputClass=" p-1  !m-0 px-2 max-h-36 overflow-auto w-full h-full rounded-md !leading-6 block !text-sm !text-white !bg-white/20 placeholder:text-sm  !text-black border  resize-none  shadow-none focus:ring-0"
         dataText={$LL.chat.enter()}
     />
 
     {#if editError}
-        <p class="tw-text-red-500 tw-text-xxs tw-p-0 tw-m-0">{$LL.chat.messageEditedError()}</p>
+        <p class="text-red-500 text-xxs p-0 m-0">{$LL.chat.messageEditedError()}</p>
     {/if}
-    <div class="tw-flex tw-flew-row tw-gap-2 tw-justify-end tw-mt-0.5">
+    <div class="flex flew-row gap-1 justify-center p-1">
         <button
-            class="hover:tw-bg-white/10 tw-text-white tw-py-0.5 tw-text-sm tw-px-3 tw-w-20 tw-text-center tw-items-center tw-justify-center"
+            class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="cancelMessageEditionButton"
             on:click={() => selectedChatMessageToEdit.set(null)}
         >
             {$LL.chat.createRoom.buttons.cancel()}
         </button>
         <button
-            class="tw-bg-white hover:tw-bg-white/80 tw-text-secondary tw-py-0.5 tw-text-sm tw-px-3 tw-w-20 tw-text-center tw-items-center tw-justify-center"
+            class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
             data-testid="saveMessageEditionButton"
             on:click={() => editMessage(inputValue)}
         >

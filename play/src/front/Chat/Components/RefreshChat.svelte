@@ -23,31 +23,27 @@
 
 <div
     class="{dismissError
-        ? 'tw-bottom-0'
-        : 'tw-h-full'} tw-absolute tw-z-[999999999] tw-gap-2 tw-py-4 tw-left-0 tw-flex tw-flex-col tw-flex-1 tw-w-full tw-backdrop-blur-2xl tw-items-center tw-justify-center"
+        ? 'bottom-0'
+        : 'h-full'} absolute z-[999999999] gap-2 py-4 left-0 flex flex-col flex-1 w-full backdrop-blur-2xl items-center justify-center"
 >
-    <div class="tw-flex tw-flex-col tw-gap-2 tw-items-center tw-justify-center">
+    <div class="flex flex-col gap-2 items-center justify-center">
         {#if !dismissError}
             <IconRefresh font-size={50} />
         {/if}
         <h3>{$LL.chat.whoops()}</h3>
     </div>
-    <button
-        class="tw-bg-danger tw-w-44 tw-text-white tw-rounded-md tw-px-4 tw-py-2"
-        on:click={refreshChat}
-        disabled={isRefreshing}
-    >
+    <button class="bg-danger w-44 text-white rounded-md px-4 py-2" on:click={refreshChat} disabled={isRefreshing}>
         {#if isRefreshing}
-            <IconLoader class="tw-animate-spin" />
+            <IconLoader class="animate-spin" />
         {:else}
-            <span class="tw-text-center tw-w-full">
+            <span class="text-center w-full">
                 {$LL.chat.refreshChat()}
             </span>
         {/if}
     </button>
     {#if !dismissError}
         <button
-            class="tw-rounded-md tw-px-4 tw-py-2"
+            class="rounded-md px-4 py-2"
             on:click={() => {
                 dismissError = true;
             }}

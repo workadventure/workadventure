@@ -18,7 +18,8 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, selectedRoomStore, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
@@ -26,7 +27,8 @@ import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { MessageNotification, notificationManager } from "../../../Notification";
+import { MessageNotification } from "../../../Notification/MessageNotification";
+import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
 
 export class ProximityChatMessage implements ChatMessage {
@@ -35,7 +37,7 @@ export class ProximityChatMessage implements ChatMessage {
     isDeleted = writable(false);
     isModified = writable(false);
     canDelete = writable(false);
-
+    reactions: MapStore<string, ChatMessageReaction> = new MapStore();
     constructor(
         public id: string,
         public sender: ChatUser,
@@ -371,9 +373,9 @@ export class ProximityChatRoom implements ChatRoom {
 
     public joinSpace(spaceName: string): void {
         this._space = this.spaceRegistry.joinSpace(spaceName);
-        bindMuteEventsToSpace(this._space);
 
         this._spaceWatcher = this._space.watchAllUsers();
+        bindMuteEventsToSpace(this._space, this._spaceWatcher);
         this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
             this.users = users;
             this.hasUserInProximityChat.set(users.size > 1);

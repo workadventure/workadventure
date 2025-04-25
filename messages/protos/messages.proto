@@ -1252,6 +1252,7 @@ message SpaceUser{
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
+  bool showVoiceIndicator = 18;
 }
 
 /*message PartialSpaceUser{

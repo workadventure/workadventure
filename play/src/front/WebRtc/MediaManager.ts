@@ -2,8 +2,7 @@ import { get } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
-import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
-
+import { showHelpCameraSettings } from "../Stores/HelpSettingsStore";
 import {
     myCameraBlockedStore,
     myCameraStore,
@@ -11,9 +10,7 @@ import {
     myMicrophoneStore,
     proximityMeetingStore,
 } from "../Stores/MyMediaStore";
-import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../Utils/locales";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
@@ -34,20 +31,12 @@ export class MediaManager {
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
-                            layoutManagerActionStore.addAction({
-                                uuid: "cameraAccessDenied",
-                                type: "warning",
-                                message: get(LL).warning.accessDenied.camera(),
-                                callback: () => {
-                                    helpCameraSettingsVisibleStore.set(true);
-                                },
-                                userInputManager: this.userInputManager,
-                            });
+                            showHelpCameraSettings();
                         }
                         //remove it after 10 sec
-                        setTimeout(() => {
-                            layoutManagerActionStore.removeAction("cameraAccessDenied");
-                        }, 10000);
+                        /*setTimeout(() => {
+                            popupStore.removePopup("cameraAccessDenied");
+                        }, 10000);*/
                         return;
                     }
                 });
@@ -57,19 +46,11 @@ export class MediaManager {
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
-                        layoutManagerActionStore.addAction({
-                            uuid: "screenSharingAccessDenied",
-                            type: "warning",
-                            message: get(LL).warning.accessDenied.screenSharing(),
-                            callback: () => {
-                                helpCameraSettingsVisibleStore.set(true);
-                            },
-                            userInputManager: this.userInputManager,
-                        });
+                        showHelpCameraSettings();
                         //remove it after 10 sec
-                        setTimeout(() => {
-                            layoutManagerActionStore.removeAction("screenSharingAccessDenied");
-                        }, 10000);
+                        /*setTimeout(() => {
+                            popupStore.removePopup("screenSharingAccessDenied");
+                        }, 10000);*/
                         return;
                     }
                 });

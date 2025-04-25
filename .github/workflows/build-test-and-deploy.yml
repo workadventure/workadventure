@@ -87,7 +87,7 @@ jobs:
   push-to-sentry:
     runs-on: ubuntu-latest
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
     needs:
 #      - build-play
       - build-back
@@ -155,71 +155,95 @@ jobs:
             /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
       fail-fast: false
       matrix:
         include:
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 1
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 2
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 3
             nbShards: 4
             renderer: auto
           - browser: chromium
+            parameters: --project=chromium
             project: chromium
             shard: 4
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 1
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 2
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 3
             nbShards: 4
             renderer: auto
           - browser: firefox
+            parameters: --project=firefox
             project: firefox
             shard: 4
             nbShards: 4
             renderer: auto
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 3
             renderer: headless
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 2
             nbShards: 3
             renderer: headless
           - browser: webkit
+            parameters: --project=webkit
             project: webkit
             shard: 3
             nbShards: 3
             renderer: headless
-          - browser: chromium
+          - browser: ""
+            parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+          - browser: ""
+            parameters: --project=mobilefirefox
+            project: mobilefirefox
+            shard: 1
+            nbShards: 1
+            renderer: auto
+          - browser: ""
+            parameters: --project=mobilewebkit
+            project: mobilewebkit
+            shard: 1
+            nbShards: 1
+            renderer: headless
     needs:
       - build-play
       - build-back
@@ -227,12 +251,12 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -311,7 +335,7 @@ jobs:
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
+        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
@@ -493,12 +517,12 @@ jobs:
       - build-uploader
       - build-map-storage
     timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -589,7 +613,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
     steps:
@@ -780,7 +804,7 @@ jobs:
     name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
     needs:
       - helm-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -797,7 +821,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
       - name: Install dependencies
         run: npm ci
         working-directory: tests

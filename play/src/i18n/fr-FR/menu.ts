@@ -22,12 +22,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         sendMessage: "Envoyer un message",
     },
     profile: {
-        edit: {
-            name: "Modifier votre nom",
-            woka: "Modifier votre WOKA",
-            companion: "Modifier votre compagnon",
-            camera: "Modifier votre caméra",
-        },
         login: "S'identifier",
         logout: "Déconnexion",
     },
@@ -57,16 +51,20 @@ const menu: DeepPartial<Translation["menu"]> = {
         save: "Sauvegarder",
         fullscreen: "Plein écran",
         notifications: "Notifications",
+        enablePictureInPicture: "Activer le picture-in-picture",
         chatSounds: "Sons du chat",
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
         proximityDiscussionVolume: "Volume des bulles de discussion",
         blockAudio: "Désactiver bruits ambiants et musique",
         disableAnimations: "Désactiver les animations de la carte",
+        bubbleSound: "Son des bulles",
+        otherSettings: "Autres paramètres",
     },
     invite: {
         description: "Partager le lien de la salle!",
         copy: "Copier",
+        copied: "Copié",
         share: "Partager",
         walkAutomaticallyToPosition: "Marcher automatiquement jusqu'à ma position",
         selectEntryPoint: "Selectionner la zone de départ",
@@ -122,7 +120,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             title: "Confirmation de la réinitialisation de la clé de sauvegarde",
             content: "Vous êtes sur le point de réinitialiser la clé de sauvegarde. Êtes-vous sûr(e) ?",
             warning:
-                "La réinitialisation de la clé de sauvegarde supprimera votre session actuelle et tous les utilisateurs de confiance. Vous pourriez perdre l’accès à certains messages passés et ne serez plus reconnu en tant qu’utilisateur de confiance. Assurez-vous de bien comprendre les conséquences de cette action avant de continuer.",
+                "La réinitialisation de la clé de sauvegarde supprimera votre session actuelle et tous les utilisateurs de confiance. Vous pourriez perdre l'accès à certains messages passés et ne serez plus reconnu en tant qu'utilisateur de confiance. Assurez-vous de bien comprendre les conséquences de cette action avant de continuer.",
             cancel: "Annuler",
             continue: "Continuer",
         },
@@ -136,6 +134,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         contact: "Contact",
         report: "Remonter un bug",
         chat: "Chat",
+        help: "Besoin d'aide ?",
+        contextualActions: "Actions contextuelles",
     },
 };
 

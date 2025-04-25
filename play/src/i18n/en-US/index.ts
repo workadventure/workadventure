@@ -11,7 +11,6 @@ import menu from "./menu";
 import report from "./report";
 import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
@@ -22,6 +21,7 @@ import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
+import form from "./form";
 
 const en_US: BaseTranslation = {
     area,
@@ -37,7 +37,6 @@ const en_US: BaseTranslation = {
     report,
     refreshPrompt,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,
@@ -47,6 +46,7 @@ const en_US: BaseTranslation = {
     video,
     statusModal,
     externalModule,
+    form,
 };
 
 export default en_US;

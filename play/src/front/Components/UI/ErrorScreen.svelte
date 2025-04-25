@@ -73,11 +73,11 @@
 
 {#if $errorScreenStore}
     <main
-        class="errorScreen tw-bg-dark-purple tw-pointer-events-auto tw-w-full tw-text-white tw-text-center tw-absolute tw-flex tw-flex-wrap tw-items-center tw-justify-center tw-h-full tw-top-0 tw-left-0 tw-right-0 tw-mx-auto tw-overflow-scroll tw-py-5"
+        class="errorScreen bg-contrast h-dvh pointer-events-auto w-full text-white text-center absolute flex flex-wrap items-center justify-center h-full top-0 left-0 right-0 mx-auto overflow-scroll py-5"
         style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
         transition:fly={{ y: -200, duration: 500 }}
     >
-        <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">
+        <div class="flex flex-col items-center" style=" width: 90%;">
             <div class="logo" bind:this={logoErrorParent} />
             <div class="icon" bind:this={imageErrorParent} />
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
