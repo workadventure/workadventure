@@ -13,6 +13,9 @@
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
+    const gameScene = gameManager.getCurrentGameScene();
+    const isMatrixChatEnabled = gameScene.room.isMatrixChatEnabled;
+
     onMount(() => {
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
@@ -90,7 +93,7 @@
                 </button>
                 {#if $shownRoomListStore === roomName}
                     <div class="flex flex-col flex-1 h-fit">
-                        <UserList userList={userInRoom} />
+                        <UserList userList={userInRoom} {isMatrixChatEnabled} />
                     </div>
                 {/if}
             </div>
