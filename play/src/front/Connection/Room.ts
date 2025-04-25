@@ -180,7 +180,7 @@ export class Room {
                 this._legals = data.legals ?? undefined;
 
                 this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
-                this._isMatrixChatEnabled = (data.enableChat ?? true) && ENABLE_CHAT && ENABLE_OPENID;
+                this._isMatrixChatEnabled = data.enableMatrixChat ?? (true && ENABLE_OPENID);
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =
