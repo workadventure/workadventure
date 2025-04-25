@@ -27,6 +27,7 @@
     dataTestId="user-list-button"
     disabledHelp={false}
     media="./static/Videos/UserList.mp4"
+    tooltipShortcuts={["u"]}
 >
     <UsersIcon />
 </ActionBarButton>

@@ -26,6 +26,8 @@
         dispatch("click");
     }
 
+    const shortcut = ["c"];
+
     let chatAvailable = false;
     gameManager
         .getChatConnection()
@@ -50,6 +52,7 @@
     tooltipTitle={$LL.actionbar.help.chat.title()}
     desc={$LL.actionbar.help.chat.desc()}
     media="./static/Videos/Chat.mp4"
+    tooltipShortcuts={shortcut}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}

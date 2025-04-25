@@ -188,7 +188,7 @@
     }
 
     async function checkWebsiteProperty(protocolChecked = false): Promise<void> {
-        if (property.link == undefined) return;
+        if (property.link == undefined || property.link == "") return;
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";

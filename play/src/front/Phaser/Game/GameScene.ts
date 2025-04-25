@@ -119,7 +119,6 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
-import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -721,8 +720,6 @@ export class GameScene extends DirtyScene {
             this.initPosition,
             urlManager.getStartPositionNameFromUrl()
         );
-
-        startLayerNamesStore.set(this.startPositionCalculator.getStartPositionNames());
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -3941,5 +3938,9 @@ ${escapedMessage}
             throw new Error("this.worldUserProvider not yet initialized");
         }
         return this.worldUserProvider.userCount;
+    }
+
+    getStartPositionNames(): string[] {
+        return this.startPositionCalculator.getStartPositionNames();
     }
 }
