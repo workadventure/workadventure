@@ -24,7 +24,7 @@ envsubst < /data/homeserver.template.yaml > /data/homeserver.yaml
 timeout=120
 elapsed=0
 echo "Waiting for OIDC mock server to be up..."
-while ! curl -s -f -o /dev/null http://oidc-server-mock/.well-known/openid-configuration; do
+while ! curl -s -f -o /dev/null http://oidc.workadventure.localhost/.well-known/openid-configuration; do
     if [ $elapsed -ge $timeout ]; then
         echo "Error: OIDC mock server did not start within 2 minutes."
         exit 1
