@@ -1,10 +1,10 @@
 import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
-import { Readable, Unsubscriber } from "svelte/store";
+import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
 import { InputPCMStreamer } from "./InputPCMStreamer";
-import { livekitVideoStreamStore } from "../../Stores/PeerStore";
+import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
 
 /**
  * Class in charge of receiving audio streams from the scripting API and playing them.
@@ -57,8 +57,10 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    livekitVideoStreamStore.forEach((peer) => {
-                        this.addMediaStreamStore(peer.streamStore);
+                    get(livekitVideoStreamElementsStore).forEach((peer) => {
+                        if (peer.media.type === "mediaStore") {
+                            this.addMediaStreamStore(peer.media.streamStore);
+                        }
                     });
                 })().catch((e) => {
                     console.error("Error while starting listening to streams", e);
@@ -73,8 +75,10 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                livekitVideoStreamStore.forEach((peer) => {
-                    this.removeMediaStreamStore(peer.streamStore);
+                get(livekitVideoStreamElementsStore).forEach((peer) => {
+                    if (peer.media.type === "mediaStore") {
+                        this.removeMediaStreamStore(peer.media.streamStore);
+                    }
                 });
 
                 if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
@@ -97,13 +101,17 @@ export class ScriptingInputAudioStreamManager {
 
         this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((peer) => {
             if (this.isListening) {
-                this.addMediaStreamStore(peer.streamStore);
+                if (peer.media.type === "mediaStore") {
+                    this.addMediaStreamStore(peer.media.streamStore);
+                }
             }
         });
 
         this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((peer) => {
             if (this.isListening) {
-                this.removeMediaStreamStore(peer.streamStore);
+                if (peer.media.type === "mediaStore") {
+                    this.removeMediaStreamStore(peer.media.streamStore);
+                }
             }
         });
     }

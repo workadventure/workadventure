@@ -1990,7 +1990,7 @@ export class GameScene extends DirtyScene {
                 if (onConnect.room.webRtcUserName && onConnect.room.webRtcPassword) {
                     try {
                         checkCoturnServer({
-                            userId: onConnect.connection.getUserId(),
+                            userId: onConnect.connection.getSpaceUserId(),
                             webRtcUser: onConnect.room.webRtcUserName,
                             webRtcPassword: onConnect.room.webRtcPassword,
                         });
