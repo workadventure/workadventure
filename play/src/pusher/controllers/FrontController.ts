@@ -215,7 +215,7 @@ export class FrontController extends BaseHttpController {
         try {
             redirectUrl = await builder.getRedirectUrl();
         } catch (e) {
-            console.info(`Cannot get redirect URL ${url}`, e);
+            console.info(`Cannot get redirect URL "%s"`, url, e);
         }
 
         if (redirectUrl) {
@@ -272,7 +272,7 @@ export class FrontController extends BaseHttpController {
                 ...option,
             });
         } catch (e) {
-            console.info(`Cannot render metatags on ${url}`, e);
+            console.info(`Cannot render metatags on "%"`, url, e);
         }
 
         res.type("html").send(html);
