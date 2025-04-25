@@ -4,8 +4,8 @@ import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistr
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
-import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
+import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -68,8 +68,11 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 };
 
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock  , new Subject());
-                spaceRegistry.joinSpace(newSpace.getName());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
+                    defaultRoomConnectionMock,
+                    new Subject()
+                );
+                spaceRegistry.joinSpace(newSpace.getName(), []);
                 expect(spaceRegistry.get(newSpace.getName())).toBeInstanceOf(Space);
             });
             it("should return a error when you try to add a space which already exist", () => {
@@ -79,8 +82,11 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 } as SpaceInterface;
 
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock  , new Subject());
-                spaceRegistry.joinSpace(newSpace.getName());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
+                    defaultRoomConnectionMock,
+                    new Subject()
+                );
+                spaceRegistry.joinSpace(newSpace.getName(), []);
                 expect(() => {
                     spaceRegistry.joinSpace(newSpace.getName(), []);
                 }).toThrow(SpaceAlreadyExistError);
@@ -94,7 +100,10 @@ describe("SpaceProviderInterface implementation", () => {
                     },
                 } as SpaceInterface;
 
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock  , new Subject());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
+                    defaultRoomConnectionMock,
+                    new Subject()
+                );
 
                 spaceRegistry.joinSpace(newSpace.getName(), []);
 
@@ -108,7 +117,10 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock  , new Subject());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
+                    defaultRoomConnectionMock,
+                    new Subject()
+                );
                 const result: boolean = spaceRegistry.exist(newSpace.getName());
                 expect(result).toBeFalsy();
             });
@@ -116,7 +128,7 @@ describe("SpaceProviderInterface implementation", () => {
         describe("SpaceRegistry delete", () => {
             it("should delete a space when space is in the store", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock  , new Subject());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
 
                 spaceRegistry.joinSpace("space-test1", []);
                 spaceRegistry.joinSpace("space-test2", []);
@@ -132,7 +144,10 @@ describe("SpaceProviderInterface implementation", () => {
                         return "space-test";
                     },
                 } as SpaceInterface;
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(defaultRoomConnectionMock  , new Subject());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(
+                    defaultRoomConnectionMock,
+                    new Subject()
+                );
 
                 expect(() => {
                     spaceRegistry.leaveSpace(newSpace);
@@ -142,7 +157,7 @@ describe("SpaceProviderInterface implementation", () => {
         describe("SpaceRegistry destroy", () => {
             it("should destroy space store", () => {
                 const roomConnectionMock = new MockRoomConnectionForSpaces();
-                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock  , new Subject());
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
 
                 spaceRegistry.joinSpace("space-test1", []);
                 spaceRegistry.joinSpace("space-test2", []);

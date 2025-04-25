@@ -4,7 +4,7 @@ import { get } from "svelte/store";
 import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { AllUsersSpaceFilter } from "../SpaceFilter/AllUsersSpaceFilter";
-import { PeerFactoryInterface, Space } from "../Space";
+import { Space } from "../Space";
 
 const defaultRoomConnectionMock = {
     emitUserJoinSpace: vi.fn(),
@@ -60,22 +60,12 @@ vi.mock("../../WebRtc/SimplePeer", () => ({
     })),
 }));
 
-const defaultPeerFactoryMock = {
-    create: vi.fn(),
-} as unknown as PeerFactoryInterface;
-
 describe("SpaceFilter", () => {
     describe("addUser", () => {
         //not throw a error because this function is call when you receive a message by the pusher
         it("should add user when user is not exist in list  ", async () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
             const spaceUserId = "foo_0";
             const user: Pick<SpaceUserExtended, "spaceUserId"> = {
                 spaceUserId,
@@ -88,13 +78,7 @@ describe("SpaceFilter", () => {
 
         it("should not overwrite user when you add a new user and he already exists", async () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
             const spaceUserId = "foo_1";
 
             const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
@@ -116,13 +100,7 @@ describe("SpaceFilter", () => {
     describe("updateUserData", () => {
         it("should not update userdata when user object do not have id ", async () => {
             const spaceFilterName = "space-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -148,13 +126,7 @@ describe("SpaceFilter", () => {
         });
         it("should update user data when user object have a id ", async () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -188,13 +160,7 @@ describe("SpaceFilter", () => {
         });
         it("should not update userdata when user object have a incorrect id ", async () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -223,13 +189,7 @@ describe("SpaceFilter", () => {
     describe("emitFilterEvent", () => {
         it("emit addSpaceFilter event when you create spaceFilter", () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
 
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
@@ -260,13 +220,7 @@ describe("SpaceFilter", () => {
 
         it("emit removeSpaceFilter event when you stop listening to a spaceFilter", () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
 
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
@@ -289,13 +243,7 @@ describe("SpaceFilter", () => {
         });
         it("emit updateSpaceFilter event when you update spaceFilter", () => {
             const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                [],
-                defaultPeerFactoryMock
-            );
+            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
 
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
