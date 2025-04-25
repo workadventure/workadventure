@@ -10,6 +10,7 @@ import {
     ENABLE_CHAT_UPLOAD,
     ENABLE_OPENID,
     OPID_WOKA_NAME_POLICY,
+    PUBLIC_MAP_STORAGE_PREFIX,
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -266,6 +267,14 @@ export class Room {
 
     get wamUrl(): string | undefined {
         return this._wamUrl;
+    }
+
+    get mapStorageUrl(): URL | undefined {
+        if (!this._wamUrl) {
+            return undefined;
+        }
+        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}`;
+        return new URL(mapStoragePath, this._wamUrl);
     }
 
     get authenticationMandatory(): boolean {

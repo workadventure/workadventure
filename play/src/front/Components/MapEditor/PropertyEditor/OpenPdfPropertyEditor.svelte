@@ -1,11 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { OpenPdfPropertyData } from "@workadventure/map-editor";
-    import { UploadFileMessage } from "@workadventure/messages";
-    import { v4 as uuidv4 } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { UploadFileFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
+    import Select from "../../Input/Select.svelte";
+    import {
+        ON_ACTION_TRIGGER_BUTTON,
+        ON_ACTION_TRIGGER_ENTER,
+        ON_ICON_TRIGGER_BUTTON,
+    } from "../../../WebRtc/LayoutManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import FileUpload from "./FileUpload/FileUpload.svelte";
 
@@ -13,42 +15,17 @@
 
     export let property: OpenPdfPropertyData;
 
-    let selectedFile: File | null = null;
-    let fileToUpload: UploadFileMessage | undefined = undefined;
-    let files: FileList | undefined = undefined;
+    function handleFileChange() {
+        property.allowAPI = true;
+        property.closable = true;
 
-    async function handleFileChange(event: Event) {
-        console.log("porperty", property);
-        const target = event.target as HTMLInputElement;
-        if (target.files && target.files.length > 0) {
-            selectedFile = target.files[0];
-            console.log("Fichier sélectionné :", selectedFile.name);
-        } else {
-            return;
+        dispatch("change");
+    }
+
+    function onTriggerValueChange() {
+        if (property.link) {
+            dispatch("change");
         }
-
-        // Send file somewhere
-        const formData = new FormData();
-        formData.append("file", selectedFile);
-
-        if (selectedFile) {
-            const fileBuffer = await selectedFile.arrayBuffer();
-            const fileAsUint8Array = new Uint8Array(fileBuffer);
-            const generatedId = uuidv4();
-            fileToUpload = {
-                id: generatedId,
-                file: fileAsUint8Array,
-                name: "test",
-                propertyId: property.id,
-            };
-
-            const roomConnection = gameManager.getCurrentGameScene()?.connection;
-            if (roomConnection === undefined) throw new Error("No connection");
-            const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
-            uploadFileCommand.emitEvent(roomConnection);
-        }
-
-        property.link = "https://workadventure.com";
     }
 </script>
 
@@ -57,9 +34,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_start.png"
             alt={$LL.mapEditor.properties.startProperties.description()}
         />
@@ -67,12 +44,29 @@
     </span>
 
     <span slot="content">
-        <input type="file" accept=".pdf" on:change={handleFileChange} />
+        <Select
+            id="trigger"
+            label={$LL.mapEditor.properties.linkProperties.trigger()}
+            bind:value={property.trigger}
+            onChange={onTriggerValueChange}
+        >
+            <option value={ON_ACTION_TRIGGER_ENTER}
+                >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
+            >
+            {#if !property.newTab}
+                <option value={ON_ICON_TRIGGER_BUTTON}
+                    >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
+                >
+            {/if}
+            <option value={ON_ACTION_TRIGGER_BUTTON}>{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
+            >
+        </Select>
 
-        {#if selectedFile}
-            <p>Fichier sélectionné : {selectedFile.name}</p>
-        {/if}
-
-        <FileUpload {files} />
+        <FileUpload
+            {property}
+            on:change={() => {
+                handleFileChange();
+            }}
+        />
     </span>
 </PropertyEditorBase>

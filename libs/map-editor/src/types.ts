@@ -95,15 +95,17 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
 export const OpenPdfPropertyData = PropertyBase.extend({
     type: z.literal("openPdf"),
     link: z.string().nullable().default("https://workadventu.re"),
-    allowAPI: z.boolean().optional(),
+    name: z.string().nullable(),
+    newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
+    allowAPI: z.boolean().optional(),
     trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
+    width: z.number().min(1).max(100).default(50).optional(),
     policy: z
         .string()
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
-    width: z.number().min(1).max(100).default(50).optional(),
     position: z.number().optional(),
 });
 

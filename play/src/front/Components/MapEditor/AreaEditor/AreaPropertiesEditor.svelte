@@ -247,10 +247,15 @@
                 return {
                     id,
                     type,
-                    link: "https://workadventu.re",
+                    link: "",
+                    name: "",
                     closable: true,
+                    newTab: false,
+                    hideButtonLabel: true,
                     allowAPI: false,
                     policy,
+                    width: 50,
+                    trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
