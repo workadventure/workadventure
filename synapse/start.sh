@@ -20,6 +20,19 @@ done
 
 envsubst < /data/homeserver.template.yaml > /data/homeserver.yaml
 
+# Wait for the OIDC mock server to be up, exit with an error after 2 minutes
+timeout=120
+elapsed=0
+while ! curl -s -f -o /dev/null http://oidc-server-mock/.well-known/openid-configuration; do
+    if [ $elapsed -ge $timeout ]; then
+        echo "Error: OIDC mock server did not start within 2 minutes."
+        exit 1
+    fi
+    echo "Waiting for OIDC mock server to be up..."
+    sleep 1
+    elapsed=$((elapsed + 1))
+done
+
 python -m synapse.app.homeserver \
     --config-path /data/homeserver.yaml \
     --generate-config \
