@@ -171,6 +171,7 @@ const chat: BaseTranslation = {
     },
     said: "said :",
     reply: "Reply",
+    replyTo: "Reply to",
     react: "React",
     copy: "Copy",
     copied: "Copied!",
@@ -354,7 +355,7 @@ const chat: BaseTranslation = {
     },
     connectionError: "Chat not available",
     requiresLoginForChatModal: {
-        title: "Log in to unlock the chat !",
+        title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
         content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
         content_3: " Please log in to proceed with the experience.",
@@ -472,6 +473,12 @@ const chat: BaseTranslation = {
             dismiss: "Dismiss",
             discordNotConfigured: "Connect to Discord",
         },
+    },
+    remoteUserNotConnected: {
+        title: "User not connected 💬",
+        descriptionNotConnected: "The user is not connected. You're not bale to start message discussion with him 😭 ",
+        descriptionWalkToCallHim: "But you may walk to him and call him to start a discussion.",
+        call: "Call {userName}",
     },
 };
 

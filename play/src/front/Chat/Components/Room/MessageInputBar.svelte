@@ -38,7 +38,7 @@
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
-    import { IconCircleX, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -92,19 +92,6 @@
             const messageToSend = message.replace(/<br>/g, "\n");
             sendMessage(messageToSend);
         }
-        if (keyDownEvent.key === "Enter" && files && files.length > 0) {
-            if (files && !(room instanceof ProximityChatRoom)) {
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
-
-                room.sendFiles(fileList).catch((error) => console.error(error));
-                files = [];
-                filesPreview = [];
-            }
-            return;
-        }
     }
 
     function sendMessage(messageToSend: string) {
@@ -114,6 +101,20 @@
         // close application part
         applicationProperty = undefined;
         applicationComponentOpened = false;
+
+        // send files
+        if (files && files.length > 0) {
+            if (!(room instanceof ProximityChatRoom)) {
+                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                    fileListAcc.items.add(currentFile.file);
+                    return fileListAcc;
+                }, new DataTransfer()).files;
+
+                room.sendFiles(fileList).catch((error) => console.error(error));
+                files = [];
+                filesPreview = [];
+            }
+        }
 
         // send message
         if (messageToSend.trim().length !== 0) {
@@ -367,35 +368,34 @@
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
-{#if $selectedChatMessageToReply !== null}
-    <div class="flex py-2 px-3 items-center gap-2 bg-contrast/50 absolute">
-        <p class="bg-contrast-800 rounded-md p-2 text-sm m-0 truncate w-full " style:overflow-wrap="anywhere">
-            {$quotedMessageContent?.body}
-        </p>
-        <button class="p-0 m-0" on:click={unselectChatMessageToReply}>
-            <IconCircleX />
-        </button>
-    </div>
-{/if}
-
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
-        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-lg ">
+    <div class="w-full p-1">
+        <div class="flex flex-row gap-2 w-full overflow-visible no-scroll-bar rounded-lg p-2 bg-contrast/80">
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-xl backdrop-opacity-10"
+                    class="relative content-center {preview.type.includes('image')
+                        ? 'w-20'
+                        : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
-                    <button class="absolute right-1 top-1 !pr-0" on:click={() => deleteFile(preview.id)}>
-                        <IconCircleX class="hover:cursor-pointer hover:opacity-10" font-size="24" />
+                    <button
+                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -left-2 -top-2"
+                        on:click={() => deleteFile(preview.id)}
+                    >
+                        <IconX font-size="12" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="w-full h-full" src={preview.url} alt={preview.name} />
+                        <img class="w-full h-full object-cover rounded-[10px]" src={preview.url} alt={preview.name} />
                     {:else}
-                        <div class="text-center">
-                            {preview.name}
-                        </div>
-                        <div class="absolute bottom-0 left-0">
-                            {formatBytes(preview.size)}
+                        <div
+                            title={preview.name}
+                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px] "
+                        >
+                            <span class="line-clamp-2 indent-3 text-xs">
+                                {preview.name}
+                            </span>
+                            <div class="rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
+                                {formatBytes(preview.size)}
+                            </div>
                         </div>
                     {/if}
                 </div>
@@ -602,9 +602,34 @@
     <MessageFileInput {room} on:fileUploaded={() => closeFileAttachmentComponent()} />
 {/if}
 <div
-    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50"
+    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
     bind:this={messageBarRef}
 >
+    {#if $selectedChatMessageToReply !== null}
+        <div class="flex p-2 items-start absolute top-0 -translate-y-full w-full">
+            <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded w-full backdrop-blur">
+                <div class="flex flex-col p-2 rounded w-full">
+                    <span class="flex flex-row justify-between">
+                        <span class="text-sm text-gray-400">
+                            {$LL.chat.replyTo()}
+                        </span>
+                        <button class="p-2 m-0" on:click={unselectChatMessageToReply}>
+                            <!--<IconCircleX />-->
+                            <IconX font-size={18} />
+                        </button>
+                    </span>
+                    <div class="flex row w-full border-l border-l-white/10 ml-1 border-solid border-0">
+                        <p
+                            class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
+                            style:overflow-wrap="anywhere"
+                        >
+                            {$quotedMessageContent?.body}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/if}
     <MessageInput
         onKeyDown={sendMessageOrEscapeLine}
         onInput={onInputHandler}
@@ -649,3 +674,16 @@
         </button>
     {/if}
 </div>
+
+<style>
+    .no-scroll-bar {
+        max-width: calc(100% + 15px);
+    }
+    .no-scroll-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>

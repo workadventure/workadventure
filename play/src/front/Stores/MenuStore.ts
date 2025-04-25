@@ -17,6 +17,7 @@ import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
@@ -445,6 +446,7 @@ function createOpenedMenuStore() {
             } else {
                 set(menu);
                 activeSecondaryZoneActionBarStore.set(undefined);
+                analyticsClient.openProfileMenu();
             }
         },
     };

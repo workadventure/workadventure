@@ -172,6 +172,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     said: "a dit :",
     reply: "Répondre",
+    replyTo: "Répondre à",
     react: "Réagir",
     copy: "Copier",
     copied: "Copié !",
@@ -473,6 +474,13 @@ const chat: DeepPartial<Translation["chat"]> = {
             dismiss: "Fermer",
             discordNotConfigured: "Synchronisation Discord",
         },
+    },
+    remoteUserNotConnected: {
+        title: "Utilisateur non connecté 💬",
+        descriptionNotConnected:
+            "L'utilisateur n'est pas connecté au monde. Vous ne pouvez pas lui envoyer de message pour le moment 😭",
+        descriptionWalkToCallHim: "Vous pouvez marcher jusqu'à lui pour l'appeler.",
+        call: "Appel {userName}",
     },
 };
 

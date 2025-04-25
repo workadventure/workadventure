@@ -93,8 +93,8 @@
                 <div>
                     <RangeSlider
                         label={$LL.mapEditor.properties.jitsiProperties.width()}
-                        min={1}
-                        max={100}
+                        min={15}
+                        max={85}
                         placeholder="50"
                         bind:value={property.width}
                         onChange={onValueChange}

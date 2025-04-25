@@ -76,4 +76,28 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await userBob.close();
     await adminPage.close();
   });
+
+  test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ browser }, { project }) => {
+    // Alice is not connected
+    const userAlice = await getPage(browser, 'Alice', Map.url("empty"));
+    const alicePosition = {
+      x: 4 * 32,
+      y: 5 * 32,
+    };
+    await Map.teleportToPosition(userAlice, alicePosition.x, alicePosition.y);
+    
+    const userUserLogin1 = await getPage(browser, 'UserLogin1', Map.url("empty"));
+    await chatUtils.open(userUserLogin1, false);
+    await chatUtils.slideToUsers(userUserLogin1);
+    // Click on chat button
+    await userUserLogin1.getByTestId(`send-message-Alice`).click();
+
+    // Check that the modal user not connected is opened
+    await expect(userUserLogin1.getByText('User not connected 💬')).toBeVisible();
+    // From the modal click on the button to walk to the user
+    await userUserLogin1.getByRole('button', { name: 'Call Alice' }).click();
+
+    // Check that the user is in bubble discussion to see the media's action button
+    await expect(userUserLogin1.locator('#cameras-container .camera-box .video-media-box .user-menu-btn')).toBeVisible({timeout: 30_000});
+  });
 });

@@ -1,6 +1,7 @@
 import { describe, vi, expect, it } from "vitest";
 
 import { UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import { Subject } from "rxjs";
 import { SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { MockRoomConnectionForSpaces } from "./MockRoomConnectionForSpaces";
@@ -15,6 +16,14 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {};
+});
+
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
 });
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
@@ -51,7 +60,7 @@ describe("SpaceRegistry", () => {
             }),
         };
 
-        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
         const space = spaceRegistry.joinSpace("space-name", []);
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);

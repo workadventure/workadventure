@@ -41,7 +41,7 @@ test.describe("Map editor interacting with object @oidc", () => {
       { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 }
     );
     await AreaEditor.setAreaName(page, "MyLinkZone");
-    await AreaEditor.addProperty(page, "Open Link");
+    await AreaEditor.addProperty(page, "openWebsite");
     await AreaEditor.setOpenLinkProperty(
       page,
       "https://workadventu.re",
@@ -79,7 +79,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
     await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
     await EntityEditor.setEntityName(page, "My Open Link");
-    await EntityEditor.addProperty(page, "Open Link");
+    await EntityEditor.addProperty(page, "openWebsite");
     await EntityEditor.setOpenLinkProperty(page, "https://workadventu.re");
     await Menu.closeMapEditor(page);
 

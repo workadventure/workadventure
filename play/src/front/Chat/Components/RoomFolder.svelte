@@ -1,6 +1,7 @@
 <script lang="ts">
     // eslint-disable-next-line import/no-unresolved
     import { get } from "svelte/store";
+    import { onMount } from "svelte";
     import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
@@ -15,7 +16,7 @@
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
     $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
-    let isOpen: boolean = localUserStore.hasFolderOpened(id) ?? false;
+    let isOpen: boolean = localUserStore.hasFolderOpened(folder.id) ?? false;
     let suggestedRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
@@ -41,6 +42,8 @@
     function toggleSuggestedRooms() {
         suggestedRoomsOpen = !suggestedRoomsOpen;
     }
+
+    onMount(() => {});
 </script>
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>

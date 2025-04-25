@@ -27,11 +27,14 @@
     });
 </script>
 
-<div class="notification-playing bg-dark-blue/95 mt-1" transition:fly={{ x: 210, duration: 500 }}>
+<div
+    class="notification-playing bg-contrast/80 p-1 backdrop-blur rounded-lg mr-2"
+    transition:fly={{ x: 210, duration: 500 }}
+>
     <img
         src={notification.icon ? icons.get(notification.icon) ?? notification.icon : waImg}
         alt="Audio playing"
-        class="bg-medium-purple rounded-full h-14"
+        class="bg-white/10 rounded-md h-12"
     />
     <p>{notification.text}</p>
 </div>
@@ -39,19 +42,16 @@
 <style lang="scss">
     /*audio html when audio message playing*/
     .notification-playing {
-        height: 54px;
-        right: 0;
         top: 40px;
         transition: all 0.1s ease-out;
         //background-color: black;
-        border-radius: 30px 0 0 30px;
         display: inline-flex;
         align-items: center;
         z-index: 750;
 
         img {
             //border-radius: 50%;
-            padding: 10px;
+            padding: 5px;
         }
 
         p {

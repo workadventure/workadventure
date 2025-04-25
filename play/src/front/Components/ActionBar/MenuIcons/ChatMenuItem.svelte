@@ -47,11 +47,12 @@
     }}
     classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
     tooltipTitle={$LL.actionbar.help.chat.title()}
-    tooltipDesc={$LL.actionbar.help.chat.desc()}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}
     disabledHelp={false}
+    media="./static/Videos/Chat.mp4"
+    desc={$LL.actionbar.help.chat.desc()}
 >
     <MessageCircleIcon />
 </ActionBarButton>

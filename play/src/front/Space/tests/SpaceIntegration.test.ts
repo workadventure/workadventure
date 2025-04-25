@@ -121,20 +121,76 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
     },
 }));
 
-const defaultPeerFactoryMock = {
-    create: vi.fn(),
-} as unknown as PeerFactoryInterface;
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
+});
+
 
 // const defaultPeerStoreMock = {
 //     getSpaceStore: vi.fn(),
 // } as unknown as PeerStoreInterface;
 
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    peerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
+    CharacterLayerManager: {
+        wokaBase64: vi.fn().mockReturnValue("data:image/png;base64,mockBase64String"),
+        prototype: {
+            getTexturesKeysForDefaultLayers: vi.fn().mockReturnValue([]),
+            getTexturesKeys: vi.fn().mockReturnValue([]),
+            loadTextures: vi.fn().mockResolvedValue(undefined),
+            getCharacterLayers: vi.fn().mockReturnValue([]),
+            setLayers: vi.fn(),
+            addLayers: vi.fn(),
+            removeLayers: vi.fn(),
+        },
+    },
+}));
+
+
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+// } as unknown as PeerStoreInterface;
+
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
+});
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
     it("should emit event when you create space and spaceFilter", () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -161,7 +217,7 @@ describe("", () => {
 
     it("should add user inSpaceFilter._users when receive AddSpaceUserMessage", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -213,7 +269,7 @@ describe("", () => {
 
     it("should define reactive property after... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -260,7 +316,7 @@ describe("", () => {
 
     it("... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -329,7 +385,7 @@ describe("", () => {
 
     it("should forward public events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -369,7 +425,7 @@ describe("", () => {
 
     it("should forward private events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection, defaultPeerFactoryMock);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 

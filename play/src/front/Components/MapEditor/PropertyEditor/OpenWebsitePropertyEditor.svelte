@@ -188,7 +188,7 @@
     }
 
     async function checkWebsiteProperty(protocolChecked = false): Promise<void> {
-        if (property.link == undefined) return;
+        if (property.link == undefined || property.link == "") return;
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
@@ -851,7 +851,7 @@
                             href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
                             target="_blank">{$LL.mapEditor.properties.linkProperties.findOutMoreHere()}</a
                         >.</span
-                    >
+                    >àà
                 </div>
             {/if}
             {#if !property.newTab}
@@ -862,9 +862,9 @@
 
                     <RangeSlider
                         id="websiteWidth"
-                        min={1}
+                        min={15}
                         label={$LL.mapEditor.properties.linkProperties.width()}
-                        max={100}
+                        max={85}
                         bind:value={property.width}
                         onChange={onValueChange}
                         variant="secondary"

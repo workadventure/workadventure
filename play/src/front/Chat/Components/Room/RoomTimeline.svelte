@@ -36,7 +36,6 @@
     let messageInputBarRef: MessageInputBar;
 
     $: messages = room?.messages;
-    $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
 
@@ -275,11 +274,7 @@
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message
-                                on:updateMessageBody={onUpdateMessageBody}
-                                {message}
-                                reactions={$messageReaction.get(message.id)}
-                            />
+                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
                         {/if}
                     </li>
                 {/each}

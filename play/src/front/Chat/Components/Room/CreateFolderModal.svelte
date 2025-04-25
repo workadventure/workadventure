@@ -8,6 +8,7 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     export let isOpen: boolean;
     export let parentID: string | undefined;
     let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
@@ -34,6 +35,7 @@
             }
         } finally {
             loadingFolderCreation = false;
+            analyticsClient.createMatrixFolder();
         }
     }
 
@@ -120,11 +122,12 @@
         {#if loadingFolderCreation}
             <p>{$LL.chat.createFolder.loadingCreation()}</p>
         {:else}
-            <button class="flex-1 justify-center" on:click={closeModal}>{$LL.chat.createFolder.buttons.cancel()}</button
+            <button class="btn btn-contrast flex-1 justify-center" on:click={closeModal}
+                >{$LL.chat.createFolder.buttons.cancel()}</button
             >
             <button
                 data-testid="createFolderButton"
-                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 disabled={createFolderOptions.name === undefined || createFolderOptions.name?.trim().length === 0}
                 on:click={() => createNewFolder(createFolderOptions)}
                 >{$LL.chat.createFolder.buttons.create()}

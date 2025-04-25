@@ -9,6 +9,7 @@ import {
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -44,7 +45,6 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
-
 export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
@@ -81,6 +81,9 @@ class ConnectionManager {
     private _cardsToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
+
+    private readonly _roomConnectionStream = new Subject<RoomConnection>();
+    public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
     get unloading() {
         return this._unloading;
@@ -564,7 +567,7 @@ class ConnectionManager {
                         this._applications.push(app);
                     }
                 }
-
+                this._roomConnectionStream.next(connection);
                 resolve(connect);
             });
         }).catch((err) => {
@@ -578,7 +581,7 @@ class ConnectionManager {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     console.info(
-                        "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
+                        "[ConnectionManager] connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
                         characterTextureIds,
@@ -588,6 +591,7 @@ class ConnectionManager {
                         availabilityStatus,
                         lastCommandId
                     );
+
                     void this.connectToRoomSocket(
                         roomUrl,
                         name,
@@ -597,7 +601,10 @@ class ConnectionManager {
                         companionTextureId,
                         availabilityStatus,
                         lastCommandId
-                    ).then((connection) => resolve(connection));
+                    ).then((connection) => {
+                        this._roomConnectionStream.next(connection.connection);
+                        resolve(connection);
+                    });
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });

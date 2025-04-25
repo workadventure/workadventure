@@ -154,12 +154,12 @@
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="flex-1 justify-center" on:click={cancelAccessSecretStorage}
+        <button class="btn flex-1 justify-center hover:bg-white/10" on:click={cancelAccessSecretStorage}
             >{$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}</button
         >
         <button
             disabled={confirmInputDisabled || isCheckingPassphrase}
-            class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+            class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
             data-testid="confirmAccessSecretStorageButton"
             on:click={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
         >
