@@ -26,6 +26,7 @@
     disabledHelp={false}
     media="./static/Videos/UserList.mp4"
     desc={$LL.actionbar.help.users.desc()}
+    tooltipShortcuts={["u"]}
 >
     <UsersIcon />
 </ActionBarButton>

@@ -25,6 +25,8 @@
         dispatch("click");
     }
 
+    const shortcut = ["c"];
+
     let chatAvailable = false;
     gameManager
         .getChatConnection()
@@ -47,6 +49,7 @@
     }}
     classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
     tooltipTitle={$LL.actionbar.help.chat.title()}
+    tooltipShortcuts={shortcut}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}
