@@ -37,6 +37,7 @@ import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
+import { UploadFileMapStorageCommand } from "./Commands/UploadFileMapStorageCommand";
 
 const editionLocks = new LockByKey<string>();
 
@@ -316,8 +317,15 @@ const mapStorageServer: MapStorageServer = {
                         );
                         break;
                     }
+                    case "uploadFileMessage": {
+                        const uploadFileMessage = editMapMessage.uploadFileMessage;
+                        await entitiesManager.executeCommand(
+                            new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
+                        );
+                        break;
+                    }
                     default: {
-                        const _exhaustiveCheck: never = editMapMessage;
+                        //const _exhaustiveCheck: never = editMapMessage;
                     }
                 }
                 // send edit map message back as a valid one

@@ -1,20 +1,26 @@
 <script lang="ts">
-    import { UploadFileMessage } from "@workadventure/messages";
-    import { onDestroy } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { Direction, FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenPdfPropertyData } from "@workadventure/map-editor";
+    import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
+    import ButtonClose from "../../../Input/ButtonClose.svelte";
+    import { gameManager } from "../../../../Phaser/Game/GameManager";
+    import { UploadFileFrontCommand } from "../../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { mapEditorFileUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
+    import { gameSceneStore } from "../../../../Stores/GameSceneStore";
     import { IconCloudUpload } from "@wa-icons";
 
-    export let files: FileList | undefined = undefined;
-    let dropZoneRef: HTMLDivElement;
-    let fileToUpload: EntityPrefab | undefined = undefined;
-    let errorOnFile: string | undefined;
-    let tagUploadInProcess: string | undefined;
+    export let property: OpenPdfPropertyData;
 
-    const BASIC_TYPE = "Custom";
+    let selectedFile: File | undefined = undefined;
+    let files: FileList | undefined = undefined;
+    let dropZoneRef: HTMLDivElement;
+    let errorOnFile: string | undefined;
+    let fileToUpload: UploadFileMessage | undefined = undefined;
+
+    const dispatch = createEventDispatcher();
+
     const filesUploadFormat = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.split(",").map(
         (format) => format.trim().split("/")[1]
     );
@@ -23,16 +29,8 @@
         if (files) {
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
-                fileToUpload = {
-                    collectionName: "c",
-                    name: file.name,
-                    imagePath: URL.createObjectURL(file),
-                    id: uuidv4(),
-                    direction: Direction.Down,
-                    tags: [],
-                    color: "",
-                    type: BASIC_TYPE,
-                };
+                selectedFile = file;
+                void handleFileChange();
             } else {
                 console.error("File format not supported");
                 errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
@@ -40,27 +38,39 @@
         }
     }
 
-    const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorFileUploadEventStore.subscribe((uploadFileMessage) => {
-        completeAndResetUpload(uploadFileMessage);
-    });
+    async function handleFileChange(): Promise<void> {
+        if (!selectedFile) {
+            return;
+        }
+        const fileBuffer = await selectedFile.arrayBuffer();
+        const fileAsUint8Array = new Uint8Array(fileBuffer);
+        const generatedId = uuidv4();
+        fileToUpload = {
+            id: generatedId,
+            file: fileAsUint8Array,
+            name: selectedFile.name,
+            propertyId: property.id,
+        };
+
+        const roomConnection = gameManager.getCurrentGameScene()?.connection;
+        if (roomConnection === undefined) throw new Error("No connection");
+        const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
+        uploadFileCommand.emitEvent(roomConnection);
+
+        const fileName = selectedFile.name.split(".")[0];
+        const fileExt = selectedFile.name.split(".")[1];
+
+        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}file/${fileName}-${
+            property.id
+        }.${fileExt}`;
+
+        property.name = selectedFile.name;
+        property.link = fileUrl;
+        dispatch("change");
+    }
 
     function isASupportedFormat(format: string): boolean {
         return format.trim().length > 0 && FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(format);
-    }
-    function completeAndResetUpload(uploadFileMessage: UploadFileMessage | undefined) {
-        if (uploadFileMessage === undefined && files !== undefined) {
-            initFileUpload();
-        }
-
-        // At the end, open the categorie of image uploaded
-        selectCategoryStore.set(tagUploadInProcess);
-    }
-
-    function initFileUpload() {
-        files = undefined;
-        fileToUpload = undefined;
-        mapEditorFileUploadEventStore.set(undefined);
-        errorOnFile = undefined;
     }
 
     function dropHandler(event: DragEvent) {
@@ -82,63 +92,65 @@
         dropZoneRef.classList.remove("border-cyan-400");
     }
 
-    async function setFileUploadStore() {
-        const file = files?.item(0);
-        if (fileToUpload && file) {
-            const fileBuffer = await file.arrayBuffer();
-            const fileAsUint8Array = new Uint8Array(fileBuffer);
-            const generatedId = uuidv4();
-            tagUploadInProcess = fileToUpload.tags && fileToUpload.tags.length > 0 ? fileToUpload.tags[0] : BASIC_TYPE;
-            console.log("tagUploadInProcess", tagUploadInProcess, get(mapEditorFileUploadEventStore));
-            mapEditorFileUploadEventStore.set({
-                id: generatedId,
-                file: fileAsUint8Array,
-                name: fileToUpload.name,
-                propertyId: fileToUpload.id,
-            });
-            console.log("mapEditorEntityUploadEventStore", get(mapEditorFileUploadEventStore));
-        }
+    function deleteFile() {
+        property.link = null;
+        property.name = null;
+        // TODO : remove the file from the map storage
+        // emit event to delete the file
+        dispatch("change");
     }
-
-    onDestroy(() => {
-        mapEditorEntityUploadEventStoreUnsubscriber();
-    });
 </script>
 
 <div class="no-padding">
-    <p class="m-0">{$LL.mapEditor.properties.openPdfProperties.uploadFile.title()}</p>
-    <p class="opacity-50">{$LL.mapEditor.properties.openPdfProperties.uploadFile.description()}</p>
-    <div
-        on:drop|preventDefault|stopPropagation={dropHandler}
-        on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
-        on:dragleave|preventDefault={() => dropZoneRef.classList.remove("border-cyan-400")}
-        bind:this={dropZoneRef}
-        class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
-    >
-        <input
-            id="upload"
-            class="hidden"
-            type="file"
-            accept={FILE_UPLOAD_SUPPORTED_FORMATS_FRONT}
-            bind:files
-            data-testid="uploadCustomAsset"
-            on:change={setFileUploadStore}
-        />
-
-        <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
-            <IconCloudUpload font-size={32} />
-            <span class="flex flex-col">
-                <span class="hover:cursor-pointer">
-                    {$LL.mapEditor.properties.openPdfProperties.uploadFile.dragDrop()}
-                    <span class="hover:cursor-pointer underline text-contrast-300"
-                        >{$LL.mapEditor.properties.openPdfProperties.uploadFile.chooseFile()}</span
-                    >
-                </span>
-                <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>
-                {#if errorOnFile}
-                    <span class="text-xx text-red-500">{errorOnFile}</span>
-                {/if}
-            </span></label
+    {#if !property.link}
+        <p class="m-0">{$LL.mapEditor.properties.openPdfProperties.uploadFile.title()}</p>
+        <p class="opacity-50">{$LL.mapEditor.properties.openPdfProperties.uploadFile.description()}</p>
+        <div
+            on:drop|preventDefault|stopPropagation={dropHandler}
+            on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
+            on:dragleave|preventDefault={() => dropZoneRef.classList.remove("border-cyan-400")}
+            bind:this={dropZoneRef}
+            class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
         >
-    </div>
+            <input
+                id="upload"
+                class="hidden"
+                type="file"
+                accept={FILE_UPLOAD_SUPPORTED_FORMATS_FRONT}
+                bind:files
+                data-testid="uploadCustomAsset"
+            />
+
+            <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
+                <IconCloudUpload font-size={32} />
+                <span class="flex flex-col">
+                    <span class="hover:cursor-pointer">
+                        {$LL.mapEditor.properties.openPdfProperties.uploadFile.dragDrop()}
+                        <span class="hover:cursor-pointer underline text-contrast-300"
+                            >{$LL.mapEditor.properties.openPdfProperties.uploadFile.chooseFile()}</span
+                        >
+                    </span>
+                    <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>
+                    {#if errorOnFile}
+                        <span class="text-xx text-red-500">{errorOnFile}</span>
+                    {/if}
+                </span></label
+            >
+        </div>
+    {:else}
+        <div class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-between">
+            <div>{property.name}</div>
+            <ButtonClose
+                dataTestId="closeFileUpload"
+                bgColor="bg-white/10"
+                hoverColor="bg-white/20"
+                textColor="text-white"
+                on:click={() => {
+                    selectedFile = undefined;
+                    deleteFile();
+                    dispatch("change");
+                }}
+            />
+        </div>
+    {/if}
 </div>
