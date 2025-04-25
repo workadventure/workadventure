@@ -35,15 +35,12 @@
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container pb-4">
                 <div class="flex flex-row items-start justify-between">
-                    <h3 class="text-lg text-left py-2">
-                        <img
-                            draggable="false"
-                            src={todoListPng}
-                            class="w-6 -mb-1 mx-2"
-                            alt={$LL.menu.icon.open.todoList()}
-                        />
-                        To Do 📋 (beta)
-                    </h3>
+                    <div class="flex flex-row items-center gap-2 flex-wrap">
+                        <img draggable="false" src={todoListPng} class="w-6" alt={$LL.menu.icon.open.todoList()} />
+                        <h3 class="text-lg text-left py-2">To Do 📋</h3>
+                        <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
+                    </div>
+
                     <ButtonClose on:click={closeTodoList} />
                 </div>
             </div>

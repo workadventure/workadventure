@@ -48,19 +48,18 @@
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
                 <div class="flex flex-row items-start justify-between">
-                    <h3 class="text-xl text-left">
-                        <img
-                            draggable="false"
-                            src={calendarSvg}
-                            class="w-8 mx-2 -mb-1"
-                            alt={$LL.menu.icon.open.calendar()}
-                        />
-                        {new Date().toLocaleString("en-EN", {
-                            month: "long",
-                            day: "2-digit",
-                            year: "numeric",
-                        })} (beta)
-                    </h3>
+                    <div class="flex flex-row items-center gap-2 flex-wrap">
+                        <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                        <h3 class="text-xl text-left leading-none">
+                            {new Date().toLocaleString("en-EN", {
+                                month: "long",
+                                day: "2-digit",
+                                year: "numeric",
+                            })}
+                        </h3>
+                        <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
+                    </div>
+
                     <ButtonClose on:click={closeCalendar} />
                 </div>
                 <div class="bg-white/20 h-[1px] w-full my-2" />
