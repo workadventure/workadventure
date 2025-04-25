@@ -87,7 +87,7 @@ jobs:
   push-to-sentry:
     runs-on: ubuntu-latest
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
     needs:
 #      - build-play
       - build-back
