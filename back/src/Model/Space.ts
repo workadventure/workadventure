@@ -122,13 +122,23 @@ export class Space implements CustomJsonReplacerInterface {
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
         try {
             const usersList = this.usersList(sourceWatcher);
+            const user = usersList.get(spaceUserId);
+
             usersList.delete(spaceUserId);
+
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
             if (usersList.size === 0) {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
             }
+
+            if (!user) {
+                console.error("User not found in this space", spaceUserId);
+                Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
+                return;
+            }
+            this.communicationManager.handleUserDeleted(user);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
@@ -146,7 +156,6 @@ export class Space implements CustomJsonReplacerInterface {
                 },
                 sourceWatcher
             );
-            this.communicationManager.handleUserDeleted(user);
         }
     }
 
