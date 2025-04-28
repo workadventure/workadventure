@@ -10,7 +10,9 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     },
     teams: {
         openingMeeting: "Ouverture de la réunion Teams...",
-        unableJoinMeeting: "Impossible de rejoindre la réunion Teams!",
+        unableJoinMeeting: "Impossible de rejoindre la réunion Teams !",
+        userNotConnected: "Vous n'êtes pas connecté à Teams !",
+        connectToYourTeams: "Connectez-vous à votre compte Teams 🙏",
     },
     discord: {
         integration: "INTÉGRATION",

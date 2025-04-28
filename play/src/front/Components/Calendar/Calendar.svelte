@@ -7,6 +7,8 @@
     import LL from "../../../i18n/i18n-svelte";
 
     import calendarSvg from "../images/applications/outlook.svg";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -36,6 +38,11 @@
                 );
         });
     }
+
+    function goToLoginPage() {
+        analyticsClient.login();
+        window.location.href = "/login";
+    }
 </script>
 
 <div class="calendar bg-dark-blue/95 select-text">
@@ -55,6 +62,17 @@
                 <h4 class="text-l text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
             <div class="flex flex-col justify-center gap-4">
+                {#if !$userIsConnected}
+                    <div class="flex flex-col justify-center items-center">
+                        <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
+                        <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
+                        <button
+                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            on:click={goToLoginPage}
+                            >{$LL.menu.profile.login()}
+                        </button>
+                    </div>
+                {/if}
                 {#if $calendarEventsStore.size > 0}
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
                         <div class="flex flex-col justify-center">
