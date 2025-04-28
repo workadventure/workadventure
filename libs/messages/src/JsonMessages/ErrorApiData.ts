@@ -25,7 +25,7 @@ export const isErrorApiErrorData = extendApi(
       example:
         "If you would like more information, you can contact the administrator or us at example@workadventu.re.",
     }),
-    image: extendApi(z.string(), {
+    image: extendApi(z.string().optional(), {
       description:
         "The URL of the image displayed just under the logo in the error screen.",
       example: "https://example.com/error.png",

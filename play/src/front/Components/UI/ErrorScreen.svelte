@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { errorImageStore, errorLogoStore, errorScreenStore } from "../../Stores/ErrorScreenStore";
+    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
 
@@ -9,29 +9,20 @@
     import LL from "../../../i18n/i18n-svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
 
+    import logoImg from "../images/logo-min-white.png";
+    import errorGif from "./images/error.gif";
+
+    let logoError: HTMLImageElement;
+    let errorImage: HTMLImageElement;
+
+
     let errorScreen = $errorScreenStore;
     let logoErrorParent: HTMLDivElement;
     let imageErrorParent: HTMLDivElement;
 
     let logoErrorSrc =
-        errorScreen?.image ??
-        gameManager?.currentStartedRoom?.errorSceneLogo ??
         gameManager?.currentStartedRoom?.loginSceneLogo ??
-        undefined;
-
-    let logoError: HTMLImageElement = $errorLogoStore;
-
-    if (logoErrorSrc !== undefined) {
-        logoError = document.createElement("img");
-        logoError.src = logoErrorSrc;
-    }
-
-    logoError.style.maxHeight = "25vh";
-    logoError.style.maxWidth = "80%";
-
-    const errorImage: HTMLImageElement = $errorImageStore;
-    errorImage.style.height = "125px";
-    errorImage.style.maxWidth = "100%";
+        logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
@@ -78,9 +69,22 @@
         transition:fly={{ y: -200, duration: 500 }}
     >
         <div class="flex flex-col items-center" style=" width: 90%;">
-            <div class="logo" bind:this={logoErrorParent} />
-            <div class="icon" bind:this={imageErrorParent} />
-            {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
+            <!-- <div class="logo" bind:this={logoErrorParent} />
+            <div class="icon" bind:this={imageErrorParent} /> -->
+            <div class="logo">
+                {#if logoErrorSrc}
+                    <img src={logoErrorSrc} alt="Logo error" style="max-height:25vh; max-width:80%;" />
+                {/if}
+            </div>
+
+        
+            <div class="icon">
+                
+                <img src={errorScreen.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif} alt="Error Image" style="height:125px; max-width:100%;" />
+                
+            </div>
+            
+            {#if $errorScreenStore.type !== "retry"}<h2 class="mt-10">{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
             <p class="details">
