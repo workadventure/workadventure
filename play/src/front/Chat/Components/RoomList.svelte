@@ -166,7 +166,7 @@
                     <ChatError />
                 {/if}
 
-                {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isChatEnabled}
+                {#if !$userIsConnected && gameManager.getCurrentGameScene().room.isMatrixChatEnabled}
                     <RequireConnection />
                 {:else if $loginTokenErrorStore}
                     <RequireConnection>
@@ -338,22 +338,22 @@
 
     <div class="w-full flex flex-col col-span-2 h-fit">
         <ExternalComponents zone="chatBand" />
-        <!--{#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}-->
-        <div class="w-full">
-            <button
-                data-testid="restoreEncryptionButton"
-                on:click|stopPropagation={initChatConnectionEncryption}
-                class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
-            >
-                <IconCloudLock font-size="20" />
-                <div class="text-sm font-bold grow text-left">
-                    {$LL.chat.e2ee.encryptionNotConfigured()}
-                </div>
-                <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
-                    {$LL.chat.e2ee.configure()}
-                </div>
-            </button>
-        </div>
-        <!--{/if}-->
+        {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
+            <div class="w-full">
+                <button
+                    data-testid="restoreEncryptionButton"
+                    on:click|stopPropagation={initChatConnectionEncryption}
+                    class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
+                >
+                    <IconCloudLock font-size="20" />
+                    <div class="text-sm font-bold grow text-left">
+                        {$LL.chat.e2ee.encryptionNotConfigured()}
+                    </div>
+                    <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
+                        {$LL.chat.e2ee.configure()}
+                    </div>
+                </button>
+            </div>
+        {/if}
     </div>
 </div>

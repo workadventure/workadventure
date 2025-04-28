@@ -9,8 +9,11 @@
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
+
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
+    const showChatButton = gameScene.room.isChatEnabled;
+    const showUserListButton = gameScene.room.isChatOnlineListEnabled;
     const showNavBar = gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
     const userProviderMergerPromise = gameScene.userProviderMerger;
     let searchLoader = false;
@@ -63,14 +66,14 @@
 <div class="p-2 flex items-center absolute w-full z-40">
     <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
-            {#if $navChat.key === "chat"}
+            {#if $navChat.key === "chat" && showUserListButton}
                 <button
                     class="userList p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white"
                     on:click={() => navChat.switchToUserList()}
                 >
                     <IconUsers font-size="20" />
                 </button>
-            {:else}
+            {:else if showChatButton}
                 <button
                     class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white"
                     on:click={() => navChat.switchToChat()}
