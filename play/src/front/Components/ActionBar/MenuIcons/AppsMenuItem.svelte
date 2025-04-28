@@ -41,7 +41,7 @@
         tooltipTitle={$LL.actionbar.help.apps.title()}
         disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
         state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
-        dataTestId={undefined}
+        dataTestId="apps-button"
         action={floatingUiRef}
         media="./static/images/tooltip-exemple.gif"
         desc={$LL.actionbar.help.apps.desc()}
@@ -52,28 +52,28 @@
                 : "stroke-white fill-transparent"}
             hover="group-hover/btn-apps:fill-white"
         />
+    </ActionBarButton>
 
-        {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div
-                class="absolute"
-                use:floatingUiContent
-                use:clickOutside={() => {
-                    openedMenuStore.close("appMenu");
-                }}
-            >
-                <div class="flex justify-center m-[unset]">
-                    <div use:arrowAction />
-                    <div class="bottom-action-bar">
-                        <div
-                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur rounded-md p-1"
-                        >
-                            <AppsMenuContent />
-                        </div>
+    {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+        <nav
+            class="absolute"
+            use:floatingUiContent
+            use:clickOutside={() => {
+                openedMenuStore.close("appMenu");
+            }}
+        >
+            <div class="flex justify-center m-[unset]">
+                <div use:arrowAction />
+                <div class="bottom-action-bar">
+                    <div
+                        class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur rounded-md p-1"
+                    >
+                        <AppsMenuContent />
                     </div>
                 </div>
             </div>
-        {/if}
-    </ActionBarButton>
+        </nav>
+    {/if}
 {:else}
     <HeaderMenuItem label={$LL.actionbar.help.apps.title()} />
     <AppsMenuContent />
