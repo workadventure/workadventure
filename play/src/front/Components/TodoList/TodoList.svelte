@@ -4,10 +4,11 @@
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
     import todoListPng from "../images/applications/todolist.png";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import TodoTask from "./TodoTask.svelte";
-    import { IconArrowDown } from "@wa-icons";
+    import { IconChevronRight } from "@wa-icons";
 
     let todoTaskCompletedOpened = false;
     let totoListOpenedId = writable<Set<string>>(new Set());
@@ -32,16 +33,23 @@
     }
 </script>
 
-<div class="totolist bg-dark-blue/95 select-text">
-    <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-        <button class="close-window" data-testid="mapEditor-close-button" on:click={closeTodoList}>&#215;</button>
-
+<div class="totolist p-1 @md/actions:p-2 select-text max-h-screen flex">
+    <div
+        class="sidebar p-2 [&>*]:p-1 max-h-full overflow-y-auto bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
+        in:fly={{ x: 100, duration: 250, delay: 200 }}
+        out:fly={{ x: 100, duration: 200 }}
+    >
         <div class="mapexplorer flex flex-col overflow-auto">
-            <div class="header-container">
-                <h3 class="text-l text-left">
-                    <img draggable="false" src={todoListPng} class="w-8 mx-2" alt={$LL.menu.icon.open.todoList()} />
-                    To Do 📋 (beta)
-                </h3>
+            <div class="header-container pb-4">
+                <div class="flex flex-row items-start justify-between">
+                    <div class="flex flex-row items-center gap-2 flex-wrap">
+                        <img draggable="false" src={todoListPng} class="w-6" alt={$LL.menu.icon.open.todoList()} />
+                        <h3 class="text-lg text-left py-2">To Do 📋</h3>
+                        <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
+                    </div>
+
+                    <ButtonClose on:click={closeTodoList} />
+                </div>
             </div>
             <div class="flex flex-col justify-center gap-4">
                 {#if $userIsConnected}
@@ -59,27 +67,44 @@
                     <div class="flex flex-col gap-2">
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            class="flex justify-between items-center bg-dark-purple/80 hover:bg-dark-purple/100 p-2 rounded-md cursor-pointer"
+                            class="flex justify-between items-center bg-white/10 hover:bg-white/20 p-2 rounded-md cursor-pointer"
                             on:click={() => openTodoList(todoList.id)}
                         >
-                            <h4 class="text-l text-left">
-                                {todoList.title} ({todoList.tasks.filter(
-                                    (task) => task.status === "notStarted" || task.status === "inProgress"
-                                ).length})
-                            </h4>
-                            {#if $totoListOpenedId.has(todoList.id)}
-                                <IconArrowDown />
-                            {:else}
-                                <IconArrowDown class="transform rotate-180" />
-                            {/if}
+                            <div class="text-base text-left flex flex-row gap-3 items-center w-full">
+                                <h4 class="text-base overflow-hidden text-ellipsis">{todoList.title}</h4>
+                                <div
+                                    class="bg-white font-bold text-secondary rounded flex- items-center justify-center aspect-square min-w-6"
+                                >
+                                    <div class="text-center">
+                                        {todoList.tasks.filter(
+                                            (task) => task.status === "notStarted" || task.status === "inProgress"
+                                        ).length}
+                                    </div>
+                                </div>
+                            </div>
+                            <IconChevronRight
+                                class="{$totoListOpenedId.has(todoList.id) ? 'rotate-90' : ''} transition-all"
+                            />
                         </div>
-                        <div class="flex flex-col gap-4 p-2" class:hidden={!$totoListOpenedId.has(todoList.id)}>
-                            {#each todoList.tasks.filter((task) => task.status === "notStarted") as item (item.id)}
-                                <TodoTask task={item} />
-                            {/each}
-                            {#each todoList.tasks.filter((task) => task.status === "inProgress") as item (item.id)}
-                                <TodoTask task={item} />
-                            {/each}
+                        <div class="flex flex-col gap-0.5 p-2" class:hidden={!$totoListOpenedId.has(todoList.id)}>
+                            <div>
+                                {#each todoList.tasks.filter((task) => task.status === "notStarted") as item (item.id)}
+                                    <TodoTask task={item} />
+                                {/each}
+                                {#each todoList.tasks.filter((task) => task.status === "inProgress") as item (item.id)}
+                                    <TodoTask task={item} />
+                                {/each}
+                                {#if todoTaskCompletedOpened}
+                                    {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}
+                                        <TodoTask task={item} />
+                                    {/each}
+                                {/if}
+                                <!--                                    <div class="flex flex-col gap-4" class:hidden={!todoTaskCompletedOpened}>-->
+                                <!--                                        {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}-->
+                                <!--                                            <TodoTask task={item} />-->
+                                <!--                                        {/each}-->
+                                <!--                                    </div>-->
+                            </div>
                             {#if todoList.tasks.filter((task) => task.status === "completed").length > 0}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 {#if todoTaskCompletedOpened === false}
@@ -90,11 +115,6 @@
                                         See completed task ☕️
                                     </span>
                                 {/if}
-                                <div class="flex flex-col gap-4" class:hidden={!todoTaskCompletedOpened}>
-                                    {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}
-                                        <TodoTask task={item} />
-                                    {/each}
-                                </div>
                                 {#if todoTaskCompletedOpened === true}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <span
@@ -140,8 +160,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1.5em;
-            width: 23em !important;
         }
     }
 </style>
