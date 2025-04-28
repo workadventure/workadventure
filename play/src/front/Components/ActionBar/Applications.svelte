@@ -45,20 +45,6 @@
     function noDrag() {
         return false;
     }
-
-    /*onMount(() => {
-        // Subscribe to the emote menu store and close the app menu if the emote menu is opened
-        unsubscriptionSecondaryZoneMenuStore = activeSecondaryZoneActionBarStore.subscribe((value) => {
-            if (value !== undefined) {
-                appMenuOpened = false;
-            }
-        });
-    });
-
-    onDestroy(() => {
-        // Unsubscribe to the emote menu store
-        if (unsubscriptionSecondaryZoneMenuStore) unsubscriptionSecondaryZoneMenuStore();
-    });*/
 </script>
 
 {#if oneApplicationIsActivated()}
