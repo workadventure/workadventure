@@ -7,7 +7,7 @@
     export let peer: Streamable;
 
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
-    if (peer.media.type === "mediaStore") {
+    if (peer.media.type === "mediaStore" && !peer.muteAudio) {
         streamStore = peer.media.streamStore;
     }
 </script>
