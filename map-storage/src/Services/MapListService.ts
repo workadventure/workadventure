@@ -69,7 +69,7 @@ export class MapListService {
                 };
             } else {
                 Sentry.captureException(outcome.reason);
-                console.log(outcome.reason);
+                console.error(`[${new Date().toISOString()}]`, outcome.reason);
             }
         }
 
@@ -200,12 +200,15 @@ export class MapListService {
             return cacheFile;
         } catch (e: unknown) {
             if (nbTry === 0) {
-                console.log("Trying to regenerate the cache file");
+                console.log(`[${new Date().toISOString()}] Trying to regenerate the cache file`);
                 // The file does not exist. Let's generate it
                 await this.generateCacheFileNoLimit(domain);
                 return this.readCacheFileNoLimit(domain, nbTry + 1);
             }
-            console.error(`Error while trying to read a cache file for domain ${domain}:`, e);
+            console.error(
+                `[${new Date().toISOString()}] Error while trying to read a cache file for domain ${domain}:`,
+                e
+            );
             Sentry.captureException(
                 `Error while trying to read a cache file for domain ${domain}: ${JSON.stringify(e)}`
             );

@@ -36,13 +36,13 @@ if (SENTRY_DSN != undefined) {
         Sentry.init(sentryOptions);
 
         setErrorHandler((error: Error) => {
-            console.error(error);
+            console.error(`[${new Date().toISOString()}]`, error);
             Sentry.captureException(error);
         });
 
-        console.info("Sentry initialized");
+        console.info(`[${new Date().toISOString()}] Sentry initialized`);
     } catch (e) {
-        console.error("Error while initializing Sentry", e);
+        console.error(`[${new Date().toISOString()}] Error while initializing Sentry`, e);
     }
 }
 import { MapListService } from "./Services/MapListService";
@@ -58,8 +58,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
     if (err) {
         throw err;
     }
-    console.log("Application is running");
-    console.log("gRPC port is 50053");
+    console.log(`[${new Date().toISOString()}] Application is running`);
+    console.log(`[${new Date().toISOString()}] gRPC port is 50053`);
     server.start();
 });
 
@@ -128,5 +128,5 @@ if (fs.existsSync("dist-ui")) {
 }
 
 app.listen(3000, () => {
-    console.log("Application is running on port 3000");
+    console.log(`[${new Date().toISOString()}] Application is running on port 3000`);
 });
