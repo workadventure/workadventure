@@ -28,7 +28,7 @@ export class LiveKitService {
         }
         
         await this.roomServiceClient.createRoom(createOptions);
-        this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
+        //this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
     }
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
@@ -144,14 +144,14 @@ export class LiveKitService {
             this.currentRecordingInformation = result;
 
             // Stop recording after 60 seconds
-            setTimeout(async () => {
-                try {
-                     await this.stopRecording();
-                } catch (error) {
-                    console.error('Failed to auto-stop recording after 10 seconds:', error);
-                    Sentry.captureException(error);
-                }
-            }, 60000);
+            // setTimeout(async () => {
+            //     try {
+            //          await this.stopRecording();
+            //     } catch (error) {
+            //         console.error('Failed to auto-stop recording after 10 seconds:', error);
+            //         Sentry.captureException(error);
+            //     }
+            // }, 60000);
         } catch (error) {
             console.error('Failed to start recording:', error);
             Sentry.captureException(error);
