@@ -366,8 +366,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
+    
+        //TODO : set le peer dans livekitScreenShareStreamStore / probleme de connection quand on switch pour l'instant 
+        this.space.livekitScreenShareStreamStore.delete(user.userId);
         this.space.screenSharingPeerStore.set(user.userId, peer);
-        // this.space.livekitScreenShareStreamStore.set(user.userId, peer);
+
+        //this.space.livekitScreenShareStreamStore.set(user.userId, peer);
         this._screenSharingPeerAdded.next(peer);
         return peer;
     }
@@ -423,6 +427,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 return;
             }
             this._screenSharingPeerRemoved.next(peer);
+            this.space.screenSharingPeerStore.delete(userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
            // peer.destroy();
