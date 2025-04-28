@@ -1,15 +1,20 @@
 import { SpaceUser } from '@workadventure/messages';
-import { RoomServiceClient, AccessToken , CreateOptions, TrackSource } from 'livekit-server-sdk';
+import { RoomServiceClient, AccessToken , CreateOptions, TrackSource , EgressClient, EncodedFileOutput , EgressInfo, S3Upload, EncodedFileType } from 'livekit-server-sdk';
 import * as Sentry from "@sentry/node";
 import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from '../../Enum/EnvironmentVariable';
     
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
+const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
 export class LiveKitService {
 
     private roomServiceClient: RoomServiceClient;
+    private egressClient: EgressClient;
+    private currentRecordingInformation: EgressInfo | null = null;
 
-    constructor(createRoomServiceClient: (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => RoomServiceClient = defaultRoomServiceClient, private livekitHost = LIVEKIT_HOST, private livekitApiKey = LIVEKIT_API_KEY, private livekitApiSecret = LIVEKIT_API_SECRET, private livekitFrontendUrl = LIVEKIT_WS_URL) {
+    constructor(createRoomServiceClient: (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => RoomServiceClient = defaultRoomServiceClient, createEgressClient: (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) => EgressClient = defaultEgressClient, private livekitHost = LIVEKIT_HOST, private livekitApiKey = LIVEKIT_API_KEY, private livekitApiSecret = LIVEKIT_API_SECRET, private livekitFrontendUrl = LIVEKIT_WS_URL) {
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
+        this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
+        
     }
 
 
@@ -23,12 +28,10 @@ export class LiveKitService {
         }
         
         await this.roomServiceClient.createRoom(createOptions);
+        this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
     }
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
-        console.log(">>>> generateToken", {
-            identity: `${user.uuid}||${user.spaceUserId}`,
-        });
         try {
             const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
                 //TODO : séparateur a maintenir coté front et back : voir comment on peut changer ça 
@@ -62,6 +65,9 @@ export class LiveKitService {
     deleteRoom(roomName: string): void {
         try {
             this.roomServiceClient.deleteRoom(roomName);
+            if(this.currentRecordingInformation) {
+                this.stopRecording();
+            }
         } catch (error) {
             console.error(`Error deleting room ${roomName}:`, error);
             Sentry.captureException(error);
@@ -95,5 +101,72 @@ export class LiveKitService {
     getLivekitFrontendUrl(): string {
         return this.livekitFrontendUrl;
     }
+
+    //TODO : voir si on autorise plusieurs enregistrements en même temps
+    async startRecording(roomName: string, layout: string = 'grid'): Promise<void> {
+        try {
+            
+            //TODO : use env variable / voir si on utilise toujours un S3
+            const endpoint = 'http://minio-livekit:9000';
+            const accessKey = 'minio-access-key';
+            const secret = 'minio-secret-access-key';
+            const region = 'eu-west-1';
+            const bucket = 'livekit-recording';
+            const filepath = `out/test-${new Date().toISOString().slice(0, 19)}`;
+            
+            const output = new EncodedFileOutput({
+                fileType: EncodedFileType.MP4,
+                filepath,
+                output: {
+                  case: 's3',
+                  value: new S3Upload({
+                    endpoint,
+                    accessKey,
+                    region,
+                    secret,
+                    bucket,
+                    forcePathStyle: true
+                  })
+                },
+                disableManifest: true
+              })
+              
+            const result = await this.egressClient.startRoomCompositeEgress(
+                    roomName,
+                     {
+                        file: output,
+                     },
+                     {
+                        layout
+                     }  
+            );
+
+            this.currentRecordingInformation = result;
+
+            // Stop recording after 60 seconds
+            setTimeout(async () => {
+                try {
+                     await this.stopRecording();
+                } catch (error) {
+                    console.error('Failed to auto-stop recording after 10 seconds:', error);
+                    Sentry.captureException(error);
+                }
+            }, 60000);
+        } catch (error) {
+            console.error('Failed to start recording:', error);
+            Sentry.captureException(error);
+            throw new Error('Failed to start recording');
+        }
+    }
+
+    async stopRecording(): Promise<void> {
+        if (!this.currentRecordingInformation) {
+            console.warn('No recording to stop');
+            return;
+        }
+        const result = await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
+        this.currentRecordingInformation = null;
+    }
+
     
 }
