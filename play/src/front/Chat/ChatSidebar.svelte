@@ -25,6 +25,14 @@
     const isUserListEnabled = gameScene.room.isChatOnlineListEnabled;
 
     function onKeyDown(e: KeyboardEvent) {
+        const activeElement = document.activeElement as HTMLElement | null;
+        const dataTestId: string | null | undefined = activeElement?.getAttribute("data-testid");
+        if (
+            activeElement &&
+            (activeElement.tagName === "INPUT" || activeElement.tagName === "TEXTAREA" || dataTestId === "messageInput")
+        ) {
+            return; // Ignore key events when an input or textarea is focused
+        }
         if (e.key === "c") {
             if (!isChatEnabled) {
                 return;
