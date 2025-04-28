@@ -183,7 +183,7 @@
     "ts-deepmerge": "^2.0.4",
     "ts-deferred": "^1.0.4",
     "ts-proto-descriptors": "^1.15.0",
-    "tsx": "^4.7.0",
+    "tsx": "^4.7.1",
     "typesafe-i18n": "^5.26.2",
     "uuid": "^9.0.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",

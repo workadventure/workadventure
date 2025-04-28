@@ -75,8 +75,7 @@ services:
       MINIO_ROOT_PASSWORD: "minio-secret-access-key"
       MINIO_DEFAULT_BUCKETS: "livekit-recording:public"
       MINIO_SITE_REGION: "eu-west-1"
-    volumes:
-      - minio-livekit:/data
+
   reverse-proxy:
     networks:
       default:

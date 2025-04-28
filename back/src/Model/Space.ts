@@ -209,6 +209,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
         });
     }
+
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
         debug(`${this.name} => watcher removed ${watcher.id}`);

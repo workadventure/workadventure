@@ -13,7 +13,7 @@ const authenticators: string[] = [];
 
 if (ENV_VARS.AUTHENTICATION_STRATEGY) {
     console.warn(
-        "The AUTHENTICATION_STRATEGY environment variable is deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead"
+        `[${new Date().toISOString()}] The AUTHENTICATION_STRATEGY environment variable is deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead`
     );
     switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
         case "Bearer":
@@ -46,7 +46,7 @@ if (ENV_VARS.ENABLE_BEARER_AUTHENTICATION) {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         done: (error: any, user?: any, options?: any) => void
     ) => {
-        console.log("Bearer authentication received:", token);
+        console.log(`[${new Date().toISOString()}] Bearer authentication received:`, token);
         if (authToken && token === authToken) {
             return done(null, {}, { scope: "all" });
         }

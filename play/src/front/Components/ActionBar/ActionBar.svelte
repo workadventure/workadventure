@@ -41,8 +41,8 @@
     let actionBarWidth: number;
 
     const gameScene = gameManager.getCurrentGameScene();
-    const showChatButton = gameScene.room.isChatOnlineListEnabled;
-    const showUserListButton = gameScene.room.isChatDisconnectedListEnabled;
+    const showChatButton = gameScene.room.isChatEnabled;
+    const showUserListButton = gameScene.room.isChatOnlineListEnabled;
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -80,20 +80,18 @@
 {#if !$hideActionBarStoreBecauseOfChatBar}
     <ResponsiveActionBar bind:rightDiv bind:actionBarWidth>
         <div slot="left" class="justify-start flex-none">
-            {#if showChatButton || showUserListButton}
-                <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
-                    {#if !$chatVisibilityStore}
-                        {#if showChatButton}
-                            <ChatMenuItem last={isSmallScreen ? true : undefined} />
-                        {/if}
-                        {#if showUserListButton && !isSmallScreen}
-                            <UserListMenuItem />
-                        {/if}
-                    {:else}
-                        <CloseChatMenuItem />
+            <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
+                {#if !$chatVisibilityStore}
+                    {#if showChatButton}
+                        <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
                     {/if}
-                </div>
-            {/if}
+                    {#if !isSmallScreen && showUserListButton}
+                        <UserListMenuItem state={showUserListButton ? "normal" : "disabled"} />
+                    {/if}
+                {:else}
+                    <CloseChatMenuItem />
+                {/if}
+            </div>
         </div>
 
         <div
@@ -116,7 +114,7 @@
 
                         {#if smallArrowVisible}
                             <div
-                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-[2.86rem] m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
                                     ? 'opacity-100'
                                     : 'group-hover/hardware:opacity-100'}"
                             >

@@ -7,6 +7,9 @@
     import LL from "../../../i18n/i18n-svelte";
 
     import calendarSvg from "../images/applications/outlook.svg";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -36,25 +39,51 @@
                 );
         });
     }
+
+    function goToLoginPage() {
+        analyticsClient.login();
+        window.location.href = "/login";
+    }
 </script>
 
-<div class="calendar bg-dark-blue/95 select-text">
-    <div class="sidebar " in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-        <button class="close-window" data-testid="mapEditor-close-button" on:click={closeCalendar}>&#215;</button>
-
+<div class="calendar p-1 @md/actions:p-2 max-h-screen select-text flex">
+    <div
+        class="sidebar p-2 [&>*]:p-1 max-h-full bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
+        in:fly={{ x: 100, duration: 250, delay: 200 }}
+        out:fly={{ x: 100, duration: 200 }}
+    >
         <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
-                <h3 class="text-l text-left">
-                    <img draggable="false" src={calendarSvg} class="w-8 mx-2" alt={$LL.menu.icon.open.calendar()} />
-                    {new Date().toLocaleString("en-EN", {
-                        month: "long",
-                        day: "2-digit",
-                        year: "numeric",
-                    })} (beta)
-                </h3>
-                <h4 class="text-l text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                <div class="flex flex-row items-start justify-between">
+                    <div class="flex flex-row items-center gap-2 flex-wrap">
+                        <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                        <h3 class="text-xl text-left leading-none">
+                            {new Date().toLocaleString("en-EN", {
+                                month: "long",
+                                day: "2-digit",
+                                year: "numeric",
+                            })}
+                        </h3>
+                        <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
+                    </div>
+
+                    <ButtonClose on:click={closeCalendar} />
+                </div>
+                <div class="bg-white/20 h-[1px] w-full my-2" />
+                <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
             <div class="flex flex-col justify-center gap-4">
+                {#if !$userIsConnected}
+                    <div class="flex flex-col justify-center items-center">
+                        <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
+                        <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
+                        <button
+                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            on:click={goToLoginPage}
+                            >{$LL.menu.profile.login()}
+                        </button>
+                    </div>
+                {/if}
                 {#if $calendarEventsStore.size > 0}
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
                         <div class="flex flex-col justify-center">
@@ -64,7 +93,7 @@
                             </div>
                             <div
                                 id={`event-id-${eventId}`}
-                                class="flex flex-col justify-center p-2 bg-dark-blue/90 rounded-md"
+                                class="flex flex-col justify-center p-2 bg-white/5 border border-white/10 border-solid rounded-md"
                             >
                                 <div class="flex flex-col justify-between items-center">
                                     <h4 class="text-l text-left font-bold">{event.title}</h4>
@@ -75,7 +104,7 @@
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
                                             on:click|preventDefault|stopPropagation={() => openMeeting(event)}
-                                            class="text-xs text-right"
+                                            class="text-xs text-right text-secondary-500"
                                             target="_blank">Click here to join the meeting</a
                                         >
                                     {/if}
@@ -113,8 +142,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1.5em;
-            width: 23em !important;
         }
     }
 </style>

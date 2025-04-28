@@ -76,7 +76,7 @@ const mapStorageServer: MapStorageServer = {
             };
             callback(null, editMapCommandsArrayMessage);
         } catch (e: unknown) {
-            console.error("An error occurred in handleClearAfterUpload", e);
+            console.error(`[${new Date().toISOString()}] An error occurred in handleClearAfterUpload`, e);
             Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
             let message: string;
             if (typeof e === "object" && e !== null) {
@@ -172,7 +172,7 @@ const mapStorageServer: MapStorageServer = {
                                 };
                             }
                         } else {
-                            console.log(`Could not find area with id: ${message.id}`);
+                            console.log(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
                         }
                         break;
                     }
@@ -226,7 +226,7 @@ const mapStorageServer: MapStorageServer = {
                                 new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
                             );
                         } else {
-                            console.log(`Could not find entity with id: ${message.id}`);
+                            console.log(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
                         }
                         break;
                     }
@@ -331,7 +331,7 @@ const mapStorageServer: MapStorageServer = {
                 callback(null, editMapCommandMessage);
             });
         })().catch((e: unknown) => {
-            console.log(e);
+            console.error(e);
             callback(null, {
                 id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
                 editMapMessage: {
