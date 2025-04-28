@@ -58,7 +58,7 @@
                     <div use:arrowAction />
                     <div class="bottom-action-bar">
                         <div
-                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
+                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur rounded-md p-1"
                         >
                             <AppsMenuContent />
                         </div>
