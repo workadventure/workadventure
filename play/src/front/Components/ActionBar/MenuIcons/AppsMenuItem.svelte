@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getContext, setContext } from "svelte";
+    import { clickOutside } from "svelte-outside";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -53,7 +54,13 @@
         />
 
         {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div class="absolute" use:floatingUiContent>
+            <div
+                class="absolute"
+                use:floatingUiContent
+                use:clickOutside={() => {
+                    openedMenuStore.close("appMenu");
+                }}
+            >
                 <div class="flex justify-center m-[unset]">
                     <div use:arrowAction />
                     <div class="bottom-action-bar">
