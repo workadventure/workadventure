@@ -176,6 +176,10 @@ export const isMapDetailsData = z.object({
         description: "The URL of the image to be used on the LoginScene",
         example: "https://example.com/logo_login.png",
     }),
+    backgroundSceneImage: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the background image to be used on the loading page",
+        example: "https://example.com/background.png",
+    }),
     showPoweredBy: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the logo PoweredBy is enabled or not on this room",
         example: true,

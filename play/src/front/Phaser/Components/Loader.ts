@@ -17,11 +17,11 @@ export class Loader {
             loaderProgressStore.set(value);
         });
         this.scene.load.on("complete", () => {
-            loaderVisibleStore.set(false);
+            // loaderVisibleStore.set(false);
         });
     }
 
     public removeLoader(): void {
-        loaderVisibleStore.set(false);
+        // loaderVisibleStore.set(false);
     }
 }

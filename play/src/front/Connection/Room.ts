@@ -38,6 +38,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    private _backgroundSceneImage: string | undefined;
     private _metadata: unknown | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
@@ -169,6 +170,7 @@ export class Room {
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                this._backgroundSceneImage = data.backgroundSceneImage ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._primaryColor = data.primaryColor ?? undefined;
@@ -308,6 +310,10 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get backgroundSceneImage(): string | undefined {
+        return this._backgroundSceneImage;
     }
 
     get metadata(): unknown {
