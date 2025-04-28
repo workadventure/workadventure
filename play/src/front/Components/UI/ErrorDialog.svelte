@@ -30,24 +30,23 @@
 </script>
 
 <div class="error-div is-dark is-rounded flex flex-col items-center justify-center">
-    <p class="is-error title">{$LL.error.errorDialog.title()}</p>
-    <p class="is-error title">{$LL.error.errorDialog.title()}</p>
+    <h2 class="is-error title ">{$LL.error.errorDialog.title()}</h2>
     <div class="body">
         {#each $errorStore as error (error.id)}
-            <p>{error.message}</p>
+            <p class="text-lg place-self-center">{error.message}</p>
         {/each}
         {#if connectionManager.currentRoom?.reportIssuesUrl}
-            <p class="text-xs">
+            <p class="text-lg place-self-center">
                 {$LL.error.errorDialog.hasReportIssuesUrl()}
                 <a href={connectionManager.currentRoom.reportIssuesUrl} target="_blank" rel="noopener noreferrer"
                     >{connectionManager.currentRoom.reportIssuesUrl}</a
                 >
             </p>
         {:else}
-            <p class="text-xs">
+            <p class="text-lg">
                 {$LL.error.errorDialog.noReportIssuesUrl()}
             </p>
-            <p class="text-xs">
+            <p class="text-sm place-self-center">
                 {$LL.error.errorDialog.messageFAQ()}
                 <a
                     href="https://workadventu.re/faq"
@@ -69,7 +68,7 @@
 <style lang="scss">
     div.error-div {
         pointer-events: auto;
-        margin-top: 4%;
+        margin-top: 15%;
         margin-right: auto;
         margin-left: auto;
         left: 0;
