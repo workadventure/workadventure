@@ -12,6 +12,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let last: boolean | undefined = undefined;
+    export let chatEnabledInAdmin = true;
 
     const dispatch = createEventDispatcher();
 
@@ -31,7 +32,7 @@
     gameManager
         .getChatConnection()
         .then(() => {
-            chatAvailable = true;
+            chatAvailable = chatEnabledInAdmin ?? true;
         })
         .catch((e: unknown) => {
             console.error("Could not get chat", e);
@@ -49,13 +50,13 @@
     }}
     classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
     tooltipTitle={$LL.actionbar.help.chat.title()}
+    desc={$LL.actionbar.help.chat.desc()}
+    media="./static/Videos/Chat.mp4"
     tooltipShortcuts={shortcut}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}
     disabledHelp={false}
-    media="./static/Videos/Chat.mp4"
-    desc={$LL.actionbar.help.chat.desc()}
 >
     <MessageCircleIcon />
 </ActionBarButton>

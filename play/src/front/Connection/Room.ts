@@ -43,6 +43,7 @@ export class Room {
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
     private _enableChat: boolean | undefined;
+    private _isMatrixChatEnabled: boolean | undefined;
     private _enableChatUpload: boolean | undefined;
     private _enableChatOnlineList: boolean | undefined;
     private _enableChatDisconnectedList: boolean | undefined;
@@ -178,7 +179,8 @@ export class Room {
                 this._pricingUrl = data.pricingUrl ?? undefined;
                 this._legals = data.legals ?? undefined;
 
-                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT && ENABLE_OPENID;
+                this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
+                this._isMatrixChatEnabled = data.enableMatrixChat ?? (true && ENABLE_OPENID);
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =
@@ -329,6 +331,13 @@ export class Room {
             return true;
         }
         return this._enableChat;
+    }
+
+    get isMatrixChatEnabled(): boolean {
+        if (this._isMatrixChatEnabled === undefined) {
+            return true;
+        }
+        return this._isMatrixChatEnabled;
     }
 
     get isChatUploadEnabled(): boolean {

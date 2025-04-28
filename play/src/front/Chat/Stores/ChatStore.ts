@@ -89,3 +89,6 @@ export const isAChatRoomIsVisible = () => {
 export const isChatIdSentToPusher = writable(false);
 
 export const botsChatIds = writable<string[]>([]);
+
+export const chatButtonTooltipStore = writable(false);
+export const userListTooltipStore = writable(false);
