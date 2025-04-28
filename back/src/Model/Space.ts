@@ -192,6 +192,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
         });
     }
+
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
         debug(`${this.name} => watcher removed ${watcher.id}`);
@@ -232,7 +233,6 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",

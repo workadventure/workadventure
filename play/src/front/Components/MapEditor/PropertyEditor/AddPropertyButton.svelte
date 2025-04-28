@@ -1,33 +1,45 @@
-<script>
+<script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { fade } from "svelte/transition";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
 
-    export let headerText;
-    export let descriptionText;
-    export let img;
-    export let style;
+    export let headerText: string | undefined;
+    export let descriptionText: string | undefined;
+    export let img: string | undefined;
+    export let style: string | undefined;
     export let disabled = false;
-    export let testId;
+    export let testId: string | undefined;
     const dispatch = createEventDispatcher();
 
     let isHovered = false;
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
-            placement: "bottom-center",
+            placement: "bottom",
         },
         12
     );
+
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function onMouseEnter() {
+        hoverTimeout = setTimeout(() => {
+            isHovered = true;
+        }, 400);
+    }
+
+    function onMouseLeave() {
+        isHovered = false;
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+            hoverTimeout = undefined;
+        }
+    }
 </script>
 
 <button
-    on:mouseenter={() => {
-        isHovered = true;
-    }}
-    on:mouseleave={() => {
-        isHovered = false;
-    }}
+    on:mouseenter={onMouseEnter}
+    on:mouseleave={onMouseLeave}
     class="add-property-button tooltip p-3 flex justify-center items-center
     border border-solid border-white/25 text-gray-500 rounded-lg relative  flex-col m-[0.25rem_0.125rem]"
     use:floatingUiRef
