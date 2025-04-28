@@ -43,7 +43,7 @@
                 >
             </p>
         {:else}
-            <p class="text-lg">
+            <p class="text-lg place-self-center">
                 {$LL.error.errorDialog.noReportIssuesUrl()}
             </p>
             <p class="text-sm place-self-center">
