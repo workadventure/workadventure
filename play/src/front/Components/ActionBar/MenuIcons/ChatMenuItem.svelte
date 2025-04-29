@@ -48,7 +48,7 @@
         navChat.switchToChat();
         analyticsClient.openedChat();
     }}
-    classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
+    classList="group/btn-message-circle rounded-r-lg pr-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pr-0'}"
     tooltipTitle={$LL.actionbar.help.chat.title()}
     desc={$LL.actionbar.help.chat.desc()}
     media="./static/Videos/Chat.mp4"
