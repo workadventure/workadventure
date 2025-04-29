@@ -47,13 +47,6 @@ export const livekitScreenShareStreamElementsStore = derived(
     [] as Streamable[]
 );
 
-livekitScreenShareStreamElementsStore.subscribe((streamElements) => {
-    console.log(">>>>> livekitScreenShareStreamElementsStore", streamElements.length);
-});
-
-livekitVideoStreamElementsStore.subscribe((streamElements) => {
-    console.log(">>>>> livekitVideoStreamElementsStore", streamElements.length);
-});
 
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!

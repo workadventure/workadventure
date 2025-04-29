@@ -21,6 +21,7 @@ import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerMana
 export class Space implements SpaceInterface {
     private readonly name: string;
     private filters: MapStore<string, SpaceFilter> = new MapStore<string, SpaceFilter>();
+    private lastSpaceFilter: SpaceFilter | undefined;
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
@@ -79,6 +80,7 @@ export class Space implements SpaceInterface {
         if (this.peerManager) {
             this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         }
+        this.lastSpaceFilter = newFilter;
         return newFilter;
     }
 
@@ -90,6 +92,7 @@ export class Space implements SpaceInterface {
         if (this.peerManager) {
             this.peerManager.getPeer()?.setSpaceFilter(newFilter);
         }
+        this.lastSpaceFilter = newFilter;
         return newFilter;
     }
 
@@ -101,6 +104,10 @@ export class Space implements SpaceInterface {
             );
         }
         return spaceFilter;
+    }
+
+    getLastSpaceFilter(): SpaceFilter | undefined {
+        return this.lastSpaceFilter;
     }
 
     // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).

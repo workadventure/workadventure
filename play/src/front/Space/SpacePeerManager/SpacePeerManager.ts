@@ -10,6 +10,7 @@ import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { WebRTCState } from "./WebRTCState";
+import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
@@ -86,8 +87,8 @@ export interface SimplePeerConnectionInterface {
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
     dispatchStream(mediaStream: MediaStream): void;
-    videoPeerAdded: Observable<VideoPeer>;
-    videoPeerRemoved: Observable<VideoPeer>;
+    videoPeerAdded: Observable<MediaStoreStreamable>;
+    videoPeerRemoved: Observable<MediaStoreStreamable>;
     cleanupStore(): void;
     removePeer(userId: string): void;
 }

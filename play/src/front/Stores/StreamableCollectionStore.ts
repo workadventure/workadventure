@@ -181,6 +181,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
                 // if peer is ScreenSharing, change for presentation Layout mode
+                //TODO : revoir parce qu'on peut avoir un screen sharing qui n'est pas un ScreenSharingPeer / ajouter une propriété au streamable ?
                 if (peer instanceof ScreenSharingPeer) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);

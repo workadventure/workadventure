@@ -56,7 +56,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
         stream: MediaStream | undefined,
-        private spaceFilter: Promise<SpaceFilterInterface>
+        private spaceFilter: Promise<SpaceFilterInterface>,
+        isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
         super({
@@ -68,7 +69,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.userId = player.userId;
-        this.uniqueId = "screensharing_" + this.userId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
 
         let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 

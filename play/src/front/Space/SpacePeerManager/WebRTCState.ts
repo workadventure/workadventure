@@ -14,7 +14,12 @@ import {
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (space: SpaceInterface) => {
         const repository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
-        return new SimplePeer(space, repository);
+        const peer = new SimplePeer(space, repository);
+        const spaceFilter = space.getLastSpaceFilter();
+        if (spaceFilter) {
+            peer.setSpaceFilter(spaceFilter);
+        }
+        return peer;
     },
 };
 

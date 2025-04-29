@@ -21,6 +21,7 @@ import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 import { SimplePeerConnectionInterface } from "../Space/SpacePeerManager/SpacePeerManager";
+import { MediaStoreStreamable } from "../Stores/StreamableCollectionStore";
 
 export interface UserSimplePeerInterface {
     userId: string;
@@ -48,16 +49,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     // public readonly videoPeerStore: MapStore<string, VideoPeer>;
     // public readonly screenSharingPeerStore: MapStore<string, ScreenSharingPeer>;
 
-    private readonly _videoPeerAdded = new Subject<VideoPeer>();
+    private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
 
-    private readonly _videoPeerRemoved = new Subject<VideoPeer>();
+    private readonly _videoPeerRemoved = new Subject<MediaStoreStreamable>();
     public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
 
-    private readonly _screenSharingPeerAdded = new Subject<ScreenSharingPeer>();
+    private readonly _screenSharingPeerAdded = new Subject<MediaStoreStreamable>();
     public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
 
-    private readonly _screenSharingPeerRemoved = new Subject<ScreenSharingPeer>();
+    private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
     constructor(private space: SpaceInterface, private remotePlayersRepository: RemotePlayersRepository) {
@@ -69,7 +70,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // this.videoPeerStore = this.space.livekitVideoStreamStore
         // this.screenSharingPeerStore = this.space.screenSharingPeerStore
 
-        //todo
         this.unsubscribers.push(
             screenSharingLocalStreamStore.subscribe((streamResult) => {
                 if (streamResult.type === "error") {
@@ -244,7 +244,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const peerConnection = this.space.livekitVideoStreamStore.get(user.userId);
         if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
-                this._videoPeerRemoved.next(peerConnection);
+                this._videoPeerRemoved.next(peerConnection.media);
                 peerConnection.toClose = true;
                 peerConnection.destroy();
                 console.log(">>>> delete video stream", {
@@ -295,7 +295,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
-        // this.space.videoPeerStore.set(user.userId, peer);
         console.log(">>>> set video stream from simplePeer", {
             spaceUserId: user.userId,
             peer,
@@ -304,7 +303,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             space: this.space,
         });
         this.space.livekitVideoStreamStore.set(user.userId, peer);
-        this._videoPeerAdded.next(peer);
+        this._videoPeerAdded.next(peer.media);
         console.log(">>>>> return peer added", peer);
         return peer;
     }
@@ -314,13 +313,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     private async createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
-        stream: MediaStream | undefined
+        stream: MediaStream | undefined,
     ): Promise<ScreenSharingPeer | null> {
         
-        const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
-        if (peerScreenSharingConnection) {
+        //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
+        const peerScreenSharingConnection = this.space.livekitScreenShareStreamStore.get(user.userId);
+
+        if (peerScreenSharingConnection && peerScreenSharingConnection instanceof ScreenSharingPeer) {
             if (peerScreenSharingConnection.destroyed) {
-                this._screenSharingPeerRemoved.next(peerScreenSharingConnection);
+                this._screenSharingPeerRemoved.next(peerScreenSharingConnection.media);
                 //peerScreenSharingConnection.toClose = true;
                 //peerScreenSharingConnection.destroy();
                 //this.space.screenSharingPeerStore.delete(user.userId);
@@ -349,7 +350,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             player,
             this.space,
             stream,
-            this.spaceFilterDeferred.promise
+            this.spaceFilterDeferred.promise,
+            true
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -368,12 +370,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
     
-        //TODO : set le peer dans livekitScreenShareStreamStore / probleme de connection quand on switch pour l'instant 
-        this.space.livekitScreenShareStreamStore.delete(user.userId);
-        this.space.screenSharingPeerStore.set(user.userId, peer);
-
-        //this.space.livekitScreenShareStreamStore.set(user.userId, peer);
-        this._screenSharingPeerAdded.next(peer);
+        this.space.livekitScreenShareStreamStore.set(user.userId, peer);
+        this._screenSharingPeerAdded.next(peer.media);
         return peer;
     }
 
@@ -391,7 +389,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             if (!peer || !(peer instanceof VideoPeer)) {
                 return;
             }
-            this._videoPeerRemoved.next(peer);
+            this._videoPeerRemoved.next(peer.media);
 
             //create temp peer to close
             //peer.toClose = true;
@@ -406,7 +404,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         //if the user left the discussion, clear screen sharing.
         if (this.space.livekitVideoStreamStore.size === 0) {
-            for (const userId of this.space.screenSharingPeerStore.keys()) {
+            for (const userId of this.space.livekitScreenShareStreamStore.keys()) {
                 this.closeScreenSharingConnection(userId);
             }
         }
@@ -423,12 +421,13 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private closeScreenSharingConnection(userId: string) {
         //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         try {
-            const peer = this.space.screenSharingPeerStore.get(userId);
+            const peer = this.space.livekitScreenShareStreamStore.get(userId);
             if (!peer) {
                 return;
             }
-            this._screenSharingPeerRemoved.next(peer);
-            this.space.screenSharingPeerStore.delete(userId);
+
+            this._screenSharingPeerRemoved.next(peer.media);
+            this.space.livekitScreenShareStreamStore.delete(userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
            // peer.destroy();
@@ -448,7 +447,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this.closeConnection(userId);
         }
 
-        for (const userId of this.space.screenSharingPeerStore.keys()) {
+        for (const userId of this.space.livekitScreenShareStreamStore.keys()) {
             this.closeScreenSharingConnection(userId);
         }
     }
@@ -479,7 +478,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
         });
 
-        this.space.screenSharingPeerStore.forEach((peer) => {
+        this.space.livekitScreenShareStreamStore.forEach((peer) => {
             if (peer instanceof ScreenSharingPeer) {
                 //peer.destroy();
                 ///this.space.screenSharingPeerStore.delete(peer.user.userId);
@@ -533,8 +532,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             if (data.signal.type === "offer") {
                 await this.createPeerScreenSharingConnection(data, stream);
             }
-            const peer = this.space.screenSharingPeerStore.get(data.userId);
-            if (peer !== undefined) {
+            const peer = this.space.livekitScreenShareStreamStore.get(data.userId);
+            if (peer !== undefined && peer instanceof ScreenSharingPeer) {
+                console.log(">>>> send signal to peer");
                 peer.signal(data.signal);
             } else {
                 console.error(
@@ -553,8 +553,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private pushScreenSharingToRemoteUser(userId: string, localScreenCapture: MediaStream) {
-        const PeerConnection = this.space.screenSharingPeerStore.get(userId);
+        const PeerConnection = this.space.livekitScreenShareStreamStore.get(userId);
         if (!PeerConnection) {
+            throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
+        }
+
+        if (!(PeerConnection instanceof ScreenSharingPeer)) {
             throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
         }
 
@@ -589,7 +593,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const uuid = (await this.remotePlayersRepository.getPlayer(userIdNumber)).userUuid;
         if (blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
-        if (this.space.screenSharingPeerStore.has(userId)) {
+        if (this.space.livekitScreenShareStreamStore.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId, localScreenCapture);
             return;
         }
@@ -600,7 +604,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         };
         const PeerConnectionScreenSharing = await this.createPeerScreenSharingConnection(
             screenSharingUser,
-            localScreenCapture
+            localScreenCapture, 
         );
         if (!PeerConnectionScreenSharing) {
             return;
@@ -608,7 +612,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
-        const PeerConnectionScreenSharing = this.space.screenSharingPeerStore.get(userId);
+        const PeerConnectionScreenSharing = this.space.livekitScreenShareStreamStore.get(userId);
         if (!PeerConnectionScreenSharing || !(PeerConnectionScreenSharing instanceof ScreenSharingPeer)) {
             return;
         }

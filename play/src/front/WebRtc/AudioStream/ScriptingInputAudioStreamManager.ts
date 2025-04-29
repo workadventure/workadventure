@@ -99,18 +99,19 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((peer) => {
+        //TODO : Remplacer par livekitScreenShareStreamStore
+        this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
-                if (peer.media.type === "mediaStore") {
-                    this.addMediaStreamStore(peer.media.streamStore);
+                if (media.type === "mediaStore") {
+                    this.addMediaStreamStore(media.streamStore);
                 }
             }
         });
 
-        this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((peer) => {
+        this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((media) => {
             if (this.isListening) {
-                if (peer.media.type === "mediaStore") {
-                    this.removeMediaStreamStore(peer.media.streamStore);
+                if (media.type === "mediaStore") {
+                    this.removeMediaStreamStore(media.streamStore);
                 }
             }
         });
