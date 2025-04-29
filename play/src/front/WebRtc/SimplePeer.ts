@@ -46,7 +46,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
 
     // public readonly videoPeerStore: MapStore<string, VideoPeer>;
-    // public readonly screenSharingPeerStore: MapStore<string, ScreenSharingPeer> ;
+    // public readonly screenSharingPeerStore: MapStore<string, ScreenSharingPeer>;
 
     private readonly _videoPeerAdded = new Subject<VideoPeer>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -316,6 +316,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         user: UserSimplePeerInterface,
         stream: MediaStream | undefined
     ): Promise<ScreenSharingPeer | null> {
+        
         const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         if (peerScreenSharingConnection) {
             if (peerScreenSharingConnection.destroyed) {
@@ -441,6 +442,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         });
     }
 
+    //TODO : voir si on fait 2 fonctions / 1 pour close complet et l'autre pour la transition (sans close le stream et delete dans le store)
     public closeAllConnections(needToDelete?: boolean) {
         for (const userId of this.space.livekitVideoStreamStore.keys()) {
             this.closeConnection(userId);
