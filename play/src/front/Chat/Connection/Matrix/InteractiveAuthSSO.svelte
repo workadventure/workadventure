@@ -58,11 +58,11 @@
     {$LL.chat.e2ee.interactiveAuth.buttons.cancel()}
 </button>
 {#if phase === INTERACTIVE_AUTH_PHASE.PRE_AUTH}
-    <button class="bg-secondary flex-1 justify-center" on:click={onStartAuthClick}>
+    <button class="btn btn-secondary flex-1 justify-center" on:click={onStartAuthClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.continueSSO()}
     </button>
 {:else}
-    <button class="bg-secondary flex-1 justify-center" on:click={onConfirmClick}>
+    <button class="btn btn-secondary flex-1 justify-center" on:click={onConfirmClick}>
         {$LL.chat.e2ee.interactiveAuth.buttons.finish()}
     </button>
 {/if}
