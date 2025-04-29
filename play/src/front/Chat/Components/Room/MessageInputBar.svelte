@@ -14,6 +14,7 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { get } from "svelte/store";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { ChatRoom } from "../../Connection/ChatConnection";
@@ -39,6 +40,7 @@
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { draftMessageService } from "../../Services/DraftMessageService";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -62,6 +64,8 @@
             messageInput.focus();
         }
     });
+
+    const draftId = `${room.id}-${JSON.parse(localStorage.getItem('localUser'))?.uuid}`;
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
@@ -140,6 +144,18 @@
 
     onMount(() => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
+        const draft = draftMessageService.loadDraft(draftId);
+        if (draft) {
+            message = draft.message;
+            selectedChatMessageToReply.set(draft.replyingToMessageId);
+        }
+        console.log("Draft loaded", {
+            id: draftId,
+            roomId: room.id,
+            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
+            message: message,
+            replyingToMessageId: get(selectedChatMessageToReply),
+        });
     });
 
     onDestroy(() => {
@@ -147,6 +163,20 @@
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
+        draftMessageService.saveDraft({
+            id: draftId,
+            roomId: room.id,
+            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
+            message,
+            replyingToMessageId: get(selectedChatMessageToReply),
+        })
+        console.log("Draft saved", {
+            id: draftId,
+            roomId: room.id,
+            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
+            message,
+            replyingToMessageId: get(selectedChatMessageToReply),
+        });
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
