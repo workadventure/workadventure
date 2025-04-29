@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div class="flex flex-col justify-center gap-4">
-                {#if $userIsConnected}
+                {#if !$userIsConnected}
                     <div class="flex flex-col justify-center items-center">
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>

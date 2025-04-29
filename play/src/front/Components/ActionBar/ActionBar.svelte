@@ -114,7 +114,7 @@
 
                         {#if smallArrowVisible}
                             <div
-                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-[2.86rem] m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
                                     ? 'opacity-100'
                                     : 'group-hover/hardware:opacity-100'}"
                             >

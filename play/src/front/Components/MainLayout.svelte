@@ -23,6 +23,7 @@
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -49,6 +50,7 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -109,6 +111,12 @@
         <div class="w-full h-full fixed left-0 right-0">
             <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
+        <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
+        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+            {#if peer.uniqueId !== $highlightedEmbedScreen.uniqueId}
+                <AudioStreamWrapper {peer} />
+            {/if}
+        {/each}
     {/if}
 
     <AudioPlayer />
