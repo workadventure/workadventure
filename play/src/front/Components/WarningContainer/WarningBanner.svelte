@@ -22,7 +22,7 @@
     <div class="backdrop-blur rounded-lg overflow-hidden">
         {#if $bannerStore != undefined}
             <div id={$bannerStore.id} class="m-0 p-4 flex justify-center items-center relative">
-                <div class="relative z-10 text-lg bold pl-2" style={`color: ${$bannerStore.textColor};`}>
+                <div class="relative z-10 text-lg pl-2" style={`color: ${$bannerStore.textColor};`}>
                     {$bannerStore.text}&nbsp;
                     {#if $bannerStore.link}
                         <a
