@@ -137,8 +137,8 @@
                     on:click={copyUrl}
                 >
                     <ExternalLinkIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
@@ -154,8 +154,8 @@
                 }}
             >
                 <CopyIcon
-                    height="h-4"
-                    width="w-4"
+                    height="h-6"
+                    width="w-6"
                     strokeColor={active ? "stroke-contrast" : "stroke-white"}
                     hover={active ? "" : ""}
                 />
@@ -168,8 +168,8 @@
                     on:click={closeTab}
                 >
                     <XIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
