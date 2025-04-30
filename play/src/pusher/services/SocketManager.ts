@@ -872,8 +872,8 @@ export class SocketManager implements ZoneEventListener {
         };
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
-                Sentry.captureException(`Error while sending admin message ${error}`);
-                console.error(`Error while sending admin message ${error}`);
+                Sentry.captureException(error);
+                console.error('Error while sending admin message', error);
             }
         });
     }

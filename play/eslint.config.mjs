@@ -3,6 +3,8 @@
 import eslint from '@eslint/js';
 import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
+import { defineConfig, globalIgnores } from "eslint/config";
+
 //import unusedImports from "eslint-plugin-unused-imports";
 //import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
@@ -10,7 +12,8 @@ import importPlugin from 'eslint-plugin-import';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
 
-export default [
+export default defineConfig([
+    globalIgnores(["**/generated/*.ts", "**/i18n-*.ts"]),
     eslint.configs.recommended,
     //tseslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
@@ -25,6 +28,10 @@ export default [
     ...svelte.configs.recommended,
     {
         languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
             globals: {
                 ...globals.browser,
                 ...globals.node
@@ -84,66 +91,67 @@ export default [
     },
     {
 
-    plugins: {
-        //"@typescript-eslint": typescriptEslint,
-        rxjs: rxjs,
-        //"unused-imports": unusedImports,
-    },
-
-    settings: {
-        typescript: true,
-        node: true,
-
-        "import/resolver": {
-            typescript: {},
+        plugins: {
+            //"@typescript-eslint": typescriptEslint,
+            rxjs: rxjs,
+            //"unused-imports": unusedImports,
         },
-    },
 
-    rules: {
-        "no-unused-vars": "off",
-        "eol-last": ["error", "always"],
-        "@typescript-eslint/no-explicit-any": "error",
-        "no-throw-literal": "error",
+        settings: {
+            typescript: true,
+            node: true,
 
-        "@typescript-eslint/no-unused-vars": ["error", {
-            args: "none",
-            caughtErrors: "all",
-            varsIgnorePattern: "_exhaustiveCheck",
-        }],
+            "import/resolver": {
+                typescript: {},
+            },
+        },
 
-        "@typescript-eslint/no-unsafe-call": "off",
-        "@typescript-eslint/restrict-plus-operands": "off",
-        "@typescript-eslint/no-unsafe-assignment": "off",
-        "@typescript-eslint/no-unsafe-return": "off",
-        "@typescript-eslint/no-unsafe-member-access": "off",
-        "@typescript-eslint/restrict-template-expressions": "off",
-        "@typescript-eslint/no-unsafe-argument": "off",
-        "@typescript-eslint/no-empty-function": "off",
-        "@typescript-eslint/ban-ts-comment": ["error", {
-            'ts-ignore': 'allow-with-description',
-        }],
-        //"@typescript-eslint/ban-ts-ignore": "off",
-        "@typescript-eslint/no-unsafe-enum-comparison": "off",
-        "@typescript-eslint/no-redundant-type-constituents": "off",
+        rules: {
+            "no-unused-vars": "off",
+            "eol-last": ["error", "always"],
+            "@typescript-eslint/no-explicit-any": "error",
+            "no-throw-literal": "error",
 
-        "import/order": "error",
-        "no-async-promise-executor": "error",
-        "no-await-in-loop": "error",
-        "no-promise-executor-return": "error",
-        "require-atomic-updates": "error",
-        "prefer-promise-reject-errors": "error",
-        "rxjs/no-ignored-subscription": "error",
-        "svelte/require-each-key": "error",
+            "@typescript-eslint/no-unused-vars": ["error", {
+                args: "none",
+                caughtErrors: "all",
+                varsIgnorePattern: "_exhaustiveCheck",
+            }],
 
-        "svelte/valid-compile": ["error", {
-            ignoreWarnings: true,
-        }],
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/restrict-plus-operands": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/restrict-template-expressions": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/no-empty-function": "off",
+            "@typescript-eslint/ban-ts-comment": ["error", {
+                'ts-ignore': 'allow-with-description',
+            }],
+            //"@typescript-eslint/ban-ts-ignore": "off",
+            "@typescript-eslint/no-unsafe-enum-comparison": "off",
+            "@typescript-eslint/no-redundant-type-constituents": "off",
 
-        "svelte/no-at-html-tags": "off",
-        "import/default": "off",
-        "import/no-named-as-default": "off",
-        "import/no-named-as-default-member": "off",
-        "svelte/no-ignored-unsubscribe": "error",
-        //"unused-imports/no-unused-imports": "error",
-    },
-}];
+            "import/order": "error",
+            "no-async-promise-executor": "error",
+            "no-await-in-loop": "error",
+            "no-promise-executor-return": "error",
+            "require-atomic-updates": "error",
+            "prefer-promise-reject-errors": "error",
+            "rxjs/no-ignored-subscription": "error",
+            "svelte/require-each-key": "error",
+
+            "svelte/valid-compile": ["error", {
+                ignoreWarnings: true,
+            }],
+
+            "svelte/no-at-html-tags": "off",
+            "import/default": "off",
+            "import/no-named-as-default": "off",
+            "import/no-named-as-default-member": "off",
+            "svelte/no-ignored-unsubscribe": "error",
+            //"unused-imports/no-unused-imports": "error",
+        },
+    }
+]);
