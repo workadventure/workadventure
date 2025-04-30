@@ -1,17 +1,17 @@
-// @ts-check
 
 //import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import eslint from '@eslint/js';
 import tseslint from "typescript-eslint";
 import rxjs from "@smarttools/eslint-plugin-rxjs";
-import unusedImports from "eslint-plugin-unused-imports";
-import tsParser from "@typescript-eslint/parser";
+//import unusedImports from "eslint-plugin-unused-imports";
+//import tsParser from "@typescript-eslint/parser";
 import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
 import svelte from 'eslint-plugin-svelte';
-
+import globals from 'globals';
 
 export default [
-    "eslint:recommended",
+    eslint.configs.recommended,
     //tseslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
     //typescriptEslint.configs.recommendedTypeChecked,
@@ -23,7 +23,14 @@ export default [
     importPlugin.flatConfigs.typescript,
     rxjs.configs.recommended,
     ...svelte.configs.recommended,
-
+    {
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node
+            }
+        }
+    },
     //"plugin:import/recommended",
     //"plugin:import/typescript",
     //"plugin:rxjs/recommended",
@@ -32,13 +39,23 @@ export default [
         files: ["**/*.svelte"],
 
         languageOptions: {
-            parser: parser,
-            ecmaVersion: 5,
-            sourceType: "script",
-
             parserOptions: {
-                parser: "@typescript-eslint/parser",
-            },
+                projectService: true,
+                extraFileExtensions: ['.svelte'], // Add support for additional file extensions, such as .svelte
+                parser: tseslint.parser,
+                // Specify a parser for each language, if needed:
+                // parser: {
+                //   ts: ts.parser,
+                //   js: espree,    // Use espree for .js files (add: import espree from 'espree')
+                //   typescript: ts.parser
+                // },
+
+                // We recommend importing and specifying svelte.config.js.
+                // By doing so, some rules in eslint-plugin-svelte will automatically read the configuration and adjust their behavior accordingly.
+                // While certain Svelte settings may be statically loaded from svelte.config.js even if you don’t specify it,
+                // explicitly specifying it ensures better compatibility and functionality.
+                //svelteConfig
+            }
         },
     },
     {
@@ -53,11 +70,13 @@ export default [
                 SharedArrayBuffer: "readonly",
             },
 
-            parser: tsParser,
+            //parser: tsParser,
             ecmaVersion: 2018,
             sourceType: "module",
 
             parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
                 project: "./tsconfig.json",
                 extraFileExtensions: [".svelte"],
             },
@@ -68,7 +87,7 @@ export default [
     plugins: {
         //"@typescript-eslint": typescriptEslint,
         rxjs: rxjs,
-        "unused-imports": unusedImports,
+        //"unused-imports": unusedImports,
     },
 
     settings: {
@@ -123,6 +142,6 @@ export default [
         "import/no-named-as-default": "off",
         "import/no-named-as-default-member": "off",
         "svelte/no-ignored-unsubscribe": "error",
-        "unused-imports/no-unused-imports": "error",
+        //"unused-imports/no-unused-imports": "error",
     },
 }];
