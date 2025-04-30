@@ -68,6 +68,7 @@
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
+        pipRequested = false;
         activePictureInPictureStore.set(false);
     }
 
@@ -77,11 +78,13 @@
         }
     });
 
+    let pipRequested = false;
+
     function requestPictureInPicture() {
         // We activate the picture in picture mode only if we have a streamable in the collection
         if ($streamablePictureInPictureStore.size == 0) return;
 
-        if (pipWindow !== undefined) return;
+        if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -104,6 +107,8 @@
             height: `${$streamablePictureInPictureStore.size * 227 + 80 + 78}`,
             width: "400",
         };
+
+        pipRequested = true;
 
         window.documentPictureInPicture
             .requestWindow(options)
@@ -150,8 +155,7 @@
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
-            }
-            if (window.location.protocol === "http:" && visible === false) {
+            } else {
                 requestPictureInPicture();
             }
         });
