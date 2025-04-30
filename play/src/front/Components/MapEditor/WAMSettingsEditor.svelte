@@ -18,7 +18,7 @@
 
     onMount(() => {
         isVisible = true;
-        if (userIsAdminStore) {
+        if ($userIsAdminStore) {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings);
         } else {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone);
@@ -77,7 +77,7 @@
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.room.title()}</span>
-                                <IconChevronRight class={`-mr-2`} />
+                                <IconChevronRight class="-mr-2" />
                             </li>
                         {/if}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->

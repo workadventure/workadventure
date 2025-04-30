@@ -1,6 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    // eslint-disable-next-line import/no-unresolved
+     
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
@@ -297,7 +297,7 @@
                                     {$LL.chat.rooms()}
                                 </div>
                             </div>
-                            <CreateRoomOrFolderOption parentID={undefined} parentName={""} folder={undefined} />
+                            <CreateRoomOrFolderOption parentID={undefined} parentName="" folder={undefined} />
                             <button
                                 class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
                             >

@@ -361,7 +361,7 @@ export class GameScene extends DirtyScene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
-    constructor(private _room: Room, customKey?: string | undefined) {
+    constructor(private _room: Room, customKey?: string  ) {
         super({
             key: customKey ?? _room.key,
         });
@@ -1782,13 +1782,13 @@ export class GameScene extends DirtyScene {
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                //eslint-disable-next-line @typescript-eslint/no-this-alias
+                 
                 /*const me = this;
                 this.events.once("render", () => {
                     if (me.connection) {*/

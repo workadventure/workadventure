@@ -64,6 +64,7 @@
     }
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
     $: videoEnabled = $hasVideoStore;
+    // eslint-disable-next-line svelte/require-store-reactive-access
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     function toggleFullScreen() {

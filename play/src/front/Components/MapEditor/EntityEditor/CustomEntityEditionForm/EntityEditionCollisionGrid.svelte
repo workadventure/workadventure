@@ -4,7 +4,7 @@
     export let updateCollisionGrid: (rowIndex: number, columnIndex: number) => void;
 </script>
 
-<div class={`absolute w-32 grid gap`} style={`height: ${collisionGridHeight}px`}>
+<div class="absolute w-32 grid gap" style={`height: ${collisionGridHeight}px`}>
     {#each collisionGrid as row, rowIndex (rowIndex)}
         {#each row as _, columnIndex (columnIndex)}
             <div

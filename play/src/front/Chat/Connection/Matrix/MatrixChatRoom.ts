@@ -212,7 +212,7 @@ export class MatrixChatRoom
     }
 
     private startHandlingChatRoomEvents() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+         
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -674,7 +674,7 @@ export class MatrixChatRoom
     }
 
     destroy() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+         
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);

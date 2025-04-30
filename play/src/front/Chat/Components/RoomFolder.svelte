@@ -1,5 +1,5 @@
 <script lang="ts">
-    // eslint-disable-next-line import/no-unresolved
+     
     import { get } from "svelte/store";
     import { onMount } from "svelte";
     import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";
@@ -79,9 +79,9 @@
         {#if isOpen}
             <div class="flex flex-col overflow-auto">
                 {#if $suggestedRooms.length > 0}
-                    <div class={`mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4`}>
+                    <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
                         <div
-                            class={`group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center`}
+                            class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
                             class:mb-2={suggestedRoomsOpen}
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
@@ -90,7 +90,7 @@
                                     data-testid="openSuggestedRooms"
                                     on:click={toggleSuggestedRooms}
                                 >
-                                    <div class={`text-sm font-bold tracking-widest uppercase grow text-left`}>
+                                    <div class="text-sm font-bold tracking-widest uppercase grow text-left">
                                         {$LL.chat.suggestedRooms()}
                                     </div>
                                 </button>
