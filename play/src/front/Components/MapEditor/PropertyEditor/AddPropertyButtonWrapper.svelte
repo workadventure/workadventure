@@ -26,7 +26,10 @@
     export let subProperty: string | undefined = undefined;
     export let isActive = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined,
+        close: undefined,
+    }>();
 
     let modulesExtensionMapEditor = $extensionModuleStore.reduce(
         (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {

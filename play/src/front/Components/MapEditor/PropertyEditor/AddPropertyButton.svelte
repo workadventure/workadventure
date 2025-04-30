@@ -9,7 +9,10 @@
     export let style: string | undefined;
     export let disabled = false;
     export let testId: string | undefined;
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined,
+        close: undefined,
+    }>();
 
     let isHovered = false;
 

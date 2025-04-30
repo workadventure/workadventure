@@ -3,7 +3,9 @@
     import { inputFormFocusStore } from "../../../Stores/UserInputStore";
     import CloseButton from "./CloseButton.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: undefined,
+    }>();
 
     onDestroy(() => {
         inputFormFocusStore.set(false);

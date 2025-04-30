@@ -7,7 +7,10 @@
 
     export let property: FocusablePropertyData;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined,
+        close: undefined,
+    }>();
 
     function onValueChange() {
         dispatch("change");

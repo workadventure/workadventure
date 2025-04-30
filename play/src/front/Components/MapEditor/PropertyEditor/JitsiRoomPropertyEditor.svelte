@@ -22,7 +22,10 @@
     export let isArea = false;
     let optionAdvancedActivated = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined,
+        close: undefined,
+    }>();
 
     function onTriggerValueChange() {
         triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;

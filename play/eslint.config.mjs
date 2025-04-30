@@ -60,7 +60,7 @@ export default [
     },
     {
         files: ["{src,tests}/**/*.ts", "{src,tests}/**/*.js", "{src,tests}/**/*.svelte"],
-        ignores: ["**/generated/*.ts"],
+        ignores: ["**/generated/*.ts", "**/i18n/i18n-*.ts"],
 
         languageOptions: {
             globals: {
@@ -119,8 +119,10 @@ export default [
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/no-unsafe-argument": "off",
         "@typescript-eslint/no-empty-function": "off",
-        "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/ban-ts-comment": ["error", {
+            'ts-ignore': 'allow-with-description',
+        }],
+        //"@typescript-eslint/ban-ts-ignore": "off",
         "@typescript-eslint/no-unsafe-enum-comparison": "off",
         "@typescript-eslint/no-redundant-type-constituents": "off",
 

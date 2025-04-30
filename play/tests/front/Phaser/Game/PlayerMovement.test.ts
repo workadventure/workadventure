@@ -34,7 +34,6 @@ describe("Interpolation / Extrapolation", () => {
         );
 
         expect(playerMovement.isOutdated(START_TICK + MAX_EXTRAPOLATION_TIME)).toBe(false);
-        43000;
         expect(playerMovement.isOutdated(START_TICK + MAX_EXTRAPOLATION_TIME + 900)).toBe(true);
 
         expect(playerMovement.getPosition(START_TICK + MAX_EXTRAPOLATION_TIME)).toEqual({
