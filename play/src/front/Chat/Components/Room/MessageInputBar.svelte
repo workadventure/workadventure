@@ -14,7 +14,6 @@
 
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { get } from "svelte/store";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { ChatRoom } from "../../Connection/ChatConnection";
@@ -36,11 +35,13 @@
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
+    import { draftMessageService } from "../../Services/DraftMessageService";
+    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
-    import { draftMessageService } from "../../Services/DraftMessageService";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -58,14 +59,15 @@
     let fileAttachementEnabled = false;
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
+    let replyMessageId: string | null = null;
+    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
             messageInput.focus();
+            replyMessageId = chatMessage.id;
         }
     });
-
-    const draftId = `${room.id}-${JSON.parse(localStorage.getItem('localUser'))?.uuid}`;
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
         if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
@@ -133,6 +135,7 @@
 
     function unselectChatMessageToReply() {
         selectedChatMessageToReply.set(null);
+        replyMessageId = null;
     }
 
     function onInputHandler() {
@@ -142,41 +145,32 @@
         }
     }
 
-    onMount(() => {
+    onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
-        const draft = draftMessageService.loadDraft(draftId);
+        const draft = await draftMessageService.loadDraft(draftId);
         if (draft) {
-            message = draft.message;
-            selectedChatMessageToReply.set(draft.replyingToMessageId);
+            message = draft.message ?? "";
+            if (draft.replyingToMessageId) {
+                if (room instanceof MatrixChatRoom) {
+                    let loadReplyMessage = await room.getMessageById(draft.replyingToMessageId);
+                    selectedChatMessageToReply.set(loadReplyMessage ?? null);
+                }
+            }
         }
-        console.log("Draft loaded", {
-            id: draftId,
-            roomId: room.id,
-            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
-            message: message,
-            replyingToMessageId: get(selectedChatMessageToReply),
-        });
     });
 
     onDestroy(() => {
-        selectedChatChatMessageToReplyUnsubscriber();
-        if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
-        closeEmojiPicker?.();
-        closeEmojiPicker = undefined;
         draftMessageService.saveDraft({
             id: draftId,
             roomId: room.id,
-            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
+            userId: localUserStore.getChatId(),
             message,
-            replyingToMessageId: get(selectedChatMessageToReply),
-        })
-        console.log("Draft saved", {
-            id: draftId,
-            roomId: room.id,
-            userId: JSON.parse(localStorage.getItem('localUser'))?.uuid,
-            message,
-            replyingToMessageId: get(selectedChatMessageToReply),
+            replyingToMessageId: replyMessageId ?? null,
         });
+        if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
+        closeEmojiPicker?.();
+        closeEmojiPicker = undefined;
+        selectedChatChatMessageToReplyUnsubscriber();
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;

@@ -60,7 +60,6 @@
     const reactionsWithUsers = derived(
         [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
         ([$reactions, ...$users]) => {
-            console.log("Reactions with users", $reactions, $users);
             return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
     );

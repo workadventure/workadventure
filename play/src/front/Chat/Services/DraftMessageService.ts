@@ -34,7 +34,6 @@ class DraftMessageService {
 
     public saveDraft(draft: DraftMessage) {
         if (!this.db) return;
-
         const transaction = this.db.transaction("drafts", "readwrite");
         const store = transaction.objectStore("drafts");
 
@@ -53,7 +52,12 @@ class DraftMessageService {
 
             const request = store.get(id);
             request.onsuccess = (event) => {
-                resolve((event.target as IDBRequest).result || null);
+                const draft = (event.target as IDBRequest).result;
+                if (!draft) {
+                    resolve(null);
+                    return;
+                }
+                resolve(draft);
             };
 
             request.onerror = (event) => {
