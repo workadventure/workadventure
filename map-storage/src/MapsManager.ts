@@ -181,7 +181,8 @@ class MapsManager {
                         this.clearSaveMapInterval(key);
                     }
                 })().catch((e) => {
-                    console.error(`[${new Date().toISOString()}]`, e);
+                    console.error(`[${new Date().toISOString()}]`, e, "STOP AUTOSAVING");
+                    this.clearSaveMapInterval(key);
                     Sentry.captureException(e);
                 });
             }, intervalMS)
