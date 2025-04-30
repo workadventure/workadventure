@@ -755,19 +755,13 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserUuid: string
     ): Promise<boolean> {
-        try {
-            return axios.post(
-                ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserUuid },
-                {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                }
-            );
-        } catch (err) {
-            return new Promise((solve, reject) => {
-                reject(err);
-            });
-        }
+        return axios.post(
+            ADMIN_API_URL + "/api/ban",
+            { uuidToBan, playUri, name, message, byUserUuid },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 
     public getCapabilities(): Promise<Capabilities> {
