@@ -803,7 +803,7 @@
                     id="linkButton"
                     type="text"
                     bind:value={property.buttonLabel}
-                    on:change={onValueChange}
+                    onChange={onValueChange}
                 />
             </div>
         {/if}
