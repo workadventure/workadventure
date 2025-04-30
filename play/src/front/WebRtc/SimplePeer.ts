@@ -231,13 +231,11 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
-        console.log("createPeerConnection", user.userId);
-        console.log(this.remotePlayersRepository.getPlayers());
+
 
         const userId = this.extractUserIdFromSpaceId(user.userId);
 
         const player = await this.remotePlayersRepository.getPlayer(userId);
-        console.log(">>>>> player", player);
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
 
@@ -247,9 +245,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this._videoPeerRemoved.next(peerConnection.media);
                 peerConnection.toClose = true;
                 peerConnection.destroy();
-                console.log(">>>> delete video stream", {
-                    spaceUserId: user.userId,
-                });
+
                 //this.space.livekitVideoStreamStore.delete(user.userId);
             } else {
                 peerConnection.toClose = false;
@@ -295,16 +291,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
-        console.log(">>>> set video stream from simplePeer", {
-            spaceUserId: user.userId,
-            peer,
-            user,
-            livekitVideoStreamStore: this.space.livekitVideoStreamStore,
-            space: this.space,
-        });
+
         this.space.livekitVideoStreamStore.set(user.userId, peer);
         this._videoPeerAdded.next(peer.media);
-        console.log(">>>>> return peer added", peer);
         return peer;
     }
 

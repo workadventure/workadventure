@@ -126,6 +126,7 @@ export class LiveKitParticipant {
         this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, this.getScreenShareStream());
     }
 
+    //TODO : peut etre creer une class qui encapsule + ajouter le userId et le champs player ==> + simple pour la suite et ajouter des propriétés spécifiques
     public getVideoStream(): Streamable {
         return {
             uniqueId: this.participant.identity,
