@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy } from "svelte";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -12,17 +12,9 @@
     import logoImg from "../images/logo-min-white.png";
     import errorGif from "./images/error.gif";
 
-    let logoError: HTMLImageElement;
-    let errorImage: HTMLImageElement;
-
-
     let errorScreen = $errorScreenStore;
-    let logoErrorParent: HTMLDivElement;
-    let imageErrorParent: HTMLDivElement;
 
-    let logoErrorSrc =
-        gameManager?.currentStartedRoom?.loginSceneLogo ??
-        logoImg;
+    let logoErrorSrc = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
@@ -50,16 +42,18 @@
 
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 
-    onMount(() => {
-        if (logoErrorParent) {
-            logoErrorParent.innerHTML = "";
-            logoErrorParent.appendChild(logoError);
-        }
-        if (imageErrorParent) {
-            imageErrorParent.innerHTML = "";
-            imageErrorParent.appendChild(errorImage);
-        }
-    });
+    // onMount(() => {
+    //     if (logoErrorParent) {
+    //         logoErrorParent.innerHTML = "";
+    //         logoErrorParent.appendChild(logoError);
+    //     }
+    //     if (imageErrorParent) {
+    //         imageErrorParent.innerHTML = "";
+    //         imageErrorParent.appendChild(errorImage);
+    //     }
+    // });
+
+    console.log(errorScreen);
 </script>
 
 {#if $errorScreenStore}
@@ -73,17 +67,22 @@
             <div class="icon" bind:this={imageErrorParent} /> -->
             <div class="logo">
                 {#if logoErrorSrc}
-                    <img src={logoErrorSrc} alt="Logo error" style="max-height:25vh; max-width:80%;" />
+                    <img
+                        src={errorScreen?.imageLogo ?? logoErrorSrc}
+                        alt="Logo error"
+                        style="max-height:25vh; max-width:80%;"
+                    />
                 {/if}
             </div>
 
-        
             <div class="icon">
-                
-                <img src={errorScreen.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif} alt="Error Image" style="height:125px; max-width:100%;" />
-                
+                <img
+                    src={errorScreen?.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif}
+                    alt="Error"
+                    style="height:125px; max-width:100%;"
+                />
             </div>
-            
+
             {#if $errorScreenStore.type !== "retry"}<h2 class="mt-10">{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
@@ -94,8 +93,8 @@
                 {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="light button" on:click={click}>
-                    {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
+                <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
+                    {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload mr-2 hover:" />{/if}
                     {$errorScreenStore.buttonTitle}
                 </button>
                 {#if $userIsConnected}

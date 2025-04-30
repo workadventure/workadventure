@@ -316,7 +316,6 @@ class AdminApi implements AdminInterface {
                 type: "error",
                 title: "Invalid server response",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "MAP_VALIDATION",
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };

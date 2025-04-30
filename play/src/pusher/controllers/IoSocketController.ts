@@ -296,6 +296,7 @@ export class IoSocketController {
                                         title: "Please refresh",
                                         subtitle: "New version available",
                                         image: "/resources/icons/new_version.png",
+                                        imageLogo: "/static/images/logo.png",
                                         code: "NEW_VERSION",
                                         details:
                                             "A new version of WorkAdventure is available. Please refresh your window",

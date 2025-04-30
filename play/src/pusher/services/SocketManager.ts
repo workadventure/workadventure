@@ -1024,6 +1024,7 @@ export class SocketManager implements ZoneEventListener {
             subtitle: "",
             details: "",
             image: "",
+            imageLogo: "",
             buttonTitle: "",
             canRetryManual: false,
             timeToRetry: 0,
@@ -1036,6 +1037,7 @@ export class SocketManager implements ZoneEventListener {
             errorScreenMessage.subtitle = errorApi.subtitle;
             errorScreenMessage.details = errorApi.details;
             errorScreenMessage.image = errorApi.image;
+            errorScreenMessage.imageLogo = errorApi.imageLogo;
             if (errorApi.type == "unauthorized" && errorApi.buttonTitle) {
                 errorScreenMessage.buttonTitle = errorApi.buttonTitle;
             }

@@ -30,6 +30,11 @@ export const isErrorApiErrorData = extendApi(
         "The URL of the image displayed just under the logo in the error screen.",
       example: "https://example.com/error.png",
     }),
+    imageLogo: extendApi(z.string().optional(), {
+      description:
+        "The URL of the image displayed just at the place of the logo in the error screen.",
+      example: "https://example.com/error.png",
+    }),
   }),
   {
     description:
@@ -63,6 +68,11 @@ export const isErrorApiRetryData = extendApi(
     image: extendApi(z.string(), {
       description:
         "The URL of the image displayed just under the logo in the waiting screen.",
+      example: "https://example.com/wait.png",
+    }),
+    imageLogo: extendApi(z.string(), {
+      description:
+        "The URL of the image displayed just at the place of the logo in the waiting screen.",
       example: "https://example.com/wait.png",
     }),
     buttonTitle: extendApi(z.string().nullable().optional(), {
@@ -129,6 +139,11 @@ export const isErrorApiUnauthorizedData = extendApi(
         "If you would like more information, you can contact the administrator or us at example@workadventu.re.",
     }),
     image: extendApi(z.string(), {
+      description:
+        "The URL of the image displayed just under the logo in the error screen.",
+      example: "https://example.com/error.png",
+    }),
+    imageLogo: extendApi(z.string(), {
       description:
         "The URL of the image displayed just under the logo in the error screen.",
       example: "https://example.com/error.png",
