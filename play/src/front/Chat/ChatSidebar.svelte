@@ -1,12 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { enableUserInputsStore } from "../Stores/UserInputStore";
-    import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
-    import { navChat } from "./Stores/ChatStore";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement;
@@ -19,39 +16,6 @@
 
     function closeChat() {
         chatVisibilityStore.set(false);
-    }
-
-    const isChatEnabled = gameScene.room.isChatEnabled;
-    const isUserListEnabled = gameScene.room.isChatOnlineListEnabled;
-
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "c") {
-            if (!isChatEnabled) {
-                return;
-            }
-            if ($navChat.key === "users" && $chatVisibilityStore) {
-                navChat.switchToChat();
-            } else if (!$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
-                navChat.switchToChat();
-                chatVisibilityStore.set(true);
-            } else if ($chatVisibilityStore) {
-                chatVisibilityStore.set(false);
-            }
-        } else if (e.key === "u") {
-            if (!isUserListEnabled) {
-                return;
-            }
-            if (!$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
-                navChat.switchToUserList();
-                chatVisibilityStore.set(true);
-            } else if ($chatVisibilityStore) {
-                if ($navChat.key === "chat") {
-                    navChat.switchToUserList();
-                } else {
-                    chatVisibilityStore.set(false);
-                }
-            }
-        }
     }
 
     let sideBarWidth: number = $chatSidebarWidthStore;
@@ -122,7 +86,7 @@
     };
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:resize={onresize} />
+<svelte:window on:resize={onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:clientWidth={sideBarWidth}
