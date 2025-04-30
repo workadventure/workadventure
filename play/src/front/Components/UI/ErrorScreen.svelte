@@ -52,8 +52,6 @@
     //         imageErrorParent.appendChild(errorImage);
     //     }
     // });
-
-    console.log(errorScreen);
 </script>
 
 {#if $errorScreenStore}
