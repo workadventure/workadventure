@@ -6,8 +6,7 @@
   "scripts": {
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "precommit": "lint-staged && [ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS'",
-    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "precommit": "lint-staged && ([ \"$(uname)\" != \"Darwin\" ] && npm run export-json-schema || echo 'Skipping export-json-schema on MacOS')",    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
     "test": "vitest run",
     "test:watch": "vitest watch",

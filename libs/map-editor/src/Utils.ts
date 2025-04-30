@@ -5,7 +5,7 @@ export function getSpeakerMegaphoneAreaName(
     areaId: string
 ): string | undefined {
     for (const area of areas.values()) {
-        const speakerMegaphonePropertyRaw = area.properties.type === "speakerMegaphone"; // Erreur ici
+        const speakerMegaphonePropertyRaw = area.properties.find((property) => property.type === "speakerMegaphone");
         if (speakerMegaphonePropertyRaw) {
             const speakerMegaphoneProperty = SpeakerMegaphonePropertyData.safeParse(speakerMegaphonePropertyRaw);
             if (speakerMegaphoneProperty.success && area.id === areaId) {
