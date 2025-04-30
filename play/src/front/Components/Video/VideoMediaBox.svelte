@@ -22,7 +22,6 @@
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
-    import { IconArrowDown, IconArrowUp } from "@wa-icons";
 
     export let fullScreen = false;
     export let peer: Streamable;
@@ -56,7 +55,6 @@
     let embedScreen: Streamable;
 
     let showUserSubMenu = false;
-    let menuDrop = false;
     let hasVideoStore = peer.hasVideo;
     let hasAudioStore = peer.hasAudio;
     let isMutedStore = peer.isMuted;
@@ -70,13 +68,11 @@
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
-        menuDrop = false;
     }
 
     function exitFullScreen() {
         highlightedEmbedScreen.removeHighlight();
         highlightFullScreen.set(false);
-        menuDrop = false;
     }
 
     let userMenuButton: HTMLDivElement;
@@ -235,46 +231,27 @@
 
                 <!-- The button at the top of the video that opens the menu to go fullscreen -->
                 {#if !inCameraContainer}
-                    <button
-                        class="w-8 h-8 bg-contrast/80 flex rounded-sm z-10 opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 absolute inset-0 mx-auto picture-in-picture:hidden"
-                        on:click={() => (menuDrop = !menuDrop)}
-                    >
-                        {#if menuDrop}
-                            <IconArrowUp class="w-4 h-4 m-auto flex items-center text-white" />
-                        {:else}
-                            <IconArrowDown class="w-4 h-4 m-auto flex items-center text-white" />
-                        {/if}
-                    </button>
-
                     <!-- The menu to go fullscreen -->
                     <div
-                        class={menuDrop
-                            ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-28 w-60 z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
-                            : "hidden"}
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
-                        <div class="flex flex-col justify-evenly cursor-pointer h-full w-full">
+                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                            {#if !fullScreen}
+                                <button
+                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                    on:click={exitFullScreen}
+                                >
+                                    <ArrowsMinimizeIcon classList="w-14" />
+                                </button>
+                            {/if}
                             <button
-                                class="svg w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                on:click={exitFullScreen}
-                            >
-                                <ArrowsMinimizeIcon classList="mx-4" />
-                                <span class="font-bold text-white">{$LL.video.reduce()}</span>
-                            </button>
-                            <div class="h-[1px] z-30 w-full bg-white/20" />
-                            <button
-                                class="muted-video w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
                                 on:click={toggleFullScreen}
                             >
                                 {#if fullScreen}
-                                    <ArrowsMinimizeIcon classList="mx-4" />
-                                    <span class="font-bold cursor-pointer text-white"
-                                        >{$LL.video.exit_fullscreen()}</span
-                                    >
+                                    <ArrowsMinimizeIcon classList="w-14" />
                                 {:else}
-                                    <ArrowsMaximizeIcon classList="mx-4" />
-                                    <span class="font-bold cursor-pointer text-white"
-                                        >{$LL.video.toggle_fullscreen()}</span
-                                    >
+                                    <ArrowsMaximizeIcon classList="w-14" />
                                 {/if}
                             </button>
                         </div>
@@ -300,7 +277,7 @@
 
     {#if inCameraContainer && videoEnabled && !missingUserActivation}
         <button
-            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 cursor-pointer"
+            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
             on:click={() => highlightPeer(peer)}
         >
             <ArrowsMaximizeIcon />
