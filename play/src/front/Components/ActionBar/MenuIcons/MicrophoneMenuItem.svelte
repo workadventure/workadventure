@@ -48,27 +48,3 @@
         <MicOffIcon />
     {/if}
 </ActionBarButton>
-
-<!--
-version avec le tooltip potentiellement à supprimer définitivement
-<ActionBarButton
-    on:click={microphoneClick}
-    classList="group/btn-mic peer/mic"
-    tooltipTitle={$microphoneButtonStateStore === "disabled"
-        ? $LL.actionbar.help.micDisabledByStatus.title()
-        : $LL.actionbar.help.mic.title()}
-    tooltipDesc={$microphoneButtonStateStore === "disabled"
-        ? $LL.actionbar.help.micDisabledByStatus.desc({
-              status: getStatusLabel($availabilityStatusStore),
-          })
-        : $LL.actionbar.help.mic.desc()}
-    disabledHelp={$openedMenuStore !== undefined}
-    state={$microphoneButtonStateStore}
-    dataTestId="microphone-button"
->
-    {#if $requestedMicrophoneState && !$silentStore}
-        <MicOnIcon />
-    {:else}
-        <MicOffIcon />
-    {/if}
-</ActionBarButton> -->
