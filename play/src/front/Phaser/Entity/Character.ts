@@ -5,7 +5,7 @@ import { Deferred } from "ts-deferred";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";

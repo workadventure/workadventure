@@ -27,9 +27,9 @@
     export let isActive = false;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
-        click: CustomEvent,
+        change: undefined;
+        close: undefined;
+        click: CustomEvent;
     }>();
 
     let modulesExtensionMapEditor = $extensionModuleStore.reduce(

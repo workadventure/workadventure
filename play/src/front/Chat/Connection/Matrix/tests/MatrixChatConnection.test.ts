@@ -457,7 +457,6 @@ describe("MatrixChatConnection", () => {
 
             const matrixChatConnection = await getMatrixConnection(clientPromise);
 
-             
             await expect(matrixChatConnection.createRoom()).rejects.toThrowError("CreateRoomOptions is empty");
         });
 

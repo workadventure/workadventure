@@ -31,9 +31,7 @@
         }
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData").forEach((area) => {
-            const property = area.areaData.properties.find(
-                (property) => property.type === "personalAreaPropertyData"
-            );
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
             if (property !== undefined && property.ownerId === userUUID) {
                 // If the user already has a personal area, we do not allow him to claim another one
                 notificationPlayingStore.playNotification($LL.area.personalArea.alreadyHavePersonalArea());

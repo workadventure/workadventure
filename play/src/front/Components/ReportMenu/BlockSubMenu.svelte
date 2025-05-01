@@ -23,7 +23,7 @@
             return;
         }
         if (blackListManager.isBlackListed(userUUID)) {
-            blackListManager.cancelBlackList(userUUID)
+            blackListManager.cancelBlackList(userUUID);
         } else {
             blackListManager.blackList(userUUID);
         }

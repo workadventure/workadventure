@@ -21,7 +21,6 @@ export interface ChatUser {
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
- 
 export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
 
 export enum ChatPermissionLevel {

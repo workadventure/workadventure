@@ -156,12 +156,12 @@ export class MetaTagsBuilder {
         const mapDescriptionValue = mapDescriptionProperty?.value;
 
         return {
-            title: (typeof mapNameValue === "string")
-                ? `${MetaTagsDefaultValue.title} - ${mapNameValue}`
-                : MetaTagsDefaultValue.title,
-            description: (typeof mapDescriptionValue === "string")
-                ? mapDescriptionValue
-                : MetaTagsDefaultValue.description,
+            title:
+                typeof mapNameValue === "string"
+                    ? `${MetaTagsDefaultValue.title} - ${mapNameValue}`
+                    : MetaTagsDefaultValue.title,
+            description:
+                typeof mapDescriptionValue === "string" ? mapDescriptionValue : MetaTagsDefaultValue.description,
             author: MetaTagsDefaultValue.author,
             provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,

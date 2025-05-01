@@ -340,11 +340,11 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const mode = get(mapEditorAreaModeStore);
-        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj))).sort(
-            (a1, a2) => {
+        const sortedAreaPreviews = gameObjects
+            .filter((obj) => this.isAreaPreview(obj))
+            .sort((a1, a2) => {
                 return a1.getSize() - a2.getSize();
-            }
-        );
+            });
 
         if (mode === "ADD") {
             if (this.drawinNewAreaStartPos) {

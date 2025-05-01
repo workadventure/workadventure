@@ -1,4 +1,3 @@
- 
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
 
 export interface JitsiLocalTracks {

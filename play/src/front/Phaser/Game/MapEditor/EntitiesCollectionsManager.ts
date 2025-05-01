@@ -7,7 +7,7 @@ import {
 } from "@workadventure/map-editor";
 import { derived, Readable, Writable, writable } from "svelte/store";
 import { entitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {

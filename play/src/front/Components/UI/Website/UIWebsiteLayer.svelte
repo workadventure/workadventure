@@ -9,8 +9,15 @@
     let iframeEl: HTMLIFrameElement;
 
     $: iframeSrc = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
-    $: iframeStyles = `border: 0; height: ${uiWebsite.size.height}; width: ${uiWebsite.size.width}; visibility: ${uiWebsite.visible ? "visible" : "hidden"};`
-        + (uiWebsite.margin ? ` margin: ${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${uiWebsite.margin.bottom || 0} ${uiWebsite.margin.left || 0};` : '');
+    $: iframeStyles =
+        `border: 0; height: ${uiWebsite.size.height}; width: ${uiWebsite.size.width}; visibility: ${
+            uiWebsite.visible ? "visible" : "hidden"
+        };` +
+        (uiWebsite.margin
+            ? ` margin: ${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${uiWebsite.margin.bottom || 0} ${
+                  uiWebsite.margin.left || 0
+              };`
+            : "");
 
     onMount(() => {
         if (uiWebsite.allowApi) {
@@ -36,7 +43,8 @@
         ? "center"
         : uiWebsite.position.vertical === "bottom"
         ? "end"
-        : "top"}>
+        : "top"}
+>
     <iframe
         src={iframeSrc}
         id={`ui-website-${uiWebsite.id}`}
@@ -44,7 +52,8 @@
         title={uiWebsite.url}
         allow={uiWebsite.allowPolicy ?? ""}
         style={iframeStyles}
-        bind:this={iframeEl} />
+        bind:this={iframeEl}
+    />
 </div>
 
 <style lang="scss">

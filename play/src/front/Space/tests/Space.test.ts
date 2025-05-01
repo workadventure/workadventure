@@ -66,9 +66,8 @@ describe("Space test", () => {
 
         new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
-         
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
-         
+
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
     });
 
@@ -84,9 +83,9 @@ describe("Space test", () => {
         const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
-         
+
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenCalledOnce();
-         
+
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {

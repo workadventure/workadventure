@@ -6,7 +6,7 @@
     import InfoButton from "./InfoButton.svelte";
 
     const dispatch = createEventDispatcher<{
-        change: InputTagOption[] | undefined,
+        change: InputTagOption[] | undefined;
     }>();
 
     export let optional = false;

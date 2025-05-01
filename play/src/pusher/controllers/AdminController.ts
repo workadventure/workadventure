@@ -339,7 +339,6 @@ export class AdminController extends BaseHttpController {
     }
 
     sendChatMessagePrompt(): void {
-         
         this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
             const body = req.body;
 
@@ -408,7 +407,6 @@ export class AdminController extends BaseHttpController {
     }
 
     dispatchExternalModuleEvent(): void {
-         
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
             const body = req.body;
             try {
@@ -445,7 +443,6 @@ export class AdminController extends BaseHttpController {
                                     return;
                                 }
                                 res();
-
                             }
                         );
                     });

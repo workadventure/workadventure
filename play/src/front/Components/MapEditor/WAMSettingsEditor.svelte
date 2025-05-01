@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {ComponentType, onDestroy, onMount} from "svelte";
+    import { ComponentType, onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";

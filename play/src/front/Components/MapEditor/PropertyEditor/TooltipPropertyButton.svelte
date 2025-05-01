@@ -12,8 +12,8 @@
     let infinity = property.duration == -1;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
 
     function onValueChange() {

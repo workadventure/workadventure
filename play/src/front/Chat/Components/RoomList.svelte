@@ -1,6 +1,6 @@
 <script lang="ts">
     import { get } from "svelte/store";
-     
+
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";

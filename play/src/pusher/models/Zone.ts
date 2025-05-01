@@ -1,4 +1,4 @@
-import type {ClientReadableStream} from "@grpc/grpc-js";
+import type { ClientReadableStream } from "@grpc/grpc-js";
 import Debug from "debug";
 import {
     AvailabilityStatus,
@@ -19,9 +19,9 @@ import {
     ZoneMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import {apiClientRepository} from "../services/ApiClientRepository";
-import type {PositionDispatcher} from "../models/PositionDispatcher";
-import {Socket} from "../services/SocketManager";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import type { PositionDispatcher } from "../models/PositionDispatcher";
+import { Socket } from "../services/SocketManager";
 
 const debug = Debug("zone");
 

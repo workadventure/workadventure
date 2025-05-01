@@ -4,7 +4,7 @@
     import CloseButton from "./CloseButton.svelte";
 
     const dispatch = createEventDispatcher<{
-        close: void,
+        close: void;
     }>();
 
     onDestroy(() => {

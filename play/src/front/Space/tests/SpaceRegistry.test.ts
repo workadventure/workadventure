@@ -141,7 +141,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 spaceRegistry.destroy();
                 expect(spaceRegistry.getAll()).toHaveLength(0);
-                 
+
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
             });
         });

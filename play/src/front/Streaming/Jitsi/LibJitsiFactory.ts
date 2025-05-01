@@ -1,7 +1,7 @@
 import CancelablePromise from "cancelable-promise";
- 
+
 import { InitOptions, JitsiMeetJSType } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
- 
+
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 
 class LibJitsiFactory {

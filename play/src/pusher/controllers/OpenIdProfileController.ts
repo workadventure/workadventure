@@ -6,7 +6,6 @@ import { BaseHttpController } from "./BaseHttpController";
 
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
-         
         this.app.get("/profile", async (req, res) => {
             const query = validateQuery(
                 req,

@@ -12,8 +12,8 @@
     export let property: MatrixRoomPropertyData;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
     let isCreatingRoom = false;
     let creationRoomError = false;

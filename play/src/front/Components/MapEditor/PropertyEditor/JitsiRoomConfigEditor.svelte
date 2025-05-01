@@ -11,8 +11,8 @@
     export let onSave: (config: JitsiRoomConfigData) => void;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
 
     let defaultConfig: JitsiRoomConfigData = {

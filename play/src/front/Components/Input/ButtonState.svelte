@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {asError} from "catch-unknown";
+    import { asError } from "catch-unknown";
     import { IconCircleX, IconInfoCircle } from "@wa-icons";
 
     export let promise: () => Promise<string>;

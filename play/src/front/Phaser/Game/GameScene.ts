@@ -361,7 +361,7 @@ export class GameScene extends DirtyScene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
-    constructor(private _room: Room, customKey?: string  ) {
+    constructor(private _room: Room, customKey?: string) {
         super({
             key: customKey ?? _room.key,
         });
@@ -1782,13 +1782,13 @@ export class GameScene extends DirtyScene {
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-                 
+
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                 
+
                 /*const me = this;
                 this.events.once("render", () => {
                     if (me.connection) {*/

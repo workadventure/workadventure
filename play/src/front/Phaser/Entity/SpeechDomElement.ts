@@ -44,9 +44,11 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
         if (textMarked instanceof Promise) {
-            textMarked.then((resolvedText) => {
-                span.innerHTML = resolvedText;
-            }).catch(e => console.error(e));
+            textMarked
+                .then((resolvedText) => {
+                    span.innerHTML = resolvedText;
+                })
+                .catch((e) => console.error(e));
         } else {
             span.innerHTML = textMarked;
         }

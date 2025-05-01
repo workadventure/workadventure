@@ -2,14 +2,14 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     PlayerDetailsUpdatedMessage,
-    UserMovedMessage
+    UserMovedMessage,
 } from "@workadventure/messages";
-import {Deferred} from "ts-deferred";
-import type {MessageUserJoined} from "../../Connection/ConnexionModels";
-import type {AddPlayerEvent} from "../../Api/Events/AddPlayerEvent";
-import {iframeListener} from "../../Api/IframeListener";
-import {RoomConnection} from "../../Connection/RoomConnection";
-import {debugAddPlayer, debugRemovePlayer} from "../../Utils/Debuggers";
+import { Deferred } from "ts-deferred";
+import type { MessageUserJoined } from "../../Connection/ConnexionModels";
+import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import { iframeListener } from "../../Api/IframeListener";
+import { RoomConnection } from "../../Connection/RoomConnection";
+import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 export interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;

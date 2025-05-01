@@ -1,7 +1,7 @@
-import axios, {AxiosError, AxiosRequestConfig, isAxiosError} from "axios";
+import axios, { AxiosError, AxiosRequestConfig, isAxiosError } from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
 import { get } from "svelte/store";
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 import { errorStore } from "../Stores/ErrorStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -46,7 +46,10 @@ axiosWithRetry.interceptors.response.use(
     },
     (error: unknown) => {
         // Do not clear error message if the status code is being retried.
-        if (isAxiosError(error) && (error.status === undefined || (error.status >= 500 && error.status <= 599) || error.status === 429)) {
+        if (
+            isAxiosError(error) &&
+            (error.status === undefined || (error.status >= 500 && error.status <= 599) || error.status === 429)
+        ) {
             return Promise.reject(error);
         }
 

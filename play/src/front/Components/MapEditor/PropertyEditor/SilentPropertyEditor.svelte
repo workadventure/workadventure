@@ -4,8 +4,8 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
 </script>
 

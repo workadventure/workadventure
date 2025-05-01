@@ -10,8 +10,8 @@
     export let property: ListenerMegaphonePropertyData;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
 
     function onValueChange() {

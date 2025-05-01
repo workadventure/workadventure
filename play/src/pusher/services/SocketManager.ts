@@ -48,26 +48,26 @@ import {
     ViewportMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, {AxiosResponse, isAxiosError} from "axios";
-import {z} from "zod";
-import {WebSocket} from "uWebSockets.js";
-import {PusherRoom} from "../models/PusherRoom";
-import type {BackSpaceConnection, SocketData} from "../models/Websocket/SocketData";
+import axios, { AxiosResponse, isAxiosError } from "axios";
+import { z } from "zod";
+import { WebSocket } from "uWebSockets.js";
+import { PusherRoom } from "../models/PusherRoom";
+import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
-import {ProtobufUtils} from "../models/Websocket/ProtobufUtils";
-import type {GroupDescriptor, UserDescriptor, ZoneEventListener} from "../models/Zone";
-import type {AdminConnection, AdminSocketData} from "../models/Websocket/AdminSocketData";
-import {EMBEDDED_DOMAINS_WHITELIST} from "../enums/EnvironmentVariable";
-import {Space} from "../models/Space";
-import {UpgradeFailedData} from "../controllers/IoSocketController";
-import {eventProcessor} from "../models/eventProcessorInit";
-import {emitInBatch} from "./IoSocketHelpers";
-import {clientEventsEmitter} from "./ClientEventsEmitter";
-import {gaugeManager} from "./GaugeManager";
-import {apiClientRepository} from "./ApiClientRepository";
-import {adminService} from "./AdminService";
-import {ShortMapDescription} from "./ShortMapDescription";
-import {matrixProvider} from "./MatrixProvider";
+import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
+import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
+import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
+import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
+import { Space } from "../models/Space";
+import { UpgradeFailedData } from "../controllers/IoSocketController";
+import { eventProcessor } from "../models/eventProcessorInit";
+import { emitInBatch } from "./IoSocketHelpers";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { gaugeManager } from "./GaugeManager";
+import { apiClientRepository } from "./ApiClientRepository";
+import { adminService } from "./AdminService";
+import { ShortMapDescription } from "./ShortMapDescription";
+import { matrixProvider } from "./MatrixProvider";
 
 const debug = Debug("socket");
 
@@ -873,7 +873,7 @@ export class SocketManager implements ZoneEventListener {
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
                 Sentry.captureException(error);
-                console.error('Error while sending admin message', error);
+                console.error("Error while sending admin message", error);
             }
         });
     }

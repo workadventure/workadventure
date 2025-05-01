@@ -1,6 +1,6 @@
 <!-- https://lihautan.com/notes/svelte-lazy-load/ -->
 <script lang="ts">
-    import {ComponentType, createEventDispatcher} from "svelte";
+    import { ComponentType, createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher<{
         onload: void;

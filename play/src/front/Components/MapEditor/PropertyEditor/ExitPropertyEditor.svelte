@@ -11,8 +11,8 @@
     export let property: ExitPropertyData;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
     }>();
     // Key: room URL
     let mapsUrl = new Map<

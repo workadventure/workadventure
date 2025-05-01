@@ -1,4 +1,4 @@
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 
 export class TexturesHelper {
     public static async getSnapshot(

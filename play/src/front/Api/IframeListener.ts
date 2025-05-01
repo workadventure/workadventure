@@ -3,7 +3,7 @@ import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { get } from "svelte/store";
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionalButtonsMenu,
@@ -493,7 +493,10 @@ class IframeListener {
                         bannerStore.set(null);
                     } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
                         // dispacth event on windows
-                        const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message as unknown as MessageEventInit<unknown>);
+                        const event = new MessageEvent(
+                            "AcitivityPickerFromWorkAdventure",
+                            message as unknown as MessageEventInit<unknown>
+                        );
                         window.dispatchEvent(event);
                     } else if (iframeEvent.type == "banUser") {
                         this._banPlayerIframeEvent.next(iframeEvent.data);

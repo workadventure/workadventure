@@ -1,5 +1,4 @@
 <script lang="ts">
-     
     import { get } from "svelte/store";
     import { onMount } from "svelte";
     import { RoomFolder, ChatRoom, ChatRoomModeration } from "../Connection/ChatConnection";

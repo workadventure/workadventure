@@ -6,7 +6,7 @@
     import { IconMoodSmile } from "@wa-icons";
 
     const dispatch = createEventDispatcher<{
-        change: string
+        change: string;
     }>();
 
     export let messageRef: HTMLDivElement | undefined;

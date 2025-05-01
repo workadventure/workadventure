@@ -27,8 +27,7 @@
         if (!gameScene) return;
 
         [...$extensionModuleStore.values()].forEach((extensionModule) => {
-            if (extensionModule?.openPopupMeeting &&
-                event.resource?.onlineMeeting?.joinUrl) {
+            if (extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl) {
                 extensionModule.openPopupMeeting(
                     event.title,
                     event.resource?.onlineMeeting?.joinUrl,

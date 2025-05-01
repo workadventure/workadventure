@@ -1,18 +1,18 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import {get, Readable, Unsubscriber, Writable, writable} from "svelte/store";
- 
+import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
- 
+
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
- 
+
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import Debug from "debug";
- 
+
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
- 
-import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
-import {TurnCredentialsAnswer} from "@workadventure/messages";
-import {asError} from "catch-unknown";
+
+import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
+import { TurnCredentialsAnswer } from "@workadventure/messages";
+import { asError } from "catch-unknown";
 import {
     requestedCameraDeviceIdStore,
     requestedCameraState,
@@ -22,15 +22,15 @@ import {
     usedMicrophoneDeviceIdStore,
     videoConstraintStore,
 } from "../../Stores/MediaStore";
-import {liveStreamingEnabledStore} from "../../Stores/MegaphoneStore";
-import {gameManager} from "../../Phaser/Game/GameManager";
-import {requestedScreenSharingState} from "../../Stores/ScreenSharingStore";
-import {DeviceBroadcastable} from "../Common/ConferenceWrapper";
-import {notificationPlayingStore} from "../../Stores/NotificationStore";
-import {getIceServersConfig} from "../../Components/Video/utils";
-import {screenWakeLock} from "../../Utils/ScreenWakeLock";
-import {JitsiTrackWrapper} from "./JitsiTrackWrapper";
-import {JitsiLocalTracks} from "./JitsiLocalTracks";
+import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
+import { gameManager } from "../../Phaser/Game/GameManager";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
+import { getIceServersConfig } from "../../Components/Video/utils";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
+import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
 const debug = Debug("JitsiConferenceWrapper");
 

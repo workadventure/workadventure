@@ -29,7 +29,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
-import {asError} from "catch-unknown";
+import { asError } from "catch-unknown";
 import {
     ChatConnectionInterface,
     ChatRoom,

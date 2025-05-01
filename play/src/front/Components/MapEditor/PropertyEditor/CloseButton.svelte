@@ -2,7 +2,7 @@
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher<{
-        click: undefined,
+        click: undefined;
     }>();
 </script>
 
