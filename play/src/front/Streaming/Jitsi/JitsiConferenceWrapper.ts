@@ -12,7 +12,6 @@ import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/Jitsi
  
 import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import {TurnCredentialsAnswer} from "@workadventure/messages";
-import {VideoType} from "lib-jitsi-meet/types/hand-crafted/service/RTC/VideoType";
 import {
     requestedCameraDeviceIdStore,
     requestedCameraState,
@@ -269,7 +268,7 @@ export class JitsiConferenceWrapper {
                     // TODO : Remove track that is stopped and update all other users
                     debug("local track stopped", track);
 
-                    if (track.isVideoTrack() && track.getVideoType() === VideoType.DESKTOP) {
+                    if (track.isVideoTrack() && track.getVideoType() === "desktop") {
                         requestedScreenSharingState.disableScreenSharing();
                     }
                 });
@@ -474,7 +473,7 @@ export class JitsiConferenceWrapper {
                             })
                         );
                     } else if (track.isVideoTrack()) {
-                        if (track.getVideoType() === VideoType.DESKTOP) {
+                        if (track.getVideoType() === "desktop") {
                             promises.push(
                                 this.handleTrack(this.tracks.screenSharing, track).then(() => {
                                     this.tracks.screenSharing = track;
@@ -615,7 +614,7 @@ export class JitsiConferenceWrapper {
                     jitsiTrackWrapper.muteAudio();
                 }
                 if (track.isVideoTrack()) {
-                    if (track.getVideoType() === VideoType.DESKTOP) {
+                    if (track.getVideoType() === "desktop") {
                         jitsiTrackWrapper.muteScreenSharing();
                     } else {
                         jitsiTrackWrapper.muteVideo();

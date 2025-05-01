@@ -7,7 +7,6 @@ import {derived, Readable} from "svelte/store";
  
 import {CreateLocalTracksOptions} from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
 import {failure, Result, success} from "@workadventure/map-editor";
-import {VideoType} from "lib-jitsi-meet/types/hand-crafted/service/RTC/VideoType";
 import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
 import {DeviceBroadcastable} from "../Common/ConferenceWrapper";
 import {jitsiConferencesStore} from "./JitsiConferencesStore";
@@ -115,7 +114,7 @@ export const jitsiLocalTracksStore = derived<
                 if (track.isAudioTrack()) {
                     tracks.audio = track;
                 } else if (track.isVideoTrack()) {
-                    if (track.getVideoType() === VideoType.DESKTOP) {
+                    if (track.getVideoType() === "desktop") {
                         tracks.screenSharing = track;
                     } else {
                         tracks.video = track;
