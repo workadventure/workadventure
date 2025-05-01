@@ -9,9 +9,9 @@
     }>();
 
     export let when = false;
-    export let component: () => Promise<{ default: ComponentType<any> }>;
+    export let component: () => Promise<{ default: ComponentType }>;
 
-    let loading: Promise<{ default: ComponentType<any> }> | null = null;
+    let loading: Promise<{ default: ComponentType }> | null = null;
 
     $: if (when) {
         load();

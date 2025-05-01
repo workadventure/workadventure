@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { IconCircleX, IconInfoCircle } from "@wa-icons";
     import {asError} from "catch-unknown";
+    import { IconCircleX, IconInfoCircle } from "@wa-icons";
 
     export let promise: () => Promise<string>;
     export let initialText: string;

@@ -5,42 +5,27 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let uiWebsite: UIWebsiteEvent;
-    let main: HTMLDivElement;
-    const iframe = document.createElement("iframe");
-    iframe.id = `ui-website-${uiWebsite.id}`;
-    iframe.tabIndex = -1;
-    $: {
-        iframe.src = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
-        iframe.title = uiWebsite.url;
-        iframe.style.border = "0";
-        iframe.allow = uiWebsite.allowPolicy ?? "";
-        iframe.style.height = uiWebsite.size.height;
-        iframe.style.width = uiWebsite.size.width;
-        iframe.style.visibility = uiWebsite.visible ? "visible" : "hidden";
-        if (uiWebsite.margin) {
-            iframe.style.margin = `${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${
-                uiWebsite.margin.bottom || 0
-            } ${uiWebsite.margin.left || 0}`;
-        }
-    }
+
+    let iframeEl: HTMLIFrameElement;
+
+    $: iframeSrc = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
+    $: iframeStyles = `border: 0; height: ${uiWebsite.size.height}; width: ${uiWebsite.size.width}; visibility: ${uiWebsite.visible ? "visible" : "hidden"};`
+        + (uiWebsite.margin ? ` margin: ${uiWebsite.margin.top || 0} ${uiWebsite.margin.right || 0} ${uiWebsite.margin.bottom || 0} ${uiWebsite.margin.left || 0};` : '');
 
     onMount(() => {
-        main.appendChild(iframe);
-
         if (uiWebsite.allowApi) {
-            iframeListener.registerIframe(iframe, uiWebsite.id);
+            iframeListener.registerIframe(iframeEl, uiWebsite.id);
         }
     });
 
     onDestroy(() => {
         if (uiWebsite.allowApi) {
-            iframeListener.unregisterIframe(iframe);
+            iframeListener.unregisterIframe(iframeEl);
         }
     });
 </script>
 
 <div
-    bind:this={main}
     class="layer"
     style:justify-content={uiWebsite.position.horizontal === "middle"
         ? "center"
@@ -51,8 +36,16 @@
         ? "center"
         : uiWebsite.position.vertical === "bottom"
         ? "end"
-        : "top"}
-/>
+        : "top"}>
+    <iframe
+        src={iframeSrc}
+        id={`ui-website-${uiWebsite.id}`}
+        tabindex="-1"
+        title={uiWebsite.url}
+        allow={uiWebsite.allowPolicy ?? ""}
+        style={iframeStyles}
+        bind:this={iframeEl} />
+</div>
 
 <style lang="scss">
     .layer {

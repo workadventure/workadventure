@@ -7,8 +7,8 @@ import {
 } from "@workadventure/map-editor";
 import { derived, Readable, Writable, writable } from "svelte/store";
 import { entitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
-import { EntityVariant } from "./Entities/EntityVariant";
 import {asError} from "catch-unknown";
+import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabsMapPromise!: Promise<Map<string, EntityPrefab>>;

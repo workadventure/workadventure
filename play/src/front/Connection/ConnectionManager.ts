@@ -10,6 +10,7 @@ import {
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
+import {asError} from "catch-unknown";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -45,7 +46,6 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
-import {asError} from "catch-unknown";
 export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",

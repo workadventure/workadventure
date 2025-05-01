@@ -1,10 +1,10 @@
 import axios, {AxiosError, AxiosRequestConfig, isAxiosError} from "axios";
 import axiosRetry, { isNetworkOrIdempotentRequestError, exponentialDelay } from "axios-retry";
 import { get } from "svelte/store";
+import {asError} from "catch-unknown";
 import { errorStore } from "../Stores/ErrorStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
-import {asError} from "catch-unknown";
 
 export const axiosToPusher = axios.create({
     baseURL: ABSOLUTE_PUSHER_URL,

@@ -3,6 +3,7 @@ import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { get } from "svelte/store";
+import {asError} from "catch-unknown";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionalButtonsMenu,
@@ -54,7 +55,6 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
-import {asError} from "catch-unknown";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],

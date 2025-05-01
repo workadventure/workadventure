@@ -12,6 +12,7 @@ import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/Jitsi
  
 import {JitsiConferenceErrors} from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import {TurnCredentialsAnswer} from "@workadventure/messages";
+import {asError} from "catch-unknown";
 import {
     requestedCameraDeviceIdStore,
     requestedCameraState,
@@ -30,7 +31,6 @@ import {getIceServersConfig} from "../../Components/Video/utils";
 import {screenWakeLock} from "../../Utils/ScreenWakeLock";
 import {JitsiTrackWrapper} from "./JitsiTrackWrapper";
 import {JitsiLocalTracks} from "./JitsiLocalTracks";
-import {asError} from "catch-unknown";
 
 const debug = Debug("JitsiConferenceWrapper");
 
