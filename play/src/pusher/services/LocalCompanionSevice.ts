@@ -6,6 +6,8 @@ import type { CompanionServiceInterface } from "./CompanionServiceInterface";
  */
 class LocalCompanionService implements CompanionServiceInterface {
     async getCompanionList(roomUrl: string, token: string): Promise<CompanionTextureCollection[] | undefined> {
+        // "import" does not support loading JSON files
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
         if (!companionList) {
             return undefined;
@@ -14,6 +16,8 @@ class LocalCompanionService implements CompanionServiceInterface {
     }
 
     async fetchCompanionDetails(textureId: string): Promise<CompanionDetail | undefined> {
+        // "import" does not support loading JSON files
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
 
         for (const collection of companionList) {

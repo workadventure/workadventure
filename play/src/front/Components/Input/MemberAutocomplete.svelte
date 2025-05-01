@@ -14,7 +14,9 @@
           }
         : undefined;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onSelect: { index: number; label: string; value: string } | undefined;
+    }>();
 
     async function searchMembers(filterText: string) {
         const connection = gameManager.getCurrentGameScene().connection;

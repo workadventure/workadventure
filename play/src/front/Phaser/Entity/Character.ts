@@ -28,6 +28,7 @@ import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import {asError} from "catch-unknown";
 
 const playerNameY = -25;
 const interactiveRadius = 25;
@@ -110,7 +111,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                                 resolve();
                             })
                             .catch((e) => {
-                                reject(e);
+                                reject(asError(e));
                             });
                     }, 0);
                 });

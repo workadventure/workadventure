@@ -1,3 +1,5 @@
+import {asError} from "catch-unknown";
+
 export class TexturesHelper {
     public static async getSnapshot(
         scene: Phaser.Scene,
@@ -28,7 +30,8 @@ export class TexturesHelper {
                             if (url instanceof HTMLImageElement) {
                                 resolve(url.src);
                             } else {
-                                resolve(String(url));
+                                console.error("Unexpected color object received for snapshot", url);
+                                resolve("");
                             }
                             rt.destroy();
                         },
@@ -37,7 +40,7 @@ export class TexturesHelper {
                     );
                 } catch (error) {
                     rt.destroy();
-                    reject(error);
+                    reject(asError(error));
                 }
             });
         } catch (error) {

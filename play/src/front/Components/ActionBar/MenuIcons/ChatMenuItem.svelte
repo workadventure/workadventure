@@ -14,7 +14,9 @@
     export let last: boolean | undefined = undefined;
     export let chatEnabledInAdmin = true;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function toggleChat() {
         if (!$chatVisibilityStore) {

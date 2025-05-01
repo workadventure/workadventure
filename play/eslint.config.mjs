@@ -146,7 +146,7 @@ export default defineConfig([
                 ignoreWarnings: true,
             }],
 
-            "svelte/no-at-html-tags": "off",
+            //"svelte/no-at-html-tags": "off",
             "import/default": "off",
             "import/no-named-as-default": "off",
             "import/no-named-as-default-member": "off",

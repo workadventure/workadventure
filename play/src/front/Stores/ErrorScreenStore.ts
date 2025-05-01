@@ -167,8 +167,7 @@ function createErrorScreenStore() {
                         return;
                     }
                     default: {
-                        // Typescript compiler is lost because of the removal of the status field.
-                        //@ts-ignore
+                        // @ts-ignore Typescript compiler is lost because of the removal of the status field.
                         const _exhaustiveCheck: never = errorApi;
                         throw new Error("This should never happen.");
                     }

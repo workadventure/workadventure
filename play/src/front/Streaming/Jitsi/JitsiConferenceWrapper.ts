@@ -31,6 +31,7 @@ import {getIceServersConfig} from "../../Components/Video/utils";
 import {screenWakeLock} from "../../Utils/ScreenWakeLock";
 import {JitsiTrackWrapper} from "./JitsiTrackWrapper";
 import {JitsiLocalTracks} from "./JitsiLocalTracks";
+import {asError} from "catch-unknown";
 
 const debug = Debug("JitsiConferenceWrapper");
 
@@ -126,7 +127,7 @@ export class JitsiConferenceWrapper {
                 resolve(jitsiConferenceWrapper);
             });
             room.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (e) => {
-                reject(e);
+                reject(asError(e));
                 console.error("conference failed");
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
@@ -568,7 +569,7 @@ export class JitsiConferenceWrapper {
         }
         debug("JitsiConferenceWrapper => addRemoteTrack", track.getType());
         this._streamStore.update((tracks) => {
-            // @ts-ignore
+            // @ts-ignore getParticipantId() does indeed exist on track but is not documented.
             const participantId = track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId", track);
@@ -588,7 +589,7 @@ export class JitsiConferenceWrapper {
     }
 
     private trackStateChanged(track: JitsiTrack) {
-        //@ts-ignore
+        //@ts-ignore track.muted does indeed exist even if not documented
         if (track.muted) {
             debug(`remote ${track.getType()} track is muted => removing`);
             this.removeRemoteTrack(track);
@@ -601,7 +602,7 @@ export class JitsiConferenceWrapper {
     private removeRemoteTrack(track: JitsiTrack) {
         this._streamStore.update((tracks) => {
             // Because Jitsi is nicely designed, if the track is local we need to get the participantId from the conference and not from the track
-            // @ts-ignore
+            // @ts-ignore track.getParticipantId does indeed exist on track but is not documented.
             const participantId = track.isLocal() ? this.myParticipantId : track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId");

@@ -631,7 +631,6 @@
             {/if}
         </div>
 
-        <!-- svelte-ignore missing-declaration -->
         <InputSwitch
             id="searchable"
             label={$LL.mapEditor.areaEditor.areaSerchable()}

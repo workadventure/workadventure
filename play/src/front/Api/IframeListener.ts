@@ -54,6 +54,7 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
+import {asError} from "catch-unknown";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -303,14 +304,8 @@ class IframeListener {
 
                     const errorHandler = (reason: unknown) => {
                         console.error("An error occurred while responding to an iFrame query.", reason);
-                        let reasonMsg = "";
-                        if (reason instanceof Error) {
-                            reasonMsg = reason.message;
-                        } else if (typeof reason === "object") {
-                            reasonMsg = reason ? JSON.stringify(reason) : "";
-                        } else if (typeof reason === "string") {
-                            reasonMsg = reason;
-                        }
+                        const error = asError(reason);
+                        const reasonMsg = error.message;
 
                         iframe?.contentWindow?.postMessage(
                             {

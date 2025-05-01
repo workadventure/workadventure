@@ -5,8 +5,6 @@ import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { Entity } from "../Phaser/ECS/Entity";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 
-type ObjectValues<T> = T[keyof T];
-
 export const mapEditorVisibilityStore = writable<boolean>(true);
 
 function createMapEditorModeStore() {
@@ -39,18 +37,8 @@ function createMapEditorSelectedEntityStore() {
     };
 }
 
-const MAP_EDITOR_ENTITY_TOOL_MODE = {
-    ADD: "ADD",
-    EDIT: "EDIT",
-} as const;
-
-const MAP_EDITOR_AREA_TOOL_MODE = {
-    ADD: "ADD",
-    EDIT: "EDIT",
-} as const;
-
-export type MapEditorEntityToolMode = ObjectValues<typeof MAP_EDITOR_ENTITY_TOOL_MODE>;
-export type MapEditorAreaToolMode = ObjectValues<typeof MAP_EDITOR_AREA_TOOL_MODE>;
+export type MapEditorEntityToolMode = "ADD" | "EDIT";
+export type MapEditorAreaToolMode = "ADD" | "EDIT";
 
 export const mapEditorModeStore = createMapEditorModeStore();
 

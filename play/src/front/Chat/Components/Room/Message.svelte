@@ -22,7 +22,9 @@
 
     let messageRef: HTMLDivElement | undefined;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        "updateMessageBody": { id: string }
+    }>();
 
     const {
         id,

@@ -34,7 +34,7 @@
         query: $chatSearchBarValue,
     });
 
-    $: roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
+    const roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
     function getNameOfAvailabilityStatus(status: AvailabilityStatus) {
         switch (status) {

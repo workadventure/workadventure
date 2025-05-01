@@ -45,6 +45,7 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+import {asError} from "catch-unknown";
 export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
@@ -458,7 +459,7 @@ class ConnectionManager {
 
             connection.onConnectError((error: object) => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(error);
+                reject(asError(error));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

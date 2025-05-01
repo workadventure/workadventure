@@ -145,6 +145,7 @@
     let tabsContainerWidth = 0;
     let tabsOverflowing = false;
     let tabsScrollX = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     $: tabsContainerWidth, $coWebsites, (tabsOverflowing = areTabsOverflowing());
 
     function areTabsOverflowing(): boolean {

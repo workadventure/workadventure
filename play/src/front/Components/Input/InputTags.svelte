@@ -5,7 +5,9 @@
     import { InputTagOption } from "./InputTagOption";
     import InfoButton from "./InfoButton.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: InputTagOption[] | undefined,
+    }>();
 
     export let optional = false;
     export let label: string | undefined = undefined;

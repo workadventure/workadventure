@@ -7,7 +7,9 @@
     export let content: Readable<ChatMessageContent>;
     export let hasDepth: false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        updateMessageBody: void;
+    }>();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;

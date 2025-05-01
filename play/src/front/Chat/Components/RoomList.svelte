@@ -87,8 +87,8 @@
         analyticsClient.startMatrixEncryptionConfiguration();
     }
 
-    $: isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
-    $: isGuest = chat.isGuest;
+    const isEncryptionRequiredAndNotSet = chat.isEncryptionRequiredAndNotSet;
+    const isGuest = chat.isGuest;
 
     function openRoomsIfCollapsedBeforeNewRoom(rooms: ChatRoom[]) {
         if (rooms.length !== 0 && displayRooms === false) {
