@@ -26,8 +26,8 @@
     let personalAreaOwner: string | null = personalAreaPropertyData.ownerId;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: boolean | undefined;
+        close: boolean | undefined;
     }>();
     const entitiesManager = gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager();
 

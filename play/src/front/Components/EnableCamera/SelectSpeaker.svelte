@@ -9,6 +9,7 @@
     export let deviceList: MediaDeviceInfo[];
     const dispatch = createEventDispatcher<{
         selectDevice: string | undefined;
+        playSound: string | undefined;
     }>();
 </script>
 

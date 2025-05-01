@@ -13,8 +13,9 @@
     let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
+        audioLink: PlayAudioPropertyData;
     }>();
 
     let HTMLAudioPlayer: HTMLAudioElement;

@@ -10,8 +10,9 @@
     export let disabled = false;
     export let testId: string | undefined;
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: undefined;
+        close: undefined;
+        click: undefined;
     }>();
 
     let isHovered = false;

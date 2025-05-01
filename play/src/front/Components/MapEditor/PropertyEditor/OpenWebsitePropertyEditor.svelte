@@ -105,8 +105,8 @@
     ];
 
     const dispatch = createEventDispatcher<{
-        change: undefined,
-        close: undefined,
+        change: string | null | undefined;
+        close: undefined;
     }>();
 
     function shouldDisplayAdvancedOption(): boolean {
