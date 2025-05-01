@@ -394,7 +394,7 @@ export class JitsiConferenceWrapper {
         const tracksReturned: JitsiLocalTrack[] = [];
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
-            throw newTracks;
+            throw asError(newTracks);
         } else {
             for (const track of newTracks) {
                 if (track.isVideoTrack()) {

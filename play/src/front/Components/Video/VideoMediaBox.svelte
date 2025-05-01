@@ -117,8 +117,8 @@
 
     // When the status is "connecting", do not show the video for 1 second. This is to avoid a visual glitch.
     // Most of the time, the connection is established in less than 1 second, so we do not want to show the loading spinner.
-    $: {
-        if ($statusStore === "connecting") {
+    const unsubscribeStatusStore = statusStore.subscribe((status) => {
+        if (status === "connecting") {
             showAfterDelay = false;
             if (connectingTimer) clearTimeout(connectingTimer);
             connectingTimer = setTimeout(() => {
@@ -131,7 +131,7 @@
                 connectingTimer = null;
             }
         }
-    }
+    });
 
     function highlightPeer(peer: Streamable) {
         highlightedEmbedScreen.highlight(peer);
@@ -142,6 +142,7 @@
     onDestroy(() => {
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
+        unsubscribeStatusStore?.();
     });
 </script>
 
