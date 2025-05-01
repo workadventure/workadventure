@@ -57,9 +57,7 @@
         on:focus|preventDefault={noDrag}
         on:blur|preventDefault={noDrag}
         on:click={() => {
-            () => {
-                openedMenuStore.toggle("appMenu");
-            };
+            openedMenuStore.toggle("appMenu");
         }}
         class="bottom-action-button"
     >

@@ -29,6 +29,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import {asError} from "catch-unknown";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -45,7 +46,6 @@ import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
-import {asError} from "catch-unknown";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =

@@ -493,7 +493,7 @@ class IframeListener {
                         bannerStore.set(null);
                     } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
                         // dispacth event on windows
-                        const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message as unknown as MessageEventInit<any>);
+                        const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message as unknown as MessageEventInit<unknown>);
                         window.dispatchEvent(event);
                     } else if (iframeEvent.type == "banUser") {
                         this._banPlayerIframeEvent.next(iframeEvent.data);
