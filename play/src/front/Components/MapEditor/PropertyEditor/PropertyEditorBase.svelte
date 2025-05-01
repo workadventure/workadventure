@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte";
     import { inputFormFocusStore } from "../../../Stores/UserInputStore";
     import CloseButton from "./CloseButton.svelte";
 
     const dispatch = createEventDispatcher<{
-        close: undefined,
+        close: void,
     }>();
 
     onDestroy(() => {

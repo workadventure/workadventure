@@ -74,6 +74,8 @@
             unsubscriber();
         }
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <div
