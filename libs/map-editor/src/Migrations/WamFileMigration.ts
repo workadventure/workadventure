@@ -5,7 +5,7 @@ import { Migrations } from "./EntitiesFileMigration";
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
  * Only the last version has his own type
  */
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * This class takes a representation of any wam file (whatever the version of the file)
  * and will return a version of that file updated to the latest version.
