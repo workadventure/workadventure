@@ -119,13 +119,6 @@ export function generateConfig(tsconfigRootDir) {
                     varsIgnorePattern: "_exhaustiveCheck",
                 }],
 
-                "@typescript-eslint/no-unsafe-call": "off",
-                "@typescript-eslint/restrict-plus-operands": "off",
-                "@typescript-eslint/no-unsafe-assignment": "off",
-                "@typescript-eslint/no-unsafe-return": "off",
-                "@typescript-eslint/no-unsafe-member-access": "off",
-                "@typescript-eslint/restrict-template-expressions": "off",
-                "@typescript-eslint/no-unsafe-argument": "off",
                 "@typescript-eslint/no-empty-function": "off",
                 "@typescript-eslint/ban-ts-comment": ["error", {
                     'ts-ignore': 'allow-with-description',
