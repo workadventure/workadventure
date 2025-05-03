@@ -353,7 +353,7 @@ jobs:
         working-directory: "map-storage"
 
       - name: "Prettier"
-        run: npm run format
+        run: npm run pretty-check
         working-directory: "map-storage"
 
   continuous-integration-room-api-client:
