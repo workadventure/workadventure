@@ -394,7 +394,7 @@ jobs:
         working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: "Pretty"
-        run: npm run format-check
+        run: npm run pretty-check
         working-directory: "libs/room-api-clients/room-api-client-js"
 
   continuous-integration-desktop:
