@@ -70,9 +70,7 @@
     "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "tests/**/*",
-    "server.ts"
-  ],
+  "exclude": [
+    "eslint.config.mjs",
+  ]
 }

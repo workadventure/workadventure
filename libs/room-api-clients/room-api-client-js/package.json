@@ -8,7 +8,7 @@
     "/dist"
   ],
   "scripts": {
-    "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/compiled_proto --ts_proto_opt=\"outputServices=nice-grpc,outputServices=generic-definitions,useExactTypes=false\" --proto_path=../../../messages/protos ../../../messages/protos/room-api.proto",
+    "ts-proto": "grpc_tools_node_protoc --plugin=../../../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/compiled_proto --ts_proto_opt=\"outputServices=nice-grpc,outputServices=generic-definitions,useExactTypes=false\" --proto_path=../../../messages/protos ../../../messages/protos/room-api.proto",
     "build": "tsc --build",
     "example-variables": "tsx ./src/example_variables.ts",
     "example-events": "tsx ./src/example_events.ts",

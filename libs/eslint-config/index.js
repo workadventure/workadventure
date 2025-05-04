@@ -67,8 +67,15 @@ export function generateConfig(tsconfigRootDir) {
             },
         },
         {
-            files: ["{src,src-ui,tests}/**/*.ts", "{src,tests}/**/*.js", "{src,src-ui,tests}/**/*.svelte"],
-            ignores: ["**/generated/*.ts", "**/i18n/i18n-*.ts"],
+            files: [
+                "{src,src-ui,tests}/**/*.ts",
+                "{src,tests}/**/*.js",
+                "{src,src-ui,tests}/**/*.svelte"
+            ],
+            ignores: [
+                "**/generated/*.ts",
+                "**/i18n/i18n-*.ts"
+            ],
 
             languageOptions: {
                 globals: {

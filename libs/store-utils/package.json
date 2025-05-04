@@ -21,6 +21,7 @@
     "@tsconfig/svelte": "^1.0.10",
     "@types/node": "^18.11.18",
     "@types/debug": "^4.1.5",
+    "@workadventure/eslint-config": "1.0.0",
     "eslint": "^9.25.1",
     "svelte": "^3.53.1",
     "svelte-check": "^2.9.2",
