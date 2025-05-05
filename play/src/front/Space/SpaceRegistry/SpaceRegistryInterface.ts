@@ -3,6 +3,7 @@ import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
+import { ExtendedStreamable } from "../../Livekit/LivekitParticipant";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
@@ -12,6 +13,6 @@ export interface SpaceRegistryInterface {
     destroy(): void;
     peerStore: Readable<Map<string, VideoPeer>>;
     screenSharingPeerStore: Readable<Map<string, ScreenSharingPeer>>;
-    livekitVideoStreamStore: Readable<Map<string, Streamable>>;
-    livekitScreenShareStreamStore: Readable<Map<string, Streamable>>;
+    livekitVideoStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    livekitScreenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 }

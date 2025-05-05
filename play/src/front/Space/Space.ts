@@ -9,7 +9,7 @@ import {
 import { MapStore } from "@workadventure/store-utils";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { Streamable } from "../Stores/StreamableCollectionStore";
+import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
@@ -31,8 +31,11 @@ export class Space implements SpaceInterface {
 
     public videoPeerStore: MapStore<string, VideoPeer> = new MapStore<string, VideoPeer>();
     public screenSharingPeerStore: MapStore<string, ScreenSharingPeer> = new MapStore<string, ScreenSharingPeer>();
-    public livekitVideoStreamStore: MapStore<string, Streamable> = new MapStore<string, Streamable>();
-    public livekitScreenShareStreamStore: MapStore<string, Streamable> = new MapStore<string, Streamable>();
+    public livekitVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public livekitScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<
+        string,
+        ExtendedStreamable
+    >();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -257,9 +260,9 @@ export class Space implements SpaceInterface {
     }
 
     public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
-        const promises = Array.from(this.filters.values()).map(filter => filter.getUserBySpaceUserId(id));
+        const promises = Array.from(this.filters.values()).map((filter) => filter.getUserBySpaceUserId(id));
         const users = await Promise.all(promises);
-        const foundUser = users.find(user => user !== undefined);
+        const foundUser = users.find((user) => user !== undefined);
         if (foundUser) {
             return foundUser;
         }
@@ -268,16 +271,13 @@ export class Space implements SpaceInterface {
 
     //TODO : revoir le nom de la fonction
     public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
-        
-        const promises = Array.from(this.filters.values()).map(filter => filter.getUserByUserId(id));
+        const promises = Array.from(this.filters.values()).map((filter) => filter.getUserByUserId(id));
         const users = await Promise.all(promises);
-        const foundUser = users.find(user => user !== undefined);
+        const foundUser = users.find((user) => user !== undefined);
         if (foundUser) {
             return foundUser;
         }
 
-
-        
         return undefined;
     }
 }

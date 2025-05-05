@@ -13,6 +13,7 @@ import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { PeerFactoryInterface } from "../SpacePeerManager/SpacePeerManager";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
+import { ExtendedStreamable } from "../../Livekit/LivekitParticipant";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.
@@ -53,6 +54,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private roomConnectionStreamSubscription: Subscription;
 
     //TODO : Rassembler les peerStore / livekitVideoStreamStore et screenSharingPeerStore en un seul store -
+    //TODO : renommer les stores 
     public readonly peerStore: Readable<Map<string, VideoPeer>> = derived(this.spaces, ($spaces, set) => {
         const allPeers: Map<string, VideoPeer> = new Map();
         const unsubscribers: (() => void)[] = [];
@@ -124,10 +126,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    public readonly livekitVideoStreamStore: Readable<Map<string, Streamable>> = derived(
+    public readonly livekitVideoStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, Streamable> = new Map();
+            const allPeers: Map<string, ExtendedStreamable> = new Map();
             const unsubscribers: (() => void)[] = [];
 
             const updatePeers = () => {
@@ -157,10 +159,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    public readonly livekitScreenShareStreamStore: Readable<Map<string, Streamable>> = derived(
+    public readonly livekitScreenShareStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, Streamable> = new Map();
+            const allPeers: Map<string, ExtendedStreamable> = new Map();
             const unsubscribers: (() => void)[] = [];
 
             const updatePeers = () => {
