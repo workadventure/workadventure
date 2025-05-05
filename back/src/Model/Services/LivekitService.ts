@@ -121,6 +121,9 @@ export class LiveKitService {
     }
 
     getLivekitFrontendUrl(): string {
+        if (!this.livekitFrontendUrl) {
+            throw new Error("Livekit frontend URL is not set");
+        }
         return this.livekitFrontendUrl;
     }
 
