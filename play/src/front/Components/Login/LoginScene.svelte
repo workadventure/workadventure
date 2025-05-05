@@ -21,6 +21,8 @@
     let logo = gameManager.currentStartedRoom.loadingLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
+
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
         legalStrings.push(
@@ -153,4 +155,4 @@
     class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80"
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
 />
-<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');" />
+<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');" />
