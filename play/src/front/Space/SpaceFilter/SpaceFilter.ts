@@ -9,6 +9,9 @@ import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
+import { RemotePlayerData } from "../../Phaser/Game/RemotePlayersRepository";
+import { gameManager } from "../../Phaser/Game/GameManager";
+import { Deferred } from "ts-deferred";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -55,6 +58,8 @@ export type SpaceUserExtended = SpaceUser & {
     getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
     getLivekitVideoStreamStore: () => Readable<Streamable> | undefined;
     getLivekitScreenShareStreamStore: () => Readable<Streamable> | undefined;
+    getPlayer: () => Promise<RemotePlayerData> | undefined;
+    userId: number;
 };
 
 export type Filter = SpaceFilterMessage["filter"];
@@ -85,9 +90,10 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         private _name: string,
         private _space: SpaceInterface,
         private _connection: RoomConnectionForSpacesInterface,
-        private _filter: Filter
+        private _filter: Filter,
+        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
-        this.usersStore = readable(new Map<string, SpaceUserExtended>(), (set) => {
+        this.usersStore = readable(new Map<SpaceUser["spaceUserId"], SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
             this._setUsers = set;
             set(this._users);
@@ -261,6 +267,11 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 }
                 return undefined;
             },
+            getPlayer: () => {
+                return this._remotePlayersRepository.getPlayer(this.extractUserIdFromSpaceId(user.spaceUserId));
+            },
+            userId: this.extractUserIdFromSpaceId(user.spaceUserId),
+
         } as unknown as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
@@ -292,6 +303,18 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         );
 
         return extendedUser;
+    }
+
+    private extractUserIdFromSpaceId(spaceId: string): number {
+        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
+        if (lastUnderscoreIndex === -1) {
+            throw new Error("Invalid spaceId format: no underscore found");
+        }
+        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
+        if (isNaN(userId)) {
+            throw new Error("Invalid userId format: not a number");
+        }
+        return userId;
     }
 
     private unregisterSpaceFilter() {
@@ -382,7 +405,71 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             return allPeers;
         });
     }
-    public getUserByUuid(uuid: string): SpaceUserExtended | undefined {
-        return Array.from(this._users.values()).find((user) => user.uuid === uuid);
+
+    getUserBySpaceUserId(spaceUserId: string): Promise<SpaceUserExtended | undefined> {
+        if (this._users.has(spaceUserId)) {
+            return Promise.resolve(this._users.get(spaceUserId));
+        }
+
+        // Create a deferred promise that will be resolved when the user is added
+        const deferred = new Deferred<SpaceUserExtended>();
+        
+        // Subscribe to user joined events to resolve the promise when the user is found
+        const subscription = this.observeUserJoined.subscribe((user) => {
+            if (user.spaceUserId === spaceUserId) {
+                deferred.resolve(user);
+                subscription.unsubscribe();
+            }
+        });
+
+        // Return a promise that either resolves with the user or rejects after a timeout
+        return Promise.race([
+            deferred.promise,
+            new Promise<SpaceUserExtended>((resolve, reject) => {
+                setTimeout(() => {
+                    subscription.unsubscribe();
+                    reject(new Error("Timeout waiting for user data"));
+                }, 5000);
+            }),
+        ]);
     }
+
+    getUserByUserId(userId: number): Promise<SpaceUserExtended | undefined> {
+        // First check if user exists in current users
+        for (const user of this._users.values()) {
+            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+                return Promise.resolve(user);
+            }
+        }
+
+        // Create a deferred promise that will be resolved when the user is added
+        const deferred = new Deferred<SpaceUserExtended>();
+        
+        // Subscribe to user joined events to resolve the promise when the user is found
+        const subscription = this.observeUserJoined.subscribe((user) => {
+            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+                deferred.resolve(user);
+                subscription.unsubscribe();
+            }
+        });
+
+        // Return a promise that either resolves with the user or rejects after a timeout
+        return Promise.race([
+            deferred.promise,
+            new Promise<SpaceUserExtended>((resolve, reject) => {
+                setTimeout(() => {
+                    subscription.unsubscribe();
+                    reject(new Error("Timeout waiting for user data"));
+                }, 5000);
+            }),
+        ]);
+    }
+
+        //TODO : revoir le nom de la fonction
+        private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
+            const parts = spaceUserId.split("_");
+            const lastPart = parts[parts.length - 1];
+            const num = Number(lastPart);
+            return isNaN(num) ? undefined : num;
+        }
 }

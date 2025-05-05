@@ -256,34 +256,28 @@ export class Space implements SpaceInterface {
         return this._connection.updateSpaceMetadataMessageStream;
     }
 
-    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
-        for (const filter of this.filters.values()) {
-            const users = filter.getUsers();
-            const user = users.find((user) => user.spaceUserId === id);
-            if (user) {
-                return user;
-            }
+    public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
+        const promises = Array.from(this.filters.values()).map(filter => filter.getUserBySpaceUserId(id));
+        const users = await Promise.all(promises);
+        const foundUser = users.find(user => user !== undefined);
+        if (foundUser) {
+            return foundUser;
         }
         return undefined;
     }
 
     //TODO : revoir le nom de la fonction
-    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
-        for (const filter of this.filters.values()) {
-            const users = filter.getUsers();
-            const user = users.find((user) => this.getUserIdFromSpaceUserId(user.spaceUserId) === id);
-            if (user) {
-                return user;
-            }
+    public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
+        
+        const promises = Array.from(this.filters.values()).map(filter => filter.getUserByUserId(id));
+        const users = await Promise.all(promises);
+        const foundUser = users.find(user => user !== undefined);
+        if (foundUser) {
+            return foundUser;
         }
+
+
+        
         return undefined;
-    }
-    
-    //TODO : revoir le nom de la fonction
-    private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
-        const parts = spaceUserId.split("_");
-        const lastPart = parts[parts.length - 1];
-        const num = Number(lastPart);
-        return isNaN(num) ? undefined : num;
     }
 }

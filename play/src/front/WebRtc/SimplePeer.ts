@@ -92,27 +92,22 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             })
         );
 
-        console.log(">>>>> initialise");
         this.initialise();
 
         this.rxJsUnsubscribers.push(
-            blackListManager.onBlockStream.subscribe((userUuid) => {
+            blackListManager.onBlockStream.subscribe(async (userUuid) => {
                 const user = playersStore.getPlayerByUuid(userUuid);
                 if (!user) {
                     return;
                 }
 
-                console.log(">>>> closeConnection", {
-                    userId: user.userId,
-                });
-
-                const spaceUserId = this.space.getSpaceUserByUserId(user.userId)?.spaceUserId;
-                if (!spaceUserId) {
+                const spaceUser = await this.space.getSpaceUserByUserId(user.userId);
+                if (!spaceUser) {
                     console.error("spaceUserId not found for userId", user.userId);
                     return;
                 }
 
-                this.closeConnection(spaceUserId);
+                this.closeConnection(spaceUser.spaceUserId);
             })
         );
     }
@@ -215,27 +210,24 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.closeConnection(user.userId);
     }
 
-    private extractUserIdFromSpaceId(spaceId: string): number {
-        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
-        if (lastUnderscoreIndex === -1) {
-            throw new Error("Invalid spaceId format: no underscore found");
-        }
-        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
-        if (isNaN(userId)) {
-            throw new Error("Invalid userId format: not a number");
-        }
-        return userId;
-    }
-
     /**
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
 
 
-        const userId = this.extractUserIdFromSpaceId(user.userId);
+        const spaceUser = await this.space.getSpaceUserBySpaceUserId(user.userId);
 
-        const player = await this.remotePlayersRepository.getPlayer(userId);
+        if (!spaceUser) {
+            console.error("While creating peer connection, cannot find space user with ID " + user.userId);
+            return null;
+        }
+        const player = await spaceUser.getPlayer();
+        if (!player) {
+            console.error("While creating peer connection, cannot find player with ID " + user.userId);
+            return null;
+        }
+
         const uuid = player.userUuid;
         if (blackListManager.isBlackListed(uuid)) return null;
 
@@ -329,7 +321,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             user.webRtcPassword = this.lastWebrtcPassword;
         }
 
-        const userId = this.extractUserIdFromSpaceId(user.userId);
+        const spaceUser = await this.space.getSpaceUserBySpaceUserId(user.userId);
+        if (!spaceUser) {
+            console.error("While creating peer screen sharing connection, cannot find space user with ID " + user.userId);
+            return null;
+        }
+        const userId = spaceUser.userId;
 
         const player = await this.remotePlayersRepository.getPlayer(userId);
 
@@ -506,9 +503,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
+    //TODO : repasser dans les fonctions et bien faire la différence entre les userID et le spaceUserId
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
-        const userId = this.extractUserIdFromSpaceId(data.userId);
-        const uuid = (await this.remotePlayersRepository.getPlayer(userId)).userUuid;
+        const player = await this.space.getSpaceUserBySpaceUserId(data.userId)?.getPlayer();
+
+        if (!player) {
+            console.error("While receiving webrtc screen sharing signal, cannot find player with ID " + data.userId);
+            return;
+        }
+
+        const uuid = player.userUuid;
+
         if (blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
@@ -578,7 +583,13 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
-        const userIdNumber = this.extractUserIdFromSpaceId(userId);
+
+        const spaceUser = await this.space.getSpaceUserBySpaceUserId(userId);
+        if (!spaceUser) {
+            console.error("While sending local screen sharing, cannot find user with ID " + userId);
+            return;
+        }
+        const userIdNumber = spaceUser.userId;
         const uuid = (await this.remotePlayersRepository.getPlayer(userIdNumber)).userUuid;
         if (blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)

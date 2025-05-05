@@ -58,11 +58,10 @@ export class LiveKitRoom {
             });
 
             this.synchronizeMediaState();
-            room.remoteParticipants.forEach((participant) => {
-                //TODO : revoir la fonction ==> spaceUser toujours undefined /mauvais
+            const promises = Array.from(room.remoteParticipants.values()).map(async (participant) => {
                 const id = this.getParticipantId(participant);
 
-                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+                const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
 
                 if (!spaceUser) {
                     console.error("spaceUser not found for participant", id);
@@ -71,6 +70,8 @@ export class LiveKitRoom {
 
                 this.participants.set(spaceUser.uuid, new LiveKitParticipant(participant, this.space, spaceUser));
             });
+
+            await Promise.all(promises);
         } catch (err) {
             console.error("An error occurred in joinRoom", err);
             Sentry.captureException(err);
@@ -227,9 +228,9 @@ export class LiveKitRoom {
             return;
         }
 
-        this.room.on(RoomEvent.ParticipantConnected, (participant) => {
+        this.room.on(RoomEvent.ParticipantConnected, async (participant) => {
             const id = this.getParticipantId(participant);
-            const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+            const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
             if (!spaceUser) {
                 console.log("spaceUser not found for participant", id);
                 return;

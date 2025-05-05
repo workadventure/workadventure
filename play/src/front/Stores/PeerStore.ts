@@ -3,6 +3,7 @@ import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { Streamable } from "./StreamableCollectionStore";
+import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 
 export const peerStore: Writable<Readable<Map<string, VideoPeer>>> = writable<Writable<Map<string, VideoPeer>>>(
     writable<Map<string, VideoPeer>>(new Map())
@@ -10,12 +11,12 @@ export const peerStore: Writable<Readable<Map<string, VideoPeer>>> = writable<Wr
 export const screenSharingPeerStore: Writable<Readable<Map<string, ScreenSharingPeer>>> = writable<
     Readable<Map<string, ScreenSharingPeer>>
 >(writable<Map<string, ScreenSharingPeer>>(new Map()));
-export const livekitVideoStreamStore: Writable<Readable<Map<string, Streamable>>> = writable<
-    Readable<Map<string, Streamable>>
->(writable<Map<string, Streamable>>(new Map()));
-export const livekitScreenShareStreamStore: Writable<Readable<Map<string, Streamable>>> = writable<
-    Readable<Map<string, Streamable>>
->(writable<Map<string, Streamable>>(new Map()));
+export const livekitVideoStreamStore: Writable<Readable<Map<string, ExtendedStreamable>>> = writable<
+    Readable<Map<string, ExtendedStreamable>>
+>(writable<Map<string, ExtendedStreamable>>(new Map()));
+export const livekitScreenShareStreamStore: Writable<Readable<Map<string, ExtendedStreamable>>> = writable<
+    Readable<Map<string, ExtendedStreamable>>
+>(writable<Map<string, ExtendedStreamable>>(new Map()));
 
 export const peerElementsStore = derived(
     peerStore,
@@ -27,6 +28,7 @@ export const peerElementsStore = derived(
     [] as VideoPeer[]
 );
 
+//TODO : changer le type streamable + ajout du player et des props communes
 export const livekitVideoStreamElementsStore = derived(
     livekitVideoStreamStore,
     ($livekitVideoStreamStore, set) => {
@@ -34,7 +36,7 @@ export const livekitVideoStreamElementsStore = derived(
             set(Array.from($innerLivekitVideoStreamStore.values()));
         });
     },
-    [] as Streamable[]
+    [] as ExtendedStreamable[]
 );
 
 export const livekitScreenShareStreamElementsStore = derived(
@@ -44,7 +46,7 @@ export const livekitScreenShareStreamElementsStore = derived(
             set(Array.from($innerLivekitScreenShareStreamStore.values()));
         });
     },
-    [] as Streamable[]
+    [] as ExtendedStreamable[]
 );
 
 

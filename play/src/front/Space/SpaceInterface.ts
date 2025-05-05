@@ -53,8 +53,8 @@ export interface SpaceInterface {
     screenSharingPeerStore: MapStore<SpaceUser["spaceUserId"], ScreenSharingPeer>;
     livekitVideoStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
     livekitScreenShareStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
-    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
-    getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
+    getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
     //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users 

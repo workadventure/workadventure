@@ -2166,7 +2166,6 @@ export class GameScene extends DirtyScene {
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
 
-                //TODO: check if peer is a VideoPeer / faire un type pour les livekit peers avec les player info
                 statusChanger.setUserNameInteraction(peer.player?.name ?? "unknow");
 
                 statusChanger.applyInteractionRules();

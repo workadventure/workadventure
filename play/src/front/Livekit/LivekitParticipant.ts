@@ -12,6 +12,14 @@ import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+
+
+//TODO : revoir le nom 
+export type ExtendedStreamable = Streamable & {
+    player: RemotePlayerData | undefined;
+    userId: number;
+}
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -66,24 +74,26 @@ export class LiveKitParticipant {
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
-            this.updateLivekitVideoStreamStore();
+            this.updateLivekitVideoStreamStore().catch(() => {
+                console.error("Error updating livekit video stream store");
+            });
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
             this._isMuted.set(track.isMuted);
-            this.updateLivekitVideoStreamStore();
+            this.updateLivekitVideoStreamStore().catch(() => {
+                console.error("Error updating livekit video stream store");
+            });
         } else if (publication.source === Track.Source.ScreenShare) {
             this._screenShareStreamStore.set(track.mediaStream);
-            this.updateLivekitScreenShareStreamStore();
+            this.updateLivekitScreenShareStreamStore().catch(() => {
+                console.error("Error updating livekit screen share stream store");
+            });
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             //this._screenShareAudioStreamStore.set(track.mediaStream);
         }
     }
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
-        console.log(">>>> handleTrackUnsubscribed", {
-            spaceUserId: this._spaceUser.spaceUserId,
-            track: track.kind,
-        });
         if (publication.source === Track.Source.Camera) {
            // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
         } else if (publication.source === Track.Source.ScreenShare) {
@@ -115,19 +125,18 @@ export class LiveKitParticipant {
         this._isSpeakingStore.set(isSpeaking);
     }
 
-    private updateLivekitVideoStreamStore() {
-        console.log(">>>> updateLivekitVideoStreamStore", {
-            spaceUserId: this._spaceUser.spaceUserId,
-        });
-        this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, this.getVideoStream());
+    private async updateLivekitVideoStreamStore() {
+        const videoStream = await this.getVideoStream();
+        this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
     }
 
-    private updateLivekitScreenShareStreamStore() {
-        this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, this.getScreenShareStream());
+    private async updateLivekitScreenShareStreamStore() {
+        const screenShareStream = await this.getScreenShareStream();
+        this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
     }
 
-    //TODO : peut etre creer une class qui encapsule + ajouter le userId et le champs player ==> + simple pour la suite et ajouter des propriétés spécifiques
-    public getVideoStream(): Streamable {
+    public async getVideoStream(): Promise<ExtendedStreamable> {
+        const player = await this._spaceUser.getPlayer();
         return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
@@ -164,10 +173,13 @@ export class LiveKitParticipant {
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
+            player,
+            userId: this._spaceUser.userId,
         };
     }
 
-    public getScreenShareStream(): Streamable {
+    public async getScreenShareStream(): Promise<ExtendedStreamable> {
+        const player = await this._spaceUser.getPlayer();
         return {
             uniqueId: this.participant.sid,
             hasAudio: writable(false),
@@ -187,6 +199,8 @@ export class LiveKitParticipant {
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
+            player,
+            userId: this._spaceUser.userId,
         };
     }
 
