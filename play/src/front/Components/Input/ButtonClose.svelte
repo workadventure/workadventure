@@ -16,7 +16,7 @@
 
 <button
     type="button"
-    class="h-12 w-12 rounded backdrop-blur close-window transition-all aspect-square text-2xl !{textColor} {bgColor} hover:{hoverColor}"
+    class="h-12 w-12 rounded backdrop-blur close-window transition-all aspect-square text-2xl !{textColor} {bgColor} hover:{hoverColor} close-btn"
     data-testid={dataTestId}
     on:click={handleClick}
     >&#215;
