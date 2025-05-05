@@ -341,7 +341,6 @@ class AdminApi implements AdminInterface {
                 type: "error",
                 title: "Connection error",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "ROOM_ACCESS_ERROR",
                 details: message,
             };
