@@ -691,3 +691,14 @@ div.emoji-picker {
     @apply border-r-contrast/80;
     left: -12px;
 }
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.30) transparent transparent transparent;
+}

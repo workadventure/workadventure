@@ -44,7 +44,7 @@ export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export abstract class Character extends Container implements OutlineableInterface {
-    private bubble: RenderTexture | null = null;
+    private bubble: RenderTexture | null | DOMElement = null;
     private playerNameText: Text | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
@@ -398,7 +398,22 @@ export abstract class Character extends Container implements OutlineableInterfac
         switch (type) {
             case SayMessageType.SpeechBubble:
             case SayMessageType.UNRECOGNIZED: {
-                this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
+                const bubbleElement = document.createElement("div");
+                bubbleElement.textContent = text;
+                bubbleElement.classList.add(
+                    'absolute',
+                    'bg-white/30',
+                    'backdrop-blur',
+                    'rounded-full',
+                    'py-1',
+                    'px-4',
+                    'text-xs',
+                    'max-w-xs',
+                    'break-words',
+                    'speech-bubble',
+                    'text-black'
+                );
+                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 50, bubbleElement);
                 this.add(this.bubble);
                 break;
             }
