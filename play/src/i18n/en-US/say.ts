@@ -5,6 +5,7 @@ const say: BaseTranslation = {
         say: "Say",
         think: "Think",
     },
+    placeholder: "Type your message here...",
 };
 
 export default say;

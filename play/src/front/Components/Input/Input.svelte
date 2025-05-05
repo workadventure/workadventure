@@ -30,6 +30,13 @@
     export let onInput = () => {};
     export let onFocusin = (event: FocusEvent) => {};
     export let onFocusout = (event: FocusEvent) => {};
+    export let extraInputClasses: string | undefined = undefined;
+
+    export function focusInput() {
+        inputElement.focus();
+    }
+    let inputElement: HTMLInputElement;
+
 
     const SLOTS = $$slots;
 
@@ -68,7 +75,7 @@
             <input
                 id={uniqueId}
                 type="text"
-                class="grow input-text input-icon"
+                class="grow input-text input-icon {extraInputClasses}"
                 class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
@@ -90,6 +97,7 @@
                 on:error={onerror}
                 on:blur={onBlur}
                 {disabled}
+                bind:this={inputElement}
             />
 
             {#if errorHelperText}
