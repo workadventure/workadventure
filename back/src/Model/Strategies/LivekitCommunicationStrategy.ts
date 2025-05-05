@@ -78,7 +78,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         return this.usersReady.length === this.space.getAllUsers().length;
     }
     cleanup(): void {
-        this.livekitService.deleteRoom(this.space.getSpaceName());
         const users = this.space.getAllUsers();
         users.forEach((user) => {
             this.deleteUser(user).catch((error) => {
@@ -86,6 +85,9 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 Sentry.captureException(error);
             });
         });
-        this.livekitService.deleteRoom(this.space.getSpaceName());
+        this.livekitService.deleteRoom(this.space.getSpaceName()).catch((error) => {
+            console.error(`Error deleting room ${this.space.getSpaceName()} on Livekit:`, error);
+            Sentry.captureException(error);
+        });
     }
 }

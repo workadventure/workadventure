@@ -22,6 +22,6 @@ export interface ICommunicationEvent {
     senderUserId: string;
     event: {
         $case: "prepareSwitchMessage" | "communicationStrategyMessage" | "executeSwitchMessage" | "webRtcStartMessage";
-        [key: string]: any;
+        [key: string]: unknown;
     };
-} 
+}
