@@ -19,6 +19,9 @@
     export let isGradient = false;
     export let hasImage = true;
     export let action: Action = () => {};
+    export let media = "";
+    export let desc = "";
+    export let tooltipShortcuts: string[] = [];
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -52,10 +55,10 @@
 {#if !isInMenu}
     <div
         class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {classList} group-[.invisible]/visibilitychecker:px-2"
-        class:first:rounded-l-lg={first === undefined}
-        class:first:pl-2={first === undefined}
-        class:last:rounded-r-lg={last === undefined}
-        class:last:pr-2={last === undefined}
+        class:first-of-type:rounded-l-lg={first === undefined}
+        class:first-of-type:pl-2={first === undefined}
+        class:last-of-type:rounded-r-lg={last === undefined}
+        class:last-of-type:pr-2={last === undefined}
         class:rounded-l-lg={first === true}
         class:pl-2={first === true}
         class:rounded-r-lg={last === true}
@@ -95,7 +98,7 @@
             {#if label}<span>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
-            <HelpTooltip title={tooltipTitle} desc={tooltipDesc} />
+            <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
         {/if}
     </div>
 {:else}

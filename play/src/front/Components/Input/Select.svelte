@@ -23,26 +23,26 @@
 
 <div class="flex flex-col {outerClass}">
     <div class="relative flex-grow">
-            {#if label}
-                <div class="input-label">
-                    <label for={uniqueId} class="grow font-light">{label}</label>
-                </div>
-            {/if}
+        {#if label}
+            <div class="input-label">
+                <label for={uniqueId} class="grow font-light">{label}</label>
+            </div>
+        {/if}
 
-            {#if SLOTS.info}
-                <InfoButton>
-                    <slot name="info" />
-                </InfoButton>
-            {/if}
+        {#if SLOTS.info}
+            <InfoButton>
+                <slot name="info" />
+            </InfoButton>
+        {/if}
 
-            {#if optional}
-                <div class="text-xs opacity-50 ">
-                    {$LL.form.optional()}
-                </div>
-            {/if}
+        {#if optional}
+            <div class="text-xs opacity-50 ">
+                {$LL.form.optional()}
+            </div>
+        {/if}
         <select
             id={uniqueId}
-            class="grow w-full input-select font-light pr-10 {extraSelectClass}"
+            class="grow w-full input-select font-light pr-10 text-white {extraSelectClass}"
             class:input-select-light={variant === "light"}
             data-testid={dataTestId}
             {...$$restProps}

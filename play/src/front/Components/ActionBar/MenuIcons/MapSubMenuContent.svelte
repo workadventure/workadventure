@@ -71,6 +71,7 @@
         const url = new URL(ADMIN_BO_URL, window.location.href);
         url.searchParams.set("playUri", window.location.href);
         window.open(url, "_blank");
+        analyticsClient.openBackOffice();
     }
 
     function closeMapMenu() {

@@ -119,7 +119,6 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
-import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -155,7 +154,6 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
-import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
@@ -357,7 +355,6 @@ export class GameScene extends DirtyScene {
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
-    private matrixClientWrapper: MatrixClientWrapper | undefined;
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
@@ -726,8 +723,6 @@ export class GameScene extends DirtyScene {
             urlManager.getStartPositionNameFromUrl()
         );
 
-        startLayerNamesStore.set(this.startPositionCalculator.getStartPositionNames());
-
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
 
@@ -1055,7 +1050,6 @@ export class GameScene extends DirtyScene {
             this.spaceRegistry?.leaveSpace(this.allUserSpace);
         }
 
-        this.matrixClientWrapper?.stopClient();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -3955,6 +3949,10 @@ ${escapedMessage}
             throw new Error("this.worldUserProvider not yet initialized");
         }
         return this.worldUserProvider.userCount;
+    }
+
+    getStartPositionNames(): string[] {
+        return this.startPositionCalculator.getStartPositionNames();
     }
 
     get sayManager(): SayManager {

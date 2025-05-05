@@ -6,12 +6,13 @@
     import { activeSubMenuStore, menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
 
+    export let state: "normal" | "active" | "forbidden" | "disabled" = "normal";
+
     function toggleUserList() {
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
-
         chatVisibilityStore.set(!$chatVisibilityStore);
         navChat.switchToUserList();
     }
@@ -21,10 +22,12 @@
     on:click={toggleUserList}
     classList="group/btn-users hidden @sm/actions:flex"
     tooltipTitle={$LL.actionbar.help.users.title()}
-    tooltipDesc={$LL.actionbar.help.users.desc()}
-    state={"normal"}
+    desc={$LL.actionbar.help.users.desc()}
+    {state}
     dataTestId="user-list-button"
     disabledHelp={false}
+    media="./static/Videos/UserList.mp4"
+    tooltipShortcuts={["u"]}
 >
     <UsersIcon />
 </ActionBarButton>

@@ -18,10 +18,12 @@
     import { popupStore } from "../Stores/PopupStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
+    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -48,6 +50,47 @@
     import PresentationLayout from "./EmbedScreens/Layouts/PresentationLayout.svelte";
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
+    import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    let keyboardEventIsDisable = false;
+
+    const handleFocusInEvent = (event: FocusEvent) => {
+        const target = event.target as HTMLElement | null;
+        if (
+            target &&
+            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
+                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
+                target.getAttribute("contenteditable") === "true" ||
+                target.classList.contains("block-user-action"))
+        ) {
+            try {
+                gameManager.getCurrentGameScene().userInputManager.disableControls("textField");
+                keyboardEventIsDisable = true;
+            } catch (error) {
+                if (error instanceof GameSceneNotFoundError) {
+                    keyboardEventIsDisable = false;
+                    return;
+                }
+                throw error;
+            }
+        }
+    };
+
+    const handleFocusOutEvent = () => {
+        if (!keyboardEventIsDisable) return;
+        try {
+            gameManager.getCurrentGameScene().userInputManager.restoreControls("textField");
+            keyboardEventIsDisable = false;
+        } catch (error) {
+            if (error instanceof GameSceneNotFoundError) {
+                keyboardEventIsDisable = false;
+                return;
+            }
+            throw error;
+        }
+    };
+
+    document.addEventListener("focusin", handleFocusInEvent);
+    document.addEventListener("focusout", handleFocusOutEvent);
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
 </script>
@@ -68,6 +111,12 @@
         <div class="w-full h-full fixed left-0 right-0">
             <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
+        <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
+        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+            {#if peer.uniqueId !== $highlightedEmbedScreen.uniqueId}
+                <AudioStreamWrapper {peer} />
+            {/if}
+        {/each}
     {/if}
 
     <AudioPlayer />
@@ -105,7 +154,6 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
-
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto right-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}

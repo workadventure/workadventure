@@ -108,14 +108,14 @@
             {/await}
         {:else}
             <button
-                class="bg-danger-900 flex-1 justify-center mx-4 py-1"
+                class="btn btn-danger flex-1 justify-center mx-4 py-1"
                 data-testid="mismatchButton"
                 on:click={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
             </button>
             <button
                 data-testid="matchButton"
-                class="bg-secondary flex-1 justify-center mx-4 my-2 py-1"
+                class="btn btn-secondary flex-1 justify-center mx-4 my-2 py-1"
                 on:click={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
             </button>

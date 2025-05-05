@@ -13,6 +13,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import PopUpCopyUrl from "../PopUp/PopUpCopyUrl.svelte";
     import { popupStore } from "../../Stores/PopupStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
@@ -50,6 +51,7 @@
 
     function closeTab() {
         dispatch("close");
+        analyticsClient.closeCowebsite();
     }
 
     function toggleActive() {
@@ -57,12 +59,14 @@
             active = active;
         } else {
             active = !active;
+            analyticsClient.switchCowebsite();
         }
     }
 
     function copyUrl() {
         url = coWebsite.getUrl().toString();
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
+        analyticsClient.copyCowebsiteLink();
         dispatch("copy");
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
@@ -133,8 +137,8 @@
                     on:click={copyUrl}
                 >
                     <ExternalLinkIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
@@ -144,11 +148,14 @@
                 class="group {active
                     ? 'hover:bg-contrast/10'
                     : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
+                on:click={() => {
+                    window.open(coWebsite.getUrl().toString(), "_blank");
+                    analyticsClient.openCowebsiteInNewTab();
+                }}
             >
                 <CopyIcon
-                    height="h-4"
-                    width="w-4"
+                    height="h-6"
+                    width="w-6"
                     strokeColor={active ? "stroke-contrast" : "stroke-white"}
                     hover={active ? "" : ""}
                 />
@@ -161,8 +168,8 @@
                     on:click={closeTab}
                 >
                     <XIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />

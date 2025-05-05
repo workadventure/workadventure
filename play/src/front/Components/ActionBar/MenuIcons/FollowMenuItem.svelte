@@ -33,9 +33,10 @@
     tooltipTitle={$followStateStore === "active"
         ? $LL.actionbar.help.unfollow.title()
         : $LL.actionbar.help.follow.title()}
-    tooltipDesc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
     disabledHelp={$openedMenuStore !== undefined}
     state={$followStateStore === "active" ? "active" : "normal"}
+    media="./static/Videos/Follow.mp4"
+    desc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
 >
     <FollowIcon />
 </ActionBarButton>

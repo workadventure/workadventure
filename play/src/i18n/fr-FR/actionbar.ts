@@ -60,12 +60,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     help: {
         chat: {
             title: "Envoyer un message par écrit",
+            desc: "Partagez vos idées ou démarrez une discussion, directement par écrit. Simple, clair, efficace.",
         },
         users: {
             title: "Afficher la liste des utilisateurs",
+            desc: "Voyez qui est présent, accédez à leur carte de visite, envoyez-leur un message ou marchez jusqu’à eux en un clic !",
         },
         emoji: {
             title: "Réagir avec un emoji",
+            desc: "Exprimez ce que vous ressentez en un clic grâce aux réactions emoji. Un simple tap, et c’est parti !",
         },
         audioManager: {
             title: "Volume des sons ambiants",
@@ -75,9 +78,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         follow: {
             title: "Demander à vous suivre",
+            desc: "Vous pouvez demander à un utilisateur de vous suivre, et si cette demande est acceptée, son Woka vous suivra automatiquement, établissant ainsi une connexion fluide.",
         },
         lock: {
             title: "Vérouiller la bulle",
+            desc: "En activant cette fonctionnalité, vous garantissez que personne ne pourra rejoindre la discussion. Vous êtes maître de votre espace, et seules les personnes déjà présentes peuvent interagir.",
         },
         mic: {
             title: "Activer/désactiver votre micro",
@@ -93,12 +98,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Partager votre écran",
+            desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran à tous les utilisateurs de la discussion et vous pous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
         },
         unfollow: {
             title: "Arrêter de suivre",
+            desc: "Vous pouvez choisir de ne plus suivre un utilisateur à tout moment. Votre Woka cessera alors de le suivre, vous redonnant votre liberté de mouvement.",
         },
         apps: {
             title: "Applications tierces",
+            desc: "Vous avez la liberté de naviguer sur des applications externes tout en restant dans notre application, pour une expérience fluide et enrichie.",
         },
         roomList: {
             title: "Liste des salons",

@@ -67,7 +67,7 @@ export class CustomEntityCollectionService {
                 JSON.stringify(customEntityCollection)
             );
         } else {
-            console.error("Unable to find the entity to modify in custom entities file");
+            console.error(`[${new Date().toISOString()}] Unable to find the entity to modify in custom entities file`);
         }
     }
 

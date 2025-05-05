@@ -1,5 +1,6 @@
 <script lang="ts">
     import { AvailabilityStatus } from "@workadventure/messages";
+    import * as Sentry from "@sentry/svelte";
     import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
@@ -8,14 +9,17 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
-    import { openDirectChatRoom, openModalRemoteUserNotConnected } from "../../Utils";
+    import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../../Api/ScriptUtils";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
     import { IconLoader, IconSend } from "@wa-icons";
 
     export let user: ChatUser;
+
+    export let isMatrixChatEnabled = true;
 
     let showRoomCreationInProgress = false;
 
@@ -145,23 +149,25 @@
                     <UserActionButton {user} />
                 {/if}
             </div>
-            {#if !isMe && !showRoomCreationInProgress && user.chatId !== user.uuid}
+            {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
                 <button
                     class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
                     data-testId={`send-message-${user.username}`}
                     on:click|stopPropagation={() => {
-                        if (user.chatId !== user.uuid && !isMe) {
-                            showRoomCreationInProgress = true;
-                            openDirectChatRoom(chatId)
-                                .catch((error) => console.error(error))
-                                .finally(() => {
-                                    showRoomCreationInProgress = false;
-                                });
-                        } else {
-                            openModalRemoteUserNotConnected(user.username ?? "", () => {
-                                goTo("user", user.playUri ?? "", user.uuid ?? "");
+                        openDirectChatRoom(user.uuid != chatId ? chatId : undefined, user.username, () =>
+                            goTo("user", user.playUri ?? "", user.uuid ?? "")
+                        ).catch((error) => {
+                            console.error("Error opening direct chat room:", error);
+                            Sentry.captureException(error, {
+                                extra: {
+                                    userId: user.uuid,
+                                    chatId: chatId,
+                                    playUri: user.playUri,
+                                    username: user.username,
+                                },
                             });
-                        }
+                        });
+                        analyticsClient.sendMessageFromUserList();
                     }}
                 >
                     <IconSend font-size="16" />

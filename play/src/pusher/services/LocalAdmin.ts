@@ -34,6 +34,11 @@ import {
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     YOUTUBE_ENABLED,
+    MATRIX_PUBLIC_URI,
+    MATRIX_API_URI,
+    MATRIX_ADMIN_USER,
+    MATRIX_ADMIN_PASSWORD,
+    MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -253,7 +258,6 @@ class LocalAdmin implements AdminInterface {
         }
 
         const opidWokaNamePolicyCheck = OpidWokaNamePolicy.safeParse(OPID_WOKA_NAME_POLICY);
-
         return Promise.resolve({
             mapUrl,
             wamUrl,
@@ -273,6 +277,9 @@ class LocalAdmin implements AdminInterface {
             enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
             enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
             enableSay: ENABLE_SAY,
+            enableMatrixChat: Boolean(
+                MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
+            ),
             metatags: {
                 ...MetaTagsDefaultValue,
             },

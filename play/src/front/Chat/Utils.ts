@@ -69,16 +69,21 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openDirectChatRoom = async (chatID: string) => {
+export const openDirectChatRoom = async (chatID?: string, userName?: string, callUserCallback?: () => void) => {
     try {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
+            return;
+        }
+        if (!chatID) {
+            openModalRemoteUserNotConnected(userName ?? "", callUserCallback ?? (() => {}));
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
         let room = chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
+        analyticsClient.createMatrixRoom();
 
         if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
