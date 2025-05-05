@@ -9,7 +9,7 @@ import {
 } from "livekit-client";
 import { derived, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { Streamable } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
@@ -19,6 +19,7 @@ import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;
+    media: MediaStoreStreamable;
 }
 
 export class LiveKitParticipant {

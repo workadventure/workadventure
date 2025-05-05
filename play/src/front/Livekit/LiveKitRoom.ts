@@ -58,20 +58,18 @@ export class LiveKitRoom {
             });
 
             this.synchronizeMediaState();
-            const promises = Array.from(room.remoteParticipants.values()).map(async (participant) => {
-                const id = this.getParticipantId(participant);
-
-                const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
-
-                if (!spaceUser) {
-                    console.error("spaceUser not found for participant", id);
-                    return;
-                }
-
-                this.participants.set(spaceUser.uuid, new LiveKitParticipant(participant, this.space, spaceUser));
-            });
-
-            await Promise.all(promises);
+            await Promise.all(
+                Array.from(room.remoteParticipants.values()).map((participant) => {
+                    const id = this.getParticipantId(participant);
+                    return this.space.getSpaceUserBySpaceUserId(id).then(spaceUser => {
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for participant", id);
+                            return;
+                        }
+                        this.participants.set(spaceUser.uuid, new LiveKitParticipant(participant, this.space, spaceUser));
+                    });
+                })
+            );
         } catch (err) {
             console.error("An error occurred in joinRoom", err);
             Sentry.captureException(err);

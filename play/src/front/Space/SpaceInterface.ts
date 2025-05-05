@@ -7,6 +7,7 @@ import { Streamable } from "../Stores/StreamableCollectionStore";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 import { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
+import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
@@ -51,8 +52,8 @@ export interface SpaceInterface {
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     videoPeerStore: MapStore<SpaceUser["spaceUserId"], VideoPeer>;
     screenSharingPeerStore: MapStore<SpaceUser["spaceUserId"], ScreenSharingPeer>;
-    livekitVideoStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
-    livekitScreenShareStreamStore: MapStore<SpaceUser["spaceUserId"], Streamable>;
+    livekitVideoStreamStore: MapStore<SpaceUser["spaceUserId"], ExtendedStreamable>;
+    livekitScreenShareStreamStore: MapStore<SpaceUser["spaceUserId"], ExtendedStreamable>;
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
     getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
     simplePeer: SimplePeerConnectionInterface | undefined;

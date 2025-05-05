@@ -298,7 +298,7 @@ export class GameScene extends DirtyScene {
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
-    private peerSizeSubscription!: Unsubscriber;
+    private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
@@ -1074,7 +1074,7 @@ export class GameScene extends DirtyScene {
         this.mapExplorationStoreUnsubscriber?.();
         this.cameraResistanceModeStoreUnsubscriber?.();
         this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
-        this.peerSizeSubscription?.();
+        this.peerStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }

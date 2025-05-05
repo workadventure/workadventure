@@ -215,6 +215,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
 
+        console.log({
+            user,
+        });
 
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(user.userId);
 
@@ -505,7 +508,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
     //TODO : repasser dans les fonctions et bien faire la différence entre les userID et le spaceUserId
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
-        const player = await this.space.getSpaceUserBySpaceUserId(data.userId)?.getPlayer();
+        const spaceUser = await this.space.getSpaceUserBySpaceUserId(data.userId);
+
+        if (!spaceUser) {
+            console.error("While receiving webrtc screen sharing signal, cannot find space user with ID " + data.userId);
+            return;
+        }
+
+        const player = await spaceUser.getPlayer();
 
         if (!player) {
             console.error("While receiving webrtc screen sharing signal, cannot find player with ID " + data.userId);
@@ -583,6 +593,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
+
+        console.log({
+            userId,
+        });
 
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(userId);
         if (!spaceUser) {

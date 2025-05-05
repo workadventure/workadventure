@@ -91,7 +91,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         private _space: SpaceInterface,
         private _connection: RoomConnectionForSpacesInterface,
         private _filter: Filter,
-        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
+        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository(),
     ) {
         this.usersStore = readable(new Map<SpaceUser["spaceUserId"], SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();

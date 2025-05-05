@@ -192,7 +192,7 @@ export class VideoPeer extends Peer implements Streamable {
             }*/
         });
 
-        this.on("data", (chunk: Buffer) => {
+        this.on("data", async(chunk: Buffer) => {
             try {
                 const data = JSON.parse(chunk.toString("utf8"));
                 const message = P2PMessage.parse(data);
@@ -208,7 +208,12 @@ export class VideoPeer extends Peer implements Streamable {
                         this.blocked = true;
                         this.toggleRemoteStream(false);
                         const simplePeer = this.space.simplePeer;
-                        const spaceUserId = this.space.getSpaceUserByUserId(this.userId)?.spaceUserId;
+                        const spaceUser = await this.space.getSpaceUserByUserId(this.userId);
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for userId", this.userId);
+                            return;
+                        }
+                        const spaceUserId = spaceUser.spaceUserId;
                         if (!spaceUserId) {
                             console.error("spaceUserId not found for userId", this.userId);
                             return;

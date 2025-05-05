@@ -38,6 +38,10 @@ export class LiveKitService {
         private livekitApiSecret = LIVEKIT_API_SECRET,
         private livekitFrontendUrl = LIVEKIT_WS_URL
     ) {
+        if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
+            //TODO : voir si on le gere d'une autre maniere / Sentry
+            throw new Error("Livekit host, api key or secret is not set");
+        }
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
