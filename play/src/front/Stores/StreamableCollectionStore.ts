@@ -15,7 +15,6 @@ import {
     livekitScreenShareStreamElementsStore,
     livekitVideoStreamElementsStore,
     peerElementsStore,
-    peerStore,
     screenSharingStreamStore,
 } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -241,10 +240,6 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 
-streamableCollectionStore.subscribe((streamableCollection) => {
-    console.log(">>>>> streamableCollectionStore", streamableCollection.size);
-});
-
 /**
  * A store containing only the streamables that should be displayed in picture-in-picture mode
  */
@@ -258,7 +253,13 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, livekitVideoStreamElementsStore, livekitScreenShareStreamElementsStore, scriptingVideoStore, silentStore],
+    [
+        broadcastTracksStore,
+        livekitVideoStreamElementsStore,
+        livekitScreenShareStreamElementsStore,
+        scriptingVideoStore,
+        silentStore,
+    ],
     ([$broadcastTracksStore, $screenSharingStreamStore, $peerElementsStore, $scriptingVideoStore, $silentStore]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {

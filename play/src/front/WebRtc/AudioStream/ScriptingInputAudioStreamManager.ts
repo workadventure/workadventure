@@ -3,8 +3,8 @@ import { Deferred } from "ts-deferred";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
-import { InputPCMStreamer } from "./InputPCMStreamer";
 import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
+import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
  * Class in charge of receiving audio streams from the scripting API and playing them.

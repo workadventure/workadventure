@@ -51,7 +51,6 @@ import {
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
     PublicEvent,
@@ -99,7 +98,6 @@ import {
 } from "../Stores/MenuStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import type {
@@ -110,7 +108,6 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-    WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
 

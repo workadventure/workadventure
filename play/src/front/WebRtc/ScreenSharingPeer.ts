@@ -4,7 +4,6 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";

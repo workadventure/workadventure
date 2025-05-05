@@ -1,16 +1,13 @@
 // -------------------- Default Implementations --------------------x
 
-import { MapStore } from "@workadventure/store-utils";
 import { Observable } from "rxjs";
 import { Readable, Unsubscriber } from "svelte/store";
-import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-import { WebRTCState } from "./WebRTCState";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { WebRTCState } from "./WebRTCState";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
@@ -26,7 +23,7 @@ export class SpacePeerManager {
     private _communicationState: ICommunicationState;
     constructor(
         private space: SpaceInterface,
-        private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
+        private microphoneStateStore: Readable<boolean> = requestedMicrophoneState
     ) {
         this._communicationState = new WebRTCState(this.space, this);
         this.synchronizeMediaState();
@@ -59,7 +56,7 @@ export class SpacePeerManager {
     }
 
     destroy(): void {
-        if(this._communicationState) {
+        if (this._communicationState) {
             this._communicationState.destroy();
         }
         for (const unsubscribe of this.unsubscribes) {
@@ -72,7 +69,7 @@ export class SpacePeerManager {
     }
 
     setState(state: ICommunicationState): void {
-        if(this._communicationState) {
+        if (this._communicationState) {
             this._communicationState.destroy();
         }
         state.completeSwitch();

@@ -181,7 +181,6 @@ import {
     livekitScreenShareStreamStore,
     livekitVideoStreamElementsStore,
     livekitVideoStreamStore,
-    peerElementsStore,
     peerStore,
     screenSharingPeerStore,
 } from "../../Stores/PeerStore";
@@ -2172,23 +2171,23 @@ export class GameScene extends DirtyScene {
 
                 if (peer instanceof VideoPeer) {
                     pendingConnects.add(peer.userId);
-                setTimeout(() => {
-                    // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                    pendingConnects.delete(peer.userId);
-                    /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                    setTimeout(() => {
+                        // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                        pendingConnects.delete(peer.userId);
+                        /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
                         iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
                         alreadyInBubble = true;
                         }*/
-                }, 5000);
+                    }, 5000);
 
                     peer.once("connect", () => {
                         pendingConnects.delete(peer.userId);
-                    if (pendingConnects.size === 0) {
+                        if (pendingConnects.size === 0) {
                             iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
                             alreadyInBubble = true;
                         }
                     });
-                }else{
+                } else {
                     //TODO: voir si on a une meilleur solution que le else
                     iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
                 }
@@ -2215,18 +2214,17 @@ export class GameScene extends DirtyScene {
 
                 if (newUser) {
                     if (alreadyInBubble) {
-                        const peer = peers.find(p => p.userId === newUser.userId);
-                        if(peer instanceof VideoPeer) {
+                        const peer = peers.find((p) => p.userId === newUser.userId);
+                        if (peer instanceof VideoPeer) {
                             peer?.once("connect", () => {
                                 iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
                             });
                         } else {
                             //TODO: voir si on a une meilleur solution que le else
-                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser); 
+                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
                         }
-                    
                     } else {
-                        const peer = peers.find(p => p.userId === newUser.userId);
+                        const peer = peers.find((p) => p.userId === newUser.userId);
                         if (peer && peer instanceof VideoPeer) {
                             pendingConnects.add(newUser.userId);
                             setTimeout(() => {

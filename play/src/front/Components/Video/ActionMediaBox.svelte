@@ -77,7 +77,7 @@
         });
         // FIXME: this works only in bubbles
         // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
-         const spaceUserId = spaceUser.spaceUserId;
+        const spaceUserId = spaceUser.spaceUserId;
         // const userId = Number(spaceUserId.split("_").pop());
 
         spaceUser.space.simplePeer?.removePeer(spaceUserId);

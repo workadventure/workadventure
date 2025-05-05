@@ -93,7 +93,7 @@ export class LivekitConnection {
         }
 
         this.livekitRoom.destroy();
-        
+
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();
         }

@@ -2,7 +2,6 @@ import { Readable } from "svelte/store";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { ExtendedStreamable } from "../../Livekit/LivekitParticipant";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];

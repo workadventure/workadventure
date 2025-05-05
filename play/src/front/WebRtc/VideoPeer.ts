@@ -5,7 +5,6 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
@@ -192,7 +191,7 @@ export class VideoPeer extends Peer implements Streamable {
             }*/
         });
 
-        this.on("data", async(chunk: Buffer) => {
+        this.on("data", (chunk: Buffer) => {
             try {
                 const data = JSON.parse(chunk.toString("utf8"));
                 const message = P2PMessage.parse(data);
@@ -208,19 +207,26 @@ export class VideoPeer extends Peer implements Streamable {
                         this.blocked = true;
                         this.toggleRemoteStream(false);
                         const simplePeer = this.space.simplePeer;
-                        const spaceUser = await this.space.getSpaceUserByUserId(this.userId);
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for userId", this.userId);
-                            return;
-                        }
-                        const spaceUserId = spaceUser.spaceUserId;
-                        if (!spaceUserId) {
-                            console.error("spaceUserId not found for userId", this.userId);
-                            return;
-                        }
-                        if (simplePeer) {
-                            simplePeer.blockedFromRemotePlayer(spaceUserId);
-                        }
+                        this.space
+                            .getSpaceUserByUserId(this.userId)
+                            .then((spaceUser) => {
+                                if (!spaceUser) {
+                                    console.error("spaceUser not found for userId", this.userId);
+                                    return;
+                                }
+                                const spaceUserId = spaceUser.spaceUserId;
+                                if (!spaceUserId) {
+                                    console.error("spaceUserId not found for userId", this.userId);
+                                    return;
+                                }
+                                if (simplePeer) {
+                                    simplePeer.blockedFromRemotePlayer(spaceUserId);
+                                }
+                            })
+                            .catch((e) => {
+                                console.error("Error while getting spaceUser", e);
+                                Sentry.captureException(e);
+                            });
                         break;
                     }
                     case "unblocked": {

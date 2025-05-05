@@ -3,6 +3,7 @@ import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure
 import { Observable, Subject, Subscriber } from "rxjs";
 import { Readable, get, readable, writable, Writable, derived } from "svelte/store";
 import { applyFieldMask } from "protobuf-fieldmask";
+import { Deferred } from "ts-deferred";
 import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { SpaceInterface } from "../SpaceInterface";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
@@ -11,7 +12,6 @@ import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { RemotePlayerData } from "../../Phaser/Game/RemotePlayersRepository";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { Deferred } from "ts-deferred";
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -91,7 +91,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         private _space: SpaceInterface,
         private _connection: RoomConnectionForSpacesInterface,
         private _filter: Filter,
-        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository(),
+        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         this.usersStore = readable(new Map<SpaceUser["spaceUserId"], SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
@@ -271,7 +271,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 return this._remotePlayersRepository.getPlayer(this.extractUserIdFromSpaceId(user.spaceUserId));
             },
             userId: this.extractUserIdFromSpaceId(user.spaceUserId),
-
         } as unknown as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
@@ -413,7 +412,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         // Create a deferred promise that will be resolved when the user is added
         const deferred = new Deferred<SpaceUserExtended>();
-        
+
         // Subscribe to user joined events to resolve the promise when the user is found
         const subscription = this.observeUserJoined.subscribe((user) => {
             if (user.spaceUserId === spaceUserId) {
@@ -444,7 +443,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
         // Create a deferred promise that will be resolved when the user is added
         const deferred = new Deferred<SpaceUserExtended>();
-        
+
         // Subscribe to user joined events to resolve the promise when the user is found
         const subscription = this.observeUserJoined.subscribe((user) => {
             if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
@@ -465,11 +464,11 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         ]);
     }
 
-        //TODO : revoir le nom de la fonction
-        private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
-            const parts = spaceUserId.split("_");
-            const lastPart = parts[parts.length - 1];
-            const num = Number(lastPart);
-            return isNaN(num) ? undefined : num;
-        }
+    //TODO : revoir le nom de la fonction
+    private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
+        const parts = spaceUserId.split("_");
+        const lastPart = parts[parts.length - 1];
+        const num = Number(lastPart);
+        return isNaN(num) ? undefined : num;
+    }
 }

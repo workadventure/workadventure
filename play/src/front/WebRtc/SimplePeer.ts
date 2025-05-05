@@ -5,7 +5,6 @@ import { Deferred } from "ts-deferred";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
-//import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
@@ -14,14 +13,12 @@ import { BubbleNotification as BasicNotification } from "../Notification/BubbleN
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
-//import { mediaManager } from "./MediaManager";
-import { CommunicationType } from "../Livekit/LivekitConnection";
+import { SimplePeerConnectionInterface } from "../Space/SpacePeerManager/SpacePeerManager";
+import { MediaStoreStreamable } from "../Stores/StreamableCollectionStore";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
-import { SimplePeerConnectionInterface } from "../Space/SpacePeerManager/SpacePeerManager";
-import { MediaStoreStreamable } from "../Stores/StreamableCollectionStore";
 
 export interface UserSimplePeerInterface {
     userId: string;
@@ -95,19 +92,26 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this.initialise();
 
         this.rxJsUnsubscribers.push(
-            blackListManager.onBlockStream.subscribe(async (userUuid) => {
+            blackListManager.onBlockStream.subscribe((userUuid) => {
                 const user = playersStore.getPlayerByUuid(userUuid);
                 if (!user) {
                     return;
                 }
 
-                const spaceUser = await this.space.getSpaceUserByUserId(user.userId);
-                if (!spaceUser) {
-                    console.error("spaceUserId not found for userId", user.userId);
-                    return;
-                }
+                this.space
+                    .getSpaceUserByUserId(user.userId)
+                    .then((spaceUser) => {
+                        if (!spaceUser) {
+                            console.error("spaceUserId not found for userId", user.userId);
+                            return;
+                        }
 
-                this.closeConnection(spaceUser.spaceUserId);
+                        this.closeConnection(spaceUser.spaceUserId);
+                    })
+                    .catch((e) => {
+                        console.error("Error while getting spaceUser", e);
+                        Sentry.captureException(e);
+                    });
             })
         );
     }
@@ -214,7 +218,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
-
         console.log({
             user,
         });
@@ -297,9 +300,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     private async createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
-        stream: MediaStream | undefined,
+        stream: MediaStream | undefined
     ): Promise<ScreenSharingPeer | null> {
-        
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         const peerScreenSharingConnection = this.space.livekitScreenShareStreamStore.get(user.userId);
 
@@ -326,7 +328,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(user.userId);
         if (!spaceUser) {
-            console.error("While creating peer screen sharing connection, cannot find space user with ID " + user.userId);
+            console.error(
+                "While creating peer screen sharing connection, cannot find space user with ID " + user.userId
+            );
             return null;
         }
         const userId = spaceUser.userId;
@@ -358,7 +362,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
-    
+
         this.space.livekitScreenShareStreamStore.set(user.userId, peer);
         this._screenSharingPeerAdded.next(peer.media);
         return peer;
@@ -382,7 +386,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             //create temp peer to close
             //peer.toClose = true;
-           //peer.destroy();
+            //peer.destroy();
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
@@ -419,7 +423,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this.space.livekitScreenShareStreamStore.delete(userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-           // peer.destroy();
+            // peer.destroy();
         } catch (err) {
             console.error("An error occurred in closeScreenSharingConnection", err);
         }
@@ -511,7 +515,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(data.userId);
 
         if (!spaceUser) {
-            console.error("While receiving webrtc screen sharing signal, cannot find space user with ID " + data.userId);
+            console.error(
+                "While receiving webrtc screen sharing signal, cannot find space user with ID " + data.userId
+            );
             return;
         }
 
@@ -593,7 +599,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
-
         console.log({
             userId,
         });
@@ -618,7 +623,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         };
         const PeerConnectionScreenSharing = await this.createPeerScreenSharingConnection(
             screenSharingUser,
-            localScreenCapture, 
+            localScreenCapture
         );
         if (!PeerConnectionScreenSharing) {
             return;

@@ -2,7 +2,6 @@ import { derived, Readable, readable, Writable, writable } from "svelte/store";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { VideoPeer } from "../WebRtc/VideoPeer";
-import { Streamable } from "./StreamableCollectionStore";
 import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 
 export const peerStore: Writable<Readable<Map<string, VideoPeer>>> = writable<Writable<Map<string, VideoPeer>>>(
@@ -48,7 +47,6 @@ export const livekitScreenShareStreamElementsStore = derived(
     },
     [] as ExtendedStreamable[]
 );
-
 
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!

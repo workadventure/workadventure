@@ -1,8 +1,15 @@
 import { MapStore } from "@workadventure/store-utils";
-import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track, LocalAudioTrack } from "livekit-client";
+import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import { LocalStreamStoreValue, requestedMicrophoneDeviceIdStore , requestedCameraDeviceIdStore,  requestedCameraState, requestedMicrophoneState, speakerSelectedStore } from "../Stores/MediaStore";
+import {
+    LocalStreamStoreValue,
+    requestedMicrophoneDeviceIdStore,
+    requestedCameraDeviceIdStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+    speakerSelectedStore,
+} from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { LiveKitParticipant } from "./LivekitParticipant";
@@ -24,9 +31,7 @@ export class LiveKitRoom {
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
         private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore
-    ) {
-
-    }
+    ) {}
 
     public async prepareConnection(): Promise<Room> {
         //TODO : revoir les paramètres de la room
@@ -35,7 +40,7 @@ export class LiveKitRoom {
             dynacast: true,
             videoCaptureDefaults: {
                 resolution: VideoPresets.h2160.resolution,
-            }
+            },
             // reconnectPolicy: {
         });
 
@@ -61,12 +66,15 @@ export class LiveKitRoom {
             await Promise.all(
                 Array.from(room.remoteParticipants.values()).map((participant) => {
                     const id = this.getParticipantId(participant);
-                    return this.space.getSpaceUserBySpaceUserId(id).then(spaceUser => {
+                    return this.space.getSpaceUserBySpaceUserId(id).then((spaceUser) => {
                         if (!spaceUser) {
                             console.error("spaceUser not found for participant", id);
                             return;
                         }
-                        this.participants.set(spaceUser.uuid, new LiveKitParticipant(participant, this.space, spaceUser));
+                        this.participants.set(
+                            spaceUser.uuid,
+                            new LiveKitParticipant(participant, this.space, spaceUser)
+                        );
                     });
                 })
             );
@@ -80,9 +88,8 @@ export class LiveKitRoom {
     private synchronizeMediaState() {
         this.unsubscribers.push(
             this.cameraStateStore.subscribe((state) => {
-
                 console.log("cameraStateStore", state);
-                
+
                 //TODO : voir si on a la permission de partager l'ecran
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
@@ -93,15 +100,16 @@ export class LiveKitRoom {
                 const deviceId = get(this.cameraDeviceIdStore);
                 //TODO : voir si utile de subscribe directement au requestedCameraDeviceIdStore
 
-                this.localParticipant.setCameraEnabled(state, {
-                    deviceId: deviceId,
-                    //TODO : voir la résolution qu'on décide d'envoyer 
-                    resolution: VideoPresets.h2160.resolution,
-                
-                }).catch((err) => {
-                    console.error("An error occurred in synchronizeMediaState", err);
-                    Sentry.captureException(err);
-                });
+                this.localParticipant
+                    .setCameraEnabled(state, {
+                        deviceId: deviceId,
+                        //TODO : voir la résolution qu'on décide d'envoyer
+                        resolution: VideoPresets.h2160.resolution,
+                    })
+                    .catch((err) => {
+                        console.error("An error occurred in synchronizeMediaState", err);
+                        Sentry.captureException(err);
+                    });
             })
         );
 
@@ -114,53 +122,51 @@ export class LiveKitRoom {
                     return;
                 }
                 const deviceId = get(this.microphoneDeviceIdStore);
-                this.localParticipant.setMicrophoneEnabled(state,{
-                    deviceId: deviceId,
-                }).catch((err) => {
-                    console.error("An error occurred in synchronizeMediaState", err);
-                    Sentry.captureException(err);
-                });
+                this.localParticipant
+                    .setMicrophoneEnabled(state, {
+                        deviceId: deviceId,
+                    })
+                    .catch((err) => {
+                        console.error("An error occurred in synchronizeMediaState", err);
+                        Sentry.captureException(err);
+                    });
             })
         );
 
         this.unsubscribers.push(
-            this.screenSharingLocalStreamStore.subscribe(async (stream) => {
+            this.screenSharingLocalStreamStore.subscribe((stream) => {
                 const streamResult = stream.type === "success" ? stream.stream : undefined;
-                
+
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
                     Sentry.captureException(new Error("Local participant not found"));
                     return;
                 }
                 if (this.localVideoTrack) {
-                    await this.unpublishAllScreenShareTrack();
-
+                    this.unpublishAllScreenShareTrack().catch((err) => {
+                        console.error("An error occurred while unpublishing all screen share track", err);
+                        Sentry.captureException(err);
+                    });
                 }
 
                 if (streamResult) {
-    
-                        // Create a new track instance
-                        this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
-                        
-                        const dimensions = await this.localVideoTrack.waitForDimensions();
+                    // Create a new track instance
+                    this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
 
-
-                        this.localParticipant.publishTrack(this.localVideoTrack, {
-                            source: Track.Source.ScreenShare
-                        }).then(() => {
-                            console.log(">>>>>>> publishTrack success");
-                        }).catch((err) => {
+                    this.localParticipant
+                        .publishTrack(this.localVideoTrack, {
+                            source: Track.Source.ScreenShare,
+                        })
+                        .catch((err) => {
                             console.error("An error occurred while publishing track", err);
                             Sentry.captureException(err);
                         });
-
                 }
             })
         );
 
         this.unsubscribers.push(
-            this.cameraDeviceIdStore.subscribe(async(deviceId) => {
-
+            this.cameraDeviceIdStore.subscribe((deviceId) => {
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
                     Sentry.captureException(new Error("Local participant not found"));
@@ -170,9 +176,12 @@ export class LiveKitRoom {
                 console.log("cameraDeviceIdStore", deviceId);
                 const state = get(this.cameraStateStore);
 
-                if(!state || !deviceId) return;
+                if (!state || !deviceId) return;
 
-                this.room?.switchActiveDevice("videoinput", deviceId);
+                this.room?.switchActiveDevice("videoinput", deviceId).catch((err) => {
+                    console.error("An error occurred while switching active device", err);
+                    Sentry.captureException(err);
+                });
             })
         );
         //TODO : voir si on a besoin de set la sortie audio
@@ -185,21 +194,26 @@ export class LiveKitRoom {
                 }
 
                 const state = get(this.microphoneStateStore);
-                
-                if(!state || !deviceId) return;
-                
-                this.room?.switchActiveDevice("audioinput", deviceId);
+
+                if (!state || !deviceId) return;
+
+                this.room?.switchActiveDevice("audioinput", deviceId).catch((err) => {
+                    console.error("An error occurred while switching active device", err);
+                    Sentry.captureException(err);
+                });
             })
         );
 
         this.unsubscribers.push(
             this.speakerDeviceIdStore.subscribe((deviceId) => {
-                if(!deviceId) return;
+                if (!deviceId) return;
 
-                this.room?.switchActiveDevice("audiooutput", deviceId);
+                this.room?.switchActiveDevice("audiooutput", deviceId).catch((err) => {
+                    console.error("An error occurred while switching active device", err);
+                    Sentry.captureException(err);
+                });
             })
         );
-        
     }
 
     private async unpublishAllScreenShareTrack() {
@@ -208,16 +222,18 @@ export class LiveKitRoom {
             Sentry.captureException(new Error("Local participant not found"));
             return;
         }
-        
-        for (const publication of this.localParticipant.trackPublications.values()) {
-            const track = publication.track;
-          
-            // Optional: You can use naming or source tagging to distinguish screen sharing
-            if (track && publication.source === 'screen_share') {
-              await this.localParticipant.unpublishTrack(track);
-              track.stop(); // Optional: stop the media track to release resources
-            }
-          }
+
+        await Promise.all(
+            Array.from(this.localParticipant.trackPublications.values())
+                .filter((publication) => publication.track && publication.source === "screen_share")
+                .map(async (publication) => {
+                    const track = publication.track;
+                    if (track) {
+                        await this.localParticipant?.unpublishTrack(track);
+                        track.stop(); // Optional: stop the media track to release resources
+                    }
+                })
+        );
     }
     private handleRoomEvents() {
         if (!this.room) {
@@ -226,14 +242,21 @@ export class LiveKitRoom {
             return;
         }
 
-        this.room.on(RoomEvent.ParticipantConnected, async (participant) => {
+        this.room.on(RoomEvent.ParticipantConnected, (participant) => {
             const id = this.getParticipantId(participant);
-            const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
-            if (!spaceUser) {
-                console.log("spaceUser not found for participant", id);
-                return;
-            }
-            this.participants.set(participant.sid, new LiveKitParticipant(participant, this.space, spaceUser));
+            this.space
+                .getSpaceUserBySpaceUserId(id)
+                .then((spaceUser) => {
+                    if (!spaceUser) {
+                        console.log("spaceUser not found for participant", id);
+                        return;
+                    }
+                    this.participants.set(participant.sid, new LiveKitParticipant(participant, this.space, spaceUser));
+                })
+                .catch((err) => {
+                    console.error("An error occurred while getting spaceUser", err);
+                    Sentry.captureException(err);
+                });
         });
         this.room.on(RoomEvent.ParticipantDisconnected, (participant) => {
             this.participants.delete(participant.sid);
@@ -262,7 +285,7 @@ export class LiveKitRoom {
         console.log(">>>>> destroy LiveKitRoom");
         console.count("destroy LiveKitRoom");
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
-        this.participants.forEach((participant) => participant.destroy());  
+        this.participants.forEach((participant) => participant.destroy());
         this.leaveRoom();
     }
 }

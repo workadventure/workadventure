@@ -7,6 +7,7 @@ import {
     Track,
     ParticipantEvent,
 } from "livekit-client";
+import * as Sentry from "@sentry/svelte";
 import { derived, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
@@ -14,13 +15,12 @@ import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 
-
-//TODO : revoir le nom 
+//TODO : revoir le nom
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;
     media: MediaStoreStreamable;
-}
+};
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -49,14 +49,23 @@ export class LiveKitParticipant {
                 if (publication.source === Track.Source.Camera) {
                     this._videoStreamStore.set(publication.track.mediaStream);
                     this._hasVideo.set(!publication.track.isMuted);
-                    this.updateLivekitVideoStreamStore();
+                    this.updateLivekitVideoStreamStore().catch((e) => {
+                        console.error("Error while updating livekit video stream store", e);
+                        Sentry.captureException(e);
+                    });
                 } else if (publication.source === Track.Source.Microphone) {
                     this._audioStreamStore.set(publication.track.mediaStream);
                     this._isMuted.set(publication.track.isMuted);
-                    this.updateLivekitVideoStreamStore();
+                    this.updateLivekitVideoStreamStore().catch((e) => {
+                        console.error("Error while updating livekit video stream store", e);
+                        Sentry.captureException(e);
+                    });
                 } else if (publication.source === Track.Source.ScreenShare) {
                     this._screenShareStreamStore.set(publication.track.mediaStream);
-                    this.updateLivekitScreenShareStreamStore();
+                    this.updateLivekitScreenShareStreamStore().catch((e) => {
+                        console.error("Error while updating livekit screen share stream store", e);
+                        Sentry.captureException(e);
+                    });
                 }
             }
         });
@@ -96,9 +105,9 @@ export class LiveKitParticipant {
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
-           // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
+            // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
         } else if (publication.source === Track.Source.ScreenShare) {
-           // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
+            // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
         }
     }
 

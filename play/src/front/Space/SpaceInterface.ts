@@ -3,11 +3,10 @@ import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } 
 import { MapStore } from "@workadventure/store-utils";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { Streamable } from "../Stores/StreamableCollectionStore";
+import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 import { SimplePeerConnectionInterface } from "./SpacePeerManager/SpacePeerManager";
-import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
@@ -58,6 +57,6 @@ export interface SpaceInterface {
     getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
-    //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users 
+    //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
     getLastSpaceFilter(): SpaceFilter | undefined;
 }
