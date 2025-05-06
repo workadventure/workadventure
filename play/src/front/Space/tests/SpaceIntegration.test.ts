@@ -76,26 +76,12 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
-            getCurrentGameScene: () => ({}),
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: vi.fn(),
+            }),
         },
     };
 });
-
-// Mock the PeerStore module
-vi.mock("../../Stores/PeerStore", () => ({
-    peerStore: {
-        getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-    screenSharingPeerStore: {
-        getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
-}));
 
 // Mock SimplePeer
 vi.mock("../../WebRtc/SimplePeer", () => ({
@@ -128,10 +114,6 @@ vi.mock("../../Connection/ConnectionManager", () => {
     };
 });
 
-// const defaultPeerStoreMock = {
-//     getSpaceStore: vi.fn(),
-// } as unknown as PeerStoreInterface;
-
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
     peerStore: {
@@ -145,6 +127,21 @@ vi.mock("../../Stores/PeerStore", () => ({
         cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
+    },
+    peerElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitVideoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitScreenShareStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
     },
 }));
 
@@ -182,6 +179,23 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
+
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {

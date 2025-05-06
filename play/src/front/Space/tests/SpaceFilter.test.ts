@@ -34,7 +34,23 @@ vi.mock("../../Stores/PeerStore", () => ({
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
+    peerElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitVideoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitScreenShareStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
 }));
+
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
         CharacterLayerManager: {
@@ -48,7 +64,9 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
-            getCurrentGameScene: () => ({}),
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: vi.fn(),
+            }),
         },
     };
 });
@@ -59,6 +77,22 @@ vi.mock("../../WebRtc/SimplePeer", () => ({
         destroy: vi.fn(),
     })),
 }));
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
 
 describe("SpaceFilter", () => {
     describe("addUser", () => {
@@ -101,7 +135,7 @@ describe("SpaceFilter", () => {
         it("should not update userdata when user object do not have id ", async () => {
             const spaceFilterName = "space-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
-            const spaceUserId = "";
+            const spaceUserId = "_1000";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
                 spaceUserId,
@@ -127,7 +161,7 @@ describe("SpaceFilter", () => {
         it("should update user data when user object have a id ", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
-            const spaceUserId = "";
+            const spaceUserId = "_100";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
                 spaceUserId,
@@ -161,7 +195,7 @@ describe("SpaceFilter", () => {
         it("should not update userdata when user object have a incorrect id ", async () => {
             const spaceFilterName = "space-filter-name";
             const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock, []);
-            const spaceUserId = "";
+            const spaceUserId = "_1000";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
                 spaceUserId,

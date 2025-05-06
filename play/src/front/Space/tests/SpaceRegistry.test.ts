@@ -39,6 +39,21 @@ vi.mock("../../Stores/PeerStore", () => ({
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
+    peerElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitVideoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    livekitScreenShareStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
 }));
 
 // Mock SimplePeer
@@ -56,6 +71,23 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
+
 const defaultRoomConnectionMock: RoomConnectionForSpacesInterface = new MockRoomConnectionForSpaces();
 
 describe("SpaceProviderInterface implementation", () => {
