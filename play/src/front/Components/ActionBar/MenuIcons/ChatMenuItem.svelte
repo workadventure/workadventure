@@ -10,9 +10,12 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { peerStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 
     export let last: boolean | undefined = undefined;
-    export let chatEnabledInAdmin = true;
+    export let chatEnabledInAdmin = false;
+
+    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
 
     const dispatch = createEventDispatcher();
 
@@ -32,7 +35,7 @@
     gameManager
         .getChatConnection()
         .then(() => {
-            chatAvailable = chatEnabledInAdmin ?? true;
+            chatAvailable = true;
         })
         .catch((e: unknown) => {
             console.error("Could not get chat", e);
@@ -46,6 +49,10 @@
     on:click={() => {
         toggleChat();
         navChat.switchToChat();
+        if (!chatEnabledInAdmin) {
+            selectedRoomStore.set(proximityChatRoom);
+            proximityChatRoom.hasUnreadMessages.set(false);
+        }
         analyticsClient.openedChat();
     }}
     classList="group/btn-message-circle rounded-r-lg pr-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pr-0'}"

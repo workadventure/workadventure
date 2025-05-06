@@ -82,9 +82,7 @@
         <div slot="left" class="justify-start flex-none">
             <div class="flex relative transition-all duration-150 z-[2]" data-testid="chat-action">
                 {#if !$chatVisibilityStore}
-                    {#if showChatButton}
-                        <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
-                    {/if}
+                    <ChatMenuItem chatEnabledInAdmin={showChatButton} last={isSmallScreen ? true : undefined} />
                     {#if !isSmallScreen && showUserListButton}
                         <UserListMenuItem state={showUserListButton ? "normal" : "disabled"} />
                     {/if}

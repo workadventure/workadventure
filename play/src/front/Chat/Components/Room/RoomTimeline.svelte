@@ -35,6 +35,9 @@
 
     let messageInputBarRef: MessageInputBar;
 
+    const gameScene = gameManager.getCurrentGameScene();
+    const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
+
     $: messages = room?.messages;
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
@@ -200,13 +203,17 @@
     {#if room !== undefined}
         <div class="flex flex-col gap-2">
             <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
-                <button
-                    class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
-                    data-testid="chatBackward"
-                    on:click={goBackAndClearSelectedChatMessage}
-                >
-                    <IconChevronLeft font-size="20" />
-                </button>
+                {#if chatRoomsEnableInAdmin}
+                    <button
+                        class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
+                        data-testid="chatBackward"
+                        on:click={goBackAndClearSelectedChatMessage}
+                    >
+                        <IconChevronLeft font-size="20" />
+                    </button>
+                {:else}
+                    <div class="p-3 rounded-2xl aspect-square w-12" />
+                {/if}
                 <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
                     {$roomName}
                 </div>
