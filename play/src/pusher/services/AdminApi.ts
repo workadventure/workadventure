@@ -306,17 +306,17 @@ class AdminApi implements AdminInterface {
             }
 
             console.error(
-                "Invalid answer received from the admin for the /api/map endpoint. Errors:",
+                "Invalid answer received from the admin for the /api/map endpoint. /api/map answer is not a map details answer because:",
                 mapDetailData.error.issues
             );
             Sentry.captureException(mapDetailData.error.issues);
-            console.error(roomRedirect.error.issues);
+            console.error("/api/map answer is not a room redirect because:", roomRedirect.error.issues);
+            console.error("/api/map answer is not an error because:", errorData.error.issues);
             return {
                 status: "error",
                 type: "error",
                 title: "Invalid server response",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "MAP_VALIDATION",
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };
@@ -342,7 +342,6 @@ class AdminApi implements AdminInterface {
                 type: "error",
                 title: "Connection error",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "ROOM_ACCESS_ERROR",
                 details: message,
             };
