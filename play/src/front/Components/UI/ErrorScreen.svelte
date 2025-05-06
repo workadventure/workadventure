@@ -41,17 +41,6 @@
     }
 
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
-
-    // onMount(() => {
-    //     if (logoErrorParent) {
-    //         logoErrorParent.innerHTML = "";
-    //         logoErrorParent.appendChild(logoError);
-    //     }
-    //     if (imageErrorParent) {
-    //         imageErrorParent.innerHTML = "";
-    //         imageErrorParent.appendChild(errorImage);
-    //     }
-    // });
 </script>
 
 {#if $errorScreenStore}
@@ -90,17 +79,23 @@
                     <div class="loading" />
                 {/if}
             </p>
-            {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
-                    {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload mr-2 hover:" />{/if}
-                    {$errorScreenStore.buttonTitle}
-                </button>
-                {#if $userIsConnected}
-                    <button type="button" class="light button" on:click={logout}>
-                        {$LL.menu.profile.logout()}
+            <div class="flex gap-2">
+                {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
+                    <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
+                        {#if $errorScreenStore.type === "retry"}<img
+                                src={reload}
+                                alt=""
+                                class="reload mr-2 hover:"
+                            />{/if}
+                        {$errorScreenStore.buttonTitle}
                     </button>
+                    {#if $userIsConnected}
+                        <button type="button" class="btn-lg btn btn-secondary button" on:click={logout}>
+                            {$LL.menu.profile.logout()}
+                        </button>
+                    {/if}
                 {/if}
-            {/if}
+            </div>
         </div>
     </main>
 {/if}
