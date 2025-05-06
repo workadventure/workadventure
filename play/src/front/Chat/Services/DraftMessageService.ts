@@ -28,7 +28,7 @@ class DraftMessageService {
         };
 
         request.onerror = (event) => {
-            console.error("Erreur lors de l'ouverture de la base IndexedDB :", event);
+            console.error("Error while opening IndexedDB :", event);
         };
     }
 
@@ -61,7 +61,7 @@ class DraftMessageService {
             };
 
             request.onerror = (event) => {
-                console.error("Erreur lors du chargement du brouillon :", event);
+                console.error("Error while loading draft:", event);
                 reject(event);
             };
         });
