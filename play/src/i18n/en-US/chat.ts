@@ -476,8 +476,8 @@ const chat: BaseTranslation = {
     },
     remoteUserNotConnected: {
         title: "User not connected 💬",
-        descriptionNotConnected: "The user is not connected. You're not bale to start message discussion with him 😭 ",
-        descriptionWalkToCallHim: "But you may walk to him and call him to start a discussion.",
+        descriptionNotConnected: "The user is not connected. You cannot start a message thread with them 😭 ",
+        descriptionWalkToCallHim: "But you may walk to them and call them to start a discussion.",
         call: "Call {userName}",
     },
 };
