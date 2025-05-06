@@ -211,7 +211,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
-        this.closeConnection(user.userId);
+        this.closeConnection(user.userId, false);
     }
 
     /**
@@ -375,7 +375,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public closeConnection(userId: string) {
+    public closeConnection(userId: string, shouldCloseStream = true) {
         //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         try {
             const peer = this.space.livekitVideoStreamStore.get(userId);
@@ -385,12 +385,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             this._videoPeerRemoved.next(peer.media);
 
             //create temp peer to close
-            //peer.toClose = true;
-            //peer.destroy();
+            if (shouldCloseStream) {
+                peer.toClose = true;
+                peer.destroy();
+                this.space.livekitVideoStreamStore.delete(userId);
+            }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            this.closeScreenSharingConnection(userId);
+            this.closeScreenSharingConnection(userId, shouldCloseStream);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -411,7 +414,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    private closeScreenSharingConnection(userId: string) {
+    private closeScreenSharingConnection(userId: string, shouldCloseStream = true) {
         //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         try {
             const peer = this.space.livekitScreenShareStreamStore.get(userId);
@@ -420,28 +423,29 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
 
             this._screenSharingPeerRemoved.next(peer.media);
-            this.space.livekitScreenShareStreamStore.delete(userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            // peer.destroy();
+
+            if (shouldCloseStream && peer instanceof ScreenSharingPeer) {
+                peer.destroy();
+            }
         } catch (err) {
             console.error("An error occurred in closeScreenSharingConnection", err);
         }
 
-        //this.space.screenSharingPeerStore.delete(userId);
-        console.log(">>>> delete screen sharing stream", {
-            spaceUserId: userId,
-        });
+        if (shouldCloseStream) {
+            this.space.livekitScreenShareStreamStore.delete(userId);
+        }
     }
 
     //TODO : voir si on fait 2 fonctions / 1 pour close complet et l'autre pour la transition (sans close le stream et delete dans le store)
     public closeAllConnections(needToDelete?: boolean) {
         for (const userId of this.space.livekitVideoStreamStore.keys()) {
-            this.closeConnection(userId);
+            this.closeConnection(userId, needToDelete);
         }
 
         for (const userId of this.space.livekitScreenShareStreamStore.keys()) {
-            this.closeScreenSharingConnection(userId);
+            this.closeScreenSharingConnection(userId, needToDelete);
         }
     }
 

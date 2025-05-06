@@ -107,7 +107,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
         // Close all connection simple peer
         const simplePeer = space.simplePeer;
         if (simplePeer) {
-            simplePeer.closeAllConnections();
+            simplePeer.closeAllConnections(true);
             simplePeer.cleanupStore();
         }
     });
