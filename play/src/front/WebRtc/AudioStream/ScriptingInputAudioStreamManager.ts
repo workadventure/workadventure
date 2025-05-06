@@ -2,8 +2,8 @@ import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { SimplePeer } from "../SimplePeer";
-import { peerStore } from "../../Stores/PeerStore";
+import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
+import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
@@ -21,7 +21,7 @@ export class ScriptingInputAudioStreamManager {
     private videoPeerAddedUnsubscriber: Subscription;
     private videoPeerRemovedUnsubscriber: Subscription;
 
-    constructor(simplePeer: SimplePeer) {
+    constructor(simplePeer: SimplePeerConnectionInterface) {
         this.startListeningToStreamInBubbleStreamUnsubscriber =
             iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
                 (async () => {
@@ -57,8 +57,10 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    get(peerStore).forEach((peer) => {
-                        this.addMediaStreamStore(peer.streamStore);
+                    get(livekitVideoStreamElementsStore).forEach((peer) => {
+                        if (peer.media.type === "mediaStore") {
+                            this.addMediaStreamStore(peer.media.streamStore);
+                        }
                     });
                 })().catch((e) => {
                     console.error("Error while starting listening to streams", e);
@@ -73,8 +75,10 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                get(peerStore).forEach((peer) => {
-                    this.removeMediaStreamStore(peer.streamStore);
+                get(livekitVideoStreamElementsStore).forEach((peer) => {
+                    if (peer.media.type === "mediaStore") {
+                        this.removeMediaStreamStore(peer.media.streamStore);
+                    }
                 });
 
                 if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
@@ -95,15 +99,20 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((peer) => {
+        //TODO : Remplacer par livekitScreenShareStreamStore
+        this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
-                this.addMediaStreamStore(peer.streamStore);
+                if (media.type === "mediaStore") {
+                    this.addMediaStreamStore(media.streamStore);
+                }
             }
         });
 
-        this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((peer) => {
+        this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((media) => {
             if (this.isListening) {
-                this.removeMediaStreamStore(peer.streamStore);
+                if (media.type === "mediaStore") {
+                    this.removeMediaStreamStore(media.streamStore);
+                }
             }
         });
     }

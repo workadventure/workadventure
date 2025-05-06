@@ -8,7 +8,7 @@
     import { activeSubMenuStore, menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
-    import { peerStore } from "../../../Stores/PeerStore";
+    import { livekitVideoStreamElementsStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 
@@ -67,7 +67,7 @@
 >
     <MessageCircleIcon />
 </ActionBarButton>
-{#if $chatZoneLiveStore || $peerStore.size > 0}
+{#if $chatZoneLiveStore || $livekitVideoStreamElementsStore.length > 0}
     <div>
         <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
         <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />

@@ -1,0 +1,20 @@
+port: 7880
+rtc:
+    udp_port: 7882
+    tcp_port: 7881
+    use_external_ip: false
+#room:
+#    enabled_codecs:
+#        - mime: audio/opus
+#        - mime: video/h264
+redis:
+    address: redis:6379
+    username: ""
+    password: ""
+    db: 2
+keys:
+    devkey: 12345678901234567890123456789012
+logging:
+  json: false
+  level: debug
+

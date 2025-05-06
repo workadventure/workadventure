@@ -13,6 +13,7 @@ import {
 } from "@workadventure/messages";
 import { applyFieldMask } from "protobuf-fieldmask";
 import merge from "lodash/merge";
+import { intersection } from "lodash";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
@@ -44,7 +45,8 @@ export class Space {
         private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        private eventProcessor: EventProcessor
+        private eventProcessor: EventProcessor,
+        private propertiesToSync: string[] = []
     ) {
         this.users = new Map<string, SpaceUserExtended>();
         this._metadata = new Map<string, unknown>();
@@ -118,18 +120,24 @@ export class Space {
     }
 
     public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
+        const updateMaskToSync = intersection(updateMask, this.propertiesToSync);
+
+        if (updateMaskToSync.length === 0) {
+            return;
+        }
+
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
                     spaceName: this.name,
                     user: SpaceUser.fromPartial(spaceUser),
-                    updateMask,
+                    updateMask: updateMaskToSync,
                 },
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        this.localUpdateUser(spaceUser, updateMask);
+        this.localUpdateUser(spaceUser, updateMaskToSync);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this.users.get(spaceUser.spaceUserId);
@@ -530,7 +538,7 @@ export class Space {
         //             },
         //         });
         //     }
-        // });
+        // })
         const spaceEvent = noUndefined(message.spaceEvent);
 
         // FIXME: this should be unnecessary because of the noUndefined call above
@@ -612,6 +620,7 @@ export class Space {
             };
             this.notifyAll(subMessage, user);
         }
+
         // Let's remove any reference to the space in the watchers
         for (const watcher of this.clientWatchers.values()) {
             const socketData = watcher.getUserData();

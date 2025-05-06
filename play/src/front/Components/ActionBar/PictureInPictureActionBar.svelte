@@ -9,13 +9,12 @@
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { peerStore } from "../../Stores/PeerStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
-
     const dispatch = createEventDispatcher();
 
     function toggleChat() {
@@ -28,8 +27,8 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$peerStore.size > 0 &&
-    $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$livekitVideoStreamElementsStore.length >
+        0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
 >

@@ -1,7 +1,7 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
-import { SimplePeer } from "../SimplePeer";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
+import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
 
 /**
@@ -12,7 +12,7 @@ export class ScriptingOutputAudioStreamManager {
     private pcmStreamerResolved = false;
     private pcmStreamerResolving = false;
 
-    constructor(simplePeer: SimplePeer) {
+    constructor(simplePeer: SimplePeerConnectionInterface) {
         iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
             if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
                 throw new Error("A stream is already running");

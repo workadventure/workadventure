@@ -248,6 +248,8 @@ export class IoSocketController {
                             version: z.string(),
                             chatID: z.string(),
                             roomName: z.string(),
+                            cameraState: z.string().transform((val) => val === "true"),
+                            microphoneState: z.string().transform((val) => val === "true"),
                         })
                     );
 
@@ -276,6 +278,8 @@ export class IoSocketController {
                         version,
                         companionTextureId,
                         roomName,
+                        cameraState,
+                        microphoneState,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -481,9 +485,9 @@ export class IoSocketController {
                                 isLogged,
                                 color: Color.getColorByString(name),
                                 tags: memberTags,
-                                cameraState: false,
+                                cameraState,
                                 screenSharingState: false,
-                                microphoneState: false,
+                                microphoneState,
                                 megaphoneState: false,
                                 characterTextures: characterTextures.map((characterTexture) => ({
                                     url: characterTexture.url,
@@ -759,7 +763,8 @@ export class IoSocketController {
                             await socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
-                                localSpaceName
+                                localSpaceName,
+                                message.message.joinSpaceMessage.propertiesToSync
                             );
                             break;
                         }
@@ -942,8 +947,6 @@ export class IoSocketController {
                         }
                         case "itemEventMessage":
                         case "variableMessage":
-                        case "webRtcSignalToServerMessage":
-                        case "webRtcScreenSharingSignalToServerMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
