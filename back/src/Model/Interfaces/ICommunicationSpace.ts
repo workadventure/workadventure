@@ -7,4 +7,4 @@ export interface ICommunicationSpace {
     dispatchPublicEvent(publicEvent: PublicEvent): void;
     getSpaceName(): string;
     getPropertiesToSync(): string[];
-} 
+}

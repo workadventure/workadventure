@@ -9,7 +9,6 @@ eventProcessor.registerPrivateEventProcessor("webRtcSignalToServerMessage", (eve
     if (event.$case !== "webRtcSignalToServerMessage") {
         // FIXME: improve the typing of the method to avoid this
         throw new Error("Invalid event type");
-        
     }
 
     const signal = event.webRtcSignalToServerMessage.signal;
@@ -19,7 +18,9 @@ eventProcessor.registerPrivateEventProcessor("webRtcSignalToServerMessage", (eve
     };
 
     if (TURN_STATIC_AUTH_SECRET) {
-        const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(senderId.toString());
+        const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(
+            senderId.toString()
+        );
 
         webrtcSignalToClientMessage.webRtcUserName = username;
         webrtcSignalToClientMessage.webRtcPassword = password;
@@ -46,7 +47,9 @@ eventProcessor.registerPrivateEventProcessor(
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
-            const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(senderId.toString());
+            const { webRtcUserName: username, webRtcPassword: password } = webRTCCredentialsService.generateCredentials(
+                senderId.toString()
+            );
             webrtcSignalToClientMessage.webRtcUserName = username;
             webrtcSignalToClientMessage.webRtcPassword = password;
         }
@@ -58,5 +61,3 @@ eventProcessor.registerPrivateEventProcessor(
         };
     }
 );
-
-
