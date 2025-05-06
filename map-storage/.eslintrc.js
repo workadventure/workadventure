@@ -41,6 +41,7 @@ module.exports = {
     "prefer-promise-reject-errors": "error",
 
     "rxjs/no-ignored-subscription": "error",
+    "@typescript-eslint/consistent-type-imports": "error",
   },
   "settings": {
     "typescript": true,

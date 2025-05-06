@@ -3,25 +3,25 @@ import * as Sentry from "@sentry/node";
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
-import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
+import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services.ts";
 import passport from "passport";
 import bodyParser from "body-parser";
-import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
-import { mapStorageServer } from "./MapStorageServer";
-import { mapsManager } from "./MapsManager";
-import { proxyFiles } from "./FileFetcher/FileFetcher";
-import { UploadController } from "./Upload/UploadController";
-import { fileSystem } from "./fileSystem";
-import { passportStrategies } from "./Services/Authentication";
-import { mapPathUsingDomain } from "./Services/PathMapper";
-import { ValidatorController } from "./Upload/ValidatorController";
+import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler.ts";
+import { mapStorageServer } from "./MapStorageServer.ts";
+import { mapsManager } from "./MapsManager.ts";
+import { proxyFiles } from "./FileFetcher/FileFetcher.ts";
+import { UploadController } from "./Upload/UploadController.ts";
+import { fileSystem } from "./fileSystem.ts";
+import { passportStrategies } from "./Services/Authentication.ts";
+import { mapPathUsingDomain } from "./Services/PathMapper.ts";
+import { ValidatorController } from "./Upload/ValidatorController.ts";
 import {
     SENTRY_DSN,
     SENTRY_RELEASE,
     WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
-} from "./Enum/EnvironmentVariable";
+} from "./Enum/EnvironmentVariable.ts";
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -45,9 +45,9 @@ if (SENTRY_DSN != undefined) {
         console.error(`[${new Date().toISOString()}] Error while initializing Sentry`, e);
     }
 }
-import { MapListService } from "./Services/MapListService";
-import { WebHookService } from "./Services/WebHookService";
-import { PingController } from "./Upload/PingController";
+import { MapListService } from "./Services/MapListService.ts";
+import { WebHookService } from "./Services/WebHookService.ts";
+import { PingController } from "./Upload/PingController.ts";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
