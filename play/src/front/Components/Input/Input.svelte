@@ -31,12 +31,12 @@
     export let onFocusin = (event: FocusEvent) => {};
     export let onFocusout = (event: FocusEvent) => {};
     export let extraInputClasses: string | undefined = undefined;
+    export let maxlength: number | undefined = 524288; // for text input only
 
     export function focusInput() {
         inputElement.focus();
     }
     let inputElement: HTMLInputElement;
-
 
     const SLOTS = $$slots;
 
@@ -98,6 +98,7 @@
                 on:blur={onBlur}
                 {disabled}
                 bind:this={inputElement}
+                {maxlength}
             />
 
             {#if errorHelperText}

@@ -26,7 +26,7 @@ import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
-import { SpeechBubble } from "./SpeechBubble";
+// import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
 import Text = Phaser.GameObjects.Text;
@@ -401,32 +401,32 @@ export abstract class Character extends Container implements OutlineableInterfac
                 const bubbleElement = document.createElement("div");
                 bubbleElement.textContent = text;
                 bubbleElement.classList.add(
-                    'absolute',
-                    'bg-white/30',
-                    'backdrop-blur',
-                    'rounded-full',
-                    'py-1',
-                    'px-4',
-                    'text-xs',
-                    'max-w-xs',
-                    'break-words',
-                    'speech-bubble',
-                    'text-black'
+                    "absolute",
+                    "bg-white/50",
+                    "backdrop-blur-[1px]",
+                    "rounded-full",
+                    "py-1",
+                    "px-4",
+                    "text-xxs",
+                    "max-w-xs",
+                    "break-words",
+                    "say-bubble",
+                    "text-black"
                 );
                 this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 50, bubbleElement);
                 this.add(this.bubble);
                 break;
             }
             case SayMessageType.ThinkingCloud: {
-                this.bubble = new ThinkingCloud(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, {
+                const thinkElement = new ThinkingCloud({
                     text: text, //"Hello, I'm thinking about something quite long. It should wrap nicely!",
                     maxWidth: 200,
                     fontSize: 11,
                     cornerRadius: 10,
-                    padding: 0,
-                    fillAlpha: 1,
+                    padding: 12,
                     fillColor: 0xffffff,
-                });
+                }).getElement();
+                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 60, thinkElement);
                 this.add(this.bubble);
                 break;
             }

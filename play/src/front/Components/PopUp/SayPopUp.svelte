@@ -7,11 +7,10 @@
     import Select from "../Input/Select.svelte";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
-    import PopUpContainer from "./PopUpContainer.svelte";
     import Input from "../Input/Input.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import PopUpContainer from "./PopUpContainer.svelte";
     import { IconSend } from "@wa-icons";
-
 
     let message = "";
     let messageInput: Input;
@@ -114,12 +113,7 @@
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
     <div class="flex flex-row w-full items-center gap-2 min-w-80">
-        <ButtonClose
-            on:click={closeBanner}
-            bgColor="bg-constrast"
-            hoverColor="bg-white/20"
-            size="md"
-        />
+        <ButtonClose on:click={closeBanner} bgColor="bg-constrast" hoverColor="bg-white/20" size="md" />
         <div class="flex-none w-24">
             <Select
                 bind:value={type}
@@ -136,14 +130,13 @@
                 extraSelectClass="!mb-0"
             />
         </div>
-        <div class="flex flex-row gap-2"
-        >
-<!--            <MessageInput-->
-<!--                onKeyDown={sendMessageOrEscapeLine}-->
-<!--                bind:message-->
-<!--                bind:messageInput-->
-<!--                inputClass="message-input flex-grow !m-0 px-1 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"-->
-<!--            />-->
+        <div class="flex flex-row gap-2">
+            <!--            <MessageInput-->
+            <!--                onKeyDown={sendMessageOrEscapeLine}-->
+            <!--                bind:message-->
+            <!--                bind:messageInput-->
+            <!--                inputClass="message-input flex-grow !m-0 px-1 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"-->
+            <!--            />-->
 
             <Input
                 onKeyDown={sendMessageOrEscapeLine}
@@ -151,24 +144,30 @@
                 bind:this={messageInput}
                 placeholder={$LL.say.placeholder()}
                 extraInputClasses="!mb-0"
-                />
-            <div class="h-10 {message.length > 0 ? 'w-10': 'w-0' } aspect-square bg-secondary rounded flex items-center justify-center cursor-pointer transition-all">
-                <IconSend/>
-            </div>
+                maxlength={100}
+            />
+            <button
+                class="h-10 {message.length > 0
+                    ? 'w-10'
+                    : 'w-0'} p-0 aspect-square bg-secondary rounded flex items-center justify-center cursor-pointer transition-all"
+                on:click={sendMessageOrEscapeLine}
+            >
+                <IconSend />
+            </button>
         </div>
     </div>
-<!--    <div slot="buttons">-->
-<!--            <button-->
-<!--                class="btn btn-secondary w-full !p-0 h-8 items-center btn-sm z-50 pointer-events-auto"-->
-<!--                on:click={sendMessageOrEscapeLine}-->
-<!--            >-->
-<!--                {$LL.say.send()}-->
-<!--                {#if type === "say"}-->
-<!--                    {$LL.say.type.say()}-->
-<!--                {:else}-->
-<!--                    {$LL.say.type.think()}-->
-<!--                {/if}-->
-<!--                {$LL.say.bubble()}-->
-<!--            </button>-->
-<!--    </div>-->
+    <!--    <div slot="buttons">-->
+    <!--            <button-->
+    <!--                class="btn btn-secondary w-full !p-0 h-8 items-center btn-sm z-50 pointer-events-auto"-->
+    <!--                on:click={sendMessageOrEscapeLine}-->
+    <!--            >-->
+    <!--                {$LL.say.send()}-->
+    <!--                {#if type === "say"}-->
+    <!--                    {$LL.say.type.say()}-->
+    <!--                {:else}-->
+    <!--                    {$LL.say.type.think()}-->
+    <!--                {/if}-->
+    <!--                {$LL.say.bubble()}-->
+    <!--            </button>-->
+    <!--    </div>-->
 </PopUpContainer>

@@ -692,7 +692,12 @@ div.emoji-picker {
     left: -12px;
 }
 
-.speech-bubble::after {
+
+say-bubble{
+    font-size: 8px
+}
+
+.say-bubble::after {
     content: '';
     position: absolute;
     bottom: -10px;
@@ -700,5 +705,75 @@ div.emoji-picker {
     transform: translateX(-50%);
     border-width: 5px;
     border-style: solid;
-    border-color: rgba(255, 255, 255, 0.30) transparent transparent transparent;
+    border-color: rgba(255, 255, 255, 0.50) transparent transparent transparent;
+}
+
+.thinking-cloud {
+    position: relative;
+    display: inline-block;
+    opacity: 0.8 !important;
+    border-radius: 20px; 
+    padding: 20px;
+    max-width: 150px; 
+    word-wrap: break-word;
+    padding: 12px;
+}
+
+.thinking-cloud::before {
+    content: '';
+    position: absolute;
+    border-radius: 28px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    filter: blur(5px);
+    backdrop-filter: blur(12px);
+    background-color: rgb(255, 255, 255);
+    z-index: -1;
+    opacity: 0.8;
+    filter: url(#cloudy-filter);
+}
+
+.thinking-text {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #000000;
+    text-align: center;
+}
+
+.thinking-tail {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.circle {
+    background-color: #ffffff;
+    opacity: 0.8; 
+    filter: blur(0.5px); 
+    border-radius: 50%;
+}
+
+.circle1 {
+    width: 10px;
+    height: 10px;
+    transform: translateX(calc(10px + 8px));
+}
+
+.circle2 {
+    width: 8px;
+    height: 8px;
+    transform: translateX(calc(10px + 5px));
+}
+
+.circle3 {
+    width: 6px;
+    height: 6px;
+    transform: translateX(calc(10px));
 }
