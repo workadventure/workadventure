@@ -1,3 +1,5 @@
+import { asError } from "catch-unknown";
+
 export type DraftMessage = {
     id: string;
     roomId: string;
@@ -62,7 +64,7 @@ class DraftMessageService {
 
             request.onerror = (event) => {
                 console.error("Error while loading draft:", event);
-                reject(event);
+                reject(asError(event));
             };
         });
     }
