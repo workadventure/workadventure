@@ -162,10 +162,6 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "map editor" feature is enabled or not on this room (true if the map comes from the map-storage)',
         example: true,
     }),
-    loadingCowebsiteLogo: extendApi(z.string().nullable().optional(), {
-        description: "The URL of the image to be used on the cowebsite loading page",
-        example: "https://example.com/logo.gif",
-    }),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the loading page",

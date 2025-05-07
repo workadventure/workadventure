@@ -18,7 +18,7 @@
     let startValidating = false;
     let errorName = "";
 
-    let logo = gameManager.currentStartedRoom.loadingLogo ?? logoImg;
+    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
     const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
@@ -92,7 +92,12 @@
 </script>
 
 <section class="self-center absolute z-30 top-0 text-center w-full block">
-    <img src={logo} alt="logo" class="main-logo mt-8" style="width: 333px;" />
+    <img
+        src={logo}
+        alt="logo"
+        class="main-logo mt-8 {gameManager.currentStartedRoom.loginSceneLogo ? 'max-h-[200px] object-cover' : ''}"
+        style="width: 333px;"
+    />
 </section>
 
 <form

@@ -5,7 +5,7 @@
     import bgMap from "../images/map-exemple.png";
     import defaultLoader from "../images/Workadventure.gif";
 
-    const logo = gameManager.currentStartedRoom.loginSceneLogo ?? defaultLoader;
+    const logo = gameManager.currentStartedRoom.loadingLogo ?? defaultLoader;
     const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
     const primary = gameManager.currentStartedRoom.primaryColor ?? "#4056F6";

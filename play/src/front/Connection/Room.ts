@@ -35,7 +35,6 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
-    private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _backgroundSceneImage: string | undefined;
@@ -167,7 +166,6 @@ export class Room {
                 }
                 this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? OPID_WOKA_NAME_POLICY;
                 this._canReport = data.canReport ?? false;
-                this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._backgroundSceneImage = data.backgroundSceneImage ?? undefined;
@@ -294,10 +292,6 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
-    }
-
-    get loadingCowebsiteLogo(): string | undefined {
-        return this._loadingCowebsiteLogo;
     }
 
     get opidWokaNamePolicy(): OpidWokaNamePolicy | undefined {
