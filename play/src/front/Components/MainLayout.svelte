@@ -101,7 +101,7 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-left: {marginLeft}px;"
+    style="padding-inline-start: {marginLeft}px;"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
