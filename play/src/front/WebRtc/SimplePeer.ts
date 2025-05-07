@@ -305,6 +305,7 @@ export class SimplePeer {
         const controller = this.pendingConnections.get(userId);
         if (controller) {
             controller.abort();
+            return;
         }
 
         try {
