@@ -15,6 +15,7 @@
     import { ArrowAction } from "../../Utils/svelte-floatingui";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
+    import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
     let emoteDataLoading = false;
 
@@ -32,6 +33,9 @@
             focusElement(selected);
         }
     }
+
+    let showSayBubbleTooltip = false;
+    let showThinkBubbleTooltip = false;
 
     let closeFloatingUi: (() => void) | undefined = undefined;
 
@@ -144,9 +148,9 @@
     }}
 >
     <div
-        class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 md:flex-row"
+        class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md px-1 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300"
     >
-        <div class="flex animate flex-row flex items-center select-none">
+        <div class="flex animate flex-row items-center select-none">
             <div class="py-1 flex">
                 {#each [...$emoteDataStore.keys()] as key, index (index)}
                     <div class="transition-all bottom-action-button divide-x">
@@ -216,6 +220,50 @@
                 </button>
             </div>
             -->
+        </div>
+        <!-- Divider -->
+        <div class="w-full h-[1px] bg-white/10" />
+
+        <div class="px-1 py-2  flex flex-row items-center justify-between">
+            <div class="flex flex-row justify-between gap-2 items-center w-full">
+                <div
+                    class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
+                    on:mouseenter={() => (showSayBubbleTooltip = true)}
+                    on:mouseleave={() => (showSayBubbleTooltip = false)}
+                >
+                    Say Bubble
+                </div>
+                {#if showSayBubbleTooltip}
+                    <div class="absolute top-1/3 left-0 m-auto w-2 h-1">
+                        <HelpTooltip
+                            title={$LL.say.type.say()}
+                            desc="{$LL.say.tooltip.description.say()} "
+                            shortcuts={["enter"]}
+                            delayBeforeAppear={100}
+                            helpMedia="./static/images/say-bubble.png"
+                        />
+                    </div>
+                {/if}
+
+                <div
+                    class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
+                    on:mouseenter={() => (showThinkBubbleTooltip = true)}
+                    on:mouseleave={() => (showThinkBubbleTooltip = false)}
+                >
+                    Think Bubble
+                </div>
+                {#if showThinkBubbleTooltip}
+                    <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
+                        <HelpTooltip
+                            title={$LL.say.type.think()}
+                            desc="{$LL.say.tooltip.description.say()} {$LL.say.tooltip.description.think()}"
+                            shortcuts={["ctrl", "enter"]}
+                            delayBeforeAppear={100}
+                            helpMedia="./static/images/think-bubble.png"
+                        />
+                    </div>
+                {/if}
+            </div>
         </div>
     </div>
     <div use:arrowAction />
