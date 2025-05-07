@@ -43,6 +43,8 @@ export class SimplePeer {
     private lastWebrtcPassword: string | undefined;
     private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
 
+    private pendingConnections: Map<number, AbortController> = new Map();
+
     private readonly _videoPeerAdded = new Subject<VideoPeer>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
 
@@ -158,7 +160,11 @@ export class SimplePeer {
             return;
         }
 
+        this.pendingConnections.set(user.userId, new AbortController());
+
         await this.createPeerConnection(user);
+
+        this.pendingConnections.delete(user.userId);
     }
 
     /**
@@ -186,6 +192,12 @@ export class SimplePeer {
 
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
+
+        const controller = this.pendingConnections.get(user.userId);
+        if (controller && controller.signal.aborted) {
+            this.pendingConnections.delete(user.userId);
+            return null;
+        }
 
         const peer = new VideoPeer(
             user,
@@ -290,6 +302,12 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     private closeConnection(userId: number) {
+        const controller = this.pendingConnections.get(userId);
+        if (controller) {
+            controller.abort();
+            return;
+        }
+
         try {
             const peer = peerStore.getPeer(userId);
             if (peer === undefined) {
