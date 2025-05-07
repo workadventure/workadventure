@@ -204,7 +204,6 @@ export class MatrixChatRoom
             return new MatrixChatMessage(event, this.matrixRoom);
         }
         if (event.getType() === "m.reaction") {
-            console.count(`new reaction :  ${get(this.name)}`);
             this.handleNewMessageReaction(event, messages);
             this.addEventContentInMemory(event);
         }
@@ -352,7 +351,6 @@ export class MatrixChatRoom
                 );
                 return;
             }
-            console.log("👮🏻Messages sans reactions", messages);
             //TODO : voir si reaction arrive avant le message
             // const newMessageReactionMap = new MapStore<string, MatrixChatMessageReaction>();
             // newMessageReactionMap.set(reactionKey, new MatrixChatMessageReaction(this.matrixRoom, event));
@@ -465,7 +463,6 @@ export class MatrixChatRoom
 
     private getReactionEvent(event: MatrixEvent) {
         const relation = event.getRelation();
-        console.log({ relation });
         if (relation) {
             if (relation.rel_type === "m.annotation") {
                 const targetEventId = relation.event_id;
@@ -788,5 +785,21 @@ export class MatrixChatRoom
     }
     public async unban(userID: string): Promise<void> {
         await this.matrixRoom.client.unban(this.id, userID);
+    }
+
+    public async getMessageById(messageId: string): Promise<MatrixChatMessage | undefined> {
+        const message = this.messages.get(messageId);
+        if (message) {
+            return message;
+        }
+        const timeline = await this.matrixRoom.client.getEventTimeline(
+            this.matrixRoom.getUnfilteredTimelineSet(),
+            messageId
+        );
+        const event = timeline?.getEvents().find((ev) => ev.getId() === messageId);
+        if (event) {
+            return new MatrixChatMessage(event, this.matrixRoom);
+        }
+        return;
     }
 }
