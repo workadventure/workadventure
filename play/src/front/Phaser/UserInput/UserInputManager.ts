@@ -84,7 +84,11 @@ export class UserInputManager {
         }
 
         this.enableUserInputsStoreUnsubscribe = enableUserInputsStore.subscribe((enable) => {
-            enable ? this.restoreControls("store") : this.disableControls("store");
+            if (enable) {
+                this.restoreControls("store");
+            } else {
+                this.disableControls("store");
+            }
         });
     }
 

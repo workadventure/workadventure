@@ -228,11 +228,10 @@
             <!--<ActionBar />-->
         </div>
         <ActionBar />
+        {#if $actionsMenuStore}
+            <ActionsMenu />
+        {/if}
     </div>
-
-    {#if $actionsMenuStore}
-        <ActionsMenu />
-    {/if}
 </div>
 
 <style lang="scss">

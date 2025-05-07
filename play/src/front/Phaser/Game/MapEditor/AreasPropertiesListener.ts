@@ -1051,7 +1051,6 @@ export class AreasPropertiesListener {
     }
 
     private handleExitPropertyOnEnter(url: string): void {
-        this.scene;
         this.scene
             .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
             .catch((e) => console.error(e));

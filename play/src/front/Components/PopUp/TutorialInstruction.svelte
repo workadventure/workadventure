@@ -6,7 +6,9 @@
     import { currentBannerIndex } from "../../Stores/PopupStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+    }>();
 
     function goToPreviousBanner() {
         if ($currentBannerIndex === 0) return;

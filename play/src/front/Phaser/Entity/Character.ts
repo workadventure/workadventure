@@ -9,6 +9,7 @@ import {
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
+import { asError } from "catch-unknown";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -116,7 +117,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                                 resolve();
                             })
                             .catch((e) => {
-                                reject(e);
+                                reject(asError(e));
                             });
                     }, 0);
                 });

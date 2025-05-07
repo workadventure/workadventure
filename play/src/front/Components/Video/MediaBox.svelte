@@ -38,7 +38,6 @@
     $: fullScreen = $highlightedEmbedScreen === streamable && $highlightFullScreen;
 </script>
 
-<!-- svelte-ignore missing-declaration -->
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
 <div

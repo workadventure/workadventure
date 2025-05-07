@@ -17,7 +17,9 @@
             ? "h-10 w-10 text-lg"
             : "h-12 w-12 text-2xl";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function handleClick(event: Event) {
         event.preventDefault();

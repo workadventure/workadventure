@@ -38,7 +38,11 @@
 
     let helpActive = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+        mouseenter: void;
+        mouseleave: void;
+    }>();
 
     function handleClick() {
         if (state === "disabled") {

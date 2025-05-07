@@ -57,6 +57,8 @@ import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { WAMSettingsUtils } from "@workadventure/map-editor";
 import { z } from "zod";
+import { ServiceError } from "@grpc/grpc-js";
+import { asError } from "catch-unknown";
 import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -126,7 +128,7 @@ export class SocketManager {
             commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
                 getMapStorageClient().handleUpdateMapToNewestMessage(
                     updateMapToNewestWithKeyMessage,
-                    (err: unknown, message: EditMapCommandsArrayMessage) => {
+                    (err: ServiceError | null, message: EditMapCommandsArrayMessage) => {
                         if (err) {
                             emitError(user.socket, err);
                             reject(err);
@@ -807,17 +809,13 @@ export class SocketManager {
                 }
             }
         } catch (e) {
+            const error = asError(e);
             console.error("An error happened while answering a query:", e);
-            Sentry.captureException(`An error happened while answering a query: ${JSON.stringify(e)}`);
+            Sentry.captureException(`An error happened while answering a query: ${error.message}`);
             answerMessage.answer = {
                 $case: "error",
                 error: {
-                    message:
-                        e !== null && typeof e === "object"
-                            ? e.toString()
-                            : typeof e === "string"
-                            ? e
-                            : "Unknown error",
+                    message: error.message,
                 },
             };
         }
@@ -1309,7 +1307,7 @@ export class SocketManager {
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
         getMapStorageClient().handleUpdateMapToNewestMessage(
             message,
-            (err: unknown, message: EditMapCommandsArrayMessage) => {
+            (err: ServiceError | null, message: EditMapCommandsArrayMessage) => {
                 if (err) {
                     emitError(user.socket, err);
                     throw err;

@@ -21,7 +21,7 @@
     {/each}
 
     {#if typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-        <div class={`rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar`}>
+        <div class="rounded-full h-6 w-6 text-center uppercase text-white bg-gray-400 -ml-1 chatAvatar">
             +{typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
         </div>
     {/if}

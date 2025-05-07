@@ -1,5 +1,9 @@
-import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
-import { availabilityStatusToJSON } from "@workadventure/messages";
+import {
+    AvailabilityStatus,
+    availabilityStatusToJSON,
+    PlayerDetailsUpdatedMessage,
+    UserMovedMessage,
+} from "@workadventure/messages";
 import { Deferred } from "ts-deferred";
 import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
@@ -139,7 +143,7 @@ export class RemotePlayersRepository {
             player.showVoiceIndicator = details.showVoiceIndicator;
             updateStruct.updated.showVoiceIndicator = true;
         }
-        if (details.availabilityStatus !== 0) {
+        if (details.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             player.availabilityStatus = details.availabilityStatus;
             updateStruct.updated.availabilityStatus = true;
         }

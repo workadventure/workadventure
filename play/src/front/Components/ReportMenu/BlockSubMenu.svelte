@@ -22,9 +22,11 @@
             console.error("There is no user to block");
             return;
         }
-        blackListManager.isBlackListed(userUUID)
-            ? blackListManager.cancelBlackList(userUUID)
-            : blackListManager.blackList(userUUID);
+        if (blackListManager.isBlackListed(userUUID)) {
+            blackListManager.cancelBlackList(userUUID);
+        } else {
+            blackListManager.blackList(userUUID);
+        }
         showReportScreenStore.set(userReportEmpty); //close the report menu
     }
 </script>

@@ -457,7 +457,6 @@ describe("MatrixChatConnection", () => {
 
             const matrixChatConnection = await getMatrixConnection(clientPromise);
 
-            //eslint-disable-next-line @typescript-eslint/no-floating-promises
             await expect(matrixChatConnection.createRoom()).rejects.toThrowError("CreateRoomOptions is empty");
         });
 
