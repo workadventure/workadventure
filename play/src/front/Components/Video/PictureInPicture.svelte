@@ -18,6 +18,8 @@
 
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
 
+    /* eslint-disable svelte/no-dom-manipulating */
+
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
             .function()

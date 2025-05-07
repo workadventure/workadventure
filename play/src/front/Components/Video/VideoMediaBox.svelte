@@ -64,6 +64,7 @@
     }
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
     $: videoEnabled = $hasVideoStore;
+    // eslint-disable-next-line svelte/require-store-reactive-access
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     function toggleFullScreen() {
@@ -85,8 +86,7 @@
         if (showUserSubMenu && spaceUser) {
             closeFloatingUi = showFloatingUi(
                 userMenuButton,
-                // See https://github.com/storybookjs/storybook/issues/21884
-                // @ts-ignore
+                // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
                 ActionMediaBox,
                 {
                     embedScreen,
@@ -117,8 +117,8 @@
 
     // When the status is "connecting", do not show the video for 1 second. This is to avoid a visual glitch.
     // Most of the time, the connection is established in less than 1 second, so we do not want to show the loading spinner.
-    $: {
-        if ($statusStore === "connecting") {
+    const unsubscribeStatusStore = statusStore.subscribe((status) => {
+        if (status === "connecting") {
             showAfterDelay = false;
             if (connectingTimer) clearTimeout(connectingTimer);
             connectingTimer = setTimeout(() => {
@@ -131,7 +131,7 @@
                 connectingTimer = null;
             }
         }
-    }
+    });
 
     function highlightPeer(peer: Streamable) {
         highlightedEmbedScreen.highlight(peer);
@@ -142,6 +142,7 @@
     onDestroy(() => {
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
+        unsubscribeStatusStore?.();
     });
 </script>
 

@@ -16,11 +16,11 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
 
     res.bodyStream = function () {
         const stream = new Readable();
-        stream._read = noOp; // eslint-disable-line @typescript-eslint/unbound-method
+        stream._read = noOp;
 
         this.onData((ab: ArrayBuffer, isLast: boolean) => {
             // uint and then slicing is bit faster than slice and then uint
-            stream.push(new Uint8Array(ab.slice((ab as any).byteOffset, ab.byteLength))); // eslint-disable-line @typescript-eslint/no-explicit-any
+            stream.push(new Uint8Array(ab.slice((ab as any).byteOffset, ab.byteLength)));
             if (isLast) {
                 stream.push(null);
             }

@@ -104,7 +104,10 @@
         { value: "xr-spatial-tracking", label: "xr-spatial-tracking", created: undefined },
     ];
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: string | null | undefined;
+        close: undefined;
+    }>();
 
     function shouldDisplayAdvancedOption(): boolean {
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);

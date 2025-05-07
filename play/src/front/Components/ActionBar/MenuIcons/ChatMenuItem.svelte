@@ -17,7 +17,9 @@
 
     const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function toggleChat() {
         if (!$chatVisibilityStore) {

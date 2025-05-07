@@ -1,4 +1,4 @@
-import { AreaData, AreaDescriptionPropertyData } from "@workadventure/map-editor";
+import { AreaData } from "@workadventure/map-editor";
 
 export interface MapEditorArea {
     id: string;
@@ -12,9 +12,7 @@ export interface MapEditorArea {
 }
 
 export function toMapEditorArea(area: AreaData): MapEditorArea {
-    const descriptionProperty = area.properties.find((property) => property.type === "areaDescriptionProperties") as
-        | AreaDescriptionPropertyData
-        | undefined;
+    const descriptionProperty = area.properties.find((property) => property.type === "areaDescriptionProperties");
     return {
         id: area.id,
         name: area.name,

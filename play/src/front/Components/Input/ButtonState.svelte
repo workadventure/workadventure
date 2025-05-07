@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { asError } from "catch-unknown";
     import { IconCircleX, IconInfoCircle } from "@wa-icons";
 
     export let promise: () => Promise<string>;
@@ -18,7 +19,7 @@
             })
             .catch((result) => {
                 state = "error";
-                finalText = result.toString();
+                finalText = asError(result).message;
             })
             .finally(() => {
                 setTimeout(() => {

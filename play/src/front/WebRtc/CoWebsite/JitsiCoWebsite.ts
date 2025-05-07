@@ -34,8 +34,8 @@ export interface JitsiOptions {
 
 export interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
-    addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
-    removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
+    addListener: (type: string, callback: Function) => void; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
+    removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/no-unsafe-function-type
     getParticipantsInfo(): { displayName: string; participantId: string }[];
     dispose: () => void;
 }

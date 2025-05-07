@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { ComponentType, onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -18,7 +18,7 @@
 
     onMount(() => {
         isVisible = true;
-        if (userIsAdminStore) {
+        if ($userIsAdminStore) {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings);
         } else {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone);
@@ -29,7 +29,7 @@
         isVisible = false;
     });
 
-    function getCurrentComponent(): typeof Megaphone | typeof RoomSettings {
+    function getCurrentComponent(): ComponentType {
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
@@ -77,7 +77,7 @@
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.room.title()}</span>
-                                <IconChevronRight class={`-mr-2`} />
+                                <IconChevronRight class="-mr-2" />
                             </li>
                         {/if}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -22,7 +22,9 @@
 
     const debug = Debug("CenteredVideo");
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        selectOutputAudioDeviceError: void;
+    }>();
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
@@ -289,7 +291,7 @@
     bind:clientHeight={containerHeight}
 >
     <div
-        class={"absolute overflow-hidden border-solid rounded-lg"}
+        class="absolute overflow-hidden border-solid rounded-lg"
         class:w-full={!videoEnabled}
         class:h-full={!videoEnabled}
         class:border-transparent={!isTalking}

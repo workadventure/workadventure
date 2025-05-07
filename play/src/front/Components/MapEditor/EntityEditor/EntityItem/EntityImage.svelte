@@ -24,7 +24,9 @@
         }
     }
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onImageLoad: HTMLImageElement;
+    }>();
 </script>
 
 {#if imageRetry}
