@@ -67,7 +67,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
 
     await chatUtils.open(userBob, false);
     await chatUtils.slideToUsers(userBob);
-    await chatUtils.UL_sendMessage(userBob, "Admin1", "Hello Alice");
+    await chatUtils.UL_sendMessage(userBob, "Admin1");
 
     await expect(userBob.getByTestId("roomName")).toHaveText(
       "John Doe"
@@ -90,14 +90,6 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await chatUtils.open(userUserLogin1, false);
     await chatUtils.slideToUsers(userUserLogin1);
     // Click on chat button
-    await userUserLogin1.getByTestId(`send-message-Alice`).click();
-
-    // Check that the modal user not connected is opened
-    await expect(userUserLogin1.getByText('User not connected 💬')).toBeVisible();
-    // From the modal click on the button to walk to the user
-    await userUserLogin1.getByRole('button', { name: 'Call Alice' }).click();
-
-    // Check that the user is in bubble discussion to see the media's action button
-    await expect(userUserLogin1.locator('#cameras-container .camera-box .video-media-box .user-menu-btn')).toBeVisible({timeout: 30_000});
+    await expect(userUserLogin1.getByTestId(`send-message-Alice`)).toBeDisabled();
   });
 });
