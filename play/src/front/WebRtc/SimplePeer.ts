@@ -42,8 +42,8 @@ export class SimplePeer {
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
     private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
-    private pendingPeerConnections: Set<number> = new Set();
-    private pendingDisconnects: Set<number> = new Set();
+
+    private pendingConnections: Map<number, AbortController> = new Map();
 
     private readonly _videoPeerAdded = new Subject<VideoPeer>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -159,16 +159,12 @@ export class SimplePeer {
         if (!user.initiator) {
             return;
         }
-        this.pendingPeerConnections.add(user.userId);
+
+        this.pendingConnections.set(user.userId, new AbortController());
 
         await this.createPeerConnection(user);
 
-        this.pendingPeerConnections.delete(user.userId);
-
-        if (this.pendingDisconnects.has(user.userId)) {
-            this.pendingDisconnects.delete(user.userId);
-            this.closeConnection(user.userId);
-        }
+        this.pendingConnections.delete(user.userId);
     }
 
     /**
@@ -197,7 +193,9 @@ export class SimplePeer {
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 
-        if (this.pendingDisconnects.has(user.userId)) {
+        const controller = this.pendingConnections.get(user.userId);
+        if (controller && controller.signal.aborted) {
+            this.pendingConnections.delete(user.userId);
             return null;
         }
 
@@ -304,9 +302,9 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     private closeConnection(userId: number) {
-        if (this.pendingPeerConnections.has(userId)) {
-            this.pendingDisconnects.add(userId);
-            return;
+        const controller = this.pendingConnections.get(userId);
+        if (controller) {
+            controller.abort();
         }
 
         try {
