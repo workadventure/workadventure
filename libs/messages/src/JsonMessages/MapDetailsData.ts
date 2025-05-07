@@ -57,7 +57,7 @@ const MetaTagsData = z.object({
     }),
     provider: extendApi(z.string().optional().default("WorkAdventure"), {
         description: "Provider of the webpage",
-        example: "WorkAdventure SAAS plateform",
+        example: "WorkAdventure SAAS platform",
     }),
     favIcons: extendApi(isMetaTagFavicon.array().optional(), {
         description: "Icon to load inside the index.html and on the manifest",
@@ -166,7 +166,6 @@ export const isMapDetailsData = z.object({
         description: "The URL of the image to be used on the cowebsite loading page",
         example: "https://example.com/logo.gif",
     }),
-    miniLogo: z.string().nullable().optional(),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the loading page",
@@ -195,6 +194,10 @@ export const isMapDetailsData = z.object({
         description:
             "The url of the page where the user can see the price to upgrade and can use the features he wants in the future.",
         example: "https://example.com/pricing",
+    }),
+    enableMatrixChat: extendApi(z.boolean().optional(), {
+        description: "Whether the matrix chat is enabled or not on this room",
+        example: true,
     }),
     enableChat: extendApi(z.boolean().optional(), {
         description: "Whether the chat is enabled or not on this room",
@@ -225,6 +228,10 @@ export const isMapDetailsData = z.object({
         description: "The background color used on configuration scenes (enter your name, select a woka, etc...) (WIP)",
         example: "#330033",
     }),
+    primaryColor: extendApi(z.string().nullable().optional(), {
+        description: "The primary color used on configuration scenes (enter your name, select a woka, etc...)",
+        example: "#330033",
+    }),
     reportIssuesUrl: extendApi(z.string().nullable().optional(), {
         description: "The URL of the page to report issues (in the 'Report issues' menu). If this parameter is null, report issues menu is hidden",
         example: "https://my-report-issues-form.com/issues",
@@ -239,6 +246,9 @@ export const isMapDetailsData = z.object({
     }),
     modules: extendApi(z.array(z.string()).optional().nullable(), {
         description: "List of external-modules to load",
+    }),
+    isLogged: extendApi(z.boolean().optional(), {
+        description: "True if the UUID passed in parameter belongs to a legitimate user. Return false for anonymous users.",
     }),
 });
 

@@ -1,26 +1,22 @@
 import { expect, test } from '@playwright/test';
-import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
 import {publicTestMapUrl} from "./utils/urls";
+import { getPage } from './utils/auth';
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Modal', () => {
-    test('test', async ({ page }, { project }) => {
-        // Skip test for mobile device
-        if(project.name === "mobilechromium") {
+    test.beforeEach(async ({ page }) => {
+        if (isMobile(page)) {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
         }
-      
-        // Go to
-        await page.goto(
+    });
+    test('test', async ({ browser }) => {
+        const page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "banner_script")
         );
-
-        // Connection with Alice
-        await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
         // Create banner with scripting API
         await evaluateScript(page, async () => {
             return WA.ui.banner.openBanner({
@@ -45,5 +41,7 @@ test.describe('Modal', () => {
 
         // Check the component of the Webpage
         await expect(page.locator('#modalIframe')).toHaveCount(0);
+        await page.close();
+        await page.context().close();
     });
 });

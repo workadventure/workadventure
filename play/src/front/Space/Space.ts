@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
 import { PrivateEvent, PublicEvent, SpaceEvent, UpdateSpaceMetadataMessage } from "@workadventure/messages";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
-import { SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
+import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
@@ -13,6 +13,8 @@ export class Space implements SpaceInterface {
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
+    private _onLeaveSpace = new Subject<void>();
+    public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -70,12 +72,14 @@ export class Space implements SpaceInterface {
         return spaceFilter;
     }
 
-    stopWatching(spaceFilter: SpaceFilterInterface): void {
+    // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).
+    // This is mildly an issue because it is unlikely we will need to create many filters (we have only 2 so far)
+    /*stopWatching(spaceFilter: SpaceFilterInterface): void {
         const filterName = spaceFilter.getName();
         const filter = this.filters.get(filterName);
         if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
         this.filters.delete(filterName);
-    }
+    }*/
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
@@ -126,10 +130,9 @@ export class Space implements SpaceInterface {
         const subject = this.publicEventsObservables[spaceInnerEvent.$case];
         if (subject) {
             subject.next({
-                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 spaceName: message.spaceName,
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 sender,
                 ...spaceInnerEvent,
             });
@@ -155,10 +158,9 @@ export class Space implements SpaceInterface {
         const subject = this.privateEventsObservables[spaceInnerEvent.$case];
         if (subject) {
             subject.next({
-                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 spaceName: message.spaceName,
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 sender,
                 ...spaceInnerEvent,
             });
@@ -189,6 +191,8 @@ export class Space implements SpaceInterface {
         for (const subscription of Object.values(this.privateEventsObservables)) {
             subscription.complete();
         }
+        this._onLeaveSpace.next();
+        this._onLeaveSpace.complete();
     }
 
     /**

@@ -24,24 +24,26 @@
         }
     }
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onImageLoad: HTMLImageElement;
+    }>();
 </script>
 
 {#if imageRetry}
-    <div class="tw-flex tw-items-center tw-justify-center tw-flex-1" data-testid="entityImageLoader">
-        <IconLoader class="tw-animate-spin" />
+    <div class="flex items-center justify-center flex-1" data-testid="entityImageLoader">
+        <IconLoader class="animate-spin" />
     </div>
 {/if}
 
 {#if imageError}
-    <div class="tw-flex tw-items-center tw-justify-center tw-flex-1" data-testid="entityImageError">
+    <div class="flex items-center justify-center flex-1" data-testid="entityImageError">
         <IconPhotoOff />
     </div>
 {/if}
 
 <img
     loading="lazy"
-    class={`${classNames} ${imageRetry || imageError ? "tw-invisible tw-flex-[0_1_0]" : "tw-visible"}`}
+    class={`${classNames} ${imageRetry || imageError ? "invisible flex-[0_1_0]" : "visible"}`}
     style="image-rendering: pixelated"
     src={imageSource}
     alt={imageAlt}

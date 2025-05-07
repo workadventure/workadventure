@@ -9,8 +9,10 @@ import {
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
+import { Subject } from "rxjs";
+import { asError } from "catch-unknown";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
+import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -33,8 +35,9 @@ import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
-import { setCurrentLocale } from "../../i18n/locales";
+import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { openChatRoom } from "../Chat/Utils";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -43,8 +46,7 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
-
-const enum defautlNativeIntegrationAppName {
+export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
     GOOGLE_DRIVE = "Google Drive",
@@ -80,6 +82,9 @@ class ConnectionManager {
     private _cardsToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
+
+    private readonly _roomConnectionStream = new Subject<RoomConnection>();
+    public readonly roomConnectionStream = this._roomConnectionStream.asObservable();
 
     get unloading() {
         return this._unloading;
@@ -153,7 +158,13 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
 
-        gameManager.logout().finally(() => window.location.assign(redirectUrl));
+        gameManager
+            .logout()
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            })
+            .finally(() => window.location.assign(redirectUrl));
     }
 
     /**
@@ -334,6 +345,15 @@ class ConnectionManager {
                         } else if (response.isCompanionTextureValid === false) {
                             nextScene = "selectCompanionScene";
                         }
+
+                        const chatRoomId = urlManager.getHashParameter("chatRoomId");
+
+                        if (chatRoomId) {
+                            openChatRoom(chatRoomId).catch((err) => {
+                                console.error("Unable to open chat room or establish chat connection", err);
+                                Sentry.captureException(err);
+                            });
+                        }
                     }
                 } catch (err) {
                     if (isAxiosError(err) && err.response?.status === 401) {
@@ -387,9 +407,6 @@ class ConnectionManager {
         }
 
         this.serviceWorker = new _ServiceWorker();
-
-        // add report issue menu
-        subMenusStore.addReportIssuesMenu();
 
         return Promise.resolve({
             room: this._currentRoom,
@@ -445,7 +462,7 @@ class ConnectionManager {
 
             connection.onConnectError((error: object) => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(error);
+                reject(asError(error));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -557,7 +574,7 @@ class ConnectionManager {
                         this._applications.push(app);
                     }
                 }
-
+                this._roomConnectionStream.next(connection);
                 resolve(connect);
             });
         }).catch((err) => {
@@ -571,7 +588,7 @@ class ConnectionManager {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     console.info(
-                        "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
+                        "[ConnectionManager] connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
                         characterTextureIds,
@@ -581,6 +598,7 @@ class ConnectionManager {
                         availabilityStatus,
                         lastCommandId
                     );
+
                     void this.connectToRoomSocket(
                         roomUrl,
                         name,
@@ -590,7 +608,10 @@ class ConnectionManager {
                         companionTextureId,
                         availabilityStatus,
                         lastCommandId
-                    ).then((connection) => resolve(connection));
+                    ).then((connection) => {
+                        this._roomConnectionStream.next(connection.connection);
+                        resolve(connection);
+                    });
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });
@@ -687,8 +708,12 @@ class ConnectionManager {
         return response;
     }
 
-    async saveName(name: string): Promise<void> {
-        if (hasCapability("api/save-name") && this.authToken !== undefined) {
+    async saveName(name: string): Promise<boolean> {
+        if (
+            hasCapability("api/save-name") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-name",
                 {
@@ -701,11 +726,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveTextures(textures: string[]): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveTextures(textures: string[]): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-textures",
                 {
@@ -718,11 +750,18 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 
-    async saveCompanionTexture(texture: string | null): Promise<void> {
-        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+    async saveCompanionTexture(texture: string | null): Promise<boolean> {
+        if (
+            hasCapability("api/save-textures") &&
+            this.authToken !== undefined &&
+            (this.currentRoom?.isLogged || !this.currentRoom)
+        ) {
             await axiosToPusher.post(
                 "save-companion-texture",
                 {
@@ -735,6 +774,9 @@ class ConnectionManager {
                     },
                 }
             );
+            return true;
+        } else {
+            return false;
         }
     }
 

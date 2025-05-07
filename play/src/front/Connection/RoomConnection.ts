@@ -1,4 +1,5 @@
 import axios from "axios";
+import Debug from "debug";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
@@ -252,7 +253,7 @@ export class RoomConnection implements RoomConnection {
      */
     public constructor(
         token: string | null,
-        roomUrl: string,
+        private roomUrl: string,
         name: string,
         characterTextureIds: string[],
         position: PositionInterface,
@@ -266,7 +267,7 @@ export class RoomConnection implements RoomConnection {
         if (!url.endsWith("/")) {
             url += "/";
         }
-        url += "room";
+        url += "ws/room";
         url += "?roomId=" + encodeURIComponent(roomUrl);
         if (token) {
             url += "&token=" + encodeURIComponent(token);
@@ -290,7 +291,7 @@ export class RoomConnection implements RoomConnection {
         }
         url += "&version=" + apiVersionHash;
         url += "&chatID=" + (localUserStore.getChatId() ?? "");
-        url += "&roomName=" + gameManager.currentStartedRoom.roomName ?? "";
+        url += "&roomName=" + (gameManager.currentStartedRoom.roomName ?? "");
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -464,8 +465,6 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             default: {
-                                // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                                //@ts-ignore
                                 const _exhaustiveCheck: never = subMessage;
                             }
                         }
@@ -505,7 +504,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    this.canEdit = roomJoinedMessage.canEdit || this.isAdmin();
+                    this.canEdit = roomJoinedMessage.canEdit;
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it
@@ -721,7 +720,6 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    //@ts-ignore
                     const _exhaustiveCheck: never = message;
                 }
             }
@@ -915,6 +913,10 @@ export class RoomConnection implements RoomConnection {
         return this.userId;
     }
 
+    public getSpaceUserId(): string {
+        return this.roomUrl + "_" + this.getUserId();
+    }
+
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
         this.send({
             message: {
@@ -1085,6 +1087,19 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorModifyArea(commandId: string, config: AtLeast<AreaData, "id">): void {
+        // We need to round the values because previous versions of WorkAdventure saved them as floats
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1142,6 +1157,18 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMapEditorCreateArea(commandId: string, config: AreaData): void {
+        if (config.x !== undefined) {
+            config.x = Math.round(config.x);
+        }
+        if (config.y !== undefined) {
+            config.y = Math.round(config.y);
+        }
+        if (config.width !== undefined) {
+            config.width = Math.round(config.width);
+        }
+        if (config.height !== undefined) {
+            config.height = Math.round(config.height);
+        }
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1481,7 +1508,7 @@ export class RoomConnection implements RoomConnection {
                 updateSpaceUserMessage: {
                     spaceName,
                     user: SpaceUser.fromPartial({
-                        id: userId,
+                        spaceUserId: this.getSpaceUserId(),
                         ...spaceUser,
                     }),
                     updateMask: generateFieldMask(spaceUser),
@@ -1581,16 +1608,26 @@ export class RoomConnection implements RoomConnection {
     }
 
     public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
-        const answer = await this.query({
-            $case: "oauthRefreshTokenQuery",
-            oauthRefreshTokenQuery: {
-                tokenToRefresh,
-            },
-        });
-        if (answer.$case !== "oauthRefreshTokenAnswer") {
-            throw new Error("Unexpected answer");
+        try {
+            const answer = await this.query({
+                $case: "oauthRefreshTokenQuery",
+                oauthRefreshTokenQuery: {
+                    tokenToRefresh,
+                },
+            });
+            if (answer.$case !== "oauthRefreshTokenAnswer") {
+                throw new Error("Unexpected answer");
+            }
+            return answer.oauthRefreshTokenAnswer;
+        } catch (error) {
+            // FIWME: delete me when the fresh token query and answer are stable
+            Debug(
+                `RoomConnection => getOauthRefreshToken => Error getting oauth refresh token: ${
+                    (error as Error).message
+                }`
+            );
+            throw error;
         }
-        return answer.oauthRefreshTokenAnswer;
     }
 
     public emitUpdateChatId(email: string, chatId: string) {
@@ -1673,7 +1710,7 @@ export class RoomConnection implements RoomConnection {
     public emitPrivateSpaceEvent(
         spaceName: string,
         spaceEvent: NonNullable<PrivateSpaceEvent["event"]>,
-        receiverUserId: number
+        receiverUserId: string
     ): void {
         this.send({
             message: {

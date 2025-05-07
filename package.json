@@ -12,6 +12,7 @@
     "back",
     "map-storage",
     "libs/*",
+    "libs/room-api-clients/room-api-client-js",
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"

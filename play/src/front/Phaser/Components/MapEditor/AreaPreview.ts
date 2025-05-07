@@ -9,6 +9,7 @@ import _ from "lodash";
 import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
 import { CopyAreaEventData } from "../../Game/GameMap/EntitiesManager";
+import { SpeechDomElement } from "../../Entity/SpeechDomElement";
 import { SizeAlteringSquare, SizeAlteringSquareEvent, SizeAlteringSquarePosition as Edge } from "./SizeAlteringSquare";
 
 export enum AreaPreviewEvent {
@@ -37,6 +38,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private shiftKey?: Phaser.Input.Keyboard.Key;
     private ctrlKey?: Phaser.Input.Keyboard.Key;
     private propertiesIcon: GameObjects.Image[] = [];
+
+    private speechDomElement: SpeechDomElement | null = null;
 
     constructor(
         scene: Phaser.Scene,
@@ -93,14 +96,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public get description(): string | undefined {
         const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
             (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
             (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.searchable;
     }
 
@@ -131,6 +134,9 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.showPropertiesIcon(value);
         if (!value) {
             this.showSizeAlteringSquares(false);
+            this.destroyText();
+        } else {
+            this.playText();
         }
         this.emit(AreaPreviewEvent.UpdateVisibility, value);
         return this;
@@ -184,6 +190,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public destroy(): void {
         super.destroy();
         this.squares.forEach((square) => square.destroy());
+        this.destroyText();
     }
 
     public getPosition(): { x: number; y: number } {
@@ -267,10 +274,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 counter++;
             }
         }
-        this.x = this.areaData.x + this.areaData.width * 0.5;
-        this.y = this.areaData.y + this.areaData.height * 0.5;
-        this.displayWidth = this.areaData.width;
-        this.displayHeight = this.areaData.height;
+        this.x = Math.floor(this.areaData.x + this.areaData.width * 0.5);
+        this.y = Math.floor(this.areaData.y + this.areaData.height * 0.5);
+        this.displayWidth = Math.floor(this.areaData.width);
+        this.displayHeight = Math.floor(this.areaData.height);
         this.updateSquaresPositions();
     }
 
@@ -309,11 +316,11 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 if (this.shiftKey?.isDown) {
                     const topLeftX = Math.floor((dragX - this.displayWidth * 0.5) / 32) * 32;
                     const topLeftY = Math.floor((dragY - this.displayHeight * 0.5) / 32) * 32;
-                    this.x = topLeftX + this.displayWidth * 0.5;
-                    this.y = topLeftY + this.displayHeight * 0.5;
+                    this.x = Math.round(topLeftX + this.displayWidth * 0.5);
+                    this.y = Math.round(topLeftY + this.displayHeight * 0.5);
                 } else {
-                    this.x = dragX;
-                    this.y = dragY;
+                    this.x = Math.round(dragX);
+                    this.y = Math.round(dragY);
                 }
                 this.updateSquaresPositions();
                 this.moved = true;
@@ -342,8 +349,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.x - this.displayWidth * 0.5,
-                    y: this.y - this.displayHeight * 0.5,
+                    x: Math.floor(this.x - this.displayWidth * 0.5),
+                    y: Math.floor(this.y - this.displayHeight * 0.5),
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
@@ -379,13 +386,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                     if (newWidth >= 10) {
                         this.displayWidth = newWidth;
-                        this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
+                        this.x = Math.floor(this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5);
                     } else {
                         square.x = oldX;
                     }
                     if (newHeight >= 10) {
                         this.displayHeight = newHeight;
-                        this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
+                        this.y = Math.floor(this.squares[Edge.TopCenter].y + this.displayHeight * 0.5);
                     } else {
                         square.y = oldY;
                     }
@@ -424,13 +431,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                 if (newWidth >= 10) {
                     this.displayWidth = newWidth;
-                    this.x = newCenterX;
+                    this.x = Math.floor(newCenterX);
                 } else {
                     square.x = oldX;
                 }
                 if (newHeight >= 10) {
                     this.displayHeight = newHeight;
-                    this.y = newCenterY;
+                    this.y = Math.floor(newCenterY);
                 } else {
                     square.y = oldY;
                 }
@@ -447,8 +454,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: this.x - this.displayWidth * 0.5,
-                    y: this.y - this.displayHeight * 0.5,
+                    x: Math.floor(this.x - this.displayWidth * 0.5),
+                    y: Math.floor(this.y - this.displayHeight * 0.5),
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
@@ -471,10 +478,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private updateAreaDataWithSquaresAdjustments(): void {
         this.areaData = {
             ...this.areaData,
-            x: this.x - this.displayWidth * 0.5,
-            y: this.y - this.displayHeight * 0.5,
-            width: this.displayWidth,
-            height: this.displayHeight,
+            x: Math.floor(this.x - this.displayWidth * 0.5),
+            y: Math.floor(this.y - this.displayHeight * 0.5),
+            width: Math.floor(this.displayWidth),
+            height: Math.floor(this.displayHeight),
         };
     }
 
@@ -521,11 +528,52 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     color: "464EB8",
                 };
             }
+            case "matrixRoomPropertyData": {
+                return {
+                    name: "MatrixRoom",
+                    color: "0cbd8b",
+                };
+            }
+            case "tooltipPropertyData": {
+                return {
+                    name: "Tooltip",
+                    color: "0b66c2",
+                };
+            }
             default:
                 return {
                     name: "",
                     color: "FFFFFF",
                 };
+        }
+    }
+
+    // Play text on the Image entity
+    public playText() {
+        if (this.speechDomElement) this.destroyText();
+        setTimeout(() => {
+            if (this.areaData.name === undefined || this.areaData.name === "") return;
+            const x = this.x;
+            this.speechDomElement = new SpeechDomElement(
+                "name",
+                this.areaData.name,
+                this.scene,
+                x,
+                this.y - this.height / 2 - 30,
+                () => this.destroyText()
+            );
+            this.scene.add.existing(this.speechDomElement);
+            // Need to put the element at the top because
+            // if the SpechDomElement is inside of the area, pointer mouse events will not triggered
+            this.speechDomElement.play(x, this.y - this.height / 2 - 15, -1);
+        }, 10);
+    }
+
+    // Destroy text
+    public destroyText() {
+        if (this.speechDomElement) {
+            this.speechDomElement.destroy();
+            this.speechDomElement = null;
         }
     }
 }

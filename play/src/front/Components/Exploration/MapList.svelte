@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { writable } from "svelte/store";
     import { onMount } from "svelte";
     import defaultMapImg from "../images/default-map.png";
@@ -7,6 +6,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../Api/ScriptUtils";
     import LL from "../../../i18n/i18n-svelte";
+    import PopUpContainer from "../PopUp/PopUpContainer.svelte";
 
     interface RoomData {
         name: string;
@@ -75,78 +75,122 @@
         roomNameSelected.set(roomName);
         // Use the room url to join the room
         scriptUtils.goToPage(roomUrl);
-        LL;
     }
 </script>
 
-<div
-    class="menu-container tw-bg-dark-purple/80 tw-backdrop-blur-sm tw-flex tw-flex-col tw-items-center tw-absolute tw-left-0 tw-top-0 tw-h-screen tw-w-screen tw-p-3"
-    transition:fly={{ x: 1000, duration: 500 }}
->
-    {#if $isMoving}
-        <h1>{$LL.mapEditor.listRoom.movingToRoom({ roomNameSelected: $roomNameSelected })}</h1>
-    {:else}
-        <label for="search">{$LL.mapEditor.listRoom.searchLabel()}</label>
-        <input
-            id="search"
-            type="text"
-            placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
-            bind:value={search}
-            on:input={onUpdateSearch}
-        />
-        <!-- room card -->
-        <div class="tw-flex tw-flex-wrap tw-justify-center tw-overflow-auto">
-            {#if $isFetching}
-                <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
-            {/if}
-            {#if !$isFetching && $roomListFiltered.size === 0}
-                <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
-            {/if}
-            {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    id={roomUrl}
-                    class:active={currentRoomUrl === new URL(roomData.roomUrl, window.location.href).toString()}
-                    class="room-card tw-flex tw-flex-col tw-items-center tw-justify-center tw-cursor-pointer tw-rounded-xl tw-m-12 tw-p-12"
-                    on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
-                >
-                    <img
-                        class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
-                        src={roomData.thumbnail ?? defaultMapImg}
-                        alt={roomData.name}
-                        on:error={function () {
-                            this.src = defaultMapImg;
-                        }}
-                    />
-                    <span class="tw-pointer-events-none tw-text-2xl tw-font-bold tw-m-0">{roomData.name}</span>
-                    {#if roomData.areasSearchable || roomData.entitiesSearchable}
-                        <span class="tw-pointer-events-none tw-m-0">
-                            {$LL.mapEditor.listRoom.items({
-                                countEntity: roomData.entitiesSearchable ?? 0,
-                                countArea: roomData.areasSearchable ?? 0,
-                            })}
-                        </span>
-                    {/if}
-                </div>
-            {/each}
-        </div>
-        <div
-            class="tw-bg-dark-purple/90 tw-backdrop-blur-sm tw-absolute tw-bottom-0 tw-left-0 tw-h-16 tw-w-screen tw-flex tw-justify-center tw-content-center tw-items-center"
-        >
-            <button class="light" on:click={close}>{$LL.mapEditor.listRoom.close()}</button>
-        </div>
-    {/if}
+<div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
+    <div class="w-11/12 lg:w-2/3  relative h-fit">
+        <PopUpContainer extraClasses="w-full relative" fullContent={true}>
+            <div class="flex flex-col items-center pointer-events-auto w-full">
+                {#if $isMoving}
+                    <h1>{$LL.mapEditor.listRoom.movingToRoom({ roomNameSelected: $roomNameSelected })}</h1>
+                {:else}
+                    <!-- room card -->
+                    <div class="h-fit w-full flex flex-col items-center gap-8">
+                        <div class="w-full flex flex-col items-start gap-2 px-6">
+                            <label for="search" class="text-white pl-2">{$LL.mapEditor.listRoom.searchLabel()}</label>
+                            <div class="relative flex grow w-full ">
+                                <input
+                                    id="search"
+                                    type="text"
+                                    placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
+                                    bind:value={search}
+                                    on:input={onUpdateSearch}
+                                    class="grow input-search input-search-lg peer w-full"
+                                />
+                                <svg
+                                    class="icon icon-tabler icon-tabler-search stroke-contrast-400 absolute top-0 bottom-0 right-5 m-auto peer-focus:stroke-secondary peer-hover:stroke-secondary-500 transition-all peer-focus:-translate-x-1"
+                                    fill="none"
+                                    height="20"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="1.5"
+                                    viewBox="0 0 24 24"
+                                    width="20"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path d="M0 0h24v24H0z" fill="none" stroke="none" />
+                                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                    <path d="M21 21l-6 -6" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex flex-row flex-nowrap space-x-4 justify-center items-center w-full min-h-52">
+                            {#if $isFetching}
+                                <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
+                            {:else if !$isFetching && $roomListFiltered.size === 0}
+                                <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
+                            {:else}
+                                <div class="relative w-full flex space-x-6 snap-mandatory snap-x overflow-x-auto">
+                                    <div class="snap-center shrink-0">
+                                        <div class="shrink-0 " />
+                                    </div>
+                                    {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <div
+                                            id={roomUrl}
+                                            class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8  rounded-lg overflow-hidden"
+                                            on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
+                                        >
+                                            <div
+                                                class="w-full rounded-lg relative overflow-hidden group cursor-pointer"
+                                            >
+                                                <div
+                                                    class="absolute z-10  left-0 bottom-0-0 w-full h-full bg-gradient-to-t to-90% to-transparent {currentRoomUrl ===
+                                                    new URL(roomData.roomUrl, window.location.href).toString()
+                                                        ? 'from-secondary-900'
+                                                        : 'from-contrast'}"
+                                                />
+                                                <img
+                                                    src={roomData.thumbnail ?? defaultMapImg}
+                                                    alt={roomData.name}
+                                                    class="shrink-0 w-80 h-52 shadow-xl bg-white object-cover group-hover:scale-110 transition-all z-0"
+                                                    on:error={function () {
+                                                        this.src = defaultMapImg;
+                                                    }}
+                                                />
+                                                <span
+                                                    class="absolute z-20 bottom-0 max-w-full w-full flex items-center justify-center text-ellipsis overflow-hidden text-white text-xs font-bold px-2 py-3 bg-se"
+                                                >
+                                                    {roomData.name}
+                                                </span>
+                                                {#if currentRoomUrl === new URL(roomData.roomUrl, window.location.href).toString()}
+                                                    <span
+                                                        class="chip z-20 chip-sm chip-secondary bg-secondary text-white rounded-[8px] absolute top-3 right-3"
+                                                    >
+                                                        <div class="px-2">Active</div>
+                                                    </span>
+                                                {/if}
+                                            </div>
+                                            <div class="py-2 text-center">
+                                                {#if roomData.areasSearchable || roomData.entitiesSearchable}
+                                                    <div class="pointer-events-none m-0 px-3">
+                                                        {$LL.mapEditor.listRoom.items({
+                                                            countEntity: roomData.entitiesSearchable ?? 0,
+                                                            countArea: roomData.areasSearchable ?? 0,
+                                                        })}
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                    <div class="snap-center shrink-0">
+                                        <div class="shrink-0" />
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+            <div slot="buttons" class="flex flex-row justify-center w-full">
+                <button class="btn btn-lg btn-secondary w-1/2 m-auto" on:click={close}>
+                    {$LL.mapEditor.listRoom.close()}
+                </button>
+            </div>
+        </PopUpContainer>
+    </div>
 </div>
 
 <style lang="scss">
-    .room-card {
-        transition: transform 0.15s ease-in-out;
-        &.active {
-            background-color: rgb(86 234 255 / 0.3);
-        }
-        &:hover:not(.active) {
-            background-color: rgb(27 27 41 / 0.6);
-            transform: scale(1.1);
-        }
-    }
 </style>

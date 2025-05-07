@@ -1,43 +1,40 @@
 import { Browser, expect, Page, test } from "@playwright/test";
-import { login } from "./utils/roles";
 import { getCoWebsiteIframe } from "./utils/iframe";
 import { assertLogMessage, startRecordLogs } from "./utils/log";
 import { evaluateScript } from "./utils/scripting";
-import { oidcLogin, oidcLogout } from "./utils/oidc";
+import {oidcLogin, oidcLogout} from "./utils/oidc";
 import { publicTestMapUrl } from "./utils/urls";
+import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("API WA.players", () => {
-  test("enter leave events are received", async ({ page, browser }, {
-    project,
-  }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
+  test.beforeEach(async ({ page, browserName }) => {
+    if (isMobile(page) || browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
+  });
 
-    await page.goto(
+  test("enter leave events are received", async ({ browser }) => {
+
+    const page1 : Page = await getPage(
+      browser,
+      'Alice',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-
-    await page2.goto(
+    const page2: Page = await getPage(
+      browser,
+      'Bob',
       publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
-
-    await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
-
-    const events = getCoWebsiteIframe(page).locator("#events");
-    await expect(events).toContainText("New user: Bob", {
-      timeout: 10000,
-    });
-
-    await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
-    const list = getCoWebsiteIframe(page).locator("#list");
+    
+    
+    const events = getCoWebsiteIframe(page1).locator("#events");
+    
+    await expect(events.getByText('New user: Bob')).toBeVisible();
+    await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
+    const list = getCoWebsiteIframe(page1).locator("#list");
     await expect(list).toContainText("Bob");
 
     await getCoWebsiteIframe(page2).locator("#listCurrentPlayers").click();
@@ -45,8 +42,8 @@ test.describe("API WA.players", () => {
     await expect(list2).toContainText("Alice");
 
     // Now, let's test variables
-    await getCoWebsiteIframe(page).locator("#the-variable").fill("yeah");
-    await getCoWebsiteIframe(page)
+    await getCoWebsiteIframe(page1).locator("#the-variable").fill("yeah");
+    await getCoWebsiteIframe(page1)
       .locator("#the-variable")
       .evaluate((e) => e.blur());
     const events2 = getCoWebsiteIframe(page2).locator("#events");
@@ -61,53 +58,38 @@ test.describe("API WA.players", () => {
     );
 
     await page2.close();
-    await newBrowser.close();
-
-    await expect(events).toContainText("User left: Bob");
-    await getCoWebsiteIframe(page).locator("#listCurrentPlayers").click();
+    await page2.context().close();
+    await expect(events.getByText('User left: Bob')).toBeVisible();
+    await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
+    await page1.close()
+    await page1.context().close();
   });
 
-  test("exception if we forget to call WA.players.configureTracking", async ({
-    page,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("exception if we forget to call WA.players.configureTracking", async ({ browser }) => {
 
-    await page.goto(
-      publicTestMapUrl(
-        `tests/RemotePlayers/remote_players_no_init.json`,
-        "api_players"
-      )
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
     );
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
     await expect(
       getCoWebsiteIframe(page).locator("#onPlayerEntersException")
     ).toHaveText("Yes");
     await expect(
       getCoWebsiteIframe(page).locator("#onPlayerLeavesException")
     ).toHaveText("Yes");
+    await page.close();
+    await page.context().close();
   });
 
-  test("Test that player B arriving after player A set his variables can read the variable.", async ({
-    page,
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+  test("Test that player B arriving after player A set his variables can read the variable.",
+      async ({ browser }) => {
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -118,13 +100,12 @@ test.describe("API WA.players", () => {
       });
       return;
     });
+    const page2 = await getPage(
+      browser,
+      'Bob',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
-
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page2, "Bob", 3, "en-US", project.name === "mobilechromium");
 
     const myvar = await evaluateScript(page2, async () => {
       await WA.onInit();
@@ -138,13 +119,14 @@ test.describe("API WA.players", () => {
     await expect(myvar).toBe(12);
 
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
+    await page.close();
+    await page.context().close();
   });
 
   const runPersistenceTest = async (
     page: Page,
     browser: Browser,
-    isMobile = false
   ) => {
     await evaluateScript(page, async () => {
       /*function later(delay) {
@@ -240,15 +222,14 @@ test.describe("API WA.players", () => {
 
       return;
     });
+    const page2 = await getPage(
+      browser,
+      'Bob',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
-    const newBrowser = await browser.newContext();
-    const page2 = await newBrowser.newPage();
 
-    await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page2, "Bob", 3, "en-US", isMobile);
-
-    const readRemotePlayerVariable = async (
+      const readRemotePlayerVariable = async (
       playerName: string,
       variableName: string,
       targetPage: Page
@@ -399,67 +380,46 @@ test.describe("API WA.players", () => {
     await expect
       .poll(() => readLocalPlayerVariable("undefined_var", page))
       .toBe(undefined);
-
+    
     await page2.close();
-    await newBrowser.close();
+    await page2.context().close();
   };
 
-  test("Test variable persistence for anonymous users.", async ({
-    page,
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
-  });
-
-  test("Test variable persistence for logged users. @oidc", async ({
-    page,
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    test.setTimeout(120_000); // Fix Webkit that can take more than 60s
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
-
-    await oidcLogin(page);
-
-    await runPersistenceTest(page, browser, project.name === "mobilechromium");
-
-    await oidcLogout(page, false);
-  });
-
-  test("Test variables are sent across frames.", async ({ page }, {
-    project,
-  }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(
-      publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
+  test("Test variable persistence for anonymous users.", async ({ browser }) => {
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
     );
 
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+    await runPersistenceTest(page, browser, false);
+    await page.close();
+    await page.context().close();
+  });
+
+  test("Test variable persistence for logged users. @oidc", async ({ browser }) => {
+
+    test.setTimeout(120_000); // Fix Webkit that can take more than 60s
+    
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
+    await oidcLogin(page);
+    await runPersistenceTest(page, browser);
+
+    await oidcLogout(page);
+    await page.close();
+    await page.context().close();
+  });
+
+  test("Test variables are sent across frames.", async ({ browser }) => {
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty_2_frames.json`, "api_players")
+    );
 
     await evaluateScript(
       page,
@@ -495,24 +455,19 @@ test.describe("API WA.players", () => {
       "embedded_iframe"
     );
     await expect(variable).toBe(12);
+    await page.close();
+    await page.context().close();
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
   // All players with same UUID should share the same state (public or private as long as it is persisted)
-  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.", async ({
-    page,
-    context,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.",
+      async ({ browser }) => {
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl("tests/E2E/empty.json", "api_players")
+    );
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -520,7 +475,8 @@ test.describe("API WA.players", () => {
     }));*/
 
     // We use a new tab to keep the same LocalStorage
-    const page2 = await context.newPage();
+     
+    const page2 = await page.context().newPage();
 
     await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
 
@@ -596,22 +552,17 @@ test.describe("API WA.players", () => {
     await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
+    await page2.context().close();
+    //await page.close();
+    //await page.context().close();
   });
 
-  test("Test that a variable changed can be listened to locally.", async ({
-    page,
-    browser,
-  }, { project }) => {
-    // Skip test for mobile device
-    if (project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "api_players"));
-
-    await login(page, "Alice", 2, "en-US", project.name === "mobilechromium");
+  test("Test that a variable changed can be listened to locally.", async ({ browser }) => {
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/E2E/empty.json`, "api_players")
+    );
 
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;
@@ -649,5 +600,44 @@ test.describe("API WA.players", () => {
     });
 
     await expect.poll(() => gotExpectedNotification).toBe(true);
+
+    await page.close();
+    await page.context().close();
+  });
+
+  test('cowebsites tab system', async ({ browser }) => {
+    // Open the main page with the cowebsite container
+    const page = await getPage(
+      browser,
+      'Alice',
+      publicTestMapUrl(`tests/RemotePlayers/remote_players_cowebsite.json`, "api_players")
+    );
+
+    // Ouvrir le Site A dans le premier onglet
+    await page.locator('.siteA-page1');
+
+    // Ouvrir le Site B dans le deuxième onglet
+    await page.locator('.siteB-page1');
+    // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
+
+    //Switching tabs and pages
+    await page.getByTestId('tab1').click();
+    const event = getCoWebsiteIframe(page).locator('.siteA-page1');
+    await expect(event).toContainText('Site A Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
+    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    await expect(eventpage).toContainText('Site A Page 2');
+
+    await page.getByTestId('tab2').click();
+    const event2 = getCoWebsiteIframe(page).locator('.siteB-page1')
+    await expect(event2).toContainText('Site B Page 1');
+
+    await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
+    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    await expect(eventpage2).toContainText('Site B Page 2');
+
+    await page.close();
+    await page.context().close();
   });
 });

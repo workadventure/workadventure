@@ -89,12 +89,12 @@
             ? passphraseInput.trim().length === 0
             : recoveryKeyInput.trim().length === 0;
 
-    const changeAccessSecretStorageMethodButtonClass = "tw-self-end tw-text-blue-500";
+    const changeAccessSecretStorageMethodButtonClass = "self-end text-blue-500";
 </script>
 
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.e2ee.accessSecretStorage.title()}</h1>
-    <div slot="content" class="tw-flex tw-flex-col">
+    <div slot="content" class="flex flex-col">
         <p>{$LL.chat.e2ee.accessSecretStorage.description()}</p>
         {#if accessSecretStorageMethod === "passphrase"}
             <label for="passphrase"> <IconEdit /> {$LL.chat.e2ee.accessSecretStorage.passphrase()}</label>
@@ -103,19 +103,19 @@
                 type="password"
                 autocomplete="new-password"
                 data-testid="passphraseInput"
-                class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
                 on:keydown={(key) => {
-                    key.key === "Enter"
-                        ? checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error))
-                        : undefined;
+                    if (key.key === "Enter") {
+                        checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
+                    }
                 }}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
             />
-            <div class="tw-flex tw-flex-row tw-justify-between">
-                <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
+            <div class="flex flex-row justify-between">
+                <button class="self-start text-blue-500" on:click={switchToRestoreConfirmationModal}>
                     <IconRestore />
                     {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                 </button>
@@ -131,13 +131,13 @@
                 type="password"
                 autocomplete="new-password"
                 data-testid="recoveryKeyInput"
-                class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 bind:value={recoveryKeyInput}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
             />
-            <div class="tw-flex tw-flex-row tw-justify-between">
-                <button class="tw-self-start tw-text-blue-500" on:click={switchToRestoreConfirmationModal}>
+            <div class="flex flex-row justify-between">
+                <button class="self-start text-blue-500" on:click={switchToRestoreConfirmationModal}>
                     <IconRestore />
                     {$LL.menu.chat.resetKeyStorageUpButtonLabel()}
                 </button>
@@ -148,18 +148,19 @@
         {/if}
 
         {#if error}
-            <p class="tw-text-red-500">
+            <p class="text-red-500">
                 {`${accessSecretStorageMethod === "passphrase" ? "Passphrase" : "RecoveryKey"}  is wrong !`}
             </p>
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="tw-flex-1 tw-justify-center" on:click={cancelAccessSecretStorage}
+        <button class="btn flex-1 justify-center hover:bg-white/10" on:click={cancelAccessSecretStorage}
             >{$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}</button
         >
         <button
             disabled={confirmInputDisabled || isCheckingPassphrase}
-            class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+            class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+            data-testid="confirmAccessSecretStorageButton"
             on:click={() => checkAndSubmitRecoveryOrPassphraseIfValid()}
         >
             {#if isCheckingPassphrase}

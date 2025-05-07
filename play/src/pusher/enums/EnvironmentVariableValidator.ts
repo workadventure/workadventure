@@ -30,6 +30,7 @@ export const EnvironmentVariables = z.object({
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional().transform((val) => toNumber(val, 80)),
     PUSHER_HTTP_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 3000)),
+    PUSHER_WS_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 3001)),
     SOCKET_IDLE_TIMER: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 120))
         .describe(
@@ -71,7 +72,7 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
-    DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
+    //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional().transform((val) => toBool(val, false)),
     START_ROOM_URL: z.string().optional(),
 
@@ -119,6 +120,11 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => toArray(val)),
+    MAP_EDITOR_ALLOW_ALL_USERS: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe(
+            'If set to true, all users can edit the map. If set to false, only the users in MAP_EDITOR_ALLOWED_USERS or users with the "admin" or "editor" tag can edit the map. Note: this setting is ignored if an Admin API is configured.'
+        ),
     WOKA_SPEED: PositiveIntAsString.optional().transform((val) => toNumber(val, 9)),
     FEATURE_FLAG_BROADCAST_AREAS: BoolAsString.optional().transform((val) => toBool(val, false)),
 

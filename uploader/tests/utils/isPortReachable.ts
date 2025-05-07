@@ -1,9 +1,7 @@
 import net from 'node:net';
 
 // @ts-ignore
-export default async function isPortReachable(port: number, {host, timeout = 1000} = {}) {
-	if (typeof host !== 'string')
-		throw new TypeError('Specify a `host`');
+export default async function isPortReachable(port: number, {host, timeout = 1000}: {host:string, timeout?:number} = {}) {
 
 	const testConnection = (resolve:(value: unknown)=>void, reject:(value: unknown)=>void) => {
 		const socket = new net.Socket();

@@ -13,7 +13,7 @@ declare global {
                     height?: number;
                     width?: number;
                 };
-            }) => void;
+            }) => Window | null;
         };
     }
 }
@@ -39,6 +39,7 @@ export const initWindowKlaxoonActivityPicker = () => {
                 },
                 { once: !0 }
             );
+            return s;
         },
     };
     /* eslint-enable */
@@ -50,8 +51,7 @@ export const initWindowKlaxoonActivityPicker = () => {
 };
 
 export const openKlaxoonActivityPicker = (clientId: string, successCallback: (arg1: KlaxoonEvent) => void) => {
-    window.KlaxoonActivityPicker.openPicker({
-        // eslint-disable-line
+    return window.KlaxoonActivityPicker.openPicker({
         clientId: clientId,
         success: successCallback,
         options: {

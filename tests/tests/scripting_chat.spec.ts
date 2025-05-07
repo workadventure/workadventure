@@ -1,31 +1,31 @@
 import { expect, test } from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
-import { login } from "./utils/roles";
 import Chat from "./utils/chat";
 import Map from "./utils/map";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import chatUtils from "./chat/chatUtils";
+import { getPage } from "./utils/auth";
+import {isMobile} from "./utils/isMobile";
 
 test.describe("#Scripting chat functions", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
-    async ({ browserName, request, page }, { project }) => {
+    async ({ browserName, request, page }) => {
       //WebKit has issue with camera
-      if (browserName === "webkit" || project.name === "mobilechromium") {
+      if (browserName === "webkit" || isMobile(page)) {
         //eslint-disable-next-line playwright/no-skipped-test
         test.skip();
         return;
       }
       await resetWamMaps(request);
-      await page.goto(Map.url("empty"));
       await chatUtils.resetMatrixDatabase();
     }
   );
   test("can open / close chat + start / stop typing @chat", async ({
-    page,
+    browser
   }) => {
-    await login(page, "bob", 3, "us-US", false);
+    const page = await getPage(browser, "Bob", Map.url("empty"));
     //await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
@@ -39,7 +39,7 @@ test.describe("#Scripting chat functions", () => {
       page.getByRole("button", { name: "Proximity Chat" })
     ).toBeVisible({ timeout: 60000 });
 
-    // Open the time line
+    // Open the timeline
     await Chat.openTimeline(page);
     await expect(page.locator(".back-roomlist")).toBeVisible();
 
@@ -83,11 +83,13 @@ test.describe("#Scripting chat functions", () => {
       return WA.chat.close();
     });
     await expect(page.locator("#chat")).toBeHidden();
+
+    await page.close();
+    await page.context().close();
   });
 
-  test("can send message to bubble users @chat", async ({ page, browser }) => {
-    const bob = page;
-    await login(bob, "bob", 3, "us-US", false);
+  test("can send message to bubble users @chat", async ({ browser }) => {
+    const bob = await getPage(browser, "Bob", Map.url("empty"));
     //await oidcMatrixUserLogin(bob, false);
     // test to send bubble message when entering proximity meeting
     await evaluateScript(bob, async () => {
@@ -106,17 +108,19 @@ test.describe("#Scripting chat functions", () => {
     await Map.teleportToPosition(bob, 32, 32);
 
     // Open new page for alice
-    const newBrowser = await browser.newContext();
-    const alice = await newBrowser.newPage();
-    await alice.goto(Map.url("empty"));
-    await login(alice, "alice", 4, "us-US", false);
+    const alice = await getPage(browser, "Alice", Map.url("empty"));
     //await oidcMemberTagLogin(alice, false);
 
     const chatMessageReceivedPromise = evaluateScript(alice, async () => {
+      await WA.players.configureTracking();
+
       return new Promise((resolve) => {
         WA.chat.onChatMessage(
           (message, event) => {
-            resolve(message);
+            resolve({
+              message,
+              event,
+            });
           },
           {
             scope: "bubble",
@@ -130,10 +134,8 @@ test.describe("#Scripting chat functions", () => {
     await Map.teleportToPosition(alice, 32, 32);
 
     // Check that bob received the message
-    await expect(bob.locator("#chat")).toContainText(
-      "alice joined the discussion",
-      { timeout: 30000 }
-    );
+    //await bob.pause();
+    await expect(bob.getByText('Alice joined the discussion')).toBeVisible();
 
     // Check that bob received the message
     await expect(bob.locator("#chat")).toContainText("Test message sent", {
@@ -141,10 +143,7 @@ test.describe("#Scripting chat functions", () => {
     });
 
     // Check that bob received the message
-    await expect(alice.locator("#chat")).toContainText(
-      "bob joined the discussion",
-      { timeout: 30000 }
-    );
+    await expect(alice.getByText('Bob joined the discussion')).toBeVisible();
 
     // Check that alice also received the message
     await expect(alice.locator("#chat")).toContainText("Test message sent", {
@@ -152,9 +151,12 @@ test.describe("#Scripting chat functions", () => {
     });
 
     const chatMessageReceived = await chatMessageReceivedPromise;
-    expect(chatMessageReceived).toBe("Test message sent");
-
+    expect(chatMessageReceived.message).toBe("Test message sent");
+    expect(chatMessageReceived.event.authorId).toBeDefined();
+    expect(chatMessageReceived.event.author).toBeDefined();
     await alice.close();
-    await newBrowser.close();
+    await alice.context().close();
+    await bob.close();
+    await bob.context().close();
   });
 });

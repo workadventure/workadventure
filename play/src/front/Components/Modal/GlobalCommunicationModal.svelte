@@ -16,8 +16,8 @@
         streamingMegaphoneStore,
     } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
-    import microphoneImg from "../images/microphone.png";
-    import cameraImg from "../images/camera.png";
+    import microphoneImg from "../images/mic.svg";
+    import cameraImg from "../images/cam.svg";
     import liveMessageImg from "../images/live-message.svg";
     import textMessageImg from "../images/text-message.svg";
     import audioMessageImg from "../images/audio-message.svg";
@@ -30,11 +30,16 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import {
         currentLiveStreamingSpaceStore,
+        megaphoneCanBeUsedStore,
         megaphoneSpaceStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Tooltip from "../Util/Tooltip.svelte";
+    import Alert from "../UI/Alert.svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import Select from "../Input/Select.svelte";
+    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import { IconAlertTriangle, IconInfoCircle } from "@wa-icons";
 
     let mainModal: HTMLDivElement;
@@ -47,7 +52,7 @@
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
 
     let videoElement: HTMLVideoElement;
-    let stream: MediaStream | null;
+    let stream: MediaStream | undefined;
     let aspectRatio = 1;
 
     let isMobile = isMediaBreakpointUp("md");
@@ -63,7 +68,7 @@
                 aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
             }, 100);
         } else {
-            stream = null;
+            stream = undefined;
         }
     });
 
@@ -163,138 +168,199 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
+        //close();
+    }
+
+    function stopLive() {
+        analyticsClient.stopMegaphone();
+        currentLiveStreamingSpaceStore.set(undefined);
+        requestedMegaphoneStore.set(false);
         close();
     }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container {isMobile ? 'mobile' : 'center'} tw-h-3/4" bind:this={mainModal}>
-    <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click|preventDefault|stopPropagation={close}>&times</button>
-        <header>
-            <h2 class="tw-p-5 blue-title">Global communication</h2>
-            {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a
-                    href="#"
-                    class="tw-px-5 tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
-                    on:click|preventDefault|stopPropagation={() => back()}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12px"
-                        height="12px"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-arrow-left tw-cursor-pointer"
-                        ><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg
+<div
+    class="absolute z-[308] rounded-xxl w-full h-full top-0 left-0 right-0 bottom-0 flex items-center justify-center  overflow-hidden"
+    bind:this={mainModal}
+>
+    <div
+        class="h-full md:h-auto md:top-auto md:left-auto  md:right-auto md:bottom-auto bg-contrast/80 backdrop-blur rounded-md max-h-screen overflow-y-auto w-full lg:w-11/12"
+        transition:fly={{ x: 1000, duration: 500 }}
+    >
+        <!-- <div class="bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg p-2 aspect-square">
+            <button type="button" class="close-window h-[16px] w-[16px] bg-red-500 justify-center" on:click|preventDefault|stopPropagation={close}
+                >&times</button
+            >
+        </div> -->
+        <header class="flex flex-row items-start justify-between p-2">
+            <div class="flex flex-col gap-2 p-4">
+                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">Global communication</h2>
+
+                {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <a
+                        href="#"
+                        class="px-4 py-2 text-white no-underline bg-white/10 rounded hover:bg-white/20 flex flex-row items-center text-xs m-0 w-fit"
+                        on:click|preventDefault|stopPropagation={() => back()}
                     >
-                    <span class="tw-ml-1 tw-cursor-pointer">Back to select communication</span>
-                </a>
-            {/if}
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12px"
+                            height="12px"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="feather feather-arrow-left cursor-pointer"
+                            ><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg
+                        >
+                        <span class="ml-1 cursor-pointer">Back to select communication</span>
+                    </a>
+                {/if}
+            </div>
+            <div class="group/btn-chat  transition-all" id="btn-chat">
+                <ButtonClose on:click={close} />
+            </div>
         </header>
-        <div />
-        <div class="tw-h-5/6 tw-px-5 tw-overflow-auto">
+        <div class="px-5 h-full ">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
-                <div class="tw-flex tw-flex-row tw-justify-center">
-                    <div id="content-liveMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>
+                <div class="flex flex-col md:flex-row md:justify-center h-full">
+                    <div
+                        id="content-liveMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6  h-full justify-between"
+                    >
+                        <h4 class="text-white mb-2">
                             <img
                                 src={liveMessageImg}
-                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
-                        </h3>
-                        <button class="light tw-max-w-fit" on:click={activateLiveMessage}
-                            >{$LL.megaphone.modal.liveMessage.button()}</button
+                        </h4>
+
+                        <button
+                            class="btn-lg btn btn-light btn-border mt-2 mb-4"
+                            on:click={activateLiveMessage}
+                            disabled={!$megaphoneCanBeUsedStore}
                         >
-                        <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
+                            {$LL.megaphone.modal.liveMessage.button()}
+                        </button>
+
+                        {#if !$megaphoneCanBeUsedStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="20" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
+                        <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
                         </p>
+
+                        <div class="mt-auto pt-4">
+                            <video
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
+                                class="w-full cursor-pointer rounded"
+                                controls
+                                muted
+                                on:mouseover={playVideo}
+                                on:mouseout={stopVideo}
+                                on:click={fullScreenVideo}
+                            />
+                        </div>
                     </div>
-                    <div id="content-textMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>
+
+                    <div
+                        id="content-textMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6  h-full justify-between"
+                    >
+                        <h4 class="text-white mb-2">
                             <img
                                 src={textMessageImg}
-                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                             />
                             {$LL.megaphone.modal.textMessage.title()}
-                        </h3>
-                        {#if !$userIsAdminStore}
-                            <p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>
-                        {/if}
-                        <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
-                            {$LL.megaphone.modal.textMessage.button()}</button
+                        </h4>
+
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4"
+                            on:click={activateInputText}
+                            disabled={!$userIsAdminStore}
                         >
-                        <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
+                            {$LL.megaphone.modal.textMessage.button()}
+                        </button>
+
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
+                                    {$LL.megaphone.modal.textMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
+                        <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
                         </p>
+
+                        <div class="mt-auto pt-4">
+                            <video
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
+                                class="w-full cursor-pointer rounded"
+                                controls
+                                muted
+                                on:mouseover={playVideo}
+                                on:mouseout={stopVideo}
+                                on:click={fullScreenVideo}
+                            />
+                        </div>
                     </div>
-                    <div id="content-soundMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>
+
+                    <div
+                        id="content-soundMessage"
+                        class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
+                    >
+                        <h4 class="text-white mb-2">
                             <img
                                 src={audioMessageImg}
-                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
-                        </h3>
-                        {#if !$userIsAdminStore}
-                            <p class="help-text">
-                                <IconInfoCircle font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>
-                        {/if}
-                        <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
-                            {$LL.megaphone.modal.audioMessage.button()}</button
+                        </h4>
+
+                        <button
+                            class="btn-lg btn btn-light btn-border mb-4"
+                            on:click={activateUploadAudio}
+                            disabled={!$userIsAdminStore}
                         >
-                        <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
+                            {$LL.megaphone.modal.audioMessage.button()}
+                        </button>
+
+                        {#if !$userIsAdminStore}
+                            <Alert>
+                                <p class="help-text flex items-center">
+                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
+                                    {$LL.megaphone.modal.audioMessage.noAccess()}
+                                </p>
+                            </Alert>
+                        {/if}
+
+                        <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
                         </p>
-                    </div>
-                </div>
-                <div class="tw-flex tw-flex-row tw-justify-center">
-                    <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
-                        <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
-                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
-                                controls
-                                muted
-                                on:mouseover={playVideo}
-                                on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
-                            />
-                        </div>
-                    </div>
-                    <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
-                        <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
-                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
-                                controls
-                                muted
-                                on:mouseover={playVideo}
-                                on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
-                            />
-                        </div>
-                    </div>
-                    <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
-                        <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
+
+                        <div class="mt-auto pt-4">
                             <video
                                 src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_audio_message.mp4"
-                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
+                                class="w-full cursor-pointer rounded"
                                 controls
                                 muted
                                 on:mouseover={playVideo}
@@ -307,79 +373,83 @@
             {/if}
 
             {#if inputSendTextActive || uploadAudioActive}
-                <div id="active-globalMessage" class="tw-flex tw-flex-col tw-p-5">
+                <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
-                        <h3>
+                        <h3 class="text-white mb-2">
                             <img
                                 src={textMessageImg}
-                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.textMessage.title()}
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
                         <TextGlobalMessage bind:handleSending={handleSendText} />
                     {/if}
+
                     {#if uploadAudioActive}
-                        <h3>
-                            <img
-                                src={audioMessageImg}
-                                class="tw-h-8 tw-w-8 tw-mr-1"
-                                alt={$LL.megaphone.modal.audioMessage.title()}
-                            />
-                            {$LL.megaphone.modal.audioMessage.title()}
-                        </h3>
-                        <AudioGlobalMessage bind:handleSending={handleSendAudio} />
+                        <div class="flex  flex-col justify-center items-center">
+                            <h3 class="text-white ">
+                                <img
+                                    src={audioMessageImg}
+                                    class="h-8 w-8 mr-1"
+                                    alt={$LL.megaphone.modal.audioMessage.title()}
+                                />
+                                {$LL.megaphone.modal.audioMessage.title()}
+                            </h3>
+                            <div class="text-white">
+                                <AudioGlobalMessage bind:handleSending={handleSendAudio} />
+                            </div>
+                        </div>
                     {/if}
-                    <div class="tw-flex tw-justify-center">
-                        <label>
-                            <input type="checkbox" bind:checked={broadcastToWorld} />
-                            <span>{$LL.menu.globalMessage.warning()}</span>
-                        </label>
+                    <div class="flex justify-center">
+                        <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
                     </div>
-                    <div class="tw-flex tw-justify-center">
+                    <div class="flex justify-center">
                         <section class="centered-column">
-                            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
+                            <button class="btn btn-light" on:click|preventDefault={send}
+                                >{$LL.menu.globalMessage.send()}</button
                             >
                         </section>
                     </div>
                 </div>
             {/if}
             {#if activeLiveMessage}
-                <div id="active-liveMessage" class="tw-flex tw-flex-col tw-p-5">
-                    <h3>
-                        <img
-                            src={liveMessageImg}
-                            class="tw-h-8 tw-w-8 tw-mr-1"
-                            alt={$LL.megaphone.modal.liveMessage.title()}
-                        />
-                        {$LL.megaphone.modal.liveMessage.title()}
-                    </h3>
-                    <div class="tw-flex tw-flew-row tw-justify-center">
-                        <div class="tw-flex tw-flex-col">
+                <div id="active-liveMessage" class="flex flex-col p-5 text-white ">
+                    <div>
+                        <h3>
+                            <img
+                                src={liveMessageImg}
+                                class="h-8 w-8 mr-1 text-white"
+                                alt={$LL.megaphone.modal.liveMessage.title()}
+                            />
+                            {$LL.megaphone.modal.liveMessage.title()}
+                        </h3>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-center">
+                        <div class="flex flex-col mr-5">
                             <video
                                 bind:this={videoElement}
-                                class="tw-h-full tw-w-full md:tw-object-cover tw-rounded-xl"
+                                class="h-full w-full md:object-cover rounded"
                                 class:object-contain={stream && (isMobile || aspectRatio < 1)}
-                                class:tw-max-h-[230px]={stream}
+                                class:max-h-[230px]={stream}
                                 style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                                 use:srcObject={stream}
                                 autoplay
                                 muted
                                 playsinline
                             />
-                            <div
-                                class="tw-z-[251] tw-w-full tw-p-4 tw-flex tw-items-center tw-justify-center tw-scale-150"
-                            >
+                            <div class="z-[251] mt-3 w-full p-4 flex items-center justify-center scale-150">
                                 <SoundMeterWidget
                                     volume={$localVolumeStore}
-                                    classcss="!tw-bg-none !tw-bg-transparent tw-scale-150"
+                                    cssClass="!bg-none !bg-transparent scale-150"
                                     barColor="blue"
                                 />
                             </div>
                         </div>
-                        <div class="tw-flex tw-flex-col tw-pl-6">
-                            <h3>{$LL.megaphone.modal.liveMessage.settings()}</h3>
-                            <p class="tw-text-white tw-text-sm">
+                        <div class="flex flex-col pl-6">
+                            <h3 class="text-white ">{$LL.megaphone.modal.liveMessage.settings()}</h3>
+                            <p class="text-white text-sm">
                                 {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
                                     {$LL.warning.megaphoneNeeds()}
                                 {:else}
@@ -400,69 +470,71 @@
                                     {$LL.megaphone.modal.liveMessage.toAll()}.
                                 {/if}
                             </p>
-                            <div class="tw-flex tw-flex-row">
+                            <div class="flex flex-row items-center gap-3">
                                 <img
                                     draggable="false"
                                     src={cameraImg}
                                     style="padding: 2px; height: 32px; width: 32px;"
                                     alt="Turn off microphone"
                                 />
-                                <select
-                                    class="tw-w-full tw-ml-4"
-                                    bind:value={cameraDiveId}
-                                    on:change={() => selectCamera()}
-                                >
-                                    {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                        {#each $cameraListStore as camera (camera.deviceId)}
-                                            <option value={camera.deviceId}>
-                                                {StringUtils.normalizeDeviceName(camera.label)}
-                                            </option>
-                                        {/each}
-                                    {/if}
-                                </select>
+                                <div class="w-full">
+                                    <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
+                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                            {#each $cameraListStore as camera (camera.deviceId)}
+                                                <option value={camera.deviceId}>
+                                                    {StringUtils.normalizeDeviceName(camera.label)}
+                                                </option>
+                                            {/each}
+                                        {/if}
+                                    </Select>
+                                </div>
                             </div>
-                            <div class="tw-flex tw-flex-row">
+                            <div class="flex flex-row items-center gap-3 ">
                                 <img
                                     draggable="false"
                                     src={microphoneImg}
-                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    style="padding: 2px; height: 32px; width: 32px; "
                                     alt="Turn off microphone"
                                 />
-                                <select
-                                    class="tw-w-full tw-ml-4"
-                                    bind:value={microphoneDeviceId}
-                                    on:change={() => selectMicrophone()}
-                                >
-                                    {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
-                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
-                                            <option value={microphone.deviceId}>
-                                                {StringUtils.normalizeDeviceName(microphone.label)}
-                                            </option>
-                                        {/each}
-                                    {/if}
-                                </select>
+                                <div class="w-full ">
+                                    <Select bind:value={microphoneDeviceId} on:change={() => selectMicrophone()}>
+                                        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
+                                            {#each $microphoneListStore as microphone (microphone.deviceId)}
+                                                <option value={microphone.deviceId}>
+                                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                                </option>
+                                            {/each}
+                                        {/if}
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="tw-flex tw-flew-row tw-justify-center">
+                    <div class="flex flew-row justify-center">
                         {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
-                            <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1">
+                            <span class="err text-warning-900 text-xs italic mt-1">
                                 <IconAlertTriangle font-size="12" />
                                 {$LL.warning.megaphoneNeeds()}
                             </span>
                         {/if}
                     </div>
-                    <div class="tw-flex tw-flew-row tw-justify-center">
-                        <button
-                            class="light"
-                            on:click={startLive}
-                            disabled={!$requestedCameraState && !$requestedMicrophoneState}
-                        >
-                            {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
-                                <Tooltip text={$LL.warning.megaphoneNeeds()} />
-                            {/if}
-                            {$LL.megaphone.modal.liveMessage.startMegaphone()}
-                        </button>
+                    <div class="flex flew-row justify-center">
+                        {#if !$requestedMegaphoneStore}
+                            <button
+                                class="btn light  text-black bg-white mt-4 rounded-md"
+                                on:click={startLive}
+                                disabled={!$requestedCameraState && !$requestedMicrophoneState}
+                            >
+                                {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                                    <Tooltip text={$LL.warning.megaphoneNeeds()} />
+                                {/if}
+                                {$LL.megaphone.modal.liveMessage.startMegaphone()}
+                            </button>
+                        {:else}
+                            <button class="btn btn-danger" on:click={stopLive}>
+                                {$LL.megaphone.modal.liveMessage.stopMegaphone()}
+                            </button>
+                        {/if}
                     </div>
                 </div>
             {/if}
@@ -471,17 +543,6 @@
 </div>
 
 <style lang="scss">
-    .menu-container {
-        &.mobile {
-            width: 100% !important;
-            height: 100% !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-        }
-    }
-
     video {
         transition: all 0.2s ease-in-out;
         &:hover {

@@ -1,5 +1,5 @@
 import { Metadata } from "@grpc/grpc-js";
-import type { Request, Response } from "hyper-express";
+import type { Request, Response } from "express";
 import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
 import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
@@ -42,7 +42,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveRoomEditionPrompt(): void {
         this.app.post("/room/refresh", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+            const body = req.body;
 
             if (typeof body.roomId !== "string") {
                 throw new Error("Incorrect roomId parameter");
@@ -56,15 +56,17 @@ export class AdminController extends BaseHttpController {
                             roomId,
                         },
                         (err) => {
-                            err ? rej(err) : res();
+                            if (err) {
+                                rej(err);
+                                return;
+                            }
+                            res();
                         }
                     );
                 });
             });
 
-            res.atomic(() => {
-                res.send("ok");
-            });
+            res.send("ok");
 
             return;
         });
@@ -108,7 +110,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveGlobalMessagePrompt(): void {
         this.app.post("/message", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+            const body = req.body;
 
             if (typeof body.text !== "string") {
                 throw new Error("Incorrect text parameter");
@@ -135,7 +137,11 @@ export class AdminController extends BaseHttpController {
                                         type: "", // TODO: what to put here?
                                     },
                                     (err) => {
-                                        err ? rej(err) : res();
+                                        if (err) {
+                                            rej(err);
+                                            return;
+                                        }
+                                        res();
                                     }
                                 );
                             } else if (type === "capacity") {
@@ -144,7 +150,11 @@ export class AdminController extends BaseHttpController {
                                         roomId,
                                     },
                                     (err) => {
-                                        err ? rej(err) : res();
+                                        if (err) {
+                                            rej(err);
+                                            return;
+                                        }
+                                        res();
                                     }
                                 );
                             }
@@ -153,9 +163,7 @@ export class AdminController extends BaseHttpController {
                 })
             );
 
-            res.atomic(() => {
-                res.send("ok");
-            });
+            res.send("ok");
         });
     }
 
@@ -227,9 +235,7 @@ export class AdminController extends BaseHttpController {
                 }
             }
 
-            res.atomic(() => {
-                res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
-            });
+            res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
             return;
         });
     }
@@ -272,7 +278,7 @@ export class AdminController extends BaseHttpController {
      */
     dispatchGlobalEvent(): void {
         this.app.post("/global/event", [adminToken], async (req: Request, res: Response) => {
-            const body = await validatePostQuery(
+            const body = validatePostQuery(
                 req,
                 res,
                 z.object({
@@ -291,6 +297,8 @@ export class AdminController extends BaseHttpController {
             for (const roomClient of roomClients) {
                 promises.push(
                     new Promise<void>((resolve, reject) => {
+                        console.log("dispatchGlobalEvent => body.name", body.name);
+                        console.log("dispatchGlobalEvent => body.data", body.data);
                         roomClient.dispatchGlobalEvent(
                             {
                                 name: body.name,
@@ -325,17 +333,14 @@ export class AdminController extends BaseHttpController {
                 }
             }
 
-            res.atomic(() => {
-                res.send("ok");
-            });
+            res.send("ok");
             return;
         });
     }
 
     sendChatMessagePrompt(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+            const body = req.body;
 
             try {
                 if (typeof body.roomId !== "string") {
@@ -384,7 +389,11 @@ export class AdminController extends BaseHttpController {
                 await apiClientRepository.getClient(roomId).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
-                            err ? rej(err) : res();
+                            if (err) {
+                                rej(err);
+                                return;
+                            }
+                            res();
                         });
                     });
                 });
@@ -392,17 +401,14 @@ export class AdminController extends BaseHttpController {
                 throw new Error("sendChatMessagePrompt => error" + err);
             }
 
-            res.atomic(() => {
-                res.send("ok");
-            });
+            res.send("ok");
             return;
         });
     }
 
     dispatchExternalModuleEvent(): void {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
-            const body = await req.json();
+            const body = req.body;
             try {
                 if (typeof body.data.moduleId !== "string") {
                     throw new Error("Incorrect roomId parameter");
@@ -432,7 +438,11 @@ export class AdminController extends BaseHttpController {
                                 message,
                             },
                             (err) => {
-                                err ? rej(err) : res();
+                                if (err) {
+                                    rej(err);
+                                    return;
+                                }
+                                res();
                             }
                         );
                     });
@@ -441,9 +451,7 @@ export class AdminController extends BaseHttpController {
                 throw new Error("dispatchExternalModuleEvent => error: " + err);
             }
 
-            res.atomic(() => {
-                res.send("ok");
-            });
+            res.send("ok");
             return;
         });
     }

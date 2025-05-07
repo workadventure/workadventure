@@ -2,9 +2,15 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const notification: DeepPartial<Translation["notification"]> = {
-    discussion: "veut discuter avec toi",
-    message: "a envoyé un message",
+    discussion: "{name} veut discuter avec toi",
+    message: "{name} a envoyé un message",
     chatRoom: "sur le salon",
+    askToMuteMicrophone: "Puis-je couper votre micro?",
+    askToMuteCamera: "Puis-je couper votre caméra?",
+    microphoneMuted: "Votre micro a été coupé par un modérateur",
+    cameraMuted: "Votre caméra a été coupée par un modérateur",
+    announcement: "Annonce",
+    open: "Ouvrir",
     help: {
         title: "Accès aux notifications refusé",
         permissionDenied: "Permission refusée",

@@ -1,9 +1,9 @@
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
+import { showHelpCameraSettings } from "../../Stores/HelpSettingsStore";
 import {
     availabilityStatusStore,
     requestedCameraDeviceIdStore,
@@ -11,23 +11,24 @@ import {
     requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
 } from "../../Stores/MediaStore";
-import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { menuIconVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
-import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { gameSceneIsLoadedStore, waitForGameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { ENABLE_CHAT, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
-import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
+import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
+import { InvalidLoginTokenError, MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
+import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
+import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
 import { GameScene } from "./GameScene";
-
 /**
  * This class should be responsible for any scene starting/stopping
  */
@@ -44,11 +45,13 @@ export class GameManager {
     private chatConnectionPromise: Promise<ChatConnectionInterface> | undefined;
     private matrixClientWrapper: MatrixClientWrapper | undefined;
     private _chatConnection: ChatConnectionInterface | undefined;
+    private chatVisibilitySubscription: Unsubscriber | undefined;
 
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterTextureIds = localUserStore.getCharacterTextures();
         this.companionTextureId = localUserStore.getCompanionTextureId();
+        this.chatVisibilitySubscription = initializeChatVisibilitySubscription();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -104,11 +107,6 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        // Only save the name if the user is not logged in
-        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
-        if (!localUserStore.isLogged() || !hasCapability("api/save-name")) {
-            localUserStore.setName(name);
-        }
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {
@@ -173,7 +171,7 @@ export class GameManager {
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))
         ) {
-            helpCameraSettingsVisibleStore.set(true);
+            showHelpCameraSettings();
             localUserStore.setHelpCameraSettingsShown();
         }
     }
@@ -188,21 +186,23 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
-        gameSceneIsLoadedStore.set(false);
+        this.closeGameScene();
+        if (!this.scenePlugin.get(targetSceneName)) {
+            this.scenePlugin.add(targetSceneName, sceneClass, false);
+        }
+        this.scenePlugin.run(targetSceneName);
+    }
 
+    closeGameScene(): void {
+        gameSceneIsLoadedStore.set(false);
         const gameScene = this.scenePlugin.get(this.currentGameSceneName ?? "default");
 
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
-
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
-        if (!this.scenePlugin.get(targetSceneName)) {
-            this.scenePlugin.add(targetSceneName, sceneClass, false);
-        }
-        this.scenePlugin.run(targetSceneName);
     }
 
     /**
@@ -245,24 +245,44 @@ export class GameManager {
         }
 
         const matrixServerUrl = this.getMatrixServerUrl() ?? MATRIX_PUBLIC_URI;
-        if (matrixServerUrl && ENABLE_CHAT && this.getCurrentGameScene().room.isChatEnabled) {
+
+        if (matrixServerUrl && get(userIsConnected)) {
             this.matrixClientWrapper = new MatrixClientWrapper(matrixServerUrl, localUserStore);
+
             const matrixClientPromise = this.matrixClientWrapper.initMatrixClient();
 
-            matrixClientPromise.catch((error) => {
-                console.error(`Failed to create matrix client : ${error}`);
-                Sentry.captureMessage(`Failed to create matrix client : ${error}`);
+            matrixClientPromise.catch((e) => {
+                if (e instanceof InvalidLoginTokenError) {
+                    loginTokenErrorStore.set(true);
+                }
             });
 
             const matrixChatConnection = new MatrixChatConnection(matrixClientPromise, availabilityStatusStore);
             this._chatConnection = matrixChatConnection;
 
             this.chatConnectionPromise = matrixChatConnection.init().then(() => matrixChatConnection);
+            isMatrixChatEnabledStore.set(true);
 
-            return this.chatConnectionPromise;
+            try {
+                const gameScene = await waitForGameSceneStore();
+
+                if (gameScene.room.isChatEnabled) {
+                    return this.chatConnectionPromise;
+                }
+            } catch (e) {
+                console.error(e);
+                Sentry.captureException(e);
+            }
+
+            matrixChatConnection.destroy().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            return new VoidChatConnection();
         } else {
             // No matrix connection? Let's fill the gap with a "void" object
             this._chatConnection = new VoidChatConnection();
+            isMatrixChatEnabledStore.set(false);
             return this._chatConnection;
         }
     }
@@ -282,6 +302,9 @@ export class GameManager {
             try {
                 this._chatConnection.clearListener();
                 await this._chatConnection.destroy();
+                if (this.chatVisibilitySubscription) {
+                    this.chatVisibilitySubscription();
+                }
                 this.clearChatDataFromLocalStorage();
                 this._chatConnection = undefined;
                 this.chatConnectionPromise = undefined;

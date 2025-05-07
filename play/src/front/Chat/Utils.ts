@@ -6,13 +6,15 @@ import { iframeListener } from "../Api/IframeListener";
 import { connectionManager } from "../Connection/ConnectionManager";
 import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
+import { coWebsites } from "../Stores/CoWebsiteStore";
 import { scriptUtils } from "../Api/ScriptUtils";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { userIsConnected } from "../Stores/MenuStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
-import { navChat, selectedRoomStore } from "./Stores/ChatStore";
-import { ChatRoom } from "./Connection/ChatConnection";
+import { warningMessageStore } from "../Stores/ErrorStore";
+import { LL } from "../../i18n/i18n-svelte";
+import { navChat } from "./Stores/ChatStore";
+import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
 
 export type OpenCoWebsiteObject = {
@@ -20,14 +22,12 @@ export type OpenCoWebsiteObject = {
     allowApi?: boolean;
     allowPolicy?: string;
     widthPercent?: number;
-    position?: number;
     closable?: boolean;
-    lazy?: boolean;
 };
 
 //enlever les events lié au chat dans iframelistener
-export const openCoWebSite = async (
-    { url, allowApi, allowPolicy, widthPercent, position, closable, lazy }: OpenCoWebsiteObject,
+export const openCoWebSite = (
+    { url, allowApi, allowPolicy, widthPercent, closable }: OpenCoWebsiteObject,
     source: MessageEventSource | null
 ) => {
     if (!url || !source) {
@@ -42,13 +42,11 @@ export const openCoWebSite = async (
         closable
     );
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
 export const getCoWebSite = () => {
-    const coWebsites = coWebsiteManager.getCoWebsites();
-
-    return coWebsites.map((coWebsite: CoWebsite) => {
+    return get(coWebsites).map((coWebsite: CoWebsite) => {
         return {
             id: coWebsite.getId(),
         };
@@ -70,18 +68,19 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openChatRoom = async (chatID: string) => {
+export const openDirectChatRoom = async (chatID: string) => {
     try {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
             return;
         }
-        const chatConnection = gameManager.chatConnection;
-        let room: ChatRoom | undefined = chatConnection.getDirectRoomFor(chatID);
+        const chatConnection = await gameManager.getChatConnection();
+        let room = chatConnection.getDirectRoomFor(chatID);
         if (!room) room = await chatConnection.createDirectRoom(chatID);
         if (!room) throw new Error("Failed to create room");
+        analyticsClient.createMatrixRoom();
 
-        if (room.myMembership === "invite") {
+        if (get(room.myMembership) === "invite") {
             room.joinRoom().catch((error: unknown) => console.error(error));
         }
 
@@ -89,19 +88,39 @@ export const openChatRoom = async (chatID: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId: chatID }));
         console.error(error);
-        Sentry.captureMessage("Failed to create room");
+        Sentry.captureException(error);
     }
 };
 
-export const openCoWebSiteWithoutSource = async ({
+export const openChatRoom = async (roomId: string) => {
+    try {
+        if (!get(userIsConnected)) {
+            openModal(RequiresLoginForChatModal);
+            return;
+        }
+        const chatConnection = await gameManager.getChatConnection();
+        const room = chatConnection.getRoomByID(roomId);
+
+        if (!room) throw new Error("Failed to retrieve room");
+
+        selectedRoomStore.set(room);
+        navChat.switchToChat();
+        chatVisibilityStore.set(true);
+    } catch (error) {
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId }));
+        console.error(error);
+        Sentry.captureException(error);
+    }
+};
+
+export const openCoWebSiteWithoutSource = ({
     url,
     allowApi,
     allowPolicy,
     widthPercent,
-    position,
     closable,
-    lazy,
 }: OpenCoWebsiteObject) => {
     if (!url) {
         throw new Error("Unknown query source");
@@ -109,15 +128,11 @@ export const openCoWebSiteWithoutSource = async ({
 
     const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(new URL(url), allowApi, allowPolicy, widthPercent, closable);
 
-    return openSimpleCowebsite(coWebsite, position, lazy);
+    return openSimpleCowebsite(coWebsite);
 };
 
-const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number, lazy?: boolean) => {
-    coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
-
-    if (lazy === undefined || !lazy) {
-        await coWebsiteManager.loadCoWebsite(coWebsite);
-    }
+const openSimpleCowebsite = (coWebsite: SimpleCoWebsite) => {
+    coWebsites.add(coWebsite);
 
     return {
         id: coWebsite.getId(),
@@ -125,12 +140,12 @@ const openSimpleCowebsite = async (coWebsite: SimpleCoWebsite, position?: number
 };
 
 export const closeCoWebsite = (coWebsiteId: string) => {
-    const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
+    const coWebsite = coWebsites.findById(coWebsiteId);
 
     if (!coWebsite) {
         console.warn("Unknown co-website, probably already closed", coWebsiteId);
         return;
     }
 
-    return coWebsiteManager.closeCoWebsite(coWebsite);
+    coWebsites.remove(coWebsite);
 };

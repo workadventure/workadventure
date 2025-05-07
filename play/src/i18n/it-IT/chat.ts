@@ -19,7 +19,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "In ",
         teleport: "Teletrasporto",
         search: "Cerca!",
-        walkTo: "Cammina verso",
+        // walkTo: "Cammina verso",
         teleporting: "Teletrasporto in corso...",
         businessCard: "Biglietto da visita",
         sendMessage: "Invia messaggio",
@@ -88,32 +88,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Invia Klaxoon incorporato nella chat!",
-                error: "Inserisci un URL Klaxoon valido",
             },
             youtube: {
-                title: "Youtube",
-                description: "Invia video di Youtube incorporato nella chat!",
-                error: "Inserisci un URL Youtube valido",
+                title: "YouTube",
+                description: "Invia video di YouTube incorporato nella chat!",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Invia Google Docs incorporato nella chat!",
-                error: "Inserisci un URL Google Docs valido",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Invia Google Slides incorporato nella chat!",
-                error: "Inserisci un URL Google Slides valido",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Invia Google Sheets incorporato nella chat!",
-                error: "Inserisci un URL Google Sheets valido",
             },
             eraser: {
                 title: "Eraser",
                 description: "Invia Eraser incorporato nella chat!",
-                error: "Inserisci un URL Eraser valido",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Invia file da Google Drive incorporato nella chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Invia Excalidraw incorporato nella chat!",
+            },
+            cards: {
+                title: "Carte",
+                description: "Invia carte incorporato nella chat!",
             },
             weblink: {
                 error: "Inserisci un URL valido",
@@ -318,7 +324,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: " Per favore, accedi per procedere con l'esperienza.",
     },
     requiresLoginForChat: "Accedi per accedere ai messaggi della chat",
-    featureComingSoon: "Funzione in arrivo!",
+    fileAttachment: {
+        title: "Allega file",
+        description: "Allega un file alla tua chat",
+        featureComingSoon: "Funzionalità in arrivo!",
+    },
 };
 
 export default chat;

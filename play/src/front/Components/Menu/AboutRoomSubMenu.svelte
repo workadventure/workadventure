@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -62,36 +63,96 @@
     });
 </script>
 
-<div class="about-room-main">
-    <h2>{$LL.menu.about.mapInfo()}</h2>
-    <section class="container-overflow">
-        <h3 class="blue-title">{mapName}</h3>
-        <p class="tw-whitespace-pre-line">{mapDescription}</p>
+<div class="about-room-main text-center py-8" transition:fly={{ x: -700, duration: 250 }}>
+    <h2 class="h4 light">{$LL.menu.about.mapInfo()}</h2>
+    <section class="container-overflow p-0">
+        <h3 class="h5 text-white/50">{mapName}</h3>
+        <p class="whitespace-pre-line italic text-white/50">{mapDescription}</p>
         {#if mapLink}
-            <p class="tw-whitespace-pre-line">
-                &gt; <a href={mapLink} target="_blank">{$LL.menu.about.mapLink()}</a> &lt;
-            </p>
+            <a href={mapLink} class="btn btn-sm btn-secondary uppercase inline-block" target="_blank"
+                >{$LL.menu.about.mapLink()}</a
+            >
         {/if}
-        <h3 class="blue-title" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
-            {$LL.menu.about.copyrights.map.title()}
-        </h3>
-        <p class="tw-whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
-        <h3 class="blue-title" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
-            {$LL.menu.about.copyrights.tileset.title()}
-        </h3>
+        <div
+            class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedMapCopyright = !expandedMapCopyright)}
+        >
+            <div class="grow text-left">{$LL.menu.about.copyrights.map.title()}</div>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedMapCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M6 9l6 6l6 -6" />
+            </svg>
+        </div>
+        <p class="whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
+        <div
+            class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedTilesetCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}
+        >
+            <div class="grow text-left">{$LL.menu.about.copyrights.tileset.title()}</div>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedTilesetCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M6 9l6 6l6 -6" />
+            </svg>
+        </div>
         <section hidden={!expandedTilesetCopyright}>
             {#each tilesetCopyright as copyright (copyright)}
-                <p class="tw-whitespace-pre-line">{copyright}</p>
+                <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
-        <h3 class="blue-title" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
-            {$LL.menu.about.copyrights.audio.title()}
-        </h3>
+        <div
+            class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedAudioCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}
+        >
+            <div class="grow text-left">{$LL.menu.about.copyrights.audio.title()}</div>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedAudioCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M6 9l6 6l6 -6" />
+            </svg>
+        </div>
         <section hidden={!expandedAudioCopyright}>
             {#each audioCopyright as copyright (copyright)}
-                <p class="tw-whitespace-pre-line">{copyright}</p>
+                <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.audio.empty()}</p>
             {/each}

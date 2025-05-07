@@ -1,12 +1,13 @@
 import debug from "debug";
 import pLimit from "p-limit";
+import * as Sentry from "@sentry/svelte";
 import { derived, get, Readable, Unsubscriber } from "svelte/store";
 import type JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
-import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
+import { BroadcastService } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
@@ -15,6 +16,8 @@ import { SpaceFilterInterface } from "../../Space/SpaceFilter/SpaceFilter";
 import { bindMuteEventsToSpace } from "../../Space/Utils/BindMuteEvents";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
+import LL from "../../../i18n/i18n-svelte";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -40,6 +43,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
     private spaceFilter: SpaceFilterInterface;
 
+    private static numInstances = 0;
+
     constructor(
         private roomConnection: RoomConnection,
         spaceName: string,
@@ -48,9 +53,9 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         private spaceRegistry: SpaceRegistryInterface
     ) {
         super();
+        JitsiBroadcastSpace.numInstances++;
 
         this.space = this.spaceRegistry.joinSpace(spaceName);
-        bindMuteEventsToSpace(this.space);
 
         this.unsubscribes.push(
             requestedCameraState.subscribe((state) => {
@@ -86,14 +91,17 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         );
 
         this.spaceFilter = this.space.watchLiveStreamingUsers();
+        bindMuteEventsToSpace(this.space, this.spaceFilter);
 
         this.space.setMetadata(new Map([["test", "test"]]));
 
         this.jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         // When the user leaves the space, we leave the Jitsi conference
+        console.warn("JitsiBroadcastSpace => Subscribing to this.spaceFilter.usersStore");
         this.unsubscribes.push(
             this.spaceFilter.usersStore.subscribe((users) => {
+                console.log("JitsiBroadcastSpace => Spacefilter usersStore", JitsiBroadcastSpace.numInstances, users);
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
                         limit(() => this.conference?.leave("Nobody is streaming anymore ..."))
@@ -105,24 +113,23 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                                 console.error(e);
                             })
                             .finally(() => {
-                                jitsiLoadingStore.set(false);
                                 broadcastService.disconnectProvider(this.provider);
                             });
                     }
                 } else {
                     limit(async () => {
                         if (this.conference === undefined) {
-                            jitsiLoadingStore.set(true);
+                            // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
+                            // on speaker zones)
+                            notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
                             this.conference = await this.joinJitsiConference(spaceName);
                             this.space.emitUpdateUser({
                                 jitsiParticipantId: this.conference.participantId,
                             });
-                            jitsiLoadingStore.set(false);
                         }
                     }).catch((e) => {
-                        // TODO : Handle the error and retry to join the conference
-                        jitsiLoadingStore.set(false);
                         console.error("Error while joining the conference", e);
+                        Sentry.captureException(e);
                     });
                 }
             })
@@ -148,7 +155,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             }
 
             if (!jitsiConnection) {
-                jitsiLoadingStore.set(false);
                 throw new Error("Could not connect to Jitsi");
             }
 
@@ -176,7 +182,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         // TODO: change me
         // We need to wait a bit before associating the JitsiTrack with the SpaceUser
         // Because the spaceUser was not updated with new users yet
-        // This is a workaround to avoid having to wait for the spaceUser to be updated implmented when we correct the Megaphone feature
+        // This is a workaround to avoid having to wait for the spaceUser to be updated implemented when we correct the Megaphone feature
         if (this.associatedStreamStoreTimeOut) clearTimeout(this.associatedStreamStoreTimeOut);
         this.associatedStreamStoreTimeOut = setTimeout(() => {
             const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
@@ -187,7 +193,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                         let found = false;
                         const spaceUser = stream.getImmediateSpaceUser();
                         if (spaceUser !== undefined) {
-                            if ($users.has(spaceUser.id)) {
+                            if ($users.has(spaceUser.spaceUserId)) {
                                 filtered.set(participantId, stream);
                             }
                             continue;
@@ -208,8 +214,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             );
                             jitsiBroadcastSpaceLogger(
                                 "joinJitsiConference => No associated spaceUser found for participantId: " +
-                                    stream.uniqueId +
-                                    $users.values()
+                                    stream.uniqueId
                             );
                         }
                     }
@@ -235,11 +240,11 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             })
             .finally(() => {
                 this.broadcastService.disconnectProvider(this.provider);
-                jitsiLoadingStore.set(false);
             });
         jitsiConferencesStore.delete(this.space.getName());
-        this.space.stopWatching(this.spaceFilter);
-        this.spaceRegistry.leaveSpace(this.space);
+        //this.space.stopWatching(this.spaceFilter);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
+        this.spaceRegistry.leaveSpace(this.space);
+        console.warn("JitsiBroadcastSpace => Unsubscribing from this.spaceFilter.usersStore");
     }
 }

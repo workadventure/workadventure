@@ -1,12 +1,8 @@
 <script lang="ts">
-    import {
-        EntityDataProperties,
-        EntityDataPropertiesKeys,
-        EntityDataProperty,
-        EntityDescriptionPropertyData,
-    } from "@workadventure/map-editor";
+    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
+    import { v4 as uuid } from "uuid";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -19,7 +15,10 @@
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { IconArrowLeft } from "@wa-icons";
+    import { IconChevronDown, IconArrowLeft } from "../../Icons";
+    import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -36,14 +35,14 @@
             const descriptionProperty = properties.find((p) => p.type === "entityDescriptionProperties");
             if (!descriptionProperty) {
                 $mapEditorSelectedEntityStore?.addProperty({
-                    id: crypto.randomUUID(),
+                    id: uuid(),
                     type: "entityDescriptionProperties",
                     description: "",
                     searchable: false,
                 });
             } else {
-                entityDescription = (descriptionProperty as EntityDescriptionPropertyData).description ?? "";
-                entitySearchable = (descriptionProperty as EntityDescriptionPropertyData).searchable ?? false;
+                entityDescription = descriptionProperty.description ?? "";
+                entitySearchable = descriptionProperty.searchable ?? false;
             }
         }
     });
@@ -64,7 +63,7 @@
         if (!$mapEditorSelectedEntityStore) return;
         analyticsClient.addMapEditorProperty("entity", app.name);
         const property: EntityDataProperty = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             type: "openWebsite",
             application: app.name,
             closable: true,
@@ -126,7 +125,7 @@
     }
 
     function getPropertyFromType(type: EntityDataPropertiesKeys, subtype?: string): EntityDataProperty {
-        const id = crypto.randomUUID();
+        const id = uuid();
         let placeholder: string;
         let buttonLabel: string;
         let policy: string | undefined;
@@ -252,172 +251,180 @@
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
-    <div class="header-container">
-        <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
-    </div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
-        <IconArrowLeft font-size="12" class="tw-cursor-pointer" />
-        <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
-    </p>
-    <div class="properties-buttons tw-flex tw-flex-row">
-        {#if !hasJitsiRoomProperty}
+    <div class="overflow-x-hidden overflow-y-auto">
+        <div class="header-container">
+            <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
+        </div>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+            <IconArrowLeft font-size="12" class="cursor-pointer" />
+            <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
+        </p>
+        <div class="properties-buttons flex flex-row">
+            {#if !hasJitsiRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="jitsiRoomProperty"
+                    on:click={() => {
+                        onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
             <AddPropertyButtonWrapper
-                property="jitsiRoomProperty"
+                property="playAudio"
                 on:click={() => {
-                    onAddProperty("jitsiRoomProperty");
+                    onAddProperty("playAudio");
                 }}
             />
-        {/if}
-        <AddPropertyButtonWrapper
-            property="playAudio"
-            on:click={() => {
-                onAddProperty("playAudio");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            on:click={() => {
-                onAddProperty("openWebsite");
-            }}
-        />
-    </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="klaxoon"
-            on:click={() => {
-                onAddProperty("openWebsite", "klaxoon");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="youtube"
-            on:click={() => {
-                onAddProperty("openWebsite", "youtube");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDrive"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDrive");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDocs"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDocs");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSheets"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSheets");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSlides"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSlides");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="eraser"
-            on:click={() => {
-                onAddProperty("openWebsite", "eraser");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="excalidraw"
-            on:click={() => {
-                onAddProperty("openWebsite", "excalidraw");
-            }}
-        />
-    </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
-        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
             <AddPropertyButtonWrapper
                 property="openWebsite"
-                subProperty={app.name}
                 on:click={() => {
-                    onAddSpecificProperty(app);
+                    onAddProperty("openWebsite");
                 }}
             />
-        {/each}
-    </div>
-    <div class="entity-name-container">
-        <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
-        <input
-            id="objectName"
-            type="text"
-            placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
-            bind:value={entityName}
-            on:change={onUpdateName}
-        />
-    </div>
-    <div class="entity-name-container">
-        {#if !showDescriptionField}
-            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
-            >
-        {:else}
-            <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
-            <textarea
-                id="objectDescription"
-                placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
-                bind:value={entityDescription}
-                on:change={onUpdateDescription}
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="klaxoon"
+                on:click={() => {
+                    onAddProperty("openWebsite", "klaxoon");
+                }}
             />
-        {/if}
-    </div>
-    <div class="value-switch">
-        <label for="searchable">{$LL.mapEditor.entityEditor.objectSearchable()}</label>
-        <input
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="youtube"
+                on:click={() => {
+                    onAddProperty("openWebsite", "youtube");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDrive"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDrive");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDocs"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDocs");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSheets"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSheets");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSlides"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSlides");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="eraser"
+                on:click={() => {
+                    onAddProperty("openWebsite", "eraser");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="excalidraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "excalidraw");
+                }}
+            />
+        </div>
+        <div class="properties-buttons flex flex-row flex-wrap m-2">
+            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+                <AddPropertyButtonWrapper
+                    property="openWebsite"
+                    subProperty={app.name}
+                    on:click={() => {
+                        onAddSpecificProperty(app);
+                    }}
+                />
+            {/each}
+        </div>
+        <div class="entity-name-container">
+            <Input
+                id="objectName"
+                label={$LL.mapEditor.entityEditor.objectName()}
+                type="text"
+                placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
+                bind:value={entityName}
+                onChange={onUpdateName}
+            />
+        </div>
+        <div class="entity-name-container">
+            {#if !showDescriptionField}
+                <a
+                    href="#addDescriptionField"
+                    class="pl-0 text-blue-500 flex flex-row items-center"
+                    on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                    >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+                >
+            {:else}
+                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
+                    <IconChevronDown />{$LL.mapEditor.entityEditor.addDescriptionField()}</button
+                >
+
+                <TextArea
+                    label={$LL.mapEditor.entityEditor.objectDescription()}
+                    id="objectDescription"
+                    placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
+                    bind:value={entityDescription}
+                    on:change={onUpdateDescription}
+                    onKeyPress={() => {}}
+                />
+            {/if}
+        </div>
+
+        <InputSwitch
+            label={$LL.mapEditor.entityEditor.objectSearchable()}
             id="searchable"
-            type="checkbox"
-            class="input-switch"
-            bind:checked={entitySearchable}
-            on:change={onUpdateSearchable}
+            bind:value={entitySearchable}
+            onChange={onUpdateSearchable}
         />
-    </div>
-    <div class="properties-container">
-        {#each properties as property (property.id)}
-            <div class="property-box">
-                {#if property.type === "jitsiRoomProperty"}
-                    <JitsiRoomPropertyEditor
-                        {property}
-                        triggerOptionActivated={false}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "playAudio"}
-                    <PlayAudioPropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "openWebsite"}
-                    <OpenWebsitePropertyEditor
-                        {property}
-                        triggerOptionActivated={false}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {/if}
-            </div>
-        {/each}
+
+        <div class="properties-container">
+            {#each properties as property (property.id)}
+                <div class="property-box">
+                    {#if property.type === "jitsiRoomProperty"}
+                        <JitsiRoomPropertyEditor
+                            {property}
+                            triggerOptionActivated={false}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "playAudio"}
+                        <PlayAudioPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "openWebsite"}
+                        <OpenWebsitePropertyEditor
+                            {property}
+                            triggerOptionActivated={false}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {/if}
+                </div>
+            {/each}
+        </div>
     </div>
 {/if}
 
@@ -454,68 +461,68 @@
         }
     }
 
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
+    // .input-switch {
+    //     position: relative;
+    //     top: 0px;
+    //     right: 0px;
+    //     bottom: 0px;
+    //     left: 0px;
+    //     display: inline-block;
+    //     height: 1rem;
+    //     width: 2rem;
+    //     -webkit-appearance: none;
+    //     -moz-appearance: none;
+    //     appearance: none;
+    //     border-radius: 9999px;
+    //     border-width: 1px;
+    //     border-style: solid;
+    //     --border-opacity: 1;
+    //     border-color: rgb(77 75 103 / var(--border-opacity));
+    //     --bg-opacity: 1;
+    //     background-color: rgb(15 31 45 / var(--bg-opacity));
+    //     background-image: none;
+    //     padding: 0px;
+    //     --text-opacity: 1;
+    //     color: rgb(242 253 255 / var(--text-opacity));
+    //     outline: 2px solid transparent;
+    //     outline-offset: 2px;
+    //     cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    // }
 
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
+    // .input-switch::before {
+    //     position: absolute;
+    //     left: -3px;
+    //     top: -3px;
+    //     height: 1.25rem;
+    //     width: 1.25rem;
+    //     border-radius: 9999px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(146 142 187 / var(--bg-opacity));
+    //     transition-property: all;
+    //     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //     transition-duration: 150ms;
+    //     --content: "";
+    //     content: var(--content);
+    // }
 
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
+    // .input-switch:checked {
+    //     --border-opacity: 1;
+    //     border-color: rgb(146 142 187 / var(--border-opacity));
+    // }
 
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
+    // .input-switch:checked::before {
+    //     left: 13px;
+    //     top: -3px;
+    //     --bg-opacity: 1;
+    //     background-color: rgb(65 86 246 / var(--bg-opacity));
+    //     content: var(--content);
+    //     /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    //     --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    //     box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    // }
 
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
+    // .input-switch:disabled {
+    //     cursor: not-allowed;
+    //     opacity: 0.4;
+    // }
 </style>

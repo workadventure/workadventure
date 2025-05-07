@@ -40,6 +40,8 @@ export const MAP_STORAGE_API_TOKEN = env.MAP_STORAGE_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
+
+export const PUSHER_WS_PORT = env.PUSHER_WS_PORT;
 export const SOCKET_IDLE_TIMER = env.SOCKET_IDLE_TIMER; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
@@ -70,7 +72,7 @@ export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
 export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
 export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
 export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECTED_LIST;
-export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
+//export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
 export const ENABLE_OPENAPI_ENDPOINT = env.ENABLE_OPENAPI_ENDPOINT;
@@ -95,6 +97,7 @@ export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 // Map editor
 export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
 export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
+export const MAP_EDITOR_ALLOW_ALL_USERS: boolean = env.MAP_EDITOR_ALLOW_ALL_USERS;
 
 // Integration tools
 export const KLAXOON_ENABLED = env.KLAXOON_ENABLED;
@@ -186,4 +189,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
+    MATRIX_ADMIN_USER,
+    MATRIX_DOMAIN,
 };

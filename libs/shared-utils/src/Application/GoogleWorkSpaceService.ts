@@ -1,3 +1,4 @@
+import { asError } from "catch-unknown";
 import {
     GoogleDocsException,
     GoogleSheetsException,
@@ -19,7 +20,7 @@ export const getGoogleSlidesEmbedUrl = (url: URL): string => {
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
-function getGoogleWorkSpaceEmbedUrl(url: URL): string {
+export function getGoogleWorkSpaceEmbedUrl(url: URL): string {
     const link = url.toString();
     if (isEmbedableGooglWorkSapceLink(url)) return link;
     url.searchParams.set("embedded", "true");
@@ -183,7 +184,7 @@ export const initGooglePicker = (
                         const embedUrlPicked = await showGooglePicker(appId, tokenResponse.access_token, viewId);
                         reseolve(embedUrlPicked);
                     } catch (e) {
-                        reject(e);
+                        reject(asError(e));
                     }
                 }, // defined later
             })
@@ -207,7 +208,7 @@ export const showGooglePicker = (appId: string, accessToken: string, viewId: str
                     const embedUrl = document[window.google.picker.Document.EMBEDDABLE_URL];
                     resolve(embedUrl);
                 } catch (e) {
-                    reject(e);
+                    reject(asError(e));
                 }
             })
             .build();

@@ -1,9 +1,15 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const camera: BaseTranslation = {
+    editCam: "Edit camera",
+    editMic: "Edit microphone",
+    editSpeaker: "Edit audio output",
+    active: "Active",
+    disabled: "Disabled",
+    notRecommended: "Not recommended",
     enable: {
         title: "Turn on your camera and microphone",
-        start: "Let's go!",
+        start: "Welcome to our audio and video device configuration page! Find the tools here to enhance your online experience. Adjust settings to your preferences to address any potential issues. Ensure your hardware is properly connected and up to date. Explore and test different configurations to find what works best for you.",
     },
     help: {
         title: "Camera / Microphone access needed",
@@ -11,7 +17,7 @@ const camera: BaseTranslation = {
         content: "You must allow camera and microphone access in your browser.",
         firefoxContent:
             'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
-        refresh: "Refresh",
+        allow: "Allow webcam",
         continue: "Continue without webcam",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
@@ -32,10 +38,14 @@ const camera: BaseTranslation = {
         preparingYouNetworkGuide: '"Preparing your network" guide',
         refresh: "Refresh",
         continue: "Continue",
+        newDeviceDetected: "New device detected {device} 🎉 Switch? [SPACE]",
     },
     my: {
         silentZone: "Silent zone",
+        silentZoneDesc:
+            "You are in a silent zone. You can only see and hear the people you are with. You can not see or hear the other people in the room.",
         nameTag: "You",
+        loading: "Loading your camera...",
     },
     disable: "Turn off your camera",
     menu: {
@@ -48,7 +58,7 @@ const camera: BaseTranslation = {
         muteVideoUser: "Mute video",
         muteVideoEveryBody: "Mute video for everybody",
         pin: "Pin",
-        blockOrReportUser: "Block or report user",
+        blockOrReportUser: "Moderation",
     },
 };
 

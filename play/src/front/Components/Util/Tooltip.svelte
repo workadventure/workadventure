@@ -1,5 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import { fly } from "svelte/transition";
+
+    import tooltipArrow from "../images/arrow-top.svg";
 
     export let text: string;
     export let rightPosition = "false";
@@ -22,6 +25,7 @@
         } else if (rightPosition === "true") {
             toolTipPosition = "right-tooltip";
         }
+        console.log("tooltip parent ::::", tooltipElement?.parentElement);
         tooltipElement?.parentElement?.addEventListener("mouseenter", () => show());
         tooltipElement?.parentElement?.addEventListener("mouseleave", () => hide());
     });
@@ -32,65 +36,20 @@
     });
 </script>
 
-<div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span bind:this={textElement} class="tooltiptext {toolTipPosition}" class:tw-ml-2={rightPosition === "true"}
-        >{text}</span
+<div bind:this={tooltipElement} in:fly={{ y: 40, duration: 150 }}>
+    <div
+        bind:this={textElement}
+        class="fixed top-[70px] text-sm rounded w-40 px-4 py-2 text-white left-1/2 transform -translate-x-1/2 text-center before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all {toolTipPosition}"
     >
+        <img
+            loading="eager"
+            src={tooltipArrow}
+            class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
+            alt="Sub menu arrow"
+            style="visibility: hidden;"
+        />
+        <span class="relative">
+            {text}
+        </span>
+    </div>
 </div>
-
-<style lang="scss">
-    .tooltip {
-        display: block;
-        .tooltiptext {
-            white-space: pre;
-            visibility: hidden;
-            position: absolute;
-            align-items: center;
-            border-radius: 0.25rem;
-            --tw-bg-opacity: 0.8;
-            background-color: rgb(56 56 74 / var(--tw-bg-opacity));
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            padding-top: 0.25rem;
-            padding-bottom: 0.25rem;
-            text-align: center;
-            --tw-text-opacity: 1;
-            color: rgb(255 255 255 / var(--tw-text-opacity));
-        }
-
-        .right-tooltip {
-            left: 10px;
-            bottom: 50%;
-            transform: translate(0, 50%);
-            &::after {
-                top: calc(50% - 5px);
-                left: -5px;
-                border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
-                    theme("colors.transparent");
-            }
-        }
-
-        .left-tooltip {
-            right: 55px;
-            bottom: 50%;
-            transform: translate(0, 50%);
-            &::after {
-                top: calc(50% - 5px);
-                left: auto;
-                right: -12px;
-                border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
-                    theme("colors.transparent");
-                content: "";
-                transform: rotate(180deg);
-            }
-        }
-
-        .top-tooltip {
-            bottom: 10px;
-            left: 0;
-            &::after {
-                left: 1.5rem;
-            }
-        }
-    }
-</style>

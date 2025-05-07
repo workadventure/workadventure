@@ -7,6 +7,9 @@
     import LL from "../../../i18n/i18n-svelte";
 
     import calendarSvg from "../images/applications/outlook.svg";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -24,8 +27,7 @@
         if (!gameScene) return;
 
         [...$extensionModuleStore.values()].forEach((extensionModule) => {
-            extensionModule?.openPopupMeeting &&
-                event.resource?.onlineMeeting?.joinUrl &&
+            if (extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl) {
                 extensionModule.openPopupMeeting(
                     event.title,
                     event.resource?.onlineMeeting?.joinUrl,
@@ -34,61 +36,83 @@
                     event.end,
                     event.resource?.onlineMeeting?.passcode
                 );
+            }
         });
+    }
+
+    function goToLoginPage() {
+        analyticsClient.login();
+        window.location.href = "/login";
     }
 </script>
 
-<div class="calendar tw-bg-dark-blue/95 tw-select-text">
-    <div class="sidebar " in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-        <button class="close-window" data-testid="mapEditor-close-button" on:click={closeCalendar}>&#215;</button>
-
-        <div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
+<div class="calendar p-1 @md/actions:p-2 max-h-screen select-text flex">
+    <div
+        class="sidebar p-2 [&>*]:p-1 max-h-full bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
+        in:fly={{ x: 100, duration: 250, delay: 200 }}
+        out:fly={{ x: 100, duration: 200 }}
+    >
+        <div class="mapexplorer flex flex-col overflow-auto">
             <div class="header-container">
-                <h3 class="tw-text-l tw-text-left">
-                    <img
-                        draggable="false"
-                        src={calendarSvg}
-                        class="tw-w-8 tw-mx-2"
-                        alt={$LL.menu.icon.open.calendar()}
-                    />
-                    {new Date().toLocaleString("en-EN", {
-                        month: "long",
-                        day: "2-digit",
-                        year: "numeric",
-                    })} (beta)
-                </h3>
-                <h4 class="tw-text-l tw-text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                <div class="flex flex-row items-start justify-between">
+                    <div class="flex flex-row items-center gap-2 flex-wrap">
+                        <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                        <h3 class="text-xl text-left leading-none">
+                            {new Date().toLocaleString("en-EN", {
+                                month: "long",
+                                day: "2-digit",
+                                year: "numeric",
+                            })}
+                        </h3>
+                        <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
+                    </div>
+
+                    <ButtonClose on:click={closeCalendar} />
+                </div>
+                <div class="bg-white/20 h-[1px] w-full my-2" />
+                <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
             </div>
-            <div class="tw-flex tw-flex-col tw-justify-center tw-gap-4">
+            <div class="flex flex-col justify-center gap-4">
+                {#if !$userIsConnected}
+                    <div class="flex flex-col justify-center items-center">
+                        <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
+                        <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
+                        <button
+                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                            on:click={goToLoginPage}
+                            >{$LL.menu.profile.login()}
+                        </button>
+                    </div>
+                {/if}
                 {#if $calendarEventsStore.size > 0}
                     {#each [...$calendarEventsStore.entries()] as [eventId, event] (eventId)}
-                        <div class="tw-flex tw-flex-col tw-justify-center">
-                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
-                                <span class="tw-text-xs">{formatHour(event.start)}</span>
-                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                        <div class="flex flex-col justify-center">
+                            <div class="flex flex-row justify-start w-full">
+                                <span class="text-xs">{formatHour(event.start)}</span>
+                                <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
                             </div>
                             <div
                                 id={`event-id-${eventId}`}
-                                class="tw-flex tw-flex-col tw-justify-center tw-p-2 tw-bg-dark-blue/90 tw-rounded-md"
+                                class="flex flex-col justify-center p-2 bg-white/5 border border-white/10 border-solid rounded-md"
                             >
-                                <div class="tw-flex tw-flex-col tw-justify-between tw-items-center">
-                                    <h4 class="tw-text-l tw-text-left tw-font-bold">{event.title}</h4>
-                                    <p class="tw-text-xs tw-w-full tw-whitespace-pre-line tw-overflow-x-hidden">
+                                <div class="flex flex-col justify-between items-center">
+                                    <h4 class="text-l text-left font-bold">{event.title}</h4>
+                                    <p class="text-xs w-full whitespace-pre-line overflow-x-hidden">
                                         {event.description}
                                     </p>
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
                                             on:click|preventDefault|stopPropagation={() => openMeeting(event)}
-                                            class="tw-text-xs tw-text-right"
+                                            class="text-xs text-right text-secondary-500"
                                             target="_blank">Click here to join the meeting</a
                                         >
                                     {/if}
                                 </div>
                             </div>
-                            <div class="tw-flex tw-flex-row tw-justify-start tw-w-full">
-                                <span class="tw-text-xs">{formatHour(event.end)}</span>
-                                <hr class="tw-border-gray-300 tw-mx-2 tw-w-full tw-opacity-30 tw-border-dashed" />
+                            <div class="flex flex-row justify-start w-full">
+                                <span class="text-xs">{formatHour(event.end)}</span>
+                                <hr class="border-gray-300 mx-2 w-full opacity-30 border-dashed" />
                             </div>
                         </div>
                     {/each}
@@ -118,8 +142,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding: 1.5em;
-            width: 23em !important;
         }
     }
 </style>

@@ -11,11 +11,11 @@ import login from "./login";
 import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import actionbar from "./actionbar";
 import video from "./video";
+import form from "./form";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -29,11 +29,11 @@ const zh_CN = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     actionbar,
     video,
+    form,
 });
 
 export default zh_CN;

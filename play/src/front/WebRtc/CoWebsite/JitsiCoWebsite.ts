@@ -1,19 +1,10 @@
-import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
-import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { JitsiRoomConfigData } from "@workadventure/map-editor";
-import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-import { coWebsiteManager } from "../CoWebsiteManager";
-import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
-import { inJitsiStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
-import { gameManager } from "../../Phaser/Game/GameManager";
-import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
-const JitsiConfig = z
+export const JitsiConfig = z
     .object({
         startWithAudioMuted: z.boolean().optional(),
         startWithVideoMuted: z.boolean().optional(),
@@ -30,7 +21,7 @@ const JitsiConfig = z
 
 type JitsiConfig = z.infer<typeof JitsiConfig>;
 
-interface JitsiOptions {
+export interface JitsiOptions {
     jwt?: string;
     roomName: string;
     width: string;
@@ -41,10 +32,10 @@ interface JitsiOptions {
     onload?: () => void;
 }
 
-interface JitsiApi {
+export interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
-    addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
-    removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
+    addListener: (type: string, callback: Function) => void; // eslint-disable-line @typescript-eslint/no-unsafe-function-type
+    removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/no-unsafe-function-type
     getParticipantsInfo(): { displayName: string; participantId: string }[];
     dispose: () => void;
 }
@@ -67,7 +58,7 @@ const getDefaultConfig = (): JitsiConfig => {
     };
 };
 
-const mergeConfig = (config?: object) => {
+export const mergeConfig = (config?: object) => {
     const currentDefaultConfig = getDefaultConfig();
     if (!config) {
         return currentDefaultConfig;
@@ -84,7 +75,7 @@ const mergeConfig = (config?: object) => {
     };
 };
 
-const defaultInterfaceConfig = {
+export const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
 
@@ -132,265 +123,23 @@ const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-    private jitsiApi?: JitsiApi;
-    private audioCallback = this.onAudioChange.bind(this);
-    private videoCallback = this.onVideoChange.bind(this);
-    private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
-    private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
-
-    private screenWakeRelease: (() => Promise<void>) | undefined;
-
     constructor(
         url: URL,
         widthPercent: number | undefined,
         closable: boolean | undefined,
-        private roomName: string,
+        // FIXME: unused private variables.
+        public roomName: string,
         private playerName: string,
         private jwt: string | undefined,
-        private jitsiConfig: JitsiRoomConfigData | undefined,
-        private jitsiInterfaceConfig: object | undefined,
-        private domain: string
+        public readonly jitsiConfig: JitsiRoomConfigData | undefined,
+        public readonly jitsiInterfaceConfig: object | undefined,
+        private domain: string,
+        public readonly jitsiRoomAdminTag: string | null
     ) {
         super(url, false, undefined, widthPercent, closable);
     }
 
-    private loadPromise: CancelablePromise | undefined;
-
-    load(): CancelablePromise<HTMLIFrameElement> {
-        let cancelled = false;
-        return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
-            this.state.set("loading");
-
-            inExternalServiceStore.set(true);
-
-            jitsiExternalApiFactory
-                .loadJitsiScript(this.domain)
-                .then(async () => {
-                    const userConnectedTags = gameManager.getCurrentGameScene().connection?.getAllTags() ?? [];
-                    await randomDelay();
-
-                    const mergedConfig = mergeConfig(this.jitsiConfig);
-
-                    if (
-                        !userConnectedTags.includes("admin") &&
-                        (!this.jitsiConfig?.jitsiRoomAdminTag ||
-                            !userConnectedTags.includes(this.jitsiConfig?.jitsiRoomAdminTag))
-                    ) {
-                        mergedConfig.localRecording = {
-                            disable: true,
-                            disableSelfRecording: true,
-                        };
-                    }
-
-                    const options: JitsiOptions = {
-                        roomName: this.roomName,
-                        jwt: this.jwt,
-                        width: "100%",
-                        height: "100%",
-                        parentNode: coWebsiteManager.getCoWebsiteBuffer(),
-                        configOverwrite: mergedConfig,
-                        interfaceConfigOverwrite: {
-                            ...defaultInterfaceConfig,
-                            ...this.jitsiInterfaceConfig,
-                        },
-                    };
-
-                    if (!options.jwt) {
-                        delete options.jwt;
-                    }
-
-                    this.jitsiApi = undefined;
-
-                    const timemoutPromise = new Promise<void>((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve();
-                        }, 2000);
-                    }); //failsafe in case the iframe is deleted before loading or too long to load
-
-                    const jistiMeetLoadedPromise = new Promise<void>((resolve, reject) => {
-                        options.onload = () => {
-                            resolve();
-                        }; //we want for the iframe to be loaded before triggering animations.
-
-                        this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
-
-                        this.jitsiApi.addListener("videoConferenceJoined", () => {
-                            this.jitsiApi?.executeCommand("displayName", this.playerName);
-                            this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
-                            this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
-                                enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
-                            });
-
-                            screenWakeLock
-                                .requestWakeLock()
-                                .then((release) => {
-                                    this.screenWakeRelease = release;
-                                })
-                                .catch((error) => console.error(error));
-
-                            this.updateParticipantsCountStore();
-                        });
-
-                        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-                        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
-                        this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
-                        this.jitsiApi.addListener("participantJoined", this.participantsCountChangeCallback);
-                        this.jitsiApi.addListener("participantLeft", this.participantsCountChangeCallback);
-                        this.jitsiApi.addListener("participantKickedOut", this.participantsCountChangeCallback);
-                    });
-
-                    Promise.race([timemoutPromise, jistiMeetLoadedPromise])
-                        .then(async () => {
-                            await randomDelay();
-                            const iframe = coWebsiteManager
-                                .getCoWebsiteBuffer()
-                                .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
-
-                            if (cancelled /*&& iframe*/) {
-                                console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
-                                //this.closeOrUnload(iframe);
-                                this.destroy();
-                                return;
-                            }
-
-                            if (iframe && this.jitsiApi) {
-                                this.jitsiApi.addListener("videoConferenceLeft", () => {
-                                    this.closeOrUnload();
-                                });
-
-                                this.jitsiApi.addListener("readyToClose", () => {
-                                    this.closeOrUnload();
-                                });
-
-                                this.iframe = iframe;
-                                this.iframe.classList.add("pixel");
-                                this.state.set("ready");
-                                return resolve(iframe);
-                            } else {
-                                console.error("No iframe or no jitsiApi. We may have a problem.");
-                            }
-                        })
-                        .catch((e) => {
-                            return reject(e);
-                        });
-                })
-                .catch((e) => {
-                    reject(e);
-                });
-
-            cancel(() => {
-                console.info("CLOSING Canceling JitsiCoWebsite");
-                cancelled = true;
-                this.unload().catch((err) => {
-                    console.error("Cannot unload Jitsi co-website while cancel loading", err);
-                });
-            });
-        }));
-    }
-
-    private closeOrUnload() {
-        if (this.screenWakeRelease) {
-            this.releaseScreenWake();
-            if (this.isClosable()) {
-                coWebsiteManager.closeCoWebsite(this);
-            } else {
-                coWebsiteManager.unloadCoWebsite(this).catch((err) => {
-                    console.error("Cannot unload co-website from the Jitsi factory", err);
-                });
-            }
-        }
-    }
-
-    private releaseScreenWake() {
-        if (this.screenWakeRelease) {
-            this.screenWakeRelease()
-                .then(() => {
-                    this.screenWakeRelease = undefined;
-                })
-                .catch((error) => console.error(error));
-        }
-    }
-
-    unload(): Promise<void> {
-        if (this.loadPromise) {
-            console.info("CLOSING unload JitsiCoWebsite");
-        } else {
-            console.info("CLOSING NOOOOT unload JitsiCoWebsite");
-        }
-        try {
-            this.loadPromise?.cancel();
-            this.destroy();
-            inExternalServiceStore.set(false);
-            inJitsiStore.set(false);
-            this.releaseScreenWake();
-            return super.unload();
-        } catch (e) {
-            console.error("Cannot unload Jitsi co-website", e);
-            return Promise.reject(e);
-        }
-    }
-
-    public stop() {
-        if (!this.jitsiApi) {
-            return;
-        }
-
-        this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
-        this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
-    }
-
-    public destroy() {
-        userIsJitsiDominantSpeakerStore.set(false);
-        jitsiParticipantsCountStore.set(0);
-        if (!this.jitsiApi) {
-            return;
-        }
-
-        this.stop();
-        this.jitsiApi?.dispose();
-    }
-
-    private onAudioChange({ muted }: { muted: boolean }): void {
-        if (muted) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
-    }
-
-    private onVideoChange({ muted }: { muted: boolean }): void {
-        if (muted) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
-        }
-    }
-
-    private onDominantSpeakerChanged(data: { id: string }): void {
-        if (this.jitsiApi) {
-            userIsJitsiDominantSpeakerStore.set(
-                data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
-            );
-        }
-    }
-
-    private onParticipantsCountChange(): void {
-        this.updateParticipantsCountStore();
-    }
-
-    private updateParticipantsCountStore(): void {
-        jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
-    }
-
-    private getCurrentParticipantId(
-        participants: { displayName: string; participantId: string }[]
-    ): string | undefined {
-        const currentPlayerName = gameManager.getPlayerName();
-        for (const participant of participants) {
-            if (participant.displayName === currentPlayerName) {
-                return participant.participantId;
-            }
-        }
-        return;
+    getDomain(): string {
+        return this.domain;
     }
 }

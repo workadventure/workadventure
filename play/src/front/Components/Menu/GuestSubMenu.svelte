@@ -1,13 +1,21 @@
 <script lang="ts">
+    import { fly } from "svelte/transition";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+    import InputSwitch from "../Input/InputSwitch.svelte";
+    import LocationIcon from "../Icons/LocationIcon.svelte";
+    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import PinIcon from "../Icons/PinIcon.svelte";
+    import Select from "../Input/Select.svelte";
 
-    let entryPoint: string = $startLayerNamesStore[0];
     let walkAutomatically = false;
-    const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
+    let linkCopied = false;
+    const gameScene = gameManager.getCurrentGameScene();
+    const currentPlayer = gameScene.CurrentPlayer;
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
+    const startPositions = gameScene.getStartPositionNames();
+    let entryPoint: string = startPositions[0];
 
     function copyLink() {
         // Analytics Client
@@ -55,44 +63,77 @@
     }
 </script>
 
-<div>
+<div transition:fly={{ x: -700, duration: 250 }}>
     {#if !canShare}
         <section class="share-url not-mobile">
-            <h3 class="blue-title">{$LL.menu.invite.description()}</h3>
-            <input type="text" readonly id="input-share-link" class="tw-w-full" value={location.toString()} />
-            <div class="centered-column">
-                <button type="button" class="light" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
+            <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+                <PinIcon />
+                <div class="grow">{$LL.menu.invite.description()}</div>
+            </div>
+            <div class="flex items-center relative m-4">
+                <input
+                    type="text"
+                    readonly
+                    id="input-share-link"
+                    class="grow h-12 text border-white bg-contrast rounded border border-solid border-white/20"
+                    value={location.toString()}
+                />
+                <button
+                    type="button"
+                    class="flex items-center btn btn-secondary btn-sm absolute right-2 transition-all w-32 text-center justify-center {linkCopied
+                        ? 'btn-success'
+                        : 'btn-secondary'}"
+                    on:click={() => (linkCopied = !linkCopied)}
+                    on:click={copyLink}
+                >
+                    <span hidden={!linkCopied}>
+                        <div class="icon-tabler icon-tabler-check">
+                            <CheckIcon />
+                        </div>
+                    </span>
+                    <span hidden={!linkCopied}>{$LL.menu.invite.copied()}</span>
+                    <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
+                </button>
             </div>
         </section>
     {:else}
         <section class="is-mobile">
-            <h3 class="blue-title">{$LL.menu.invite.description()}</h3>
-            <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="light" on:click={shareLink}>{$LL.menu.invite.share()}</button>
+            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">
+                {$LL.menu.invite.description()}
+            </h3>
+            <input type="hidden" readonly value={location.toString()} />
+            <button type="button" class="btn btn-secondary mb-7 ml-1" on:click={shareLink}
+                >{$LL.menu.invite.share()}</button
+            >
         </section>
     {/if}
-    <h3 class="blue-title">{$LL.menu.invite.selectEntryPoint()}</h3>
-    <section>
-        <select
-            class="tw-w-full"
+    <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+        <LocationIcon />
+        <div>
+            {$LL.menu.invite.selectEntryPoint()}
+        </div>
+    </div>
+    <section class="m-4 mt-7">
+        <Select
             bind:value={entryPoint}
-            on:blur={() => {
+            onChange={() => {
                 updateInputFieldValue();
             }}
         >
-            {#each $startLayerNamesStore as entryPointName (entryPointName)}
+            {#each startPositions as entryPointName (entryPointName)}
                 <option value={entryPointName}>{entryPointName}</option>
             {/each}
-        </select>
-        <label>
-            <input
-                type="checkbox"
-                bind:checked={walkAutomatically}
-                on:change={() => {
+        </Select>
+
+        <label for="walkto" class="flex cursor-pointer items-center relative my-4 ">
+            <InputSwitch
+                id="walkto"
+                bind:value={walkAutomatically}
+                onChange={() => {
                     updateInputFieldValue();
                 }}
+                label={$LL.menu.invite.walkAutomaticallyToPosition()}
             />
-            <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
         </label>
     </section>
 </div>

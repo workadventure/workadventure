@@ -14,7 +14,7 @@
     let passphraseInput: string | undefined;
     let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined;
     let error = false;
-    $: isPrivateKeyDownloaded = false;
+    let isPrivateKeyDownloaded = false;
 
     async function generateRecoveryKey(passphrase: string | undefined) {
         if (passphrase === undefined) {
@@ -71,39 +71,39 @@
         <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
         <input
             data-testid="passphraseInput"
-            class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
+            class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
             bind:value={passphraseInput}
             on:focusin={focusChatInput}
             on:focusout={unfocusChatInput}
         />
         {#if generatedSecretStorageKey?.encodedPrivateKey}
             <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
-            <div class="tw-flex tw-justify-between">
-                <p class="tw-text-green-500 tw-m-0 tw-content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
+            <div class="flex justify-between">
+                <p class="text-green-500 m-0 content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
                 <button data-testid="downloadRecoveryKeyButton" on:click={downloadPrivateKeyFile}>
                     <IconFileDownload />
                 </button>
             </div>
         {/if}
         {#if error}
-            <p class="tw-text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
+            <p class="text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="tw-flex-1 tw-justify-center" on:click={() => closeModalAndContinueToWorkAdventure()}
+        <button class="flex-1 justify-center" on:click={() => closeModalAndContinueToWorkAdventure()}
             >{$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
         </button>
         {#if generatedSecretStorageKey === undefined}
             <button
                 disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
-                class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 on:click={() => generateRecoveryKey(passphraseInput)}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}
             </button>
         {:else}
             <button
                 disabled={!isPrivateKeyDownloaded}
-                class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                class="btn btn-secondary disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 on:click={closeModalAndContinueToWorkAdventure}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.continue()}
             </button>

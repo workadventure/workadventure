@@ -5,8 +5,6 @@ import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { Entity } from "../Phaser/ECS/Entity";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 
-type ObjectValues<T> = T[keyof T];
-
 export const mapEditorVisibilityStore = writable<boolean>(true);
 
 function createMapEditorModeStore() {
@@ -39,18 +37,8 @@ function createMapEditorSelectedEntityStore() {
     };
 }
 
-const MAP_EDITOR_ENTITY_TOOL_MODE = {
-    ADD: "ADD",
-    EDIT: "EDIT",
-} as const;
-
-const MAP_EDITOR_AREA_TOOL_MODE = {
-    ADD: "ADD",
-    EDIT: "EDIT",
-} as const;
-
-export type MapEditorEntityToolMode = ObjectValues<typeof MAP_EDITOR_ENTITY_TOOL_MODE>;
-export type MapEditorAreaToolMode = ObjectValues<typeof MAP_EDITOR_AREA_TOOL_MODE>;
+export type MapEditorEntityToolMode = "ADD" | "EDIT";
+export type MapEditorAreaToolMode = "ADD" | "EDIT";
 
 export const mapEditorModeStore = createMapEditorModeStore();
 
@@ -77,6 +65,7 @@ export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntity
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
     RoomSettings = "Room Settings",
+    MatrixRoomList = "Matrix Room List",
 }
 
 export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
@@ -108,6 +97,7 @@ export const cameraResistanceModeStore = derived(
     }
 );
 
-export type CustomTag = "Custom";
-export type SelectableTag = string | CustomTag | undefined;
+export type SelectableTag = string | undefined;
 export const selectCategoryStore = writable<SelectableTag>(undefined);
+
+export const mapEditorRestrictedPropertiesStore = writable<string[]>([]);

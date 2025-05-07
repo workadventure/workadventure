@@ -24,7 +24,7 @@ export class PathfindingManager {
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
-        this.logGridToTheConsole(collisionsGrid);
+        //this.logGridToTheConsole(collisionsGrid);
     }
 
     public setCollisionGrid(collisionGrid: number[][]): void {
@@ -213,11 +213,11 @@ export class PathfindingManager {
         this.easyStar.setAcceptableTiles([PathTileType.Walkable, PathTileType.Exit, PathTileType.Start]);
     }
 
-    private logGridToTheConsole(grid: number[][]): void {
+    /*private logGridToTheConsole(grid: number[][]): void {
         let rowNumber = 0;
         for (const row of grid) {
             console.info(`${rowNumber}:\t${row}`);
             rowNumber += 1;
         }
-    }
+    }*/
 }

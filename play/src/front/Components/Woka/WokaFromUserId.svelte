@@ -7,7 +7,6 @@
     export let userId: number | string;
     export let placeholderSrc: string;
     export let customWidth: string;
-    export let customHeight: string;
 
     let src: string;
     let unsubscribe: Unsubscriber | undefined;
@@ -23,6 +22,7 @@
                 (item) => item.pictureStore
             );
         } else {
+            // eslint-disable-next-line svelte/require-store-reactive-access
             playerWokaPictureStore = [...gameScene.MapPlayersByKey].find(
                 ([, player]) => player.userUuid === (userId as string)
             )?.[1].pictureStore;
@@ -39,5 +39,5 @@
 </script>
 
 {#if src}
-    <Woka {src} {customWidth} {customHeight} />
+    <Woka {src} {customWidth} />
 {/if}

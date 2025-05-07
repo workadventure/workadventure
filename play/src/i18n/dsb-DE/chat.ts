@@ -17,7 +17,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "na ",
         teleport: "Teleport",
         search: "Jadnorje pytaj!",
-        walkTo: "Hyś k",
+        // walkTo: "Hyś k",
         teleporting: "Teleportěrowanje...",
         businessCard: "Wizitna kórtka",
     },
@@ -71,32 +71,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Pósćel klaxoon do chata!",
-                error: "Klaxoon-URL njejo płaśeca",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Pósćel youtube-video do chata!",
-                error: "Youtube-URL njejo płaśeca",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Pósćel google-docs-dokument do chata!",
-                error: "Google-docs-URL njejo płaśeca",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Pósćel google-slides-prezentaciju do chata!",
-                error: "Google-slides-URL njejo płaśeca",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Pósćel google-sheets-dokument do chata!",
-                error: "Google-sheets-URL njejo płaśeca",
             },
             eraser: {
                 title: "Eraser",
                 description: "Pósćel Eraser-toflu do chata!",
-                error: "Eraser-URL njejo płaśeca",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Pósćel google-drive-dokument do chata!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Pósćel Excalidraw do chata!",
+            },
+            cards: {
+                title: "Karty",
+                description: "Pósćel karty do chata!",
             },
             weblink: {
                 error: "URL njejo płaśeca",

@@ -1,7 +1,9 @@
 import { derived, writable } from "svelte/store";
-import { menuInputFocusStore } from "./MenuStore";
+import { menuInputFocusStore } from "./MenuInputFocusStore";
 import { chatInputFocusStore } from "./ChatStore";
 import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
+import { emoteMenuStore } from "./EmoteStore";
+import { refreshPromptStore } from "./RefreshPromptStore";
 
 export const inputFormFocusStore = writable(false);
 
@@ -9,7 +11,11 @@ document.addEventListener("focusin", (event) => {
     if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLDivElement &&
+            (event.target.getAttribute("role") === "textbox" ||
+                event.target.classList.contains("block-user-action") ||
+                event.target.getAttribute("contenteditable") === "true"))
     ) {
         inputFormFocusStore.set(true);
     }
@@ -19,7 +25,11 @@ document.addEventListener("focusout", (event) => {
     if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
-        event.target instanceof HTMLSelectElement
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLDivElement &&
+            (event.target.getAttribute("role") === "textbox" ||
+                event.target.classList.contains("block-user-action") ||
+                event.target.getAttribute("contenteditable") === "true"))
     ) {
         inputFormFocusStore.set(false);
     }
@@ -35,6 +45,8 @@ export const enableUserInputsStore = derived(
         showReportScreenStore,
         inputFormFocusStore,
         mapExplorerSearchinputFocusStore,
+        emoteMenuStore,
+        refreshPromptStore,
     ],
     ([
         $menuInputFocusStore,
@@ -42,13 +54,17 @@ export const enableUserInputsStore = derived(
         $showReportScreenStore,
         $inputFormFocusStore,
         $mapExplorerSearchinputFocusStore,
+        $emoteMenuStore,
+        $refreshPromptStore,
     ]) => {
         return (
             !$menuInputFocusStore &&
             !$chatInputFocusStore &&
             !($showReportScreenStore !== userReportEmpty) &&
             !$inputFormFocusStore &&
-            !$mapExplorerSearchinputFocusStore
+            !$mapExplorerSearchinputFocusStore &&
+            !$emoteMenuStore &&
+            !$refreshPromptStore
         );
     }
 );

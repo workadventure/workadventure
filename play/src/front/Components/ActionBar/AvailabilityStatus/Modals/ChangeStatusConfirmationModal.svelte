@@ -1,19 +1,21 @@
 <script lang="ts">
     import { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
-    import { changeStatusConfirmationModalVisibility } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { resetAllStatusStoreExcept } from "../../../../Rules/StatusRules/statusChangerFunctions";
+    import {
+        closeChangeStatusConfirmationModal,
+        resetAllStatusStoreExcept,
+    } from "../../../../Rules/StatusRules/statusChangerFunctions";
     import { statusChanger } from "../statusChanger";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
             resetAllStatusStoreExcept();
-            changeStatusConfirmationModalVisibility.close();
+            closeChangeStatusConfirmationModal();
         },
         handleClose: () => {
             statusChanger.applyTimedRules();
-            changeStatusConfirmationModalVisibility.close();
+            closeChangeStatusConfirmationModal();
         },
         acceptLabel: $LL.statusModal.confirm(),
         closeLabel: $LL.statusModal.close(),
@@ -21,5 +23,5 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div class="tw-grow tw-text-center tw-text-xl">{$LL.statusModal.goBackToOnlineStatusLabel()}</div>
+    <div class="grow text-center text-xl">{$LL.statusModal.goBackToOnlineStatusLabel()}</div>
 </ConfirmationModal>

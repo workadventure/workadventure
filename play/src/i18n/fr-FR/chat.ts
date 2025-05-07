@@ -6,6 +6,9 @@ const chat: DeepPartial<Translation["chat"]> = {
     adventurers: "Utilisateurs",
     onlineUsers: "Utilisateurs en ligne",
     getCloserTitle: "Rapproche toi de quelqu'un",
+    noRoomOpen: "Ouvrez un conversation",
+    noRoomOpenDescription:
+        "Rien à afficher pour le moment. Commencez une discussion ou approchez quelqu'un pour voir vos messages apparaître ici.",
     getCloserDesc:
         "Lorsque tu te rapproches d’une personne dans l’espace virtuel, une bulle de conversation s’ouvre automatiquement, te permettant de discuter en direct comme si vous étiez face à face.",
     noMessage: "Aucun message envoyé pour l’instant !",
@@ -26,7 +29,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "Dans ",
         teleport: "Se téléporter",
         search: "Il suffit de chercher !",
-        walkTo: "Marcher jusqu'à",
+        // walkTo: "Marcher jusqu'à",
+        TalkTo: "Parler à",
         teleporting: "Téléportation ...",
         businessCard: "Carte de visite",
         sendMessage: "Envoyer un message",
@@ -42,6 +46,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     people: "Personnes",
     rooms: "Salons",
     invitations: "Invitations",
+    suggestedRooms: "Salons recommandés",
     availableRooms: "Salon(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
@@ -69,6 +74,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Ouvrir",
     me: "Moi",
     you: "Vous",
+    addNew: "Ajouter un nouveau : ",
     ban: {
         title: "Bannir",
         content: "Bannir l'utilisateur {userName} du monde courant. Cela peut être annulé depuis l'administration.",
@@ -96,32 +102,38 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Envoyer un klaxoon dans le chat !",
-                error: "L'URL Klaxoon n'est pas valide",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Envoyer une vidéo youtube dans le chat !",
-                error: "L'URL Youtube n'est pas valide",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Envoyer un document google docs dans le chat !",
-                error: "L'URL Google Docs n'est pas valide",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Envoyer une présentation google slides dans le chat !",
-                error: "L'URL Google Slides n'est pas valide",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Envoyer un tableau google sheets dans le chat !",
-                error: "L'URL Google Sheets n'est pas valide",
             },
             eraser: {
                 title: "Eraser",
                 description: "Envoyer un tableau eraser dans le chat !",
-                error: "L'URL Eraser n'est pas valide",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Envoyer un document google drive dans le chat !",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Envoyer un tableau excalidraw dans le chat !",
+            },
+            cards: {
+                title: "Cards",
+                description: "Envoyer un tableau cards dans le chat !",
             },
             weblink: {
                 error: "L'URL n'est pas valide",
@@ -160,6 +172,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     said: "a dit :",
     reply: "Répondre",
+    replyTo: "Répondre à",
     react: "Réagir",
     copy: "Copier",
     copied: "Copié !",
@@ -202,6 +215,8 @@ const chat: DeepPartial<Translation["chat"]> = {
             label: "Activer le chiffrement de bout en bout",
             description: "Vous ne pourrez pas le désactiver plus tard.",
         },
+        suggested: "Salon recommandé",
+        suggestedDescription: "Ce salon sera recommandé aux utilisateurs qui rejoignent le même espace.",
         users: "Utilisateurs",
         historyVisibility: {
             label: "Qui peut lire l'historique",
@@ -256,17 +271,30 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         roomOption: "Participants",
         error: "Impossible d'envoyer les invitations",
-        title: "Inviter des participants",
+        title: "Gérer les participants",
         invitations: "Invitations",
         participants: "Participants",
+        roomID: "ID du salon : {roomId}",
         join: "Présent",
         invite: "Invité",
         ban: "Banni",
         kick: "Expulsé",
         leave: "Parti",
+        membership: "Statut",
+        permissionLevel: "Rôles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Envoyer les invitations",
             cancel: "Annuler",
+            ban: "Bannir",
+            kick: "Expulser",
+            unban: "Débannir",
+            invite: "Inviter",
+        },
+        roles: {
+            USER: "Utilisateur",
+            ADMIN: "Admin",
+            MODERATOR: "Moderateur",
         },
         sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
     },
@@ -278,8 +306,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         muteRoom: "Couper les notification",
         unmuteRoom: "Activer les notifications",
     },
+    folderMenu: {
+        leaveFolder: {
+            label: "Quitter le dossier",
+            notification: "Vous avez quitté le dossier",
+        },
+    },
     e2ee: {
-        configure: "Configuré",
+        configure: "Configurer",
         encryptionNotConfigured: "Chiffrement non configuré",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
@@ -352,7 +386,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         from: "depuis",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
-    featureComingSoon: "Prochainement disponible !",
     emojis: {
         Dog: "Chien",
         Cat: "Chat",
@@ -420,6 +453,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         Pin: "Punaise",
         unknownLabel: "Label Inconnu",
     },
+    fileAttachment: {
+        title: "Pièce jointe",
+        description: "Téléchargez un fichier pour le partager",
+        featureComingSoon: "Fonctionnalité à venir !",
+    },
+    loginTokenError: "Une erreur est survenue. Veuillez réessayer de vous reconnecter",
+    reconnect: "Se reconnecter",
+    failedToJoinRoom: "Impossible de rejoindre la room",
+    failedToLeaveRoom: "Impossible de quitter la room",
+    refreshChat: "Rafraichir le chat",
+    dismiss: "Ignorer",
+    whoops: "Oups ! une erreur est survenue",
+    failedToOpenRoom: "Impossible d'ouvrir la room : {roomId}",
+    refreshChatError: "Impossible de rafraichir le chat",
+    discord: {
+        chatBand: {
+            configure: "Configurer",
+            open: "Ouvrir",
+            dismiss: "Fermer",
+            discordNotConfigured: "Synchronisation Discord",
+        },
+    },
+    remoteUserNotConnected: "Utilisateur non connecté. Impossible d'envoyer un message.",
 };
 
 export default chat;

@@ -2,7 +2,7 @@ import crypto from "crypto";
 import type { Client, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
 import { Issuer, generators } from "openid-client";
 import { v4 } from "uuid";
-import type { Request, Response } from "hyper-express";
+import type { Request, Response } from "express";
 import {
     OPID_CLIENT_ID,
     OPID_CLIENT_SECRET,
@@ -63,7 +63,8 @@ class OpenIDClient {
         res: Response,
         playUri: string,
         req: Request,
-        manuallyTriggered: "true" | undefined
+        manuallyTriggered: "true" | undefined,
+        chatRoomId: string | undefined
     ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -73,7 +74,7 @@ class OpenIDClient {
             const code_verifier = generators.codeVerifier();
             // store the code_verifier in your framework's session mechanism, if it is a cookie based solution
             // it should be httpOnly (not readable by javascript) and encrypted.
-            res.cookie("code_verifier", this.encrypt(code_verifier), undefined, {
+            res.cookie("code_verifier", this.encrypt(code_verifier), {
                 httpOnly: true, // dont let browser javascript access cookie ever
                 secure: req.secure, // only use cookie over https
             });
@@ -81,7 +82,7 @@ class OpenIDClient {
             // We also store the state in cookies. The state should not be needed, except for older OpenID client servers that
             // don't understand PKCE
             const state = v4();
-            res.cookie("oidc_state", state, undefined, {
+            res.cookie("oidc_state", state, {
                 httpOnly: true, // dont let browser javascript access cookie ever
                 secure: req.secure, // only use cookie over https
             });
@@ -98,7 +99,7 @@ class OpenIDClient {
                 // anonymous) or whether the login was triggered because user was not authenticated and authentication
                 // is mandatory.
                 manuallyTriggered,
-
+                chatRoomId,
                 code_challenge,
                 code_challenge_method: "S256",
             });
@@ -184,8 +185,10 @@ class OpenIDClient {
 
     private encrypt(text: string): string {
         const iv = crypto.randomBytes(16);
+        // @ts-ignore Required because of a bug in svelte-check that is typechecking pusher for some reason
         const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(this.secret), iv);
         let encrypted = cipher.update(text);
+        // @ts-ignore Required because of a bug in svelte-check that is typechecking pusher for some reason
         encrypted = Buffer.concat([encrypted, cipher.final()]);
         return iv.toString("hex") + "::" + encrypted.toString("hex");
     }
@@ -199,8 +202,11 @@ class OpenIDClient {
         const encryptedData = parts[1];
         const iv = Buffer.from(ivStr, "hex");
         const encryptedText = Buffer.from(encryptedData, "hex");
+        // @ts-ignore Required because of a bug in svelte-check that is typechecking pusher for some reason
         const decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(this.secret), iv);
+        // @ts-ignore Required because of a bug in svelte-check that is typechecking pusher for some reason
         let decrypted = decipher.update(encryptedText);
+        // @ts-ignore Required because of a bug in svelte-check that is typechecking pusher for some reason
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     }

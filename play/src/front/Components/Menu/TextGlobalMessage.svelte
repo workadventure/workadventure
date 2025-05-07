@@ -1,7 +1,7 @@
 <script lang="ts">
     import Quill from "quill";
     import { onDestroy, onMount } from "svelte";
-    import { menuInputFocusStore } from "../../Stores/MenuStore";
+    import { menuInputFocusStore } from "../../Stores/MenuInputFocusStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
@@ -70,8 +70,8 @@
     });
 </script>
 
-<section class="section-input-send-text">
-    <div class="input-send-text" bind:this={QUILL_EDITOR} />
+<section class="section-input-send-text test">
+    <div class="input-send-text" role="textbox" bind:this={QUILL_EDITOR} />
 </section>
 
 <style lang="scss">
@@ -82,16 +82,44 @@
         --height-toolbar: 20%;
         height: 100%;
 
+        :global(.ql-editor) {
+            background-color: #1b2a41;
+        }
+        :global(.ql-toolbar.ql-snow .ql-picker-label) {
+            color: whitesmoke;
+        }
+
+        :global(.ql-toolbar .ql-stroke) {
+            fill: none;
+            stroke: #fff;
+        }
+
+        :global(.ql-toolbar .ql-fill) {
+            fill: #fff;
+            stroke: none;
+        }
+
+        :global(.ql-toolbar.ql-snow .ql-formats button) {
+            color: whitesmoke; /* Droprown label text color */
+        }
+
+        :global(.ql-container) {
+            background-color: #1b2a41;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            border: 1px solid #879fc2;
+            color: whitesmoke;
+        }
         :global(.ql-toolbar) {
             max-height: var(--height-toolbar);
-            background: whitesmoke;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
         }
 
         div.input-send-text {
             height: calc(100% - var(--height-toolbar));
             overflow: auto;
 
-            color: whitesmoke;
             font-size: 1rem;
 
             :global(.ql-editor.ql-blank::before) {

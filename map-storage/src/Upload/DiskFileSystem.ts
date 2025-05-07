@@ -42,7 +42,7 @@ export class DiskFileSystem implements FileSystemInterface {
                 await Promise.all(promises);
             }
         } catch (error) {
-            console.log(error);
+            console.error(`[${new Date().toISOString()}]`, error);
         }
     }
 

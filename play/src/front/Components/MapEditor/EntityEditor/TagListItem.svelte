@@ -8,30 +8,32 @@
     export let tag: string;
     export let entitiesPrefabsVariants: EntityVariant[];
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onSelectedTag: string;
+    }>();
 </script>
 
 {#if entitiesPrefabsVariants.length !== 0}
     <li
-        class="tw-min-w-full tw-bg-white tw-bg-opacity-10 tw-rounded-xl tw-mt-2 hover:tw-bg-opacity-100 hover:tw-text-dark hover:!tw-cursor-pointer"
+        class="min-w-full group transition-all bg-white bg-opacity-10 rounded mt-2 hover:bg-opacity-100 hover:text-dark hover:!cursor-pointer"
         on:click={() => dispatch("onSelectedTag", tag)}
     >
-        <div class="entities-tag-list-item-grid tw-p-2">
+        <div class="entities-tag-list-item-grid p-2">
             <div class="asset">
                 <EntityImage
-                    classNames="tw-w-[32px] tw-h-[32px] tw-object-contain"
+                    classNames="w-[32px] h-[32px] object-contain"
                     imageSource={entitiesPrefabsVariants[0].defaultPrefab.imagePath}
                     imageAlt={entitiesPrefabsVariants[0].defaultPrefab.name}
                 />
             </div>
             <div class="tag">
-                <p class="tw-m-0">{`${tag.charAt(0).toUpperCase()}${tag.slice(1)}`}</p>
+                <p class="m-0">{`${tag.charAt(0).toUpperCase()}${tag.slice(1)}`}</p>
             </div>
             <div class="entitiesCount">
                 {entitiesPrefabsVariants.length}
             </div>
             <div class="object">{$LL.mapEditor.entityEditor.images(entitiesPrefabsVariants.length)}</div>
-            <div class="chevronRight">
+            <div class="chevronRight group-hover:-translate-x-2 transition-transform">
                 <IconChevronRight />
             </div>
         </div>

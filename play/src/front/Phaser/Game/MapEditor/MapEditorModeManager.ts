@@ -1,4 +1,5 @@
-import { Command, PersonalAreaPropertyData, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import * as Sentry from "@sentry/svelte";
+import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
@@ -144,7 +145,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
-                logger(error);
+                console.error(error);
+                Sentry.captureException(error);
                 return;
             }
         }));
@@ -159,7 +161,8 @@ export class MapEditorModeManager {
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
             } catch (error) {
-                logger(error);
+                console.error(error);
+                Sentry.captureException(error);
                 return;
             }
         }));
@@ -185,7 +188,8 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            logger(e);
+            console.error(e);
+            Sentry.captureException(e);
         }
     }
 
@@ -211,7 +215,8 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            logger(e);
+            console.error(e);
+            Sentry.captureException(e);
         }
     }
 
@@ -489,9 +494,7 @@ export class MapEditorModeManager {
         // Get and revoke the personal area of the user if it exists
         const gameMapFrontWrapper = gameManager.getCurrentGameScene().getGameMapFrontWrapper();
         for (const area of gameMapFrontWrapper.areasManager?.getAreasByPropertyType("personalAreaPropertyData") ?? []) {
-            const property = area.areaData.properties.find(
-                (property) => property.type === "personalAreaPropertyData"
-            ) as PersonalAreaPropertyData | undefined;
+            const property = area.areaData.properties.find((property) => property.type === "personalAreaPropertyData");
             if (!property || property.ownerId !== userUUID) continue;
 
             // The user already has a personal area, revoke it

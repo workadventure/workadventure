@@ -2,8 +2,8 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const notification: DeepPartial<Translation["notification"]> = {
-    discussion: "يريد التحدث معك", // wants to talk to you
-    message: "يرسل رسالة", // sends a message
+    discussion: "{name} يريد مناقشتك", // {name} wants to discuss with you
+    message: "{name} يرسل رسالة", // {name} sends a message
     chatRoom: "في المنتدى", // in the forum
     askToMuteMicrophone: "يرجى كتم الميكروفون 🙏", // please mute your microphone
     askToMuteCamera: "يرجى كتم الكاميرا 🙏", // please mute your camera

@@ -1,59 +1,62 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
+    import Alert from "../UI/Alert.svelte";
+    import { popupStore } from "../../Stores/PopupStore";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
     let isChrome = getNavigatorType() === NavigatorType.chrome;
+    let showDetails = false;
 
-    function refresh() {
-        window.location.reload();
+    function allow() {
+        showDetails = !showDetails;
     }
 
     function close() {
-        helpCameraSettingsVisibleStore.set(false);
-    }
-
-    function getBackgroundColor() {
-        if (!gameManager.currentStartedRoom) return undefined;
-        return gameManager.currentStartedRoom.backgroundColor;
+        popupStore.removePopup("cameraAccessDenied");
     }
 </script>
 
 <form
-    class="helpCameraSettings tw-z-[600] tw-backdrop-blur-sm tw-bg-dark-purple/80 tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
-    style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
+    class="helpCameraSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col w-full md:w-2/3 xl:w-[380px] text-sm md:text-base overflow-hidden"
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
-    <section class="tw-mb-0">
-        <h2 class="tw-mb-0">{$LL.camera.help.title()}</h2>
-        <p class="err blue-title">{$LL.camera.help.permissionDenied()}</p>
-        <p>{$LL.camera.help.content()}</p>
-        <p class="tw-mb-0 tw-flex tw-justify-center tw-flex-col">
+    <section class="mb-0">
+        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
+            {$LL.camera.help.title()}
+        </div>
+        {#if showDetails}
+            <div class="px-4 mt-4">
+                <Alert>
+                    {$LL.camera.help.permissionDenied()}
+                </Alert>
+            </div>
+            <div class="p-4 italic opacity-50 text-sm leading-4">
+                {$LL.camera.help.content()}
+            </div>
             {#if isFirefox}
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
                 </p>
-                <img
-                    src={$LL.camera.help.screen.firefox()}
-                    alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
-                />
-            {:else if isChrome && !isAndroid}
-                <img
-                    src={$LL.camera.help.screen.chrome()}
-                    alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
-                />
             {/if}
-        </p>
+            <div class="h-72 overflow-hidden opacity-80 saturate-50">
+                {#if isFirefox}
+                    <img src={$LL.camera.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
+                {:else if isChrome && !isAndroid}
+                    <img src={$LL.camera.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
+                {/if}
+            </div>
+        {/if}
     </section>
-    <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
-        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
+    <section class="flex row justify-center p-4 bg-contrast">
+        <button class="btn btn-sm btn-border btn-success mr-2 w-full justify-center" on:click|preventDefault={allow}
+            >{$LL.camera.help.allow()}</button
+        >
+        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
+            >{$LL.camera.help.continue()}</button
+        >
     </section>
 </form>

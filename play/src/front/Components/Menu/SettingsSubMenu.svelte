@@ -1,12 +1,16 @@
 <script lang="ts">
-    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+    import { fly } from "svelte/transition";
+    import {
+        audioManagerFileStore,
+        audioManagerVisibilityStore,
+        bubbleSoundStore,
+    } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
-    import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
+    import { displayableLocales, setCurrentLocale } from "../../Utils/locales";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    import infoImg from "../images/info.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {
@@ -18,9 +22,21 @@
     import { videoBandwidthStore } from "../../Stores/MediaStore";
     import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import InputSwitch from "../Input/InputSwitch.svelte";
+    import RangeSlider from "../Input/RangeSlider.svelte";
+    import Select from "../Input/Select.svelte";
+    import CamArrowIcon from "../Icons/CamArrowIcon.svelte";
+    import MicOnIcon from "../Icons/MicOnIcon.svelte";
+    import TablerAntennaBarsIcon from "../Icons/TablerAntennaBarsIcon.svelte";
+    import TablerAntennaBars2Icon from "../Icons/TablerAntennaBars2Icon.svelte";
+    import TablerAntennaBars3Icon from "../Icons/TablerAntennaBars3Icon.svelte";
+    import AdjustmentsIcon from "../Icons/AdjustmentsIcon.svelte";
+    import LanguageIcon from "../Icons/LanguageIcon.svelte";
+    import DoorArrowRightIcon from "../Icons/DoorArrowRightIcon.svelte";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
+    let allowPictureInPicture: boolean = localUserStore.getAllowPictureInPicture();
     let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
@@ -45,6 +61,9 @@
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+
+    let valueBubbleSound = localUserStore.getBubbleSound();
+    const sound = new Audio();
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -121,10 +140,17 @@
         }
     }
 
+    function changePictureInPicture() {
+        // Analytics Client
+        analyticsClient.settingPictureInPicture(allowPictureInPicture ? "true" : "false");
+
+        localUserStore.setAllowPictureInPicture(allowPictureInPicture);
+    }
+
     function changeBlockAudio() {
         if (blockAudio) {
             audioManagerFileStore.unloadAudio();
-            audioManagerVisibilityStore.set(false);
+            audioManagerVisibilityStore.set("disabledBySettings");
         }
         localUserStore.setBlockAudio(blockAudio);
     }
@@ -184,178 +210,327 @@
         localUserStore.setVolumeProximityDiscussion(volumeProximityDiscussion);
         volumeProximityDiscussionStore.set(volumeProximityDiscussion);
     }
+
+    function changeBubbleSound() {
+        localUserStore.setBubbleSound(valueBubbleSound);
+        bubbleSoundStore.set(valueBubbleSound);
+        this.playBubbleSound();
+    }
+
+    async function playBubbleSound() {
+        sound.src = `/resources/objects/webrtc-in-${valueBubbleSound}.mp3`;
+        sound.volume = 0.2;
+        await sound.play();
+    }
 </script>
 
-<div>
-    <section class="bottom-separator">
-        <h3 class="blue-title">{$LL.menu.settings.videoBandwidth.title()}</h3>
-        <div class="tw-flex tw-w-full tw-justify-center">
-            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
-                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.low()}</span>
+<div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
+    <section class=" p-0 first:pt-0 pt-8 m-0">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <CamArrowIcon />
+            {$LL.menu.settings.videoBandwidth.title()}
+        </div>
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-8">
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 1
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBarsIcon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 1)}
+                            >{$LL.menu.settings.videoBandwidth.low()}</span
+                        >
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.recommended()}</span>
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 2
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBars2Icon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 2)}
+                            >{$LL.menu.settings.videoBandwidth.recommended()}</span
+                        >
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.unlimited()}</span>
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 3
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBars3Icon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 3)}
+                            >{$LL.menu.settings.videoBandwidth.unlimited()}</span
+                        >
                     </li>
                 </ul>
-                <input
-                    type="range"
-                    class="tw-w-full tw-bg-pop-blue"
-                    min="1"
-                    max="3"
-                    step="1"
+                <RangeSlider
+                    buttonShape="square"
+                    min={1}
+                    max={3}
+                    step={1}
                     bind:value={valueVideoBandwidth}
-                    on:change={updateVideoBandwidth}
+                    onChange={updateVideoBandwidth}
                 />
             </div>
         </div>
+    </section>
+    <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+            <div class="mr-4 opacity-50"><MicOnIcon /></div>
 
-        <h3 class="blue-title">{$LL.menu.settings.shareScreenBandwidth.title()}</h3>
-        <div class="tw-flex tw-w-full tw-justify-center">
-            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
-                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.low()}</span>
+            {$LL.menu.settings.shareScreenBandwidth.title()}
+        </div>
+        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-8">
+                    <li
+                        class="flex relative {valueScreenShareBandwidth === 1
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBarsIcon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
+                            >{$LL.menu.settings.shareScreenBandwidth.low()}</span
+                        >
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.recommended()}</span>
+                    <li
+                        class="flex justify-center relative {valueScreenShareBandwidth === 2
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBars2Icon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
+                            >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
+                        >
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span>
+                    <li
+                        class="flex justify-center relative {valueScreenShareBandwidth === 3
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <TablerAntennaBars3Icon />
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
+                            >{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span
+                        >
                     </li>
                 </ul>
-                <input
-                    type="range"
-                    class="tw-w-full"
-                    min="1"
-                    max="3"
-                    step="1"
+                <RangeSlider
+                    min={1}
+                    max={3}
+                    step={1}
                     bind:value={valueScreenShareBandwidth}
-                    on:change={updateScreenShareBandwidth}
+                    onChange={updateScreenShareBandwidth}
+                    buttonShape="square"
                 />
             </div>
         </div>
 
-        <h3 class="blue-title">{$LL.menu.settings.proximityDiscussionVolume()}</h3>
-        <div class="tw-flex tw-w-full tw-justify-center">
-            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
-                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">0</span>
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+
+            {$LL.menu.settings.proximityDiscussionVolume()}
+        </div>
+
+        <div class="flex w-full justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-5">
+                    <li class="flex justify-center relative">
+                        <span class="absolute">0</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">1</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">1</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">2</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">2</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">3</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">3</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">4</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">4</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">5</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">5</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">6</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">6</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">7</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">7</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">8</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">8</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">9</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">9</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">10</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">10</span>
                     </li>
                 </ul>
-                <input
-                    type="range"
-                    class="tw-w-full"
-                    min="0"
-                    max="1"
-                    step="0.1"
+                <RangeSlider
+                    min={0}
+                    max={1}
+                    step={0.1}
                     bind:value={volumeProximityDiscussion}
-                    on:change={updateVolumeProximityDiscussion}
+                    onChange={updateVolumeProximityDiscussion}
                 />
             </div>
         </div>
-
-        <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
-        <select class="tw-w-full languages-switcher" bind:value={valueLocale} on:change={updateLocale}>
-            {#each displayableLocales as locale (locale.id)}
-                <option value={locale.id}>
-                    {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
-                        locale.region
-                    })`}
-                </option>
-            {/each}
-        </select>
     </section>
-    <section class="bottom-separator tw-flex tw-flex-col">
-        <div class="tooltip tw-w-fit">
-            <h3 class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">
-                {$LL.menu.settings.privacySettings.title()}
-                <img draggable="false" src={infoImg} alt="info icon" width="18px" height="18px" />
-            </h3>
-            <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
+    <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <LanguageIcon />
+            {$LL.menu.settings.language.title()}
         </div>
-        <label>
-            <input type="checkbox" bind:checked={valueCameraPrivacySettings} on:change={changeCameraPrivacySettings} />
-            {$LL.menu.settings.privacySettings.cameraToggle()}
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                bind:checked={valueMicrophonePrivacySettings}
-                on:change={changeMicrophonePrivacySettings}
-            />
-            {$LL.menu.settings.privacySettings.microphoneToggle()}
-        </label>
+        <div class="mt-2 p-2">
+            <select
+                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0 "
+                bind:value={valueLocale}
+                on:change={updateLocale}
+            >
+                {#each displayableLocales as locale (locale.id)}
+                    <option value={locale.id}>
+                        {`${
+                            locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""
+                        } (${locale.region})`}
+                    </option>
+                {/each}
+            </select>
+        </div>
     </section>
-    <section class="tw-flex tw-flex-col">
-        <h3 class="blue-title">{$LL.menu.settings.otherSettings()}</h3>
-        <label>
-            <input type="checkbox" bind:checked={fullscreen} on:change={changeFullscreen} />
-            <span>{$LL.menu.settings.fullscreen()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
-            <span>{$LL.menu.settings.notifications()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />
-            <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={ignoreFollowRequests} on:change={changeIgnoreFollowRequests} />
-            <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+    <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
+        <div class="tooltip">
+            <div class="group bg-contrast font-bold text-lg p-4 flex items-center relative">
+                <DoorArrowRightIcon />
+                <div class="grow">
+                    <div>{$LL.menu.settings.privacySettings.title()}</div>
+                    <div class="text-sm italic text-white/50">{$LL.menu.settings.privacySettings.explanation()}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="cam-toggle"
+                bind:value={valueCameraPrivacySettings}
+                onChange={changeCameraPrivacySettings}
+                label={$LL.menu.settings.privacySettings.cameraToggle()}
             />
-            <span>{$LL.audio.manager.reduce()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={blockAudio} on:change={changeBlockAudio} />
-            <span>{$LL.menu.settings.blockAudio()}</span>
-        </label>
-        <label>
-            <input type="checkbox" bind:checked={disableAnimations} on:change={changeDisableAnimations} />
-            <span>{$LL.menu.settings.disableAnimations()}</span>
-        </label>
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="mic-toggle"
+                bind:value={valueMicrophonePrivacySettings}
+                onChange={changeMicrophonePrivacySettings}
+                label={$LL.menu.settings.privacySettings.microphoneToggle()}
+            />
+        </div>
+    </section>
+    <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
+            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+            {$LL.menu.settings.otherSettings()}
+        </div>
+
+        <div class="mt-2 p-2">
+            <div class="flex items-end gap-2">
+                <Select
+                    id="bubble-sound"
+                    bind:value={valueBubbleSound}
+                    onChange={changeBubbleSound}
+                    label={$LL.menu.settings.bubbleSound()}
+                    outerClass="flex-1"
+                    options={[
+                        { value: "ding", label: $LL.menu.settings.bubbleSoundOptions.ding() },
+                        { value: "wobble", label: $LL.menu.settings.bubbleSoundOptions.wobble() },
+                    ]}
+                />
+                <button class="btn btn-light btn-ghost mb-2" on:click={playBubbleSound}> ▶️ </button>
+            </div>
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="fullscreen-toggle"
+                bind:value={fullscreen}
+                onChange={changeFullscreen}
+                label={$LL.menu.settings.fullscreen()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="notification-toggle"
+                bind:value={notification}
+                onChange={changeNotification}
+                label={$LL.menu.settings.notifications()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="picture-in-picture-toggle"
+                bind:value={allowPictureInPicture}
+                onChange={changePictureInPicture}
+                label={$LL.menu.settings.enablePictureInPicture()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="cowebsiteTrigger-toggle"
+                bind:value={forceCowebsiteTrigger}
+                onChange={changeForceCowebsiteTrigger}
+                label={$LL.menu.settings.cowebsiteTrigger()}
+            />
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="cowebsiteTrigger-toggle"
+                bind:value={ignoreFollowRequests}
+                onChange={changeIgnoreFollowRequests}
+                label={$LL.menu.settings.ignoreFollowRequest()}
+            />
+        </div>
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="decreaseAudioPlayerVolumeWhileTalking-toggle"
+                bind:value={decreaseAudioPlayerVolumeWhileTalking}
+                onChange={changeDecreaseAudioPlayerVolumeWhileTalking}
+                label={$LL.audio.manager.reduce()}
+            />
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="changeBlockAudio"
+                bind:value={blockAudio}
+                onChange={changeBlockAudio}
+                label={$LL.menu.settings.blockAudio()}
+            />
+        </div>
+
+        <div class="flex cursor-pointer items-center relative m-4">
+            <InputSwitch
+                id="changeDisableAnimations"
+                bind:value={disableAnimations}
+                onChange={changeDisableAnimations}
+                label={$LL.menu.settings.disableAnimations()}
+            />
+        </div>
     </section>
 </div>
 

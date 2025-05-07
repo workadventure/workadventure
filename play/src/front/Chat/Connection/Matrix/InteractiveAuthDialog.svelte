@@ -5,17 +5,17 @@
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import InteractiveAuthSSO from "./InteractiveAuthSSO.svelte";
-    import { INTERACTIVE_AUTH_PHASE } from "./MatrixChatConnection";
+    import { INTERACTIVE_AUTH_PHASE } from "./InteractiveAuthPhase";
 
     export let isOpen: boolean;
     export let matrixClient: MatrixClient;
-    export let onFinished: (finished: boolean) => Promise<void>;
+    export let onFinished: (finished: boolean) => void;
     export let makeRequest: (auth: AuthDict | null) => Promise<UIAResponse<void>>;
 
     let isInteractiveAuthFinished = false;
 
     let uiAuthStage: AuthType | string;
-    let uiAuthPhase: number;
+    let uiAuthPhase: INTERACTIVE_AUTH_PHASE;
 
     const interactiveAuth = new InteractiveAuth({
         matrixClient,
@@ -35,26 +35,26 @@
         uiAuthStage = nextStage;
     }
 
-    function onUpdatePhaseChange(newPhase: number) {
+    function onUpdatePhaseChange(newPhase: INTERACTIVE_AUTH_PHASE) {
         uiAuthPhase = newPhase;
     }
 
-    async function onCancelInteractiveAuth() {
-        await onFinished(false);
+    function onCancelInteractiveAuth() {
+        onFinished(false);
         closeModal();
     }
 
     onMount(() => {
         interactiveAuth
             .attemptAuth()
-            .then(async () => {
+            .then(() => {
                 isInteractiveAuthFinished = true;
-                await onFinished(isInteractiveAuthFinished);
+                onFinished(isInteractiveAuthFinished);
             })
-            .catch(async (error) => {
+            .catch((error) => {
                 console.error(error);
                 isInteractiveAuthFinished = false;
-                await onFinished(isInteractiveAuthFinished);
+                onFinished(isInteractiveAuthFinished);
             })
             .finally(() => {
                 closeModal();
@@ -62,7 +62,7 @@
     });
 
     onBeforeClose(() => {
-        onFinished(isInteractiveAuthFinished)?.catch((error) => console.error(error));
+        onFinished(isInteractiveAuthFinished);
     });
 </script>
 

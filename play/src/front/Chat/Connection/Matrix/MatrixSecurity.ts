@@ -15,7 +15,8 @@ import * as Sentry from "@sentry/svelte";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { Deferred } from "ts-deferred";
-import { alreadyAskForInitCryptoConfiguration } from "../../Stores/ChatStore";
+import { asError } from "catch-unknown";
+import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 import VerificationEmojiDialog from "./VerificationEmojiDialog.svelte";
@@ -37,15 +38,16 @@ export class MatrixSecurity {
     ) {}
 
     initClientCryptoConfiguration = async (): Promise<void> => {
-        if (!this.matrixClientStore) {
+        const client = this.matrixClientStore;
+        if (!client) {
             return Promise.reject(new Error("matrixClientStore is null"));
         }
 
-        if (this.matrixClientStore.isGuest()) {
+        if (client.isGuest()) {
             return Promise.reject(new Error("Guest user, no encryption key"));
         }
 
-        const crypto = this.matrixClientStore.getCrypto();
+        const crypto = client.getCrypto();
 
         if (crypto === undefined) {
             return Promise.reject(new Error("E2EE is not available for this client"));
@@ -59,7 +61,7 @@ export class MatrixSecurity {
         this.shouldDisplayModal = true;
         this.initializingEncryptionPromise = new Promise<void>((resolve, initializingEncryptionReject) => {
             (async () => {
-                const keyBackupInfo = await this.matrixClientStore?.getKeyBackupVersion();
+                const keyBackupInfo = await client.getKeyBackupVersion();
                 const isCrossSigningReady = await crypto.isCrossSigningReady();
 
                 if (!isCrossSigningReady || keyBackupInfo === null) {
@@ -67,7 +69,7 @@ export class MatrixSecurity {
                         authUploadDeviceSigningKeys: async (makeRequest) => {
                             const finished = await new Promise<boolean>((resolve) => {
                                 this._openModal(InteractiveAuthDialog, {
-                                    matrixClient: this.matrixClientStore,
+                                    matrixClient: client,
                                     onFinished: (finished: boolean) => resolve(finished),
                                     makeRequest,
                                 });
@@ -86,7 +88,7 @@ export class MatrixSecurity {
                                 (resolve, reject) => {
                                     this._openModal(CreateRecoveryKeyDialog, {
                                         crypto,
-                                        processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
+                                        processCallback: (generatedKey: GeneratedSecretStorageKey | undefined) => {
                                             if (generatedKey === undefined) {
                                                 return reject(new Error("no generated key storage"));
                                             }
@@ -124,7 +126,7 @@ export class MatrixSecurity {
                     console.error("initClientCryptoConfiguration error: ", error);
                     Sentry.captureMessage(`initClientCryptoConfiguration error : ${error}`);
                     this.initializingEncryptionPromise = undefined;
-                    initializingEncryptionReject(error);
+                    initializingEncryptionReject(asError(error));
                     return;
                 });
         });
@@ -235,7 +237,7 @@ export class MatrixSecurity {
                     const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
                         this._openModal(CreateRecoveryKeyDialog, {
                             crypto,
-                            processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
+                            processCallback: (generatedKey: GeneratedSecretStorageKey | undefined) => {
                                 if (generatedKey === undefined) {
                                     return reject(new Error("no generated secret storage key"));
                                 }
@@ -386,14 +388,17 @@ export class MatrixSecurity {
 
             const currentDeviceIsVerify = verificationInformation.signedByOwner;
 
-            const someDeviceAreVerified = !myDevices
-                ? false
-                : Array.from(myDevices.values()).some(async (device) => {
-                      if (!device.getIdentityKey()) return false;
+            const devicesArray = Array.from(myDevices?.values() || []);
+            const someDeviceAreVerified = await devicesArray.reduce(async (acc, device) => {
+                const previousResult = await acc;
+                if (previousResult) return true;
 
-                      const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
-                      return !!verificationStatus?.signedByOwner;
-                  });
+                if (!device.getIdentityKey()) return false;
+                if (device.deviceId === currentDeviceID) return false;
+
+                const verificationStatus = await crypto.getDeviceVerificationStatus(userID, device.deviceId);
+                return !!verificationStatus?.signedByOwner;
+            }, Promise.resolve(false));
 
             if (someDeviceAreVerified && !currentDeviceIsVerify) {
                 this.isEncryptionRequiredAndNotSet.set(true);

@@ -1,11 +1,12 @@
 import fs from "fs";
-import type { Request, Response, Server } from "hyper-express";
+import type { Request, Response, Application } from "express";
 import Mustache from "mustache";
 import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
+import { z } from "zod";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
-import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
+import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
 import {
@@ -15,6 +16,7 @@ import {
     AUTOLOGIN_URL,
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
 } from "../enums/EnvironmentVariable";
+import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
@@ -22,7 +24,7 @@ export class FrontController extends BaseHttpController {
     private redirectToAdminFile: string;
     private script: Promise<string> | undefined;
 
-    constructor(protected app: Server, protected liveAssets: LiveDirectory) {
+    constructor(protected app: Application) {
         super(app);
 
         let indexPath: string;
@@ -82,52 +84,52 @@ export class FrontController extends BaseHttpController {
     }
 
     front(): void {
-        this.app.get("/_/*", (req: Request, res: Response) => {
+        this.app.get("/_/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
-        this.app.post("/_/*", (req: Request, res: Response) => {
-            /**
-             * get infos from map file details
-             */
-            return this.displayFront(req, res, this.getFullUrl(req));
-        });
-
-        this.app.get("/*/*", (req: Request, res: Response) => {
-            /**
-             * get infos from map file details
-             */
-            return this.displayFront(req, res, this.getFullUrl(req));
-        });
-        this.app.post("/*/*", (req: Request, res: Response) => {
+        this.app.post("/_/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
-        this.app.get("/@/*", (req: Request, res: Response) => {
+        // this.app.get("/*/{*splat}", (req: Request, res: Response) => {
+        //     /**
+        //      * get infos from map file details
+        //      */
+        //     return this.displayFront(req, res, this.getFullUrl(req));
+        // });
+        // this.app.post("/*/{*splat}", (req: Request, res: Response) => {
+        //     /**
+        //      * get infos from map file details
+        //      */
+        //     return this.displayFront(req, res, this.getFullUrl(req));
+        // });
+
+        this.app.get("/@/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from admin else map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
-        this.app.post("/@/*", (req: Request, res: Response) => {
+        this.app.post("/@/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from admin else map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
-        this.app.get("/~/*", (req: Request, res: Response) => {
+        this.app.get("/~/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
-        this.app.post("/~/*", (req: Request, res: Response) => {
+        this.app.post("/~/{*splat}", (req: Request, res: Response) => {
             /**
              * get infos from map file details
              */
@@ -144,10 +146,17 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-            if (req.query.url == undefined) {
-                return res.status(500).send("playUrl is empty in query parameter of the request");
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    url: z.string(),
+                })
+            );
+            if (query === undefined) {
+                return;
             }
-            return this.displayManifestJson(req, res, req.query.url.toString());
+            return this.displayManifestJson(req, res, query.url);
         });
 
         this.app.get("/login", (req: Request, res: Response) => {
@@ -160,90 +169,48 @@ export class FrontController extends BaseHttpController {
         });
 
         // @deprecated
-        this.app.get("/register/*", (req: Request, res: Response) => {
+        this.app.get("/register/{*splat}", (req: Request, res: Response) => {
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
         this.app.get(
-            "/.well-known/cf-custom-hostname-challenge/*",
+            "/.well-known/cf-custom-hostname-challenge/{*splat}",
             [notWaHost],
             async (req: Request, res: Response) => {
                 try {
                     const response = await adminService.fetchWellKnownChallenge(req.hostname);
-                    res.atomic(() => {
-                        res.status(200).send(response);
-                    });
+                    res.status(200).send(response);
                     return;
                 } catch (e) {
                     Sentry.captureException(e);
                     console.error(e);
-                    res.atomic(() => {
-                        res.status(526).send("Fail on challenging hostname");
-                    });
+                    res.status(526).send("Fail on challenging hostname");
                     return;
                 }
             }
         );
 
         this.app.get("/server.json", (req: Request, res: Response) => {
-            res.atomic(() => {
-                res.json({
-                    domain: process.env.PUSHER_URL,
-                    name: process.env.SERVER_NAME || "WorkAdventure Server",
-                    motd: process.env.SERVER_MOTD || "A WorkAdventure Server",
-                    icon:
-                        process.env.SERVER_ICON || process.env.PUSHER_URL + "/static/images/favicons/icon-512x512.png",
-                    version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
-                });
+            res.json({
+                domain: process.env.PUSHER_URL,
+                name: process.env.SERVER_NAME || "WorkAdventure Server",
+                motd: process.env.SERVER_MOTD || "A WorkAdventure Server",
+                icon: process.env.SERVER_ICON || process.env.PUSHER_URL + "/static/images/favicons/icon-512x512.png",
+                version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
             });
             return;
         });
 
-        this.app.get("/*", (req: Request, res: Response) => {
-            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
-                // TODO check how this is used and if it is still needed for MacOs (it is not used in the current version)
-                /*if (
-                req.path.startsWith("/collections") ||
-                req.path.startsWith("/resources") ||
-                req.path.startsWith("/src") ||
-                req.path.startsWith("/node_modules") ||
-                req.path.startsWith("/@fs/") ||
-                req.path.startsWith("/iframe_api.js")
-            ) {*/
-                res.atomic(() => {
-                    res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
-                });
-                return;
-            }
+        this.app.get("/src/{*splat}", (req: Request, res: Response) => {
+            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
+        });
 
-            const filePath = req.path.startsWith("/src") ? req.path.replace(/\/src/, "") : req.path;
+        this.app.get("/node_modules/{*splat}", (req: Request, res: Response) => {
+            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
+        });
 
-            const file = this.liveAssets.get(decodeURI(filePath));
-
-            if (!file) {
-                res.atomic(() => {
-                    res.status(404).send("404 Page not found");
-                });
-                return;
-            }
-
-            res.atomic(() => {
-                if (filePath.startsWith("/assets")) {
-                    const date = new Date();
-                    date.setFullYear(date.getFullYear() + 1);
-                    res.header("expires", date.toUTCString());
-                    res.header("cache-control", "public");
-                }
-                if (filePath.startsWith("/resources") || filePath.startsWith("/static")) {
-                    const date = new Date();
-                    date.setDate(date.getDate() + 1);
-                    res.header("expires", date.toUTCString());
-                    res.header("cache-control", "public");
-                }
-
-                res.type(file.extension).header("etag", file.etag).send(file.buffer);
-            });
-            return;
+        this.app.get("/@fs/{*splat}", (req: Request, res: Response) => {
+            res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
         });
     }
 
@@ -256,14 +223,12 @@ export class FrontController extends BaseHttpController {
         try {
             redirectUrl = await builder.getRedirectUrl();
         } catch (e) {
-            console.info(`Cannot get redirect URL ${url}`, e);
+            console.info(`Cannot get redirect URL "%s"`, url, e);
         }
 
         if (redirectUrl) {
             const redirect = redirectUrl;
-            res.atomic(() => {
-                res.redirect(redirect);
-            });
+            res.redirect(redirect);
             return;
         }
 
@@ -271,27 +236,30 @@ export class FrontController extends BaseHttpController {
         const accessKey = req.query.access_key;
         if (accessKey && typeof accessKey === "string" && accessKey.length > 0) {
             if (!AUTOLOGIN_URL) {
-                res.atomic(() => {
-                    res.status(400).send("AUTOLOGIN_URL is not configured.");
-                });
+                res.status(400).send("AUTOLOGIN_URL is not configured.");
                 return;
             }
             const html = Mustache.render(this.redirectToAdminFile, {
                 accessKey,
                 AUTOLOGIN_URL,
             });
-            res.atomic(() => {
-                res.type("html").send(html);
-            });
+            res.type("html").send(html);
             return;
         }
 
         // get auth token from post /authToken
-        const { authToken } = await req.urlencoded();
+        const { authToken } = req.body ?? {};
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            const mapDetails = await builder.getMapDetails();
             let option = {};
+            const secondaryPalette = getStringPalette(mapDetails?.primaryColor, "secondary");
+            const contrastPalette = getStringPalette(mapDetails?.backgroundColor, "contrast");
+            let cssVariablesOverride = "";
+            if (secondaryPalette || contrastPalette) {
+                cssVariablesOverride = wrapWithStyleTag(`${secondaryPalette}\n${contrastPalette}`);
+            }
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
                     ...option,
@@ -308,15 +276,14 @@ export class FrontController extends BaseHttpController {
                 script: await this.getScript(),
                 authToken: authToken,
                 googleDrivePickerClientId: GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                cssVariablesOverride,
                 ...option,
             });
         } catch (e) {
-            console.info(`Cannot render metatags on ${url}`, e);
+            console.info(`Cannot render metatags on "%"`, url, e);
         }
 
-        res.atomic(() => {
-            res.type("html").send(html);
-        });
+        res.type("html").send(html);
         return;
     }
 
@@ -366,9 +333,7 @@ export class FrontController extends BaseHttpController {
             ],
         };
 
-        res.atomic(() => {
-            res.json(manifest);
-        });
+        res.json(manifest);
         return;
     }
 }

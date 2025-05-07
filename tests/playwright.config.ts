@@ -1,5 +1,4 @@
-import type { PlaywrightTestConfig } from '@playwright/test';
-import { devices } from '@playwright/test';
+import { devices, type PlaywrightTestConfig } from '@playwright/test';
 
 /**
  * Read environment variables from file.
@@ -13,7 +12,7 @@ import { devices } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   testDir: './tests',
   /* Maximum time one test can run for. */
-  timeout: 60 * 1000,
+  timeout: 120 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -30,10 +29,7 @@ const config: PlaywrightTestConfig = {
   /* Limit failures to 9 in CI (to finish early) */
   maxFailures: process.env.CI ? 9 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ['html'],
-    [process.env.CI ? 'github' : 'list']
-  ],
+  reporter: process.env.CI ? [ ['html'], ['github'], ['list'] ] : [ ['html'], ['list'] ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
@@ -51,6 +47,7 @@ const config: PlaywrightTestConfig = {
 
   /* Configure projects for major browsers */
   projects: [
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: 'chromium',
       use: {
@@ -92,11 +89,37 @@ const config: PlaywrightTestConfig = {
       name: 'mobilechromium',
       use: {
         ...devices['Pixel 5'],
+        browserName: 'chromium',
         permissions: ["microphone","camera"],
         ignoreHTTPSErrors: true,
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
         },
+      },
+    },
+    {
+      name: 'mobilefirefox',
+      use: {
+        ...devices['Pixel 5'],
+        browserName: 'firefox',
+        isMobile: false,
+        ignoreHTTPSErrors: true,
+        launchOptions: {
+          firefoxUserPrefs: {
+            // use fake audio and video media
+            "media.navigator.streams.fake": true,
+            "permissions.default.microphone": 1,
+            "permissions.default.camera": 1,
+          },
+        },
+      },
+    },
+    {
+      name: 'mobilewebkit',
+      use: {
+        ...devices['iPhone 7'],
+        browserName: 'webkit',
+        ignoreHTTPSErrors: true,
       },
     },
      

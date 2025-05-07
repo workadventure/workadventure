@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { Subscription } from "rxjs";
@@ -17,7 +16,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private _spaceUserDeferred = new Deferred<SpaceUserExtended>();
     public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
     public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
-    private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
+    private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private readonly _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
     private spaceUserUpdateSubscribe: Subscription | undefined;
@@ -46,7 +45,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
                 if (timeout) {
                     clearTimeout(timeout);
                 }
-                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                if (mediaStream === undefined || mediaStream.getAudioTracks().length <= 0) {
                     set(undefined);
                     return;
                 }
@@ -112,6 +111,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
         } else if (jitsiTrack.isVideoTrack()) {
             // The jitsiTrack.getVideoType() return is a lie.
             // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
+
             if (jitsiTrack.getVideoType() === "desktop") {
                 const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
                 if (oldScreenSharingTrack != undefined) {
@@ -175,6 +175,11 @@ export class JitsiTrackWrapper implements TrackWrapper {
                 }
 
                 this.cameraTrackWrapper.setVideoTrack(jitsiTrack);
+
+                // If we don't have an audio track, let's try to get it from the video track
+                if (this.cameraTrackWrapper.getAudioTrack() === undefined) {
+                    this._audioStreamStore.set(jitsiTrack.getOriginalStream());
+                }
             }
         } else {
             throw new Error("Jitsi Track is neither audio nor video");
@@ -183,7 +188,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
     muteAudio() {
         this.cameraTrackWrapper.setAudioTrack(undefined);
-        this._audioStreamStore.set(null);
+        this._audioStreamStore.set(undefined);
     }
 
     muteVideo() {
@@ -229,10 +234,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
             return;
         }
         // Let's notify the embedded store that a new screen-sharing has started
-        highlightedEmbedScreen.highlight({
-            type: "streamable",
-            embed: this.screenSharingTrackWrapper,
-        });
+        highlightedEmbedScreen.toggleHighlight(this.screenSharingTrackWrapper);
     }
 
     get volumeStore(): Readable<number[] | undefined> | undefined {
@@ -244,7 +246,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
         this.cameraTrackWrapper.setAudioTrack(undefined);
         this.screenSharingTrackWrapper.setVideoTrack(undefined);
         this.screenSharingTrackWrapper.setAudioTrack(undefined);
-        this._audioStreamStore.set(null);
+        this._audioStreamStore.set(undefined);
         this.spaceUserUpdateSubscribe?.unsubscribe();
         this._spaceUser = undefined;
     }

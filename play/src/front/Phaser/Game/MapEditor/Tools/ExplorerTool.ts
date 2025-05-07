@@ -153,7 +153,7 @@ export class ExplorerTool implements MapEditorTool {
         analyticsClient.closeExplorationMode();
 
         // Restore controls of the scene
-        this.scene.userInputManager.restoreControls();
+        this.scene.userInputManager.restoreControls("explorerTool");
 
         // Remove all controls for the exploration mode
         this.scene.input.keyboard?.off("keydown", this.keyDownHandler);
@@ -185,6 +185,8 @@ export class ExplorerTool implements MapEditorTool {
         // Restore camera mode
         cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000, targetZoom);
 
+        // Make all entities non interactive
+        this.setAllEntitiesNotInteractive();
         // Restore entities
         this.removeAllAreasPreviewPointedToEditColor();
 
@@ -235,7 +237,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.setDefaultCursor("grab");
 
         // Disable controls of the scene
-        this.scene.userInputManager.disableControls();
+        this.scene.userInputManager.disableControls("explorerTool");
 
         // Implement all controls for the exploration mode
         this.scene.input.setTopOnly(false);
@@ -261,7 +263,7 @@ export class ExplorerTool implements MapEditorTool {
         }
 
         // Make all entities interactive
-        this.entitiesManager.makeAllEntitiesInteractive();
+        this.setAllEntitiesInteractive();
         this.setAllAreasPreviewPointedToEditColor();
 
         this.scene.playSound("audio-cloud");
@@ -271,17 +273,6 @@ export class ExplorerTool implements MapEditorTool {
 
         // Create flash animation
         this.scene.cameras.main.flash();
-
-        // Make that to be sure that when the map explorer is open, the user don't move with the camera or keyboard
-        // See the part of code in UserInputManager.ts that automatically enable the controle when the store is defined to true
-        this.enableUserInputsStoreSubscribe = enableUserInputsStore.subscribe((value) => {
-            if (!value) return;
-            // FIXME: use queue microtask to avoid the setTimeout
-            setTimeout(() => {
-                // Disable controls of the scene
-                this.scene.userInputManager.disableControls();
-            }, 100);
-        });
     }
     public destroy(): void {
         this.clear();
@@ -317,10 +308,10 @@ export class ExplorerTool implements MapEditorTool {
                 areaPreview = this.createAndSaveAreaPreview(config);
             }
             areaPreview.on(Phaser.Input.Events.POINTER_OVER, () => {
-                this.pointerOverHandler(areaPreview as AreaPreview);
+                this.pointerOverHandler(areaPreview);
             });
             areaPreview.on(Phaser.Input.Events.POINTER_OUT, () => {
-                this.pointerOutHandler(areaPreview as AreaPreview);
+                this.pointerOutHandler(areaPreview);
             });
             areaPreviews.set(key, areaPreview);
 
@@ -366,5 +357,35 @@ export class ExplorerTool implements MapEditorTool {
             this.lastCameraCenterXToZoom = cameraCenterXToZoom;
             this.lastCameraCenterYToZoom = cameraCenterYToZoom;
         }
+    }
+
+    private definePointerOutForEntity(entity: Entity) {
+        // If the entity is selected, keep the active yellow color
+        if (get(mapExplorationObjectSelectedStore) == entity) {
+            entity.setPointedToEditColor(0xf9e82d);
+        } else {
+            entity.setPointedToEditColor(0x00000);
+        }
+        this.scene.markDirty();
+    }
+
+    private setAllEntitiesInteractive() {
+        this.entitiesManager.makeAllEntitiesInteractive();
+        this.entitiesManager.getEntities().forEach((entity) => {
+            if (entity.searchable) {
+                entity.setPointedToEditColor(0x00000);
+                entity.on(Phaser.Input.Events.POINTER_OUT, () => this.definePointerOutForEntity(entity));
+            }
+        });
+    }
+
+    private setAllEntitiesNotInteractive() {
+        this.entitiesManager.getEntities().forEach((entity) => {
+            if (entity.searchable) {
+                entity.removePointedToEditColor();
+                entity.off(Phaser.Input.Events.POINTER_OUT, () => this.definePointerOutForEntity(entity));
+            }
+        });
+        this.entitiesManager.makeAllEntitiesNonInteractive();
     }
 }

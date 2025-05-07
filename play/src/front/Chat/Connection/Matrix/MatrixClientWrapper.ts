@@ -13,6 +13,7 @@ import {
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
+import * as Sentry from "@sentry/svelte";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -52,6 +53,13 @@ export interface MatrixLocalUserStore {
     setMatrixAccessTokenExpireDate(AccessTokenExpireDate: Date): void;
 
     getName(): string | null;
+}
+
+export class InvalidLoginTokenError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "InvalidLoginTokenError";
+    }
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
@@ -140,6 +148,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 //VerificationMethod.ShowQrCode,
                 //VerificationMethod.Reciprocate,
             ],
+            timelineSupport: true,
         };
 
         if (this.clientClosed) {
@@ -195,38 +204,53 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         refreshToken: string | null;
         deviceId: string;
     }> {
-        const client = this._createClient({
+        const options: ICreateClientOpts = {
             baseUrl: matrixServerUrl,
-        });
-
-        const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.login("m.login.token", {
-            token: loginToken,
-            //device_id: deviceId,
-            initial_device_display_name: "WorkAdventure",
-        });
-
-        this.localUserStore.setMatrixUserId(user_id);
-        this.localUserStore.setMatrixAccessToken(access_token);
-        this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
-        this.localUserStore.setMatrixDeviceId(device_id, user_id);
-        if (expires_in_ms !== undefined) {
-            const expireDate = new Date();
-            // Add response.expires_in milliseconds to the current date.
-            expireDate.setMilliseconds(expireDate.getMilliseconds() + expires_in_ms);
-            this.localUserStore.setMatrixAccessTokenExpireDate(expireDate);
-        }
-
-        //Login token has been used, remove it from local storage
-        this.localUserStore.setMatrixLoginToken(null);
-
-        // Note: we ignore the device ID returned by the server. We use the one we generated.
-        // This will be required in the future when we switch to a Native OpenID Matrix client.
-        return {
-            matrixUserId: user_id,
-            accessToken: access_token,
-            refreshToken: refresh_token ?? null,
-            deviceId: device_id,
         };
+
+        const client = this._createClient(options);
+
+        try {
+            const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.login(
+                "m.login.token",
+                {
+                    token: loginToken,
+                    initial_device_display_name: "WorkAdventure",
+                }
+            );
+
+            this.localUserStore.setMatrixUserId(user_id);
+            this.localUserStore.setMatrixAccessToken(access_token);
+            this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
+            this.localUserStore.setMatrixDeviceId(device_id, user_id);
+            if (expires_in_ms !== undefined) {
+                const expireDate = new Date();
+                // Add response.expires_in milliseconds to the current date.
+                expireDate.setMilliseconds(expireDate.getMilliseconds() + expires_in_ms);
+                this.localUserStore.setMatrixAccessTokenExpireDate(expireDate);
+            }
+
+            //Login token has been used, remove it from local storage
+            this.localUserStore.setMatrixLoginToken(null);
+
+            // Note: we ignore the device ID returned by the server. We use the one we generated.
+            // This will be required in the future when we switch to a Native OpenID Matrix client.
+            return {
+                matrixUserId: user_id,
+                accessToken: access_token,
+                refreshToken: refresh_token ?? null,
+                deviceId: device_id,
+            };
+        } catch (e) {
+            console.error(e);
+            Sentry.captureException(e, {
+                extra: {
+                    loginToken,
+                },
+            });
+
+            throw new InvalidLoginTokenError("Invalid login token");
+        }
     }
 
     private async getSecretStorageKey({

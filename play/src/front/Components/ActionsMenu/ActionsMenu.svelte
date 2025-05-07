@@ -2,9 +2,12 @@
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import ButtonClose from "../Input/ButtonClose.svelte";
+    import VisitCard from "../VisitCard/VisitCard.svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import LL from "../../../i18n/i18n-svelte";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -21,6 +24,8 @@
         actionsMenuStore.clear();
     }
 
+    let buttonsLayout: "row" | "column" = "row";
+
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
         if (actionsMenuData) {
@@ -36,6 +41,12 @@
                     return 0;
                 }
             });
+            const nbButtons = sortedActions.length + (actionsMenuData.menuName ? 0 : 1);
+            if (nbButtons > 2) {
+                buttonsLayout = "column";
+            } else {
+                buttonsLayout = "row";
+            }
         }
     });
 
@@ -49,93 +60,78 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
-        <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
-            <button type="button" class="close-window" on:click|preventDefault|stopPropagation={closeActionsMenu}
-                >×</button
-            >
-            {#if actionsMenuData.menuName}
-                <h2 class="name tw-mb-2 !tw-mt-0 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
-            {/if}
-            {#if actionsMenuData.menuDescription}
-                <p class="tw-mb-2 tw-mx-2 margin-close tw-whitespace-pre-wrap">{actionsMenuData.menuDescription}</p>
-            {/if}
-            {#if sortedActions}
-                <div
-                    class="actions tw-flex tw tw-flex-col tw-items-center"
-                    class:margin-close={!actionsMenuData.menuName}
-                >
-                    {#each sortedActions ?? [] as action (action.actionName)}
-                        <button
-                            type="button"
-                            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
-                                ''}"
-                            on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
-                            on:click|preventDefault={() => {
-                                action.callback();
-                            }}
-                        >
-                            {action.actionName}
-                        </button>
-                    {/each}
+    <div
+        class="absolute max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
+        data-testid="actions-menu"
+    >
+        {#if actionsMenuData.menuName}
+            <div>
+                <div class="w-full bg-cover relative">
+                    <div class="flex items-end justify-between p-2">
+                        <div class="text-white font-bold text-xl pl-3">
+                            {actionsMenuData.menuName}
+                        </div>
+                        <ButtonClose on:click={closeActionsMenu} />
+                    </div>
+                    {#if actionsMenuData.visitCardUrl}
+                        <VisitCard
+                            visitCardUrl={actionsMenuData.visitCardUrl}
+                            isEmbedded={true}
+                            showSendMessageButton={false}
+                        />
+                    {/if}
                 </div>
-            {/if}
-        </div>
+                {#if actionsMenuData.menuDescription}
+                    <p class="text-sm opacity-50 text-white px-4">
+                        {actionsMenuData.menuDescription}
+                    </p>
+                {/if}
+            </div>
+        {/if}
+
+        {#if sortedActions}
+            <div
+                class="flex items-center bg-contrast p-2"
+                class:margin-close={!actionsMenuData.menuName}
+                class:flex-col={buttonsLayout === "column"}
+                class:flex-row={buttonsLayout === "row"}
+            >
+                {#each sortedActions ?? [] as action (action.uuid)}
+                    <button
+                        type="button"
+                        class="btn btn-light btn-ghost text-nowrap justify-center w-full {action.style ?? ''}"
+                        class:mx-2={buttonsLayout === "column"}
+                        on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
+                        on:click|preventDefault={() => {
+                            action.callback();
+                        }}
+                    >
+                        <span class="flex flex-row gap-2 items-center justify-center">
+                            {#if action.actionIcon}
+                                <div
+                                    class="w-6 h-6"
+                                    style="background-color: {action.iconColor ?? 'white'};
+                                -webkit-mask: url({action.actionIcon}) no-repeat center;
+                                    mask: url({action.actionIcon}) no-repeat center;"
+                                />
+                            {/if}
+                            {action.actionName}
+                        </span>
+                    </button>
+                {/each}
+                {#if !actionsMenuData.menuName}
+                    <button
+                        type="button"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full"
+                        on:click|preventDefault|stopPropagation={closeActionsMenu}
+                    >
+                        {$LL.actionbar.close()}
+                    </button>
+                {/if}
+            </div>
+        {/if}
     </div>
 {/if}
 
 <style lang="scss">
-    .actions-menu {
-        position: relative;
-        width: auto !important;
-        height: max-content !important;
-        max-height: 50vh;
-        margin-top: 200px;
-        overflow-y: auto;
-        z-index: 425;
-        word-break: break-all;
-        pointer-events: auto;
-        color: whitesmoke;
-        border-radius: 0.25rem;
-        background-color: rgb(27 27 41 / 0.95);
-
-        .close-window {
-            position: absolute;
-            right: 0rem;
-            top: 0rem;
-            margin-top: 0.3rem;
-            margin-right: 0.2rem;
-        }
-
-        .margin-close {
-            margin-top: 15px;
-        }
-
-        .actions {
-            max-height: 30vh;
-            width: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        .name {
-            max-height: 25vh;
-            margin: 20px 20px 0 20px;
-            overflow-y: auto;
-        }
-
-        .actions::-webkit-scrollbar {
-            display: none;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .nes-btn.is-error.close {
-            position: absolute;
-            top: -20px;
-            right: -20px;
-        }
-    }
 </style>

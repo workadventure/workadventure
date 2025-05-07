@@ -1,20 +1,34 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { JitsiRoomConfigData, JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import { JitsiRoomPropertyData } from "@workadventure/map-editor";
+    import { openModal } from "svelte-modals";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
+    import Input from "../../Input/Input.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
+    import RangeSlider from "../../Input/RangeSlider.svelte";
+    import Select from "../../Input/Select.svelte";
+    import InputCheckbox from "../../Input/InputCheckbox.svelte";
+    import {
+        ON_ACTION_TRIGGER_BUTTON,
+        ON_ACTION_TRIGGER_ENTER,
+        ON_ICON_TRIGGER_BUTTON,
+    } from "../../../WebRtc/LayoutManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import JitsiRoomConfigEditor from "./JitsiRoomConfigEditor.svelte";
 
     export let property: JitsiRoomPropertyData;
-    export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let triggerOnActionChoosen: boolean = property.trigger === ON_ACTION_TRIGGER_BUTTON;
     export let triggerOptionActivated = true;
     export let isArea = false;
     let optionAdvancedActivated = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 
     function onTriggerValueChange() {
-        triggerOnActionChoosen = property.trigger === "onaction";
+        triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;
         dispatch("change");
     }
 
@@ -24,9 +38,17 @@
 
     let jitsiConfigModalOpened = false;
 
-    function onConfigChange(event: { detail: JitsiRoomConfigData }) {
-        property.jitsiRoomConfig = event.detail;
-        dispatch("change");
+    function OpenPopup() {
+        openModal(JitsiRoomConfigEditor, {
+            visibilityValue: jitsiConfigModalOpened,
+            config: property.jitsiRoomConfig,
+            jitsiRoomAdminTag: property.jitsiRoomAdminTag,
+            onSave: (config) => {
+                property.jitsiRoomConfig = structuredClone(config);
+                dispatch("change");
+            },
+        });
+        jitsiConfigModalOpened = true;
     }
 </script>
 
@@ -35,9 +57,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_meeting.png"
             alt={$LL.mapEditor.properties.jitsiProperties.description()}
         />
@@ -45,140 +67,126 @@
     </span>
     <span slot="content">
         <div class="value-input">
-            <label for="roomName">{$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}</label>
-            <input
+            <Input
                 id="roomName"
                 type="text"
+                label={$LL.mapEditor.properties.jitsiProperties.roomNameLabel()}
                 placeholder={$LL.mapEditor.properties.jitsiProperties.roomNamePlaceholder()}
                 bind:value={property.roomName}
-                on:change={onValueChange}
+                onChange={onValueChange}
             />
         </div>
-        <div class="value-switch">
-            <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
-            <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
-        </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
-            <div class="value-switch">
-                <label for="closable">{$LL.mapEditor.properties.jitsiProperties.closable()}</label>
-                <input
-                    id="closable"
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.closable}
-                    on:change={onValueChange}
-                />
-            </div>
-            <div>
-                <label for="jitsiWidth"
-                    >{$LL.mapEditor.properties.jitsiProperties.width()}: {property.width ?? 50}%</label
-                >
-                <input
-                    class="jitsiWidth"
-                    type="range"
-                    min="1"
-                    max="100"
-                    placeholder="50"
-                    bind:value={property.width}
-                    on:change={onValueChange}
-                />
-            </div>
-            <div class="value-switch">
-                <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
-                <input
-                    id="noPrefix"
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.noPrefix}
-                    on:change={onValueChange}
-                />
-            </div>
-            <div class="value-input">
-                <label for="jitsiUrl">{$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}</label>
-                <input
-                    id="jitsiUrl"
-                    type="text"
-                    placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
-                    bind:value={property.jitsiUrl}
-                    on:change={onValueChange}
-                />
-            </div>
-            {#if !property.hideButtonLabel}
-                <div class="value-input">
-                    <label for="jitsiButtonLabel">{$LL.mapEditor.entityEditor.buttonLabel()}</label>
-                    <input
-                        id="jitsiButtonLabel"
-                        type="text"
-                        bind:value={property.buttonLabel}
-                        on:change={onValueChange}
+
+        <InputSwitch
+            id="advancedOption"
+            label={$LL.mapEditor.properties.advancedOptions()}
+            bind:value={optionAdvancedActivated}
+        />
+
+        {#if optionAdvancedActivated}
+            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2 ">
+                <div class="value-switch">
+                    <InputCheckbox
+                        id="closable"
+                        label={$LL.mapEditor.properties.jitsiProperties.closable()}
+                        bind:value={property.closable}
+                        onChange={onValueChange}
                     />
                 </div>
-            {/if}
-            {#if triggerOptionActivated}
                 <div>
-                    <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
-                    <select
-                        id="trigger"
-                        class=" tw-m-0 tw-w-full"
-                        bind:value={property.trigger}
-                        on:change={onTriggerValueChange}
-                    >
-                        <option value={undefined}
-                            >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
-                        >
-                        <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
-                        <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
-                    </select>
-                </div>
-            {/if}
-            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                <div class="value-input tw-flex tw-flex-col">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
-                    <input
-                        id="triggerMessage"
-                        type="text"
-                        placeholder={$LL.trigger.object()}
-                        bind:value={property.triggerMessage}
-                        on:change={onValueChange}
+                    <RangeSlider
+                        label={$LL.mapEditor.properties.jitsiProperties.width()}
+                        min={15}
+                        max={85}
+                        placeholder="50"
+                        bind:value={property.width}
+                        onChange={onValueChange}
+                        variant="secondary"
+                        buttonShape="square"
                     />
                 </div>
-            {/if}
-            <button
-                on:click={() => {
-                    jitsiConfigModalOpened = true;
-                }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
-            >
-            {#if jitsiConfigModalOpened}
-                <JitsiRoomConfigEditor
+
+                <InputSwitch
+                    id="noPrefix"
+                    label={$LL.mapEditor.properties.jitsiProperties.noPrefix()}
+                    bind:value={property.noPrefix}
+                    onChange={onValueChange}
+                />
+
+                <div class="value-input">
+                    <Input
+                        id="jitsiUrl"
+                        type="url"
+                        label={$LL.mapEditor.properties.jitsiProperties.jitsiUrl()}
+                        placeholder={$LL.mapEditor.properties.jitsiProperties.jitsiUrlPlaceholder()}
+                        bind:value={property.jitsiUrl}
+                        onChange={onValueChange}
+                    />
+                </div>
+                {#if !property.hideButtonLabel}
+                    <div class="value-input">
+                        <Input
+                            id="jitsiButtonLabel"
+                            type="text"
+                            label={$LL.mapEditor.entityEditor.buttonLabel()}
+                            bind:value={property.buttonLabel}
+                            onChange={onValueChange}
+                        />
+                    </div>
+                {/if}
+                {#if triggerOptionActivated}
+                    <div>
+                        <Select
+                            id="trigger"
+                            label={$LL.mapEditor.properties.jitsiProperties.trigger()}
+                            bind:value={property.trigger}
+                            onChange={onTriggerValueChange}
+                        >
+                            <option value={ON_ACTION_TRIGGER_ENTER}
+                                >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+                            >
+                            <option value={ON_ICON_TRIGGER_BUTTON}
+                                >{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option
+                            >
+                            <option value={ON_ACTION_TRIGGER_BUTTON}
+                                >{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option
+                            >
+                        </Select>
+                    </div>
+                {/if}
+                {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
+                    <div class="value-input flex flex-col">
+                        <Input
+                            id="triggerMessage"
+                            label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                            type="text"
+                            placeholder={$LL.trigger.object()}
+                            bind:value={property.triggerMessage}
+                            onChange={onValueChange}
+                        />
+                    </div>
+                {/if}
+
+                <button
+                    class="btn bg-transparent rounded-md hover:!bg-white/10 transition-all border !border-white py-2"
+                    on:click={OpenPopup}
+                >
+                    {$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}
+                </button>
+
+                <!-- <JitsiRoomConfigEditor
+                    bind:isOpen={jitsiConfigModalOpened}
                     bind:visibilityValue={jitsiConfigModalOpened}
                     on:change={onConfigChange}
                     bind:config={property.jitsiRoomConfig}
-                />
-            {/if}
-        </div>
+                    bind:jitsiRoomAdminTag={property.jitsiRoomAdminTag}
+                /> -->
+            </div>
+        {/if}
     </span>
 </PropertyEditorBase>
 
 <style lang="scss">
-    .value-input {
-        display: flex;
-        width: 100%;
-        margin-bottom: 0.5em;
-        margin-top: 0.5em;
-        flex-direction: column;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
-    }
-
     button {
         flex: 1 1 0px;
         border: 1px solid grey;
@@ -194,82 +202,5 @@
         margin-top: 0.5em;
         align-items: center;
         height: 2.5em;
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-            flex-grow: 1;
-        }
-        input {
-            min-width: 0;
-        }
-        * {
-            margin-bottom: 0;
-        }
-    }
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
-    .advanced-option {
-        display: none;
-        &.active {
-            display: block;
-        }
     }
 </style>

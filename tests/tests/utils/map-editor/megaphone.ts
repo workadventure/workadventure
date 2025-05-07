@@ -2,14 +2,21 @@ import { expect, Page } from "@playwright/test";
 
 class Megaphone {
   async toggleMegaphone(page: Page) {
-    await page
+    /*await page
       .locator('.map-editor .configure-my-room input[type="checkbox"]')
       .check();
+       await page.locator(".input-switch").click();*/
+   
+
+    await page.locator('[data-testid="megaphone-switch"]').click();
+
+    
   }
 
   async isMegaphoneEnabled(page: Page) {
     await page
-      .locator('.map-editor .configure-my-room input[type="checkbox"]')
+      // .locator('.map-editor .configure-my-room input[type="checkbox"]')
+      .locator('[data-testid="megaphone-switch"]')
       .isChecked();
   }
 
@@ -28,27 +35,23 @@ class Megaphone {
   }
 
   async megaphoneSelectScope(page: Page) {
-    await page
-      .locator(".map-editor .configure-my-room select")
-      .first()
-      .selectOption("ROOM");
+  
+    await page.getByLabel('Scope').selectOption('ROOM');
   }
 
   async megaphoneAddNewRights(page: Page, tag = "test") {
-    await page
-      .locator(".map-editor .configure-my-room .content .value-container input")
-      .fill(tag);
-    await page.getByText(`add a new tag: '${tag.toLowerCase()}'`).click();
+
+   
+   await expect(page.getByRole('textbox', { name: 'Rights' })).toBeVisible();
+   await page.getByRole('textbox', { name: 'Rights' }).fill(tag.toLowerCase());
+   await page.getByRole('textbox', { name: 'Rights' }).press('Enter');
+  
   }
 
   async megaphoneRemoveRights(page: Page, tag = "test") {
-    await page
-      .locator(
-        ".map-editor .configure-my-room .content .value-container .multi-item",
-        { hasText: tag.toLowerCase() }
-      )
-      .locator(".multi-item-clear")
-      .click();
+    
+    await expect(page.locator('.indicators > button')).toBeVisible();
+    await page.locator('.indicators > button').click();
   }
 
   async megaphoneSave(page: Page) {
@@ -56,19 +59,12 @@ class Megaphone {
   }
 
   async isCorrectlySaved(page: Page) {
-    await expect(
-      await page.locator(
-        ".map-editor .configure-my-room .content button:disabled"
-      )
-    ).toContainText("Megaphone settings saved");
+    await expect(page.getByRole('button', { name: 'Megaphone settings saved' })).toBeVisible();
+  
   }
 
   async isNotCorrectlySaved(page: Page) {
-    await expect(
-      await page.locator(
-        ".map-editor .configure-my-room .content button:disabled"
-      )
-    ).toContainText("Error while saving megaphone settings");
+    await expect(page.getByRole('button', { name: 'Error while saving megaphone settings' })).toBeVisible();
   }
 }
 

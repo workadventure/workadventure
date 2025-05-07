@@ -1,4 +1,3 @@
-import HyperExpress, { compressors } from "hyper-express";
 import { z } from "zod";
 import {
     AnswerMessage,
@@ -17,6 +16,7 @@ import {
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
+import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -53,7 +53,7 @@ type UpgradeFailedInvalidTexture = {
 export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
-    constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
+    constructor(private readonly app: TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();
@@ -61,7 +61,7 @@ export class IoSocketController {
     }
 
     adminRoomSocket(): void {
-        this.app.ws<AdminSocketData>("/admin/rooms", {
+        this.app.ws<AdminSocketData>("/ws/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -97,7 +97,7 @@ export class IoSocketController {
                             console.error(err.issues);
                             Sentry.captureException(err.issues);
                         }
-                        Sentry.captureException(`Invalid message received. ${message}`);
+                        Sentry.captureException(`Invalid message received. ${JSON.stringify(message)}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -211,7 +211,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<SocketData | UpgradeFailedData>("/room", {
+        this.app.ws<SocketData | UpgradeFailedData>("/ws/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -296,6 +296,7 @@ export class IoSocketController {
                                         title: "Please refresh",
                                         subtitle: "New version available",
                                         image: "/resources/icons/new_version.png",
+                                        imageLogo: "/static/images/logo.png",
                                         code: "NEW_VERSION",
                                         details:
                                             "A new version of WorkAdventure is available. Please refresh your window",
@@ -471,7 +472,7 @@ export class IoSocketController {
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({
-                                id: 0,
+                                spaceUserId: "",
                                 uuid: userData.userUuid,
                                 name,
                                 playUri: roomId,
@@ -902,6 +903,16 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "oauthRefreshTokenQuery": {
+                                        answerMessage.answer = {
+                                            $case: "oauthRefreshTokenAnswer",
+                                            oauthRefreshTokenAnswer: await socketManager.handleOauthRefreshTokenQuery(
+                                                message.message.queryMessage.query.oauthRefreshTokenQuery
+                                            ),
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     default: {
                                         socketManager.forwardMessageToBack(socket, message.message);
                                     }
@@ -919,7 +930,8 @@ export class IoSocketController {
                                     error: {
                                         message:
                                             error !== null && typeof error === "object"
-                                                ? error.toString()
+                                                ? // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                                                  error.toString()
                                                 : typeof error === "string"
                                                 ? error
                                                 : "Unknown error",
@@ -1069,7 +1081,7 @@ export class IoSocketController {
         });
     }
 
-    private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
+    private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
         socket.send(
             ServerToClientMessage.encode({
                 message: {

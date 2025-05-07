@@ -40,10 +40,7 @@ describe("RoomApiServer", () => {
                         }
 
                         resolve({
-                            readVariable: (
-                                request: VariableRequest,
-                                callback: (error: any | null, response: any | undefined) => void
-                            ) => {
+                            readVariable: (request: VariableRequest, callback: (error: any, response: any) => void) => {
                                 if (
                                     request.room ===
                                         "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json" &&
@@ -62,7 +59,7 @@ describe("RoomApiServer", () => {
                             },
                             saveVariable: (
                                 request: SaveVariableRequest,
-                                callback: (error: any | null, response: any | undefined) => void
+                                callback: (error: any, response: any) => void
                             ) => {
                                 if (
                                     request.room ===

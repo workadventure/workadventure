@@ -61,6 +61,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
+            disabled: "Jitsi integration is disabled for this room ❌",
         },
         audioProperties: {
             label: "Play Audio File",
@@ -103,12 +104,14 @@ const mapEditor: BaseTranslation = {
             description: "",
             nameLabel: "Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Speaker zone is disabled for this room ❌",
         },
         listenerMegaphoneProperties: {
             label: "Attendees zone",
             description: "",
             nameLabel: "SpeakerZone Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Attendees zone is disabled for this room ❌",
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {
@@ -128,10 +131,10 @@ const mapEditor: BaseTranslation = {
             defaultStartArea: "Default start area",
         },
         youtubeProperties: {
-            label: "Open Youtube Video",
-            description: "Open Youtube video within WorkAdventure or as a new tab.",
-            error: "Please enter a valid Youtube URL",
-            disabled: "Youtube integration is disabled.",
+            label: "Open YouTube Video",
+            description: "Open YouTube video within WorkAdventure or as a new tab.",
+            error: "Please enter a valid YouTube URL",
+            disabled: "YouTube integration is disabled.",
         },
         googleDocsProperties: {
             label: "Open Google Docs",
@@ -216,6 +219,13 @@ const mapEditor: BaseTranslation = {
             roomNameLabel: "Display name of room",
             roomNameLabelPlaceholder: "My room",
             defaultChatRoomAreaName: "Room Area",
+        },
+        tooltipProperties: {
+            label: "Info Bulle",
+            description: "Add an information bubble to your area ℹ️",
+            contentPlaceholder: "Write content here ✍️",
+            duration: "Duration (in seconds) ⏱️",
+            infinityDuration: "Infinite duration ⏱️",
         },
     },
     areaEditor: {
@@ -376,7 +386,7 @@ const mapEditor: BaseTranslation = {
         close: "Close",
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
-        searchPlaceholder: "Write...",
+        searchPlaceholder: "Type keywords...",
     },
 };
 

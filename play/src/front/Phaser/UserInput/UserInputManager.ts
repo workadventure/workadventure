@@ -23,6 +23,10 @@ export enum UserInputEvent {
     JoystickMove,
 }
 
+// The reason why the controls are disabled
+// The MessageEventSource type means the controls where disabled by the scripting API in the related iframe
+type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | "textField" | MessageEventSource;
+
 //we cannot use a map structure so we have to create a replacement
 export class ActiveEventList {
     private eventMap: Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
@@ -65,6 +69,7 @@ export class UserInputManager {
 
     private userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
+    private readonly disableControlsReasons: Set<DisableControlsReason> = new Set();
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
         this.scene = scene;
@@ -79,7 +84,11 @@ export class UserInputManager {
         }
 
         this.enableUserInputsStoreUnsubscribe = enableUserInputsStore.subscribe((enable) => {
-            enable ? this.restoreControls() : this.disableControls();
+            if (enable) {
+                this.restoreControls("store");
+            } else {
+                this.disableControls("store");
+            }
         });
     }
 
@@ -177,16 +186,31 @@ export class UserInputManager {
         ];
     }
 
-    disableControls() {
+    /**
+     * Will disable the controls for the user.
+     * You need to pass the reason why the controls are disabled.
+     * When you restore the controls, you need to pass the same reason.
+     */
+    disableControls(reason: DisableControlsReason) {
         try {
             this.scene.input.keyboard?.disableGlobalCapture();
+            this.disableControlsReasons.add(reason);
         } catch (e) {
             console.warn(e);
         }
         this.isInputDisabled = true;
     }
 
-    restoreControls() {
+    /**
+     * Will restore the controls for the user.
+     * You need to pass the reason why the controls are restored.
+     * Only when there are no more reasons to disable the controls, the controls will be restored.
+     */
+    restoreControls(reason: DisableControlsReason) {
+        this.disableControlsReasons.delete(reason);
+        if (this.disableControlsReasons.size > 0) {
+            return;
+        }
         try {
             this.scene.input.keyboard?.enableGlobalCapture();
         } catch (e) {
@@ -246,7 +270,9 @@ export class UserInputManager {
                 if (
                     d.keyInstance.originalEvent.target instanceof HTMLInputElement ||
                     d.keyInstance.originalEvent.target instanceof HTMLTextAreaElement ||
-                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement
+                    d.keyInstance.originalEvent.target instanceof HTMLSelectElement ||
+                    d.keyInstance.originalEvent.metaKey ||
+                    d.keyInstance.originalEvent.ctrlKey
                 ) {
                     d.keyInstance.reset();
                     return;

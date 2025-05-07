@@ -14,7 +14,9 @@
           }
         : undefined;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onSelect: { index: number; label: string; value: string };
+    }>();
 
     async function searchMembers(filterText: string) {
         const connection = gameManager.getCurrentGameScene().connection;
@@ -37,7 +39,9 @@
     }
 
     function handleSelectOption() {
-        dispatch("onSelect", selectedValue);
+        if (selectedValue) {
+            dispatch("onSelect", selectedValue);
+        }
     }
 </script>
 
@@ -55,4 +59,5 @@
     loadOptions={searchMembers}
     inputAttributes={{ "data-testid": "memberAutoCompleteInput" }}
     {placeholder}
+    class="!bg-contrast !rounded-md !border-contrast-400 !outline-none !w-full"
 />

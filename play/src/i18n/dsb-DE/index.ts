@@ -4,7 +4,6 @@ import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
 import companion from "./companion";
-import emoji from "./emoji";
 import error from "./error";
 import follow from "./follow";
 import login from "./login";
@@ -18,6 +17,7 @@ import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
+import form from "./form";
 
 const dsb_DE = merge(en_US, {
     audio,
@@ -31,13 +31,13 @@ const dsb_DE = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,
     actionbar,
     mapEditor,
     megaphone,
+    form,
 });
 
 export default dsb_DE;

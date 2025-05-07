@@ -17,7 +17,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         in: "في ", // In
         teleport: "الانتقال الفوري", // Teleport
         search: "ابحث بسهولة!", // Just search!
-        walkTo: "المشي إلى", // Walk to
+        TalkTo: "المشي إلى", // Walk to
         teleporting: "الانتقال الفوري...", // Teleporting...
         businessCard: "بطاقة العمل", // Business card
     },
@@ -71,32 +71,26 @@ const chat: DeepPartial<Translation["chat"]> = {
             klaxoon: {
                 title: "كلاكسون", // Klaxoon
                 description: "أرسل استطلاع كلاكسون في الدردشة!", // Send a Klaxoon survey in the chat!
-                error: "استطلاع كلاكسون غير صالح", // The Klaxoon survey is not valid
             },
             youtube: {
                 title: "يوتيوب", // Youtube
                 description: "أرسل فيديو يوتيوب في الدردشة!", // Send a Youtube video in the chat!
-                error: "رابط يوتيوب غير صالح", // The Youtube URL is not valid
             },
             googleDocs: {
                 title: "مستندات جوجل", // Google Docs
                 description: "أرسل مستند جوجل في الدردشة!", // Send a Google Docs document in the chat!
-                error: "رابط مستندات جوجل غير صالح", // The Google Docs URL is not valid
             },
             googleSlides: {
                 title: "شرائح جوجل", // Google Slides
                 description: "أرسل عرض شرائح جوجل في الدردشة!", // Send a Google Slides presentation in the chat!
-                error: "رابط شرائح جوجل غير صالح", // The Google Slides URL is not valid
             },
             googleSheets: {
                 title: "جداول بيانات جوجل", // Google Sheets
                 description: "أرسل جدول بيانات جوجل في الدردشة!", // Send a Google Sheets document in the chat!
-                error: "رابط جداول بيانات جوجل غير صالح", // The Google Sheets URL is not valid
             },
             eraser: {
                 title: "ممحاة", // Eraser
                 description: "أرسل لوحة ممحاة في الدردشة!", // Send an Eraser board in the chat!
-                error: "رابط ممحاة غير صالح", // The Eraser URL is not valid
             },
             weblink: {
                 error: "الرابط غير صالح", // The URL is not valid

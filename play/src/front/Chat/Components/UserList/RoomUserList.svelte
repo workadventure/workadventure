@@ -13,6 +13,9 @@
 
     const USERS_BY_ROOM_LIMITATION = 200;
 
+    const gameScene = gameManager.getCurrentGameScene();
+    const isMatrixChatEnabled = gameScene.room.isMatrixChatEnabled;
+
     onMount(() => {
         if ($shownRoomListStore === "") shownRoomListStore.set($LL.chat.userList.isHere());
     });
@@ -29,7 +32,7 @@
 
             if (currentPlayUri === gameManager?.getCurrentGameScene()?.roomUrl) roomName = $LL.chat.userList.isHere();
 
-            const myId = gameManager.getCurrentGameScene().connection?.getUserId();
+            const mySpaceUserId = gameManager.getCurrentGameScene().connection?.getSpaceUserId();
 
             const users = currentRoomWithUsers.users
                 .filter(({ username }) => {
@@ -38,8 +41,8 @@
                         : false;
                 })
                 .sort((chatUserA: ChatUser, chatUserB: ChatUser) => {
-                    if (chatUserA.id === myId) return -1;
-                    if (chatUserB.id === myId) return 1;
+                    if (chatUserA.spaceUserId === mySpaceUserId) return -1;
+                    if (chatUserB.spaceUserId === mySpaceUserId) return 1;
                     return chatUserA.username?.localeCompare(chatUserB.username || "") || -1;
                 })
                 .slice(0, USERS_BY_ROOM_LIMITATION);
@@ -59,39 +62,41 @@
         });
 </script>
 
-<div class="tw-flex tw-flex-col tw-overflow-auto tw-h-full">
+<div class="flex flex-col h-full">
     <ChatHeader />
-    {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
-        <div class=" users tw-flex tw-flex-col tw-shrink-0 tw-relative tw-pt-[72px] tw-h-full">
-            <button
-                class="tw-group tw-relative tw-px-3 tw-rounded-none tw-text-white/75 hover:tw-text-white tw-h-11 hover:tw-bg-contrast-200/10 tw-w-full tw-flex tw-space-x-2 tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-t tw-border-b-0 tw-border-white/10 tw-text-white tw-outline-none tw-border-y-0 tw-appearance-none tw-m-0"
-                on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
-            >
-                {#if roomName !== $LL.chat.userList.disconnected()}
+    <div>
+        {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
+            <div class=" users flex flex-col shrink-0 relative first:pt-[72px]">
+                <button
+                    class="group relative px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10 text-white outline-none border-y-0 appearance-none m-0"
+                    on:click={() => shownRoomListStore.set($shownRoomListStore === roomName ? "" : roomName)}
+                >
+                    {#if roomName !== $LL.chat.userList.disconnected()}
+                        <div
+                            class="{roomName !== $LL.chat.userList.disconnected()
+                                ? 'bg-white/10'
+                                : 'bg-gray'} text-white min-w-[20px] h-5 text-sm font-semibold flex items-center justify-center rounded-sm"
+                        >
+                            {userInRoom.length}
+                        </div>
+                    {/if}
+                    <div class="text-white text-sm font-bold tracking-widest uppercase grow text-left">
+                        {roomName}
+                    </div>
                     <div
-                        class="{roomName !== $LL.chat.userList.disconnected()
-                            ? 'tw-bg-white/10'
-                            : 'tw-bg-gray'} tw-text-white tw-min-w-[20px] tw-h-5 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                        class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
                     >
-                        {userInRoom.length}
+                        <IconChevronUp
+                            class={`transform transition ${$shownRoomListStore === roomName ? "" : "rotate-180"}`}
+                        />
+                    </div>
+                </button>
+                {#if $shownRoomListStore === roomName}
+                    <div class="flex flex-col flex-1 h-fit">
+                        <UserList userList={userInRoom} {isMatrixChatEnabled} />
                     </div>
                 {/if}
-                <div class="tw-text-white tw-text-sm tw-font-bold tw-tracking-widest tw-uppercase tw-grow tw-text-left">
-                    {roomName}
-                </div>
-                <div
-                    class="tw-transition-all group-hover:tw-bg-white/10 tw-p-1 tw-rounded-lg tw-aspect-square tw-flex tw-items-center tw-justify-center tw-text-white"
-                >
-                    <IconChevronUp
-                        class={`tw-transform tw-transition ${$shownRoomListStore === roomName ? "" : "tw-rotate-180"}`}
-                    />
-                </div>
-            </button>
-            {#if $shownRoomListStore === roomName}
-                <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto">
-                    <UserList userList={userInRoom} />
-                </div>
-            {/if}
-        </div>
-    {/each}
+            </div>
+        {/each}
+    </div>
 </div>

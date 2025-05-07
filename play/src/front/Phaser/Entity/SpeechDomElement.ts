@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import { marked } from "marked";
 import LL from "../../../i18n/i18n-svelte";
 
 export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
@@ -39,8 +40,18 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         svg.appendChild(textElement);
 
         // Create span element
+        const textTransformed = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
+        const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
-        span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
+        if (textMarked instanceof Promise) {
+            textMarked
+                .then((resolvedText) => {
+                    span.innerHTML = resolvedText;
+                })
+                .catch((e) => console.error(e));
+        } else {
+            span.innerHTML = textMarked;
+        }
         span.id = `spanText-${id}`;
         span.classList.add("characterTriggerAction");
         span.addEventListener("click", callback);
@@ -52,7 +63,7 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
             span,
             `z-index:10; background-color: #00000080; color: ${
                 type === "message" ? "#ffffff" : "#f9e81e"
-            }; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px);`
+            }; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px); max-width: 300px; max-height: 150px; overflow-y: auto; whie-space: pre-wrap;`
         );
         this.setAlpha(0);
     }

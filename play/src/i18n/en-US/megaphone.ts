@@ -6,6 +6,7 @@ const megaphone: BaseTranslation = {
         selectMicrophone: "Select a microphone 🎙️",
         liveMessage: {
             startMegaphone: "Start megaphone",
+            stopMegaphone: "Stop megaphone",
             goingToStream: "You are going to stream",
             yourMicrophone: "your microphone",
             yourCamera: "your camera",
@@ -21,7 +22,7 @@ const megaphone: BaseTranslation = {
 
             This message will be displayer at the bottom corner of the screen, like a video call or bubble discussion.
 
-            An exemple of a live message use case: "Hello everyone, shall we start the conference? 🎉 Follow my avatar to the conference area and open the video app 🚀"
+            An example of a live message use case: "Hello everyone, shall we start the conference? 🎉 Follow my avatar to the conference area and open the video app 🚀"
             `,
             settings: "Settings",
         },

@@ -7,6 +7,7 @@ import {
 import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
 import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
+import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import { fileSystem } from "../fileSystem";
 import { FileSystemInterface } from "../Upload/FileSystemInterface";
 import { ENABLE_WEB_HOOK, MAX_SIMULTANEOUS_FS_READS } from "../Enum/EnvironmentVariable";
@@ -68,7 +69,7 @@ export class MapListService {
                 };
             } else {
                 Sentry.captureException(outcome.reason);
-                console.log(outcome.reason);
+                console.error(`[${new Date().toISOString()}]`, outcome.reason);
             }
         }
 
@@ -85,7 +86,10 @@ export class MapListService {
         try {
             const virtualPath = mapPathUsingDomain(wamFilePath, domain);
             const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
-            return { wamFilePath: wamFilePath, wam: WAMFileFormat.parse(JSON.parse(wamFileString)) };
+            return {
+                wamFilePath: wamFilePath,
+                wam: WAMFileFormat.parse(wamFileMigration.migrate(JSON.parse(wamFileString))),
+            };
         } catch (e) {
             throw new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
@@ -196,12 +200,15 @@ export class MapListService {
             return cacheFile;
         } catch (e: unknown) {
             if (nbTry === 0) {
-                console.log("Trying to regenerate the cache file");
+                console.log(`[${new Date().toISOString()}] Trying to regenerate the cache file`);
                 // The file does not exist. Let's generate it
                 await this.generateCacheFileNoLimit(domain);
                 return this.readCacheFileNoLimit(domain, nbTry + 1);
             }
-            console.error(`Error while trying to read a cache file for domain ${domain}:`, e);
+            console.error(
+                `[${new Date().toISOString()}] Error while trying to read a cache file for domain ${domain}:`,
+                e
+            );
             Sentry.captureException(
                 `Error while trying to read a cache file for domain ${domain}: ${JSON.stringify(e)}`
             );

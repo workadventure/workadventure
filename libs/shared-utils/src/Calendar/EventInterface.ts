@@ -4,7 +4,7 @@ export interface CalendarEventInterface {
     description: string;
     start: Date;
     end: Date;
-    allDay: boolean;
+    allDay?: boolean;
     resource?: {
         body?: {
             content?: string;

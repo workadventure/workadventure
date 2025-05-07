@@ -15,12 +15,12 @@
         type="text"
         {id}
         name="search-input"
-        class="tw-h-full tw-rounded-none"
-        {placeHolder}
+        class="h-full rounded-none"
+        placeholder={placeHolder}
         on:input={(event) => onChangeSearchHandler(event.currentTarget.value)}
         {disabled}
     />
-    <button type="submit" class="tw-h-full tw-m-0 tw-rounded-l-none">
+    <button type="submit" class="h-full m-0 rounded-l-none">
         <img src="/static/images/send.png" alt="Send" width="20" />
     </button>
 </form>

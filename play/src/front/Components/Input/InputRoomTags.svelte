@@ -4,7 +4,9 @@
     import InputTags from "./InputTags.svelte";
     import { InputTagOption } from "./InputTagOption";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: InputTagOption[] | undefined;
+    }>();
 
     export let value: InputTagOption[] | undefined;
 
@@ -39,6 +41,10 @@
     }
 </script>
 
-<div>
-    <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props} />
+<div class="flex flex-col w-full">
+    <div>
+        <InputTags bind:value queryOptions={searchRoomTags} on:change={_handleChange} {...$$props}>
+            <span slot="info"> <slot name="info" /> </span>
+        </InputTags>
+    </div>
 </div>

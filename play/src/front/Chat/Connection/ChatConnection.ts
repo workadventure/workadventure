@@ -3,6 +3,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
+export type memberTypingInformation = { id: string; name: string | null; avatarUrl: string | null };
 export interface ChatUser {
     chatId: string;
     uuid?: string;
@@ -15,17 +16,26 @@ export interface ChatUser {
     isMember?: boolean;
     visitCardUrl?: string;
     color: string | undefined;
-    id: number | undefined;
+    spaceUserId: string | undefined;
 }
 
 export type PartialChatUser = Partial<ChatUser> & { chatId: string };
 
-export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
+export type ChatRoomMembership = "ban" | "leave" | "knock" | "join" | "invite" | string;
+
+export enum ChatPermissionLevel {
+    USER = "USER",
+    MODERATOR = "MODERATOR",
+    ADMIN = "ADMIN",
+}
+
+export type ModerationAction = "ban" | "kick" | "invite" | "redact";
 
 export interface ChatRoomMember {
     id: string;
-    name: string;
-    membership: ChatRoomMembership;
+    name: Readable<string>;
+    membership: Readable<ChatRoomMembership>;
+    permissionLevel: Readable<ChatPermissionLevel>;
 }
 export interface ChatRoom {
     readonly id: string;
@@ -34,15 +44,9 @@ export interface ChatRoom {
     readonly hasUnreadMessages: Readable<boolean>;
     readonly avatarUrl: string | undefined;
     readonly messages: Readable<readonly ChatMessage[]>;
-    readonly messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
-    readonly myMembership: ChatRoomMembership;
     readonly setTimelineAsRead: () => void;
-    readonly membersId: string[];
-    readonly members: ChatRoomMember[];
-    readonly leaveRoom: () => Promise<void>;
-    readonly joinRoom: () => Promise<void>;
     readonly hasPreviousMessage: Readable<boolean>;
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
@@ -51,11 +55,32 @@ export interface ChatRoom {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+}
+
+export interface ChatRoomMembershipManagement {
+    readonly name: Readable<string>;
+    readonly myMembership: Readable<ChatRoomMembership>;
+    readonly members: Readable<ChatRoomMember[]>;
+    readonly joinRoom: () => Promise<void>;
+    readonly leaveRoom: () => Promise<void>;
+}
+
+export interface ChatRoomNotificationControl {
     readonly areNotificationsMuted: Readable<boolean>;
     readonly unmuteNotification: () => Promise<void>;
     readonly muteNotification: () => Promise<void>;
+}
+
+export interface ChatRoomModeration {
+    readonly id: string;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
-    readonly destroy: () => void;
+    readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
+    readonly kick: (userID: string) => Promise<void>;
+    readonly ban: (userID: string) => Promise<void>;
+    readonly unban: (userID: string) => Promise<void>;
+    readonly changePermissionLevelFor: (member: ChatRoomMember, permissionLevel: ChatPermissionLevel) => Promise<void>;
+    readonly getAllowedRolesToAssign: () => ChatPermissionLevel[];
+    readonly canModifyRoleOf: (permissionLevel?: ChatPermissionLevel) => boolean;
 }
 
 //Readonly attributes
@@ -68,11 +93,13 @@ export interface ChatMessage {
     date: Date | null;
     quotedMessage: ChatMessage | undefined;
     type: ChatMessageType;
+    reactions: MapStore<string, ChatMessageReaction>;
     remove: () => void;
     edit: (newContent: string) => Promise<void>;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
+    canDelete: Readable<boolean>;
 }
 
 export interface ChatMessageReaction {
@@ -93,11 +120,13 @@ export type ChatMessageContent = {
 export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
-export interface RoomFolder {
+export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
-    rooms: MapStore<ChatRoom["id"], ChatRoom>;
-    folders: MapStore<RoomFolder["id"], RoomFolder>;
+    rooms: Readable<ChatRoom[]>;
+    folders: Readable<RoomFolder[]>;
+    invitations: Readable<ChatRoom[]>;
+    suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 }
 
 export interface CreateRoomOptions {
@@ -110,6 +139,7 @@ export interface CreateRoomOptions {
     encrypt?: boolean;
     parentSpaceID?: string;
     description?: string;
+    suggested?: boolean;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
@@ -120,14 +150,14 @@ export type ChatSpaceRoom = ChatRoom;
 export interface ChatConnectionInterface {
     connectionStatus: Readable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
-    rooms: Readable<ChatRoom[]>;
+    rooms: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     invitations: Readable<ChatRoom[]>;
-    roomFolders: MapStore<RoomFolder["id"], RoomFolder>;
+    folders: Readable<RoomFolder[]>;
     createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
-    createDirectRoom(userChatId: string): Promise<ChatRoom | undefined>;
+    createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;
-    getDirectRoomFor(uuserChatId: string): ChatRoom | undefined;
+    getDirectRoomFor(userChatId: string): (ChatRoom & ChatRoomMembershipManagement) | undefined;
     searchAccessibleRooms(searchText: string): Promise<
         {
             id: string;
@@ -145,6 +175,10 @@ export interface ChatConnectionInterface {
     hasUnreadMessages: Readable<boolean>;
     clearListener: () => void;
     directRoomsUsers: Readable<ChatUser[]>;
+    isUserExist: (address: string) => Promise<boolean>;
+    getRoomByID(roomId: string): ChatRoom;
+    retrySendingEvents: () => Promise<void>;
+    shouldRetrySendingEvents: Readable<boolean>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

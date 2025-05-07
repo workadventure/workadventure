@@ -1,12 +1,19 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
     import { ExitPropertyData, WAMFileFormat } from "@workadventure/map-editor";
+    import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
     import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import Select from "../../Input/Select.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+
     export let property: ExitPropertyData;
-    const dispatch = createEventDispatcher();
+
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
     // Key: room URL
     let mapsUrl = new Map<
         string,
@@ -46,7 +53,7 @@
             }
 
             const response = await axios.get(wamUrl);
-            const result = WAMFileFormat.safeParse(response.data);
+            const result = WAMFileFormat.safeParse(wamFileMigration.migrate(response.data));
             if (result.success && result.data && result.data.areas) {
                 startAreas = result.data.areas
                     .filter((area) => area.properties.find((property) => property.type === "start"))
@@ -69,9 +76,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_exit.png"
             alt={$LL.mapEditor.properties.exitProperties.description()}
         />
@@ -79,12 +86,11 @@
     </span>
     <span slot="content">
         <div>
-            <label for="exitMapSelector">{$LL.mapEditor.properties.exitProperties.exitMap()}</label>
-            <select
+            <Select
                 id="exitMapSelector"
-                class="tw-w-full"
+                label={$LL.mapEditor.properties.exitProperties.exitMap()}
                 bind:value={property.url}
-                on:change={() => {
+                onChange={() => {
                     onValueChange();
                     fetchStartAreasName().catch((e) => console.error(e));
                 }}
@@ -92,18 +98,15 @@
                 {#each [...mapsUrl.entries()] as map (map[0])}
                     <option value={map[0]}>{map[1].name}</option>
                 {/each}
-            </select>
+            </Select>
         </div>
         {#if property.url}
             <div>
-                <label for="startAreaNameSelector"
-                    >{$LL.mapEditor.properties.exitProperties.exitMapStartAreaName()}</label
-                >
-                <select
+                <Select
                     id="startAreaNameSelector"
-                    class="tw-w-full"
+                    label={$LL.mapEditor.properties.exitProperties.defaultStartArea()}
                     bind:value={property.areaName}
-                    on:change={onValueChange}
+                    onChange={onValueChange}
                     on:blur={onValueChange}
                 >
                     <option value="" selected={!property.areaName}
@@ -112,7 +115,7 @@
                     {#each startAreas as areaName (areaName)}
                         <option value={areaName} selected={areaName === property.areaName}>{areaName}</option>
                     {/each}
-                </select>
+                </Select>
             </div>
         {/if}
     </span>

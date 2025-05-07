@@ -1,10 +1,11 @@
 <script lang="ts">
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { get } from "svelte/store";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply, selectedRoomStore } from "../../Stores/ChatStore";
-    import Avatar from "../Avatar.svelte";
+    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { matrixSecurity } from "../../Connection/Matrix/MatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -12,14 +13,15 @@
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
-    import { IconChevronLeft, IconDots, IconLoader, IconMailBox } from "@wa-icons";
+    import TypingUsers from "./TypingUsers.svelte";
+    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
+    const chatConnection = gameManager.chatConnection;
+    const shouldRetrySendingEvents = chatConnection.shouldRetrySendingEvents;
     let myChatID = localUserStore.getChatId();
 
-    const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
-    let typingMembers = room.typingMembers;
     let messageListRef: HTMLDivElement;
     let autoScroll = true;
     let onScrollTop = false;
@@ -31,13 +33,21 @@
     let scrollTimer: ReturnType<typeof setTimeout>;
     let shouldDisplayLoader = false;
 
+    let messageInputBarRef: MessageInputBar;
+
+    const gameScene = gameManager.getCurrentGameScene();
+    const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
+
     $: messages = room?.messages;
-    $: messageReaction = room?.messageReactions;
     $: roomName = room?.name;
+    $: typingMembers = room.typingMembers;
 
     onMount(() => {
-        scrollToMessageListBottom();
-        initMessages().catch((error) => console.error(error));
+        initMessages()
+            .catch((error) => console.error(error))
+            .finally(() => {
+                scrollToMessageListBottom();
+            });
     });
 
     async function initMessages() {
@@ -59,9 +69,13 @@
             }
         };
 
-        await loadMessages();
-        scrollToMessageListBottom();
-        setFirstListItem();
+        try {
+            await loadMessages();
+            scrollToMessageListBottom();
+            setFirstListItem();
+        } catch (error) {
+            console.error(`Failed to load messages: ${error}`);
+        }
     }
 
     beforeUpdate(() => {
@@ -95,6 +109,7 @@
     function goBackAndClearSelectedChatMessage() {
         selectedChatMessageToReply.set(null);
         selectedRoomStore.set(undefined);
+        shouldRestoreChatStateStore.set(false);
     }
 
     function handleScroll() {
@@ -110,28 +125,28 @@
         loadingMessagePromise = new Promise<void>((resolve) => {
             (async () => {
                 const loadMessages = async () => {
-                    try {
-                        if (messageListRef.scrollTop === 0) {
-                            shouldDisplayLoader = true;
-                        }
-                        await room.loadMorePreviousMessages();
+                    if (messageListRef.scrollTop === 0) {
+                        shouldDisplayLoader = true;
+                    }
+                    await room.loadMorePreviousMessages();
 
-                        if (shouldLoadMoreMessages()) {
-                            loadMorePreviousMessages();
-                        }
-                    } catch {
-                        throw new Error("Failed to load messages");
-                    } finally {
-                        if (shouldDisplayLoader) {
-                            shouldDisplayLoader = false;
-                        }
+                    if (shouldLoadMoreMessages()) {
+                        loadMorePreviousMessages();
                     }
                 };
 
                 await loadMessages();
-            })().finally(() => {
-                resolve();
-            });
+            })()
+                .catch((error) => {
+                    console.error(`Failed to load messages: ${error}`);
+                    throw new Error(`Failed to load messages: ${error}`);
+                })
+                .finally(() => {
+                    if (shouldDisplayLoader) {
+                        shouldDisplayLoader = false;
+                    }
+                    resolve();
+                });
         }).finally(() => {
             loadingMessagePromise = undefined;
         });
@@ -170,46 +185,59 @@
             scrollToMessageListBottom();
         }
     }
+
+    function onDropFiles(event: DragEvent) {
+        if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+            messageInputBarRef.handleFiles({
+                detail: event.dataTransfer.files,
+            } as CustomEvent<FileList>);
+        }
+    }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-h-full tw-w-full tw-max-w-full">
+<div
+    class="flex flex-col flex-auto h-full w-full max-w-full"
+    on:dragover|preventDefault
+    on:drop|preventDefault|stopPropagation={onDropFiles}
+>
     {#if room !== undefined}
-        <div class="tw-flex tw-flex-col tw-gap-2">
-            <div
-                class="tw-p-2 tw-flex tw-items-center tw-border tw-border-solid tw-border-x-0 tw-border-b tw-border-t-0 tw-border-white/10"
-            >
-                <button
-                    class="back-roomlist tw-p-3 hover:tw-bg-white/10 tw-rounded-2xl tw-aspect-square tw-w-12"
-                    data-testid="chatBackward"
-                    on:click={goBackAndClearSelectedChatMessage}
-                >
-                    <IconChevronLeft font-size="20" />
-                </button>
-                <div class="tw-text-md tw-font-bold tw-h-5 tw-grow tw-text-center" data-testid="roomName">
+        <div class="flex flex-col gap-2">
+            <div class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10">
+                {#if chatRoomsEnableInAdmin}
+                    <button
+                        class="back-roomlist p-3 hover:bg-white/10 rounded-2xl aspect-square w-12"
+                        data-testid="chatBackward"
+                        on:click={goBackAndClearSelectedChatMessage}
+                    >
+                        <IconChevronLeft font-size="20" />
+                    </button>
+                {:else}
+                    <div class="p-3 rounded-2xl aspect-square w-12" />
+                {/if}
+                <div class="text-md font-bold h-5 grow text-center" data-testid="roomName">
                     {$roomName}
                 </div>
-                <div class="hover:tw-bg-white/10 tw-p-3 tw-rounded-2xl tw-aspect-square tw-w-12">
-                    <IconDots font-size="20" />
-                </div>
+
+                <div class="p-3 rounded-2xl aspect-square w-12" />
             </div>
             {#if shouldDisplayLoader}
-                <div class="tw-flex tw-justify-center tw-items-center tw-w-full tw-pb-1 tw-bg-transparent">
-                    <IconLoader class="tw-animate-[spin_2s_linear_infinite]" font-size={25} />
+                <div class="flex justify-center items-center w-full pb-1 bg-transparent">
+                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
                 </div>
             {/if}
         </div>
         <div
             bind:this={messageListRef}
-            class="tw-flex tw-overflow-auto tw-h-full tw-justify-center tw-items-end tw-relative"
+            class="flex overflow-auto h-full justify-center items-end relative"
             on:scroll={handleScroll}
         >
             <ul
-                class="tw-list-none tw-p-0 tw-flex-1 tw-flex tw-flex-col tw-max-h-full tw-pt-10 {$messages.length === 0
-                    ? 'tw-items-center tw-justify-center tw-pb-4'
-                    : 'tw-max-w-6xl'}"
+                class="list-none p-0 flex-1 flex flex-col max-h-full pt-10 {$messages.length === 0
+                    ? 'items-center justify-center pb-4'
+                    : 'max-w-6xl'}"
             >
                 <!--{#if room.id === "proximity" && $connectedUsers !== undefined}-->
-                <!--    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">-->
+                <!--    <div class="flex flex-row items-center gap-2">-->
                 <!--        {#each [...$connectedUsers] as [userId, user] (userId)}-->
                 <!--            <div class="avatar">-->
                 <!--                <Avatar avatarUrl={user.avatarUrl} fallbackName={user?.username} color={user?.color} />-->
@@ -219,19 +247,19 @@
                 <!--{/if}-->
                 {#if $messages.length === 0}
                     {#if room instanceof ProximityChatRoom}
-                        <li class="tw-text-center tw-px-3 tw-max-w-md">
+                        <li class="text-center px-3 max-w-md">
                             <img src={getCloseImg} alt="Discussion bubble" />
-                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.getCloserTitle()}</div>
-                            <div class="tw-text-sm tw-opacity-50 tw-text-center">
+                            <div class="text-lg font-bold text-center">{$LL.chat.getCloserTitle()}</div>
+                            <div class="text-sm opacity-50 text-center">
                                 {$LL.chat.getCloserDesc()}
                             </div>
                         </li>
                     {:else}
-                        <li class="tw-text-center tw-px-3 tw-max-w-md tw-relative">
+                        <li class="text-center px-3 max-w-md relative">
                             <IconMailBox font-size="40" />
-                            <div class="tw-text-lg tw-font-bold tw-text-center">{$LL.chat.noMessage()}</div>
-                            <div class="tw-text-sm tw-opacity-50 tw-text-center">{$LL.chat.beFirst()}</div>
-                            <div class="tw-absolute tw-w-10 tw-h-10 -tw-bottom-1.5 -tw-left-10">
+                            <div class="text-lg font-bold text-center">{$LL.chat.noMessage()}</div>
+                            <div class="text-sm opacity-50 text-center">{$LL.chat.beFirst()}</div>
+                            <div class="absolute w-10 h-10 -bottom-1.5 -left-10">
                                 <svg
                                     width="51"
                                     height="45"
@@ -249,15 +277,11 @@
                     {/if}
                 {/if}
                 {#each $messages as message (message.id)}
-                    <li class="last:tw-pb-3" data-event-id={message.id}>
+                    <li class="last:pb-3" data-event-id={message.id}>
                         {#if message.type === "outcoming" || message.type === "incoming"}
                             <MessageSystem {message} />
                         {:else}
-                            <Message
-                                on:updateMessageBody={onUpdateMessageBody}
-                                {message}
-                                reactions={$messageReaction.get(message.id)}
-                            />
+                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
                         {/if}
                     </li>
                 {/each}
@@ -265,74 +289,9 @@
         </div>
 
         {#if $typingMembers.length > 0}
-            <div class="tw-flex tw-row tw-w-full tw-text-gray-300 tw-text-sm  tw-m-0 tw-px-2 tw-mb-2">
-                <!-- {$typingMembers.map(typingMember => typingMember.name).slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY)} -->
-                {#each $typingMembers
-                    .map((typingMember, index) => ({ ...typingMember, index }))
-                    .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}
-                    {#if typingMember.avatarUrl || typingMember.name}
-                        <div id={`typing-user-${typingMember.id}`} class="-tw-ml-2é">
-                            <Avatar
-                                isChatAvatar={true}
-                                avatarUrl={typingMember.avatarUrl}
-                                fallbackName={typingMember.name ? typingMember.name : "Unknown"}
-                            />
-                        </div>
-                    {/if}
-                {/each}
-
-                {#if $typingMembers.length > NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    <div
-                        class={`tw-rounded-full tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white tw-bg-gray-400 -tw-ml-1 chatAvatar`}
-                    >
-                        +{$typingMembers.length - NUMBER_OF_TYPING_MEMBER_TO_DISPLAY}
-                    </div>
-                {/if}
-                <div
-                    class="message tw-rounded-2xl tw-px-3 tw-rounded-bl-none tw-bg-contrast tw-flex tw-text-lg tw-ml-1"
-                >
-                    <div class="animate-bounce-1">.</div>
-                    <div class="animate-bounce-2">.</div>
-                    <div class="animate-bounce-3">.</div>
-                </div>
-            </div>
+            <TypingUsers typingMembers={$typingMembers} />
         {/if}
-        <MessageInputBar {room} />
+
+        <MessageInputBar disabled={$shouldRetrySendingEvents} {room} bind:this={messageInputBarRef} />
     {/if}
 </div>
-
-<style>
-    @keyframes bounce {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-25%);
-        }
-    }
-
-    .animate-bounce-1 {
-        animation: bounce 1s infinite;
-    }
-
-    .animate-bounce-2 {
-        animation: bounce 1s infinite 0.1s;
-    }
-
-    .animate-bounce-3 {
-        animation: bounce 1s infinite 0.2s;
-    }
-
-    .message {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        position: relative;
-    }
-
-    .chatAvatar {
-        border-style: solid;
-        border-color: rgb(27 42 65 / 0.95);
-        border-width: 1px;
-    }
-</style>

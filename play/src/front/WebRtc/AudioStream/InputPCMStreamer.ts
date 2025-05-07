@@ -1,4 +1,5 @@
 import { Subject } from "rxjs";
+import { customWebRTCLogger } from "../CustomWebRTCLogger";
 import audioWorkletProcessorUrl from "./InputAudioWorkletProcessor.ts?worker&url";
 
 export class InputPCMStreamer {
@@ -80,7 +81,7 @@ export class InputPCMStreamer {
             this.audioContext
                 .close()
                 .then(() => {
-                    console.info("AudioContext closed.");
+                    customWebRTCLogger.info("AudioContext closed.");
                 })
                 .catch((err) => {
                     console.error("Error closing AudioContext:", err);

@@ -32,6 +32,11 @@
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
+    import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
+    import Input from "../../Input/Input.svelte";
+    import TextArea from "../../Input/TextArea.svelte";
+    import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -49,6 +54,7 @@
     let hasPersonalAreaProperty: boolean;
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
+    let hasTooltipPropertyData: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -106,6 +112,7 @@
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
+                    trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             case "openWebsite":
                 // TODO refactore and use the same code than EntityPropertiesEditor
@@ -159,6 +166,8 @@
                     allowAPI: false,
                     forceNewTab: false,
                     policy,
+                    width: 50,
+                    trigger: ON_ACTION_TRIGGER_ENTER,
                 };
             case "playAudio":
                 return {
@@ -225,6 +234,13 @@
                         matrixRoomId: undefined,
                     },
                 };
+            case "tooltipPropertyData":
+                return {
+                    id,
+                    type,
+                    content: "",
+                    duration: 2,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -255,7 +271,7 @@
         if (!$mapEditorSelectedAreaPreviewStore) return;
         analyticsClient.addMapEditorProperty("entity", app.name);
         const property: OpenWebsitePropertyData = {
-            id: crypto.randomUUID(),
+            id: uuid(),
             type: "openWebsite",
             application: app.name,
             closable: true,
@@ -324,6 +340,7 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
+        console.log("mapEditorSelectedAreaPreviewStore", $mapEditorSelectedAreaPreviewStore);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
@@ -345,6 +362,7 @@
         hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
+        hasTooltipPropertyData = hasProperty("tooltipPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -384,8 +402,8 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="tw-overflow-auto">
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="overflow-x-hidden space-y-3">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
@@ -399,7 +417,7 @@
                 />
             {/if}
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <div class="properties-buttons flex flex-row flex-wrap">
             {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
                     property="focusable"
@@ -472,10 +490,28 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if extensionModulesAreaMapEditor.length > 0}
+            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
+                <AddPropertyButtonWrapper
+                    property="matrixRoomPropertyData"
+                    on:click={() => {
+                        onAddProperty("matrixRoomPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !hasTooltipPropertyData}
+                <AddPropertyButtonWrapper
+                    property="tooltipPropertyData"
+                    on:click={() => {
+                        onAddProperty("tooltipPropertyData");
+                    }}
+                />
+            {/if}
+        </div>
+        {#if extensionModulesAreaMapEditor.length > 0}
+            <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
-                        {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, areaProperty] (`extensionModuleAreaMapEditor-${subtype}`)}
+                        {#if areaProperty.shouldDisplayButton(properties)}
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
                                 subProperty={subtype}
@@ -486,17 +522,9 @@
                         {/if}
                     {/each}
                 {/each}
-            {/if}
-            {#if !hasMatrixRoom && MATRIX_PUBLIC_URI}
-                <AddPropertyButtonWrapper
-                    property="matrixRoomPropertyData"
-                    on:click={() => {
-                        onAddProperty("matrixRoomPropertyData");
-                    }}
-                />
-            {/if}
-        </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+            </div>
+        {/if}
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -561,7 +589,7 @@
                 }}
             />
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+        <div class="properties-buttons flex flex-row flex-wrap mt-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper
                     property="openWebsite"
@@ -572,47 +600,47 @@
                 />
             {/each}
         </div>
-        <div class="area-name-container">
-            <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
-            <input
-                id="objectName"
-                type="text"
-                placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
-                bind:value={areaName}
-                on:change={onUpdateName}
-            />
-        </div>
+
+        <Input
+            id="objectName"
+            label={$LL.mapEditor.areaEditor.nameLabel()}
+            type="text"
+            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+            bind:value={areaName}
+            onChange={onUpdateName}
+        />
+
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                <button class="pl-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
-                <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-                <textarea
+
+                <TextArea
                     id="objectDescription"
-                    placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                    label={$LL.mapEditor.areaEditor.areaDescription()}
+                    placeHolder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                     bind:value={areaDescription}
-                    on:change={onUpdateAreaDescription}
+                    onChange={onUpdateAreaDescription}
+                    onKeyPress={() => {}}
                 />
             {/if}
         </div>
-        <div class="value-switch">
-            <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
-            <input
-                id="searchable"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={areaSearchable}
-                on:change={onUpdateAreaSearchable}
-            />
-        </div>
+
+        <InputSwitch
+            id="searchable"
+            label={$LL.mapEditor.areaEditor.areaSerchable()}
+            bind:value={areaSearchable}
+            onChange={onUpdateAreaSearchable}
+        />
+
         <div class="properties-container">
             {#each properties as property (property.id)}
-                <div class="property-box">
+                <div class="property-box mt-[3rem]">
                     {#if property.type === "focusable"}
                         <FocusablePropertyEditor
                             {property}
@@ -723,6 +751,14 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
+                    {:else if property.type === "tooltipPropertyData"}
+                        <TooltipPropertyButton
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
                     {/if}
                 </div>
             {/each}
@@ -736,10 +772,6 @@
         overflow-x: hidden;
     }
 
-    .property-box {
-        margin-top: 5px;
-    }
-
     .properties-container::-webkit-scrollbar {
         display: none;
     }
@@ -751,83 +783,73 @@
         margin-top: 0.5em;
         flex-direction: column;
 
-        label {
-            min-width: fit-content;
-            margin-right: 0.5em;
-        }
-
-        input {
-            flex-grow: 1;
-            min-width: 0;
-        }
-
         * {
             margin-bottom: 0;
         }
     }
 
-    .input-switch {
-        position: relative;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        left: 0px;
-        display: inline-block;
-        height: 1rem;
-        width: 2rem;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
-        border-radius: 9999px;
-        border-width: 1px;
-        border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
-        background-image: none;
-        padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
-    }
+    //     .input-switch {
+    //         position: relative;
+    //         top: 0px;
+    //         right: 0px;
+    //         bottom: 0px;
+    //         left: 0px;
+    //         display: inline-block;
+    //         height: 1rem;
+    //         width: 2rem;
+    //         -webkit-appearance: none;
+    //         -moz-appearance: none;
+    //         appearance: none;
+    //         border-radius: 9999px;
+    //         border-width: 1px;
+    //         border-style: solid;
+    //         --border-opacity: 1;
+    //         border-color: rgb(77 75 103 / var(--border-opacity));
+    //         --bg-opacity: 1;
+    //         background-color: rgb(15 31 45 / var(--bg-opacity));
+    //         background-image: none;
+    //         padding: 0px;
+    //         --text-opacity: 1;
+    //         color: rgb(242 253 255 / var(--text-opacity));
+    //         outline: 2px solid transparent;
+    //         outline-offset: 2px;
+    //         cursor: url(../../../../../public/static/images/cursor_pointer.png), pointer;
+    //     }
 
-    .input-switch::before {
-        position: absolute;
-        left: -3px;
-        top: -3px;
-        height: 1.25rem;
-        width: 1.25rem;
-        border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
-    }
+    //     .input-switch::before {
+    //         position: absolute;
+    //         left: -3px;
+    //         top: -3px;
+    //         height: 1.25rem;
+    //         width: 1.25rem;
+    //         border-radius: 9999px;
+    //         --bg-opacity: 1;
+    //         background-color: rgb(146 142 187 / var(--bg-opacity));
+    //         transition-property: all;
+    //         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    //         transition-duration: 150ms;
+    //         --content: "";
+    //         content: var(--content);
+    //     }
 
-    .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
-    }
+    //     .input-switch:checked {
+    //         --border-opacity: 1;
+    //         border-color: rgb(146 142 187 / var(--border-opacity));
+    //     }
 
-    .input-switch:checked::before {
-        left: 13px;
-        top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
---tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
-    }
+    //     .input-switch:checked::before {
+    //         left: 13px;
+    //         top: -3px;
+    //         --bg-opacity: 1;
+    //         background-color: rgb(65 86 246 / var(--bg-opacity));
+    //         content: var(--content);
+    //         /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+    // --shadow-colored: 0 0 7px 0 var(--shadow-color);
+    // box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
+    //     }
 
-    .input-switch:disabled {
-        cursor: not-allowed;
-        opacity: 0.4;
-    }
+    //     .input-switch:disabled {
+    //         cursor: not-allowed;
+    //         opacity: 0.4;
+    //     }
 </style>

@@ -1,7 +1,6 @@
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import type { PositionMessage, PositionMessage_Direction } from "@workadventure/messages";
-import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
 import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
 import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
@@ -11,6 +10,7 @@ import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { iframeListener } from "../../Api/IframeListener";
+import banIcon from "../../Components/images/ban-icon.svg";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -37,7 +37,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         direction: PositionMessage_Direction,
         moving: boolean,
         visitCardUrl: string | null,
-        companionTexturePromise?: CancelablePromise<string>,
+        companionTexturePromise: CancelablePromise<string>,
         activationRadius?: number,
         private chatID: string | undefined = undefined
     ) {
@@ -63,6 +63,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         if (this.companion) {
             this.companion.setTarget(position.x, position.y, position.direction);
         }
+    }
+
+    public getVisitCardUrl(): string | null {
+        return this.visitCardUrl;
     }
 
     public registerActionsMenuAction(action: ActionsMenuAction): void {
@@ -103,6 +107,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
+        if (this.visitCardUrl) {
+            actionsMenuStore.setVisitCardUrl(this.visitCardUrl);
+        }
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
@@ -119,30 +126,19 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
         const actions: ActionsMenuAction[] = [];
-        if (this.visitCardUrl) {
-            actions.push({
-                actionName: get(LL).woka.menu.businessCard(),
-                protected: true,
-                priority: 1,
-                callback: () => {
-                    requestVisitCardsStore.set(this.visitCardUrl);
-                    selectedChatIDRemotePlayerStore.set(this.chatID ?? null);
-                    actionsMenuStore.clear();
-                },
-            });
-        }
-
         actions.push({
             actionName: blackListManager.isBlackListed(this.userUuid)
                 ? get(LL).report.block.unblock()
                 : get(LL).report.block.block(),
             protected: true,
             priority: -1,
-            style: "is-error",
+            style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
             callback: () => {
-                showReportScreenStore.set({ userId: this.userId, userName: this.playerName });
+                showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
                 actionsMenuStore.clear();
             },
+            actionIcon: banIcon,
+            iconColor: "#EF4444",
         });
 
         return actions;

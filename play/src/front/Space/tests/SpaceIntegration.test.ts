@@ -45,7 +45,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
             | { $case: "kickOffUser"; kickOffUser: KickOffUserPrivateMessage }
             | undefined
         >,
-        receiverUserId: number
+        receiverUserId: string
     ): void {
         throw new Error("Method not implemented.");
     }
@@ -84,12 +84,19 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
+});
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
     it("should emit event when you create space and spaceFilter", () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -116,7 +123,7 @@ describe("", () => {
 
     it("should add user inSpaceFilter._users when receive AddSpaceUserMessage", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -124,7 +131,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "",
             playUri: "",
             color: "",
@@ -141,7 +148,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: undefined,
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
@@ -149,7 +157,7 @@ describe("", () => {
             user: userFromMessage,
         };
 
-        let users: Map<number, SpaceUserExtended> = new Map();
+        let users: Map<string, SpaceUserExtended> = new Map();
         const unsubscribe = spaceFilter.usersStore.subscribe((newUsers) => {
             users = newUsers;
         });
@@ -158,7 +166,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = users.get(userFromMessage.id);
+        const userToCompare = users.get(userFromMessage.spaceUserId);
 
         expect(userToCompare).toBeDefined();
 
@@ -167,7 +175,7 @@ describe("", () => {
 
     it("should define reactive property after... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -175,7 +183,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "",
             playUri: "",
             color: "",
@@ -192,7 +200,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: "chat@id.fr",
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
@@ -204,7 +213,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.id);
+        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -213,7 +222,7 @@ describe("", () => {
 
     it("... ", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -221,7 +230,7 @@ describe("", () => {
         const spaceFilter = space.watchAllUsers();
 
         const userFromMessage = {
-            id: 1,
+            spaceUserId: "foo_1",
             name: "testName",
             playUri: "",
             color: "",
@@ -238,7 +247,8 @@ describe("", () => {
             jitsiParticipantId: undefined,
             uuid: "",
             chatID: "chat@id.fr",
-        };
+            showVoiceIndicator: false,
+        } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
@@ -251,7 +261,7 @@ describe("", () => {
         await flushPromises();
 
         const spaceUserUpdate = SpaceUser.fromPartial({
-            id: 1,
+            spaceUserId: "foo_1",
             chatID: "new@id.fr",
         });
         const updateSpaceUserMessage: UpdateSpaceUserPusherToFrontMessage = {
@@ -261,7 +271,7 @@ describe("", () => {
             filterName: spaceFilter.getName(),
         };
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.id);
+        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -274,14 +284,14 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
 
-        expect(get(spaceFilter.usersStore).get(userFromMessage.id)?.name).toBe("testName");
+        expect(get(spaceFilter.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
 
         unsubscriber();
     });
 
     it("should forward public events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -293,7 +303,7 @@ describe("", () => {
 
         roomConnection.spacePublicMessageEvent.next({
             spaceName: "space1",
-            senderUserId: 1,
+            senderUserId: "foo_1",
             spaceEvent: {
                 event: {
                     $case: "spaceMessage",
@@ -309,7 +319,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: 1,
+            sender: "foo_1",
             $case: "spaceMessage",
             spaceMessage: {
                 message: "Hello",
@@ -321,7 +331,7 @@ describe("", () => {
 
     it("should forward private events to the space", async () => {
         const roomConnection = new MockRoomConnection();
-        const spaceRegistry = new SpaceRegistry(roomConnection);
+        const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
@@ -333,8 +343,8 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: 1,
-            receiverUserId: 2,
+            senderUserId: "foo_1",
+            receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
                     $case: "muteVideo",
@@ -350,7 +360,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: 1,
+            sender: "foo_1",
             $case: "muteVideo",
             muteVideo: {
                 force: true,

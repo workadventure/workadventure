@@ -1,7 +1,7 @@
-import type { Server } from "hyper-express";
+import { Application } from "express";
 
 export abstract class BaseHttpController {
-    constructor(protected app: Server) {
+    constructor(protected app: Application) {
         this.routes();
     }
 

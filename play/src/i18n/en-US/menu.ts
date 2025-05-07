@@ -12,8 +12,8 @@ const menu: BaseTranslation = {
             openEmoji: "Open emoji selected popup",
             closeEmoji: "Close emoji menu",
             mobile: "Open mobile menu",
-            calendar: "Open calendar",
-            todoList: "Open todo list",
+            calendar: "Calendar",
+            todoList: "Todo list",
         },
     },
     visitCard: {
@@ -21,12 +21,6 @@ const menu: BaseTranslation = {
         sendMessage: "Send message",
     },
     profile: {
-        edit: {
-            name: "Edit your name",
-            woka: "Edit your WOKA",
-            companion: "Edit your companion",
-            camera: "Edit your camera",
-        },
         login: "Sign in",
         logout: "Log out",
     },
@@ -57,16 +51,23 @@ const menu: BaseTranslation = {
         otherSettings: "Other settings",
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        enablePictureInPicture: "Enable picture-in-picture",
         chatSounds: "Chat sounds",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
         proximityDiscussionVolume: "Proximity discussion volume",
         blockAudio: "Block ambient sounds and music",
-        disableAnimations: "Disable map tile animations",
+        disableAnimations: "Disable map animations",
+        bubbleSound: "Bubble sound",
+        bubbleSoundOptions: {
+            ding: "Ding",
+            wobble: "Wobble",
+        },
     },
     invite: {
         description: "Share the link of the room!",
         copy: "Copy",
+        copied: "Copied",
         share: "Share",
         walkAutomaticallyToPosition: "Walk automatically to my position",
         selectEntryPoint: "Select an entry point",
@@ -136,6 +137,8 @@ const menu: BaseTranslation = {
         contact: "Contact",
         report: "Report Issues",
         chat: "Chat",
+        help: "Help & tutorials",
+        contextualActions: "Contextual actions",
     },
 };
 

@@ -3,6 +3,7 @@ import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWID
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
+import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils";
 
@@ -25,6 +26,7 @@ const disableAnimations = "disableAnimations";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const allowPictureInPicture = "allowPictureInPicture";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
 const preferredAudioInputDevice = "preferredAudioInputDevice";
@@ -43,6 +45,10 @@ const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const volumeProximityDiscussion = "volumeProximityDiscussion";
+const foldersOpened = "foldersOpened";
+const cameraContainerHeightKey = "cameraContainerHeight";
+const chatSideBarWidthKey = "chatSideBarWidth";
+const bubbleSound = "bubbleSound";
 
 const JwtAuthToken = z
     .object({
@@ -51,6 +57,8 @@ const JwtAuthToken = z
     .partial();
 
 type JwtAuthToken = z.infer<typeof JwtAuthToken>;
+
+const FoldersOpenedSchema = z.union([z.null(), z.array(z.string()).transform((arr) => new Set(arr))]);
 
 interface PlayerVariable {
     value: undefined;
@@ -281,12 +289,57 @@ class LocalUserStore {
         return localStorage.getItem(notification) === "true";
     }
 
+    setAllowPictureInPicture(value: boolean): void {
+        localStorage.setItem(allowPictureInPicture, value.toString());
+    }
+
+    getAllowPictureInPicture(): boolean {
+        return localStorage.getItem(allowPictureInPicture) !== "false";
+    }
+
     setChatSounds(value: boolean): void {
         localStorage.setItem(chatSounds, value.toString());
     }
 
     getChatSounds(): boolean {
         return localStorage.getItem(chatSounds) !== "false";
+    }
+
+    private getFoldersOpened(): Set<string> {
+        const foldersStr = localStorage.getItem(foldersOpened);
+        if (!foldersStr) {
+            return new Set<string>();
+        }
+        try {
+            const parsed = FoldersOpenedSchema.parse(JSON.parse(foldersStr));
+            return parsed ?? new Set<string>();
+        } catch (e) {
+            console.warn("Error parsing folders opened from localStorage:", e);
+            localStorage.removeItem(foldersOpened);
+            return new Set<string>();
+        }
+    }
+
+    private setFoldersOpened(folders: Set<string>) {
+        localStorage.setItem(foldersOpened, JSON.stringify(Array.from(folders)));
+    }
+
+    hasFolderOpened(folderId: string): boolean {
+        console.log(">>>>> On check si le folder: ", folderId, "est ouvert");
+        console.log(">>>>>", this.getFoldersOpened());
+        return this.getFoldersOpened().has(folderId);
+    }
+
+    addFolderOpened(folderId: string) {
+        const folders = this.getFoldersOpened();
+        folders.add(folderId);
+        this.setFoldersOpened(folders);
+    }
+
+    removeFolderOpened(folderId: string) {
+        const folders = this.getFoldersOpened();
+        folders.delete(folderId);
+        this.setFoldersOpened(folders);
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {
@@ -617,6 +670,42 @@ class LocalUserStore {
 
     setVolumeProximityDiscussion(value: number): void {
         localStorage.setItem(volumeProximityDiscussion, `${value}`);
+    }
+
+    setCameraContainerHeight(ratio: number): void {
+        localStorage.setItem(cameraContainerHeightKey, ratio.toString());
+    }
+
+    getCameraContainerHeight(): number {
+        const value = localStorage.getItem(cameraContainerHeightKey);
+        if (!value) {
+            return 0.75; // Default value of 75%
+        }
+        return parseFloat(value);
+    }
+
+    setChatSideBarWidth(width: number): void {
+        localStorage.setItem(chatSideBarWidthKey, width.toString());
+    }
+
+    getChatSideBarWidth(): number {
+        const value = localStorage.getItem(chatSideBarWidthKey);
+        if (!value) {
+            return INITIAL_SIDEBAR_WIDTH;
+        }
+        return parseFloat(value);
+    }
+
+    setBubbleSound(value: "ding" | "wobble"): void {
+        localStorage.setItem(bubbleSound, value);
+    }
+
+    getBubbleSound(): "ding" | "wobble" {
+        const value = localStorage.getItem(bubbleSound);
+        if (value === "wobble") {
+            return "wobble";
+        }
+        return "ding";
     }
 }
 

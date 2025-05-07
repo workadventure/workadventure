@@ -11,12 +11,12 @@ import login from "./login";
 import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
 import video from "./video";
+import form from "./form";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -30,12 +30,12 @@ const ca_ES = merge(en_US, {
     menu,
     report,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,
     actionbar,
     video,
+    form,
 });
 
 export default ca_ES;

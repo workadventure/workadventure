@@ -6,18 +6,18 @@ import { StatusInformationInterface } from "../Components/ActionBar/Availability
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 
 const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> = {
-    [AvailabilityStatus.AWAY]: { filling: 0xf5931e, outline: 0x875d13 },
-    [AvailabilityStatus.ONLINE]: { filling: 0x8cc43f, outline: 0x427a25 },
-    [AvailabilityStatus.SPEAKER]: { filling: 0xf5931e, outline: 0x875d13 },
+    [AvailabilityStatus.AWAY]: { filling: 0xe9c84e, outline: 0xd3873b },
+    [AvailabilityStatus.ONLINE]: { filling: 0x68e97a, outline: 0x44d45a },
+    [AvailabilityStatus.SPEAKER]: { filling: 0xe9c84e, outline: 0xd3873b },
     [AvailabilityStatus.SILENT]: { filling: 0xe74c3c, outline: 0xc0392b },
-    [AvailabilityStatus.JITSI]: { filling: 0x8cc43f, outline: 0x427a25 },
-    [AvailabilityStatus.BBB]: { filling: 0x8cc43f, outline: 0x427a25 },
-    [AvailabilityStatus.DENY_PROXIMITY_MEETING]: { filling: 0xffffff, outline: 0x404040 },
+    [AvailabilityStatus.JITSI]: { filling: 0x68e97a, outline: 0x44d45a },
+    [AvailabilityStatus.BBB]: { filling: 0x68e97a, outline: 0x44d45a },
+    [AvailabilityStatus.DENY_PROXIMITY_MEETING]: { filling: 0xffffff, outline: 0x4156f6 },
     [AvailabilityStatus.UNRECOGNIZED]: { filling: 0xffffff, outline: 0xffffff },
     [AvailabilityStatus.UNCHANGED]: { filling: 0xffffff, outline: 0xffffff },
-    [AvailabilityStatus.BACK_IN_A_MOMENT]: { filling: 0x6fa8dc, outline: 0x404040 },
-    [AvailabilityStatus.DO_NOT_DISTURB]: { filling: 0xd00303, outline: 0xffffff },
-    [AvailabilityStatus.BUSY]: { filling: 0xf5931e, outline: 0xffffff },
+    [AvailabilityStatus.BACK_IN_A_MOMENT]: { filling: 0x7382e2, outline: 0x4156f6 },
+    [AvailabilityStatus.DO_NOT_DISTURB]: { filling: 0xe96e53, outline: 0xcc5151 },
+    [AvailabilityStatus.BUSY]: { filling: 0xe9c84e, outline: 0xd3873b },
 };
 
 export const getColorOfStatus = (status: AvailabilityStatus): { filling: number; outline: number } => {
@@ -26,6 +26,12 @@ export const getColorOfStatus = (status: AvailabilityStatus): { filling: number;
 
 export const getColorHexOfStatus = (status: AvailabilityStatus): string => {
     return `#${COLORS[status].filling.toString(16)}`;
+};
+
+export const getStatusLabel = (status: AvailabilityStatus): string => {
+    //@ts-ignore Enum[key] is a string in Typescript
+    const fn = get(LL).actionbar.status[AvailabilityStatus[status]];
+    return fn?.() || "Unknown";
 };
 
 export const getStatusInformation = (

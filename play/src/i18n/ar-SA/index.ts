@@ -12,7 +12,6 @@ import menu from "./menu";
 import report from "./report";
 import refreshPrompt from "./refreshPrompt";
 import warning from "./warning";
-import emoji from "./emoji";
 import trigger from "./trigger";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
@@ -37,7 +36,6 @@ const ar_SA = merge(en_US, {
     report,
     refreshPrompt,
     warning,
-    emoji,
     trigger,
     notification,
     cowebsite,

@@ -31,7 +31,6 @@ export const FocusablePropertyData = PropertyBase.extend({
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
-    jitsiRoomAdminTag: z.string().optional().nullable(),
 });
 
 export const SilentPropertyData = PropertyBase.extend({
@@ -54,10 +53,11 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
     roomName: z.string(),
     jitsiUrl: z.string().optional(),
     closable: z.boolean().optional(),
-    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
+    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     noPrefix: z.boolean().optional(),
     width: z.number().min(1).max(100).default(50).optional(),
+    jitsiRoomAdminTag: z.string().optional(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 
@@ -74,7 +74,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
     allowAPI: z.boolean().optional(),
-    trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
+    trigger: z.union([z.literal("onenter"), z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     width: z.number().min(1).max(100).default(50).optional(),
     policy: z
@@ -147,6 +147,13 @@ export const MatrixRoomPropertyData = PropertyBase.extend({
         })
         .optional(),
 });
+
+export const TooltipPropertyData = PropertyBase.extend({
+    type: z.literal("tooltipPropertyData"),
+    id: z.string(),
+    content: z.string(),
+    duration: z.number().optional().default(5000),
+});
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -162,6 +169,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     PersonalAreaPropertyData,
     ExtensionModuleAreaProperty,
     MatrixRoomPropertyData,
+    TooltipPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -373,6 +381,7 @@ export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
+export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

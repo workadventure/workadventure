@@ -340,11 +340,11 @@ export class AreaEditorTool extends MapEditorTool {
 
     private handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const mode = get(mapEditorAreaModeStore);
-        const sortedAreaPreviews = (gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[]).sort(
-            (a1, a2) => {
+        const sortedAreaPreviews = gameObjects
+            .filter((obj) => this.isAreaPreview(obj))
+            .sort((a1, a2) => {
                 return a1.getSize() - a2.getSize();
-            }
-        );
+            });
 
         if (mode === "ADD") {
             if (this.drawinNewAreaStartPos) {
@@ -459,8 +459,8 @@ export class AreaEditorTool extends MapEditorTool {
     private getAreaEditorToolObjectsFromGameObjects(
         gameObjects: Phaser.GameObjects.GameObject[]
     ): (AreaPreview | SizeAlteringSquare)[] {
-        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[];
-        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj)) as SizeAlteringSquare[];
+        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
+        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
         return [...areaPreviews, ...sizeAlteringSquares];
     }
 
@@ -665,6 +665,7 @@ export class AreaEditorTool extends MapEditorTool {
             this.draggingdArea = true;
             const areaData = areaPreview.getAreaData();
             this.drawAreaOldPositionPreview(areaData.x, areaData.y, areaData.width, areaData.height);
+            areaPreview.destroyText();
         });
         areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
@@ -681,6 +682,7 @@ export class AreaEditorTool extends MapEditorTool {
                 removeAreaEntities: boolean | undefined
             ) => {
                 this.executeUpdateAreaFrontCommand(newData, oldData, removeAreaEntities);
+                areaPreview.playText();
             }
         );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
@@ -689,6 +691,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.UpdateVisibility, (visibility: boolean) => {
             if (!visibility) {
                 this.areaOldPositionPreview.clear();
+                areaPreview.destroyText();
             }
         });
     }

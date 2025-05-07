@@ -5,6 +5,8 @@ const chat: BaseTranslation = {
     adventurers: "Users",
     onlineUsers: "Online user",
     getCloserTitle: "Get closer to someone",
+    noRoomOpen: "Open a conversation",
+    noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",
     getCloserDesc:
         "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
     noMessage: "No message sent yet!",
@@ -25,7 +27,8 @@ const chat: BaseTranslation = {
         in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
-        walkTo: "Walk to",
+        // walkTo: "Walk to",
+        TalkTo: "Talk To",
         teleporting: "Teleporting ...",
         businessCard: "Business Card",
         sendMessage: "Send Message",
@@ -40,7 +43,9 @@ const chat: BaseTranslation = {
     searchChat: "Search for channel, message, etc ...",
     people: "People",
     rooms: "Rooms",
+    addNew: "Add new : ",
     invitations: "Invitations",
+    suggestedRooms: "Suggested rooms",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
@@ -95,32 +100,39 @@ const chat: BaseTranslation = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Send embedded klaxoon in the chat!",
-                error: "Please enter a valid Klaxoon URL",
             },
             youtube: {
-                title: "Youtube",
+                title: "YouTube",
                 description: "Send embedded youtube video in the chat!",
-                error: "Please enter a valid Youtube URL",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Send embedded google docs in the chat!",
-                error: "Please enter a valid Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Send embedded google slides in the chat!",
-                error: "Please enter a valid Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Send embedded google sheets in the chat!",
-                error: "Please enter a valid Google Sheets URL",
             },
             eraser: {
                 title: "Eraser",
                 description: "Send embedded eraser in the chat!",
-                error: "Please enter a valid Eraser URL",
+            },
+            googleDrive: {
+                title: "Google Drive",
+                description: "Send a file from google drive in the chat!",
+            },
+            excalidraw: {
+                title: "Excalidraw",
+                description:
+                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            },
+            cards: {
+                title: "Cards",
+                description: "Send a card in the chat!",
             },
             weblink: {
                 error: "Please enter a valid URL",
@@ -159,6 +171,7 @@ const chat: BaseTranslation = {
     },
     said: "said :",
     reply: "Reply",
+    replyTo: "Reply to",
     react: "React",
     copy: "Copy",
     copied: "Copied!",
@@ -201,6 +214,8 @@ const chat: BaseTranslation = {
             label: "Activate end to end encryption",
             description: "You won't be able to deactivate it later.",
         },
+        suggested: "Suggested room",
+        suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
             label: "Who can read history ?",
@@ -255,7 +270,7 @@ const chat: BaseTranslation = {
     manageRoomUsers: {
         roomOption: "Participants",
         error: "Unable send invitations",
-        title: "Invite participants",
+        title: "Manage participants",
         invitations: "Invitations",
         participants: "Participants",
         join: "Joined",
@@ -263,9 +278,22 @@ const chat: BaseTranslation = {
         ban: "Banned",
         kick: "Kicked",
         leave: "Leaved",
+        roomID: "Room ID : {roomId}",
+        membership: "Membership",
+        permissionLevel: "Roles",
+        actions: "Actions",
         buttons: {
             sendInvitations: "Send invitations",
             cancel: "Cancel",
+            ban: "Ban",
+            kick: "Kick",
+            unban: "Unban",
+            invite: "Invite",
+        },
+        roles: {
+            USER: "User",
+            ADMIN: "Admin",
+            MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
     },
@@ -276,6 +304,12 @@ const chat: BaseTranslation = {
         },
         muteRoom: "Mute Room",
         unmuteRoom: "Unmute Room",
+    },
+    folderMenu: {
+        leaveFolder: {
+            label: "Leave Folder",
+            notification: "You have left the folder",
+        },
     },
     e2ee: {
         configure: "Configure",
@@ -321,7 +355,7 @@ const chat: BaseTranslation = {
     },
     connectionError: "Chat not available",
     requiresLoginForChatModal: {
-        title: "Log in to unlock the chat !",
+        title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",
         content_2: "Logging in gives you access to all options and allows you to continue without interruption.",
         content_3: " Please log in to proceed with the experience.",
@@ -351,7 +385,6 @@ const chat: BaseTranslation = {
         from: "from",
     },
     requiresLoginForChat: "Sign in to access the chat messages",
-    featureComingSoon: "Feature coming soon!",
     emojis: {
         Dog: "Dog",
         Cat: "Cat",
@@ -419,6 +452,29 @@ const chat: BaseTranslation = {
         Pin: "Pin",
         unknownLabel: "Unknown Label",
     },
+    fileAttachment: {
+        title: "File attachment",
+        description: "Upload and share a file",
+        featureComingSoon: "Coming soon!",
+    },
+    loginTokenError: "An error occurred. Please try to reconnect",
+    reconnect: "Reconnect",
+    failedToJoinRoom: "Failed to join room",
+    failedToLeaveRoom: "Failed to leave room",
+    refreshChat: "Refresh Chat",
+    dismiss: "Dismiss",
+    whoops: "Whoops ! something went wrong",
+    failedToOpenRoom: "Failed to open room : {roomId}",
+    refreshChatError: "Failed to refresh chat",
+    discord: {
+        chatBand: {
+            configure: "Configure",
+            open: "Open",
+            dismiss: "Dismiss",
+            discordNotConfigured: "Connect to Discord",
+        },
+    },
+    remoteUserNotConnected: "User not authenticated. Cannot send message.",
 };
 
 export default chat;

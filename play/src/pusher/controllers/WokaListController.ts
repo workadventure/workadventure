@@ -1,5 +1,5 @@
 import { WokaList } from "@workadventure/messages";
-import type { Server } from "hyper-express";
+import type { Application } from "express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
 import type { WokaServiceInterface } from "../services/WokaServiceInterface";
 import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
@@ -9,7 +9,7 @@ import { AuthenticatedProviderController } from "./AuthenticatedProviderControll
  */
 export class WokaListController extends AuthenticatedProviderController<WokaList> {
     private wokaService: WokaServiceInterface | undefined;
-    constructor(protected app: Server, protected jwtTokenManager: JWTTokenManager) {
+    constructor(protected app: Application, protected jwtTokenManager: JWTTokenManager) {
         super(app, jwtTokenManager);
     }
 

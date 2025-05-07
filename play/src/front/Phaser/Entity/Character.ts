@@ -5,6 +5,7 @@ import { Deferred } from "ts-deferred";
 import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
 import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
+import { asError } from "catch-unknown";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -78,7 +79,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
-        companionTexturePromise?: CancelablePromise<string>,
+        companionTexturePromise: CancelablePromise<string>,
         userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
@@ -110,7 +111,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                                 resolve();
                             })
                             .catch((e) => {
-                                reject(e);
+                                reject(asError(e));
                             });
                     }, 0);
                 });

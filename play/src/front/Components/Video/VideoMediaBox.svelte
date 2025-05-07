@@ -1,398 +1,354 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Color } from "@workadventure/shared-utils";
-    import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
-    import CancelablePromise from "cancelable-promise";
-    import Debug from "debug";
-    import type { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { Readable } from "svelte/store";
+    import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
-    // @ts-ignore
-    import microphoneOffImg from "../images/microphone-off.png";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import loaderImg from "../images/loader.svg";
+    import MicOffIcon from "../Icons/MicOffIcon.svelte";
+    import { highlightFullScreen } from "../../Stores/ActionsCamStore";
     import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
+    import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
+    import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
+    import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import UserName from "./UserName.svelte";
+    import UpDownChevron from "./UpDownChevron.svelte";
+    import CenteredVideo from "./CenteredVideo.svelte";
 
-    // Extend the HTMLVideoElement interface to add the setSinkId method.
-    // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-    interface HTMLVideoElementExt extends HTMLVideoElement {
-        setSinkId?(deviceId: string): Promise<void>;
-        requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
+    export let fullScreen = false;
+    export let peer: Streamable;
+    // If true, and if there is not video, the height of the video box will be 11rem
+    export let miniMode = false;
+
+    // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
+    let inCameraContainer: boolean = getContext("inCameraContainer");
+
+    const pictureStore = peer.pictureStore;
+    let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
+    let showVoiceIndicatorStore = peer.showVoiceIndicator;
+
+    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    if (peer.media.type === "mediaStore") {
+        streamStore = peer.media.streamStore;
     }
 
-    export let clickable = false;
-    export let isHightlighted = false;
-    export let peer: VideoPeer;
+    // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
+    let videoUrl: string | undefined = undefined;
+    let videoConfig: VideoConfig | undefined = undefined;
+    if (peer.media.type === "scripting") {
+        videoUrl = peer.media.url;
+        videoConfig = peer.media.config;
+    }
 
-    let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
-    let name = peer.player.name;
-    let backGroundColor = Color.getColorByString(peer.player.name);
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
+    let name = peer.name;
     let statusStore = peer.statusStore;
-    let constraintStore = peer.constraintsStore;
-    let unsubscribeChangeOutput: Unsubscriber;
-    let unsubscribeStreamStore: Unsubscriber;
-    let unsubscribeConstraintStore: Unsubscriber;
-    let unsubscribeVolumeProximityDiscussionStore: Unsubscriber;
 
-    let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
-    let videoElement: HTMLVideoElementExt;
-    let minimized = isMediaBreakpointOnly("md");
-    let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
+    let embedScreen: Streamable;
 
-    let destroyed = false;
-    let currentDeviceId: string | undefined;
-
-    let displayNoVideoWarning = false;
-
-    let aspectRatio = 1;
-
-    const debug = Debug("VideoMediaBox");
-
-    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+    let showUserSubMenu = false;
+    let hasVideoStore = peer.hasVideo;
+    let hasAudioStore = peer.hasAudio;
+    let isMutedStore = peer.isMuted;
 
     if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
+        embedScreen = peer as unknown as Streamable;
+    }
+    // If there is no constraintStore, we are in a screen sharing (so video is enabled)
+    $: videoEnabled = $hasVideoStore;
+    // eslint-disable-next-line svelte/require-store-reactive-access
+    $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
+
+    function toggleFullScreen() {
+        highlightFullScreen.update((current) => !current);
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-        minimized = isMediaBreakpointOnly("md");
+    function exitFullScreen() {
+        highlightedEmbedScreen.removeHighlight();
+        highlightFullScreen.set(false);
+    }
+
+    let userMenuButton: HTMLDivElement;
+
+    let closeFloatingUi: (() => void) | undefined;
+
+    async function toggleUserMenu() {
+        showUserSubMenu = !showUserSubMenu;
+        const spaceUser = await extendedSpaceUserPromise;
+        if (showUserSubMenu && spaceUser) {
+            closeFloatingUi = showFloatingUi(
+                userMenuButton,
+                // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
+                ActionMediaBox,
+                {
+                    embedScreen,
+                    spaceUser,
+                    videoEnabled,
+                    onClose: () => {
+                        showUserSubMenu = false;
+                        closeFloatingUi?.();
+                    },
+                },
+                {
+                    placement: "bottom",
+                },
+                8,
+                false
+            );
+            // on:close={() => (showUserSubMenu = false)}
+        } else {
+            closeFloatingUi?.();
+            closeFloatingUi = undefined;
+        }
+    }
+
+    let missingUserActivation: false;
+
+    let showAfterDelay = true;
+    let connectingTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // When the status is "connecting", do not show the video for 1 second. This is to avoid a visual glitch.
+    // Most of the time, the connection is established in less than 1 second, so we do not want to show the loading spinner.
+    const unsubscribeStatusStore = statusStore.subscribe((status) => {
+        if (status === "connecting") {
+            showAfterDelay = false;
+            if (connectingTimer) clearTimeout(connectingTimer);
+            connectingTimer = setTimeout(() => {
+                showAfterDelay = true;
+            }, 500);
+        } else {
+            showAfterDelay = true;
+            if (connectingTimer) {
+                clearTimeout(connectingTimer);
+                connectingTimer = null;
+            }
+        }
     });
 
-    // TODO: check the race condition when setting sinkId is solved.
-    // Also, read: https://github.com/nwjs/nw.js/issues/4340
-
-    // A promise to chain calls to setSinkId and setting the srcObject
-    // setSinkId must be resolved before setting the srcObject. See Chrome bug, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2
-    let sinkIdPromise = CancelablePromise.resolve();
-
-    onMount(() => {
-        resizeObserver.observe(videoContainer);
-
-        unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
-            if (deviceId !== undefined) {
-                setAudioOutput(deviceId);
-            }
-        });
-
-        unsubscribeStreamStore = streamStore.subscribe((stream) => {
-            debug("Stream store changed. Awaiting to set the stream to the video element.");
-            sinkIdPromise = sinkIdPromise.then(() => {
-                if (destroyed) {
-                    // In case this function is called in a promise that resolves after the component is destroyed,
-                    // let's ignore the call.
-                    console.warn("streamStore modified after the component was destroyed. Call is ignored.");
-                    return;
-                }
-
-                if (videoElement) {
-                    debug("Setting stream to the video element.");
-                    videoElement.srcObject = stream;
-                    // After some tests, it appears that the sinkId is lost when the stream is set to the video element.
-                    // Let's try to set it again.
-                    /*if (currentDeviceId) {
-                        debug("Setting the sinkId just after setting the stream.");
-                        return videoElement.setSinkId?.(currentDeviceId);
-                    }*/
-                } else {
-                    console.error("Video element is not defined. Cannot set the stream.");
-                }
-                return;
-            });
-            updateRatio();
-        });
-
-        // Let's display a warning if the video stream never reaches the user.
-        let wasVideoEnabled = false;
-        unsubscribeConstraintStore = constraintStore.subscribe((constraints) => {
-            if (wasVideoEnabled && !constraints?.video && noVideoTimeout) {
-                // We were monitoring if a video frame was displayed but we don't need to anymore.
-                clearTimeout(noVideoTimeout);
-                noVideoTimeout = undefined;
-            }
-
-            // If the video was disabled but we now receive a message saying a video is incoming, we are starting
-            // to monitor if a video frame is actually displayed. If not, we will display a warning.
-            if (constraints?.video && !wasVideoEnabled) {
-                // requestVideoFrameCallback is not yet available in all browsers. See https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement
-                if ("requestVideoFrameCallback" in videoElement) {
-                    // Let's wait 3 seconds before displaying a warning.
-                    noVideoTimeout = setTimeout(() => {
-                        displayNoVideoWarning = true;
-                        noVideoTimeout = undefined;
-                        analyticsClient.noVideoStreamReceived();
-                    }, 3000);
-
-                    videoElement.requestVideoFrameCallback(() => {
-                        // A video frame was displayed. No need to display a warning.
-                        displayNoVideoWarning = false;
-                        clearTimeout(noVideoTimeout);
-                        noVideoTimeout = undefined;
-                    });
-                }
-            }
-
-            wasVideoEnabled = constraints?.video ?? false;
-            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
-            updateRatio();
-        });
-
-        unsubscribeVolumeProximityDiscussionStore = volumeProximityDiscussionStore.subscribe((volume) => {
-            if (videoElement) {
-                videoElement.volume = volume;
-            }
-        });
-    });
+    function highlightPeer(peer: Streamable) {
+        highlightedEmbedScreen.highlight(peer);
+        analyticsClient.pinMeetingAction();
+        window.focus();
+    }
 
     onDestroy(() => {
-        if (unsubscribeChangeOutput) unsubscribeChangeOutput();
-        if (unsubscribeStreamStore) unsubscribeStreamStore();
-        if (unsubscribeConstraintStore) unsubscribeConstraintStore();
-        if (unsubscribeVolumeProximityDiscussionStore) unsubscribeVolumeProximityDiscussionStore();
-        destroyed = true;
-        sinkIdPromise.cancel();
-        if (noVideoTimeout) {
-            clearTimeout(noVideoTimeout);
-            noVideoTimeout = undefined;
-        }
+        closeFloatingUi?.();
+        if (connectingTimer) clearTimeout(connectingTimer);
+        unsubscribeStatusStore?.();
     });
-
-    //sets the ID of the audio device to use for output
-    function setAudioOutput(deviceId: string) {
-        if (destroyed) {
-            // In case this function is called in a promise that resolves after the component is destroyed,
-            // let's ignore the call.
-            console.warn("setAudioOutput called after the component was destroyed. Call is ignored.");
-            return;
-        }
-
-        if (currentDeviceId === deviceId) {
-            // No need to change the audio output if it's already the one we want.
-            debug("setAudioOutput on already set deviceId. Ignoring call.");
-            return;
-        }
-        currentDeviceId = deviceId;
-
-        // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-        debug("Awaiting to set sink id to ", deviceId);
-        sinkIdPromise = sinkIdPromise.then(async () => {
-            debug("Setting Sink Id to ", deviceId);
-
-            const timeOutPromise = new Promise((resolve) => {
-                setTimeout(resolve, 2000, "timeout");
-            });
-
-            try {
-                const setSinkIdRacePromise = Promise.race([timeOutPromise, videoElement?.setSinkId?.(deviceId)]);
-
-                let result = await setSinkIdRacePromise;
-                if (result === "timeout") {
-                    // In some rare case, setSinkId can NEVER return. I've seen this in Firefox on Linux with a Jabra.
-                    // Let's fallback to default speaker if this happens.
-                    console.warn("setSinkId timed out. Calling setSinkId again on default speaker.");
-                    selectDefaultSpeaker();
-                    return;
-                } else {
-                    console.info("Audio output device set to ", deviceId);
-                    // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
-                    /*if (videoElement && $streamStore) {
-                        videoElement.srcObject = $streamStore;
-                    }*/
-                }
-            } catch (e) {
-                if (e instanceof DOMException && e.name === "AbortError") {
-                    // An error occurred while setting the sinkId. Let's fallback to default.
-                    console.warn("Error setting the audio output device. We fallback to default.");
-                    selectDefaultSpeaker();
-                    return;
-                }
-                console.info("Error setting the audio output device: ", e);
-            }
-        });
-    }
-
-    function updateRatio() {
-        // TODO: remove this hack
-        setTimeout(() => {
-            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-        }, 1000);
-    }
-
-    function hightlight() {
-        if (!clickable || !videoEnabled) return;
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
-    }
-
-    function onLoadVideoElement() {
-        videoElement.volume = $volumeProximityDiscussionStore;
-    }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="video-container"
-    class:tw-h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
-    class:video-off={!videoEnabled}
-    bind:this={videoContainer}
-    on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() => hightlight()}
+    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
 >
-    <ActionMediaBox {embedScreen} trackStreamWrapper={peer} {videoEnabled} />
-
     <div
-        style={videoEnabled
-            ? ""
-            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor};`}
-        class="tw-flex tw-w-full"
-        class:tw-flex-col={videoEnabled}
-        class:tw-h-full={videoEnabled}
-        class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:tw-pl-7={!videoEnabled}
-        class:tw-pr-2={!videoEnabled}
-        class:tw-rounded={!videoEnabled}
-        class:tw-flex-row={!videoEnabled}
-        class:tw-relative={!videoEnabled}
-        class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
+            (fullScreen || $statusStore !== "connected"
+                ? $statusStore === "error"
+                    ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
+                    : $statusStore === "connecting"
+                    ? "bg-gray-700/80 backdrop-blur"
+                    : "bg-contrast/80 backdrop-blur"
+                : "")}
+        style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
+        class:h-full={videoEnabled || !miniMode}
+        class:h-11={!videoEnabled && miniMode}
+        class:flex-col={videoEnabled}
+        class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+        class:flex-row={!videoEnabled}
+        class:relative={!videoEnabled}
+        class:rounded-lg={!fullScreen}
+        class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
-        {#if $statusStore === "connecting"}
-            <div class="connecting-spinner" />
+        {#if $statusStore === "connecting" && showAfterDelay}
+            <div class="absolute w-full h-full z-50 overflow-hidden">
+                <div
+                    class="flex w-8 h-8 flex justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
+                >
+                    <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
+                    <div class="connecting-spinner" />
+                </div>
+            </div>
         {:else if $statusStore === "error"}
-            <div class="rtc-error" />
+            <div class="absolute w-full h-full z-50">
+                <div class="w-full h-full flex justify-center items-end">
+                    <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
+                </div>
+            </div>
         {/if}
-        <!-- svelte-ignore a11y-media-has-caption -->
-        <video
-            bind:this={videoElement}
-            on:loadedmetadata={onLoadVideoElement}
-            class:tw-h-0={!videoEnabled}
-            class:tw-w-0={!videoEnabled}
-            class:object-contain={minimized || isHightlighted || aspectRatio < 1}
-            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
-            class:tw-max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
-            class:tw-h-full={videoEnabled}
-            class:tw-rounded={videoEnabled}
-            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
-            autoplay
-            playsinline
-        />
 
-        {#if videoEnabled}
-            {#if displayNoVideoWarning}
-                <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-w-full tw-h-full ntw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+        {#if showAfterDelay}
+            <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
+            <CenteredVideo
+                mediaStream={$streamStore}
+                {videoEnabled}
+                expectVideoOutput={videoEnabled}
+                outputDeviceId={$speakerSelectedStore}
+                volume={$volumeProximityDiscussionStore}
+                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
+                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
+                isTalking={showVoiceIndicator}
+                flipX={peer.flipX}
+                muted={peer.muteAudio}
+                {videoUrl}
+                {videoConfig}
+                cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
+                withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
+                bind:missingUserActivation
+            >
+                <UserName
+                    name={$name}
+                    picture={pictureStore}
+                    isPlayingAudio={showVoiceIndicator}
+                    isCameraDisabled={!videoEnabled && !miniMode}
+                    position={videoEnabled
+                        ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                        : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
+                    grayscale={$statusStore === "connecting"}
                 >
-                    <div class="tw-text-center">
-                        <h1>{$LL.video.connection_issue()}</h1>
-                        <p>{$LL.video.no_video_stream_received()}</p>
-                    </div>
-                </div>
-            {/if}
-            <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
-                <i class="tw-flex">
-                    <span
-                        style="background-color: {backGroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
+                    {#await extendedSpaceUserPromise}
+                        <div />
+                    {:then spaceUser}
+                        {#if spaceUser}
+                            <div
+                                class="flex items-center justify-center picture-in-picture:hidden"
+                                bind:this={userMenuButton}
+                            >
+                                <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
+                            </div>
+                        {/if}
+                    {:catch error}
+                        <div class="bg-danger">{error}</div>
+                    {/await}
+                </UserName>
+
+                <!-- The button at the top of the video that opens the menu to go fullscreen -->
+                {#if !inCameraContainer}
+                    <!-- The menu to go fullscreen -->
+                    <div
+                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
                     >
-                </i>
-            </div>
-            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
-                <div
-                    class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized
-                        ? ''
-                        : 'no-video'}"
-                >
-                    <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
-                </div>
-            </div>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2 tw-w-full"
-                >
-                    <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
-                </div>
-            {:else}
-                <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
-                >
-                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
-                </div>
-            {/if}
-        {:else if $embedScreenLayoutStore === LayoutMode.VideoChat}
-            <div
-                class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center tw-h-full tw-w-full tw-gap-2"
-            >
-                <Woka userId={peer.userId} placeholderSrc={""} customHeight="100px" customWidth="100px" />
-                <span
-                    style={`background-color: ${backGroundColor}; color: ${textColor}`}
-                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-                >
-                    {name}
-                </span>
-            </div>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget
-                    volume={$volumeStore}
-                    classcss="voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-4"
-                    barColor={textColor}
-                />
-            {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-2"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black"}
-                    class:tw-brightness-100={textColor === "white"}
-                />
-            {/if}
-        {:else}
-            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-            <span
-                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-            >
-                {name}
-            </span>
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget
-                    volume={$volumeStore}
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    barColor={textColor}
-                />
-            {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                    alt="Mute"
-                    class:tw-brightness-0={textColor === "black"}
-                    class:tw-brightness-100={textColor === "white"}
-                />
-            {/if}
+                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                            {#if !fullScreen}
+                                <button
+                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                    on:click={exitFullScreen}
+                                >
+                                    <ArrowsMinimizeIcon classList="w-14" />
+                                </button>
+                            {/if}
+                            <button
+                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                on:click={toggleFullScreen}
+                            >
+                                {#if fullScreen}
+                                    <ArrowsMinimizeIcon classList="w-14" />
+                                {:else}
+                                    <ArrowsMaximizeIcon classList="w-14" />
+                                {/if}
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+
+                {#if $statusStore === "connected" && $hasAudioStore}
+                    <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
+                        {#if !$isMutedStore}
+                            <SoundMeterWidget
+                                volume={$volumeStore}
+                                cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                                barColor="white"
+                            />
+                        {:else}
+                            <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: $name })} />
+                        {/if}
+                    </div>
+                {/if}
+            </CenteredVideo>
         {/if}
     </div>
+
+    {#if inCameraContainer && videoEnabled && !missingUserActivation}
+        <button
+            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            on:click={() => highlightPeer(peer)}
+        >
+            <ArrowsMaximizeIcon />
+        </button>
+    {/if}
+    {#if missingUserActivation && !peer.muteAudio}
+        <div
+            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+            on:click={() => (missingUserActivation = false)}
+        >
+            <div class="text-center">
+                <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+            </div>
+        </div>
+    {/if}
 </div>
 
-<style lang="scss">
-    video {
-        object-fit: cover;
-        &.object-contain {
-            object-fit: contain;
+<style>
+    /* Spinner */
+    .connecting-spinner {
+        display: flex;
+        left: calc(50% - 62px);
+        top: calc(50% - 62px);
+
+        /*width: 6rem;*/
+        height: 75%;
+        aspect-ratio: 1 / 1;
+    }
+
+    .connecting-spinner:after {
+        content: " ";
+        display: block;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        border: 6px solid theme("colors.light-blue");
+        border-color: theme("colors.light-blue") transparent theme("colors.light-blue") transparent;
+        animation: connecting-spinner 1.2s linear infinite;
+    }
+
+    @keyframes connecting-spinner {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .rtc-error {
+        left: calc(50% - 68px);
+        top: calc(42% - 68px);
+
+        width: 8rem;
+        height: 8rem;
+    }
+
+    .rtc-error:after {
+        content: " ";
+        display: block;
+        width: 8rem;
+        height: 8rem;
+        border-radius: 50%;
+        border: 6px solid #f00;
+        animation: blinker 1s linear infinite;
+    }
+
+    @keyframes blinker {
+        50% {
+            opacity: 0;
         }
     }
 </style>

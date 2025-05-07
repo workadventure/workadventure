@@ -25,9 +25,14 @@ export const isErrorApiErrorData = extendApi(
       example:
         "If you would like more information, you can contact the administrator or us at example@workadventu.re.",
     }),
-    image: extendApi(z.string(), {
+    image: extendApi(z.string().optional(), {
       description:
         "The URL of the image displayed just under the logo in the error screen.",
+      example: "https://example.com/error.png",
+    }),
+    imageLogo: extendApi(z.string().optional(), {
+      description:
+        "The URL of the image displayed just at the place of the logo in the error screen.",
       example: "https://example.com/error.png",
     }),
   }),
@@ -60,9 +65,14 @@ export const isErrorApiRetryData = extendApi(
         "Some others details on what the user can do if he don't understand the error.",
       example: "New automatic attempt in 30 seconds",
     }),
-    image: extendApi(z.string(), {
+    image: extendApi(z.string().optional(), {
       description:
         "The URL of the image displayed just under the logo in the waiting screen.",
+      example: "https://example.com/wait.png",
+    }),
+    imageLogo: extendApi(z.string().optional(), {
+      description:
+        "The URL of the image displayed just at the place of the logo in the waiting screen.",
       example: "https://example.com/wait.png",
     }),
     buttonTitle: extendApi(z.string().nullable().optional(), {
@@ -128,7 +138,12 @@ export const isErrorApiUnauthorizedData = extendApi(
       example:
         "If you would like more information, you can contact the administrator or us at example@workadventu.re.",
     }),
-    image: extendApi(z.string(), {
+    image: extendApi(z.string().optional(), {
+      description:
+        "The URL of the image displayed just under the logo in the error screen.",
+      example: "https://example.com/error.png",
+    }),
+    imageLogo: extendApi(z.string().optional(), {
       description:
         "The URL of the image displayed just under the logo in the error screen.",
       example: "https://example.com/error.png",

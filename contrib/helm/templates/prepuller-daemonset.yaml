@@ -1,0 +1,69 @@
+{{- if .Values.prepullImages }}
+# See https://jacobtomlinson.dev/posts/2023/quick-and-dirty-way-to-pre-pull-container-images-on-kubernetes/
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "workadventure.fullname" . }}-prepuller
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: prepuller
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  selector:
+    matchLabels:
+      name: {{ include "workadventure.fullname" . }}-prepuller
+  template:
+    metadata:
+      labels:
+        name: {{ include "workadventure.fullname" . }}-prepuller
+    spec:
+      {{- if or .Values.imageCredentials.enabled .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.imageCredentials.enabled }}
+        - name: {{ include "workadventure.fullname" . }}-pull-secret
+        {{- end }}
+      {{- with .Values.imagePullSecrets }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      # Configure init containers for each image we want to pull
+      initContainers:
+        - name: {{ .Chart.Name }}-prepuller-play
+          image: "{{ .Values.play.image.repository }}:{{ .Values.play.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.play.image.pullPolicy }}
+          command: ["sh", "-c", "'true'"]
+        - name: {{ .Chart.Name }}-prepuller-back
+          image: "{{ .Values.back.image.repository }}:{{ .Values.back.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.back.image.pullPolicy }}
+          command: ["sh", "-c", "'true'"]
+        - name: {{ .Chart.Name }}-prepuller-mapstorage
+          image: "{{ .Values.mapstorage.image.repository }}:{{ .Values.mapstorage.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.mapstorage.image.pullPolicy }}
+          command: ["sh", "-c", "'true'"]
+        - name: {{ .Chart.Name }}-prepuller-uploader
+          image: "{{ .Values.uploader.image.repository }}:{{ .Values.uploader.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.uploader.image.pullPolicy }}
+          command: ["sh", "-c", "'true'"]
+        - name: {{ .Chart.Name }}-prepuller-icon
+          image: "{{ .Values.icon.image.repository }}:{{ .Values.icon.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.icon.image.pullPolicy }}
+          command: ["sh", "-c", "'true'"]
+
+      # Use the pause container to ensure the Pod goes into a `Running` phase
+      # but doesn't take up resource on the cluster
+      containers:
+        - name: pause
+          image: gcr.io/google_containers/pause:3.2
+          resources:
+            limits:
+              cpu: 1m
+              memory: 8Mi
+            requests:
+              cpu: 1m
+              memory: 8Mi
+
+{{- end }}

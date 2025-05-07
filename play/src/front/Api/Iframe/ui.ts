@@ -4,7 +4,8 @@ import { v4 } from "uuid";
 import type { RequireOnlyOne } from "../types";
 import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
 import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { VideoConfig } from "../Events/Ui/PlayVideoEvent";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
@@ -18,6 +19,7 @@ import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
 import buttonActionBar, { WorkAdventureButtonActionBarCommands } from "./Ui/ButtonActionBar";
 import banner, { WorkadventureBannerCommands } from "./Ui/Banner";
+import { Video } from "./Ui/Video";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -39,6 +41,10 @@ interface MenuDescriptor {
      * A unique technical key identifying this menu
      */
     key?: string;
+    /**
+     * The "allow" attribute of the iframe tag.
+     */
+    allow?: string;
 }
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
@@ -202,6 +208,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         if (typeof options === "function") {
             options = {
                 callback: options,
+                allow: undefined,
             };
         }
 
@@ -209,6 +216,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             ...options,
             allowApi: options.allowApi === undefined ? options.iframe !== undefined : options.allowApi,
             key: options.key ?? v4(),
+            allow: options.allow,
         };
 
         const menu = new Menu(finalOptions.key);
@@ -222,6 +230,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
                     key: finalOptions.key,
                     options: {
                         allowApi: finalOptions.allowApi,
+                        allow: finalOptions.allow,
                     },
                 },
             });
@@ -331,6 +340,24 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
 
     get banner(): WorkadventureBannerCommands {
         return banner;
+    }
+
+    /**
+     * Plays a video as if the video was a player talking to us.
+     */
+    public async playVideo(videoUrl: string, config: VideoConfig = {}): Promise<Video> {
+        if (config.loop === undefined) {
+            config.loop = true;
+        }
+        const id = await queryWorkadventure({
+            type: "playVideo",
+            data: {
+                url: videoUrl,
+                config: config,
+            },
+        });
+
+        return new Video(id);
     }
 }
 

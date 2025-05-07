@@ -18,6 +18,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
         public areaData: AreaData,
         collide?: boolean,
         overlap?: boolean,
+        // FIXME: remove this, this is useless
         private connection = gameManager.getCurrentGameScene().connection
     ) {
         super(

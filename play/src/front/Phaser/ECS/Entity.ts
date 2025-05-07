@@ -15,7 +15,7 @@ import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuSto
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { coWebsites } from "../../Stores/CoWebsiteStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
@@ -87,14 +87,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public get description(): string | undefined {
         const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
             (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
             (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.searchable;
     }
 
@@ -301,9 +301,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties") as
-            | EntityDescriptionPropertyData
-            | undefined;
+        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties");
         actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
@@ -383,10 +381,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     property.width,
                                     property.closable
                                 );
-                                coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
-                                coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                                    console.error("Error during loading a co-website: " + coWebsite.getUrl());
-                                });
+                                try {
+                                    coWebsites.add(coWebsite);
+                                } catch (error) {
+                                    console.error("Error during loading a co-website: " + coWebsite.getUrl(), error);
+                                }
                             }
                             actionsMenuStore.clear();
                         },

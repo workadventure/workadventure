@@ -2,6 +2,7 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { z, ZodError } from "zod";
 import { EntityData, WAMFileFormat } from "../types";
 import { Failure, Result } from "../FunctionalTypes/Result";
+import { wamFileMigration } from "../Migrations/WamFileMigration";
 import { FileFetcherInterface } from "./Validator/FileFetcherInterface";
 
 export type MapValidation = Result<ITiledMap, Partial<OrganizedErrors>>;
@@ -168,17 +169,29 @@ export class MapValidator {
 
     // TODO: More detailed validation later on
     public validateWAMFile(data: string): WamValidation {
-        const parsedWAM = WAMFileFormat.safeParse(JSON.parse(data));
-        if (!parsedWAM.success) {
-            return {
-                ok: false,
-                error: parsedWAM.error,
-            };
-        } else {
-            return {
-                ok: true,
-                value: parsedWAM.data,
-            };
+        try {
+            const migratedWAM = wamFileMigration.migrate(JSON.parse(data));
+            const parsedWAM = WAMFileFormat.safeParse(migratedWAM);
+            if (!parsedWAM.success) {
+                return {
+                    ok: false,
+                    error: parsedWAM.error,
+                };
+            } else {
+                return {
+                    ok: true,
+                    value: parsedWAM.data,
+                };
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                return {
+                    ok: false,
+                    error: error,
+                };
+            }
+
+            throw error;
         }
     }
 
@@ -327,7 +340,8 @@ export class MapValidator {
                                 });
                             }
                             break;
-                        case "exitInstance" || "exitSceneUrl":
+                        case "exitInstance":
+                        case "exitSceneUrl":
                             errors.push({
                                 type: "warning",
                                 message:
@@ -507,7 +521,7 @@ export class MapValidator {
         let map: unknown;
         try {
             map = JSON.parse(data);
-        } catch (_exhaustiveCheck) {
+        } catch {
             return false;
         }
         return ITiledMap.safeParse(map).success;

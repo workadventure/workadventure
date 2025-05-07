@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { Page } from "@playwright/test";
+import {APIRequestContext, APIResponse } from "@playwright/test";
 import Dockerode from "dockerode";
 import { play_url } from "./urls";
 
@@ -74,8 +74,23 @@ export function rebootTraefik(): void {
   dockerCompose("up --force-recreate -d reverse-proxy");
 }
 
-export async function rebootPlay(): Promise<void> {
+export function stopTraefik(): void {
+  dockerCompose("stop reverse-proxy");
+}
+
+export function startTraefik(): void {
+  dockerCompose("start reverse-proxy");
+}
+
+export async function rebootPlay(request: APIRequestContext): Promise<void> {
   dockerCompose("up --force-recreate -d play");
+  let response: APIResponse;
+  do {
+    // wait for 1 second
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const targetUrl = new URL("ping", play_url).toString();
+    response = await request.get(targetUrl);
+  } while(!response.ok())
 }
 
 export async function upPlay(): Promise<void> {
@@ -86,7 +101,7 @@ export async function upMapStorage(): Promise<void> {
   dockerCompose("up -d map-storage");
 }
 
-export async function gotoWait200(page: Page, url: string): Promise<void> {
+/*export async function gotoWait200(page: Page, url: string): Promise<void> {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const targetUrl = new URL(url, play_url).toString();
@@ -99,7 +114,7 @@ export async function gotoWait200(page: Page, url: string): Promise<void> {
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1_000);
   }
-}
+}*/
 
 export async function stopPlay(): Promise<void> {
   dockerCompose("stop play");

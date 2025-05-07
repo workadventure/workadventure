@@ -62,6 +62,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
                 validate: "Valider",
             },
+            disabled: "L'intégration Jitsi est désactivée sur ce salon ❌",
         },
         audioProperties: {
             label: "Jouer un fichier audio",
@@ -105,12 +106,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "Nom de la zone de diffusion",
             namePlaceholder: "MaZoneDeDiffusion",
+            disabled: "La zone de diffusion est désactivée sur ce salon ❌",
         },
         listenerMegaphoneProperties: {
             label: "Zone participant",
             description: "",
             nameLabel: "Nom de la zone de diffusion",
             namePlaceholder: "MaZoneDeDiffusion",
+            disabled: "La zone participant est désactivée sur ce salon ❌",
         },
         chatEnabled: "Chat activé",
         startProperties: {
@@ -127,10 +130,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultStartArea: "Zone de départ par défaut",
         },
         youtubeProperties: {
-            label: "Ouvrir Youtube",
-            description: "Ouvrir Youtube dans l'application ou dans un nouvel onglet.",
-            error: "Veuillez entrer une URL Youtube valide",
-            disabled: "L'intégration Youtube est désactivée.",
+            label: "Ouvrir YouTube",
+            description: "Ouvrir YouTube dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL YouTube valide",
+            disabled: "L'intégration YouTube est désactivée.",
         },
         googleDocsProperties: {
             label: "Ouvrir Google Docs",
@@ -214,6 +217,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Nom du salon",
             roomNameLabelPlaceholder: "Mon Salon",
             defaultChatRoomAreaName: "Salon de zone",
+        },
+        tooltipProperties: {
+            label: "Info Bulle",
+            description: "Afficher une info bulle lors de l'interaction avec l'objet ℹ️",
+            contentPlaceholder: "Contenu de l'info bulle 📝",
+            duration: "Duration (en secondes) ⏱️",
+            infinityDuration: "Infini ⏱️",
         },
     },
     areaEditor: {

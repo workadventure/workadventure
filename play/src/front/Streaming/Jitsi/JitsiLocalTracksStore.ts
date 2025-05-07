@@ -4,7 +4,7 @@
 // - at least one Jitsi conference requires to be broadcast
 
 import { derived, Readable } from "svelte/store";
-// eslint-disable-next-line import/no-unresolved
+
 import { CreateLocalTracksOptions } from "lib-jitsi-meet/types/hand-crafted/JitsiMeetJS";
 import { failure, Result, success } from "@workadventure/map-editor";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -104,7 +104,7 @@ export const jitsiLocalTracksStore = derived<
             const newTracks = await JitsiMeetJS.createLocalTracks({ devices: requestedDevices });
             if (!(newTracks instanceof Array)) {
                 // newTracks is a JitsiConferenceError
-                console.error("jitsiLocalTracksStore", newTracks);
+                //   console.error("jitsiLocalTracksStore", newTracks);
                 set(failure(new Error("Error when creating Jitsi local track: " + newTracks)));
                 oldDevices = structuredClone($jitsiDevicesStore);
                 return oldDevices;

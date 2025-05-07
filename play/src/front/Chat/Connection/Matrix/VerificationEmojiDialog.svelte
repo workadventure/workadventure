@@ -68,19 +68,18 @@
             ? $LL.chat.verificationEmojiDialog.titleVerifyThisDevice()
             : $LL.chat.verificationEmojiDialog.titleVerifyOtherDevice()}
     </h1>
-    <div class="tw-w-full tw-h-full" slot="content">
+    <div class="w-full h-full" slot="content">
         {#if !deviceIsVerified}
-            <div class="tw-w-full tw-text-center">
+            <div class="w-full text-center">
                 {$LL.chat.verificationEmojiDialog.description()}
             </div>
-            <div class="tw-flex tw-flex-wrap tw-justify-center tw-gap-12 tw-mt-8">
+            <div class="flex flex-wrap justify-center gap-12 mt-8">
                 {#each emojis as [emoji, label], index (index)}
-                    <div class="tw-flex tw-flex-col tw-items-center tw-gap-2">
-                        <div class="tw-scale-[2.5]">{emoji}</div>
-                        <div class="tw-text-center tw-w-full">
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="scale-[2.5]">{emoji}</div>
+                        <div class="text-center w-full">
                             {Object.keys($LL.chat.emojis).includes(label)
-                                ? //FIXME : try to find a method to delete ts-ignore
-                                  // @ts-ignore
+                                ? // @ts-ignore FIXME : try to find a method to delete ts-ignore
                                   $LL.chat.emojis[label]()
                                 : $LL.chat.emojis.unknownLabel()}
                         </div>
@@ -88,8 +87,8 @@
                 {/each}
             </div>
         {:else}
-            <div class="tw-w-full tw-py-12 tw-flex tw-justify-center">
-                <IconVerify class="tw-scale-[6]" stroke="2" />
+            <div class="w-full py-12 flex justify-center">
+                <IconVerify class="scale-[6]" stroke="2" />
             </div>
         {/if}
     </div>
@@ -98,10 +97,7 @@
             {#await donePromise}
                 {$LL.chat.verificationEmojiDialog.waitOtherDeviceConfirmation()}
             {:then}
-                <button
-                    data-testid="understoodButton"
-                    class="tw-flex-1 tw-justify-center tw-bg-secondary "
-                    on:click={closeModal}
+                <button data-testid="understoodButton" class="flex-1 justify-center bg-secondary " on:click={closeModal}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </button>
             {:catch}
@@ -111,14 +107,14 @@
             {/await}
         {:else}
             <button
-                class="tw-bg-danger-900 tw-flex-1 tw-justify-center tw-mx-4 tw-py-1"
+                class="btn btn-danger flex-1 justify-center mx-4 py-1"
                 data-testid="mismatchButton"
                 on:click={mismatchAndCloseModal}
                 >{$LL.chat.verificationEmojiDialog.mismatch()}
             </button>
             <button
                 data-testid="matchButton"
-                class="tw-bg-secondary tw-flex-1 tw-justify-center tw-mx-4 tw-my-2 tw-py-1"
+                class="btn btn-secondary flex-1 justify-center mx-4 my-2 py-1"
                 on:click={confirmEmoji}
                 >{$LL.chat.verificationEmojiDialog.confirmation()}
             </button>

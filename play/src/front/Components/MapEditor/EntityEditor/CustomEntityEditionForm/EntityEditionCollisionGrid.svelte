@@ -4,14 +4,14 @@
     export let updateCollisionGrid: (rowIndex: number, columnIndex: number) => void;
 </script>
 
-<div class={`tw-absolute tw-w-32 tw-grid tw-gap`} style={`height: ${collisionGridHeight}px`}>
+<div class="absolute w-32 grid gap" style={`height: ${collisionGridHeight}px`}>
     {#each collisionGrid as row, rowIndex (rowIndex)}
         {#each row as _, columnIndex (columnIndex)}
             <div
                 style={`grid-area: ${rowIndex + 1} / ${columnIndex + 1}`}
-                class={`tw-cursor-pointer tw-border-solid tw-border tw-border-gray-400 tw-rounded-sm ${
-                    collisionGrid[rowIndex][columnIndex] === 1 ? "tw-bg-red-600" : ""
-                } tw-bg-opacity-30`}
+                class={`cursor-pointer border-solid border border-gray-400 rounded-sm ${
+                    collisionGrid[rowIndex][columnIndex] === 1 ? "bg-red-600" : ""
+                } bg-opacity-30`}
                 on:click={() => updateCollisionGrid(rowIndex, columnIndex)}
             />
         {/each}

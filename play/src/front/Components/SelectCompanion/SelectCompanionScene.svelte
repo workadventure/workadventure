@@ -4,18 +4,20 @@
     import type { SelectCompanionScene } from "../../Phaser/Login/SelectCompanionScene";
     import { SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { IconChevronLeft, IconChevronRight } from "@wa-icons";
 
     export let game: Game;
 
     const selectCompanionScene = game.scene.getScene(SelectCompanionSceneName) as SelectCompanionScene;
 
-    function selectLeft() {
+    /*function selectLeft() {
         selectCompanionScene.moveToLeft();
     }
 
     function selectRight() {
         selectCompanionScene.moveToRight();
-    }
+    }*/
 
     function noCompanion() {
         selectCompanionScene.noCompagnion().catch((e) => console.error(e));
@@ -34,98 +36,83 @@
     }
 </script>
 
-<form class="selectCompanionScene">
-    <section class="text-center">
-        <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
-        {#if $collectionsSizeStore > 1 && $selectedCollection}
-            <button
-                class="outline tw-mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
-                on:click|preventDefault={selectLeftCollection}
-            >
-                &lt;
-            </button>
-            <strong class="category-text">{$selectedCollection}</strong>
-            <button
-                class="outline tw-ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
-                on:click|preventDefault={selectRightCollection}
-            >
-                &gt;
-            </button>
-        {/if}
-        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>
-            &lt;
+<section class="text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%+20vh)] h-16">
+    <span class="text-white text-lg bold">
+        {$LL.companion.select.title()}
+    </span>
+</section>
+<section class="category flex flex-row justify-center">
+    {#if $collectionsSizeStore > 1 && $selectedCollection}
+        <button class="light mr-2 selectCharacterButton" on:click|preventDefault={selectLeftCollection}>
+            <IconChevronLeft />
         </button>
-        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>
-            &gt;
+        <strong class="category-text">{$selectedCollection}</strong>
+        <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRightCollection}>
+            <IconChevronRight />
         </button>
-    </section>
-    <section class="action tw-flex tw-flex-row tw-justify-center">
-        <button class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
-            >{$LL.companion.select.any()}</button
+    {/if}
+</section>
+<div
+    class="fixed bottom-0 w-full bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
+>
+    <section
+        class="action container m-auto p-4 flex flex-col-reverse md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4 justify-between"
+    >
+        <button
+            class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 block selectCompanionSceneFormBack"
+            on:click|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
-            class="light tw-ml-2 selectCompanionSceneFormSubmit"
+            class="btn btn-secondary btn-lg w-full md:w-1/2 block selectCompanionSceneFormSubmit"
+            on:click|preventDefault={() => analyticsClient.selectCompanion()}
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>
-</form>
+</div>
 
+<!--<form class="selectCompanionScene">-->
+<!--    <section class="text-center">-->
+<!--        <h2 class="text-white text-2xl">{$LL.companion.select.title()}</h2>-->
+<!--        {#if $collectionsSizeStore > 1 && $selectedCollection}-->
+<!--            <button-->
+<!--                class="outline mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"-->
+<!--                on:click|preventDefault={selectLeftCollection}-->
+<!--            >-->
+<!--                &lt;-->
+<!--            </button>-->
+<!--            <strong class="category-text">{$selectedCollection}</strong>-->
+<!--            <button-->
+<!--                class="outline ml-2 selectCompanionCollectionButton selectCompanionButtonRight"-->
+<!--                on:click|preventDefault={selectRightCollection}-->
+<!--            >-->
+<!--                &gt;-->
+<!--            </button>-->
+<!--        {/if}-->
+<!--        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>-->
+<!--            &lt;-->
+<!--        </button>-->
+<!--        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>-->
+<!--            &gt;-->
+<!--        </button>-->
+<!--    </section>-->
+<!--    <section class="action flex flex-row justify-center">-->
+<!--        <button class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}-->
+<!--            >{$LL.companion.select.any()}</button-->
+<!--        >-->
+<!--        <button-->
+<!--            type="submit"-->
+<!--            class="light ml-2 selectCompanionSceneFormSubmit"-->
+<!--            on:click|preventDefault={() => analyticsClient.selectWoka()}-->
+<!--            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button-->
+<!--        >-->
+<!--    </section>-->
+
+<!--</form>-->
 <style lang="scss">
     @import "../../style/breakpoints.scss";
 
-    form.selectCompanionScene {
+    button {
         pointer-events: auto;
-        color: #ebeeee;
-
-        section {
-            margin: 10px;
-
-            &.action {
-                text-align: center;
-                margin-top: 55vh;
-            }
-
-            h2 {
-                margin: 1px;
-            }
-
-            &.text-center {
-                text-align: center;
-            }
-
-            button.selectCharacterButton {
-                position: absolute;
-                top: 33vh;
-                margin: 0;
-            }
-
-            button.selectCompanionCollectionButton {
-                position: absolute;
-                margin: 0;
-            }
-        }
-
-        button.selectCharacterButtonLeft {
-            left: 33vw;
-        }
-
-        button.selectCharacterButtonRight {
-            right: 33vw;
-        }
-
-        button.selectCompanionButtonRight {
-            right: 33vw;
-            top: 4.5vh;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        form.selectCompanionScene button.selectCharacterButtonLeft {
-            left: 5vw;
-        }
-        form.selectCompanionScene button.selectCharacterButtonRight {
-            right: 5vw;
-        }
     }
 </style>

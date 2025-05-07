@@ -59,10 +59,7 @@ function createEmoteMenuSubCurrentEmojiSelectedStore() {
 export const emoteStore = writable<Emoji | null>(null);
 export const emoteMenuSubCurrentEmojiSelectedStore = createEmoteMenuSubCurrentEmojiSelectedStore();
 export const emoteMenuStore = createEmoteMenuStore();
-export const emoteMenuSubStore = createEmoteMenuStore();
 export const emoteDataStore = createEmoteDataStore();
-
-export const emoteDataStoreLoading = writable<boolean>(false);
 
 //subscribe to update localstorage favorite emoji
 // This is a singleton, so we don't need to unsubscribe.

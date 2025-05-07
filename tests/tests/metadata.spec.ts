@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
 import {maps_domain} from "./utils/urls";
+import {isMobile} from "./utils/isMobile";
 
 test.describe('Meta tags', () => {
-  test('check they are populated when the user-agent is a bot. @selfsigned', async ({
-      request,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+    test.beforeEach(async ({ page, browserName }) => {
+        // Skip test for mobile device
+        if(isMobile(page) && browserName !== "chromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+    });
+  test('check they are populated when the user-agent is a bot. @selfsigned', async ({ request }) => {
     const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; adidxbot/2.0; +http://www.bing.com/bingbot.htm)',
@@ -38,14 +38,7 @@ test.describe('Meta tags', () => {
     await expect(data2).not.toContain('Cette carte est tr');
   });
 
-  test('there is no error an funky URLs with bots. @selfsigned', async ({ request }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test('there is no error an funky URLs with bots. @selfsigned', async ({ request }) => {
     const result = await request.get(`/_/global/`, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; adidxbot/2.0; +http://www.bing.com/bingbot.htm)',

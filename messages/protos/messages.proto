@@ -63,6 +63,7 @@ message ApplicationMessage {
   optional bool forceNewTab = 10;
   optional bool allowAPI = 11;
   optional string policy = 12;
+  optional string imageLogo = 13;
 }
 
 message CompanionTextureMessage {
@@ -211,8 +212,8 @@ message EditMapCommandWithKeyMessage {
 message ModifyAreaMessage {
   string id = 1;
   optional string name = 2;
-  optional uint32 x = 3;
-  optional uint32 y = 4;
+  optional int32 x = 3;
+  optional int32 y = 4;
   optional uint32 width = 5;
   optional uint32 height = 6;
   repeated google.protobuf.Value properties = 7;
@@ -226,8 +227,8 @@ message DeleteAreaMessage {
 
 message CreateAreaMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   uint32 width = 4;
   uint32 height = 5;
   string name = 6;
@@ -236,8 +237,8 @@ message CreateAreaMessage {
 
 message CreateEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   string collectionName = 4;
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
@@ -287,8 +288,8 @@ message DeleteCustomEntityMessage {
 
 message ModifyEntityMessage {
   string id = 1;
-  uint32 x = 2;
-  uint32 y = 3;
+  int32 x = 2;
+  int32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
@@ -472,6 +473,7 @@ message EnterChatRoomAreaQuery{
   string roomID = 1;
 }
 
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -551,6 +553,8 @@ message OauthRefreshTokenAnswer {
 message EnterChatRoomAreaAnswer{
 }
 
+
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -575,6 +579,8 @@ message ChatMember {
 message SearchTagsAnswer{
   repeated string tags = 1;
 }
+
+
 
 /*********** SERVER TO CLIENT MESSAGES *************/
 
@@ -674,6 +680,7 @@ message ErrorScreenMessage {
   google.protobuf.StringValue urlToRedirect = 8;
   google.protobuf.StringValue buttonTitle = 9;
   google.protobuf.StringValue image = 10;
+  google.protobuf.StringValue imageLogo = 11;
 }
 
 message ItemStateMessage {
@@ -810,7 +817,7 @@ message PublicEventFrontToPusher {
 message PublicEvent {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
-  int32 senderUserId = 3;
+  string senderUserId = 3;
 }
 
 message SpaceEvent {
@@ -840,14 +847,14 @@ message SpaceIsTyping {
 
 message PrivateEvent {
   string spaceName = 1;
-  int32 receiverUserId = 2;
-  int32 senderUserId = 3;
+  string receiverUserId = 2;
+  string senderUserId = 3;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
 message PrivateEventFrontToPusher {
   string spaceName = 1;
-  int32 receiverUserId = 2;
+  string receiverUserId = 2;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
@@ -1230,7 +1237,7 @@ message LeaveSpaceMessage{
 }
 
 message SpaceUser{
-  int32 id = 1; // used
+  string spaceUserId = 1; // used
   string name = 2; // used
   string playUri = 3;
   string color = 4; // TO DELETE
@@ -1247,6 +1254,7 @@ message SpaceUser{
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
   google.protobuf.StringValue chatID = 17; // used
+  bool showVoiceIndicator = 18;
 }
 
 /*message PartialSpaceUser{
@@ -1302,11 +1310,11 @@ message UpdateSpaceUserPusherToFrontMessage{
  */
 message RemoveSpaceUserMessage{
   string spaceName = 1;
-  int32 userId = 2;
+  string spaceUserId = 2;
 }
 message RemoveSpaceUserPusherToFrontMessage{
   string spaceName = 1;
-  int32 userId = 2;
+  string spaceUserId = 2;
   string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{

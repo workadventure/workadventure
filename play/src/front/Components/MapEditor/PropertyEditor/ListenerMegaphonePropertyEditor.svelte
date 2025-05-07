@@ -3,11 +3,16 @@
     import { ListenerMegaphonePropertyData, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import Select from "../../Input/Select.svelte";
+    import InputSwitch from "../../Input/InputSwitch.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: ListenerMegaphonePropertyData;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 
     function onValueChange() {
         dispatch("change");
@@ -40,9 +45,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_listener.png"
             alt={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
         />
@@ -50,26 +55,23 @@
     </span>
     <span slot="content">
         <div>
-            <label for="speakerZoneSelector">{$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}</label>
-            <select
+            <Select
                 id="speakerZoneSelector"
-                class="tw-w-full"
+                label={$LL.mapEditor.properties.listenerMegaphoneProperties.nameLabel()}
                 bind:value={property.speakerZoneName}
-                on:change={onValueChange}
+                onChange={onValueChange}
             >
                 {#each [...getSpeakerZoneNames()] as [id, speakerZoneName] (id)}
                     <option value={id}>{speakerZoneName}</option>
                 {/each}
-            </select>
+            </Select>
         </div>
         <div class="value-switch">
-            <label for="chatEnabled">{$LL.mapEditor.properties.chatEnabled()}</label>
-            <input
+            <InputSwitch
                 id="chatEnabled"
-                type="checkbox"
-                class="input-switch"
-                bind:checked={property.chatEnabled}
-                on:change={onValueChange}
+                label={$LL.mapEditor.properties.chatEnabled()}
+                bind:value={property.chatEnabled}
+                onChange={onValueChange}
             />
         </div>
     </span>

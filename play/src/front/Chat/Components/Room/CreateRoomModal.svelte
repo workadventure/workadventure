@@ -1,7 +1,6 @@
 <script lang="ts">
     import { closeModal } from "svelte-modals";
     import { get } from "svelte/store";
-    import Select from "svelte-select";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -9,7 +8,11 @@
     import { IconAlertTriangle, IconHelpCircle, IconLoader } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
-    import { searchChatMembersRule } from "./searchChatMembersRule";
+    import SelectMatrixUser from "../SelectMatrixUser.svelte";
+    import Input from "../../../Components/Input/Input.svelte";
+    import Select from "../../../Components/Input/Select.svelte";
+    import InputCheckbox from "../../../Components/Input/InputCheckbox.svelte";
+    import InputRadio from "../../../Components/Input/InputRadio.svelte";
 
     export let isOpen: boolean;
     export let parentID: string | undefined;
@@ -18,8 +21,6 @@
     let createRoomError: string | undefined = undefined;
 
     const chat = gameManager.chatConnection;
-
-    const { searchMembers } = searchChatMembersRule();
 
     let loadingRoomCreation = false;
 
@@ -65,100 +66,111 @@
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
     }
+
+    function handleSelectMatrixUserError(e: CustomEvent) {
+        createRoomError = e.detail.error;
+    }
 </script>
 
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.createRoom.title()}</h1>
-    <div slot="content" class="tw-w-full tw-flex tw-flex-col tw-gap-2">
+    <div slot="content" class="w-full flex flex-col gap-2">
         {#if loadingRoomCreation}
-            <div class="tw-animate-[spin_2s_linear_infinite] tw-self-center">
+            <div class="animate-[spin_2s_linear_infinite] self-center">
                 <IconLoader font-size="2em" />
             </div>
         {:else}
             {#if createRoomError !== undefined}
-                <div class="tw-bg-red-500 tw-p-2 tw-rounded-md">
+                <div class="bg-red-500 p-2 rounded">
                     {$LL.chat.createRoom.error()} : <b><i>{createRoomError}</i></b>
                 </div>
             {/if}
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.name()}</p>
-            <input
-                class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
+
+            <Input
+                data-testid="createRoomName"
+                label={$LL.chat.createRoom.name()}
                 placeholder={$LL.chat.createRoom.name()}
                 bind:value={createRoomOptions.name}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
-                data-testid="createRoomName"
             />
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.visibility.label()}</p>
-            <select
+
+            <Select
                 data-testid="createRoomVisibility"
+                label={$LL.chat.createRoom.visibility.label()}
                 bind:value={createRoomOptions.visibility}
-                class="tw-m-0 tw-bg-contrast tw-rounded-xl"
             >
                 <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
                 <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
                 {#if parentID}
                     <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
                 {/if}
-            </select>
 
-            <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
-                <IconHelpCircle font-size={18} />
-                {#if createRoomOptions.visibility === "private"}
-                    {$LL.chat.createRoom.visibility.privateDescription()}
-                {:else if createRoomOptions.visibility === "public"}
-                    {$LL.chat.createRoom.visibility.publicDescription()}
-                {:else if createRoomOptions.visibility === "restricted"}
-                    {$LL.chat.createRoom.visibility.restrictedDescription()}
-                {/if}
-            </p>
-            {#if createRoomOptions.visibility === "private"}
-                <div class="tw-pl-1">
+                <span slot="helper">
+                    <p class="text-xs m-0 p-0 text-gray-300 flex items-center mb-1">
+                        <IconHelpCircle class="mr-2" font-size={18} />
+                        {#if createRoomOptions.visibility === "private"}
+                            {$LL.chat.createRoom.visibility.privateDescription()}
+                        {:else if createRoomOptions.visibility === "public"}
+                            {$LL.chat.createRoom.visibility.publicDescription()}
+                        {:else if createRoomOptions.visibility === "restricted"}
+                            {$LL.chat.createRoom.visibility.restrictedDescription()}
+                        {/if}
+                    </p>
+                </span>
+            </Select>
+
+            {#if parentID}
+                <div class="pl-1">
                     <input
-                        data-testid="createRoomEncryption"
-                        bind:checked={createRoomOptions.encrypt}
+                        data-testid="createRoomSuggested"
+                        bind:checked={createRoomOptions.suggested}
                         type="checkbox"
+                        id="suggestedData"
+                        on:focusin={focusChatInput}
+                        on:focusout={unfocusChatInput}
+                    />
+                    <label class="m-0" for="suggestedData">{$LL.chat.createRoom.suggested()}</label>
+                </div>
+                <p class="text-xs m-0 p-0 text-gray-400 pl-1">
+                    <IconHelpCircle font-size={18} />
+                    {$LL.chat.createRoom.suggestedDescription()}
+                </p>
+            {/if}
+            {#if createRoomOptions.visibility === "private"}
+                <div class="pl-1">
+                    <InputCheckbox
+                        data-testid="createRoomEncryption"
+                        label={$LL.chat.createRoom.e2eEncryption.label()}
+                        bind:value={createRoomOptions.encrypt}
                         id="encryptData"
                         on:focusin={focusChatInput}
                         on:focusout={unfocusChatInput}
                     />
-                    <label class="tw-m-0" for="encryptData">{$LL.chat.createRoom.e2eEncryption.label()}</label>
                 </div>
-                <p class="tw-text-xs tw-m-0 tw-p-0 tw-text-gray-400 tw-pl-1">
-                    <IconAlertTriangle font-size={18} />
+                <p class="text-xs m-0 p-0 text-gray-400 pl-3 flex items-center ">
+                    <IconAlertTriangle class="mr-2" font-size={18} />
                     {$LL.chat.createRoom.e2eEncryption.description()}
                 </p>
             {/if}
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.users()}</p>
-            <Select
+            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createRoom.users()}</p>
+            <SelectMatrixUser
+                on:error={handleSelectMatrixUserError}
                 bind:value={createRoomOptions.invite}
-                multiple
-                class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl"
-                inputStyles="box-shadow:none !important"
-                --border-focused="2px solid rgb(146 142 187)"
-                --input-color="white"
-                --item-color="black"
-                --item-hover-color="black"
-                --clear-select-color="red"
-                loadOptions={searchMembers}
                 placeholder={$LL.chat.createRoom.users()}
-            >
-                <div slot="item" let:item>
-                    {`${item.label} (${item.value})`}
-                </div>
-            </Select>
-            <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
+            />
+
+            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
             {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
-                <label class="tw-m-0">
-                    <input
+                <label class="m-0" for="historyVisibility-{historyVisibilityOption}">
+                    <InputRadio
+                        id={`historyVisibility-${historyVisibilityOption}`}
                         bind:group={createRoomOptions.historyVisibility}
-                        type="radio"
                         value={historyVisibilityOption}
-                        name="historyVisibility"
                         on:focusin={focusChatInput}
                         on:focusout={unfocusChatInput}
+                        label={getHistoryTranslation(historyVisibilityOption)}
                     />
-                    {getHistoryTranslation(historyVisibilityOption)}
                 </label>
             {/each}
         {/if}
@@ -168,12 +180,12 @@
         {#if loadingRoomCreation}
             <p>{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <button class="tw-flex-1 tw-justify-center" on:click={closeModal}
+            <button class="flex-1 justify-cente btn btn-contrast m-1" on:click={closeModal}
                 >{$LL.chat.createRoom.buttons.cancel()}</button
             >
             <button
                 data-testid="createRoomButton"
-                class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                class="disabled:text-gray-400  btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
                 disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0}
                 on:click={() => createNewRoom(createRoomOptions)}
                 >{$LL.chat.createRoom.buttons.create()}

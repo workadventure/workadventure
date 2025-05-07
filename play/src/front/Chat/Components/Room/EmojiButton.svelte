@@ -1,29 +1,52 @@
 <script lang="ts">
-    import { EmojiButton } from "@joeattardi/emoji-button";
     import { createEventDispatcher } from "svelte";
-    import { getChatEmojiPicker } from "../../EmojiPicker";
+    import type { EmojiClickEvent } from "emoji-picker-element/shared";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { IconMoodSmile } from "@wa-icons";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: string;
+    }>();
 
-    let picker: EmojiButton | undefined;
+    export let messageRef: HTMLDivElement | undefined;
+
     let trigger: HTMLButtonElement;
 
+    let closeEmojiPicker: (() => void) | undefined = undefined;
+
     function togglePicker() {
-        // Lazy instantiation of the emoji picker. It takes ~250ms to load so we don't want to load it if we don't need it.
-        if (!picker) {
-            picker = getChatEmojiPicker();
-            picker.on("emoji", (selection: { emoji: string; name: string }) => {
-                dispatch("change", selection.emoji);
-            });
+        if (closeEmojiPicker) {
+            closeEmojiPicker();
+            closeEmojiPicker = undefined;
+        } else if (messageRef) {
+            closeEmojiPicker = showFloatingUi(
+                messageRef,
+                LazyEmote,
+                {
+                    onEmojiClick: (event: EmojiClickEvent) => {
+                        dispatch("change", event.detail.unicode ?? "");
+                        closeEmojiPicker?.();
+                        closeEmojiPicker = undefined;
+                    },
+                    onClose: () => {
+                        closeEmojiPicker?.();
+                        closeEmojiPicker = undefined;
+                    },
+                },
+                {
+                    placement: "top-end",
+                },
+                12,
+                true
+            );
         }
-        picker.togglePicker(trigger);
     }
 </script>
 
 <button
     data-testid="openEmojiPickerButton"
-    class="tw-p-0 tw-m-0 tw-text-white/50 hover:tw-text-white tw-transition-all"
+    class="p-0 m-0 text-white/50 hover:text-white transition-all flex"
     bind:this={trigger}
     on:click={togglePicker}
 >

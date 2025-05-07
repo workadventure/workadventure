@@ -20,9 +20,7 @@ export class SwaggerController extends BaseHttpController {
                 apis: ["./src/pusher/controllers/*.ts"],
             };
 
-            res.atomic(() => {
-                res.json(swaggerJsdoc(options));
-            });
+            res.json(swaggerJsdoc(options));
         });
 
         this.app.get("/openapi/admin", (req, res) => {
@@ -59,9 +57,7 @@ export class SwaggerController extends BaseHttpController {
             if (ADMIN_URL && options.swaggerDefinition) {
                 options.swaggerDefinition.host = "pusher." + ADMIN_URL.replace("//", "");
             }
-            res.atomic(() => {
-                res.json(swaggerJsdoc(options));
-            });
+            res.json(swaggerJsdoc(options));
         });
 
         // Create static serve route to serve index.html
@@ -96,13 +92,13 @@ export class SwaggerController extends BaseHttpController {
                   };</script>`;
                 $("body").append(swaggerScript);
 
-                response.send($.html());
+                response.type("html").send($.html());
                 return;
             });
         });
 
         // Create static serve route to serve frontend assets
-        this.app.get("/swagger-ui/*", (request, response) => {
+        this.app.get("/swagger-ui/{*splat}", (request, response) => {
             const fileParsed = path.parse(request.path);
             // Filter files
             if (
