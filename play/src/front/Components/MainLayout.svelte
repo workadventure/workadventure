@@ -16,13 +16,19 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
-    import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import {
+        mapEditorAskToClaimPersonalAreaStore,
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+        mapExplorationObjectSelectedStore,
+    } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
+    import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
@@ -51,6 +57,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
+    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -93,6 +100,10 @@
     document.addEventListener("focusout", handleFocusOutEvent);
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
+    $: marginRight =
+        $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor
+            ? $mapEditorSideBarWidthStore
+            : 0;
 </script>
 
 <!-- Components ordered by z-index -->
@@ -101,7 +112,7 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-left: {marginLeft}px;"
+    style="padding-left: {marginLeft}px; padding-right: {marginRight}px"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
