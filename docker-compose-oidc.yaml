@@ -98,12 +98,12 @@ services:
             "Claims": [
               {
                 "Type": "name",
-                "Value": "John Doe",
+                "Value": "Bob Doe",
                 "ValueType": "string",
               },
               {
                 "Type": "email",
-                "Value": "john.doe@example.com",
+                "Value": "bob.doe@example.com",
                 "ValueType": "string"
               },
               {
