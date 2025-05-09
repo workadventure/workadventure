@@ -377,6 +377,9 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
+      - name: "Install ESLint config dependencies"
+        run: npm ci --workspace=@workadventure/eslint-config
+
       - name: "Install dependencies"
         run: npm ci
         working-directory: "libs/room-api-clients/room-api-client-js"
@@ -499,7 +502,7 @@ jobs:
         working-directory: "tests"
 
       - name: "Install play dependencies"
-        run: npm ci --workspace=workadventure-play --workspace=@workadventure/room-api-client
+        run: npm ci --workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm ci
@@ -508,6 +511,10 @@ jobs:
       - name: "Build proto messages"
         run: npm run ts-proto
         working-directory: "messages"
+
+      - name: "Install Room API client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: "Build Room API proto files"
         run: npm run ts-proto
