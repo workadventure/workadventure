@@ -283,7 +283,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
-            <div class="mr-4 opacity-50"><MicOnIcon /></div>
+            <div class="me-4 opacity-50"><MicOnIcon /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
@@ -339,7 +339,7 @@
         </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
 
             {$LL.menu.settings.proximityDiscussionVolume()}
         </div>
@@ -443,7 +443,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
             {$LL.menu.settings.otherSettings()}
         </div>
 

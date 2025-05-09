@@ -225,7 +225,7 @@
                                 {...button.props}
                                 first={firstVisibleItemIndex === index}
                                 classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
-                                    ? "mr-1 @md/actions:mr-2 @xl/actions:mr-4"
+                                    ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                     : ""}
                             />
                         </VisibilityChecker>

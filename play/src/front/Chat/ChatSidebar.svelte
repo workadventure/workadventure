@@ -20,11 +20,14 @@
 
     let sideBarWidth: number = $chatSidebarWidthStore;
 
+    const isRTL: boolean = document.documentElement.dir === "rtl";
+
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
         document.onmousemove = (e) => {
             const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            const newWidth = Math.min(container.offsetWidth + e.clientX - dragX, vw);
+            const diff = e.clientX - dragX;
+            const newWidth = Math.min(isRTL ? container.offsetWidth - diff : container.offsetWidth + diff, vw);
             container.style.maxWidth = newWidth + "px";
             container.style.width = newWidth + "px";
             dragX = e.clientX;
@@ -41,7 +44,8 @@
 
         function onTouchMove(e: TouchEvent) {
             const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            const newWidth = Math.min(container.offsetWidth + e.targetTouches[0].pageX - dragX, vw);
+            const diff = e.targetTouches[0].pageX - dragX;
+            const newWidth = Math.min(isRTL ? container.offsetWidth - diff : container.offsetWidth + diff, vw);
 
             container.style.maxWidth = newWidth + "px";
             container.style.width = newWidth + "px";
@@ -93,7 +97,7 @@
         bind:this={container}
         id="chat"
         data-testid="chat"
-        transition:fly={{ duration: 200, x: -sideBarWidth }}
+        transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
@@ -113,7 +117,7 @@
         <Chat {sideBarWidth} />
 
         <div
-            class="!absolute !right-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize"
+            class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize user-select-none"
             id="resize-bar"
             on:mousedown={handleMousedown}
             on:dblclick={handleDbClick}
