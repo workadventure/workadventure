@@ -1,12 +1,13 @@
 import { CompanionTextureCollection, CompanionDetail } from "@workadventure/messages";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
+import companionList from "../data/companions.json" with { "type": "json" };
 
 /**
  * Companion Service list that the default list of companions
  */
 class LocalCompanionService implements CompanionServiceInterface {
     async getCompanionList(roomUrl: string, token: string): Promise<CompanionTextureCollection[] | undefined> {
-        const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
+        //const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
         if (!companionList) {
             return undefined;
         }
@@ -14,7 +15,7 @@ class LocalCompanionService implements CompanionServiceInterface {
     }
 
     async fetchCompanionDetails(textureId: string): Promise<CompanionDetail | undefined> {
-        const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
+        //const companionList: CompanionTextureCollection[] = await require("../data/companions.json");
 
         for (const collection of companionList) {
             const texture = collection.textures.find((texture) => texture.id === textureId);
