@@ -5,7 +5,9 @@
     export let title: string;
     export let dataTestId: string | undefined = undefined;
     export let bg = "hover:bg-white/10";
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 </script>
 
 <button

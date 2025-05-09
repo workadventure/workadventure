@@ -326,12 +326,10 @@ class AdminApi implements AdminInterface {
             }
             let message = "Unknown error";
             if (isAxiosError(err)) {
-                Sentry.captureException(
-                    `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}. ${err}`
-                );
+                Sentry.captureException(err);
                 console.error(`An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}.`, err);
             } else {
-                Sentry.captureException(`An error occurred during call to /api/map endpoint. ${err}`);
+                Sentry.captureException(err);
                 console.error(`An error occurred during call to /api/map endpoint.`, err);
             }
             if (err instanceof Error) {
@@ -450,9 +448,7 @@ class AdminApi implements AdminInterface {
         } catch (err) {
             let message = "Unknown error";
             if (isAxiosError(err)) {
-                Sentry.captureException(
-                    `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}. ${err}`
-                );
+                Sentry.captureException(err);
                 console.error(
                     `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}.`,
                     err
@@ -759,19 +755,13 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserUuid: string
     ): Promise<boolean> {
-        try {
-            return axios.post(
-                ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserUuid },
-                {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                }
-            );
-        } catch (err) {
-            return new Promise((solve, reject) => {
-                reject(err);
-            });
-        }
+        return axios.post(
+            ADMIN_API_URL + "/api/ban",
+            { uuidToBan, playUri, name, message, byUserUuid },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 
     public getCapabilities(): Promise<Capabilities> {

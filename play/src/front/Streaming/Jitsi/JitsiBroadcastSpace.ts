@@ -214,8 +214,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             );
                             jitsiBroadcastSpaceLogger(
                                 "joinJitsiConference => No associated spaceUser found for participantId: " +
-                                    stream.uniqueId +
-                                    $users.values()
+                                    stream.uniqueId
                             );
                         }
                     }

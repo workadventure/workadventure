@@ -7,7 +7,7 @@
 
     export let tool: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString };
 
-    $: activeTooltip = false;
+    let activeTooltip = false;
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
@@ -17,7 +17,9 @@
         16
     );
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 </script>
 
 <div

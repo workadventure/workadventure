@@ -154,6 +154,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
         const initStoreValue = reducer(initArray);
 
         let unsubscriber: Unsubscriber | undefined;
+        let derivedUnsubscriber: Unsubscriber | undefined;
 
         return readable(initStoreValue, (set) => {
             const globalUnsubscriber = this.subscribe((map) => {
@@ -168,7 +169,10 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
                     }
                 }
                 const derivedStore = derived(stores, reducer);
-                derivedStore.subscribe((value) => {
+                if (derivedUnsubscriber) {
+                    derivedUnsubscriber();
+                }
+                derivedUnsubscriber = derivedStore.subscribe((value) => {
                     set(value);
                 });
             });
@@ -177,6 +181,9 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
                 globalUnsubscriber();
                 if (unsubscriber) {
                     unsubscriber();
+                }
+                if (derivedUnsubscriber) {
+                    derivedUnsubscriber();
                 }
             };
         });

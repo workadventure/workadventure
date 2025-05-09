@@ -7,6 +7,7 @@ import {
 } from "@workadventure/map-editor";
 import { derived, Readable, Writable, writable } from "svelte/store";
 import { entitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
+import { asError } from "catch-unknown";
 import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {
@@ -111,7 +112,7 @@ export class EntitiesCollectionsManager {
                 })
                 .catch((error) => {
                     console.error(error);
-                    reject(error);
+                    reject(error instanceof Error ? error : new Error(JSON.stringify(error)));
                 });
         });
     }
@@ -132,7 +133,7 @@ export class EntitiesCollectionsManager {
                 })
                 .catch((error) => {
                     console.error(error);
-                    reject(error);
+                    reject(asError(error));
                 });
         });
     }
@@ -174,7 +175,7 @@ export class EntitiesCollectionsManager {
                 })
                 .catch((error) => {
                     console.error(error);
-                    reject(error);
+                    reject(asError(error));
                 });
         });
     }
@@ -191,7 +192,7 @@ export class EntitiesCollectionsManager {
                 })
                 .catch((error) => {
                     console.error(error);
-                    reject(error);
+                    reject(asError(error));
                 });
         });
     }

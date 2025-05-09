@@ -474,12 +474,7 @@ const chat: BaseTranslation = {
             discordNotConfigured: "Connect to Discord",
         },
     },
-    remoteUserNotConnected: {
-        title: "User not connected 💬",
-        descriptionNotConnected: "The user is not connected. You're not bale to start message discussion with him 😭 ",
-        descriptionWalkToCallHim: "But you may walk to him and call him to start a discussion.",
-        call: "Call {userName}",
-    },
+    remoteUserNotConnected: "User not authenticated. Cannot send message.",
 };
 
 export default chat;

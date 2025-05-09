@@ -353,7 +353,7 @@ jobs:
         working-directory: "map-storage"
 
       - name: "Prettier"
-        run: npm run format
+        run: npm run pretty-check
         working-directory: "map-storage"
 
   continuous-integration-room-api-client:
@@ -377,6 +377,9 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'
 
+      - name: "Install ESLint config dependencies"
+        run: npm ci --workspace=@workadventure/eslint-config
+
       - name: "Install dependencies"
         run: npm ci
         working-directory: "libs/room-api-clients/room-api-client-js"
@@ -394,7 +397,7 @@ jobs:
         working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: "Pretty"
-        run: npm run format-check
+        run: npm run pretty-check
         working-directory: "libs/room-api-clients/room-api-client-js"
 
   continuous-integration-desktop:

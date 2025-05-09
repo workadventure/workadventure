@@ -3,6 +3,7 @@ import type { Request, Response, Application } from "express";
 import Mustache from "mustache";
 import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
+import { z } from "zod";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import { adminService } from "../services/AdminService";
 import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
@@ -15,6 +16,7 @@ import {
     AUTOLOGIN_URL,
     GOOGLE_DRIVE_PICKER_CLIENT_ID,
 } from "../enums/EnvironmentVariable";
+import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
@@ -144,11 +146,17 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
-            if (req.query.url == undefined) {
-                res.status(500).send("playUrl is empty in query parameter of the request");
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    url: z.string(),
+                })
+            );
+            if (query === undefined) {
                 return;
             }
-            return this.displayManifestJson(req, res, req.query.url.toString());
+            return this.displayManifestJson(req, res, query.url);
         });
 
         this.app.get("/login", (req: Request, res: Response) => {

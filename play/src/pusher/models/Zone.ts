@@ -94,7 +94,7 @@ export class UserDescriptor {
             }
         }
         const availabilityStatus = playerDetails.availabilityStatus;
-        if (availabilityStatus !== 0) {
+        if (availabilityStatus !== AvailabilityStatus.UNCHANGED) {
             this.availabilityStatus = availabilityStatus;
         }
         const setVariable = playerDetails.setVariable;

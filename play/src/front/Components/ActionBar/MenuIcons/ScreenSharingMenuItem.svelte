@@ -10,7 +10,9 @@
     import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
     import { isScreenSharingSupported, requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function screenSharingClick(): void {
         dispatch("click");

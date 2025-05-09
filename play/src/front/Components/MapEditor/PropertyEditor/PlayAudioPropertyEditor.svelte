@@ -12,7 +12,11 @@
     export let isArea = false;
     let optionAdvancedActivated = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+        audioLink: PlayAudioPropertyData;
+    }>();
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let playing = false;
