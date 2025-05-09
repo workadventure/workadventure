@@ -66,7 +66,7 @@ class Menu {
         await this.openMapMenu(page);
         await page.getByRole('button', { name: 'Send global message' }).click();
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeEnabled();
-        await page.getByRole('button', { name: '×' }).first().click();
+        await page.locator(".close-btn").first().click();
         //await this.closeMapMenu(page);
     }
 
@@ -74,7 +74,7 @@ class Menu {
         await this.openMapMenu(page);
         await page.getByRole('button', { name: 'Send global message' }).click();
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeDisabled();
-        await page.getByRole('button', { name: '×' }).first().click();
+        await page.locator(".close-btn").first().click();
         //await this.closeMapMenu(page);
     }
 

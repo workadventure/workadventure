@@ -22,6 +22,6 @@ export class Loader {
     }
 
     public removeLoader(): void {
-        loaderVisibleStore.set(false);
+        // loaderVisibleStore.set(false);
     }
 }
