@@ -5,6 +5,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
 
     let chatSounds: boolean = localUserStore.getChatSounds();
@@ -20,22 +21,28 @@
 </script>
 
 <div class="customize-main">
-    <div class="submenu">
+    <div class="submenu p-4">
         {#if gameManager.getCurrentGameScene().room.isChatEnabled}
             {#if $userIsConnected}
-                <h3 class="blue-title pt-2">{$LL.menu.chat.matrixIDLabel()}</h3>
-                <div class="flex w-full justify-center py-1">
-                    {mychatID}
+                <div class="flex w-full justify-start flex-row gap-4 items-center pb-4">
+                    <span class="text-xl">{$LL.menu.chat.matrixIDLabel()} :</span>
+                    <div class="flex justify-center p-2 bg-white text-secondary rounded">
+                        {mychatID}
+                    </div>
                 </div>
-                <h3 class="blue-title py-2">{$LL.menu.chat.settings()}</h3>
-                <label>
-                    <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
-                    <span>{$LL.menu.settings.chatSounds()}</span>
-                </label>
+                <div class="flex flex-col w-full h-full items-start justify-start pb-4">
+                    <span class="font-xl blue-title text-lg">{$LL.menu.chat.settings()}</span>
+                    <InputCheckbox
+                        data-testid="chatSounds"
+                        bind:value={chatSounds}
+                        on:change={changeChatSounds}
+                        label={$LL.menu.settings.chatSounds()}
+                    />
+                </div>
                 <section class="centered-column resizing-width m-auto resizing-text">
                     <button
                         type="button"
-                        class="w-full bg-danger-900 min-w-[220px] flex justify-center items-center"
+                        class="btn p-2 bg-danger-900 min-w-[220px] flex justify-center items-center"
                         on:click={openResetKeyStorage}>{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</button
                     >
                 </section>

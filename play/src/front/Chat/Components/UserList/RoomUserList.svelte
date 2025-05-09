@@ -62,7 +62,7 @@
         });
 </script>
 
-<div class="flex flex-col overflow-auto h-full">
+<div class="flex flex-col h-full">
     <ChatHeader />
     <div>
         {#each roomsWithUsers as [roomName, userInRoom] (roomName)}

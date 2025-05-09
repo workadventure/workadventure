@@ -510,8 +510,8 @@
         {#if extensionModulesAreaMapEditor.length > 0}
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
                 {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, index] (`extensionModuleAreaMapEditor-${index}`)}
-                        {#if extensionModuleAreaMapEditor[subtype].shouldDisplayButton(properties)}
+                    {#each Object.entries(extensionModuleAreaMapEditor) as [subtype, areaProperty] (`extensionModuleAreaMapEditor-${subtype}`)}
+                        {#if areaProperty.shouldDisplayButton(properties)}
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
                                 subProperty={subtype}
@@ -631,7 +631,6 @@
             {/if}
         </div>
 
-        <!-- svelte-ignore missing-declaration -->
         <InputSwitch
             id="searchable"
             label={$LL.mapEditor.areaEditor.areaSerchable()}

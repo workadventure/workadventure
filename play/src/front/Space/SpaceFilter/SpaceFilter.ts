@@ -220,7 +220,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                         return target[property as keyof ReactiveSpaceUser];
                     } else {
                         if (property in extendedUser) {
-                            //@ts-ignore
+                            //@ts-ignore We check just above that the property is in extendedUser
                             target[property] = writable(extendedUser[property]);
                             return target[property];
                         } else {

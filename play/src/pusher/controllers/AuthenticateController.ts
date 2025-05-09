@@ -93,7 +93,7 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects the user to the OpenID login screen
          *
          */
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+
         this.app.get("/login-screen", async (req, res) => {
             const query = validateQuery(
                 req,
@@ -169,7 +169,7 @@ export class AuthenticateController extends BaseHttpController {
          *       401:
          *         description: Thrown when the token is invalid
          */
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for") ?? "";
             const query = validateQuery(req, res, MeRequest);
@@ -279,7 +279,7 @@ export class AuthenticateController extends BaseHttpController {
          *       302:
          *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
          */
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+
         this.app.get("/openid-callback", async (req, res) => {
             const playUri = req.cookies.playUri;
             if (!playUri) {

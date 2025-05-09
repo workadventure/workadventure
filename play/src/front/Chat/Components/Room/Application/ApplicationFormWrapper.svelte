@@ -16,7 +16,11 @@
     import LL from "../../../../../i18n/i18n-svelte";
     import { ApplicationProperty } from "../MessageInputBar.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        update: ApplicationProperty;
+        close: void;
+        input: string;
+    }>();
 
     export let property: ApplicationProperty;
 

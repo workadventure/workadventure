@@ -31,7 +31,10 @@
     let srcJitsi = jitsiIcon;
     let srcMeeting = meetingIcon;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+        copy: void;
+    }>();
 
     onMount(() => {
         if (isJitsi) {
@@ -137,8 +140,8 @@
                     on:click={copyUrl}
                 >
                     <ExternalLinkIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />
@@ -154,8 +157,8 @@
                 }}
             >
                 <CopyIcon
-                    height="h-4"
-                    width="w-4"
+                    height="h-6"
+                    width="w-6"
                     strokeColor={active ? "stroke-contrast" : "stroke-white"}
                     hover={active ? "" : ""}
                 />
@@ -168,8 +171,8 @@
                     on:click={closeTab}
                 >
                     <XIcon
-                        height="h-4"
-                        width="w-4"
+                        height="h-6"
+                        width="w-6"
                         strokeColor={active ? "stroke-contrast" : "stroke-white"}
                         hover={active ? "" : ""}
                     />

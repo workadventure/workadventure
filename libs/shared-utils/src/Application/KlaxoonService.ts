@@ -52,7 +52,6 @@ export const initWindowKlaxoonActivityPicker = () => {
 
 export const openKlaxoonActivityPicker = (clientId: string, successCallback: (arg1: KlaxoonEvent) => void) => {
     return window.KlaxoonActivityPicker.openPicker({
-        // eslint-disable-line
         clientId: clientId,
         success: successCallback,
         options: {

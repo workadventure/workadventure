@@ -35,6 +35,9 @@
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
+    import { draftMessageService } from "../../Services/DraftMessageService";
+    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
@@ -56,10 +59,13 @@
     let fileAttachementEnabled = false;
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
+    let replyMessageId: string | null = null;
+    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
             messageInput.focus();
+            replyMessageId = chatMessage.id;
         }
     });
 
@@ -129,6 +135,7 @@
 
     function unselectChatMessageToReply() {
         selectedChatMessageToReply.set(null);
+        replyMessageId = null;
     }
 
     function onInputHandler() {
@@ -138,15 +145,32 @@
         }
     }
 
-    onMount(() => {
+    onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
+        const draft = await draftMessageService.loadDraft(draftId);
+        if (draft) {
+            message = draft.message ?? "";
+            if (draft.replyingToMessageId) {
+                if (room instanceof MatrixChatRoom) {
+                    let loadReplyMessage = await room.getMessageById(draft.replyingToMessageId);
+                    selectedChatMessageToReply.set(loadReplyMessage ?? null);
+                }
+            }
+        }
     });
 
     onDestroy(() => {
-        selectedChatChatMessageToReplyUnsubscriber();
+        draftMessageService.saveDraft({
+            id: draftId,
+            roomId: room.id,
+            userId: localUserStore.getChatId(),
+            message,
+            replyingToMessageId: replyMessageId ?? null,
+        });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
+        selectedChatChatMessageToReplyUnsubscriber();
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;

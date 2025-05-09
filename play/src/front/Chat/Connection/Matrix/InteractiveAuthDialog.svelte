@@ -15,7 +15,7 @@
     let isInteractiveAuthFinished = false;
 
     let uiAuthStage: AuthType | string;
-    let uiAuthPhase: number;
+    let uiAuthPhase: INTERACTIVE_AUTH_PHASE;
 
     const interactiveAuth = new InteractiveAuth({
         matrixClient,
@@ -35,7 +35,7 @@
         uiAuthStage = nextStage;
     }
 
-    function onUpdatePhaseChange(newPhase: number) {
+    function onUpdatePhaseChange(newPhase: INTERACTIVE_AUTH_PHASE) {
         uiAuthPhase = newPhase;
     }
 
