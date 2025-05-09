@@ -16,7 +16,7 @@
     let messageInput: Input;
     let type: "say" | "think" = "say";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{ close: void }>();
 
     function closeBanner() {
         dispatch("close");
