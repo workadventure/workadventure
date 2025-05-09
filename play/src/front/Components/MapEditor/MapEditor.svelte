@@ -40,13 +40,11 @@
 
     function onResize(width: number) {
         mapEditorSideBarWidthStore.set(width);
-        mapEditorSideBarWidth = width;
     }
 
     $: if (mapEditor) {
         mapEditor.style.width = `${mapEditorSideBarWidth}px`;
     }
-    $: console.log("mapEditorSideBarWidth", mapEditorSideBarWidth);
 
     onMount(() => {
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));
