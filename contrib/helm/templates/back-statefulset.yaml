@@ -65,6 +65,10 @@ spec:
             - secretRef:
                 name: {{ .Values.back.externalSecretName }}
             {{- end }}
+            {{- if .Values.livekitServer.enabled }}
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-livekit
+            {{- end }}
           env:
             - name: SECRET_KEY
               valueFrom:
