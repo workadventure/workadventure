@@ -18,6 +18,7 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
+import say from "./say";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
@@ -44,6 +45,7 @@ const en_US: BaseTranslation = {
     mapEditor,
     megaphone,
     video,
+    say,
     statusModal,
     externalModule,
     form,

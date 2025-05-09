@@ -4,6 +4,7 @@ import type {
     AvailabilityStatus,
     EditMapCommandMessage,
     PositionMessage,
+    SayMessage,
 } from "@workadventure/messages";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
@@ -26,6 +27,7 @@ export interface MessageUserJoined {
     outlineColor: number | undefined;
     variables: Map<string, unknown>;
     chatID?: string;
+    sayMessage?: SayMessage;
 }
 
 export interface PositionInterface {
