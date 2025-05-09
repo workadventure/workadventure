@@ -157,16 +157,27 @@ export class GameMapAreas {
         return this.getPersonalAreaRightPropertyData(area) != undefined;
     }
 
-    public isGameMapContainsSpecificAreas(): boolean {
+    public isGameMapContainsSpecificAreas(userId: string | undefined, tags:string[]): boolean {
         let hasSpecificAreas = false;
         this.areas.forEach((area) => {
+            console.log("✳️✳️✳️✳️ >>> area", area);
             if (this.getAreaRightPropertyData(area) !== undefined) {
-                hasSpecificAreas = true;
+                if (this.isUserHasWriteAccessOnAreaByUserTags(area, tags)) {
+                    hasSpecificAreas = true;
+                    return;
+                }
                 return;
             }
-            if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
-                hasSpecificAreas = true;
-                return;
+            if (userId){
+                if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
+                    console.log("👮🏻👮🏻👮🏻️ >>> Il a un personal desk", this.isAreaOwner(area, userId.toString()), userId.toString());
+                    if (this.isAreaOwner(area, userId)) {
+                        hasSpecificAreas = true;
+                        return;
+                    }
+                    // hasSpecificAreas = true;
+                    return;
+                }
             }
         });
         return hasSpecificAreas;

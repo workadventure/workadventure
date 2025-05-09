@@ -71,7 +71,9 @@ export class AreasManager {
     }
 
     private updateMapEditorOptionForSpecificAreas() {
-        const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
+        const userId = this.scene.;
+        const userTags = this.scene.connection?.getAllTags() ?? [];
+        const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas(userId, userTags);
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
 
