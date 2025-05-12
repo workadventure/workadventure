@@ -1095,6 +1095,33 @@ export class AreasPropertiesListener {
 
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
+        if (property.newTab) {
+            const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+            if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+                this.coWebsitesActionTriggers.set(property.id, actionId);
+                let message = property.triggerMessage;
+                if (message === undefined) {
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                }
+
+                popupStore.addPopup(
+                    PopUpTab,
+                    {
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(property.link as string);
+                        },
+                        userInputManager: this.scene.userInputManager,
+                    },
+                    actionId
+                );
+            } else {
+                scriptUtils.openTab(property.link);
+            }
+            return;
+        }
+
         if (this.openedCoWebsites.has(property.id)) {
             return;
         }
