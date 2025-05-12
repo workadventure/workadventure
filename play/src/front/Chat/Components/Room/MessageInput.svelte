@@ -16,7 +16,9 @@
         console.info("Not used focusout", event);
     };
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        pasteFiles: FileList;
+    }>();
 
     const handleKeyDown = (event: KeyboardEvent) => {
         if (onKeyDown) {

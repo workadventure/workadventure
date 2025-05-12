@@ -1,21 +1,22 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
 import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
-// eslint-disable-next-line import/no-unresolved
+
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-// eslint-disable-next-line import/no-unresolved
+
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
-// eslint-disable-next-line import/no-unresolved
+
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import Debug from "debug";
-// eslint-disable-next-line import/no-unresolved
+
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
-// eslint-disable-next-line import/no-unresolved
+
 import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
 import { TurnCredentialsAnswer } from "@workadventure/messages";
+import { asError } from "catch-unknown";
 import {
     requestedCameraDeviceIdStore,
-    requestedMicrophoneDeviceIdStore,
     requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
     requestedMicrophoneState,
     usedCameraDeviceIdStore,
     usedMicrophoneDeviceIdStore,
@@ -125,7 +126,7 @@ export class JitsiConferenceWrapper {
                 resolve(jitsiConferenceWrapper);
             });
             room.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (e) => {
-                reject(e);
+                reject(asError(e));
                 console.error("conference failed");
             });
             room.on(JitsiMeetJS.events.conference.CONNECTION_ESTABLISHED, () => {
@@ -393,7 +394,7 @@ export class JitsiConferenceWrapper {
         const tracksReturned: JitsiLocalTrack[] = [];
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
-            throw newTracks;
+            throw asError(newTracks);
         } else {
             for (const track of newTracks) {
                 if (track.isVideoTrack()) {
@@ -567,7 +568,7 @@ export class JitsiConferenceWrapper {
         }
         debug("JitsiConferenceWrapper => addRemoteTrack", track.getType());
         this._streamStore.update((tracks) => {
-            // @ts-ignore
+            // @ts-ignore getParticipantId() does indeed exist on track but is not documented.
             const participantId = track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId", track);
@@ -587,7 +588,7 @@ export class JitsiConferenceWrapper {
     }
 
     private trackStateChanged(track: JitsiTrack) {
-        //@ts-ignore
+        //@ts-ignore track.muted does indeed exist even if not documented
         if (track.muted) {
             debug(`remote ${track.getType()} track is muted => removing`);
             this.removeRemoteTrack(track);
@@ -600,7 +601,7 @@ export class JitsiConferenceWrapper {
     private removeRemoteTrack(track: JitsiTrack) {
         this._streamStore.update((tracks) => {
             // Because Jitsi is nicely designed, if the track is local we need to get the participantId from the conference and not from the track
-            // @ts-ignore
+            // @ts-ignore track.getParticipantId does indeed exist on track but is not documented.
             const participantId = track.isLocal() ? this.myParticipantId : track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId");

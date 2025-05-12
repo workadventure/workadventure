@@ -1,3 +1,4 @@
+import { asError } from "catch-unknown";
 import { getRedisClient } from "../RedisClient";
 import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
 import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository";
@@ -21,7 +22,7 @@ export async function getPlayersVariablesRepository(): Promise<PlayersVariablesR
                 }
             })
             .catch((err) => {
-                reject(err);
+                reject(asError(err));
             });
     });
     return playerVariablesRepositoryPromise;

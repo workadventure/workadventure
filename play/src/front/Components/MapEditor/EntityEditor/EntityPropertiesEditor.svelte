@@ -1,10 +1,5 @@
 <script lang="ts">
-    import {
-        EntityDataProperties,
-        EntityDataPropertiesKeys,
-        EntityDataProperty,
-        EntityDescriptionPropertyData,
-    } from "@workadventure/map-editor";
+    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
@@ -46,8 +41,8 @@
                     searchable: false,
                 });
             } else {
-                entityDescription = (descriptionProperty as EntityDescriptionPropertyData).description ?? "";
-                entitySearchable = (descriptionProperty as EntityDescriptionPropertyData).searchable ?? false;
+                entityDescription = descriptionProperty.description ?? "";
+                entitySearchable = descriptionProperty.searchable ?? false;
             }
         }
     });

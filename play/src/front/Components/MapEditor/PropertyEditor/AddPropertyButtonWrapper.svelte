@@ -26,7 +26,11 @@
     export let subProperty: string | undefined = undefined;
     export let isActive = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+        click: CustomEvent;
+    }>();
 
     let modulesExtensionMapEditor = $extensionModuleStore.reduce(
         (acc: { [key: string]: ExtensionModuleAreaProperty }[], module: ExtensionModule) => {
@@ -68,7 +72,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.focusableProperties.label()}
         descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-        img={"resources/icons/icon_focus.png"}
+        img="resources/icons/icon_focus.png"
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="focusable"
         on:click={(event) => {
@@ -80,7 +84,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.silentProperty.label()}
         descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-        img={"resources/icons/icon_silent.png"}
+        img="resources/icons/icon_silent.png"
         style={`z-index: 270;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
@@ -93,7 +97,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
             descriptionText={$LL.mapEditor.properties.jitsiProperties.disabled()}
-            img={"resources/icons/icon_meeting.png"}
+            img="resources/icons/icon_meeting.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -105,7 +109,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
             descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-            img={"resources/icons/icon_meeting.png"}
+            img="resources/icons/icon_meeting.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -119,7 +123,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.disabled()}
-            img={"resources/icons/icon_speaker.png"}
+            img="resources/icons/icon_speaker.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -131,7 +135,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-            img={"resources/icons/icon_speaker.png"}
+            img="resources/icons/icon_speaker.png"
             style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -145,7 +149,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.disabled()}
-            img={"resources/icons/icon_listener.png"}
+            img="resources/icons/icon_listener.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -157,7 +161,7 @@
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
             descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-            img={"resources/icons/icon_listener.png"}
+            img="resources/icons/icon_listener.png"
             style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
                 dispatch("click", event);
@@ -170,7 +174,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.startProperties.label()}
         descriptionText={$LL.mapEditor.properties.startProperties.description()}
-        img={"resources/icons/icon_start.png"}
+        img="resources/icons/icon_start.png"
         style={`z-index: 230;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
@@ -182,7 +186,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.exitProperties.label()}
         descriptionText={$LL.mapEditor.properties.exitProperties.description()}
-        img={"resources/icons/icon_exit.png"}
+        img="resources/icons/icon_exit.png"
         style={`z-index: 220;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);
@@ -206,7 +210,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.linkProperties.label()}
         descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-        img={"resources/icons/icon_link.png"}
+        img="resources/icons/icon_link.png"
         style={`z-index: 200;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
             dispatch("click", event);

@@ -5,7 +5,9 @@
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+    }>();
     let isPopupVisible = false;
 
     const subscription = coWebsites.subscribe(() => {

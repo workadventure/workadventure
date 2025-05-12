@@ -74,7 +74,7 @@
             return Promise.resolve($LL.mapEditor.settings.room.actions.success());
         } catch (e) {
             console.error(e);
-            return Promise.reject($LL.mapEditor.settings.room.actions.error());
+            return Promise.reject(new Error($LL.mapEditor.settings.room.actions.error()));
         }
     }
 </script>

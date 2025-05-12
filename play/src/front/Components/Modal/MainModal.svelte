@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { closeModal, Modals } from "svelte-modals";
 </script>
 

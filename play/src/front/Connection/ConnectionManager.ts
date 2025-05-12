@@ -10,6 +10,7 @@ import {
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { Subject } from "rxjs";
+import { asError } from "catch-unknown";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -157,7 +158,13 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
 
-        gameManager.logout().finally(() => window.location.assign(redirectUrl));
+        gameManager
+            .logout()
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            })
+            .finally(() => window.location.assign(redirectUrl));
     }
 
     /**
@@ -455,7 +462,7 @@ class ConnectionManager {
 
             connection.onConnectError((error: object) => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(error);
+                reject(asError(error));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

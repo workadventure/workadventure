@@ -22,10 +22,9 @@
 
     onDestroy(async () => {
         try {
-            screenWakeRelease;
             if (screenWakeRelease) {
                 await screenWakeRelease();
-                screenWakeRelease;
+                // eslint-disable-next-line require-atomic-updates
                 screenWakeRelease = undefined;
             }
             inExternalServiceStore.set(false);

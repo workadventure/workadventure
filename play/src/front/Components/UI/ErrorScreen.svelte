@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
-    import { errorImageStore, errorLogoStore, errorScreenStore } from "../../Stores/ErrorScreenStore";
+    import { onDestroy } from "svelte";
+    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
 
@@ -9,29 +9,12 @@
     import LL from "../../../i18n/i18n-svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
 
+    import logoImg from "../images/logo-min-white.png";
+    import errorGif from "./images/error.gif";
+
     let errorScreen = $errorScreenStore;
-    let logoErrorParent: HTMLDivElement;
-    let imageErrorParent: HTMLDivElement;
 
-    let logoErrorSrc =
-        errorScreen?.image ??
-        gameManager?.currentStartedRoom?.errorSceneLogo ??
-        gameManager?.currentStartedRoom?.loginSceneLogo ??
-        undefined;
-
-    let logoError: HTMLImageElement = $errorLogoStore;
-
-    if (logoErrorSrc !== undefined) {
-        logoError = document.createElement("img");
-        logoError.src = logoErrorSrc;
-    }
-
-    logoError.style.maxHeight = "25vh";
-    logoError.style.maxWidth = "80%";
-
-    const errorImage: HTMLImageElement = $errorImageStore;
-    errorImage.style.height = "125px";
-    errorImage.style.maxWidth = "100%";
+    let logoErrorSrc = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
@@ -58,17 +41,6 @@
     }
 
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
-
-    onMount(() => {
-        if (logoErrorParent) {
-            logoErrorParent.innerHTML = "";
-            logoErrorParent.appendChild(logoError);
-        }
-        if (imageErrorParent) {
-            imageErrorParent.innerHTML = "";
-            imageErrorParent.appendChild(errorImage);
-        }
-    });
 </script>
 
 {#if $errorScreenStore}
@@ -78,9 +50,27 @@
         transition:fly={{ y: -200, duration: 500 }}
     >
         <div class="flex flex-col items-center" style=" width: 90%;">
-            <div class="logo" bind:this={logoErrorParent} />
-            <div class="icon" bind:this={imageErrorParent} />
-            {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
+            <!-- <div class="logo" bind:this={logoErrorParent} />
+            <div class="icon" bind:this={imageErrorParent} /> -->
+            <div class="logo">
+                {#if logoErrorSrc}
+                    <img
+                        src={errorScreen?.imageLogo ?? logoErrorSrc}
+                        alt="Logo error"
+                        style="max-height:25vh; max-width:80%;"
+                    />
+                {/if}
+            </div>
+
+            <div class="icon">
+                <img
+                    src={errorScreen?.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif}
+                    alt="Error"
+                    style="height:125px; max-width:100%;"
+                />
+            </div>
+
+            {#if $errorScreenStore.type !== "retry"}<h2 class="mt-10">{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
             <p class="details">
@@ -89,17 +79,23 @@
                     <div class="loading" />
                 {/if}
             </p>
-            {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="light button" on:click={click}>
-                    {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
-                    {$errorScreenStore.buttonTitle}
-                </button>
-                {#if $userIsConnected}
-                    <button type="button" class="light button" on:click={logout}>
-                        {$LL.menu.profile.logout()}
+            <div class="flex gap-2">
+                {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
+                    <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
+                        {#if $errorScreenStore.type === "retry"}<img
+                                src={reload}
+                                alt=""
+                                class="reload mr-2 hover:"
+                            />{/if}
+                        {$errorScreenStore.buttonTitle}
                     </button>
+                    {#if $userIsConnected}
+                        <button type="button" class="btn-lg btn btn-secondary button" on:click={logout}>
+                            {$LL.menu.profile.logout()}
+                        </button>
+                    {/if}
                 {/if}
-            {/if}
+            </div>
         </div>
     </main>
 {/if}

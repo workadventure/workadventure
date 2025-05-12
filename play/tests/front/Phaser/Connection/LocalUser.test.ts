@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-//@ts-ignore
+//@ts-ignore Forcing environment variables in global object
 window.env = {
     MAX_USERNAME_LENGTH: 10,
     DEBUG_MODE: true,

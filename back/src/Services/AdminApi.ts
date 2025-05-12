@@ -61,9 +61,9 @@ class AdminApi {
             let message = "Unknown error";
             if (isAxiosError(err)) {
                 Sentry.captureException(
-                    `An error occurred during call to /api/map endpoint. HTTP Status: ${
-                        err.status ?? "none"
-                    }. ${err.toString()}`
+                    `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}. ${
+                        err.message
+                    }`
                 );
                 console.error(
                     `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status ?? "none"}.`,

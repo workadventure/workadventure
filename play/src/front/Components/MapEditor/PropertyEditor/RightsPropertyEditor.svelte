@@ -27,7 +27,10 @@
         dispatch("change");
     }
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 </script>
 
 <PropertyEditorBase

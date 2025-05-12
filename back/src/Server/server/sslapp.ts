@@ -5,7 +5,7 @@ import { UwsApp } from "./types";
 
 class SSLApp extends (<UwsApp>_SSLApp) {
     constructor(options: AppOptions) {
-        super(options); // eslint-disable-line constructor-super
+        super(options);
         extend(this, new BaseApp());
     }
 }

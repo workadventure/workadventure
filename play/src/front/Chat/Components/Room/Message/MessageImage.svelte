@@ -29,5 +29,5 @@
             </svg>
         </div>
     </div>
-    <img class="w-full object-contain max-h-52 rounded" src={$content.url} alt={$content.body} />
+    <img class="w-full object-cover max-h-52 rounded" src={$content.url} alt={$content.body} />
 </a>

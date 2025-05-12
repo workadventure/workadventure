@@ -69,10 +69,10 @@ export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState";
 
 const globalState = createState();
 
-let _metadata: unknown | undefined;
+let _metadata: unknown;
 let _iframeId: string | undefined;
 
-const setMetadata = (data: unknown | undefined) => {
+const setMetadata = (data: unknown) => {
     _metadata = data;
 };
 
@@ -134,9 +134,9 @@ const wa = {
      * Important: You need to wait for the end of the initialization before accessing.
      * {@link https://docs.workadventu.re/map-building/api-metadata.md | Website documentation}
      *
-     * @returns {unknown|undefined} Metadata
+     * @returns {unknown} Metadata
      */
-    get metadata(): unknown | undefined {
+    get metadata(): unknown {
         return _metadata;
     },
 

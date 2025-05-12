@@ -8,6 +8,7 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     export let isOpen: boolean;
     export let parentID: string | undefined;
     let createFolderOptions: CreateRoomOptions = { visibility: "public", description: "" };
@@ -34,6 +35,7 @@
             }
         } finally {
             loadingFolderCreation = false;
+            analyticsClient.createMatrixFolder();
         }
     }
 

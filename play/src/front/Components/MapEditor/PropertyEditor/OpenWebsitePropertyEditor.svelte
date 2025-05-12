@@ -104,7 +104,10 @@
         { value: "xr-spatial-tracking", label: "xr-spatial-tracking", created: undefined },
     ];
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: string | null | undefined;
+        close: undefined;
+    }>();
 
     function shouldDisplayAdvancedOption(): boolean {
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
@@ -188,7 +191,7 @@
     }
 
     async function checkWebsiteProperty(protocolChecked = false): Promise<void> {
-        if (property.link == undefined) return;
+        if (property.link == undefined || property.link == "") return;
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
@@ -803,7 +806,7 @@
                     id="linkButton"
                     type="text"
                     bind:value={property.buttonLabel}
-                    on:change={onValueChange}
+                    onChange={onValueChange}
                 />
             </div>
         {/if}

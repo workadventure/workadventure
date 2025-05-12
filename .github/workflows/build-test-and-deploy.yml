@@ -23,7 +23,7 @@ jobs:
       # FIXME: Final build should only build on master or tags
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
       dockerfile: play/Dockerfile
-      sentry_project: play
+      # sentry_project: play
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
@@ -87,7 +87,7 @@ jobs:
   push-to-sentry:
     runs-on: ubuntu-latest
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    if: ${{ github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
     needs:
 #      - build-play
       - build-back
@@ -357,8 +357,7 @@ jobs:
 
   run-gitlab-saas-tests:
     name: "Run Gitlab SaaS tests"
-    if: >
-      ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/master') || (github.event_name == 'release') || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
     runs-on: ubuntu-latest
     needs:
       - build-back

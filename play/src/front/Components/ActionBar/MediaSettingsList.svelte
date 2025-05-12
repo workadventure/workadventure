@@ -30,7 +30,9 @@
 
     export let mediaSettingsDisplayed = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+    }>();
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);

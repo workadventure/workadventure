@@ -1,7 +1,5 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { enableUserInputsStore } from "../Stores/UserInputStore";
-    import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import Chat from "./Components/Chat.svelte";
@@ -18,14 +16,6 @@
 
     function closeChat() {
         chatVisibilityStore.set(false);
-    }
-
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape" && $chatVisibilityStore) {
-            closeChat();
-        } else if (e.key === "c" && !$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
-            chatVisibilityStore.set(true);
-        }
     }
 
     let sideBarWidth: number = $chatSidebarWidthStore;
@@ -96,7 +86,7 @@
     };
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:resize={onresize} />
+<svelte:window on:resize={onresize} />
 {#if $chatVisibilityStore}
     <section
         bind:clientWidth={sideBarWidth}

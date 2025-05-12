@@ -17,6 +17,7 @@ import MapSubMenu from "../Components/ActionBar/MenuIcons/MapSubMenu.svelte";
 import LoginMenuItem from "../Components/ActionBar/MenuIcons/LoginMenuItem.svelte";
 import InviteMenuItem from "../Components/ActionBar/MenuIcons/InviteMenuItem.svelte";
 import CustomActionBarButton from "../Components/ActionBar/MenuIcons/CustomActionBarButton.svelte";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { userHasAccessToBackOfficeStore, userIsAdminStore } from "./GameStore";
 import { megaphoneCanBeUsedStore } from "./MegaphoneStore";
 import { chatVisibilityStore, isMatrixChatEnabledStore } from "./ChatStore";
@@ -153,6 +154,7 @@ function createSubMenusStore() {
          * Returns a translated menu item by its key.
          * Throw an error if the key was not found.
          */
+
         findByKey(key: MenuKeys | string): MenuItem {
             const menuItem = get(store).find((menu) => menu.key === key);
             if (menuItem === undefined) {
@@ -376,7 +378,7 @@ export const rightActionBarMenuItems: Readable<RightMenuItem<SvelteComponentType
 );
 
 // It is ok to not unsubscribe to this store because it is a singleton.
-// eslint-disable-next-line svelte/no-ignored-unsubscribe
+
 /*additionalButtonsMenu.subscribe((map) => {
     addClassicButtonActionBarEvent.set(
         [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]
@@ -445,6 +447,7 @@ function createOpenedMenuStore() {
             } else {
                 set(menu);
                 activeSecondaryZoneActionBarStore.set(undefined);
+                analyticsClient.openProfileMenu();
             }
         },
     };

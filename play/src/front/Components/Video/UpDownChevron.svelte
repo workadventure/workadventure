@@ -4,7 +4,9 @@
 
     export let enabled = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 </script>
 
 <button

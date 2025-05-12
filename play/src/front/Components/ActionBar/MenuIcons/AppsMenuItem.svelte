@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getContext, setContext } from "svelte";
+    import { clickOutside } from "svelte-outside";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -38,11 +39,12 @@
         classList="group/btn-apps"
         context="actionBar"
         tooltipTitle={$LL.actionbar.help.apps.title()}
-        tooltipDesc={$LL.actionbar.help.apps.desc()}
         disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
         state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
-        dataTestId={undefined}
+        dataTestId="apps-button"
         action={floatingUiRef}
+        media="./static/images/tooltip-exemple.gif"
+        desc={$LL.actionbar.help.apps.desc()}
     >
         <AppsIcon
             strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
@@ -50,22 +52,28 @@
                 : "stroke-white fill-transparent"}
             hover="group-hover/btn-apps:fill-white"
         />
+    </ActionBarButton>
 
-        {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
-            <div class="absolute" use:floatingUiContent>
-                <div class="flex justify-center m-[unset]">
-                    <div use:arrowAction />
-                    <div class="bottom-action-bar">
-                        <div
-                            class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur-md rounded-md p-1"
-                        >
-                            <AppsMenuContent />
-                        </div>
+    {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0)}
+        <nav
+            class="absolute"
+            use:floatingUiContent
+            use:clickOutside={() => {
+                openedMenuStore.close("appMenu");
+            }}
+        >
+            <div class="flex justify-center m-[unset]">
+                <div use:arrowAction />
+                <div class="bottom-action-bar">
+                    <div
+                        class="bottom-action-section flex flex-col animate bg-contrast/80 backdrop-blur rounded-md p-1"
+                    >
+                        <AppsMenuContent />
                     </div>
                 </div>
             </div>
-        {/if}
-    </ActionBarButton>
+        </nav>
+    {/if}
 {:else}
     <HeaderMenuItem label={$LL.actionbar.help.apps.title()} />
     <AppsMenuContent />

@@ -23,7 +23,6 @@ describe("LockByKeys", () => {
 
         lock.waitForLock(key, async () => {
             await firstPromise;
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
         }).catch(() => {});
 
         void lock.waitForLock(key, secondPromise);

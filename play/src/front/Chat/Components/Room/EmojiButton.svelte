@@ -5,7 +5,9 @@
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import { IconMoodSmile } from "@wa-icons";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: string;
+    }>();
 
     export let messageRef: HTMLDivElement | undefined;
 

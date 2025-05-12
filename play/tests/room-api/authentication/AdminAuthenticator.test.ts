@@ -29,7 +29,7 @@ describe("AdminAuthenticator", () => {
                     ) => {
                         return new Promise((resolve, reject) => {
                             if (!options.headers || !options.headers["X-API-Key"]) {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 401,
@@ -40,7 +40,7 @@ describe("AdminAuthenticator", () => {
                             }
 
                             if (!options.params || !options.params.roomUrl) {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 400,
@@ -51,7 +51,7 @@ describe("AdminAuthenticator", () => {
                             }
 
                             if (options.headers["X-API-Key"] !== apiKey) {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 401,
@@ -70,7 +70,7 @@ describe("AdminAuthenticator", () => {
                                 });
                                 return;
                             } else if (options.params.roomUrl === roomUrl + "internal-error") {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 500,
@@ -79,7 +79,7 @@ describe("AdminAuthenticator", () => {
                                 });
                                 return;
                             } else if (options.params.roomUrl === roomUrl + "undefined") {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 404,
@@ -88,7 +88,7 @@ describe("AdminAuthenticator", () => {
                                 });
                                 return;
                             } else if (options.params.roomUrl !== roomUrl) {
-                                // eslint-disable-next-line prefer-promise-reject-errors
+                                // eslint-disable-next-line prefer-promise-reject-errors,@typescript-eslint/prefer-promise-reject-errors
                                 reject({
                                     response: {
                                         status: 403,

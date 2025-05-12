@@ -87,14 +87,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public get description(): string | undefined {
         const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
             (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
             (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.searchable;
     }
 
@@ -301,9 +301,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties") as
-            | EntityDescriptionPropertyData
-            | undefined;
+        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties");
         actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);

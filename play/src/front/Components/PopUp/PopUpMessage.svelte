@@ -8,7 +8,9 @@
     // export let click: () => void;
     // export let userInputManager: UserInputManager;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+    }>();
 
     function closeBanner() {
         dispatch("close");

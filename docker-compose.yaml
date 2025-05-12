@@ -17,9 +17,6 @@ services:
       - "traefik.port=8080"
       - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
       - "traefik.http.routers.traefik.service=api@internal"
-    depends_on:
-      - back
-      - play
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

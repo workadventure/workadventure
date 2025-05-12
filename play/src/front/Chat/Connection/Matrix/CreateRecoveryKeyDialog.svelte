@@ -14,7 +14,7 @@
     let passphraseInput: string | undefined;
     let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined;
     let error = false;
-    $: isPrivateKeyDownloaded = false;
+    let isPrivateKeyDownloaded = false;
 
     async function generateRecoveryKey(passphrase: string | undefined) {
         if (passphrase === undefined) {

@@ -72,6 +72,7 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "./src-ui"
+    "./src-ui",
+    "./eslint.config.mjs"
   ]
 }

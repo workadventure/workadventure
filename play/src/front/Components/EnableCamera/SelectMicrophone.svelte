@@ -8,7 +8,9 @@
     let editMode = false;
     export let selectedDevice: string | undefined = undefined;
     export let deviceList: MediaDeviceInfo[];
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        selectDevice: string | undefined;
+    }>();
 </script>
 
 <div

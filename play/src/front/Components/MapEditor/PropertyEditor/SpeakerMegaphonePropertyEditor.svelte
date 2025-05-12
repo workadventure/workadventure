@@ -8,7 +8,10 @@
 
     export let property: SpeakerMegaphonePropertyData;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 
     function onValueChange() {
         // Replace all special characters or spaces with an empty string

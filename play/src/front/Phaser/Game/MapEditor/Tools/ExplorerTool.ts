@@ -308,10 +308,10 @@ export class ExplorerTool implements MapEditorTool {
                 areaPreview = this.createAndSaveAreaPreview(config);
             }
             areaPreview.on(Phaser.Input.Events.POINTER_OVER, () => {
-                this.pointerOverHandler(areaPreview as AreaPreview);
+                this.pointerOverHandler(areaPreview);
             });
             areaPreview.on(Phaser.Input.Events.POINTER_OUT, () => {
-                this.pointerOutHandler(areaPreview as AreaPreview);
+                this.pointerOutHandler(areaPreview);
             });
             areaPreviews.set(key, areaPreview);
 

@@ -3,17 +3,19 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import LocationIcon from "../Icons/LocationIcon.svelte";
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import PinIcon from "../Icons/PinIcon.svelte";
+    import Select from "../Input/Select.svelte";
 
-    let entryPoint: string = $startLayerNamesStore[0];
     let walkAutomatically = false;
     let linkCopied = false;
-    const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
+    const gameScene = gameManager.getCurrentGameScene();
+    const currentPlayer = gameScene.CurrentPlayer;
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
+    const startPositions = gameScene.getStartPositionNames();
+    let entryPoint: string = startPositions[0];
 
     function copyLink() {
         // Analytics Client
@@ -112,17 +114,16 @@
         </div>
     </div>
     <section class="m-4 mt-7">
-        <select
-            class="bg-contrast rounded border border-solid border-white/20 mb-4 w-full "
+        <Select
             bind:value={entryPoint}
-            on:blur={() => {
+            onChange={() => {
                 updateInputFieldValue();
             }}
         >
-            {#each $startLayerNamesStore as entryPointName (entryPointName)}
+            {#each startPositions as entryPointName (entryPointName)}
                 <option value={entryPointName}>{entryPointName}</option>
             {/each}
-        </select>
+        </Select>
 
         <label for="walkto" class="flex cursor-pointer items-center relative my-4 ">
             <InputSwitch

@@ -32,14 +32,15 @@ async function init() {
   console.log("Value read:", Value.unwrap(value));
 
   // Save a variable in 5sec
-  setTimeout(async () => {
-    await client.saveVariable({
+  setTimeout(() => {
+    client.saveVariable({
       name: variableName,
       room: roomUrl,
       value: "New Value",
-    });
+    }).then(() => {
+      console.log("Value saved: New Value");
+    }).catch(e => console.error(e));
 
-    console.log("Value saved: New Value");
   }, 5000);
 
   // Listen a variable
@@ -55,4 +56,4 @@ async function init() {
   }
 }
 
-init();
+init().catch(e => console.error(e));

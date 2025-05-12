@@ -8,7 +8,9 @@
     export let tag: string;
     export let entitiesPrefabsVariants: EntityVariant[];
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        onSelectedTag: string;
+    }>();
 </script>
 
 {#if entitiesPrefabsVariants.length !== 0}

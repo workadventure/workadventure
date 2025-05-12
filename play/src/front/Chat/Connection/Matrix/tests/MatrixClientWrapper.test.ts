@@ -65,7 +65,6 @@ describe("MatrixClientWrapper", () => {
                 createClient
             );
 
-            // eslint-disable-next-line
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow();
         });
 
@@ -90,7 +89,7 @@ describe("MatrixClientWrapper", () => {
                 localUserStoreMock,
                 createClient
             );
-            // eslint-disable-next-line
+
             await expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
                 "Unable to connect to matrix, access token is null"
             );

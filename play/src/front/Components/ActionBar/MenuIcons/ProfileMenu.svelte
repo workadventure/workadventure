@@ -80,6 +80,7 @@
     function openEnableCameraScene() {
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
+        analyticsClient.editCamera();
     }
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
@@ -178,14 +179,32 @@
                 <AvailabilityStatusList statusInformation={getStatusInformation(statusToShow)} />
                 <HeaderMenuItem label={$LL.menu.sub.profile()} />
                 {#if showWokaNameMenuItem()}
-                    <ActionBarButton label={$LL.actionbar.profil()} on:click={() => openEditNameScene()}>
+                    <ActionBarButton
+                        label={$LL.actionbar.profil()}
+                        on:click={() => {
+                            openEditNameScene();
+                            analyticsClient.editName();
+                        }}
+                    >
                         <ProfilIcon />
                     </ActionBarButton>
                 {/if}
-                <ActionBarButton label={$LL.actionbar.woka()} on:click={() => openEditSkinScene()}>
+                <ActionBarButton
+                    label={$LL.actionbar.woka()}
+                    on:click={() => {
+                        openEditSkinScene();
+                        analyticsClient.editWoka();
+                    }}
+                >
                     <Woka userId={-1} placeholderSrc="" customWidth="26px" />
                 </ActionBarButton>
-                <ActionBarButton label={$LL.actionbar.companion()} on:click={() => openEditCompanionScene()}>
+                <ActionBarButton
+                    label={$LL.actionbar.companion()}
+                    on:click={() => {
+                        openEditCompanionScene();
+                        analyticsClient.editCompanion();
+                    }}
+                >
                     <Companion
                         userId={-1}
                         placeholderSrc="../static/images/default-companion.png"
@@ -211,6 +230,7 @@
                     label={$LL.actionbar.otherSettings()}
                     on:click={() => {
                         showMenuItem(SubMenusInterface.settings);
+                        analyticsClient.openedMenu();
                         openedMenuStore.close("profileMenu");
                     }}
                 >

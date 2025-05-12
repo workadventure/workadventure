@@ -7,6 +7,8 @@ class LocalWokaService implements WokaServiceInterface {
      * Returns the list of all available Wokas & Woka Parts for the current user.
      */
     async getWokaList(roomUrl: string, token: string): Promise<WokaList | undefined> {
+        // "import" does not support loading JSON files
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const wokaData: WokaList = await require("../data/woka.json");
         if (!wokaData) {
             return undefined;
@@ -23,6 +25,8 @@ class LocalWokaService implements WokaServiceInterface {
      * If one of the textures cannot be found, undefined is returned (and the user should be redirected to Woka choice page!)
      */
     async fetchWokaDetails(textureIds: string[]): Promise<WokaDetail[] | undefined> {
+        // "import" does not support loading JSON files
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const wokaData: WokaList = await require("../data/woka.json");
         const textures = new Map<string, string>();
         const searchIds = new Set(textureIds);

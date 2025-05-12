@@ -85,8 +85,10 @@ export class PositionDispatcher {
      * Warning, zone is not closed by this method.
      */
     private deleteZone(zone: Zone): void {
+        // eslint-disable-next-line @typescript-eslint/no-array-delete
         delete this.zones[zone.y][zone.x];
         if (Object.keys(this.zones[zone.y]).length === 0) {
+            // eslint-disable-next-line @typescript-eslint/no-array-delete
             delete this.zones[zone.y];
         }
     }

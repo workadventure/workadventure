@@ -18,7 +18,6 @@ export class UpdateWAMSettingCommand extends Command {
             this.wam.settings = {};
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
         const message: UpdateWAMSettingsMessage["message"] = this.updateWAMSettingsMessage.message;
         if (message === undefined) {
             console.warn("Empty settings message received");
@@ -30,13 +29,9 @@ export class UpdateWAMSettingCommand extends Command {
         //switch (message.$case) {
         //    case "updateMegaphoneSettingMessage": {
         this.wam.settings.megaphone = {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
             scope: message.updateMegaphoneSettingMessage.scope ?? this.oldConfig?.megaphone?.scope,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
             title: message.updateMegaphoneSettingMessage.title ?? this.oldConfig?.megaphone?.title,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
             rights: message.updateMegaphoneSettingMessage.rights ?? this.oldConfig?.megaphone?.rights,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-assignment
             enabled: message.updateMegaphoneSettingMessage.enabled ?? this.oldConfig?.megaphone?.enabled ?? false,
         };
         /*        break;

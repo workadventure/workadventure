@@ -6,7 +6,9 @@
     export let entityVariant: EntityVariant;
     export let isActive: boolean;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        selectEntity: EntityVariant;
+    }>();
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

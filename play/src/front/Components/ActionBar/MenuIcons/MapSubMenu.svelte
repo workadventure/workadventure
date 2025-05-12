@@ -23,10 +23,13 @@
     // svelte-ignore unused-export-let
     export let classList: string | undefined = undefined;
 
-    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions({
-        placement: "bottom-end",
-        //strategy: 'fixed',
-    });
+    const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
+        {
+            placement: "bottom-end",
+            //strategy: 'fixed',
+        },
+        8
+    );
 
     function closeMapMenu() {
         openedMenuStore.close("mapMenu");
@@ -67,7 +70,7 @@
         </div>
         {#if $openedMenuStore === "mapMenu"}
             <div
-                class="absolute mt-2 bg-contrast/80 backdrop-blur rounded-md  w-auto max-w-full  text-white"
+                class="absolute bg-contrast/80 backdrop-blur rounded-md  w-auto max-w-full  text-white"
                 data-testid="map-sub-menu"
                 use:floatingUiContent
                 use:clickOutside={closeMapMenu}

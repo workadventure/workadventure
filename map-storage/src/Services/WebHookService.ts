@@ -43,10 +43,10 @@ export class WebHookService {
                 }
             )
             .then((r) => {
-                console.debug(`Webhook called successfully: ${r.status} ${r.statusText}`);
+                console.debug(`[${new Date().toISOString()}] Webhook called successfully: ${r.status} ${r.statusText}`);
             })
             .catch((e: unknown) => {
-                console.error("Error while calling webhook:", e);
+                console.error(`[${new Date().toISOString()}] Error while calling webhook:`, e);
                 Sentry.captureException(
                     `Error while calling webhook: ${JSON.stringify(e)}. Domain: ${domain}, mapPath: ${
                         mapPath ?? "no map path"

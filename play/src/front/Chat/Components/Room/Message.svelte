@@ -22,7 +22,9 @@
 
     let messageRef: HTMLDivElement | undefined;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        updateMessageBody: { id: string };
+    }>();
 
     const {
         id,
@@ -60,7 +62,6 @@
     const reactionsWithUsers = derived(
         [reactions, ...Array.from(reactions.values()).map((reaction) => reaction.users)],
         ([$reactions, ...$users]) => {
-            console.log("Reactions with users", $reactions, $users);
             return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
         }
     );
@@ -78,7 +79,7 @@
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
         class="message-grid container-grid justify-start overflow-visible relative {replyDepth === 0
             ? 'max-w-[calc(100% - 100px)]'
-            : ''} {!isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
+            : ''} {!$isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
             ? 'justify-end grid-container-inverted pr-4'
             : 'justify-start pl-3'}"
     >
@@ -94,7 +95,7 @@
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {!isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-contrast' : ''}
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0 ? 'bg-secondary' : ''}
-                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-1' : ''}
+                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-0.5' : ''}
                     {!isQuotedMessage ? 'my' : ''}"
         >
             {#if $isDeleted}

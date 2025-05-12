@@ -152,13 +152,16 @@ export class MetaTagsBuilder {
         const mapNameProperty = mapFile.properties.find((property) => property.name === "mapName");
         const mapDescriptionProperty = mapFile.properties.find((property) => property.name === "mapDescription");
 
+        const mapNameValue = mapNameProperty?.value;
+        const mapDescriptionValue = mapDescriptionProperty?.value;
+
         return {
-            title: mapNameProperty?.value
-                ? `${MetaTagsDefaultValue.title} - ${String(mapNameProperty.value)}`
-                : MetaTagsDefaultValue.title,
-            description: mapDescriptionProperty?.value
-                ? String(mapDescriptionProperty.value)
-                : MetaTagsDefaultValue.description,
+            title:
+                typeof mapNameValue === "string"
+                    ? `${MetaTagsDefaultValue.title} - ${mapNameValue}`
+                    : MetaTagsDefaultValue.title,
+            description:
+                typeof mapDescriptionValue === "string" ? mapDescriptionValue : MetaTagsDefaultValue.description,
             author: MetaTagsDefaultValue.author,
             provider: MetaTagsDefaultValue.provider,
             favIcons: MetaTagsDefaultValue.favIcons,

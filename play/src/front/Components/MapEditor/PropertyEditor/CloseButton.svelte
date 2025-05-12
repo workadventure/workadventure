@@ -1,7 +1,9 @@
-<script>
+<script lang="ts">
     import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: undefined;
+    }>();
 </script>
 
 <button

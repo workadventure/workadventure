@@ -10,10 +10,16 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { peerStore } from "../../../Stores/PeerStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 
     export let last: boolean | undefined = undefined;
+    export let chatEnabledInAdmin = false;
 
-    const dispatch = createEventDispatcher();
+    const proximityChatRoom = gameManager.getCurrentGameScene().proximityChatRoom;
+
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function toggleChat() {
         if (!$chatVisibilityStore) {
@@ -24,6 +30,8 @@
         chatVisibilityStore.set(!$chatVisibilityStore);
         dispatch("click");
     }
+
+    const shortcut = ["c"];
 
     let chatAvailable = false;
     gameManager
@@ -43,11 +51,17 @@
     on:click={() => {
         toggleChat();
         navChat.switchToChat();
+        if (!chatEnabledInAdmin) {
+            selectedRoomStore.set(proximityChatRoom);
+            proximityChatRoom.hasUnreadMessages.set(false);
+        }
         analyticsClient.openedChat();
     }}
-    classList="group/btn-message-circle rounded-r-lg pr-2 @sm/actions:rounded-r-none @sm/actions:pr-0"
+    classList="group/btn-message-circle rounded-r-lg pr-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pr-0'}"
     tooltipTitle={$LL.actionbar.help.chat.title()}
-    tooltipDesc={$LL.actionbar.help.chat.desc()}
+    desc={$LL.actionbar.help.chat.desc()}
+    media="./static/Videos/Chat.mp4"
+    tooltipShortcuts={shortcut}
     dataTestId="chat-btn"
     state={chatAvailable ? "normal" : "disabled"}
     {last}

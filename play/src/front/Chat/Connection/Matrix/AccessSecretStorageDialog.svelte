@@ -107,9 +107,9 @@
                 placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
                 bind:value={passphraseInput}
                 on:keydown={(key) => {
-                    key.key === "Enter"
-                        ? checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error))
-                        : undefined;
+                    if (key.key === "Enter") {
+                        checkAndSubmitRecoveryOrPassphraseIfValid().catch((error) => console.error(error));
+                    }
                 }}
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}

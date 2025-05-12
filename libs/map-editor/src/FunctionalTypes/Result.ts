@@ -1,3 +1,5 @@
+import { asError } from "catch-unknown";
+
 export type Success<T> = { ok: true; value: T };
 export type Failure<E> = { ok: false; error: E };
 export type Result<T, E> = Success<T> | Failure<E>;
@@ -31,6 +33,6 @@ export function resultOrThrow<T, E>(result: Result<T, E>): T {
     if (result.ok) {
         return result.value;
     } else {
-        throw result.error;
+        throw asError(result.error);
     }
 }

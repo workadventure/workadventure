@@ -45,20 +45,6 @@
     function noDrag() {
         return false;
     }
-
-    /*onMount(() => {
-        // Subscribe to the emote menu store and close the app menu if the emote menu is opened
-        unsubscriptionSecondaryZoneMenuStore = activeSecondaryZoneActionBarStore.subscribe((value) => {
-            if (value !== undefined) {
-                appMenuOpened = false;
-            }
-        });
-    });
-
-    onDestroy(() => {
-        // Unsubscribe to the emote menu store
-        if (unsubscriptionSecondaryZoneMenuStore) unsubscriptionSecondaryZoneMenuStore();
-    });*/
 </script>
 
 {#if oneApplicationIsActivated()}
@@ -71,9 +57,7 @@
         on:focus|preventDefault={noDrag}
         on:blur|preventDefault={noDrag}
         on:click={() => {
-            () => {
-                openedMenuStore.toggle("appMenu");
-            };
+            openedMenuStore.toggle("appMenu");
         }}
         class="bottom-action-button"
     >
@@ -103,7 +87,7 @@
                                 klaxoonButtonHandler();
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.klaxoonToolActivated}
                         >
                             <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
@@ -120,7 +104,7 @@
                                 window.open(`https://drive.google.com/drive/home`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.googleDriveToolActivated}
                         >
                             <img draggable="false" src={googleDriveSvg} style="padding: 2px" alt="Goodle Doc" />
@@ -135,7 +119,7 @@
                                 window.open(`https://docs.google.com/document/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.googleDocsToolActivated}
                         >
                             <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Goodle Doc" />
@@ -150,7 +134,7 @@
                                 window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.googleSheetsToolActivated}
                         >
                             <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Google Sheet" />
@@ -165,7 +149,7 @@
                                 window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.googleSlidesToolActivated}
                         >
                             <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Google Slide" />
@@ -180,7 +164,7 @@
                                 window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.eraserToolActivated}
                         >
                             <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Eraser" />
@@ -195,7 +179,7 @@
                                 window.open(`https://excalidraw.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.excalidrawToolActivated}
                         >
                             <img draggable="false" src={excalidrawSvg} style="padding: 2px" alt="Excalidraw" />
@@ -210,7 +194,7 @@
                                 window.open(`https://excalidraw.com`, "_blanck");
                                 openedMenuStore.close("appMenu");
                             }}
-                            id={`button-app-klaxoon`}
+                            id="button-app-klaxoon"
                             disabled={!connectionManager.cardsToolActivated}
                         >
                             <img draggable="false" src={cardsPng} style="padding: 2px" alt="Excalidraw" />

@@ -13,6 +13,7 @@
     import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
     import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     //let container: HTMLElement;
@@ -123,6 +124,7 @@
             fullScreenCowebsite.set(false);
         } else {
             fullScreenCowebsite.set(true);
+            analyticsClient.fullScreenCowebsite();
         }
     }
 
@@ -143,6 +145,7 @@
     let tabsContainerWidth = 0;
     let tabsOverflowing = false;
     let tabsScrollX = 0;
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     $: tabsContainerWidth, $coWebsites, (tabsOverflowing = areTabsOverflowing());
 
     function areTabsOverflowing(): boolean {

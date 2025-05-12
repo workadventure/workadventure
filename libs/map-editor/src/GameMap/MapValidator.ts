@@ -521,7 +521,7 @@ export class MapValidator {
         let map: unknown;
         try {
             map = JSON.parse(data);
-        } catch (_exhaustiveCheck) {
+        } catch {
             return false;
         }
         return ITiledMap.safeParse(map).success;

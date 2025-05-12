@@ -35,10 +35,13 @@
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
+    import { draftMessageService } from "../../Services/DraftMessageService";
+    import { MatrixChatRoom } from "../../Connection/Matrix/MatrixChatRoom";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import MessageInput from "./MessageInput.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
-    import { IconCircleX, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import { IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
 
     export let room: ChatRoom;
     export let disabled = false;
@@ -56,10 +59,13 @@
     let fileAttachementEnabled = false;
     let applicationProperty: ApplicationProperty | undefined = undefined;
     const isProximityChatRoom = room instanceof ProximityChatRoom;
+    let replyMessageId: string | null = null;
+    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
         if (chatMessage !== null) {
             messageInput.focus();
+            replyMessageId = chatMessage.id;
         }
     });
 
@@ -92,19 +98,6 @@
             const messageToSend = message.replace(/<br>/g, "\n");
             sendMessage(messageToSend);
         }
-        if (keyDownEvent.key === "Enter" && files && files.length > 0) {
-            if (files && !(room instanceof ProximityChatRoom)) {
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
-
-                room.sendFiles(fileList).catch((error) => console.error(error));
-                files = [];
-                filesPreview = [];
-            }
-            return;
-        }
     }
 
     function sendMessage(messageToSend: string) {
@@ -114,6 +107,20 @@
         // close application part
         applicationProperty = undefined;
         applicationComponentOpened = false;
+
+        // send files
+        if (files && files.length > 0) {
+            if (!(room instanceof ProximityChatRoom)) {
+                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                    fileListAcc.items.add(currentFile.file);
+                    return fileListAcc;
+                }, new DataTransfer()).files;
+
+                room.sendFiles(fileList).catch((error) => console.error(error));
+                files = [];
+                filesPreview = [];
+            }
+        }
 
         // send message
         if (messageToSend.trim().length !== 0) {
@@ -128,6 +135,7 @@
 
     function unselectChatMessageToReply() {
         selectedChatMessageToReply.set(null);
+        replyMessageId = null;
     }
 
     function onInputHandler() {
@@ -137,15 +145,32 @@
         }
     }
 
-    onMount(() => {
+    onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
+        const draft = await draftMessageService.loadDraft(draftId);
+        if (draft) {
+            message = draft.message ?? "";
+            if (draft.replyingToMessageId) {
+                if (room instanceof MatrixChatRoom) {
+                    let loadReplyMessage = await room.getMessageById(draft.replyingToMessageId);
+                    selectedChatMessageToReply.set(loadReplyMessage ?? null);
+                }
+            }
+        }
     });
 
     onDestroy(() => {
-        selectedChatChatMessageToReplyUnsubscriber();
+        draftMessageService.saveDraft({
+            id: draftId,
+            roomId: room.id,
+            userId: localUserStore.getChatId(),
+            message,
+            replyingToMessageId: replyMessageId ?? null,
+        });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
+        selectedChatChatMessageToReplyUnsubscriber();
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
@@ -368,23 +393,33 @@
 </script>
 
 {#if files.length > 0 && !(room instanceof ProximityChatRoom)}
-    <div class="w-full pt-2 !bg-blue-300/10 rounded-xl">
-        <div class="flex p-2  gap-2 w-full overflow-x-scroll overflow-y-hidden rounded-lg ">
+    <div class="w-full p-1">
+        <div class="flex flex-row gap-2 w-full overflow-visible no-scroll-bar rounded-lg p-2 bg-contrast/80">
             {#each filesPreview as preview (preview.id)}
                 <div
-                    class="relative content-center h-[15rem] w-[15rem]  min-h-[15rem] min-w-[15rem] overflow-hidden rounded-xl backdrop-opacity-10"
+                    class="relative content-center {preview.type.includes('image')
+                        ? 'w-20'
+                        : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
-                    <button class="absolute right-1 top-1 !pr-0" on:click={() => deleteFile(preview.id)}>
-                        <IconCircleX class="hover:cursor-pointer hover:opacity-10" font-size="24" />
+                    <button
+                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -left-2 -top-2"
+                        on:click={() => deleteFile(preview.id)}
+                    >
+                        <IconX font-size="12" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="w-full h-full" src={preview.url} alt={preview.name} />
+                        <img class="w-full h-full object-cover rounded-[10px]" src={preview.url} alt={preview.name} />
                     {:else}
-                        <div class="text-center">
-                            {preview.name}
-                        </div>
-                        <div class="absolute bottom-0 left-0">
-                            {formatBytes(preview.size)}
+                        <div
+                            title={preview.name}
+                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px] "
+                        >
+                            <span class="line-clamp-2 indent-3 text-xs">
+                                {preview.name}
+                            </span>
+                            <div class="rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
+                                {formatBytes(preview.size)}
+                            </div>
                         </div>
                     {/if}
                 </div>
@@ -663,3 +698,16 @@
         </button>
     {/if}
 </div>
+
+<style>
+    .no-scroll-bar {
+        max-width: calc(100% + 15px);
+    }
+    .no-scroll-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scroll-bar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>

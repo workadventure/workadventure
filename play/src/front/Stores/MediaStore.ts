@@ -948,7 +948,7 @@ localStreamStore.subscribe((streamResult) => {
 // When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
 // If the user did not select the new speaker, the first new speaker cannot be selected automatically.
 // It is ok to not unsubscribe to this store because it is a singleton.
-// eslint-disable-next-line svelte/no-ignored-unsubscribe
+// // eslint-disable-next-line svelte/no-ignored-unsubscribe
 /*speakerSelectedStore.subscribe((speaker) => {
     const oldValue = localUserStore.getSpeakerDeviceId();
     const currentValue = speaker;

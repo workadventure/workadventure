@@ -52,10 +52,9 @@ class FakeRequest {
     params: object = {};
     constructor(
         public query: { [key: string]: string } = {},
-        private headers: object = { Authorization: NOT_A_SECRET }
+        private headers: { [key: string]: string } = { Authorization: NOT_A_SECRET }
     ) {}
     header(header: string): string {
-        // @ts-ignore
         return this.headers[header];
     }
 }
@@ -68,12 +67,10 @@ export interface MockAuthTokenData {
 }
 
 export class JWTTokenManagerMock {
-    // @ts-ignore
     public verifyAdminSocketToken(_token: string): { authorizedRoomIds: string[] } {
         return { authorizedRoomIds: [] };
     }
 
-    // @ts-ignore
     public createAuthToken(identifier: string, _accessToken?: string, username?: string, _locale?: string): string {
         return "";
     }
@@ -108,8 +105,7 @@ describe("AuthenticatedProviderController", () => {
         });
         const res = new FakeResponse(200);
 
-        // @ts-ignore
-        mockApp.simulateRequest("/foo/bar", req, res);
+        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         await subject.promise;
         expect(res.lastJsonData).toEqual("success");
         expect(subject.lastRequestParameters).toEqual(["room", "avaliduser"]);
@@ -123,8 +119,7 @@ describe("AuthenticatedProviderController", () => {
         const req = new FakeRequest();
         const res = new FakeResponse(400);
 
-        // @ts-ignore
-        mockApp.simulateRequest("/foo/bar", req, res);
+        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("bad roomUrl URL parameter");
     });
 
@@ -136,8 +131,7 @@ describe("AuthenticatedProviderController", () => {
         const req = new FakeRequest(undefined, {});
         const res = new FakeResponse(401);
 
-        // @ts-ignore
-        mockApp.simulateRequest("/foo/bar", req, res);
+        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("Undefined authorization header");
     });
 
@@ -153,8 +147,7 @@ describe("AuthenticatedProviderController", () => {
         });
         const res = new FakeResponse(401);
 
-        // @ts-ignore
-        mockApp.simulateRequest("/foo/bar", req, res);
+        mockApp.simulateRequest("/foo/bar", req as unknown as Request, res as unknown as Response);
         expect(res.lastSentData).toEqual("Invalid token sent");
     });
 });

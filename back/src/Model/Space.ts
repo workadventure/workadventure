@@ -192,6 +192,7 @@ export class Space implements CustomJsonReplacerInterface {
             },
         });
     }
+
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
         debug(`${this.name} => watcher removed ${watcher.id}`);
@@ -200,7 +201,7 @@ export class Space implements CustomJsonReplacerInterface {
     /**
      * Notify all watchers expect the one that sent the message
      */
-    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher | undefined) {
+    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher) {
         for (const watcher_ of this.users.keys()) {
             if (exceptWatcher && watcher_.id === exceptWatcher.id) {
                 continue;
@@ -232,7 +233,6 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public dispatchPublicEvent(publicEvent: PublicEvent) {
-        console.log("dispatchPublicEvent to all pushers", publicEvent);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",

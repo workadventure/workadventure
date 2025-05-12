@@ -75,7 +75,6 @@
         roomNameSelected.set(roomName);
         // Use the room url to join the room
         scriptUtils.goToPage(roomUrl);
-        LL;
     }
 </script>
 

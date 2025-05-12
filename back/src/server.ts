@@ -2,8 +2,8 @@
 import * as grpc from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import App from "./src/App";
-import { roomManager } from "./src/RoomManager";
+import App from "./App";
+import { roomManager } from "./RoomManager";
 import {
     GRPC_PORT,
     ENABLE_TELEMETRY,
@@ -11,9 +11,9 @@ import {
     SENTRY_RELEASE,
     SENTRY_ENVIRONMENT,
     SENTRY_TRACES_SAMPLE_RATE,
-} from "./src/Enum/EnvironmentVariable";
-import { telemetryService } from "./src/Services/TelemetryService";
-import { spaceManager } from "./src/SpaceManager";
+} from "./Enum/EnvironmentVariable";
+import { telemetryService } from "./Services/TelemetryService";
+import { spaceManager } from "./SpaceManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));

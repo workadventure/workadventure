@@ -10,7 +10,10 @@
     export let isOpen: boolean;
     export let onSave: (config: JitsiRoomConfigData) => void;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 
     let defaultConfig: JitsiRoomConfigData = {
         startWithAudioMuted: false,

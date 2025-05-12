@@ -15,10 +15,7 @@
 
     const emojiClickEventHandler = onEmojiClick;
 
-    $: {
-        const language = $locale.split("-")[0];
-        const country = $locale.split("-")[1];
-
+    function loadLanguage(language: string, country: string) {
         switch (language) {
             // See list of supported languages here: https://github.com/nolanlawson/emoji-picker-element/tree/master/src/picker/i18n
             case "ar": {
@@ -173,6 +170,13 @@
                 // Use default English
             }
         }
+    }
+
+    $: {
+        const language = $locale.split("-")[0];
+        const country = $locale.split("-")[1];
+
+        loadLanguage(language, country);
     }
 
     onMount(() => {

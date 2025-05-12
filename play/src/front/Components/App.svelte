@@ -22,6 +22,7 @@
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
+    import { urlManager } from "../Url/UrlManager";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -82,11 +83,16 @@
 
         // the ?phaserMode=canvas parameter can be used to force Canvas usage
         const params = new URLSearchParams(document.location.search.substring(1));
-        const phaserMode = params.get("phaserMode");
+        let phaserMode: string | null | undefined = params.get("phaserMode");
+
+        if (phaserMode === null) {
+            phaserMode = urlManager.getHashParameter("phaserMode");
+        }
+
         let mode: number;
         switch (phaserMode) {
             case "auto":
-            case null:
+            case undefined:
                 mode = Phaser.AUTO;
                 break;
             case "canvas":

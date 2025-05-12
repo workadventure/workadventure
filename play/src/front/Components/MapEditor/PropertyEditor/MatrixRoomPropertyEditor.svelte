@@ -11,7 +11,10 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: MatrixRoomPropertyData;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
     let isCreatingRoom = false;
     let creationRoomError = false;
     function onValueChange() {

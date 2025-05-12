@@ -1,6 +1,5 @@
 <script lang="ts">
     import { setContext } from "svelte";
-    import { get } from "svelte/store";
     import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
@@ -23,6 +22,7 @@
     import { mapEditorModeStore } from "../../../Stores/MapEditorStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import WorldIcon from "../../Icons/WorldIcon.svelte";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
@@ -44,10 +44,8 @@
         resetChatVisibility();
         resetModalVisibility();
 
-        console.log("1showRoomList", get(openedMenuStore));
         roomListVisibilityStore.set(true);
         openedMenuStore.closeAll();
-        console.log("2showRoomList", get(openedMenuStore));
     }
 
     function openExternalModuleCalendar() {
@@ -68,30 +66,37 @@
 </script>
 
 <!-- Room list part -->
-{#if $roomListActivated}
-    <div on:click|stopPropagation={showRoomList} on:keydown|stopPropagation={showRoomList}>
-        <ActionBarButton label={$LL.actionbar.help.roomList.title()}>
-            <WorldIcon />
-        </ActionBarButton>
-    </div>
+{#if $roomListActivated || $userIsAdminStore}
+    <ActionBarButton
+        on:click={showRoomList}
+        on:keydown={showRoomList}
+        label={$LL.actionbar.help.roomList.title()}
+        state={$roomListActivated ? "normal" : "disabled"}
+    >
+        <WorldIcon />
+    </ActionBarButton>
 {/if}
 
 <!-- Calendar integration -->
-<ActionBarButton
-    on:click={openExternalModuleCalendar}
-    label={$LL.actionbar.calendar()}
-    state={$isCalendarActivatedStore ? "normal" : "disabled"}
->
-    <IconCalendar width="20" height="20" />
-</ActionBarButton>
+{#if $isCalendarActivatedStore || $userIsAdminStore}
+    <ActionBarButton
+        on:click={openExternalModuleCalendar}
+        label={$LL.actionbar.calendar()}
+        state={$isCalendarActivatedStore ? "normal" : "disabled"}
+    >
+        <IconCalendar width="20" height="20" />
+    </ActionBarButton>
+{/if}
 
-<ActionBarButton
-    on:click={openExternalModuleTodoList}
-    label={$LL.actionbar.todoList()}
-    state={$isTodoListActivatedStore ? "normal" : "disabled"}
->
-    <IconCheckList width="20" height="20" />
-</ActionBarButton>
+{#if $isTodoListActivatedStore || $userIsAdminStore}
+    <ActionBarButton
+        on:click={openExternalModuleTodoList}
+        label={$LL.actionbar.todoList()}
+        state={$isTodoListActivatedStore ? "normal" : "disabled"}
+    >
+        <IconCheckList width="20" height="20" />
+    </ActionBarButton>
+{/if}
 
 <!-- External module action bar -->
 <ExternalComponents zone="actionBarAppsMenu" />

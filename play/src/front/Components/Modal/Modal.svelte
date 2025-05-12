@@ -63,7 +63,17 @@
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
         <div
-            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 hover:opacity-100 opacity-25 transition-opacity duration-300"
+            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
+                ${
+                    isFullScreened || isMobile
+                        ? "top-4 right-4"
+                        : `${
+                              $modalIframeStore?.position == "center" || $modalIframeStore?.position == "left"
+                                  ? "flex-col gap-1 top-0 -right-20"
+                                  : "flex-col gap-1 top-0 -left-20"
+                          }`
+                }
+            `}
         >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allowFullScreen}
@@ -102,7 +112,8 @@
             {/if}
             <button
                 on:click|preventDefault|stopPropagation={close}
-                class="btn btn-danger rounded"
+                class="btn btn-danger rounded m-0"
+                style={isFullScreened == true ? "" : "margin: 0px;"}
                 data-testid="close-modal-button"
             >
                 <XIcon />

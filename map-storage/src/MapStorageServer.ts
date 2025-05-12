@@ -27,6 +27,7 @@ import {
 } from "@workadventure/messages";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { asError } from "catch-unknown";
 import { DeleteCustomEntityMapStorageCommand } from "./Commands/CustomEntity/DeleteCustomEntityMapStorageCommand";
 import { ModifyCustomEntityMapStorageCommand } from "./Commands/CustomEntity/ModifyCustomEntityMapStorageCommand";
 import { UploadEntityMapStorageCommand } from "./Commands/CustomEntity/UploadEntityMapStorageCommand";
@@ -77,15 +78,10 @@ const mapStorageServer: MapStorageServer = {
             };
             callback(null, editMapCommandsArrayMessage);
         } catch (e: unknown) {
-            console.error("An error occurred in handleClearAfterUpload", e);
-            Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
-            let message: string;
-            if (typeof e === "object" && e !== null) {
-                message = e.toString();
-            } else {
-                message = "Unknown error";
-            }
-            callback({ name: "MapStorageError", message }, null);
+            const error = asError(e);
+            console.error(`[${new Date().toISOString()}] An error occurred in handleClearAfterUpload`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: error.message }, null);
         }
     },
 
@@ -173,7 +169,7 @@ const mapStorageServer: MapStorageServer = {
                                 };
                             }
                         } else {
-                            console.log(`Could not find area with id: ${message.id}`);
+                            console.log(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
                         }
                         break;
                     }
@@ -227,7 +223,7 @@ const mapStorageServer: MapStorageServer = {
                                 new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
                             );
                         } else {
-                            console.log(`Could not find entity with id: ${message.id}`);
+                            console.log(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
                         }
                         break;
                     }
@@ -292,13 +288,11 @@ const mapStorageServer: MapStorageServer = {
                         break;
                     }
                     case "updateWAMSettingsMessage": {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                         const message = editMapMessage.updateWAMSettingsMessage;
                         const wam = gameMap.getWam();
                         if (!wam) {
                             throw new Error("WAM is not defined");
                         }
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -339,7 +333,7 @@ const mapStorageServer: MapStorageServer = {
                 callback(null, editMapCommandMessage);
             });
         })().catch((e: unknown) => {
-            console.log(e);
+            console.error(e);
             callback(null, {
                 id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
                 editMapMessage: {

@@ -214,13 +214,13 @@ export class UploadController {
                     // Delete the uploaded ZIP file from the disk
                     fs.unlink(zipFile.path, (err) => {
                         if (err) {
-                            console.error("Error deleting file:", err);
+                            console.error(`[${new Date().toISOString()}] Error deleting file:`, err);
                             Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
                         }
                     });
                     for (const wamUrl of wamToPurge) {
                         uploadDetector.refresh(wamUrl).catch((err) => {
-                            console.error(err);
+                            console.error(`[${new Date().toISOString()}]`, err);
                             Sentry.captureException(err);
                         });
                     }
@@ -359,7 +359,7 @@ export class UploadController {
                         if (file) {
                             fs.unlink(file.path, (err) => {
                                 if (err) {
-                                    console.error("Error deleting file:", err);
+                                    console.error(`[${new Date().toISOString()}] Error deleting file:`, err);
                                     Sentry.captureException(`Error deleting file: ${JSON.stringify(err)}`);
                                 }
                             });
@@ -367,7 +367,7 @@ export class UploadController {
 
                         if (extension === ".wam" && wamFile) {
                             uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
-                                console.error(err);
+                                console.error(`[${new Date().toISOString()}]`, err);
                                 Sentry.captureException(err);
                             });
                             await this.mapListService.updateWAMFileInCache(req.hostname, filePath, wamFile);
@@ -380,7 +380,7 @@ export class UploadController {
                         this.uploadLimiter.delete(virtualPath);
                     }
                 })().catch((e) => {
-                    console.error(e);
+                    console.error(`[${new Date().toISOString()}]`, e);
                     Sentry.captureException(e);
                     next(e);
                 });
@@ -428,7 +428,6 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const patchedContent = jsonpatch.applyPatch(
                         content,
                         req.body as Operation[],
@@ -455,7 +454,7 @@ export class UploadController {
                     await this.fileSystem.writeStringAsFile(virtualPath, patchedContentString);
 
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
-                        console.error(err);
+                        console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
 
@@ -468,7 +467,7 @@ export class UploadController {
                     this.uploadLimiter.delete(virtualPath);
                 }
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });
@@ -602,16 +601,16 @@ export class UploadController {
                 archive.on("warning", function (err) {
                     if (err.code === "ENOENT") {
                         // log warning
-                        console.warn("File not found: ", err);
+                        console.warn(`[${new Date().toISOString()}] File not found: `, err);
                     } else {
-                        console.error("A warning occurred while Zipping file: ", err);
+                        console.error(`[${new Date().toISOString()}] A warning occurred while Zipping file: `, err);
                         Sentry.captureException(`A warning occurred while Zipping file: ${JSON.stringify(err)}`);
                     }
                 });
 
                 // good practice to catch this error explicitly
                 archive.on("error", function (err) {
-                    console.error("An error occurred while Zipping file: ", err);
+                    console.error(`[${new Date().toISOString()}] An error occurred while Zipping file: `, err);
                     Sentry.captureException(`An error occurred while Zipping file: ${JSON.stringify(err)}`);
                     res.status(500).send("An error occurred");
                 });
@@ -623,7 +622,7 @@ export class UploadController {
 
                 await archive.finalize();
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });
@@ -663,7 +662,10 @@ export class UploadController {
                         try {
                             await Promise.all(promises);
                         } catch (error) {
-                            console.error("Failed to execute all request on resourceUrl", error);
+                            console.error(
+                                `[${new Date().toISOString()}] Failed to execute all request on resourceUrl`,
+                                error
+                            );
                             Sentry.captureMessage(
                                 `Failed to execute all request on resourceUrl ${JSON.stringify(error)}`
                             );
@@ -676,7 +678,7 @@ export class UploadController {
                 if (isWamFile) {
                     // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
-                        console.error(err);
+                        console.error(`[${new Date().toISOString()}]`, err);
                         Sentry.captureException(err);
                     });
                     //await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
@@ -686,7 +688,7 @@ export class UploadController {
 
                 res.sendStatus(204);
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });
@@ -732,7 +734,7 @@ export class UploadController {
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(200);
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });
@@ -774,7 +776,7 @@ export class UploadController {
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(201);
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });
@@ -831,7 +833,7 @@ export class UploadController {
                     throw e;
                 }
             })().catch((e) => {
-                console.error(e);
+                console.error(`[${new Date().toISOString()}]`, e);
                 Sentry.captureException(e);
                 next(e);
             });

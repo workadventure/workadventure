@@ -96,14 +96,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public get description(): string | undefined {
         const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
             (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.description;
     }
 
     public get searchable(): boolean | undefined {
         const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
             (p) => p.type === "areaDescriptionProperties"
-        ) as AreaDescriptionPropertyData | undefined;
+        );
         return descriptionProperty?.searchable;
     }
 

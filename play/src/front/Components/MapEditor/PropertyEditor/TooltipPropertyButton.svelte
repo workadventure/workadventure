@@ -11,7 +11,10 @@
     export let property: TooltipPropertyData;
     let infinity = property.duration == -1;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: undefined;
+        close: undefined;
+    }>();
 
     function onValueChange() {
         dispatch("change");

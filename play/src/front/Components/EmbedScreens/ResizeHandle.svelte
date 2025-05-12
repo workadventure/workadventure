@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let minHeight: number;
     export let maxHeight: number;
@@ -38,6 +39,7 @@
         document.removeEventListener("mouseup", stopDragging);
         document.removeEventListener("touchmove", handleDragging);
         document.removeEventListener("touchend", stopDragging);
+        analyticsClient.resizeCameraLayout();
     }
 
     onMount(() => {

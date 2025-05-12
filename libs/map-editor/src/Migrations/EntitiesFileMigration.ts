@@ -4,7 +4,7 @@ import { EntityCollectionRaw } from "../types";
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
  * Only the last version has his own type
  */
-/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 export interface Migrations {
     [migrationVersionKey: string]: (fileContent: any) => any;
 }

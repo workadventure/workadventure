@@ -5,7 +5,9 @@
     export let textColor = "text-white";
     import { createEventDispatcher } from "svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+    }>();
 
     function handleClick(event: Event) {
         event.preventDefault();

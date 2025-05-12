@@ -24,6 +24,8 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$currentPlayerGroupLockStateStore ? "forbidden" : "normal"}
     dataTestId="lock-button"
+    media="./static/Videos/LockBubble.mp4"
+    desc={$LL.actionbar.help.lock.desc()}
 >
     {#if $currentPlayerGroupLockStateStore}
         <LockIcon />

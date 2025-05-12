@@ -7,7 +7,9 @@
     export let content: Readable<ChatMessageContent>;
     export let hasDepth: false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        updateMessageBody: void;
+    }>();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -72,6 +74,8 @@
             unsubscriber();
         }
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <div
@@ -94,6 +98,33 @@
         .message-bubble a {
             text-decoration: underline;
             opacity: 0.75;
+        }
+        pre {
+            margin: 0;
+        }
+        code {
+            display: block;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.25em 0.5em;
+            border-radius: 8px;
+            overflow-x: auto;
+            padding: 0.2em 0.5em;
+        }
+        ::-webkit-scrollbar {
+            width: 2px;
+            height: 6px;
+        }
+
+        /* Track */
+        /* Track */
+        ::-webkit-scrollbar-track {
+        }
+
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3px;
         }
     </style>
 </div>

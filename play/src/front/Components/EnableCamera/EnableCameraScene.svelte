@@ -183,6 +183,7 @@
     function playSoundClick() {
         sound.play().catch((e) => console.error(e));
     }
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" on:submit|preventDefault={submit}>

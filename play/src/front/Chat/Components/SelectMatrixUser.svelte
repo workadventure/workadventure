@@ -12,7 +12,9 @@
     let items: SelectItem[] = [];
     const chat = gameManager.chatConnection;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        error: { error: string };
+    }>();
     const { searchWorldMembers } = searchChatMembersRule();
 
     function handleFilter(e: CustomEvent) {

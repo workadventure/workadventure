@@ -30,7 +30,7 @@ class OutputAudioWorkletProcessor extends AudioWorkletProcessor {
 
         let nextChunk: PCMData | undefined;
         let currentOffset = 0;
-        // eslint-disable-next-line no-cond-assign
+
         while ((nextChunk = this.audioQueue[0])) {
             if (currentOffset + nextChunk.pcmData.length <= outputData.length) {
                 outputData.set(nextChunk.pcmData, currentOffset);

@@ -220,8 +220,8 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     private getAreaEditorToolObjectsFromGameObjects(
         gameObjects: Phaser.GameObjects.GameObject[]
     ): (AreaPreview | SizeAlteringSquare)[] {
-        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj)) as AreaPreview[];
-        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj)) as SizeAlteringSquare[];
+        const areaPreviews = gameObjects.filter((obj) => this.isAreaPreview(obj));
+        const sizeAlteringSquares = gameObjects.filter((obj) => this.isSizeAlteringSquare(obj));
         return [...areaPreviews, ...sizeAlteringSquares];
     }
 

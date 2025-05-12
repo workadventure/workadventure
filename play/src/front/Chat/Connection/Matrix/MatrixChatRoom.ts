@@ -184,7 +184,7 @@ export class MatrixChatRoom
         });
 
         const result = await Promise.all(decryptMessagesPromises);
-        const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+        const messages = result.filter((message) => message !== undefined);
         this.messages.push(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -204,7 +204,6 @@ export class MatrixChatRoom
             return new MatrixChatMessage(event, this.matrixRoom);
         }
         if (event.getType() === "m.reaction") {
-            console.count(`new reaction :  ${get(this.name)}`);
             this.handleNewMessageReaction(event, messages);
             this.addEventContentInMemory(event);
         }
@@ -212,7 +211,6 @@ export class MatrixChatRoom
     }
 
     private startHandlingChatRoomEvents() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.matrixRoom.on(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.on(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.on(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -353,7 +351,6 @@ export class MatrixChatRoom
                 );
                 return;
             }
-            console.log("👮🏻Messages sans reactions", messages);
             //TODO : voir si reaction arrive avant le message
             // const newMessageReactionMap = new MapStore<string, MatrixChatMessageReaction>();
             // newMessageReactionMap.set(reactionKey, new MatrixChatMessageReaction(this.matrixRoom, event));
@@ -455,7 +452,7 @@ export class MatrixChatRoom
 
             const result = await Promise.all(tempMatrixChatMessages);
 
-            const messages = result.filter((message) => message !== undefined) as MatrixChatMessage[];
+            const messages = result.filter((message) => message !== undefined);
             this.messages.unshift(...messages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (messages.length === 0) {
@@ -466,7 +463,6 @@ export class MatrixChatRoom
 
     private getReactionEvent(event: MatrixEvent) {
         const relation = event.getRelation();
-        console.log({ relation });
         if (relation) {
             if (relation.rel_type === "m.annotation") {
                 const targetEventId = relation.event_id;
@@ -674,7 +670,6 @@ export class MatrixChatRoom
     }
 
     destroy() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
         this.matrixRoom.off(RoomEvent.Redaction, this.handleRoomRedaction);
@@ -790,5 +785,21 @@ export class MatrixChatRoom
     }
     public async unban(userID: string): Promise<void> {
         await this.matrixRoom.client.unban(this.id, userID);
+    }
+
+    public async getMessageById(messageId: string): Promise<MatrixChatMessage | undefined> {
+        const message = this.messages.get(messageId);
+        if (message) {
+            return message;
+        }
+        const timeline = await this.matrixRoom.client.getEventTimeline(
+            this.matrixRoom.getUnfilteredTimelineSet(),
+            messageId
+        );
+        const event = timeline?.getEvents().find((ev) => ev.getId() === messageId);
+        if (event) {
+            return new MatrixChatMessage(event, this.matrixRoom);
+        }
+        return;
     }
 }

@@ -306,17 +306,17 @@ class AdminApi implements AdminInterface {
             }
 
             console.error(
-                "Invalid answer received from the admin for the /api/map endpoint. Errors:",
+                "Invalid answer received from the admin for the /api/map endpoint. /api/map answer is not a map details answer because:",
                 mapDetailData.error.issues
             );
             Sentry.captureException(mapDetailData.error.issues);
-            console.error(roomRedirect.error.issues);
+            console.error("/api/map answer is not a room redirect because:", roomRedirect.error.issues);
+            console.error("/api/map answer is not an error because:", errorData.error.issues);
             return {
                 status: "error",
                 type: "error",
                 title: "Invalid server response",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "MAP_VALIDATION",
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };
@@ -326,12 +326,10 @@ class AdminApi implements AdminInterface {
             }
             let message = "Unknown error";
             if (isAxiosError(err)) {
-                Sentry.captureException(
-                    `An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}. ${err}`
-                );
+                Sentry.captureException(err);
                 console.error(`An error occurred during call to /api/map endpoint. HTTP Status: ${err.status}.`, err);
             } else {
-                Sentry.captureException(`An error occurred during call to /api/map endpoint. ${err}`);
+                Sentry.captureException(err);
                 console.error(`An error occurred during call to /api/map endpoint.`, err);
             }
             if (err instanceof Error) {
@@ -342,7 +340,6 @@ class AdminApi implements AdminInterface {
                 type: "error",
                 title: "Connection error",
                 subtitle: "Something wrong happened while fetching map details!",
-                image: "",
                 code: "ROOM_ACCESS_ERROR",
                 details: message,
             };
@@ -451,9 +448,7 @@ class AdminApi implements AdminInterface {
         } catch (err) {
             let message = "Unknown error";
             if (isAxiosError(err)) {
-                Sentry.captureException(
-                    `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}. ${err}`
-                );
+                Sentry.captureException(err);
                 console.error(
                     `An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}.`,
                     err
@@ -760,19 +755,13 @@ class AdminApi implements AdminInterface {
         message: string,
         byUserUuid: string
     ): Promise<boolean> {
-        try {
-            return axios.post(
-                ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserUuid },
-                {
-                    headers: { Authorization: `${ADMIN_API_TOKEN}` },
-                }
-            );
-        } catch (err) {
-            return new Promise((solve, reject) => {
-                reject(err);
-            });
-        }
+        return axios.post(
+            ADMIN_API_URL + "/api/ban",
+            { uuidToBan, playUri, name, message, byUserUuid },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
     }
 
     public getCapabilities(): Promise<Capabilities> {

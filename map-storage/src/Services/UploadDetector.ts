@@ -18,7 +18,7 @@ class UploadDetector {
                     wamUrl,
                 },
                 (err) => {
-                    console.error(err);
+                    console.error(`[${new Date().toISOString()}]`, err);
                     Sentry.captureException(err);
                 }
             );

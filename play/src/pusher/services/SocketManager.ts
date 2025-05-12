@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AvailabilityStatus,
     BackToPusherSpaceMessage,
     BanMessage,
     BanPlayerMessage,
@@ -17,34 +18,34 @@ import {
     GetMemberQuery,
     JoinRoomMessage,
     MemberData,
+    NonUndefinedFields,
+    noUndefined,
+    OauthRefreshTokenAnswer,
+    OauthRefreshTokenQuery,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEventFrontToPusher,
+    PublicEventFrontToPusher,
     PusherToBackMessage,
     PusherToBackSpaceMessage,
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
     SearchMemberAnswer,
-    SearchTagsAnswer,
     SearchMemberQuery,
+    SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
+    SpaceUser,
+    SubMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
-    SpaceUser,
-    noUndefined,
-    NonUndefinedFields,
-    PublicEventFrontToPusher,
-    PrivateEventFrontToPusher,
-    UpdateSpaceUserMessage,
-    OauthRefreshTokenQuery,
-    OauthRefreshTokenAnswer,
-    SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -551,6 +552,7 @@ export class SocketManager implements ZoneEventListener {
                     new Error(`User ${socketData.name} is trying to join a space he is already in.`)
                 );
             }
+
             socketData.spaces.add(space.name);
 
             // Notify the client of the space metadata
@@ -662,20 +664,24 @@ export class SocketManager implements ZoneEventListener {
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
-        if (
-            socketData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus &&
-            playerDetailsMessage.availabilityStatus !== 0
-        ) {
+        const oldStatus = socketData.spaceUser.availabilityStatus;
+        const newStatus = playerDetailsMessage.availabilityStatus;
+
+        if (newStatus !== oldStatus && newStatus !== AvailabilityStatus.UNCHANGED) {
             fieldMask.push("availabilityStatus");
+            socketData.spaceUser.availabilityStatus = newStatus;
         }
-        if (socketData.spaceUser.chatID !== playerDetailsMessage.chatID && playerDetailsMessage.chatID !== "") {
+
+        if (playerDetailsMessage.chatID !== socketData.spaceUser.chatID && playerDetailsMessage.chatID !== "") {
             fieldMask.push("chatID");
+            socketData.spaceUser.chatID = playerDetailsMessage.chatID;
         }
         if (
             playerDetailsMessage.showVoiceIndicator !== undefined &&
             socketData.spaceUser.showVoiceIndicator !== playerDetailsMessage.showVoiceIndicator
         ) {
             fieldMask.push("showVoiceIndicator");
+            socketData.spaceUser.showVoiceIndicator = playerDetailsMessage.showVoiceIndicator;
         }
         if (fieldMask.length > 0) {
             const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
@@ -684,6 +690,7 @@ export class SocketManager implements ZoneEventListener {
                 chatID: playerDetailsMessage.chatID,
                 showVoiceIndicator: playerDetailsMessage.showVoiceIndicator,
             });
+
             socketData.spaces.forEach((spaceName) => {
                 const space = this.spaces.get(spaceName);
                 if (space) {
@@ -800,6 +807,7 @@ export class SocketManager implements ZoneEventListener {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
+
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
                 const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
                 if (spaceStreamBack) {
@@ -864,8 +872,8 @@ export class SocketManager implements ZoneEventListener {
         };
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
-                Sentry.captureException(`Error while sending admin message ${error}`);
-                console.error(`Error while sending admin message ${error}`);
+                Sentry.captureException(error);
+                console.error("Error while sending admin message", error);
             }
         });
     }
@@ -1017,6 +1025,7 @@ export class SocketManager implements ZoneEventListener {
             subtitle: "",
             details: "",
             image: "",
+            imageLogo: "",
             buttonTitle: "",
             canRetryManual: false,
             timeToRetry: 0,
@@ -1029,6 +1038,7 @@ export class SocketManager implements ZoneEventListener {
             errorScreenMessage.subtitle = errorApi.subtitle;
             errorScreenMessage.details = errorApi.details;
             errorScreenMessage.image = errorApi.image;
+            errorScreenMessage.imageLogo = errorApi.imageLogo;
             if (errorApi.type == "unauthorized" && errorApi.buttonTitle) {
                 errorScreenMessage.buttonTitle = errorApi.buttonTitle;
             }
@@ -1372,7 +1382,7 @@ export class SocketManager implements ZoneEventListener {
             if (isAxiosError(error) && error.response?.status === 999) {
                 emitAnswerMessage(true, false);
             } else {
-                debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                debug(`SocketManager => embeddableUrl : ${url} ${JSON.stringify(error)}`);
                 // If the URL is not reachable, we send a message to the client
                 // Catch is used to avoid crash if the client is disconnected
                 try {

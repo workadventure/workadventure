@@ -29,7 +29,7 @@
     // We go back in "wide" mode when all buttons are visible
     let mode: "wide" | "shrunk" = "wide";
 
-    $: if (leftToCenterWidth === 0) {
+    function switchToShrunkMode() {
         // Additional delay: we make sure the right bar is not touching the center bar. Why?
         // Because when resized quickly (for instance when switching from landscape to portrait), the hiddenItemsWidth
         // can suddenly hit 0px before the flexbox had time to resize the right bar to the correct size.
@@ -42,6 +42,10 @@
                 mode = "shrunk";
             }
         }, 1);
+    }
+
+    $: if (leftToCenterWidth === 0) {
+        switchToShrunkMode();
     }
 
     let fullMenuVisible: boolean;
