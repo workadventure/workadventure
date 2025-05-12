@@ -27,7 +27,7 @@ import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
-// import { SpeechBubble } from "./SpeechBubble";
+import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
 import { ThinkingCloud } from "./ThinkingCloud";
 import Text = Phaser.GameObjects.Text;
@@ -399,22 +399,13 @@ export abstract class Character extends Container implements OutlineableInterfac
         switch (type) {
             case SayMessageType.SpeechBubble:
             case SayMessageType.UNRECOGNIZED: {
-                const bubbleElement = document.createElement("div");
-                bubbleElement.textContent = text;
-                bubbleElement.classList.add(
-                    "absolute",
-                    "bg-white/50",
-                    "backdrop-blur-[1px]",
-                    "rounded-full",
-                    "py-1",
-                    "px-4",
-                    "text-xxs",
-                    "max-w-xs",
-                    "break-words",
-                    "say-bubble",
-                    "text-black"
+                const speechBubble = new SpeechBubble(text);
+                this.bubble = new DOMElement(
+                    this.scene,
+                    0,
+                    0 - CHARACTER_BODY_HEIGHT / 2 - 50,
+                    speechBubble.getElement()
                 );
-                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 50, bubbleElement);
                 this.add(this.bubble);
                 break;
             }
@@ -435,7 +426,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 const _exhaustiveCheck: never = type;
             }
         }
-        //this.bubble = new SpeechBubble(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 28, text);
     }
 
     destroy(): void {
