@@ -266,10 +266,20 @@
                           ],
                           "default": "https://workadventu.re"
                         },
-                        "allowAPI": {
-                          "type": "boolean"
+                        "name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "newTab": {
+                          "type": "boolean",
+                          "default": false
                         },
                         "closable": {
+                          "type": "boolean"
+                        },
+                        "allowAPI": {
                           "type": "boolean"
                         },
                         "trigger": {
@@ -283,15 +293,15 @@
                         "triggerMessage": {
                           "type": "string"
                         },
-                        "policy": {
-                          "type": "string",
-                          "default": "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        },
                         "width": {
                           "type": "number",
                           "minimum": 1,
                           "maximum": 100,
                           "default": 50
+                        },
+                        "policy": {
+                          "type": "string",
+                          "default": "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         },
                         "position": {
                           "type": "number"
@@ -299,7 +309,8 @@
                       },
                       "required": [
                         "id",
-                        "type"
+                        "type",
+                        "name"
                       ],
                       "additionalProperties": false
                     },
