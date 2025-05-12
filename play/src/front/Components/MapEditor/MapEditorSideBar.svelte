@@ -132,14 +132,9 @@
         </div>
         <div class="p-2 bg-contrast/80 rounded-2xl flex flex-col gap-2 backdrop-blur-md">
             {#each availableTools as tool (tool.toolName)}
-                <div class="tool-button relative group">
-                    <div
-                        class=" bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 right-[130%] "
-                    >
-                        {tool.tooltiptext}
-                    </div>
+                <div class="tool-button relative">
                     <button
-                        class="p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
+                        class="peer p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
                         id={tool.toolName}
@@ -149,6 +144,11 @@
                     >
                         <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
                     </button>
+                    <div
+                            class=" bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all peer-hover:opacity-100 rounded top-1/2 -translate-y-1/2 right-[130%] "
+                    >
+                        {tool.tooltiptext}
+                    </div>
                 </div>
             {/each}
         </div>
