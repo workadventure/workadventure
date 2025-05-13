@@ -18,22 +18,14 @@ function createTrackedSubject<T>(
     onUnsubscribe: () => void
 ): { subject: Subject<T>; observable: Observable<T> } {
     const subject = new Subject<T>();
-    let subscriberCount = 0;
 
     const observable = new Observable<T>((observer) => {
-        if (subscriberCount === 0) {
-            onSubscribe();
-        }
-        subscriberCount++;
-
+        onSubscribe();
         const subscription = subject.subscribe(observer);
 
         return () => {
             subscription.unsubscribe();
-            subscriberCount--;
-            if (subscriberCount === 0) {
-                onUnsubscribe();
-            }
+            onUnsubscribe();
         };
     });
 
@@ -132,22 +124,30 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             };
         });
 
-        const { subject: observeUserJoinedSubject } = createTrackedSubject<SpaceUserExtended>(
-            () => {
-                this.registerSpaceFilter();
-            },
-            () => this.unregisterSpaceFilter()
-        );
+        const { subject: observeUserJoinedSubject, observable: observeUserJoinedObservable } =
+            createTrackedSubject<SpaceUserExtended>(
+                () => {
+                    this.registerSpaceFilter();
+                },
+                () => {
+                    this.unregisterSpaceFilter();
+                }
+            );
 
-        this.observeUserJoined = observeUserJoinedSubject.asObservable();
+        this.observeUserJoined = observeUserJoinedObservable;
         this._addUserSubscriber = observeUserJoinedSubject;
 
-        const { subject: observeUserLeftSubject } = createTrackedSubject<SpaceUserExtended>(
-            () => this.registerSpaceFilter(),
-            () => this.unregisterSpaceFilter()
-        );
+        const { subject: observeUserLeftSubject, observable: observeUserLeftObservable } =
+            createTrackedSubject<SpaceUserExtended>(
+                () => {
+                    this.registerSpaceFilter();
+                },
+                () => {
+                    this.unregisterSpaceFilter();
+                }
+            );
 
-        this.observeUserLeft = observeUserLeftSubject.asObservable();
+        this.observeUserLeft = observeUserLeftObservable;
         this._leftUserSubscriber = observeUserLeftSubject;
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
@@ -365,6 +365,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         });
     }
     private registerSpaceFilter() {
+        // console.log(this.registerRefCount , '++++');
         if (this.registerRefCount === 0) {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {

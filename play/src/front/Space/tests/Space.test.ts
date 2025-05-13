@@ -115,8 +115,6 @@ describe("Space test", () => {
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, defaultPropertiesToSync);
-
-        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
