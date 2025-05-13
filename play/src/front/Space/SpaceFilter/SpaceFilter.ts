@@ -1,6 +1,6 @@
 import merge from "lodash/merge";
 import { PrivateSpaceEvent, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
-import { Observable, Subject, Subscriber } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { Readable, get, readable, writable, Writable, derived } from "svelte/store";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Deferred } from "ts-deferred";
@@ -12,6 +12,33 @@ import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { RemotePlayerData } from "../../Phaser/Game/RemotePlayersRepository";
 import { gameManager } from "../../Phaser/Game/GameManager";
+
+function createTrackedSubject<T>(
+    onSubscribe: () => void,
+    onUnsubscribe: () => void
+): { subject: Subject<T>; observable: Observable<T> } {
+    const subject = new Subject<T>();
+    let subscriberCount = 0;
+
+    const observable = new Observable<T>((observer) => {
+        if (subscriberCount === 0) {
+            onSubscribe();
+        }
+        subscriberCount++;
+
+        const subscription = subject.subscribe(observer);
+
+        return () => {
+            subscription.unsubscribe();
+            subscriberCount--;
+            if (subscriberCount === 0) {
+                onUnsubscribe();
+            }
+        };
+    });
+
+    return { subject, observable };
+}
 
 // FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
@@ -80,8 +107,8 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
     private isSubscribe = false;
-    private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
-    private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    private _addUserSubscriber: Subject<SpaceUserExtended> | undefined;
+    private _leftUserSubscriber: Subject<SpaceUserExtended> | undefined;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     private registerRefCount = 0;
@@ -105,23 +132,23 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             };
         });
 
-        this.observeUserJoined = new Observable<SpaceUserExtended>((subscriber) => {
-            this.registerSpaceFilter();
-            this._addUserSubscriber = subscriber;
+        const { subject: observeUserJoinedSubject } = createTrackedSubject<SpaceUserExtended>(
+            () => {
+                this.registerSpaceFilter();
+            },
+            () => this.unregisterSpaceFilter()
+        );
 
-            return () => {
-                this.unregisterSpaceFilter();
-            };
-        });
+        this.observeUserJoined = observeUserJoinedSubject.asObservable();
+        this._addUserSubscriber = observeUserJoinedSubject;
 
-        this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
-            this.registerSpaceFilter();
-            this._leftUserSubscriber = subscriber;
+        const { subject: observeUserLeftSubject } = createTrackedSubject<SpaceUserExtended>(
+            () => this.registerSpaceFilter(),
+            () => this.unregisterSpaceFilter()
+        );
 
-            return () => {
-                this.unregisterSpaceFilter();
-            };
-        });
+        this.observeUserLeft = observeUserLeftSubject.asObservable();
+        this._leftUserSubscriber = observeUserLeftSubject;
     }
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user);

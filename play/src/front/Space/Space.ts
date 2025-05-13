@@ -124,9 +124,6 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-        if (this.peerManager) {
-            this.peerManager.destroy();
-        }
     }
 
     private userJoinSpace() {

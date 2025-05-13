@@ -218,10 +218,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
-        console.log({
-            user,
-        });
-
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(user.userId);
 
         if (!spaceUser) {
@@ -311,9 +307,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 //peerScreenSharingConnection.toClose = true;
                 //peerScreenSharingConnection.destroy();
                 //this.space.screenSharingPeerStore.delete(user.userId);
-                console.log(">>>> delete screen sharing stream", {
-                    spaceUserId: user.userId,
-                });
             } else {
                 peerScreenSharingConnection.toClose = false;
                 return null;
@@ -406,9 +399,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         //this.space.livekitVideoStreamStore.delete(userId);
-        console.log(">>>> delete video stream", {
-            spaceUserId: userId,
-        });
     }
 
     /**
@@ -469,9 +459,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             if (peer instanceof VideoPeer) {
                 //peer.destroy();
                 //this.space.livekitVideoStreamStore.delete(peer.user.userId);
-                console.log(">>>> delete video stream", {
-                    spaceUserId: peer.user.userId,
-                });
             }
         });
 
@@ -479,9 +466,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             if (peer instanceof ScreenSharingPeer) {
                 //peer.destroy();
                 ///this.space.screenSharingPeerStore.delete(peer.user.userId);
-                console.log(">>>> delete screen sharing stream", {
-                    spaceUserId: peer.user.userId,
-                });
             }
         });
     }
@@ -493,10 +477,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 await this.createPeerConnection(data);
             }
             const peer = this.space.livekitVideoStreamStore.get(data.userId);
-            console.log("peer", {
-                peer,
-                data,
-            });
 
             if (!(peer instanceof VideoPeer)) {
                 console.error("peer is not a VideoPeer");
@@ -504,7 +484,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
 
             if (peer && peer instanceof VideoPeer) {
-                console.log("peer is a VideoPeer and signal ");
                 peer.signal(data.signal);
             } else {
                 console.error('Could not find peer whose ID is "' + data.userId + '" in PeerConnectionArray');
@@ -548,7 +527,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
             const peer = this.space.livekitScreenShareStreamStore.get(data.userId);
             if (peer !== undefined && peer instanceof ScreenSharingPeer) {
-                console.log(">>>> send signal to peer");
                 peer.signal(data.signal);
             } else {
                 console.error(
@@ -603,10 +581,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
-        console.log({
-            userId,
-        });
-
         const spaceUser = await this.space.getSpaceUserBySpaceUserId(userId);
         if (!spaceUser) {
             console.error("While sending local screen sharing, cannot find user with ID " + userId);
@@ -710,9 +684,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     public removePeer(userId: string) {
-        console.log(">>>> removePeer", {
-            userId,
-        });
         // this.space.livekitVideoStreamStore.delete(userId);
         // this.space.screenSharingPeerStore.delete(userId);
     }
