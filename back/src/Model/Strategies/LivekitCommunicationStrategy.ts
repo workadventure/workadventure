@@ -17,43 +17,52 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     //TODO ; voir si on peut integrer une notion de salle d'attente directement dans cette partie
     // avec un salon ouvert / fermé
 
-    async addUser(user: SpaceUser, switchInProgress = false): Promise<void> {
-        const token = await this.livekitService.generateToken(this.space.getSpaceName(), user);
-        this.space.dispatchPrivateEvent({
-            spaceName: this.space.getSpaceName(),
-            receiverUserId: user.spaceUserId,
-            senderUserId: user.spaceUserId,
-            spaceEvent: {
-                event: {
-                    $case: "livekitInvitationMessage",
-                    livekitInvitationMessage: {
-                        token: token,
-                        serverUrl: this.livekitService.getLivekitFrontendUrl(),
-                        shouldJoinRoomImmediately: !switchInProgress,
+    addUser(user: SpaceUser, switchInProgress = false): void {
+        this.livekitService
+            .generateToken(this.space.getSpaceName(), user)
+            .then((token) => {
+                this.space.dispatchPrivateEvent({
+                    spaceName: this.space.getSpaceName(),
+                    receiverUserId: user.spaceUserId,
+                    senderUserId: user.spaceUserId,
+                    spaceEvent: {
+                        event: {
+                            $case: "livekitInvitationMessage",
+                            livekitInvitationMessage: {
+                                token: token,
+                                serverUrl: this.livekitService.getLivekitFrontendUrl(),
+                                shouldJoinRoomImmediately: !switchInProgress,
+                            },
+                        },
                     },
-                },
-            },
-        });
+                });
+            })
+            .catch((error) => {
+                console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
+                Sentry.captureException(error);
+            });
     }
 
-    async deleteUser(user: SpaceUser): Promise<void> {
-        try {
-            await this.livekitService.removeParticipant(this.space.getSpaceName(), user.name);
-        } catch (error) {
-            console.error(`Error removing participant ${user.name} from Livekit:`, error);
-            Sentry.captureException(error);
-        }
-        this.space.dispatchPrivateEvent({
-            spaceName: this.space.getSpaceName(),
-            receiverUserId: user.spaceUserId,
-            senderUserId: user.spaceUserId,
-            spaceEvent: {
-                event: {
-                    $case: "livekitDisconnectMessage",
-                    livekitDisconnectMessage: {},
-                },
-            },
-        });
+    deleteUser(user: SpaceUser): void {
+        this.livekitService
+            .removeParticipant(this.space.getSpaceName(), user.name)
+            .catch((error) => {
+                console.error(`Error removing participant ${user.name} from Livekit:`, error);
+                Sentry.captureException(error);
+            })
+            .finally(() => {
+                this.space.dispatchPrivateEvent({
+                    spaceName: this.space.getSpaceName(),
+                    receiverUserId: user.spaceUserId,
+                    senderUserId: user.spaceUserId,
+                    spaceEvent: {
+                        event: {
+                            $case: "livekitDisconnectMessage",
+                            livekitDisconnectMessage: {},
+                        },
+                    },
+                });
+            });
     }
 
     updateUser(user: SpaceUser): void {
@@ -63,10 +72,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     initialize(): void {
         const users = this.space.getAllUsers();
         users.forEach((user) => {
-            this.addUser(user, true).catch((error) => {
-                console.error(`Error adding user ${user.spaceUserId} to Livekit:`, error);
-                Sentry.captureException(error);
-            });
+            this.addUser(user, true);
         });
     }
 
@@ -80,13 +86,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     cleanup(): void {
         const users = this.space.getAllUsers();
         users.forEach((user) => {
-            this.deleteUser(user).catch((error) => {
-                console.error(`Error deleting user ${user.spaceUserId} from Livekit:`, error);
-                Sentry.captureException(error);
-            });
+            this.deleteUser(user);
         });
         this.livekitService.deleteRoom(this.space.getSpaceName()).catch((error) => {
-            console.error(`Error deleting room ${this.space.getSpaceName()} on Livekit:`, error);
+            console.error(error);
             Sentry.captureException(error);
         });
     }
