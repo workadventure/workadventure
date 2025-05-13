@@ -157,7 +157,7 @@ export class GameMapAreas {
         return this.getPersonalAreaRightPropertyData(area) != undefined;
     }
 
-    public isGameMapContainsSpecificAreas(userId: string | undefined, tags:string[]): boolean {
+    public isGameMapContainsSpecificAreas(userId: string | undefined, tags: string[]): boolean {
         let hasSpecificAreas = false;
         this.areas.forEach((area) => {
             console.log("✳️✳️✳️✳️ >>> area", area);
@@ -168,9 +168,13 @@ export class GameMapAreas {
                 }
                 return;
             }
-            if (userId){
+            if (userId) {
                 if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
-                    console.log("👮🏻👮🏻👮🏻️ >>> Il a un personal desk", this.isAreaOwner(area, userId.toString()), userId.toString());
+                    console.log(
+                        "👮🏻👮🏻👮🏻️ >>> Il a un personal desk",
+                        this.isAreaOwner(area, userId.toString()),
+                        userId.toString()
+                    );
                     if (this.isAreaOwner(area, userId)) {
                         hasSpecificAreas = true;
                         return;
