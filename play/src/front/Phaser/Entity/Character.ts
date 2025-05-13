@@ -2,8 +2,12 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import { Unsubscriber, Writable, get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
-import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
-import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
+import {
+    AvailabilityStatus as AvailabilityStatusType,
+    SayMessageType,
+    AvailabilityStatus,
+    PositionMessage_Direction,
+} from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
@@ -25,10 +29,12 @@ import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
+import { ThinkingCloud } from "./ThinkingCloud";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import RenderTexture = Phaser.GameObjects.RenderTexture;
 
 const playerNameY = -25;
 const interactiveRadius = 25;
@@ -39,7 +45,7 @@ export const CHARACTER_BODY_OFFSET_X = 0;
 export const CHARACTER_BODY_OFFSET_Y = 8;
 
 export abstract class Character extends Container implements OutlineableInterface {
-    private bubble: SpeechBubble | null = null;
+    private bubble: RenderTexture | null | DOMElement = null;
     private playerNameText: Text | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
@@ -379,15 +385,47 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.playAnimation(this._lastDirection, false);
     }
 
-    say(text: string) {
-        if (this.bubble) return;
-        this.bubble = new SpeechBubble(this.scene, this, text);
-        setTimeout(() => {
-            if (this.bubble !== null) {
-                this.bubble.destroy();
-                this.bubble = null;
+    say(text: string, type: SayMessageType) {
+        this.scene.markDirty();
+        if (this.bubble !== null) {
+            this.remove(this.bubble);
+            this.bubble.destroy();
+        }
+        // If text is empty, let's just remove the previous bubble and say nothing.
+        if (!text) {
+            return;
+        }
+
+        switch (type) {
+            case SayMessageType.SpeechBubble:
+            case SayMessageType.UNRECOGNIZED: {
+                const speechBubble = new SpeechBubble(text);
+                this.bubble = new DOMElement(
+                    this.scene,
+                    0,
+                    0 - CHARACTER_BODY_HEIGHT / 2 - 50,
+                    speechBubble.getElement()
+                );
+                this.add(this.bubble);
+                break;
             }
-        }, 3000);
+            case SayMessageType.ThinkingCloud: {
+                const thinkElement = new ThinkingCloud({
+                    text: text, //"Hello, I'm thinking about something quite long. It should wrap nicely!",
+                    maxWidth: 200,
+                    fontSize: 11,
+                    cornerRadius: 10,
+                    padding: 12,
+                    fillColor: 0xffffff,
+                }).getElement();
+                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 60, thinkElement);
+                this.add(this.bubble);
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = type;
+            }
+        }
     }
 
     destroy(): void {
