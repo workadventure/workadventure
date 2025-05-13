@@ -27,8 +27,7 @@
         if (!gameScene) return;
 
         [...$extensionModuleStore.values()].forEach((extensionModule) => {
-            extensionModule?.openPopupMeeting &&
-                event.resource?.onlineMeeting?.joinUrl &&
+            if (extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl) {
                 extensionModule.openPopupMeeting(
                     event.title,
                     event.resource?.onlineMeeting?.joinUrl,
@@ -37,6 +36,7 @@
                     event.end,
                     event.resource?.onlineMeeting?.passcode
                 );
+            }
         });
     }
 

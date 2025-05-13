@@ -61,7 +61,7 @@
 
 {#if actionsMenuData}
     <div
-        class="absolute left-0 right-0 m-auto max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="absolute max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
         data-testid="actions-menu"
     >
         {#if actionsMenuData.menuName}
@@ -97,7 +97,7 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast px-2"
+                class="flex items-center bg-contrast p-2"
                 class:margin-close={!actionsMenuData.menuName}
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
@@ -105,7 +105,7 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center w-full {action.style ?? ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {

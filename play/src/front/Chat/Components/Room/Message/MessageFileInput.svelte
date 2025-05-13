@@ -7,7 +7,9 @@
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import { IconLoader, IconPaperclip, IconX } from "@wa-icons";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        fileUploaded: void;
+    }>();
 
     let files: FileList | undefined = undefined;
     export let room: ChatRoom;
@@ -17,6 +19,8 @@
         if (files) {
             room.sendFiles(files)
                 .then(() => {
+                    // Infinite loop is not possible because the first thing we do in the reactive statement is test for "files" not undefined.
+                    // eslint-disable-next-line svelte/infinite-reactive-loop
                     files = undefined;
                     unselectChatMessageToReplyIfSelected();
                 })

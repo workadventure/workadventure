@@ -52,7 +52,7 @@
             loading = true;
             if (!title) {
                 dynamicStrings.error.title = $LL.mapEditor.settings.megaphone.inputs.error.title();
-                throw $LL.mapEditor.settings.megaphone.inputs.error.save.fail();
+                throw new Error($LL.mapEditor.settings.megaphone.inputs.error.save.fail());
             } else {
                 dynamicStrings.error.title = "";
             }

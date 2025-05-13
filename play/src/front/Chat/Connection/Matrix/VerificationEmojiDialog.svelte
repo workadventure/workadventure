@@ -79,8 +79,7 @@
                         <div class="scale-[2.5]">{emoji}</div>
                         <div class="text-center w-full">
                             {Object.keys($LL.chat.emojis).includes(label)
-                                ? //FIXME : try to find a method to delete ts-ignore
-                                  // @ts-ignore
+                                ? // @ts-ignore FIXME : try to find a method to delete ts-ignore
                                   $LL.chat.emojis[label]()
                                 : $LL.chat.emojis.unknownLabel()}
                         </div>

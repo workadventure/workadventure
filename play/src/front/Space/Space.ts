@@ -130,10 +130,9 @@ export class Space implements SpaceInterface {
         const subject = this.publicEventsObservables[spaceInnerEvent.$case];
         if (subject) {
             subject.next({
-                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 spaceName: message.spaceName,
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 sender,
                 ...spaceInnerEvent,
             });
@@ -159,10 +158,9 @@ export class Space implements SpaceInterface {
         const subject = this.privateEventsObservables[spaceInnerEvent.$case];
         if (subject) {
             subject.next({
-                // We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 spaceName: message.spaceName,
-                //@ts-ignore
+                //@ts-ignore We are hitting a limitation of TypeScript documented here: https://stackoverflow.com/questions/67513032/helper-function-to-un-discriminate-a-discriminated-union
                 sender,
                 ...spaceInnerEvent,
             });

@@ -16,7 +16,6 @@ import { LL } from "../../i18n/i18n-svelte";
 import { navChat } from "./Stores/ChatStore";
 import { selectedRoomStore } from "./Stores/SelectRoomStore";
 import RequiresLoginForChatModal from "./Components/RequiresLoginForChatModal.svelte";
-import RemoteUserNotConnected from "./Components/RemoteUserNotConnected.svelte";
 
 export type OpenCoWebsiteObject = {
     url: string;
@@ -69,14 +68,10 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openDirectChatRoom = async (chatID?: string, userName?: string, callUserCallback?: () => void) => {
+export const openDirectChatRoom = async (chatID: string) => {
     try {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
-            return;
-        }
-        if (!chatID) {
-            openModalRemoteUserNotConnected(userName ?? "", callUserCallback ?? (() => {}));
             return;
         }
         const chatConnection = await gameManager.getChatConnection();
@@ -153,11 +148,4 @@ export const closeCoWebsite = (coWebsiteId: string) => {
     }
 
     coWebsites.remove(coWebsite);
-};
-
-export const openModalRemoteUserNotConnected = (userName: string, callUserCallback: () => void) => {
-    openModal(RemoteUserNotConnected, {
-        userName,
-        callUserCallback,
-    });
 };

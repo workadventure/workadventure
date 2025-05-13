@@ -97,7 +97,7 @@ export class IoSocketController {
                             console.error(err.issues);
                             Sentry.captureException(err.issues);
                         }
-                        Sentry.captureException(`Invalid message received. ${message}`);
+                        Sentry.captureException(`Invalid message received. ${JSON.stringify(message)}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -296,6 +296,7 @@ export class IoSocketController {
                                         title: "Please refresh",
                                         subtitle: "New version available",
                                         image: "/resources/icons/new_version.png",
+                                        imageLogo: "/static/images/logo.png",
                                         code: "NEW_VERSION",
                                         details:
                                             "A new version of WorkAdventure is available. Please refresh your window",
@@ -929,7 +930,8 @@ export class IoSocketController {
                                     error: {
                                         message:
                                             error !== null && typeof error === "object"
-                                                ? error.toString()
+                                                ? // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                                                  error.toString()
                                                 : typeof error === "string"
                                                 ? error
                                                 : "Unknown error",

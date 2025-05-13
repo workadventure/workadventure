@@ -38,7 +38,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
-    private _metadata: unknown | undefined;
+    private _metadata: unknown;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -180,7 +180,7 @@ export class Room {
                 this._legals = data.legals ?? undefined;
 
                 this._enableChat = (data.enableChat ?? true) && ENABLE_CHAT;
-                this._isMatrixChatEnabled = data.enableMatrixChat ?? (true && ENABLE_OPENID);
+                this._isMatrixChatEnabled = (data.enableMatrixChat ?? true) && ENABLE_OPENID;
                 this._enableChatUpload = (data.enableChatUpload ?? true) && ENABLE_CHAT_UPLOAD;
                 this._enableChatOnlineList = (data.enableChatOnlineList ?? true) && ENABLE_CHAT_ONLINE_LIST;
                 this._enableChatDisconnectedList =

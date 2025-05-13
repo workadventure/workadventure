@@ -428,7 +428,6 @@ export class UploadController {
                         content.metadata = {};
                     }
 
-                    //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                     const patchedContent = jsonpatch.applyPatch(
                         content,
                         req.body as Operation[],

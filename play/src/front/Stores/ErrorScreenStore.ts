@@ -37,6 +37,7 @@ function createErrorScreenStore() {
             const errorApiErrorData = isErrorApiErrorData.safeParse(e);
             if (errorApiErrorData.success) {
                 const error = errorApiErrorData.data;
+
                 set({
                     type: "error",
                     code: error.code,
@@ -44,6 +45,7 @@ function createErrorScreenStore() {
                     subtitle: error.subtitle,
                     details: error.details,
                     image: error.image,
+                    imageLogo: error.imageLogo,
                     timeToRetry: undefined,
                     buttonTitle: undefined,
                     canRetryManual: undefined,
@@ -61,6 +63,7 @@ function createErrorScreenStore() {
                     subtitle: error.subtitle,
                     details: error.details,
                     image: error.image,
+                    imageLogo: error.imageLogo,
                     timeToRetry: error.timeToRetry,
                     buttonTitle: error.buttonTitle ?? undefined,
                     canRetryManual: error.canRetryManual,
@@ -78,6 +81,7 @@ function createErrorScreenStore() {
                     subtitle: error.subtitle,
                     details: error.details,
                     image: error.image,
+                    imageLogo: error.imageLogo,
                     timeToRetry: undefined,
                     buttonTitle: error.buttonTitle ?? undefined,
                     canRetryManual: undefined,
@@ -99,6 +103,8 @@ function createErrorScreenStore() {
             if (typeof error === "string" || error instanceof String) {
                 set(
                     ErrorScreenMessage.fromPartial({
+                        image: "/resources/icons/new_version.png",
+                        imageLogo: "/static/images/logo.png",
                         type: "error",
                         code: "INTERNAL_ERROR",
                         title: "An error occurred",
@@ -161,8 +167,7 @@ function createErrorScreenStore() {
                         return;
                     }
                     default: {
-                        // Typescript compiler is lost because of the removal of the status field.
-                        //@ts-ignore
+                        // @ts-ignore Typescript compiler is lost because of the removal of the status field.
                         const _exhaustiveCheck: never = errorApi;
                         throw new Error("This should never happen.");
                     }

@@ -2,7 +2,6 @@
 
 import { ReadStream } from "fs";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extend(who: any, from: any, overwrite = true) {
     const ownProps = Object.getOwnPropertyNames(Object.getPrototypeOf(from)).concat(Object.keys(from));
     ownProps.forEach((prop) => {

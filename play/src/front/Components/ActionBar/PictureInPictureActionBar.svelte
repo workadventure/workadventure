@@ -16,7 +16,9 @@
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        screenSharingClick: void;
+    }>();
 
     function toggleChat() {
         window.focus();
