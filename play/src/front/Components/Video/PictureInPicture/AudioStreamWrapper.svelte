@@ -2,7 +2,7 @@
     import { Readable } from "svelte/store";
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { volumeProximityDiscussionStore } from "../../../Stores/PeerStore";
-    import PictureInPictureAudio from "./PictureInPictureAudio.svelte";
+    import AudioStream from "./AudioStream.svelte";
 
     export let peer: Streamable;
 
@@ -13,5 +13,5 @@
 </script>
 
 {#if $streamStore}
-    <PictureInPictureAudio stream={$streamStore} volume={$volumeProximityDiscussionStore} />
+    <AudioStream stream={$streamStore} volume={$volumeProximityDiscussionStore} />
 {/if}

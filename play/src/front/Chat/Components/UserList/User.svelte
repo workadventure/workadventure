@@ -11,7 +11,6 @@
     import { defaultColor, defaultWoka } from "../../Connection/Matrix/MatrixChatConnection";
     import { openDirectChatRoom } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { scriptUtils } from "../../../Api/ScriptUtils";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import UserActionButton from "./UserActionButton.svelte";
     import ImageWithFallback from "./ImageWithFallback.svelte";
@@ -34,7 +33,7 @@
         query: $chatSearchBarValue,
     });
 
-    $: roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
+    const roomCreationInProgress = gameManager.chatConnection.roomCreationInProgress;
 
     function getNameOfAvailabilityStatus(status: AvailabilityStatus) {
         switch (status) {
@@ -60,15 +59,6 @@
     }
 
     let loadingDirectRoomAccess = false;
-
-    const { connection } = gameManager.getCurrentGameScene();
-    const goTo = (type: string, playUri: string, uuid: string) => {
-        if (type === "room") {
-            scriptUtils.goToPage(`${playUri}#moveToUser=${uuid}`);
-        } else if (type === "user") {
-            if (user.uuid && connection && user.playUri) connection.emitAskPosition(user.uuid, user.playUri);
-        }
-    };
 </script>
 
 {#if loadingDirectRoomAccess}
@@ -150,28 +140,40 @@
                 {/if}
             </div>
             {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
-                <button
-                    class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center text-white m-0"
-                    data-testId={`send-message-${user.username}`}
-                    on:click|stopPropagation={() => {
-                        openDirectChatRoom(user.uuid != chatId ? chatId : undefined, user.username, () =>
-                            goTo("user", user.playUri ?? "", user.uuid ?? "")
-                        ).catch((error) => {
-                            console.error("Error opening direct chat room:", error);
-                            Sentry.captureException(error, {
-                                extra: {
-                                    userId: user.uuid,
-                                    chatId: chatId,
-                                    playUri: user.playUri,
-                                    username: user.username,
-                                },
+                <div class="relative group">
+                    <div
+                        class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 left-[130%] "
+                    >
+                        {#if user.uuid === chatId}
+                            {$LL.chat.remoteUserNotConnected()}
+                        {:else}
+                            {$LL.chat.userList.sendMessage()}
+                        {/if}
+                    </div>
+                    <button
+                        class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
+                        class:text-white={user.uuid !== chatId}
+                        class:text-gray-400={user.uuid === chatId}
+                        data-testId={`send-message-${user.username}`}
+                        disabled={user.uuid === chatId}
+                        on:click|stopPropagation={() => {
+                            openDirectChatRoom(chatId).catch((error) => {
+                                console.error("Error opening direct chat room:", error);
+                                Sentry.captureException(error, {
+                                    extra: {
+                                        userId: user.uuid,
+                                        chatId: chatId,
+                                        playUri: user.playUri,
+                                        username: user.username,
+                                    },
+                                });
                             });
-                        });
-                        analyticsClient.sendMessageFromUserList();
-                    }}
-                >
-                    <IconSend font-size="16" />
-                </button>
+                            analyticsClient.sendMessageFromUserList();
+                        }}
+                    >
+                        <IconSend font-size="16" />
+                    </button>
+                </div>
             {:else if $roomCreationInProgress && showRoomCreationInProgress}
                 <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
                     <IconLoader class="animate-spin" />

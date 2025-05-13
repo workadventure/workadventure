@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AvailabilityStatus,
     BackToPusherSpaceMessage,
     BanMessage,
     BanPlayerMessage,
@@ -17,34 +18,34 @@ import {
     GetMemberQuery,
     JoinRoomMessage,
     MemberData,
+    NonUndefinedFields,
+    noUndefined,
+    OauthRefreshTokenAnswer,
+    OauthRefreshTokenQuery,
     PlayerDetailsUpdatedMessage,
     PlayGlobalMessage,
+    PrivateEventFrontToPusher,
+    PublicEventFrontToPusher,
     PusherToBackMessage,
     PusherToBackSpaceMessage,
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
     SearchMemberAnswer,
-    SearchTagsAnswer,
     SearchMemberQuery,
+    SearchTagsAnswer,
     SearchTagsQuery,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SpaceFilterMessage,
+    SpaceUser,
+    SubMessage,
     UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
-    SpaceUser,
-    noUndefined,
-    NonUndefinedFields,
-    PublicEventFrontToPusher,
-    PrivateEventFrontToPusher,
-    UpdateSpaceUserMessage,
-    OauthRefreshTokenQuery,
-    OauthRefreshTokenAnswer,
-    SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
@@ -679,7 +680,7 @@ export class SocketManager implements ZoneEventListener {
         const oldStatus = socketData.spaceUser.availabilityStatus;
         const newStatus = playerDetailsMessage.availabilityStatus;
 
-        if (newStatus !== oldStatus && newStatus !== 0) {
+        if (newStatus !== oldStatus && newStatus !== AvailabilityStatus.UNCHANGED) {
             fieldMask.push("availabilityStatus");
             socketData.spaceUser.availabilityStatus = newStatus;
         }
@@ -884,8 +885,8 @@ export class SocketManager implements ZoneEventListener {
         };
         backConnection.sendAdminMessage(backAdminMessage, (error: unknown) => {
             if (error !== null) {
-                Sentry.captureException(`Error while sending admin message ${error}`);
-                console.error(`Error while sending admin message ${error}`);
+                Sentry.captureException(error);
+                console.error("Error while sending admin message", error);
             }
         });
     }
@@ -1037,6 +1038,7 @@ export class SocketManager implements ZoneEventListener {
             subtitle: "",
             details: "",
             image: "",
+            imageLogo: "",
             buttonTitle: "",
             canRetryManual: false,
             timeToRetry: 0,
@@ -1049,6 +1051,7 @@ export class SocketManager implements ZoneEventListener {
             errorScreenMessage.subtitle = errorApi.subtitle;
             errorScreenMessage.details = errorApi.details;
             errorScreenMessage.image = errorApi.image;
+            errorScreenMessage.imageLogo = errorApi.imageLogo;
             if (errorApi.type == "unauthorized" && errorApi.buttonTitle) {
                 errorScreenMessage.buttonTitle = errorApi.buttonTitle;
             }
@@ -1392,7 +1395,7 @@ export class SocketManager implements ZoneEventListener {
             if (isAxiosError(error) && error.response?.status === 999) {
                 emitAnswerMessage(true, false);
             } else {
-                debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                debug(`SocketManager => embeddableUrl : ${url} ${JSON.stringify(error)}`);
                 // If the URL is not reachable, we send a message to the client
                 // Catch is used to avoid crash if the client is disconnected
                 try {

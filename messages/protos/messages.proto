@@ -63,6 +63,7 @@ message ApplicationMessage {
   optional bool forceNewTab = 10;
   optional bool allowAPI = 11;
   optional string policy = 12;
+  optional string imageLogo = 13;
 }
 
 message CompanionTextureMessage {
@@ -677,6 +678,7 @@ message ErrorScreenMessage {
   google.protobuf.StringValue urlToRedirect = 8;
   google.protobuf.StringValue buttonTitle = 9;
   google.protobuf.StringValue image = 10;
+  google.protobuf.StringValue imageLogo = 11;
 }
 
 message ItemStateMessage {

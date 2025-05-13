@@ -2,7 +2,6 @@
     import { createEventDispatcher } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
 
-    import { chatVisibilityStore } from "../../Stores/ChatStore";
     import {
         inExternalServiceStore,
         myCameraStore,
@@ -16,7 +15,10 @@
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
     import ChatMenuItem from "./MenuIcons/ChatMenuItem.svelte";
-    const dispatch = createEventDispatcher();
+
+    const dispatch = createEventDispatcher<{
+        screenSharingClick: void;
+    }>();
 
     function toggleChat() {
         window.focus();
@@ -35,11 +37,7 @@
 >
     <div class="flex w-full p-2 gap-2 @xl/actions:p-4 @xl/actions:gap-4 justify-items-center">
         <div class="justify-items-center flex-1 w-32">
-            <div
-                class="flex relative transition-all duration-150 z-[2] {$chatVisibilityStore ? 'hidden' : ''}"
-                class:opacity-0={$chatVisibilityStore}
-                data-testid="chat-action"
-            >
+            <div class="flex relative transition-all duration-150 z-[2]">
                 <div class="mr-3">
                     <ChatMenuItem on:click={toggleChat} last={true} />
                 </div>

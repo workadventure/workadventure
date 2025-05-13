@@ -15,6 +15,7 @@ import * as Sentry from "@sentry/svelte";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { Deferred } from "ts-deferred";
+import { asError } from "catch-unknown";
 import { alreadyAskForInitCryptoConfiguration } from "../../Stores/AlreadyAskForInitCryptoConfigurationStore";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
@@ -125,7 +126,7 @@ export class MatrixSecurity {
                     console.error("initClientCryptoConfiguration error: ", error);
                     Sentry.captureMessage(`initClientCryptoConfiguration error : ${error}`);
                     this.initializingEncryptionPromise = undefined;
-                    initializingEncryptionReject(error);
+                    initializingEncryptionReject(asError(error));
                     return;
                 });
         });

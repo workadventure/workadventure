@@ -41,7 +41,8 @@ export class ScriptingInputAudioStreamManager {
                     this.pcmStreamerResolved = true;
                     this.pcmStreamerResolving = false;
                     this.pcmStreamerDeferred.resolve(pcmStreamer);
-                    // eslint-disable-next-line rxjs/no-nested-subscribe
+
+                    // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
                     this.appendPCMDataStreamUnsubscriber = pcmStreamer.pcmDataStream.subscribe((data) => {
                         iframeListener.postMessage(
                             {

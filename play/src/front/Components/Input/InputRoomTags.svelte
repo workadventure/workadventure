@@ -4,7 +4,9 @@
     import InputTags from "./InputTags.svelte";
     import { InputTagOption } from "./InputTagOption";
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: InputTagOption[] | undefined;
+    }>();
 
     export let value: InputTagOption[] | undefined;
 

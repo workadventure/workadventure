@@ -38,7 +38,11 @@
 
     let helpActive = false;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        click: void;
+        mouseenter: void;
+        mouseleave: void;
+    }>();
 
     function handleClick() {
         if (state === "disabled") {
@@ -55,10 +59,10 @@
 {#if !isInMenu}
     <div
         class="relative bg-contrast/80 backdrop-blur py-2 pl-1 pr-1 pointer-events-auto {classList} group-[.invisible]/visibilitychecker:px-2"
-        class:first:rounded-l-lg={first === undefined}
-        class:first:pl-2={first === undefined}
-        class:last:rounded-r-lg={last === undefined}
-        class:last:pr-2={last === undefined}
+        class:first-of-type:rounded-l-lg={first === undefined}
+        class:first-of-type:pl-2={first === undefined}
+        class:last-of-type:rounded-r-lg={last === undefined}
+        class:last-of-type:pr-2={last === undefined}
         class:rounded-l-lg={first === true}
         class:pl-2={first === true}
         class:rounded-r-lg={last === true}

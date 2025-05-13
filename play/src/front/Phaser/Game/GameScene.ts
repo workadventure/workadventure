@@ -368,7 +368,7 @@ export class GameScene extends DirtyScene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
-    constructor(private _room: Room, customKey?: string | undefined) {
+    constructor(private _room: Room, customKey?: string) {
         super({
             key: customKey ?? _room.key,
         });
@@ -1789,7 +1789,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
@@ -2684,9 +2684,11 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
                 const duration = cameraSetEvent.smooth ? cameraSetEvent.duration ?? 1000 : 0;
-                cameraSetEvent.lock
-                    ? this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration)
-                    : this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
+                if (cameraSetEvent.lock) {
+                    this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration);
+                } else {
+                    this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
+                }
             })
         );
 

@@ -197,7 +197,7 @@ describe("SpaceProviderInterface implementation", () => {
 
                 spaceRegistry.destroy();
                 expect(spaceRegistry.getAll()).toHaveLength(0);
-                // eslint-disable-next-line @typescript-eslint/unbound-method
+
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
             });
         });

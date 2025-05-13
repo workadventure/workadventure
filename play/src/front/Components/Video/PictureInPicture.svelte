@@ -7,7 +7,7 @@
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import PictureInPictureAudioWrapper from "./PictureInPicture/PictureInPictureAudioWrapper.svelte";
+    import AudioStreamWrapper from "./PictureInPicture/AudioStreamWrapper.svelte";
     import {} from "./PictureInPicture/PictureInPictureWindow";
 
     const debug = Debug("app:PictureInPicture");
@@ -17,6 +17,8 @@
     let pipWindow: Window | undefined;
 
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
+
+    /* eslint-disable svelte/no-dom-manipulating */
 
     const DocumentPictureInPictureSchema = z.object({
         requestWindow: z
@@ -178,7 +180,7 @@
         <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
         <!-- So we need to play audio out of the PIP slot. -->
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-            <PictureInPictureAudioWrapper {peer} />
+            <AudioStreamWrapper {peer} />
         {/each}
     {/if}
 </div>
