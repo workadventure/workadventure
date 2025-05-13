@@ -19,7 +19,10 @@
     let errorOnFile: string | undefined;
     let fileToUpload: UploadFileMessage | undefined = undefined;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        change: string | null | undefined;
+        deleteFile: undefined;
+    }>();
 
     const filesUploadFormat = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.split(",").map(
         (format) => format.trim().split("/")[1]
@@ -91,14 +94,6 @@
 
         dropZoneRef.classList.remove("border-cyan-400");
     }
-
-    function deleteFile() {
-        property.link = null;
-        property.name = null;
-        // TODO : remove the file from the map storage
-        // emit event to delete the file
-        dispatch("change");
-    }
 </script>
 
 <div class="no-padding">
@@ -147,7 +142,7 @@
                 textColor="text-white"
                 on:click={() => {
                     selectedFile = undefined;
-                    deleteFile();
+                    dispatch("deleteFile");
                     dispatch("change");
                 }}
             />

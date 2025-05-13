@@ -37,7 +37,8 @@ import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
-import { UploadFileMapStorageCommand } from "./Commands/UploadFileMapStorageCommand";
+import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
+import { DeleteFileMapStorageCommand } from "./Commands/File/DeleteFileMapStorageCommand";
 
 const editionLocks = new LockByKey<string>();
 
@@ -321,6 +322,13 @@ const mapStorageServer: MapStorageServer = {
                         const uploadFileMessage = editMapMessage.uploadFileMessage;
                         await entitiesManager.executeCommand(
                             new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
+                        );
+                        break;
+                    }
+                    case "deleteFileMessage": {
+                        const deleteFileMessage = editMapMessage.deleteFileMessage;
+                        await entitiesManager.executeCommand(
+                            new DeleteFileMapStorageCommand(deleteFileMessage, mapUrl.hostname)
                         );
                         break;
                     }
