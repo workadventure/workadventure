@@ -1,8 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onDestroy } from "svelte";
     import { inputFormFocusStore } from "../../../Stores/UserInputStore";
-    import CloseButton from "./CloseButton.svelte";
-
+    import ButtonClose from "../../Input/ButtonClose.svelte";
     const dispatch = createEventDispatcher<{
         close: void;
     }>();
@@ -13,12 +12,15 @@
 </script>
 
 <div class="property-settings-container">
-    <div class="header relative">
+    <div class="header relative flex items-center justify-between p-x-2">
         <slot name="header">_MISSING_</slot>
-        <CloseButton
+        <ButtonClose
             on:click={() => {
                 dispatch("close");
             }}
+            bgColor="bg-white/20"
+            hoverColor="bg-white/30"
+            size="xs"
         />
     </div>
     <div class="content p-2">
