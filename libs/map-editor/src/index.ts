@@ -9,6 +9,7 @@ export * from "./Commands/Entity/UpdateEntityCommand";
 export * from "./Commands/Entity/UploadEntityCommand";
 export * from "./Commands/Entity/DeleteCustomEntityCommand";
 export * from "./Commands/File/UploadFileCommand";
+export * from "./Commands/File/DeleteFileCommand";
 export * from "./Commands/WAM/UpdateWAMSettingCommand";
 export * from "./Commands/WAM/UpdateWAMMetadataCommand";
 export * from "./GameMap/GameMap";
