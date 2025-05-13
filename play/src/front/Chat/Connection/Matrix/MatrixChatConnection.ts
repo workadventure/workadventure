@@ -29,6 +29,7 @@ import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { canAcceptVerificationRequest, VerificationRequest } from "matrix-js-sdk/lib/crypto-api";
+import { asError } from "catch-unknown";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -724,7 +725,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 if (state === SyncState.Syncing) {
                     if (timer) clearTimeout(timer);
                     if (!this.client) {
-                        reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+                        reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
                         return;
                     }
                     this.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
@@ -734,7 +735,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
             const timer = setTimeout(() => {
                 if (!this.client) {
-                    reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+                    reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
                     return;
                 }
                 this.client.off(ClientEvent.Sync, resolveIfIsASyncingEvent);
@@ -777,14 +778,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             throw this.handleMatrixError(error);
         }
     }
-    private handleMatrixError(error: unknown) {
+    private handleMatrixError(error: unknown): Error {
         if (error instanceof MatrixError) {
-            error.data.error;
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
             return new Error(error.data.error, { cause: error });
         }
-        return error;
+        return asError(error);
     }
     private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions: CreateRoomOptions): ICreateRoomOpts {
         const roomName = roomOptions.name;
@@ -804,8 +804,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             is_direct: roomOptions.is_direct,
             initial_state: this.computeInitialState(roomOptions),
             power_level_content_override: {
-                //TODO: fix type
-                // @ts-ignore
+                // @ts-ignore TODO: fix type
                 suggested: roomOptions.suggested ?? false,
             },
         };
@@ -880,7 +879,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     async createDirectRoom(userToInvite: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined> {
         if (!this.client) {
-            return Promise.reject(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+            return Promise.reject(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
         }
 
         const existingDirectRoom = this.getDirectRoomFor(userToInvite);
@@ -993,7 +992,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     res(publicRoomsChunkRoom);
                 })
                 .catch((error) => {
-                    rej(error);
+                    rej(asError(error));
                 });
         });
     }
@@ -1057,7 +1056,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
 
         try {
-            // @ts-ignore
             await this.client.sendStateEvent(
                 spaceRoomId,
                 EventType.SpaceChild,

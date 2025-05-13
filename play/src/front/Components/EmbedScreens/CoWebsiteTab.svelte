@@ -31,7 +31,10 @@
     let srcJitsi = jitsiIcon;
     let srcMeeting = meetingIcon;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{
+        close: void;
+        copy: void;
+    }>();
 
     onMount(() => {
         if (isJitsi) {

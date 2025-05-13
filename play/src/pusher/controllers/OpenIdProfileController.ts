@@ -6,7 +6,6 @@ import { BaseHttpController } from "./BaseHttpController";
 
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile", async (req, res) => {
             const query = validateQuery(
                 req,

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { describe, expect, it } from "vitest";
 import { EnvironmentVariables } from "../src/Enum/EnvironmentVariableValidator";
 

@@ -29,7 +29,7 @@ export const getColorHexOfStatus = (status: AvailabilityStatus): string => {
 };
 
 export const getStatusLabel = (status: AvailabilityStatus): string => {
-    //@ts-ignore
+    //@ts-ignore Enum[key] is a string in Typescript
     const fn = get(LL).actionbar.status[AvailabilityStatus[status]];
     return fn?.() || "Unknown";
 };

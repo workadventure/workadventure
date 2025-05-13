@@ -2,15 +2,24 @@
     //import svelteLogo from './assets/svelte.svg'
     //import viteLogo from '/vite.svg'
 
-    import {MapsCacheFileFormat, WAMFileFormat} from "@workadventure/map-editor";
-    import {onMount} from "svelte";
+    import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
+    import { onMount } from "svelte";
 
     // TODO: not perfect. We should instead get data from an env var.
-    const playUrl = window.location.protocol + "//" + window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
+    const playUrl =
+        window.location.protocol +
+        "//" +
+        window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
     const mapStorageUrl = window.location.protocol + "//" + window.location.host;
 
-    const responsePromise = fetch<MapsCacheFileFormat>('../maps', {
-        redirect: "follow"
+    const responsePromise = fetch<MapsCacheFileFormat>("../maps", {
+        redirect: "follow",
+    }).then(async (response) => {
+        if (response.ok) {
+            return MapsCacheFileFormat.parse(await response.json());
+        } else {
+            throw new Error("Error while fetching the maps list: " + response.statusText);
+        }
     });
 
     function addTmj() {
@@ -18,10 +27,10 @@
             alert("The WAM path should be a valid non existing file name, ending with '.wam'. For instance: 'map.wam'");
         }
 
-        fetch("../"+wamPath, {
+        fetch("../" + wamPath, {
             method: "PUT",
             headers: {
-                'Content-type': 'application/json; charset=UTF-8',
+                "Content-type": "application/json; charset=UTF-8",
             },
             body: JSON.stringify({
                 version: "1.0.0",
@@ -30,37 +39,39 @@
                 metadata: {},
                 entityCollections: [
                     {
-                        "url": playUrl+"/collections/FurnitureCollection.json",
-                        "type": "file"
+                        url: playUrl + "/collections/FurnitureCollection.json",
+                        type: "file",
                     },
                     {
-                        "url": playUrl+"/collections/OfficeCollection.json",
-                        "type": "file"
-                    }
+                        url: playUrl + "/collections/OfficeCollection.json",
+                        type: "file",
+                    },
                 ],
                 areas: [],
             } satisfies WAMFileFormat),
-        }).then((response) => {
-            if (response.ok) {
-                alert("Map added successfully!");
-                closeTmjDialog();
-                window.location.reload();
-            } else {
-                alert("Error while adding the map: " + response.statusText);
-            }
-        }).catch((error) => {
-            alert("Error while adding the map: " + error);
-        });
+        })
+            .then((response) => {
+                if (response.ok) {
+                    alert("Map added successfully!");
+                    closeTmjDialog();
+                    window.location.reload();
+                } else {
+                    alert("Error while adding the map: " + response.statusText);
+                }
+            })
+            .catch((error) => {
+                alert("Error while adding the map: " + error);
+            });
     }
 
-    let dialog: HTMLDialogElement|null; // Reference to the dialog tag
+    let dialog: HTMLDialogElement | null; // Reference to the dialog tag
     onMount(() => {
-        dialog = document.getElementById('add-tmj-dialog') as HTMLDialogElement|null;
-    })
+        dialog = document.getElementById("add-tmj-dialog") as HTMLDialogElement | null;
+    });
 
     function showDialogClick() {
         dialog?.showModal();
-    };
+    }
 
     function closeTmjDialog() {
         dialog?.close();
@@ -75,48 +86,41 @@
 
     {#await responsePromise}
         <p>Loading maps list...</p>
-    {:then response}
-        {#await response.json()}
-            <p>Loading maps list...</p>
-        {:then json}
-            <h2>Maps list</h2>
-            <ul>
-                {#each Object.entries(json.maps) as [name, map]}
+    {:then json}
+        <h2>Maps list</h2>
+        <ul>
+            {#each Object.entries(json.maps) as [name, map] (name)}
                 <li>
                     <a href={mapStorageUrl + "/" + name} target="_blank">{name}</a>
                     &rarr;
                     <a href={map.mapUrl} target="_blank">{map.mapUrl}</a>
                 </li>
-                {/each}
-            </ul>
-        {:catch error}
-            <p style="color: red">{error.message}</p>
-        {/await}
+            {/each}
+        </ul>
     {:catch error}
         <p style="color: red">{error.message}</p>
     {/await}
 
     <button on:click={showDialogClick}>Add a map (hosted on a remote server)</button>
 
-
     <div style="display: flex;">
         <div style="padding: 10px; margin: 20px;">
             <h2>Upload map</h2>
             <p>Use this very simple web interface to upload a map (as a ZIP file).</p>
             <form action="../upload" method="post" enctype="multipart/form-data">
-                <label for="file">Select a file to upload:</label><br>
-                <input type="file" name="file" id="file" accept=".zip"><br>
-                <label for="directory">Directory:</label><br>
-                <input type="text" name="directory" id="directory" value="/"><br><br>
-                <input type="submit" value="Submit">
+                <label for="file">Select a file to upload:</label><br />
+                <input type="file" name="file" id="file" accept=".zip" /><br />
+                <label for="directory">Directory:</label><br />
+                <input type="text" name="directory" id="directory" value="/" /><br /><br />
+                <input type="submit" value="Submit" />
             </form>
         </div>
         <div style="padding: 10px; margin: 20px;">
             <h2>Download map</h2>
             <form action="../download" method="get">
-                <label for="directoryDownload">Directory:</label><br>
-                <input type="text" name="directory" id="directoryDownload" value="/"><br><br>
-                <input type="submit" value="Submit">
+                <label for="directoryDownload">Directory:</label><br />
+                <input type="text" name="directory" id="directoryDownload" value="/" /><br /><br />
+                <input type="submit" value="Submit" />
             </form>
         </div>
     </div>
@@ -141,5 +145,4 @@
 </main>
 
 <style>
-
 </style>

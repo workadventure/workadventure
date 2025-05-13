@@ -68,10 +68,8 @@ class Chat {
         await page.locator('.user', {hasText: nickname}).locator('span:has-text("Talk to")').click({ timeout: 5_000 });
     }
 
-    async UL_sendMessage(page: Page, nickname: string, text: string){
-        await page.locator('.user', {hasText: nickname}).locator('.wa-dropdown').click();
-        await expect(page.locator('.user', {hasText: nickname}).locator('span:has-text("Send message")')).toBeVisible();
-        await page.locator('.user', {hasText: nickname}).locator('span:has-text("Send message")').click({ timeout: 5_000 });
+    async UL_sendMessage(page: Page, nickname: string){
+        await page.getByTestId('send-message-'+nickname).click();
     }
 
     async AT_sendMessage(page: Page, text: string){

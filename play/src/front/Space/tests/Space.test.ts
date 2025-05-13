@@ -66,9 +66,8 @@ describe("Space test", () => {
 
         new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
     });
 
@@ -84,9 +83,9 @@ describe("Space test", () => {
         const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
 
         space.destroy();
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenCalledOnce();
-        // eslint-disable-next-line @typescript-eslint/unbound-method
+
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
     it("should add metadata when key is not in metadata map", () => {

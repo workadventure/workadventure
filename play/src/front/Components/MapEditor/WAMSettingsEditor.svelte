@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { ComponentType, onDestroy, onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -9,6 +9,7 @@
         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     } from "../../Stores/MapEditorStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
 
@@ -18,7 +19,7 @@
 
     onMount(() => {
         isVisible = true;
-        if (userIsAdminStore) {
+        if ($userIsAdminStore) {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings);
         } else {
             mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone);
@@ -29,7 +30,7 @@
         isVisible = false;
     });
 
-    function getCurrentComponent(): typeof Megaphone | typeof RoomSettings {
+    function getCurrentComponent(): ComponentType {
         switch ($mapEditorWamSettingsEditorToolCurrentMenuItemStore) {
             case WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone: {
                 return Megaphone;
@@ -55,10 +56,8 @@
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
     >
-        <div class="absolute top-2 right-2 hover:bg-white/10">
-            <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}
-                >&#215;</button
-            >
+        <div class="absolute top-2 right-2 z-50 close-window {isVisible ? 'visible' : ''} ">
+            <ButtonClose on:click={close} />
         </div>
         <div class="flex flex-wrap w-full grow max-h-[70vh] overflow-auto">
             <div class="menu mx-auto flex flex-col relative">
@@ -77,7 +76,7 @@
                                     )}
                             >
                                 <span>{$LL.mapEditor.settings.room.title()}</span>
-                                <IconChevronRight class={`-mr-2`} />
+                                <IconChevronRight class="-mr-2" />
                             </li>
                         {/if}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->

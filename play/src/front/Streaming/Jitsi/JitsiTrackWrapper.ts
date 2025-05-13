@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { Subscription } from "rxjs";
@@ -112,6 +111,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
         } else if (jitsiTrack.isVideoTrack()) {
             // The jitsiTrack.getVideoType() return is a lie.
             // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
+
             if (jitsiTrack.getVideoType() === "desktop") {
                 const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
                 if (oldScreenSharingTrack != undefined) {
