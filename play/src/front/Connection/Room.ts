@@ -36,10 +36,10 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
-    private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _metadata: unknown;
+    private _backgroundSceneImage: string | undefined;
     private _showPoweredBy: boolean | undefined = true;
     private _roomName: string | undefined;
     private _pricingUrl: string | undefined;
@@ -168,9 +168,9 @@ export class Room {
                 }
                 this._opidWokaNamePolicy = data.opidWokaNamePolicy ?? OPID_WOKA_NAME_POLICY;
                 this._canReport = data.canReport ?? false;
-                this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                this._backgroundSceneImage = data.backgroundSceneImage ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._primaryColor = data.primaryColor ?? undefined;
@@ -296,10 +296,6 @@ export class Room {
         return this._canReport;
     }
 
-    get loadingCowebsiteLogo(): string | undefined {
-        return this._loadingCowebsiteLogo;
-    }
-
     get opidWokaNamePolicy(): OpidWokaNamePolicy | undefined {
         return this._opidWokaNamePolicy;
     }
@@ -310,6 +306,10 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get backgroundSceneImage(): string | undefined {
+        return this._backgroundSceneImage;
     }
 
     get metadata(): unknown {
