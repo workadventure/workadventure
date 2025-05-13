@@ -73,18 +73,6 @@
 
                     <div class="flex items-center justify-center p-2">
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl pl-3">
-                            <div
-                                id="woka"
-                                class=" bt-3 overflow-hidden mt-3 border w-fit h-fit rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
-                            >
-                                <img
-                                    id="wokaPicture"
-                                    class="h-16 w-16 self-center relative top-4"
-                                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAz5JREFUWEfFlktIVFEcxv8TIVRUpkkD5VAmGji9dJGKVDDjELYzWkQQZI9NC1cFbVq0CWrlok0PgyBahO6SGGegQtQW2kshxTTGggnTrKhAoonvjN/lzH17MzqbmTnn3PP9zvd/3AnJfx6hAPo5H8/4Ptf3RhFRwhu3VSn9aHWl+hwZmyj4jrlPU+Nk9Dzfc8PiSTkIQ1QXNAPov7FvEcRVww+AIa5b31BXKwNDw8aU+TdhvCC8AArEdRE3AH3Ny4klAeBWZmFzSOzW3VxwA7DEHWIcbknIJCWcmwu+ABjP+KaI0o9sXy+d/a8t1djWuFMyb7+o+dTHTEF1OLngGyA8v2CIe/UBQmSLi4xSDQxAO4MCMGyBAEpEZMVi/b961FNw8dPHj1iMuHWvq2Bu16EW1Td+T43LXH7F4rhjCEpEchBBrBn7G8luaYrukQe9vXL78gULwKlLV+Voc7P0jbyQs4lWIxeQG4CbCwpQ8XNcKrbG5f5Ar7TVl6uDyyr3WQBmJp6puc7BaTnW0CyT71IyuapKAgHgILoA+kR9XGV/+a98KU6vzL8L9KGvIRGTgymBi063t42J+VBAYK4yLHIwZo07hABmHo/TXTKRzc/aWc/9Xp3QOBcgdMGiZprg7d2EAwHgIS8IinvdfEkAkZqY8SckPJtWCWlnO8SReNnSmJRujsrshxHJjKb/7nUM8UhNXL7PZ2XLjgPy/s0TWVMcloWnF40YM0eK9l+x7MuMplwhXOkoviFcrRyDOCHweb61TO62HJYTPQ/lWveMZR3PfM6OiRuEJ8Du2DlDHJbCWkLU9d2R2h9fZXj1OhlqOmnM6/vw8Mv0dUcXHAFwe4hhwHLcguK4FUKCcSbZITcT7cY+uAWnAMHQYdEpH2wBUHKseyRW/7ecusHeRHsOt+egEMH0+efJjhAu0bg2pBKWfcFcmo4Aermxk+FAhoRicIM5wjlazk6Keafe4Poy4oGkhgOML23lHoaL63AAa+ykTn3BdyfEAXoI9Oy2qxYCeHXNwAAsSwjZ5cY/A0BFYDDbdQC4goEKWXYAliUBIMLScltbthAwzryhua7NEF4tmGBLygH9pWT3kvFat3PjDyquFz87TvYcAAAAAElFTkSuQmCC"
-                                    loading="lazy"
-                                    alt="User woka's"
-                                />
-                            </div>
                             <div class="w-max ml-5 mt-[29px] ">
                                 <h3>{actionsMenuData.menuName}</h3>
                             </div>
