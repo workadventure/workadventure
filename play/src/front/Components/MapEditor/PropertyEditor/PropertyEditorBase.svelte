@@ -12,7 +12,7 @@
 </script>
 
 <div class="property-settings-container">
-    <div class="header relative flex items-center justify-between p-x-2">
+    <div class="header relative font-bold flex items-center justify-between px-2">
         <slot name="header">_MISSING_</slot>
         <ButtonClose
             on:click={() => {

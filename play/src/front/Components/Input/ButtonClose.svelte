@@ -2,8 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import { IconX } from "@wa-icons";
     export let dataTestId: string | undefined = undefined;
-    export let bgColor = "bg-white/10";
-    export let hoverColor = "bg-white/20";
+    export let bgColor = "bg-white/20";
+    export let hoverColor = "bg-white/30";
     export let textColor = "text-white";
 
     export let size: "xs" | "sm" | "md" | "lg" = "lg";
@@ -32,6 +32,6 @@
     class="{sizeClasses}  rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} hover:{hoverColor} close-btn flex items-center justify-center"
     data-testid={dataTestId}
     on:click={handleClick}
-    >
+>
     <IconX />
 </button>
