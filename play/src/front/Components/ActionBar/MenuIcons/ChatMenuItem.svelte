@@ -57,7 +57,7 @@
         }
         analyticsClient.openedChat();
     }}
-    classList="group/btn-message-circle rounded-r-lg pr-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pr-0'}"
+    classList="group/btn-message-circle rounded-r-lg pe-2 {last ? '' : '@sm/actions:rounded-r-none @sm/actions:pe-0'}"
     tooltipTitle={$LL.actionbar.help.chat.title()}
     desc={$LL.actionbar.help.chat.desc()}
     media="./static/Videos/Chat.mp4"
@@ -71,12 +71,12 @@
 </ActionBarButton>
 {#if $chatZoneLiveStore || $peerStore.size > 0}
     <div>
-        <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping bg-white" />
-        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 bg-white" />
+        <span class="w-4 h-4 block rounded-full absolute -top-1 -start-1 animate-ping bg-white" />
+        <span class="w-3 h-3 block rounded-full absolute -top-0.5 -start-0.5 bg-white" />
     </div>
 {:else if $totalMessagesToSee > 0}
     <div
-        class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
+        class="absolute -top-2 -start-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10"
     >
         {$totalMessagesToSee}
     </div>

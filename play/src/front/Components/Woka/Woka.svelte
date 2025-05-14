@@ -26,9 +26,9 @@
         margin: 0;
         padding: 0;
         position: static;
-        left: 0;
+        inset-inline-start: 0;
         bottom: 0;
-        right: 0;
+        inset-inline-end: 0;
         top: 0;
         image-rendering: pixelated;
     }

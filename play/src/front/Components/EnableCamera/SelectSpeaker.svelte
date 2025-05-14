@@ -16,9 +16,9 @@
 <div
     class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 mx-2 md:mx-0 w-full min-w-[300px] md:min-w-[400px] max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
-    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
+    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 ps-2">
         <VolumeIcon height="h-8" width="w-8" />
-        <div class="grow pr-8">{$LL.camera.editSpeaker()}</div>
+        <div class="grow pe-8 ps-2">{$LL.camera.editSpeaker()}</div>
         <button
             class="btn {!editMode ? 'btn-secondary' : 'btn-light btn-ghost'}"
             on:click|stopPropagation|preventDefault={() => (editMode = !editMode)}
@@ -46,7 +46,7 @@
                 >
                     <div class="flex items-center space-x-4 overflow-hidden truncate">
                         <div
-                            class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedDevice ===
+                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedDevice ===
                             speaker.deviceId
                                 ? 'bg-secondary border-secondary'
                                 : 'border-white'}"

@@ -46,7 +46,7 @@
             <EncryptionBadge />
         {/if}
     </div>
-    <div class="m-0 flex-1 text-left">
+    <div class="m-0 flex-1 text-start">
         {#each chunks as chunk (chunk.key)}
             <span
                 class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage

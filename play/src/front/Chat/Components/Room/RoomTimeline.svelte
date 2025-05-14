@@ -14,7 +14,7 @@
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import TypingUsers from "./TypingUsers.svelte";
-    import { IconChevronLeft, IconLoader, IconMailBox } from "@wa-icons";
+    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox } from "@wa-icons";
 
     export let room: ChatRoom;
 
@@ -37,6 +37,7 @@
 
     const gameScene = gameManager.getCurrentGameScene();
     const chatRoomsEnableInAdmin = gameScene.room.isChatEnabled;
+    const direction = document.documentElement.getAttribute("dir") || "ltr";
 
     $: messages = room?.messages;
     $: roomName = room?.name;
@@ -209,7 +210,11 @@
                         data-testid="chatBackward"
                         on:click={goBackAndClearSelectedChatMessage}
                     >
-                        <IconChevronLeft font-size="20" />
+                        {#if direction === "rtl"}
+                            <IconChevronRight font-size="20" />
+                        {:else}
+                            <IconChevronLeft font-size="20" />
+                        {/if}
                     </button>
                 {:else}
                     <div class="p-3 rounded-2xl aspect-square w-12" />

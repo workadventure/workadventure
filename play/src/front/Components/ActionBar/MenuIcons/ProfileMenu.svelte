@@ -134,7 +134,7 @@
             class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-2 pr-3 "
         >
             <Woka userId={-1} placeholderSrc="" customWidth="32px" />
-            <div class="grow flex flex-row @xl/actions:flex-col justify-start text-left pr-2">
+            <div class="grow flex flex-row @xl/actions:flex-col justify-start text-start pr-2">
                 <div
                     class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base order-last @xl/actions:order-first flex items-center"
                 >
@@ -142,7 +142,7 @@
                 </div>
                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                     <div
-                        class="aspect-square h-2 w-2 rounded-full mr-1.5"
+                        class="aspect-square h-2 w-2 rounded-full me-1.5"
                         style="background-color: {getColorHexOfStatus($availabilityStatusStore)}"
                     />
                     <div
@@ -249,12 +249,12 @@
                     <button
                         on:click={() => analyticsClient.logout()}
                         on:click={() => connectionManager.logout()}
-                        class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"
+                        class="group flex p-2 gap-2 items-center hover:bg-danger-600 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
                     >
                         <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
                             <IconLogout height="20" width="20" class="text-danger-600 group-hover:text-white" />
                         </div>
-                        <div class="text-left leading-4 text-danger-600 group-hover:text-white flex items-center">
+                        <div class="text-start leading-4 text-danger-600 group-hover:text-white flex items-center">
                             {$LL.menu.profile.logout()}
                         </div>
                     </button>

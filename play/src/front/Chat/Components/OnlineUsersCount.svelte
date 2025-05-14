@@ -6,7 +6,7 @@
     const userWorldCount = gameScene.worldUserCounter;
 </script>
 
-<div class="flex items-center justify-center text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
+<div class="flex items-center justify-center gap-1 text-success space-x-1.5 {searchActive ? 'hidden' : ''}">
     <div
         class="text-xs aspect-square min-w-5 h-5 px-1 border border-solid border-success flex items-center justify-center font-bold rounded"
     >

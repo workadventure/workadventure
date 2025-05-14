@@ -80,7 +80,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
+        <img class="w-6 me-2" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">
@@ -95,9 +95,9 @@
                     onChange={onValueChange}
                 />
                 {#if !playing}
-                    <button on:click={playAudio} class="mt-7 pl-1 pr-0 text-xl"> ▶️ </button>
+                    <button on:click={playAudio} class="mt-7 ps-1 pe-0 text-xl"> ▶️ </button>
                 {:else}
-                    <button on:click={stopAudio} class="mt-7 pl-1 pr-0 text-xl"> ⏹️ </button>
+                    <button on:click={stopAudio} class="mt-7 ps-1 pe-0 text-xl"> ⏹️ </button>
                 {/if}
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />

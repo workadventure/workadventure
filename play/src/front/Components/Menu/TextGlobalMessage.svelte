@@ -116,6 +116,10 @@
             border-top-right-radius: 12px;
         }
 
+        :global(.ql-editor) {
+            text-align: start;
+        }
+
         div.input-send-text {
             height: calc(100% - var(--height-toolbar));
             overflow: auto;
@@ -129,7 +133,7 @@
 
             :global(.ql-tooltip) {
                 top: 40% !important;
-                left: 20% !important;
+                inset-inline-start: 20% !important;
 
                 color: whitesmoke;
                 background-color: #333333;

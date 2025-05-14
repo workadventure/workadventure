@@ -65,7 +65,7 @@
     <IconDots />
 </button>
 <div
-    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-50 w-max right-4 top-10 p-1"
+    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-50 w-max end-4 top-10 p-1"
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideFolderOptions}
 >
