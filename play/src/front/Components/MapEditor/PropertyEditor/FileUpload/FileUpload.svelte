@@ -67,6 +67,7 @@
             property.id
         }.${fileExt}`;
 
+        //property.file = fileAsUint8Array;
         property.name = selectedFile.name;
         property.link = fileUrl;
         dispatch("change");

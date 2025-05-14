@@ -87,13 +87,6 @@
             ) as Option[];
     });
 
-    function handleFileChange() {
-        property.allowAPI = true;
-        property.closable = true;
-
-        dispatch("change");
-    }
-
     function onValueChange() {
         if (property.link) {
             dispatch("change");
@@ -123,6 +116,7 @@
         const deleteFileCommand = new DeleteFileFrontCommand(fileToDelete);
         deleteFileCommand.emitEvent(roomConnection);
 
+        property.file = undefined;
         property.link = null;
         property.name = null;
         dispatch("change");
@@ -166,7 +160,7 @@
         <FileUpload
             {property}
             on:change={() => {
-                handleFileChange();
+                dispatch("change");
             }}
             on:deleteFile={() => {
                 deleteFile();

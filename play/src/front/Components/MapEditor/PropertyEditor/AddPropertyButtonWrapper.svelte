@@ -396,7 +396,7 @@
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.openPdfProperties.label()}
         descriptionText={$LL.mapEditor.properties.openPdfProperties.description()}
-        img={"resources/icons/icon_pdf.png"}
+        img="resources/icons/icon_pdf.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="openPdf"
         on:click={(event) => {
