@@ -42,7 +42,6 @@
                         width="w-6"
                         strokeColor="stroke-white"
                         fillColor="fill-transparent"
-                        strokeWidth="1.5"
                         classList="aspect-ratio transition-all"
                     />
                 </button>
