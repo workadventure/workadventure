@@ -18,8 +18,11 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
+            console.log("operation", operation);
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = AreaDataProperty.safeParse(operation.value);
+                console.log("value", value);
+                console.log("operation.", operation);
 
                 if (!value.success) {
                     return acc;
@@ -40,6 +43,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 acc.push(
                     limit(async () => {
                         const response = await _axios.post(resourceUrl, operation.value);
+                        console.log("resourceUrl", resourceUrl, operation.value);
                         if (!response.data) {
                             return Promise.resolve();
                         }
@@ -68,6 +72,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 if (!value) return acc;
                 const resourceUrl = value.resourceUrl;
                 if (resourceUrl) {
+                    console.log("resourceUrl", resourceUrl, value);
                     acc.push(limit(() => _axios.delete(resourceUrl, { data: value })));
                 }
             }
@@ -93,6 +98,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
                 if (resourcesUrl) {
                     acc.push(
                         limit(async () => {
+                            console.log("resourceUrl", resourcesUrl, operation.value);
                             const response = await _axios.patch(resourcesUrl, property);
 
                             if (!response.data) {
