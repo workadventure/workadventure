@@ -26,7 +26,9 @@ export class FileUploadService {
             this.hostname
         );
         console.log("Uploading file to: ", mapPath);
+        console.log("hostname", this.hostname);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
+        console.log("filesystem", await fileSystem.listFiles(""));
         return;
     }
 }

@@ -18,6 +18,7 @@ export class FileDeleteService {
             this.hostname
         );
 
+        console.log("filesystem", await fileSystem.listFiles(""));
         console.log("Deleting file to: ", deleteFileMessage.name);
         await fileSystem.deleteFiles(mapPath);
         return;
