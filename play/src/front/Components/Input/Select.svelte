@@ -42,7 +42,7 @@
 
         <select
             id={uniqueId}
-            class="grow w-full input-select font-light pr-10 text-white"
+            class="grow w-full input-select font-light pe-10 text-white"
             class:input-select-light={variant === "light"}
             data-testid={dataTestId}
             {...$$restProps}

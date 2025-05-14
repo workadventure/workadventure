@@ -213,8 +213,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         addDescriptionField: "إضافة وصف", // Add description
         actionPopupOnPersonalAreaWithEntities: {
             title: "إجراء مطلوب", // Action required
-            description:
-                "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟", // This personal area contains one or more objects. What would you like to do with it?
+            description: "يحتوي هذا المجال الشخصي على كائن واحد أو أكثر. ماذا تريد أن تفعل معه؟", // This personal area contains one or more objects. What would you like to do with it?
             buttons: {
                 keep: "احتفظ", // Keep
                 remove: "أزل", // Remove
@@ -229,8 +228,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         header: {
             title: "أضف كائن إلى خريطتك", // Add an object to your map
-            description:
-                "ابحث، حمّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة.", // Search, upload, or select an existing object and add it to the map.
+            description: "ابحث، حمّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة.", // Search, upload, or select an existing object and add it to the map.
         },
         title: "وضع الكائن", // Place object
         editing: "تعديل: {name}", // Editing: {name}
@@ -254,8 +252,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         addDescriptionField: "إضافة وصف", // Add description
         uploadEntity: {
             title: "إضافة صورة", // Add image
-            description:
-                "اسحب وأفلت صورتك أو اخترها لإضافتها إلى الخريطة.", // Drag & drop your image or select it to add it to the map.
+            description: "اسحب وأفلت صورتك أو اخترها لإضافتها إلى الخريطة.", // Drag & drop your image or select it to add it to the map.
             dragDrop: "اسحب وأفلت أو", // Drag and drop or
             chooseFile: "اختر ملف", // Choose file
             errorOnFileFormat: "تنسيق الملف غير مدعوم", // File format not supported
@@ -268,8 +265,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             tags: "وسوم", // Tags
             objectType: "نوع الكائن", // Object type
             floatingObject: "كائن عائم", // Floating object
-            floatingObjectDescription:
-                "يمكن وضع الكائن العائم بحرية على الخريطة. وإلا، سيتم ضبطه على شبكة الخريطة.", // A floating object can be placed freely on the map. Otherwise, it will snap to the map's grid.
+            floatingObjectDescription: "يمكن وضع الكائن العائم بحرية على الخريطة. وإلا، سيتم ضبطه على شبكة الخريطة.", // A floating object can be placed freely on the map. Otherwise, it will snap to the map's grid.
             depth: "العمق", // Depth
             groundLevel: "مستوى الأرض", // Ground level
             custom: "مخصص", // Custom
@@ -288,8 +284,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         loading: "جارٍ التحميل...", // Loading...
         megaphone: {
             title: "الميغا فون", // Megaphone
-            description:
-                "الميغا فون هو أداة تمكنك من بث صوتك إلى العالم بأسره أو إلى غرفة محددة.", // The megaphone is a tool that allows you to broadcast your voice to the entire world or to a specific room.
+            description: "الميغا فون هو أداة تمكنك من بث صوتك إلى العالم بأسره أو إلى غرفة محددة.", // The megaphone is a tool that allows you to broadcast your voice to the entire world or to a specific room.
             inputs: {
                 spaceName: "اسم الغرفة", // Room name
                 spaceNameHelper:
@@ -359,8 +354,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         noRoomFound: "لم يتم العثور على غرفة 🙅‍♂️", // No room found 🙅‍♂️
         items: "{countEntity} كائنات / {countArea} مناطق", // {countEntity} entities / {countArea} areas
         close: "إغلاق", // Close
-        movingToRoom:
-            "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡", // Moving to room: {roomNameSelected}... See you soon... 🫡
+        movingToRoom: "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡", // Moving to room: {roomNameSelected}... See you soon... 🫡
         searchLabel: "ابحث عن غرفة", // Search for a room
         searchPlaceholder: "اكتب...", // Type...
     },

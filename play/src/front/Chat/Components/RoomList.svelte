@@ -201,7 +201,7 @@
                                 >
                                     <div class="absolute overflow-hidden w-full h-full rounded-full">
                                         <div
-                                            class="translate-y-[3px] -translate-x-[3px] group-hover:translate-y-[0] transition-all"
+                                            class=" flex items-center justify-center translate-y-[3px]  group-hover:translate-y-[0] transition-all"
                                         >
                                             <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
                                         </div>
@@ -209,7 +209,7 @@
                                 </div>
                             </div>
                             <div
-                                class="cursor-default text-sm grow text-left pl-1 {$proximityHasUnreadMessages
+                                class="cursor-default text-sm grow text-start ps-1 {$proximityHasUnreadMessages
                                     ? 'text-white font-bold'
                                     : 'text-white/75'}"
                             >
@@ -238,7 +238,7 @@
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
                             on:click={toggleDisplayRoomInvitations}
                         >
-                            <div class="text-sm font-bold tracking-widest uppercase grow text-left">
+                            <div class="text-sm font-bold tracking-widest uppercase grow text-start">
                                 {$LL.chat.invitations()}
                             </div>
                             <button
@@ -250,7 +250,7 @@
                             </button>
                         </button>
                         {#if displayRoomInvitations}
-                            <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                            <div class="flex flex-col overflow-auto ps-3 pr-4 pb-3">
                                 <ShowMore items={filteredRoomInvitations} maxNumber={8} idKey="id" let:item={room}>
                                     <RoomInvitation {room} />
                                 </ShowMore>
@@ -263,7 +263,7 @@
                         on:click={toggleDisplayDirectRooms}
                     >
                         <div class="flex items-center space-x-2 m-0 p-0 grow">
-                            <div class="text-sm font-bold tracking-widest uppercase grow text-left">
+                            <div class="text-sm font-bold tracking-widest uppercase grow text-start">
                                 {$LL.chat.people()}
                             </div>
                             <button
@@ -293,7 +293,7 @@
                             data-testid="roomAccordeon"
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
-                                <div class="text-sm font-bold tracking-widest uppercase grow text-left">
+                                <div class="text-sm font-bold tracking-widest uppercase grow text-start">
                                     {$LL.chat.rooms()}
                                 </div>
                             </div>
@@ -325,7 +325,7 @@
             <RoomTimeline room={$selectedRoomStore} />
         </div>
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
-        <div class="flex flex-col flex-1 pl-4 items-center pt-8">
+        <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
                 <img src={getCloseImg} alt="Discussion bubble" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
@@ -346,7 +346,7 @@
                     class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
                     <IconCloudLock font-size="20" />
-                    <div class="text-sm font-bold grow text-left">
+                    <div class="text-sm font-bold grow text-start">
                         {$LL.chat.e2ee.encryptionNotConfigured()}
                     </div>
                     <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">

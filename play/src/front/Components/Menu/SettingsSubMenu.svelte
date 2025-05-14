@@ -230,7 +230,7 @@
             <CamArrowIcon />
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+        <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -287,7 +287,7 @@
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+        <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li

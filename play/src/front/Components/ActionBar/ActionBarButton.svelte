@@ -107,7 +107,7 @@
     </div>
 {:else}
     <button
-        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-left rounded select-none
+        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
@@ -124,7 +124,7 @@
                 <slot />
             </div>
         {/if}
-        <div class="text-left h-6 leading-4 flex items-center text-nowrap">
+        <div class="text-start h-6 leading-4 flex items-center text-nowrap">
             {label ?? tooltipTitle ?? ""}
             <slot name="end" />
         </div>
@@ -137,7 +137,7 @@
         z-index: -1;
         position: absolute;
         top: 0;
-        left: 0;
+        inset-inline-start: 0;
         width: 100%;
         height: 200%;
         border-radius: 100%;

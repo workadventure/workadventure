@@ -104,7 +104,7 @@
         class=" chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
         {#if $hideActionBarStoreBecauseOfChatBar}
-            <div class="close-window absolute right-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
+            <div class="close-window absolute end-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
                 <button
                     class="hover:bg-white/10 rounded aspect-square w-10 h-10 m-0 flex items-center justify-center !text-white"
                     data-testid="closeChatButton"

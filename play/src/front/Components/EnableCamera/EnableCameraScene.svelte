@@ -211,7 +211,7 @@
                     <MicOnIcon height="h-8" width="w-8" slot="icon" />
                     <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
 
-                    <div class="absolute top-4 left-0 flex justify-center w-full " slot="widget">
+                    <div class="absolute top-4 start-0 flex justify-center w-full " slot="widget">
                         <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                     </div>
                 </SelectMicrophone>
@@ -254,7 +254,7 @@
                 {/if}
             </div>
             <div
-                class="fixed bottom-0 left-0  !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
+                class="fixed bottom-0 start-0  !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
                 <section
                     class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4 "
@@ -284,8 +284,8 @@
         </div>
     </section>
 </form>
-<div class="absolute left-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');" />
-<div class="absolute left-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
+<div class="absolute start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');" />
+<div class="absolute start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
 
 <style lang="scss">
     .enableCameraScene {
