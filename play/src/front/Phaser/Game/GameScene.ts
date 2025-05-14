@@ -365,6 +365,7 @@ export class GameScene extends DirtyScene {
     public landingAreas: AreaData[] = [];
 
     public _chatConnection: ChatConnectionInterface | undefined;
+    private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1808,6 +1809,8 @@ export class GameScene extends DirtyScene {
                     //this.simplePeer,
                     iframeListener
                 );
+
+                this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 this.scriptingVideoManager = new ScriptingVideoManager();
@@ -2607,38 +2610,56 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
-                switch (chatMessage.options.scope) {
-                    case "local": {
-                        const room = this.proximityChatRoom;
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        switch (chatMessage.options.scope) {
+                            case "local": {
+                                room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
+                                selectedRoomStore.set(room);
+                                chatVisibilityStore.set(true);
 
-                        room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
-                        selectedRoomStore.set(room);
-                        chatVisibilityStore.set(true);
-                        break;
-                    }
-                    case "bubble": {
-                        const room = this.proximityChatRoom;
-
-                        room.addExternalMessage("bubble", chatMessage.message);
-                        selectedRoomStore.set(room);
-                        chatVisibilityStore.set(true);
-                    }
-                }
+                                break;
+                            }
+                            case "bubble": {
+                                room.addExternalMessage("bubble", chatMessage.message);
+                                selectedRoomStore.set(room);
+                                chatVisibilityStore.set(true);
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error while sending proximity chat message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const room = this.proximityChatRoom;
-
-                room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        room.addExternalTypingUser(
+                            btoa(sartWriting.author ?? "unknow"),
+                            sartWriting.author ?? "unknow",
+                            null
+                        );
+                    })
+                    .catch((error) => {
+                        console.error("Error while starting typing proximity message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const room = this.proximityChatRoom;
-
-                room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
+                    })
+                    .catch((error) => {
+                        console.error("Error while stopping typing proximity message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
 
@@ -3934,6 +3955,14 @@ ${escapedMessage}
 
     private disableCameraResistance(): void {
         this.cameraManager.disableResistanceZone();
+    }
+
+    private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
+        if (this._proximityChatRoom) {
+            return Promise.resolve(this._proximityChatRoom);
+        }
+
+        return this._proximityChatRoomDeferred.promise;
     }
 
     //get spaceStore(): Promise<SpaceProviderInterface> {
