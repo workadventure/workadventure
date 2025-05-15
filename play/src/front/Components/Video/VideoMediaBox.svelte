@@ -285,7 +285,7 @@
 
     {#if inCameraContainer && videoEnabled && !missingUserActivation}
         <button
-            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
             on:click={() => highlightPeer(peer)}
         >
             <ArrowsMaximizeIcon />
