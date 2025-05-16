@@ -14,6 +14,7 @@ import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollection
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
 //TODO : revoir le nom
 export type ExtendedStreamable = Streamable & {
@@ -33,8 +34,17 @@ export class LiveKitParticipant {
     private _hasVideo = writable<boolean>(false);
     private _isMuted = writable<boolean>(true);
     private _spaceUser: SpaceUserExtended;
+    private _videoRemoteTrack: RemoteTrack | undefined;
+    private _screenShareRemoteTrack: RemoteTrack | undefined;
+    private _videoElements: HTMLVideoElement[] = [];
+    private _screenShareElements: HTMLVideoElement[] = [];
 
-    constructor(private participant: Participant, private space: SpaceInterface, private spaceUser: SpaceUserExtended) {
+    constructor(
+        private participant: Participant,
+        private space: SpaceInterface,
+        private spaceUser: SpaceUserExtended,
+        private highlightedEmbedScreenStore = highlightedEmbedScreen
+    ) {
         this.listenToParticipantEvents();
         this._spaceUser = this.spaceUser;
         this._isSpeakingStore = writable(this.participant.isSpeaking);
@@ -45,23 +55,41 @@ export class LiveKitParticipant {
 
     private initializeTracks() {
         this.participant.trackPublications.forEach((publication: TrackPublication) => {
-            if (publication.track) {
+            const track = publication.track;
+            if (track) {
                 if (publication.source === Track.Source.Camera) {
-                    this._videoStreamStore.set(publication.track.mediaStream);
-                    this._hasVideo.set(!publication.track.isMuted);
+                    this._videoStreamStore.set(track.mediaStream);
+                    this._hasVideo.set(!track.isMuted);
+                    const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    console.log(">>>>>>> videoElements", videoElements);
+                    videoElements.forEach((videoElement) => {
+                        console.log("attach to existing videoElement and existing track", videoElement, track);
+                        videoElement.autoplay = true;
+                        videoElement.playsInline = true;
+                        videoElement.muted = true;
+                        track.attach(videoElement);
+                    });
                     this.updateLivekitVideoStreamStore().catch((e) => {
                         console.error("Error while updating livekit video stream store", e);
                         Sentry.captureException(e);
                     });
                 } else if (publication.source === Track.Source.Microphone) {
-                    this._audioStreamStore.set(publication.track.mediaStream);
-                    this._isMuted.set(publication.track.isMuted);
+                    this._audioStreamStore.set(track.mediaStream);
+                    this._isMuted.set(track.isMuted);
                     this.updateLivekitVideoStreamStore().catch((e) => {
                         console.error("Error while updating livekit video stream store", e);
                         Sentry.captureException(e);
                     });
                 } else if (publication.source === Track.Source.ScreenShare) {
-                    this._screenShareStreamStore.set(publication.track.mediaStream);
+                    this._screenShareStreamStore.set(track.mediaStream);
+                    const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    screenElements.forEach((screenElement) => {
+                        console.log("attach to existing screenElement and existing track", screenElement, track);
+                        screenElement.autoplay = true;
+                        screenElement.playsInline = true;
+                        screenElement.muted = true;
+                        track.attach(screenElement);
+                    });
                     this.updateLivekitScreenShareStreamStore().catch((e) => {
                         console.error("Error while updating livekit screen share stream store", e);
                         Sentry.captureException(e);
@@ -83,7 +111,29 @@ export class LiveKitParticipant {
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
+            // Set initial subscription state based on visibility
+            // const isVisible = get(this._isVisible);
+            // publication.setEnabled(isVisible);
             this._hasVideo.set(!track.isMuted);
+
+            // Create and attach video element
+            this._videoRemoteTrack = track;
+
+            // this._videoElements.forEach((videoElement) => {
+            //     videoElement.autoplay = true;
+            //     videoElement.playsInline = true;
+            //     videoElement.muted = true;
+            //     track.attach(videoElement);
+            // });
+
+            this.space.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
+                console.log("attach to existing videoElement", videoElement);
+                videoElement.autoplay = true;
+                videoElement.playsInline = true;
+                videoElement.muted = true;
+                track.attach(videoElement);
+            });
+
             this.updateLivekitVideoStreamStore().catch(() => {
                 console.error("Error updating livekit video stream store");
             });
@@ -95,6 +145,26 @@ export class LiveKitParticipant {
             });
         } else if (publication.source === Track.Source.ScreenShare) {
             this._screenShareStreamStore.set(track.mediaStream);
+
+            // Create and attach screen share element
+            this._screenShareRemoteTrack = track;
+
+            // this._screenShareElements.forEach((screenElement) => {
+            //     screenElement.autoplay = true;
+            //     screenElement.playsInline = true;
+            //     screenElement.muted = true;
+            //     track.attach(screenElement);
+            // });
+
+            const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+            screenElements.forEach((screenElement) => {
+                console.log("attach to existing screenElement", screenElement);
+                screenElement.autoplay = true;
+                screenElement.playsInline = true;
+                screenElement.muted = true;
+                track.attach(screenElement);
+            });
+
             this.updateLivekitScreenShareStreamStore().catch(() => {
                 console.error("Error updating livekit screen share stream store");
             });
@@ -106,8 +176,24 @@ export class LiveKitParticipant {
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
             // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
+            if (this._videoRemoteTrack === track) {
+                this._videoRemoteTrack = undefined;
+                const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                videoElements.forEach((videoElement) => {
+                    track.detach(videoElement);
+                    videoElement.remove();
+                });
+            }
         } else if (publication.source === Track.Source.ScreenShare) {
             // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
+            if (this._screenShareRemoteTrack === track) {
+                this._screenShareRemoteTrack = undefined;
+                const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                screenElements.forEach((screenElement) => {
+                    track.detach(screenElement);
+                    screenElement.remove();
+                });
+            }
         }
     }
 
@@ -138,6 +224,8 @@ export class LiveKitParticipant {
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
         this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+
+        //TODO : faire le attach detach dans cette partie ?
     }
 
     private async updateLivekitScreenShareStreamStore() {
@@ -160,6 +248,7 @@ export class LiveKitParticipant {
             muteAudio: false,
             displayMode: "cover",
             displayInPictureInPictureMode: true,
+            usePresentationMode: false,
             media: {
                 type: "mediaStore",
                 streamStore: derived(
@@ -180,6 +269,24 @@ export class LiveKitParticipant {
                         return new MediaStream(tracks);
                     }
                 ),
+                attach: (container: HTMLVideoElement) => {
+                    const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    videoElements.push(container);
+                    this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
+
+                    if (this._videoRemoteTrack) {
+                        this._videoRemoteTrack.attach(container);
+                    }
+                },
+                detach: (container: HTMLVideoElement) => {
+                    let videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    videoElements = videoElements.filter((element) => element !== container);
+                    this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
+
+                    if (this._videoRemoteTrack) {
+                        this._videoRemoteTrack.detach(container);
+                    }
+                },
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
@@ -190,7 +297,7 @@ export class LiveKitParticipant {
 
     public async getScreenShareStream(): Promise<ExtendedStreamable> {
         const player = await this._spaceUser.getPlayer();
-        return {
+        const streamble: ExtendedStreamable = {
             uniqueId: this.participant.sid,
             hasAudio: writable(false),
             hasVideo: writable(true),
@@ -203,18 +310,51 @@ export class LiveKitParticipant {
             muteAudio: false,
             displayMode: "fit",
             displayInPictureInPictureMode: true,
+            usePresentationMode: true,
             media: {
                 type: "mediaStore",
                 streamStore: this._screenShareStreamStore,
+                attach: (container: HTMLVideoElement) => {
+                    const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    screenElements.push(container);
+                    this.space.screenShareContainerMap.set(this._spaceUser.spaceUserId, screenElements);
+                    if (this._screenShareRemoteTrack) {
+                        this._screenShareRemoteTrack.attach(container);
+                    }
+                },
+                detach: (container: HTMLVideoElement) => {
+                    let screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    screenElements = screenElements.filter((element) => element !== container);
+                    this.space.screenShareContainerMap.set(this._spaceUser.spaceUserId, screenElements);
+                    if (this._screenShareRemoteTrack) {
+                        this._screenShareRemoteTrack.detach(container);
+                    }
+                },
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
             player,
             userId: this._spaceUser.userId,
         };
+
+        this.highlightedEmbedScreenStore.toggleHighlight(streamble);
+
+        return streamble;
     }
 
     public destroy() {
+        // Clean up video elements
+
+        // ????
+        this._videoElements.forEach((videoElement) => {
+            videoElement.remove();
+        });
+        this._screenShareElements.forEach((screenElement) => {
+            screenElement.remove();
+        });
+
+        //detach ???
+
         this.participant.off(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
         this.participant.off(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
         this.participant.off(ParticipantEvent.TrackMuted, this.handleTrackMuted.bind(this));

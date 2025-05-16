@@ -57,13 +57,15 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "cover";
     public readonly displayInPictureInPictureMode = true;
+    public readonly usePresentationMode = false;
 
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
-        private spaceFilter: Promise<SpaceFilterInterface>
+        private spaceFilter: Promise<SpaceFilterInterface>,
+        private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -401,9 +403,35 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     get media(): MediaStoreStreamable {
+        // Use a closure to keep the videoElementUnsubscribers map private to this getter call
+        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
+            attach: (container: HTMLVideoElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        container.srcObject = stream;
+                    }
+                });
+                const videoElements = this.space.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                videoElements.push(container);
+                this.space.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                // Store the unsubscribe function in our Map
+                videoElementUnsubscribers.set(container, unsubscribe);
+            },
+            detach: (container: HTMLVideoElement) => {
+                container.srcObject = null;
+                let videoElements = this.space.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                videoElements = videoElements.filter((element) => element !== container);
+                this.space.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                // Call the unsubscribe function if it exists and remove it from the Map
+                const unsubscribe = videoElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    videoElementUnsubscribers.delete(container);
+                }
+            },
         };
     }
 

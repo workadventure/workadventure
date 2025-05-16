@@ -23,7 +23,6 @@ export class LivekitState implements ICommunicationState {
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.WEBRTC) {
-                    console.log(">>>>>create next state WEBRTCState PREPARE_SWITCH_MESSAGE", this._nextState);
                     this._nextState = new WebRTCState(this.space, this.peerManager);
                 }
             })
@@ -37,7 +36,6 @@ export class LivekitState implements ICommunicationState {
                         console.error("Next state is null");
                         return;
                     }
-                    console.log(">>>>> set next state EXECUTE_SWITCH_MESSAGE", this._nextState);
                     // TODO: determine if destroy() should be called here or at the end of the switch
                     this.peerManager.setState(this._nextState);
                 }
@@ -50,7 +48,6 @@ export class LivekitState implements ICommunicationState {
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
                         const nextState = new WebRTCState(this.space, this.peerManager);
-                        console.log(">>>>> set next state COMMUNICATION_STRATEGY_MESSAGE", nextState);
                         this.peerManager.setState(nextState);
                     }
                 })
@@ -62,7 +59,6 @@ export class LivekitState implements ICommunicationState {
     }
 
     destroy() {
-        console.log(">>>>> destroy LivekitState");
         this.livekitConnection.destroy();
         for (const subscription of this.rxJsUnsubscribers) {
             subscription.unsubscribe();

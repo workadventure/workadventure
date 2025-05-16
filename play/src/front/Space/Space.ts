@@ -37,6 +37,8 @@ export class Space implements SpaceInterface {
         ExtendedStreamable
     >();
 
+    public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.

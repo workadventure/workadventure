@@ -39,6 +39,8 @@ import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 export interface MediaStoreStreamable {
     type: "mediaStore";
     readonly streamStore: Readable<MediaStream | undefined>;
+    readonly attach: (container: HTMLVideoElement) => void;
+    readonly detach: (container: HTMLVideoElement) => void;
 }
 
 export interface JitsiTrackStreamable {
@@ -77,6 +79,7 @@ export interface Streamable {
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
+    readonly usePresentationMode: boolean;
 }
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -117,12 +120,34 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 });
 
 export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+    const media = {
+        type: "mediaStore" as const,
+        streamStore: localstreamStoreValue,
+        videoElementUnsubscribers: new Map<HTMLVideoElement, () => void>(),
+        attach: (container: HTMLVideoElement) => {
+            const unsubscribe = localstreamStoreValue.subscribe((stream) => {
+                if (stream) {
+                    container.srcObject = stream;
+                }
+            });
+            // Store the unsubscribe function in our Map
+            media.videoElementUnsubscribers.set(container, unsubscribe);
+        },
+        detach: (container: HTMLVideoElement) => {
+            // Clean up the stream
+            container.srcObject = null;
+            // Call the unsubscribe function if it exists and remove it from the Map
+            const unsubscribe = media.videoElementUnsubscribers.get(container);
+            if (unsubscribe) {
+                unsubscribe();
+                media.videoElementUnsubscribers.delete(container);
+            }
+        },
+    };
+
     return {
         uniqueId: "-1",
-        media: {
-            type: "mediaStore" as const,
-            streamStore: localstreamStoreValue,
-        },
+        media,
         volumeStore: localVolumeStore,
         hasVideo: requestedCameraState,
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
@@ -137,6 +162,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         muteAudio: true,
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
+        usePresentationMode: false,
     };
 });
 
@@ -180,8 +206,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                //TODO : revoir parce qu'on peut avoir un screen sharing qui n'est pas un ScreenSharingPeer / ajouter une propriété au streamable ?
-                if (peer instanceof ScreenSharingPeer) {
+                if (peer instanceof ScreenSharingPeer || peer.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -224,6 +249,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             }
 
             $livekitVideoStreamElementsStore.forEach(addPeer);
+
+            // Add LiveKit screen share streams
             $livekitScreenShareStreamElementsStore.forEach(addPeer);
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);

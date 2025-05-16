@@ -257,7 +257,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             user.initiator ? user.initiator : false,
             player,
             this.space,
-            this.spaceFilterDeferred.promise
+            this.spaceFilterDeferred.promise,
+            spaceUser
         );
 
         peer.toClose = false;

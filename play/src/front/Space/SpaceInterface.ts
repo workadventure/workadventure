@@ -59,4 +59,6 @@ export interface SpaceInterface {
     readonly onLeaveSpace: Observable<void>;
     //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
     getLastSpaceFilter(): SpaceFilter | undefined;
+    videoContainerMap: Map<string, HTMLVideoElement[]>;
+    screenShareContainerMap: Map<string, HTMLVideoElement[]>;
 }

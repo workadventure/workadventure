@@ -36,8 +36,13 @@
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    let attach: (container: HTMLVideoElement) => void | undefined = undefined;
+    let detach: () => void | undefined = undefined;
+
     if (peer.media.type === "mediaStore") {
         streamStore = peer.media.streamStore;
+        attach = peer.media.attach;
+        detach = peer.media.detach;
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
@@ -189,6 +194,8 @@
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
                 mediaStream={$streamStore}
+                attach={attach}
+                detach={detach}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
                 outputDeviceId={$speakerSelectedStore}

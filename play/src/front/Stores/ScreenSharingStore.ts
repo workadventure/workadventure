@@ -248,12 +248,34 @@ export interface ScreenSharingLocalMedia {
  */
 export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
+    const media = {
+        type: "mediaStore" as const,
+        streamStore: localMediaStreamStore,
+        videoElementUnsubscribers: new Map<HTMLVideoElement, () => void>(),
+        attach: (container: HTMLVideoElement) => {
+            const unsubscribe = localMediaStreamStore.subscribe((stream) => {
+                if (stream) {
+                    container.srcObject = stream;
+                }
+            });
+            // Store the unsubscribe function in our Map
+            media.videoElementUnsubscribers.set(container, unsubscribe);
+        },
+        detach: (container: HTMLVideoElement) => {
+            // Clean up the stream
+            container.srcObject = null;
+            // Call the unsubscribe function if it exists and remove it from the Map
+            const unsubscribe = media.videoElementUnsubscribers.get(container);
+            if (unsubscribe) {
+                unsubscribe();
+                media.videoElementUnsubscribers.delete(container);
+            }
+        },
+    };
+
     const localMedia = {
         uniqueId: "localScreenSharingStream",
-        media: {
-            type: "mediaStore",
-            streamStore: localMediaStreamStore,
-        },
+        media,
         getExtendedSpaceUser(): Promise<SpaceUserExtended> | undefined {
             return undefined;
         },
@@ -269,6 +291,7 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         muteAudio: true,
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
+        usePresentationMode: true,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
