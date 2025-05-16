@@ -2,6 +2,7 @@ import { AreaData, AreaPermissions, AtLeast, GameMapAreas } from "@workadventure
 import { Area } from "../../Entity/Area";
 import { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 
 /**
  * This class handles the display
@@ -71,7 +72,9 @@ export class AreasManager {
     }
 
     private updateMapEditorOptionForSpecificAreas() {
-        const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
+        const userId = localUserStore.getLocalUser()?.uuid;
+        const userTags = this.scene.connection?.getAllTags() ?? [];
+        const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas(userId, userTags);
         mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
 
