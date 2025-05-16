@@ -3,6 +3,7 @@
     import { onDestroy } from "svelte";
     import { v4 as uuidv4 } from "uuid";
     import { Direction, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT, EntityPrefab } from "@workadventure/map-editor";
+    import { get } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore, selectCategoryStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
@@ -63,6 +64,7 @@
             const generatedId = uuidv4();
             tagUploadInProcess =
                 customEditedEntity.tags && customEditedEntity.tags.length > 0 ? customEditedEntity.tags[0] : BASIC_TYPE;
+            console.log("tagUploadInProcess", tagUploadInProcess, get(mapEditorEntityUploadEventStore));
             mapEditorEntityUploadEventStore.set({
                 id: generatedId,
                 file: fileAsUint8Array,
@@ -74,6 +76,7 @@
                 depthOffset: customEditedEntity.depthOffset,
                 color: "",
             });
+            console.log("mapEditorEntityUploadEventStore", get(mapEditorEntityUploadEventStore));
         }
     }
 

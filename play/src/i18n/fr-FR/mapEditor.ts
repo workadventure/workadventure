@@ -225,6 +225,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             duration: "Duration (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
         },
+        openPdfProperties: {
+            label: "Ouvrir un PDF",
+            description: "Ouvrir un PDF dans l'application.",
+            error: "Veuillez entrer une URL PDF valide",
+            disabled: "L'intégration PDF est désactivée.",
+            uploadFile: {
+                title: "Ajouter votre fichier",
+                description: "Glissez-déposer ou choisissez votre fichier afin de l'ajouter sur la carte",
+                dragDrop: "Glissez-déposer ou",
+                chooseFile: "Choisir ",
+                errorOnFileFormat: "Format du fichier non supporté",
+                errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            },
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
