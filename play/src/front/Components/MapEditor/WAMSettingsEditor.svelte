@@ -57,7 +57,7 @@
         out:fly={{ x: 100, duration: 200 }}
     >
         <div class="absolute top-2 right-2 z-50 close-window {isVisible ? 'visible' : ''} ">
-            <ButtonClose on:click={close} />
+            <ButtonClose on:click={close} size="md" />
         </div>
         <div class="flex flex-wrap w-full grow max-h-[70vh] overflow-auto">
             <div class="menu mx-auto flex flex-col relative">

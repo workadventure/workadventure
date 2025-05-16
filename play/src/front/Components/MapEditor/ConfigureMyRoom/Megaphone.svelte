@@ -108,15 +108,9 @@
                 placeholder="MySpace"
                 bind:value={title}
                 onKeyPress={() => (dynamicStrings.error.title = "")}
-                variant="light"
             />
 
-            <Select
-                label={$LL.mapEditor.settings.megaphone.inputs.scope()}
-                options={scopes}
-                bind:value={scope}
-                variant="light"
-            />
+            <Select label={$LL.mapEditor.settings.megaphone.inputs.scope()} options={scopes} bind:value={scope} />
 
             <p class="help-text">
                 <IconInfoCircle font-size="18" />
