@@ -1,3 +1,4 @@
+import path from "path";
 import {expect, Locator, Page} from "@playwright/test";
 
 class AreaEditor {
@@ -98,6 +99,18 @@ class AreaEditor {
   async setOpenLinkProperty(page: Page, link: string, option = "Show immediately on enter") {
     await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link,{timeout : 20_000});
+  }
+
+  async setOpenPdfProperty(page: Page, option = "Show immediately on enter") {
+    await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(path.join(__dirname, `../../assets/lorem-ipsum.pdf`));
+  }
+
+  async deletePdfFile(page: Page) {
+    await page.getByTestId("closeFileUpload").click();
   }
 
   async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){

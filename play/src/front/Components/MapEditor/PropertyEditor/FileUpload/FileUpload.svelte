@@ -107,21 +107,14 @@
             bind:this={dropZoneRef}
             class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white bg-opacity-10"
         >
-            <input
-                id="upload"
-                class="hidden"
-                type="file"
-                accept={FILE_UPLOAD_SUPPORTED_FORMATS_FRONT}
-                bind:files
-                data-testid="uploadCustomAsset"
-            />
+            <input id="upload" class="hidden" type="file" accept={FILE_UPLOAD_SUPPORTED_FORMATS_FRONT} bind:files />
 
             <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">
                         {$LL.mapEditor.properties.openPdfProperties.uploadFile.dragDrop()}
-                        <span class="hover:cursor-pointer underline text-contrast-300"
+                        <span class="hover:cursor-pointer underline text-contrast-300" id="chooseUpload"
                             >{$LL.mapEditor.properties.openPdfProperties.uploadFile.chooseFile()}</span
                         >
                     </span>
