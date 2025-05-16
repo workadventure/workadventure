@@ -266,7 +266,6 @@
                           ],
                           "default": "https://workadventu.re"
                         },
-                        "file": {},
                         "name": {
                           "type": [
                             "string",

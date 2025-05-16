@@ -97,4 +97,48 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.close();
     await page.context().close();
   });
+
+  test("Success to interact with openPdf area", async ({ browser, request }) => {
+    // Go to the map
+    await resetWamMaps(request);
+    const page = await getPage(browser, 'Admin1', Map.url("empty"));
+
+    // Create area on the map for the test
+    await Menu.openMapEditor(page);
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(
+      page,
+      { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 },
+      { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 }
+    );
+    await AreaEditor.setAreaName(page, "MyLinkZone");
+    await AreaEditor.addProperty(page, "openPdf");
+    await AreaEditor.setOpenPdfProperty(
+      page,
+      "Show immediately on enter"
+    );
+
+    // Walk to the area
+    await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+    // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
+    const iframe = await page.waitForSelector('iframe[src*="lorem-ipsum"]');
+    
+    // Assert that the iframe has the correct 'src' attribute
+    const iframeSrc = await iframe.getAttribute('src');
+    expect(iframeSrc).toContain('lorem-ipsum');
+
+    const uploadFile1 = request.post(iframeSrc);
+    expect((await uploadFile1).ok()).toBeTruthy();
+
+    await AreaEditor.deletePdfFile(page);
+
+    const uploadedFile2 = request.post(iframeSrc);
+    expect((await uploadedFile2).ok()).toBeFalsy();
+
+    await Menu.closeMapEditor(page);
+
+    await page.close();
+    await page.context().close();
+  });
 });
