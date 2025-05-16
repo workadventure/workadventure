@@ -38,7 +38,7 @@ import { LockByKey } from "./Services/LockByKey";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
 import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
-import { DeleteFileMapStorageCommand } from "./Commands/File/DeleteFileMapStorageCommand";
+import { hookManager } from "./Modules/HookManager";
 
 const editionLocks = new LockByKey<string>();
 
@@ -133,7 +133,14 @@ const mapStorageServer: MapStorageServer = {
                             await mapsManager.executeCommand(
                                 mapKey,
                                 mapUrl.host,
-                                new UpdateAreaMapStorageCommand(gameMap, dataToModify, commandId, area)
+                                new UpdateAreaMapStorageCommand(
+                                    gameMap,
+                                    dataToModify,
+                                    commandId,
+                                    area,
+                                    hookManager,
+                                    mapUrl.hostname
+                                )
                             );
 
                             const newAreaData = gameMap.getGameMapAreas()?.getArea(message.id);
@@ -192,7 +199,7 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new DeleteAreaMapStorageCommand(gameMap, message.id, commandId)
+                            new DeleteAreaMapStorageCommand(gameMap, message.id, commandId, mapUrl.hostname)
                         );
                         break;
                     }
@@ -322,13 +329,6 @@ const mapStorageServer: MapStorageServer = {
                         const uploadFileMessage = editMapMessage.uploadFileMessage;
                         await entitiesManager.executeCommand(
                             new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
-                        );
-                        break;
-                    }
-                    case "deleteFileMessage": {
-                        const deleteFileMessage = editMapMessage.deleteFileMessage;
-                        await entitiesManager.executeCommand(
-                            new DeleteFileMapStorageCommand(deleteFileMessage, mapUrl.hostname)
                         );
                         break;
                     }

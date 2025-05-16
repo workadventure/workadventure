@@ -72,7 +72,6 @@ import {
     SpaceDestroyedMessage,
     SayMessage,
     UploadFileMessage,
-    DeleteFileMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1305,23 +1304,6 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "uploadFileMessage",
                             uploadFileMessage,
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    public emitMapEditorDeleteFile(commandId: string, deleteFileMessage: DeleteFileMessage): void {
-        this.send({
-            message: {
-                $case: "editMapCommandMessage",
-                editMapCommandMessage: {
-                    id: commandId,
-                    editMapMessage: {
-                        message: {
-                            $case: "deleteFileMessage",
-                            deleteFileMessage,
                         },
                     },
                 },

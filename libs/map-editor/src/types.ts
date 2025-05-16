@@ -95,7 +95,6 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
 export const OpenPdfPropertyData = PropertyBase.extend({
     type: z.literal("openPdf"),
     link: z.string().nullable().default("https://workadventu.re"),
-    file: z.instanceof(Uint8Array).optional(),
     name: z.string().nullable(),
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
