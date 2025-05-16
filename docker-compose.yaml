@@ -253,7 +253,7 @@ services:
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: thecodingmachine/nodejs:v2-22-bullseye
     command: npm run start:dev
     #command: npm run profile
     working_dir: /usr/src/app/map-storage
