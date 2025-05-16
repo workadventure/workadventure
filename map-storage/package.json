@@ -47,7 +47,7 @@
     "front:test:unit": "vitest"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.238.0",
+    "@aws-sdk/client-s3": "^3.810.0",
     "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "^0.7.8",
     "@sentry/node": "^7.48.0",
@@ -73,7 +73,7 @@
     "node-stream-zip": "^1.15.0",
     "nodemon": "^3.0.1",
     "npm-check-updates": "^16.0.5",
-    "p-limit": "^3.1.0",
+    "p-limit": "^6.2.0",
     "passport": "^0.6.0",
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
