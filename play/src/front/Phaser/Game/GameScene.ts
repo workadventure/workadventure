@@ -2721,7 +2721,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
-                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                this.MapPlayersByKey.get(data.id)?.registerWokaMenuAction({
                     actionName: data.actionKey,
                     callback: () => {
                         iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
@@ -2732,7 +2732,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
-                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+                this.MapPlayersByKey.get(data.id)?.unregisterWokaMenuAction(data.actionKey);
             })
         );
 
