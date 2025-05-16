@@ -1,0 +1,71 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: Play (Pusher)",
+            "type": "node",
+            "nodeVersionHint": 20,
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9231,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": [
+                "/"
+            ]
+        },
+        {
+            "name": "Debug: Play (RoomAPI)",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9235,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": [
+                "/"
+            ]
+        },
+        {
+            "name": "Debug: Back",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9232,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": [
+                "/"
+            ]
+        },
+        {
+            "name": "Debug: Map Storage",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9233,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": [
+                "/"
+            ]
+        },
+        {
+            "name": "Debug: Uploader",
+            "type": "node",
+            "request": "attach",
+            "remoteRoot": "/usr/src/app",
+            "localRoot": "${workspaceFolder}",
+            "port": 9234,
+            "restart": true,
+            "address": "0.0.0.0",
+            "skipFiles": [
+                "/**"
+            ]
+        }
+    ]
+}

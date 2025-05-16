@@ -1,5 +1,6 @@
 import path from "path";
 import { AreaDataProperty, fileUploadSupportedFormatForMapStorage } from "@workadventure/map-editor";
+import { UploadFileMessage } from "@workadventure/messages";
 import { fileSystem } from "../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
@@ -10,49 +11,42 @@ export class CustomFileService {
         this.hostname = hostname;
     }
 
-    public async uploadFile(property: AreaDataProperty) {
-        if (property.type !== "openPdf") {
-            throw new Error("Property is not a file");
-        }
+    public async uploadFile(uploadFileMessage: UploadFileMessage) {
+        const { file } = uploadFileMessage;
+        const { name: filename, ext: fileExtension } = path.parse(uploadFileMessage.name);
 
-        if (!property.name || !property.file) {
-            throw new Error("Property is missing name or file");
-        }
-
-        const { file } = property;
-        const { name: filename, ext: fileExtension } = path.parse(property.name);
-
-        const errorm = "File extension is not a supported format pdf :" + fileExtension + property.name;
+        const errorm = "File extension is not a supported format pdf :" + fileExtension + uploadFileMessage.name;
 
         if (!fileExtension.match(fileUploadSupportedFormatForMapStorage)) {
             throw new Error(errorm);
         }
 
-        const mapPath = mapPathUsingDomainWithPrefix(`/file/${filename}-${property.id}${fileExtension}`, this.hostname);
-
-        if (!(file instanceof Uint8Array)) {
-            throw new Error("File must be of type Uint8Array");
-        }
-
+        const mapPath = mapPathUsingDomainWithPrefix(
+            `/file/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
+            this.hostname
+        );
         console.log("Uploading file to: ", mapPath);
+        console.log("hostname", this.hostname);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
+        console.log("filesystem", await fileSystem.listFiles(""));
         return;
     }
 
-    public deleteFile(property: AreaDataProperty) {
+    public async deleteFile(property: AreaDataProperty) {
         if (property.type !== "openPdf") {
             throw new Error("Property is not a file");
         }
-        console.log("filesystem");
-        //const { name: filename, ext: fileExtension } = path.parse(property.id);
 
-        // const mapPath = mapPathUsingDomainWithPrefix(
-        //     `/file/${filename}-${deleteFileMessage.propertyId}${fileExtension}`,
-        //     this.hostname
-        // );
+        if (!property.name) {
+            throw new Error("Property is missing name. Can't find file to delete.");
+        }
 
-        // console.log("Deleting file to: ", deleteFileMessage.name);
-        // await fileSystem.deleteFiles(mapPath);
+        const { name: filename, ext: fileExtension } = path.parse(property.name);
+
+        const mapPath = mapPathUsingDomainWithPrefix(`/file/${filename}-${property.id}${fileExtension}`, this.hostname);
+
+        console.log("Deleting file: ", property.name);
+        await fileSystem.deleteFiles(mapPath);
         return;
     }
 }

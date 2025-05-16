@@ -48,6 +48,15 @@ if (SENTRY_DSN != undefined) {
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { PingController } from "./Upload/PingController";
+import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
+import { hookManager } from "./Modules/HookManager";
+import { FileModule } from "./Modules/FileModule";
+
+const resourceUrlModule = new ResourceUrlModule();
+resourceUrlModule.init(hookManager);
+
+const fileModule = new FileModule();
+fileModule.init(hookManager);
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

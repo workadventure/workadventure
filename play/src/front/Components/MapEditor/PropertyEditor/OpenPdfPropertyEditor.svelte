@@ -14,8 +14,6 @@
     import InputCheckbox from "../../Input/InputCheckbox.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { DeleteFileFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/File/DeleteFileFrontCommand";
     import FileUpload from "./FileUpload/FileUpload.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -88,9 +86,7 @@
     });
 
     function onValueChange() {
-        if (property.link) {
-            dispatch("change");
-        }
+        dispatch("change");
     }
 
     function handlePolicyChange() {
@@ -102,21 +98,10 @@
     }
 
     function deleteFile() {
-        const roomConnection = gameManager.getCurrentGameScene()?.connection;
-        if (roomConnection === undefined) throw new Error("No connection");
-
-        if (property.link === null || property.name === null) {
+        if (property.link === null && property.name === null) {
             return;
         }
 
-        const fileToDelete = {
-            propertyId: property.id,
-            name: property.name,
-        };
-        const deleteFileCommand = new DeleteFileFrontCommand(fileToDelete);
-        deleteFileCommand.emitEvent(roomConnection);
-
-        property.file = undefined;
         property.link = null;
         property.name = null;
         dispatch("change");

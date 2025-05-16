@@ -6,7 +6,7 @@ import { _axios } from "../../Services/axiosInstance";
 const limit = pLimit(10);
 
 export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
-    constructor(gameMap: GameMap, id: string, commandId: string | undefined) {
+    constructor(gameMap: GameMap, id: string, commandId: string | undefined, private hostname: string) {
         super(gameMap, id, commandId);
     }
     public async execute(): Promise<void> {
