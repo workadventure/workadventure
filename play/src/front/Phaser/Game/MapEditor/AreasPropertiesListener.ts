@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import {
     AreaData,
     AreaDataProperties,
@@ -396,7 +397,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+        const actionId = "openWebsite-" + crypto.randomUUID();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
@@ -1093,7 +1094,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+        const actionId = "openWebsite-" + crypto.randomUUID();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
