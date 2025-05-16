@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import {
     AreaData,
     AreaDataProperties,
@@ -397,7 +397,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + crypto.randomUUID();
+        const actionId = "openWebsite-" + uuidv4();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
@@ -1094,7 +1094,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + crypto.randomUUID();
+        const actionId = "openWebsite-" + uuidv4();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
