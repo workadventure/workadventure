@@ -3,9 +3,9 @@ import path from "node:path";
 import { z, ZodError } from "zod";
 import { Express, Request } from "express";
 import multer from "multer";
-import pLimit from "p-limit";
+import pLimit, { LimitFunction } from "p-limit";
 import archiver from "archiver";
-import StreamZip, { ZipEntry } from "node-stream-zip";
+import * as unzipper from "unzipper";
 import * as jsonpatch from "fast-json-patch";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
@@ -43,10 +43,10 @@ export class UploadController {
      * This is not perfect (because we should actually forbid an upload on "/" if "/foo" is being uploaded), but it's
      * already a start of a check.
      */
-    private uploadLimiter: Map<string, pLimit.Limit>;
+    private uploadLimiter: Map<string, LimitFunction>;
 
     constructor(private app: Express, private fileSystem: FileSystemInterface, private mapListService: MapListService) {
-        this.uploadLimiter = new Map<string, pLimit.Limit>();
+        this.uploadLimiter = new Map<string, LimitFunction>();
         this.index();
         this.postUpload();
         this.putUpload();
@@ -99,17 +99,17 @@ export class UploadController {
 
                 await limiter(async () => {
                     // Read the contents of the ZIP archive
-                    const zip = new StreamZip.async({ file: zipFile.path });
-                    const zipEntries = Object.values(await zip.entries()).filter(
-                        (zipEntry) => !zipEntry.isDirectory && this.filterFile(zipEntry.name)
+                    const zipDirectory = await unzipper.Open.file(zipFile.path);
+                    const zipEntries = zipDirectory.files.filter(
+                        (zipEntry) => zipEntry.type !== "Directory" && this.filterFile(zipEntry.path)
                     );
 
                     let totalSize = 0;
                     for (const zipEntry of zipEntries) {
-                        totalSize += zipEntry.size;
+                        totalSize += zipEntry.uncompressedSize;
                     }
 
-                    const availableFiles = zipEntries.map((entry) => entry.name);
+                    const availableFiles = zipEntries.map((entry) => entry.path);
 
                     if (totalSize > MAX_UNCOMPRESSED_SIZE) {
                         res.status(413).send(
@@ -122,36 +122,44 @@ export class UploadController {
 
                     for (const zipEntry of zipEntries) {
                         // Let's validate the archive
-                        const zipFileFetcher = new ZipFileFetcher(zipEntry.name, availableFiles);
+                        const zipFileFetcher = new ZipFileFetcher(zipEntry.path, availableFiles);
 
                         const mapValidator = new MapValidator("error", zipFileFetcher);
 
-                        const extension = path.extname(zipEntry.name);
-                        if (
-                            extension === ".json" &&
+                        const extension = path.extname(zipEntry.path);
+                        if (extension === ".json") {
+                            // Get the content of the file as a string
                             // We handle one zip entry at a time on purpose
                             // eslint-disable-next-line no-await-in-loop
-                            mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
-                        ) {
-                            // We forbid Maps in JSON format.
-                            errors[zipEntry.name] = {
-                                map: [
-                                    {
-                                        type: "error",
-                                        message: 'Invalid file extension. Maps should end with the ".tmj" extension.',
-                                        details: "",
-                                    },
-                                ],
-                            };
+                            const buffer = await zipEntry.buffer();
+                            const content = buffer.toString("utf-8");
 
-                            continue;
+                            if (mapValidator.doesStringLooksLikeMap(content)) {
+                                // We forbid Maps in JSON format.
+                                errors[zipEntry.path] = {
+                                    map: [
+                                        {
+                                            type: "error",
+                                            message:
+                                                'Invalid file extension. Maps should end with the ".tmj" extension.',
+                                            details: "",
+                                        },
+                                    ],
+                                };
+                                continue;
+                            }
                         }
+
                         if (extension === ".wam") {
+                            // Get the content of the file as a string
                             // We handle one zip entry at a time on purpose
                             // eslint-disable-next-line no-await-in-loop
-                            const result = mapValidator.validateWAMFile((await zip.entryData(zipEntry)).toString());
+                            const buffer = await zipEntry.buffer();
+                            const content = buffer.toString("utf-8");
+
+                            const result = mapValidator.validateWAMFile(content);
                             if (!result.ok) {
-                                errors[zipEntry.name] = {
+                                errors[zipEntry.path] = {
                                     map: [
                                         {
                                             type: "error",
@@ -168,11 +176,16 @@ export class UploadController {
                             continue;
                         }
 
+                        // Get the content of the file as a string
                         // We handle one zip entry at a time on purpose
                         // eslint-disable-next-line no-await-in-loop
-                        const result = await mapValidator.validateStringMap((await zip.entryData(zipEntry)).toString());
+                        const buffer = await zipEntry.buffer();
+                        const content = buffer.toString("utf-8");
+
+                        // eslint-disable-next-line no-await-in-loop
+                        const result = await mapValidator.validateStringMap(content);
                         if (!result.ok) {
-                            errors[zipEntry.name] = result.error;
+                            errors[zipEntry.path] = result.error;
                         }
                     }
 
@@ -182,8 +195,8 @@ export class UploadController {
                     }
 
                     const filesPathsFromZip = zipEntries
-                        .filter((zipEntry) => zipEntry.name.includes(".wam") || zipEntry.name.includes(".tmj"))
-                        .map((zipEntry) => zipEntry.name);
+                        .filter((zipEntry) => zipEntry.path.includes(".wam") || zipEntry.path.includes(".tmj"))
+                        .map((zipEntry) => zipEntry.path);
 
                     // Delete all files in the given filesystem (disk or s3) with the exception of some .wam files
                     await this.fileSystem.deleteFilesExceptWAM(mapPath(directory, req), filesPathsFromZip);
@@ -191,26 +204,26 @@ export class UploadController {
                     const promises: Promise<void>[] = [];
                     const wamToPurge: string[] = [];
                     const wamFilesNames = zipEntries
-                        .filter((zipEntry) => zipEntry.name.includes(".wam"))
-                        .map((zipEntry) => path.parse(zipEntry.name).name);
+                        .filter((zipEntry) => zipEntry.path.includes(".wam"))
+                        .map((zipEntry) => path.parse(zipEntry.path).name);
                     // Iterate over the entries in the ZIP archive
                     for (const zipEntry of zipEntries) {
-                        const key = mapPath(path.join(directory, zipEntry.name), req);
+                        const key = mapPath(path.join(directory, zipEntry.path), req);
                         // Store the file
-                        promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
+                        promises.push(this.fileSystem.writeFile(zipEntry, key));
                         if (path.extname(key) === ".tmj") {
-                            if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
-                                promises.push(this.createWAMFileIfMissing(key, zipEntry, zip));
+                            if (!wamFilesNames.includes(path.parse(zipEntry.path).name)) {
+                                promises.push(this.createWAMFileIfMissing(key, zipEntry, zipDirectory));
                             }
                         } else if (path.extname(key) === ".wam") {
-                            const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.name}`;
+                            const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.path}`;
                             wamToPurge.push(wamUrl);
                         }
                     }
 
                     await Promise.all(promises);
 
-                    await zip.close();
+                    // No need to close the directory with unzipper
                     // Delete the uploaded ZIP file from the disk
                     fs.unlink(zipFile.path, (err) => {
                         if (err) {
@@ -476,13 +489,16 @@ export class UploadController {
 
     private async createWAMFileIfMissing(
         tmjKey: string,
-        zipEntry: ZipEntry,
-        zip: StreamZip.StreamZipAsync
+        zipEntry: unzipper.File,
+        zip: unzipper.CentralDirectory
     ): Promise<void> {
         const wamPath = tmjKey.slice().replace(".tmj", ".wam");
         if (!(await this.fileSystem.exist(wamPath))) {
-            const tmjString = (await zip.entryData(zipEntry)).toString();
-            // Using "as" instead of Zod because the Zod check was alreadz performed before.
+            // Get the content of the file as a string
+            const buffer = await zipEntry.buffer();
+            const tmjString = buffer.toString("utf-8");
+
+            // Using "as" instead of Zod because the Zod check was already performed before.
             const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,

@@ -17,7 +17,7 @@ import {
 import { Archiver } from "archiver";
 import { NextFunction, Response } from "express";
 import mime from "mime";
-import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import * as unzipper from "unzipper";
 import pLimit from "p-limit";
 import { MapListService } from "../Services/MapListService";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
@@ -194,18 +194,18 @@ export class S3FileSystem implements FileSystemInterface {
         }
     }
 
-    async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
-        await s3UploadConcurrencyLimit(async () =>
-            this.s3.send(
+    async writeFile(zipEntry: unzipper.File, targetFilePath: string): Promise<void> {
+        await s3UploadConcurrencyLimit(async () => {
+            await this.s3.send(
                 new PutObjectCommand({
                     Bucket: this.bucketName,
                     Key: targetFilePath,
-                    Body: (await zip.stream(zipEntry)) as unknown as ReadableStream,
+                    Body: zipEntry.stream(),
                     ContentType: mime.getType(targetFilePath) ?? undefined,
-                    ContentLength: zipEntry.size,
+                    ContentLength: zipEntry.uncompressedSize,
                 })
-            )
-        );
+            );
+        });
         return;
     }
 
