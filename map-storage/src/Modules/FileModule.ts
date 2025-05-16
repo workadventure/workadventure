@@ -10,7 +10,7 @@ export class FileModule implements MapStorageModuleInterface {
             }
 
             if (newProperty.type !== "openPdf") {
-                return oldProperty;
+                return newProperty;
             }
 
             const fileService = new CustomFileService(hostname);
