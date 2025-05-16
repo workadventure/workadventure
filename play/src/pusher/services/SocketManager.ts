@@ -370,7 +370,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string): Promise<void> {
+    public async handleJoinSpace(
+        client: Socket,
+        spaceName: string,
+        localSpaceName: string,
+        propertiesToSync: string[]
+    ): Promise<void> {
         const socketData = client.getUserData();
 
         try {
@@ -531,7 +536,14 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor);
+                space = new Space(
+                    spaceName,
+                    localSpaceName,
+                    spaceStreamToBack,
+                    backId,
+                    eventProcessor,
+                    propertiesToSync
+                );
 
                 this.spaces.set(spaceName, space);
 
@@ -540,6 +552,7 @@ export class SocketManager implements ZoneEventListener {
                         $case: "joinSpaceMessage",
                         joinSpaceMessage: {
                             spaceName,
+                            propertiesToSync,
                         },
                     },
                 });

@@ -66,6 +66,10 @@
 
     onMount(() => {});
 
+    onDestroy(() => {
+        gameScene.reposition();
+    });
+
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
 
     $: {
@@ -265,6 +269,7 @@
         {#if isOnOneLine && oneLineMode === "vertical"}
             <div class="fixed bottom-20 right-0 z-50">
                 <div
+                    data-unique-id="my-camera"
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                     }`}

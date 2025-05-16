@@ -28,6 +28,8 @@
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
+    export let attach: (container: HTMLVideoElement) => void | undefined;
+    export let detach: (container: HTMLVideoElement) => void | undefined;
 
     export let videoUrl: string | undefined = undefined;
     export let videoConfig: VideoConfig | undefined = undefined;
@@ -74,6 +76,7 @@
             missingUserActivation = true;
         }
         videoElement.srcObject = mediaStream;
+      
     }
     $: if (videoUrl && videoElement) {
         videoElement.src = videoUrl;
@@ -263,15 +266,24 @@
             displayNoVideoWarning = false;
         });
 
+        if (attach) {
+            attach(videoElement);
+        }
+
         return () => {
             unsubscriber();
         };
     });
 
     onDestroy(() => {
+
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
+        }
+
+        if (detach) {
+            detach(videoElement);
         }
         sinkIdPromise.cancel();
     });
