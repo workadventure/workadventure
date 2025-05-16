@@ -2,7 +2,7 @@ import { AreaData, AreaDataProperty, AtLeast, GameMap, UpdateAreaCommand } from 
 import * as Sentry from "@sentry/node";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
-import { _axios } from "../../Services/axiosInstance";
+import { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
@@ -10,7 +10,9 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
         gameMap: GameMap,
         dataToModify: AtLeast<AreaData, "id">,
         commandId: string | undefined,
-        oldConfig: AtLeast<AreaData, "id"> | undefined
+        oldConfig: AtLeast<AreaData, "id"> | undefined,
+        private hookManager: HookManager,
+        private hostname: string
     ) {
         super(gameMap, dataToModify, commandId, oldConfig);
     }
@@ -18,51 +20,16 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
-            console.log("operation", operation);
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = AreaDataProperty.safeParse(operation.value);
-                console.log("value", value);
-                console.log("operation.", operation);
 
                 if (!value.success) {
                     return acc;
                 }
 
-                const { resourceUrl, id } = value.data;
-                if (!resourceUrl) {
-                    return acc;
-                }
-
-                if (value.data.serverData) {
-                    value.data.serverData = undefined;
-                }
-
-                const propertyFromNewConfig = this.newConfig.properties?.find((property) => property.id === id);
-
-                if (propertyFromNewConfig) propertyFromNewConfig.serverData = undefined;
                 acc.push(
                     limit(async () => {
-                        const response = await _axios.post(resourceUrl, operation.value);
-                        console.log("resourceUrl", resourceUrl, operation.value);
-                        if (!response.data) {
-                            return Promise.resolve();
-                        }
-
-                        const isAreaDataProperty = AreaDataProperty.safeParse(response.data);
-
-                        if (!isAreaDataProperty.success) {
-                            return Promise.resolve();
-                        }
-
-                        this.newConfig.properties = this.newConfig.properties?.map((property) => {
-                            if (property.id !== id || !isAreaDataProperty.data.serverData) {
-                                return property;
-                            }
-
-                            return isAreaDataProperty.data;
-                        });
-
-                        return Promise.resolve();
+                        await this.hookManager.fireAreaPropertyAdd(this.newConfig, value.data, this.hostname);
                     })
                 );
             }
@@ -70,11 +37,11 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             if (operation.op === "remove" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = jsonpatch.getValueByPointer(this.oldConfig, operation.path) as AreaDataProperty;
                 if (!value) return acc;
-                const resourceUrl = value.resourceUrl;
-                if (resourceUrl) {
-                    console.log("resourceUrl", resourceUrl, value);
-                    acc.push(limit(() => _axios.delete(resourceUrl, { data: value })));
-                }
+                acc.push(
+                    limit(async () => {
+                        await this.hookManager.fireAreaPropertyDelete(this.newConfig, value, this.hostname);
+                    })
+                );
             }
 
             if (operation.op === "replace" && operation.path.match(new RegExp("^/properties/*"))) {
@@ -87,41 +54,23 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
 
                 if (!properties) return acc;
                 const property = properties[propertyIndex];
-                const serverData = this.gameMap
+                const oldProperty = this.gameMap
                     .getGameMapAreas()
                     ?.getArea(this.oldConfig.id)
-                    ?.properties.find((propertyToFind) => propertyToFind.id === property.id)?.serverData;
+                    ?.properties.find((propertyToFind) => propertyToFind.id === property.id);
 
-                property.serverData = serverData;
-                const resourcesUrl = property.resourceUrl;
+                if (!property || !oldProperty) return acc;
 
-                if (resourcesUrl) {
-                    acc.push(
-                        limit(async () => {
-                            console.log("resourceUrl", resourcesUrl, operation.value);
-                            const response = await _axios.patch(resourcesUrl, property);
-
-                            if (!response.data) {
-                                return Promise.resolve();
-                            }
-
-                            const isAreaDataProperty = AreaDataProperty.safeParse(response.data);
-
-                            if (!isAreaDataProperty.success) {
-                                return Promise.resolve();
-                            }
-
-                            this.newConfig.properties = this.newConfig.properties?.map((oldProperty) => {
-                                if (oldProperty.id !== property.id || !isAreaDataProperty.data.serverData) {
-                                    return oldProperty;
-                                }
-
-                                return isAreaDataProperty.data;
-                            });
-                            return Promise.resolve();
-                        })
-                    );
-                }
+                acc.push(
+                    limit(async () => {
+                        await this.hookManager.fireAreaPropertyChange(
+                            this.newConfig,
+                            oldProperty,
+                            property,
+                            this.hostname
+                        );
+                    })
+                );
             }
             return acc;
         }, []);
@@ -133,6 +82,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
         }
 
+        console.log("UpdateAreaMapStorageCommand", this.newConfig);
         return await super.execute();
     }
 }
