@@ -6,7 +6,7 @@
     import MediaBox from "../../Video/MediaBox.svelte";
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import { highlightFullScreen, setHeightScreenShare } from "../../../Stores/ActionsCamStore";
+    import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
@@ -52,7 +52,6 @@
         if (availableHeight < 0) {
             availableHeight = 0;
         }
-        setHeightScreenShare.set(availableHeight);
     }
 
     $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();

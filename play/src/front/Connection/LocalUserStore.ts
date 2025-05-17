@@ -682,7 +682,7 @@ class LocalUserStore {
     getCameraContainerHeight(): number {
         const value = localStorage.getItem(cameraContainerHeightKey);
         if (!value) {
-            return 0.75; // Default value of 75%
+            return 0.2; // Default value of 20%
         }
         return parseFloat(value);
     }
