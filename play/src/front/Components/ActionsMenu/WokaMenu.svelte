@@ -1,18 +1,19 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
-    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { wokaMenuStore } from "../../Stores/WokaMenuStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
+    import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
 
-    import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
+    import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
 
-    let actionsMenuData: ActionsMenuData | undefined;
-    let sortedActions: ActionsMenuAction[] | undefined;
+    let wokaMenuData: WokaMenuData | undefined;
+    let sortedActions: WokaMenuAction[] | undefined;
 
-    let actionsMenuStoreUnsubscriber: Unsubscriber | null;
+    let wokaMenuStoreUnsubscriber: Unsubscriber | null;
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -21,15 +22,15 @@
     }
 
     function closeActionsMenu() {
-        actionsMenuStore.clear();
+        wokaMenuStore.clear();
     }
 
     let buttonsLayout: "row" | "column" = "row";
 
-    actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
-        actionsMenuData = value;
-        if (actionsMenuData) {
-            sortedActions = [...actionsMenuData.actions.values()].sort((a, b) => {
+    wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
+        wokaMenuData = value;
+        if (wokaMenuData) {
+            sortedActions = [...wokaMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
                 const bp = b.priority ?? 0;
                 if (ap > bp) {
@@ -41,7 +42,7 @@
                     return 0;
                 }
             });
-            const nbButtons = sortedActions.length + (actionsMenuData.menuName ? 0 : 1);
+            const nbButtons = sortedActions.length + (wokaMenuData.wokaName ? 0 : 1);
             if (nbButtons > 2) {
                 buttonsLayout = "column";
             } else {
@@ -51,20 +52,20 @@
     });
 
     onDestroy(() => {
-        if (actionsMenuStoreUnsubscriber) {
-            actionsMenuStoreUnsubscriber();
+        if (wokaMenuStoreUnsubscriber) {
+            wokaMenuStoreUnsubscriber();
         }
     });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
-{#if actionsMenuData}
+{#if wokaMenuData}
     <div
-        class="absolute max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
+        class="absolute left-0 right-0 m-auto max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
         data-testid="actions-menu"
     >
-        {#if actionsMenuData.menuName}
+        {#if wokaMenuData.wokaName}
             <div>
                 <div class="w-full bg-cover relative">
                     <div class="absolute top-2 right-2">
@@ -72,52 +73,45 @@
                     </div>
 
                     <div class="flex items-center justify-center p-2">
-                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl pl-3">
+                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl ">
                             <div
                                 id="woka"
                                 class=" bt-3 overflow-hidden mt-3 border w-fit h-fit rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
                             >
-                                <img
-                                    id="wokaPicture"
-                                    class="h-16 w-16 self-center relative top-4"
-                                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAz5JREFUWEfFlktIVFEcxv8TIVRUpkkD5VAmGji9dJGKVDDjELYzWkQQZI9NC1cFbVq0CWrlok0PgyBahO6SGGegQtQW2kshxTTGggnTrKhAoonvjN/lzH17MzqbmTnn3PP9zvd/3AnJfx6hAPo5H8/4Ptf3RhFRwhu3VSn9aHWl+hwZmyj4jrlPU+Nk9Dzfc8PiSTkIQ1QXNAPov7FvEcRVww+AIa5b31BXKwNDw8aU+TdhvCC8AArEdRE3AH3Ny4klAeBWZmFzSOzW3VxwA7DEHWIcbknIJCWcmwu+ABjP+KaI0o9sXy+d/a8t1djWuFMyb7+o+dTHTEF1OLngGyA8v2CIe/UBQmSLi4xSDQxAO4MCMGyBAEpEZMVi/b961FNw8dPHj1iMuHWvq2Bu16EW1Td+T43LXH7F4rhjCEpEchBBrBn7G8luaYrukQe9vXL78gULwKlLV+Voc7P0jbyQs4lWIxeQG4CbCwpQ8XNcKrbG5f5Ar7TVl6uDyyr3WQBmJp6puc7BaTnW0CyT71IyuapKAgHgILoA+kR9XGV/+a98KU6vzL8L9KGvIRGTgymBi063t42J+VBAYK4yLHIwZo07hABmHo/TXTKRzc/aWc/9Xp3QOBcgdMGiZprg7d2EAwHgIS8IinvdfEkAkZqY8SckPJtWCWlnO8SReNnSmJRujsrshxHJjKb/7nUM8UhNXL7PZ2XLjgPy/s0TWVMcloWnF40YM0eK9l+x7MuMplwhXOkoviFcrRyDOCHweb61TO62HJYTPQ/lWveMZR3PfM6OiRuEJ8Du2DlDHJbCWkLU9d2R2h9fZXj1OhlqOmnM6/vw8Mv0dUcXHAFwe4hhwHLcguK4FUKCcSbZITcT7cY+uAWnAMHQYdEpH2wBUHKseyRW/7ecusHeRHsOt+egEMH0+efJjhAu0bg2pBKWfcFcmo4Aermxk+FAhoRicIM5wjlazk6Keafe4Poy4oGkhgOML23lHoaL63AAa+ykTn3BdyfEAXoI9Oy2qxYCeHXNwAAsSwjZ5cY/A0BFYDDbdQC4goEKWXYAliUBIMLScltbthAwzryhua7NEF4tmGBLygH9pWT3kvFat3PjDyquFz87TvYcAAAAAElFTkSuQmCC"
-                                    loading="lazy"
-                                    alt="User woka's"
+                                <WokaFromUserId
+                                    userId={wokaMenuData.userId}
+                                    placeholderSrc="/assets/placeholder-woka.png"
+                                    customWidth="4rem"
                                 />
                             </div>
-                            <div class="w-max ml-5 mt-[29px] ">
-                                <h3>{actionsMenuData.menuName}</h3>
+                            <div class=" w-max mt-[29px] ">
+                                <h3>{wokaMenuData.wokaName}</h3>
                             </div>
                         </div>
                     </div>
 
-                    {#if actionsMenuData.visitCardUrl}
+                    {#if wokaMenuData.visitCardUrl}
                         <VisitCard
-                            visitCardUrl={actionsMenuData.visitCardUrl}
+                            visitCardUrl={wokaMenuData.visitCardUrl}
                             isEmbedded={true}
                             showSendMessageButton={false}
                         />
                     {/if}
                 </div>
-                {#if actionsMenuData.menuDescription}
-                    <p class="text-sm opacity-50 text-white px-4">
-                        {actionsMenuData.menuDescription}
-                    </p>
-                {/if}
             </div>
         {/if}
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast p-2"
-                class:margin-close={!actionsMenuData.menuName}
+                class="flex items-center bg-contrast px-2"
+                class:margin-close={!wokaMenuData.wokaName}
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
             >
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
@@ -137,7 +131,7 @@
                         </span>
                     </button>
                 {/each}
-                {#if !actionsMenuData.menuName}
+                {#if !wokaMenuData.wokaName}
                     <button
                         type="button"
                         class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full"
