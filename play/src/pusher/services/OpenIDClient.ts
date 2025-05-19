@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { Client, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
-import { Issuer, generators } from "openid-client";
+import { Issuer, generators, custom } from "openid-client";
 import { v4 } from "uuid";
 import type { Request, Response } from "hyper-express";
 import {
@@ -15,6 +15,10 @@ import {
     SECRET_KEY,
     OPID_TAGS_CLAIM,
 } from "../enums/EnvironmentVariable";
+
+custom.setHttpOptionsDefaults({
+    timeout: 50000,
+});
 
 class OpenIDClient {
     private issuerPromise: Promise<Client> | null = null;
