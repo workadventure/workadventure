@@ -57,8 +57,8 @@
                 <div
                     class={`${
                         rootFolder
-                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-left"
-                            : "text-sm font-bold tracking-widest uppercase grow text-left"
+                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-start"
+                            : "text-sm font-bold tracking-widest uppercase grow text-start"
                     }`}
                 >
                     {$name}
@@ -89,7 +89,7 @@
                                     data-testid="openSuggestedRooms"
                                     on:click={toggleSuggestedRooms}
                                 >
-                                    <div class="text-sm font-bold tracking-widest uppercase grow text-left">
+                                    <div class="text-sm font-bold tracking-widest uppercase grow text-start">
                                         {$LL.chat.suggestedRooms()}
                                     </div>
                                 </button>
@@ -105,7 +105,7 @@
                             </button>
                         </div>
                         {#if suggestedRoomsOpen}
-                            <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                            <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                                 <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
                                     <RoomSuggested roomInformation={room} />
                                 </ShowMore>
@@ -116,7 +116,7 @@
             </div>
             <div class="flex flex-col overflow-auto">
                 {#if $invitations.length > 0}
-                    <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                    <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                         <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
                             <RoomInvitation {room} />
                         </ShowMore>

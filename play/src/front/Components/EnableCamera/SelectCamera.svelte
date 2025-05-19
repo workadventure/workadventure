@@ -16,9 +16,9 @@
 <div
     class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 w-full mx-2 md:mx-0 min-w-[280px] md:min-w-[400px] max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
-    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
+    <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 ps-2">
         <slot name="icon" />
-        <div class="grow pr-8">
+        <div class="grow pe-8 ps-2">
             <slot name="title" />
         </div>
         <button
@@ -49,9 +49,9 @@
                         <CamOffIcon />
                     </div>
                 {/if}
-                <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
+                <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
                     <div
-                        class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center  "
+                        class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center  "
                         class:bg-secondary={!selectedDevice}
                         class:border-secondary={!selectedDevice}
                     >
@@ -94,9 +94,9 @@
                             <slot name="widget" />
                         </div>
                     {/if}
-                    <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
+                    <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
                         <div
-                            class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center "
                             class:bg-secondary={selectedDevice === device.deviceId}
                             class:border-secondary={selectedDevice === device.deviceId}
                         >

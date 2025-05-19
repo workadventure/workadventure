@@ -24,7 +24,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <img
-            class="w-6 mr-1"
+            class="w-6 me-2"
             src="resources/icons/icon_focus.png"
             alt={$LL.mapEditor.properties.focusableProperties.description()}
         />

@@ -13,7 +13,7 @@
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
     export let statusInformation: Array<StatusInformationInterface>;
-    export let align: "right" | "left" = "left";
+    export let align: "end" | "start" = "start";
 
     const handleKeyPress = (e: KeyboardEvent, newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
         if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
@@ -36,21 +36,21 @@
     <!-- Some status (silent, in a meeting...) are locking the status bar to only one option -->
     {#if [AvailabilityStatus.SPEAKER, AvailabilityStatus.JITSI, AvailabilityStatus.BBB, AvailabilityStatus.DENY_PROXIMITY_MEETING, AvailabilityStatus.SILENT].includes($availabilityStatusStore)}
         <button
-            class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-left rounded active:outline-none focus:outline-none"
+            class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
         >
             <AvailabilityStatusCircle
                 cursorType="pointer"
                 position="relative"
                 colorHex={getColorHexOfStatus($availabilityStatusStore)}
             />
-            <div class="grow text-left leading-4 opacity-50">{getStatusLabel($availabilityStatusStore)}</div>
+            <div class="grow text-start leading-4 opacity-50">{getStatusLabel($availabilityStatusStore)}</div>
             <CheckIcon height="h-4" width="h-4" classList="transition-all" />
         </button>
     {:else}
         {#each statusInformation as statusInformationValue (statusInformationValue.AvailabilityStatus)}
             <button
-                class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-left rounded active:outline-none focus:outline-none"
-                class:justify-end={align === "right"}
+                class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
+                class:justify-end={align === "end"}
                 class:disabled={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
                 on:keyup={(e) => {
                     handleKeyPress(e, statusInformationValue.AvailabilityStatus);
@@ -64,8 +64,8 @@
                     isActive={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
                 />
                 <div
-                    class="text-left leading-4"
-                    class:grow={align === "left"}
+                    class="text-start leading-4"
+                    class:grow={align === "start"}
                     class:opacity-50={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
                 >
                     {statusInformationValue.label}

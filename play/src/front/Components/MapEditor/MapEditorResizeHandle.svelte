@@ -74,7 +74,7 @@
         content: "";
         position: absolute;
         top: -20px;
-        left: -20px;
+        inset-inline-start: -20px;
         width: 45px;
         height: 122px;
         /*background-color: rgba(255, 0, 0, 0.5);*/

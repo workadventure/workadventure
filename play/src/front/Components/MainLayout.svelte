@@ -112,14 +112,14 @@
     class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-left: {marginLeft}px; padding-right: {marginRight}px"
+    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
 >
     {#if $modalVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
+        <div class="bg-black/60 w-full h-full fixed start-0 end-0" />
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
-        <div class="w-full h-full fixed left-0 right-0">
+        <div class="w-full h-full fixed start-0 end-0">
             <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
         <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
@@ -134,7 +134,7 @@
 
     <div class="flex min-h-full flex-col-reverse mobile:flex-col">
         <section id="main-layout-main" class="pb-0 flex-1 pointer-events-none h-full w-full relative">
-            <div class="fixed z-[1000] bottom-0 left-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
+            <div class="fixed z-[1000] bottom-0 start-0 right-0 m-auto w-max mobile:w-[98vw] md:max-w-[80%]">
                 <div class="popups flex items-end relative w-full justify-center mobile:mb-24 mb-4 h-[calc(100%-96px)]">
                     {#each $popupStore.slice().reverse() as popup, index (popup.uuid)}
                         <div class="popupwrapper popupwrapper-{index} w-full flex-1" in:fly={{ y: 150, duration: 550 }}>
@@ -167,7 +167,7 @@
             {/if}
 
             {#if $notificationPlayingStore}
-                <div class="flex flex-col absolute w-auto right-0">
+                <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}
                         <Notification {notification} />
                     {/each}
