@@ -29,7 +29,7 @@
 
 <button
     type="button"
-    class="{sizeClasses}  rounded backdrop-blur close-window transition-all aspect-square text-2xl !{textColor} {bgColor} hover:{hoverColor} close-btn"
+    class="{sizeClasses} flex items-center justify-center rounded backdrop-blur close-window transition-all aspect-square text-2xl !{textColor} {bgColor} hover:{hoverColor} close-btn"
     data-testid={dataTestId}
     on:click={handleClick}
 >

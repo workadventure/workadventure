@@ -16,12 +16,15 @@
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
+    import { connectionManager } from "../../Connection/ConnectionManager";
 
     let emoteDataLoading = false;
 
     export let arrowAction: ArrowAction;
 
     let triggerElement: HTMLElement | undefined = undefined;
+
+    const isSayBubbleEnabled = connectionManager.currentRoom?.isSayEnabled ?? true;
 
     function clickEmoji(selected?: number) {
         //if open, in edit mode or playing mode
@@ -222,49 +225,50 @@
             -->
         </div>
         <!-- Divider -->
-        <div class="w-full h-[1px] bg-white/10" />
+        {#if isSayBubbleEnabled}
+            <div class="w-full h-[1px] bg-white/10" />
 
-        <div class="px-1 py-2  flex flex-row items-center justify-between">
-            <div class="flex flex-row justify-between gap-2 items-center w-full">
-                <div
-                    class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
-                    on:mouseenter={() => (showSayBubbleTooltip = true)}
-                    on:mouseleave={() => (showSayBubbleTooltip = false)}
-                >
-                    Say Bubble
-                </div>
-                {#if showSayBubbleTooltip}
-                    <div class="absolute top-1/3 left-0 m-auto w-2 h-1">
-                        <HelpTooltip
-                            title={$LL.say.type.say()}
-                            desc="{$LL.say.tooltip.description.say()} "
-                            shortcuts={["enter"]}
-                            delayBeforeAppear={100}
-                            helpMedia="./static/images/say-bubble.png"
-                        />
+            <div class="px-1 py-2  flex flex-row items-center justify-between">
+                <div class="flex flex-row justify-between gap-2 items-center w-full">
+                    <div
+                        class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
+                        on:mouseenter={() => (showSayBubbleTooltip = true)}
+                        on:mouseleave={() => (showSayBubbleTooltip = false)}
+                    >
+                        Say Bubble
                     </div>
-                {/if}
-
-                <div
-                    class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
-                    on:mouseenter={() => (showThinkBubbleTooltip = true)}
-                    on:mouseleave={() => (showThinkBubbleTooltip = false)}
-                >
-                    Think Bubble
-                </div>
-                {#if showThinkBubbleTooltip}
-                    <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
-                        <HelpTooltip
-                            title={$LL.say.type.think()}
-                            desc="{$LL.say.tooltip.description.say()} {$LL.say.tooltip.description.think()}"
-                            shortcuts={["ctrl", "enter"]}
-                            delayBeforeAppear={100}
-                            helpMedia="./static/images/think-bubble.png"
-                        />
+                    {#if showSayBubbleTooltip}
+                        <div class="absolute top-1/3 left-0 m-auto w-2 h-1">
+                            <HelpTooltip
+                                title={$LL.say.type.say()}
+                                desc="{$LL.say.tooltip.description.say()} "
+                                shortcuts={["enter"]}
+                                delayBeforeAppear={100}
+                                helpMedia="./static/images/say-bubble.png"
+                            />
+                        </div>
+                    {/if}
+                    <div
+                        class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
+                        on:mouseenter={() => (showThinkBubbleTooltip = true)}
+                        on:mouseleave={() => (showThinkBubbleTooltip = false)}
+                    >
+                        Think Bubble
                     </div>
-                {/if}
+                    {#if showThinkBubbleTooltip}
+                        <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
+                            <HelpTooltip
+                                title={$LL.say.type.think()}
+                                desc="{$LL.say.tooltip.description.say()} {$LL.say.tooltip.description.think()}"
+                                shortcuts={["ctrl", "enter"]}
+                                delayBeforeAppear={100}
+                                helpMedia="./static/images/think-bubble.png"
+                            />
+                        </div>
+                    {/if}
+                </div>
             </div>
-        </div>
+        {/if}
     </div>
     <div use:arrowAction />
 </div>
