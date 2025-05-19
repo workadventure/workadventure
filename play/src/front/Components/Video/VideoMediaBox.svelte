@@ -196,6 +196,7 @@
                 mediaStream={$streamStore}
                 attach={attach}
                 detach={detach}
+                name={peer.name}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
                 outputDeviceId={$speakerSelectedStore}
