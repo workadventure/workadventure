@@ -259,7 +259,7 @@
                         <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
                             <HelpTooltip
                                 title={$LL.say.type.think()}
-                                desc="{$LL.say.tooltip.description.say()} {$LL.say.tooltip.description.think()}"
+                                desc={$LL.say.tooltip.description.think()}
                                 shortcuts={["ctrl", "enter"]}
                                 delayBeforeAppear={100}
                                 helpMedia="./static/images/think-bubble.png"

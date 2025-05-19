@@ -7,53 +7,73 @@ test.describe("Say bubbles", () => {
 
     // });
 
-    test("should display a speech bubble when sending a message", async ({ browser }) => {
-
-        const page = await getPage(browser, 'Alice',
+    test("should display a speech bubble and be received by other users", async ({ browser }) => {
+        // Create two browser contexts for Alice and Bob
+        const alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
-        // Open the say popup
-        await page.keyboard.press("Enter");
+        const bobPage = await getPage(browser, 'Bob',
+            publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
+        );
 
-        // Type a message
-        await page.keyboard.type("Hello, this is a test message!");
+        // Wait for both users to be connected
+        await alicePage.waitForTimeout(2000);
+        await bobPage.waitForTimeout(2000);
 
-        // Send the message
-        await page.keyboard.press("Enter");
+        // Alice sends a message
+        await alicePage.keyboard.press("Enter");
+        await alicePage.keyboard.type("Hello Bob, this is a test message!");
+        await alicePage.keyboard.press("Enter");
 
-        // Wait for the speech bubble to appear
-        const speechBubble = await page.waitForSelector(".say-bubble", { timeout: 5000 });
+        // Wait for the speech bubble to appear for both users
+        const aliceSpeechBubble = await alicePage.waitForSelector(".say-bubble", { timeout: 5000 });
+        const bobSpeechBubble = await bobPage.waitForSelector(".say-bubble", { timeout: 5000 });
 
-        // Verify the speech bubble is visible and contains the correct text
-        expect(await speechBubble.isVisible()).toBeTruthy();
-        expect(await speechBubble.textContent()).toBe("Hello, this is a test message!");
+        // Verify the speech bubble is visible and contains the correct text for both users
+        expect(await aliceSpeechBubble.isVisible()).toBeTruthy();
+        expect(await aliceSpeechBubble.textContent()).toBe("Hello Bob, this is a test message!");
 
-        await page.close();
+        expect(await bobSpeechBubble.isVisible()).toBeTruthy();
+        expect(await bobSpeechBubble.textContent()).toBe("Hello Bob, this is a test message!");
+
+        // Close both pages
+        await alicePage.close();
+        await bobPage.close();
     });
 
-    test("should display a thinking bubble when sending a message with Ctrl", async ({ browser }) => {
-
-        const page = await getPage(browser, 'Alice',
+    test("should display a thinking bubble and be received by other users", async ({ browser }) => {
+        // Create two browser contexts for Alice and Bob
+        const alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
-        // Open the say popup
-        await page.keyboard.press("Enter");
+        const bobPage = await getPage(browser, 'Bob',
+            publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
+        );
 
-        // Type a message
-        await page.keyboard.type("This is a thinking message!");
+        // Wait for both users to be connected
+        await alicePage.waitForTimeout(2000);
+        await bobPage.waitForTimeout(2000);
 
-        // Send the message with Ctrl+Enter
-        await page.keyboard.down("Control");
-        await page.keyboard.press("Enter");
-        await page.keyboard.up("Control");
+        // Alice sends a thinking message
+        await alicePage.keyboard.press("Enter");
+        await alicePage.keyboard.type("This is a thinking message for Bob!");
+        await alicePage.keyboard.down("Control");
+        await alicePage.keyboard.press("Enter");
+        await alicePage.keyboard.up("Control");
 
-        // Wait for the thinking bubble to appear
-        const thinkingBubble = await page.waitForSelector(".thinking-cloud", { timeout: 5000 });
+        // Wait for the thinking bubble to appear for both users
+        const aliceThinkingBubble = await alicePage.waitForSelector(".thinking-cloud", { timeout: 5000 });
+        const bobThinkingBubble = await bobPage.waitForSelector(".thinking-cloud", { timeout: 5000 });
 
-        // Verify the thinking bubble is visible and contains the correct text
-        expect(await thinkingBubble.isVisible()).toBeTruthy();
-        expect(await thinkingBubble.textContent()).toBe("This is a thinking message!");
+        // Verify the thinking bubble is visible and contains the correct text for both users
+        expect(await aliceThinkingBubble.isVisible()).toBeTruthy();
+        expect(await aliceThinkingBubble.textContent()).toBe("This is a thinking message for Bob!");
 
-        await page.close();
+        expect(await bobThinkingBubble.isVisible()).toBeTruthy();
+        expect(await bobThinkingBubble.textContent()).toBe("This is a thinking message for Bob!");
+
+        // Close both pages
+        await alicePage.close();
+        await bobPage.close();
     });
 });
