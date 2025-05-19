@@ -55,7 +55,7 @@
         {/if}
         {#if hidden}
             <div class="w-full flex justify-center items-center p-4">
-                <div class="spinner" />
+                <span class="loader border-4 border-solid der-white border-b-secondary" />
             </div>
         {/if}
         <div class={isEmbedded ? "" : "p-2"}>
@@ -95,39 +95,23 @@
 <svelte:window on:message={handleIframeMessage} />
 
 <style lang="scss">
-    .spinner {
-        width: 56px;
-        height: 56px;
+    .loader {
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        border: 9px solid;
-        border-right-color: #ffffff;
-        animation: spinner 1s infinite linear;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
     }
 
-    @keyframes spinner {
-        to {
-            transform: rotate(1turn);
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
         }
     }
-    //.loader {
-    //    border: 16px solid #f3f3f3; /* Light grey */
-    //    border-top: 16px solid #3498db; /* Blue */
-    //    border-radius: 50%;
-    //    width: 120px;
-    //    height: 120px;
-    //    margin: auto;
-    //    animation: spin 2s linear infinite;
-    //    z-index: 350;
-    //}
-    //
-    //@keyframes spin {
-    //    0% {
-    //        transform: rotate(0deg);
-    //    }
-    //    100% {
-    //        transform: rotate(360deg);
-    //    }
-    //}
 
     .visitCard {
         pointer-events: all;

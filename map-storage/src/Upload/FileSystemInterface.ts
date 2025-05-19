@@ -1,13 +1,13 @@
 import { Archiver } from "archiver";
 import { NextFunction, Response } from "express";
-import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import * as unzipper from "unzipper";
 
 export interface FileSystemInterface {
     deleteFiles(path: string): Promise<void>;
 
     deleteFilesExceptWAM(directory: string, filesFromZip: string[]): Promise<void>;
 
-    writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void>;
+    writeFile(zipEntry: unzipper.File, targetFilePath: string): Promise<void>;
 
     exist(virtualPath: string): Promise<boolean>;
 

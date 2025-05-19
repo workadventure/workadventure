@@ -6,6 +6,7 @@
     import defaultLoader from "../images/Workadventure.gif";
 
     const logo = gameManager.currentStartedRoom.loadingLogo ?? defaultLoader;
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
     const primary = gameManager.currentStartedRoom.primaryColor ?? "#4056F6";
 </script>
@@ -33,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url({bgMap});" />
+    <div class="absolute left-0 top-0 w-full h-full bg-cover z-10 blur" style="background-image: url({sceneBg});" />
     <div
         class="absolute left-0 top-0 w-full h-full z-20 backdrop-blur-md opacity-70"
         style="background-color: {bgColor};"
