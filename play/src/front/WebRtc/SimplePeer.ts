@@ -43,8 +43,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private lastWebrtcPassword: string | undefined;
     private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
 
-    // public readonly videoPeerStore: MapStore<string, VideoPeer>;
-    // public readonly screenSharingPeerStore: MapStore<string, ScreenSharingPeer>;
+    private pendingConnections: Map<string, AbortController> = new Map();
 
     private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -207,8 +206,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return;
         }
 
+        this.pendingConnections.set(user.userId, new AbortController());
+
         await this.createPeerConnection(user);
+
+        this.pendingConnections.delete(user.userId);
     }
+
+
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
         this.closeConnection(user.userId, false);
@@ -251,6 +256,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
+
+        const controller = this.pendingConnections.get(user.userId);
+        if (controller && controller.signal.aborted) {
+            this.pendingConnections.delete(user.userId);
+            return null;
+        }
 
         const peer = new VideoPeer(
             user,
@@ -371,6 +382,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public closeConnection(userId: string, shouldCloseStream = true) {
         //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
+        const controller = this.pendingConnections.get(userId);
+        if (controller) {
+            controller.abort();
+            return;
+        }
+
         try {
             const peer = this.space.livekitVideoStreamStore.get(userId);
             if (!peer || !(peer instanceof VideoPeer)) {

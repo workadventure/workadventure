@@ -12,8 +12,8 @@ We opted for a different approach to the event's detection of 'enter' and 'leave
 ## Detecting when the user enters/leaves an area edited by the map editor
 
 ```ts
-WA.mapEditor.onEnter(name: string): Subscription
-WA.mapEditor.onLeave(name: string): Subscription
+WA.mapEditor.area.onEnter(name: string): Subscription
+WA.mapEditor.area.onLeave(name: string): Subscription
 ```
 
 Listens to the position of the current user. The event is triggered when the user enters or leaves a given area.

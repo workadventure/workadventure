@@ -9,6 +9,7 @@
         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     } from "../../Stores/MapEditorStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import ButtonClose from "../Input/ButtonClose.svelte";
     import Megaphone from "./ConfigureMyRoom/Megaphone.svelte";
     import RoomSettings from "./ConfigureMyRoom/RoomSettings.svelte";
 
@@ -55,10 +56,8 @@
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
     >
-        <div class="absolute top-2 right-2 hover:bg-white/10">
-            <button class="close-window {isVisible ? 'visible' : ''} " on:click|preventDefault|stopPropagation={close}
-                >&#215;</button
-            >
+        <div class="absolute top-2 right-2 z-50 close-window {isVisible ? 'visible' : ''} ">
+            <ButtonClose on:click={close} />
         </div>
         <div class="flex flex-wrap w-full grow max-h-[70vh] overflow-auto">
             <div class="menu mx-auto flex flex-col relative">
