@@ -75,12 +75,12 @@
             console.warn("User has not interacted with the browser yet. The video will be muted.");
             missingUserActivation = true;
         }
-        videoElement.srcObject = mediaStream;
+       // videoElement.srcObject = mediaStream;
       
     }
-    $: if (videoUrl && videoElement) {
-        videoElement.src = videoUrl;
-    }
+    // $: if (videoUrl && videoElement) {
+    //     videoElement.src = videoUrl;
+    // }
 
     let containerWidth: number;
     let containerHeight: number;
