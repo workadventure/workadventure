@@ -255,7 +255,7 @@
                         <FullScreenIcon />
                     {:else}
                         <svg
-                            xmsns="http://www.w3.org/2000/svg"
+                            xmlns="http://www.w3.org/2000/svg"
                             class="icon icon-tabler icon-tabler-arrows-minimize"
                             width="24"
                             height="24"
