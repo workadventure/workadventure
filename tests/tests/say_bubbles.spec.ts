@@ -1,11 +1,20 @@
 import { test, expect } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { publicTestMapUrl } from "./utils/urls";
+import { isMobile } from "./utils/isMobile";
 
 test.describe("Say bubbles", () => {
-    // test.beforeEach(async ({ page }) => {
-
-    // });
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({ page }) => {
+            //Map Editor not available on mobile
+            if (isMobile(page)) {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
+        }
+    );
 
     test("should display a speech bubble and be received by other users", async ({ browser }) => {
         // Create two browser contexts for Alice and Bob
