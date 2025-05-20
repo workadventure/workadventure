@@ -42,6 +42,7 @@ export class LiveKitRoom {
             dynacast: true,
             publishDefaults: {
                 videoSimulcastLayers: [VideoPresets.h720, VideoPresets.h360, VideoPresets.h90],
+                videoCodec: "vp9",
             },
             videoCaptureDefaults: {
                 resolution: VideoPresets.h1080,
