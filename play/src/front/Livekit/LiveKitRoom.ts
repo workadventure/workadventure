@@ -38,12 +38,8 @@ export class LiveKitRoom {
         this.room = new Room({
             adaptiveStream: true,
             dynacast: true,
-            videoCaptureDefaults: {
-                resolution: VideoPresets.h2160.resolution,
-            },
-            // reconnectPolicy: {
         });
-
+        
         this.localParticipant = this.room.localParticipant;
 
         await this.room.prepareConnection(this.serverUrl, this.token);
@@ -103,8 +99,9 @@ export class LiveKitRoom {
                 this.localParticipant
                     .setCameraEnabled(state, {
                         deviceId: deviceId,
-                        //TODO : voir la résolution qu'on décide d'envoyer
-                        resolution: VideoPresets.h2160.resolution,
+                    
+                    },{
+
                     })
                     .catch((err) => {
                         console.error("An error occurred in synchronizeMediaState", err);
