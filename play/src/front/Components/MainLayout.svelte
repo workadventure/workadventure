@@ -165,7 +165,6 @@
             {:else if $textMessageStore.length > 0}
                 <TextMessageContainer />
             {/if}
-
             {#if $notificationPlayingStore}
                 <div class="flex flex-col absolute w-auto end-0">
                     {#each [...$notificationPlayingStore.values()] as notification, index (`${index}-${notification.id}`)}

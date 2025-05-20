@@ -36,7 +36,7 @@
             {/if}
         {/if}
         <div class="flex flex-col gap-2 items-start px-1 pt-1 ">
-            <div class="flex flex-row items-start justify-between">
+            <div class="flex flex-row items-start justify-between w-full">
                 <div class="text-lg bold leading-none">
                     {title}
                 </div>
