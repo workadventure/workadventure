@@ -84,7 +84,7 @@
 </button>
 <div
     on:mouseleave={toggleRoomOptions}
-    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[1] w-max right-2 top-10 p-1"
+    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[99] w-max right-2 top-10 p-1"
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideOptions}
 >
