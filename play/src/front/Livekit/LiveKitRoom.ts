@@ -36,10 +36,18 @@ export class LiveKitRoom {
     public async prepareConnection(): Promise<Room> {
         //TODO : revoir les paramètres de la room
         this.room = new Room({
-            adaptiveStream: true,
+            adaptiveStream: {
+                pixelDensity: "screen",
+            },
             dynacast: true,
+            publishDefaults: {
+                videoSimulcastLayers: [VideoPresets.h720, VideoPresets.h360, VideoPresets.h90],
+            },
+            videoCaptureDefaults: {
+                resolution: VideoPresets.h1080,
+            },
         });
-        
+
         this.localParticipant = this.room.localParticipant;
 
         await this.room.prepareConnection(this.serverUrl, this.token);
@@ -97,12 +105,13 @@ export class LiveKitRoom {
                 //TODO : voir si utile de subscribe directement au requestedCameraDeviceIdStore
 
                 this.localParticipant
-                    .setCameraEnabled(state, {
-                        deviceId: deviceId,
-                    
-                    },{
-
-                    })
+                    .setCameraEnabled(
+                        state,
+                        {
+                            deviceId: deviceId,
+                        },
+                        {}
+                    )
                     .catch((err) => {
                         console.error("An error occurred in synchronizeMediaState", err);
                         Sentry.captureException(err);
