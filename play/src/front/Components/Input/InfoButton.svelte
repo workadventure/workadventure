@@ -35,12 +35,16 @@
     </svg>
 
     <!--{#if showTooltip}-->
-        <div class="transition-opacity { showTooltip ? 'visible' : 'hidden' } absolute bg-contrast-900 rounded p-3 text-white z-10 w-80"
-             use:floatingUiContent>
-            <slot />
+    <div
+        class="transition-opacity {showTooltip
+            ? 'visible'
+            : 'hidden'} absolute bg-contrast-900 rounded p-3 text-white z-10 w-80"
+        use:floatingUiContent
+    >
+        <slot />
 
-            <!-- Arrow -->
-            <div use:arrowAction />
-        </div>
+        <!-- Arrow -->
+        <div use:arrowAction />
+    </div>
     <!--{/if}-->
 </div>
