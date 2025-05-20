@@ -6,6 +6,9 @@ import {
     ConnectionQuality,
     Track,
     ParticipantEvent,
+    RemoteVideoTrack,
+    supportsAdaptiveStream,
+    supportsDynacast,
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
 import { derived, Writable, writable } from "svelte/store";
@@ -38,7 +41,9 @@ export class LiveKitParticipant {
     private _screenShareRemoteTrack: RemoteTrack | undefined;
     private _videoElements: HTMLVideoElement[] = [];
     private _screenShareElements: HTMLVideoElement[] = [];
-
+    private _videoQuality: Writable<"low" | "medium" | "high" | undefined> = writable<
+        "low" | "medium" | "high" | "default"
+    >("default");
     constructor(
         private participant: Participant,
         private space: SpaceInterface,
@@ -61,7 +66,6 @@ export class LiveKitParticipant {
                     this._videoStreamStore.set(track.mediaStream);
                     this._hasVideo.set(!track.isMuted);
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
-                    console.log(">>>>>>> videoElements", videoElements);
                     videoElements.forEach((videoElement) => {
                         console.log("attach to existing videoElement and existing track", videoElement, track);
                         videoElement.autoplay = true;
@@ -69,6 +73,7 @@ export class LiveKitParticipant {
                         videoElement.muted = true;
                         track.attach(videoElement);
                     });
+
                     this.updateLivekitVideoStreamStore().catch((e) => {
                         console.error("Error while updating livekit video stream store", e);
                         Sentry.captureException(e);
@@ -119,12 +124,21 @@ export class LiveKitParticipant {
             // Create and attach video element
             this._videoRemoteTrack = track;
 
-            // this._videoElements.forEach((videoElement) => {
-            //     videoElement.autoplay = true;
-            //     videoElement.playsInline = true;
-            //     videoElement.muted = true;
-            //     track.attach(videoElement);
-            // });
+            if (track instanceof RemoteVideoTrack) {
+                console.log(">>>>>track.isAdaptiveStream", {
+                    isAdaptiveStream: track.isAdaptiveStream,
+                    currentBitrate: track.currentBitrate,
+                    streamState: track.streamState,
+                    supportsAdaptiveStream: supportsAdaptiveStream(),
+                    supportsDynacast: supportsDynacast(),
+                });
+            }
+
+            track.on("videoDimensionsChanged", (dimensions) => {
+                const videoQuality = this.getVideoQuality(dimensions.width, dimensions.height);
+                console.log(">>>>>videoDimensionsChanged", dimensions, videoQuality);
+                this._videoQuality.set(videoQuality);
+            });
 
             this.space.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
                 console.log("attach to existing videoElement", videoElement);
@@ -224,8 +238,6 @@ export class LiveKitParticipant {
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
         this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
-
-        //TODO : faire le attach detach dans cette partie ?
     }
 
     private async updateLivekitScreenShareStreamStore() {
@@ -287,12 +299,20 @@ export class LiveKitParticipant {
                         this._videoRemoteTrack.detach(container);
                     }
                 },
+                videoQuality: this._videoQuality,
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
             player,
             userId: this._spaceUser.userId,
         };
+    }
+
+    private getVideoQuality(width: number, height: number): "low" | "medium" | "high" {
+        const pixels = width * height;
+        if (pixels <= 320 * 180) return "low";
+        if (pixels <= 640 * 360) return "medium";
+        return "high";
     }
 
     public async getScreenShareStream(): Promise<ExtendedStreamable> {
@@ -330,6 +350,7 @@ export class LiveKitParticipant {
                         this._screenShareRemoteTrack.detach(container);
                     }
                 },
+                videoQuality: this._videoQuality,
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
