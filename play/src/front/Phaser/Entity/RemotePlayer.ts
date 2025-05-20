@@ -1,8 +1,8 @@
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import type { PositionMessage, PositionMessage_Direction, SayMessage } from "@workadventure/messages";
-import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
-import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import type { WokaMenuAction } from "../../Stores/WokaMenuStore";
+import { wokaMenuStore } from "../../Stores/WokaMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
@@ -48,7 +48,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.userId = userId;
         this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
-        this.setClickable(this.getDefaultActionsMenuActions().length > 0);
+        this.setClickable(this.getDefaultWokaMenuActions().length > 0);
         this.activationRadius = activationRadius ?? 96;
 
         if (sayMessage) {
@@ -74,19 +74,19 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         return this.visitCardUrl;
     }
 
-    public registerActionsMenuAction(action: ActionsMenuAction): void {
-        actionsMenuStore.addAction({
+    public registerWokaMenuAction(action: WokaMenuAction): void {
+        wokaMenuStore.addAction({
             ...action,
             priority: action.priority ?? 0,
             callback: () => {
                 action.callback();
-                actionsMenuStore.clear();
+                wokaMenuStore.clear();
             },
         });
     }
 
-    public unregisterActionsMenuAction(actionName: string) {
-        actionsMenuStore.removeAction(actionName);
+    public unregisterWokaMenuAction(actionName: string) {
+        wokaMenuStore.removeAction(actionName);
     }
 
     public activate(): void {
@@ -94,11 +94,11 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public deactivate(): void {
-        actionsMenuStore.clear();
+        wokaMenuStore.clear();
     }
 
     public destroy(): void {
-        actionsMenuStore.clear();
+        wokaMenuStore.clear();
         super.destroy();
     }
 
@@ -107,16 +107,14 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private toggleActionsMenu(): void {
-        if (get(actionsMenuStore) !== undefined) {
-            actionsMenuStore.clear();
+        if (get(wokaMenuStore) !== undefined) {
+            wokaMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.playerName);
-        if (this.visitCardUrl) {
-            actionsMenuStore.setVisitCardUrl(this.visitCardUrl);
-        }
-        for (const action of this.getDefaultActionsMenuActions()) {
-            actionsMenuStore.addAction(action);
+        wokaMenuStore.initialize(this.playerName, this.userId, this.visitCardUrl ?? undefined);
+
+        for (const action of this.getDefaultWokaMenuActions()) {
+            wokaMenuStore.addAction(action);
         }
 
         const userFound = this.scene.getRemotePlayersRepository().getPlayers().get(this.userId);
@@ -129,8 +127,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         iframeListener.sendRemotePlayerClickedEvent(userFound);
     }
 
-    private getDefaultActionsMenuActions(): ActionsMenuAction[] {
-        const actions: ActionsMenuAction[] = [];
+    private getDefaultWokaMenuActions(): WokaMenuAction[] {
+        const actions: WokaMenuAction[] = [];
         actions.push({
             actionName: blackListManager.isBlackListed(this.userUuid)
                 ? get(LL).report.block.unblock()
@@ -140,7 +138,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             style: "is-error bg-white/10 hover:bg-white/30 text-red-500",
             callback: () => {
                 showReportScreenStore.set({ userUuid: this.userUuid, userName: this.playerName });
-                actionsMenuStore.clear();
+                wokaMenuStore.clear();
             },
             actionIcon: banIcon,
             iconColor: "#EF4444",

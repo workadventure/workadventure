@@ -10,6 +10,7 @@
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
+    import { wokaMenuStore } from "../Stores/WokaMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { coWebsites } from "../Stores/CoWebsiteStore";
@@ -42,6 +43,7 @@
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
+    import WokaMenu from "./ActionsMenu/WokaMenu.svelte";
     import Lazy from "./Lazy.svelte";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
@@ -239,10 +241,13 @@
             <!--<ActionBar />-->
         </div>
         <ActionBar />
-        {#if $actionsMenuStore}
-            <ActionsMenu />
-        {/if}
     </div>
+
+    {#if $wokaMenuStore}
+        <WokaMenu />
+    {:else if $actionsMenuStore}
+        <ActionsMenu />
+    {/if}
 </div>
 
 <style lang="scss">
