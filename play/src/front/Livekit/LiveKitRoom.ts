@@ -110,8 +110,12 @@ export class LiveKitRoom {
                         state,
                         {
                             deviceId: deviceId,
+                            resolution: VideoPresets.h720,
                         },
-                        {}
+                        {
+                            videoCodec: "vp9",
+                            videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h90],
+                        }
                     )
                     .catch((err) => {
                         console.error("An error occurred in synchronizeMediaState", err);
