@@ -3,7 +3,7 @@
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import LL from "../../../../i18n/i18n-svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
-    import { IconChevronRight } from "@wa-icons";
+    import { IconChevronRight, IconChevronLeft } from "@wa-icons";
 
     export let tag: string;
     export let entitiesPrefabsVariants: EntityVariant[];
@@ -11,6 +11,8 @@
     const dispatch = createEventDispatcher<{
         onSelectedTag: string;
     }>();
+
+    const isRtl = document.dir === "rtl";
 </script>
 
 {#if entitiesPrefabsVariants.length !== 0}
@@ -34,7 +36,11 @@
             </div>
             <div class="object">{$LL.mapEditor.entityEditor.images(entitiesPrefabsVariants.length)}</div>
             <div class="chevronRight group-hover:-translate-x-2 transition-transform">
-                <IconChevronRight />
+                {#if isRtl}
+                    <IconChevronLeft />
+                {:else}
+                    <IconChevronRight />
+                {/if}
             </div>
         </div>
     </li>
