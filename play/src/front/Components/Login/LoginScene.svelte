@@ -18,8 +18,10 @@
     let startValidating = false;
     let errorName = "";
 
-    let logo = gameManager.currentStartedRoom.loadingLogo ?? logoImg;
+    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
+
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -90,7 +92,12 @@
 </script>
 
 <section class="self-center absolute z-30 top-0 text-center w-full block">
-    <img src={logo} alt="logo" class="main-logo mt-8" style="width: 333px;" />
+    <img
+        src={logo}
+        alt="logo"
+        class="main-logo mt-8 {gameManager.currentStartedRoom.loginSceneLogo ? 'max-h-[200px] object-cover' : ''}"
+        style="width: 333px;"
+    />
 </section>
 
 <form
@@ -153,4 +160,4 @@
     class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80"
     style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
 />
-<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');" />
+<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{sceneBg}');" />

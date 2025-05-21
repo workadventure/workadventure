@@ -197,11 +197,11 @@
 
 <div id="cowebsites-container" class="w-full h-full bg-contrast/50 backdrop-blur">
     <div class="h-full w-full flex flex-col">
-        <div class="flex py-2 ml-3 items-center height-tab overflow-hidden flex-none">
+        <div class="flex py-2 ms-3 items-center height-tab overflow-hidden flex-none">
             {#if tabsOverflowing && tabsScrollX > 0}
                 <div class="flex-0 w-10">
                     <button
-                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 mr-2"
+                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsLeft}
                     >
                         <ChevronLeftIcon />
@@ -237,7 +237,7 @@
             {#if tabsOverflowing && tabsScrollX < tabsContainer?.scrollWidth - tabsContainer?.clientWidth}
                 <div class="flex-0 w-10">
                     <button
-                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 mr-2"
+                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
                         on:click={scrollTabsRight}
                     >
                         <ChevronRightIcon />
@@ -248,7 +248,7 @@
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="flex justify-end w-10 flex-none">
                 <div
-                    class="ml-full h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+                    class="ms-full h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 me-2 cursor-pointer"
                     on:click={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
@@ -281,7 +281,7 @@
             </div>
         </div>
 
-        <div class={$screenOrientationStore === "portrait" ? "flex-1 mb-3" : "h-full object-contain ml-3"}>
+        <div class={$screenOrientationStore === "portrait" ? "flex-1 mb-3" : "h-full object-contain ms-3"}>
             {#each $coWebsites as coWebsite (coWebsite.getId())}
                 {#if coWebsite instanceof JitsiCoWebsite}
                     <JitsiCowebsiteComponent actualCowebsite={coWebsite} visible={coWebsite === activeCowebsite} />
@@ -303,8 +303,8 @@
     <!-- We make the drag handle bigger than it really is to make it more easily selectable (especially on mobile) with "after" pseudo element -->
     <div
         class={$screenOrientationStore === "portrait"
-            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-left-4 after:-top-1  after:w-48 after:h-6"
-            : "absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize after:content-[''] after:absolute after:-left-4 after:-top-4 after:h-48 after:w-6"}
+            ? "-mt-1.5 mx-auto w-40 h-1 bg-white rounded cursor-row-resize relative after:content-[''] after:absolute after:-start-4 after:-top-1  after:w-48 after:h-6"
+            : "absolute start-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize after:content-[''] after:absolute after:-start-4 after:-top-4 after:h-48 after:w-6"}
         class:hidden={$fullScreenCowebsite}
         bind:this={resizeBar}
         on:mousedown={addDivForResize}

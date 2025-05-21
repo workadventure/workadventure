@@ -133,10 +133,10 @@
     <td>
         <div class="flex gap-2 content-center justify-center">
             <p
-                class="max-h-min m-0 ml-1 px-2 py-1 rounded-3xl min-w-[6rem] text-center content-center"
-                class:bg-success-900={$membership === "join"}
-                class:bg-warning-900={$membership === "invite"}
-                class:bg-danger-900={$membership === "ban" || $membership === "leave"}
+                class="max-h-min m-0 ml-1 px-2 py-1 rounded-3xl min-w-[6rem] text-center content-center flex items-center justify-center border border-solid
+                {$membership === 'join' ? 'bg-success-900/20 border-success-900/30' : ''}
+                {$membership === 'invite' ? 'bg-warning-900/20 border-warning-900/30' : ''}
+                {$membership === 'ban' || $membership === 'leave' ? 'bg-danger-900/20 border-danger-900/30' : ''}"
                 data-testid={`${id}-membership`}
             >
                 <svelte:component this={getIconForMembership($membership)} />
@@ -171,7 +171,7 @@
         <div class="flex gap-2 content-center justify-center">
             {#if $hasPermissionToInvite && $membership === "leave"}
                 <button
-                    class="max-h-min m-0 px-2 py-1 bg-success-900 rounded-md"
+                    class="max-h-min m-0 p-2 py-1 bg-success-900/20 hover:bg-success-900/50 rounded-sm"
                     disabled={disableModerationButton}
                     on:click={inviteUser}
                     data-testid={`${id}-inviteButton`}
@@ -185,7 +185,7 @@
             {/if}
             {#if $hasPermissionToKick && $membership !== "leave" && $membership !== "ban"}
                 <button
-                    class="max-h-min m-0 px-2 py-1 bg-warning-900 rounded-md"
+                    class="max-h-min m-0 p-2 py-1 bg-warning-900/20 hover:bg-warning-900/50 rounded-sm"
                     disabled={disableModerationButton}
                     data-testid={`${id}-kickButton`}
                     on:click={kickUser}
@@ -201,7 +201,7 @@
                 {#if $membership === "ban"}
                     <button
                         disabled={disableModerationButton}
-                        class="max-h-min m-0 px-2 py-1 bg-success-900 rounded-md"
+                        class="max-h-min m-0 p-2 py-1 bg-success-900/20 hover:bg-success-900/50 rounded-sm"
                         data-testid={`${id}-unbanButton`}
                         on:click={unbanUser}
                     >
@@ -213,7 +213,7 @@
                     </button>
                 {:else}
                     <button
-                        class="max-h-min m-0 px-2 py-1 bg-red-500 rounded-md"
+                        class="max-h-min m-0 p-2 py-1 bg-danger-900/20 hover:bg-danger-900/50 rounded-sm"
                         disabled={disableModerationButton}
                         on:click={banUser}
                         data-testid={`${id}-banButton`}

@@ -67,12 +67,18 @@
         {#if actionsMenuData.menuName}
             <div>
                 <div class="w-full bg-cover relative">
-                    <div class="flex items-end justify-between p-2">
-                        <div class="text-white font-bold text-xl pl-3">
-                            {actionsMenuData.menuName}
-                        </div>
+                    <div class="absolute top-2 right-2">
                         <ButtonClose on:click={closeActionsMenu} />
                     </div>
+
+                    <div class="flex items-center justify-center p-2">
+                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl pl-3">
+                            <div class="w-max ml-5 mt-[29px] ">
+                                <h3>{actionsMenuData.menuName}</h3>
+                            </div>
+                        </div>
+                    </div>
+
                     {#if actionsMenuData.visitCardUrl}
                         <VisitCard
                             visitCardUrl={actionsMenuData.visitCardUrl}

@@ -48,7 +48,10 @@ const volumeProximityDiscussion = "volumeProximityDiscussion";
 const foldersOpened = "foldersOpened";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
+const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
 const bubbleSound = "bubbleSound";
+
+const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 
 const JwtAuthToken = z
     .object({
@@ -679,7 +682,7 @@ class LocalUserStore {
     getCameraContainerHeight(): number {
         const value = localStorage.getItem(cameraContainerHeightKey);
         if (!value) {
-            return 0.75; // Default value of 75%
+            return 0.2; // Default value of 20%
         }
         return parseFloat(value);
     }
@@ -693,7 +696,21 @@ class LocalUserStore {
         if (!value) {
             return INITIAL_SIDEBAR_WIDTH;
         }
-        return parseFloat(value);
+        const floatValue = parseFloat(value);
+        return isNaN(floatValue) ? INITIAL_SIDEBAR_WIDTH : floatValue;
+    }
+
+    setMapEditorSideBarWidth(width: number): void {
+        localStorage.setItem(mapEditorSideBarWidthKey, width.toString());
+    }
+
+    getMapEditorSideBarWidth(): number {
+        const value = localStorage.getItem(mapEditorSideBarWidthKey);
+        if (!value) {
+            return INITIAL_MAP_EDITOR_SIDEBAR_WIDTH;
+        }
+        const floatValue = parseFloat(value);
+        return isNaN(floatValue) ? INITIAL_MAP_EDITOR_SIDEBAR_WIDTH : floatValue;
     }
 
     setBubbleSound(value: "ding" | "wobble"): void {

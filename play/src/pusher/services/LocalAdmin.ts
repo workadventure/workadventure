@@ -19,6 +19,7 @@ import {
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
     ENABLE_MAP_EDITOR,
+    ENABLE_SAY,
     ERASER_ENABLED,
     EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
@@ -275,6 +276,7 @@ class LocalAdmin implements AdminInterface {
             enableChatUpload: ENABLE_CHAT_UPLOAD,
             enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
             enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
+            enableSay: ENABLE_SAY,
             enableMatrixChat: Boolean(
                 MATRIX_PUBLIC_URI && MATRIX_API_URI && MATRIX_ADMIN_USER && MATRIX_ADMIN_PASSWORD && MATRIX_DOMAIN
             ),

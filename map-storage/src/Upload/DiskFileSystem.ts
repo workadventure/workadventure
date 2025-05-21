@@ -2,7 +2,7 @@ import path from "path";
 import { Archiver } from "archiver";
 import { NextFunction, Response } from "express";
 import * as fs from "fs-extra";
-import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";
@@ -65,11 +65,17 @@ export class DiskFileSystem implements FileSystemInterface {
         await fs.copy(fullPath, newFullPath, { recursive: true, errorOnExist: true });
     }
 
-    async writeFile(zipEntry: ZipEntry, targetFilePath: string, zip: StreamZipAsync): Promise<void> {
+    async writeFile(zipEntry: unzipper.File, targetFilePath: string): Promise<void> {
         const fullPath = this.getFullPath(targetFilePath);
         const dir = path.dirname(fullPath);
         await fs.mkdirp(dir);
-        await zip.extract(zipEntry, this.getFullPath(targetFilePath));
+
+        const writeStream = fs.createWriteStream(fullPath, { flags: "w" });
+        zipEntry.stream().pipe(writeStream);
+        await new Promise((resolve, reject) => {
+            writeStream.on("finish", resolve);
+            writeStream.on("error", reject);
+        });
     }
 
     async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {

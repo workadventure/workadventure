@@ -5,8 +5,6 @@ import legacy from "@vitejs/plugin-legacy";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import inject from "@rollup/plugin-inject";
-import { UserConfig } from "vitest/config";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
 
 // https://vitejs.dev/config/
@@ -30,7 +28,7 @@ export default defineConfig(({ mode }) => {
             sourcemap: true,
             outDir: "./dist/public",
             rollupOptions: {
-                plugins: [NodeGlobalsPolyfillPlugin({buffer: true}) ],
+                plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
                 //plugins: [inject({ Buffer: ["buffer/", "Buffer"] })],
             },
         },
@@ -104,5 +102,5 @@ export default defineConfig(({ mode }) => {
     } else {
         console.info("Sentry plugin disabled");
     }
-    return config ;
+    return config;
 });

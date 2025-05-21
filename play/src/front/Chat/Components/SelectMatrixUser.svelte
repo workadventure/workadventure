@@ -69,13 +69,31 @@
 <Select
     bind:value
     multiple
-    class="!border-light-purple border border-solid !bg-contrast !rounded-xl"
+    class="border border-solid !bg-contrast !rounded-xl"
     inputStyles="box-shadow:none !important"
-    --border-focused="2px solid rgb(146 142 187)"
+    --border-focused="2px solid hsl(var(--secondary-600))"
     --input-color="white"
-    --item-color="black"
-    --item-hover-color="black"
-    --clear-select-color="red"
+    --border="1px solid hsl(var(--contrast-400))"
+    --clear-select-color="hsl(var(--danger-500))"
+    --internal-padding="6px"
+    --value-container-padding="0 0 0 6px"
+    --multi-select-input-padding="0 0 0 6px"
+    --multi-item-color="hsl(var(--contrast-900))"
+    --multi-item-bg="hsl(var(--contrast-200))"
+    --multi-select-padding="0 0 0 6px"
+    --multi-item-outline="none"
+    --list-background="hsl(var(--contrast))"
+    --list-empty-color="hsl(var(--contrast-400))"
+    --selected-item-color="hsl(var(--contrast-500)) !important"
+    --selected-item-padding="0 0 0 32px"
+    --list-border-radius="12px"
+    --list-border="solid 1px hsl(var(--contrast-400))"
+    --list-empty-padding="12px"
+    --item-color="hsl(var(--contrast-200))"
+    --item-is-active-bg="hsl(var(--contrast-900))"
+    --item-is-active-color="hsl(var(--contrast-200))"
+    --item-hover-bg="hsl(var(--contrast-900))"
+    --item-hover-color="hsl(var(--contrast-200))"
     {placeholder}
     on:change={async () => {
         const validItems = await handleChange();

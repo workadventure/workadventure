@@ -162,10 +162,6 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "map editor" feature is enabled or not on this room (true if the map comes from the map-storage)',
         example: true,
     }),
-    loadingCowebsiteLogo: extendApi(z.string().nullable().optional(), {
-        description: "The URL of the image to be used on the cowebsite loading page",
-        example: "https://example.com/logo.gif",
-    }),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the loading page",
@@ -175,6 +171,10 @@ export const isMapDetailsData = z.object({
     loginSceneLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the LoginScene",
         example: "https://example.com/logo_login.png",
+    }),
+    backgroundSceneImage: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the background image to be used on the loading page",
+        example: "https://example.com/background.png",
     }),
     showPoweredBy: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the logo PoweredBy is enabled or not on this room",
@@ -213,6 +213,10 @@ export const isMapDetailsData = z.object({
     }),
     enableChatDisconnectedList: extendApi(z.boolean().optional(), {
         description: "Whether the feature 'disconnected users' in the chat is enabled or not on this room",
+        example: true,
+    }),
+    enableSay: extendApi(z.boolean().optional(), {
+        description: "Whether the users can communicate via 'comics-like' conversation bubbles.",
         example: true,
     }),
     metatags: extendApi(MetaTagsData.nullable().optional(), {
