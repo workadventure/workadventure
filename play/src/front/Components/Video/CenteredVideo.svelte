@@ -99,7 +99,7 @@
             if (isVideoActuallyPlaying(videoEl)) {
                // console.log("video frame displayed and actually playing", get(name));
             } else {
-                console.warn("video frame displayed but not actually playing", get(name));
+               // console.warn("video frame displayed but not actually playing", get(name));
             }
             timer = setTimeout(onLost, maxSilence);
             videoEl.requestVideoFrameCallback(gotFrame);
@@ -109,7 +109,7 @@
 
     $: if (videoElement) {
         watchFrames(videoElement, () => {
-            console.warn("No video frames received for 1s", get(name));
+          //  console.warn("No video frames received for 1s", get(name));
         });
     }
 
@@ -227,7 +227,7 @@
             }
             callbackId = videoElement.requestVideoFrameCallback(() => {
                 // A video frame was displayed. No need to display a warning.
-                console.log("video frame displayed", videoID);
+               // console.log("video frame displayed", videoID);
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;

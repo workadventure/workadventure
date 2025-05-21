@@ -11,7 +11,7 @@ import {
     supportsDynacast,
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
-import { derived, Writable, writable } from "svelte/store";
+import { derived, Unsubscriber, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../WebRtc/VideoPeer";
@@ -31,6 +31,24 @@ export class LiveKitParticipant {
     private _connectionQualityStore: Writable<ConnectionQuality>;
     private _videoStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
+    private _streamStore =  derived(
+        [this._videoStreamStore, this._audioStreamStore],
+        ([$videoStreamStore, $audioStreamStore]) => {
+            const tracks = [];
+            if ($videoStreamStore) {
+                tracks.push(...$videoStreamStore.getTracks());
+            }
+            if ($audioStreamStore) {
+                tracks.push(...$audioStreamStore.getTracks());
+            }
+
+            if (tracks.length === 0) {
+                return undefined;
+            }
+
+            return new MediaStream(tracks);
+        }
+    );
     private _screenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _nameStore: Writable<string>;
     private _hasAudio = writable<boolean>(true);
@@ -44,6 +62,9 @@ export class LiveKitParticipant {
     private _videoQuality: Writable<"low" | "medium" | "high" | undefined> = writable<
         "low" | "medium" | "high" | "default"
     >("default");
+
+    private _subscribers : Unsubscriber[] = [];
+    
     constructor(
         private participant: Participant,
         private space: SpaceInterface,
@@ -66,11 +87,12 @@ export class LiveKitParticipant {
                     this._videoStreamStore.set(track.mediaStream);
                     this._hasVideo.set(!track.isMuted);
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    console.log("try to attach existing track to videoElements", videoElements, track);
                     videoElements.forEach((videoElement) => {
-                        console.log("attach to existing videoElement and existing track", videoElement, track);
+                        console.log("attach to existing videoElement and existing track");
                         videoElement.autoplay = true;
                         videoElement.playsInline = true;
-                        videoElement.muted = true;
+                        videoElement.muted = track.isMuted;
                         track.attach(videoElement);
                     });
 
@@ -92,8 +114,9 @@ export class LiveKitParticipant {
                         console.log("attach to existing screenElement and existing track", screenElement, track);
                         screenElement.autoplay = true;
                         screenElement.playsInline = true;
-                        screenElement.muted = true;
+                        screenElement.muted = track.isMuted;
                         track.attach(screenElement);
+                        
                     });
                     this.updateLivekitScreenShareStreamStore().catch((e) => {
                         console.error("Error while updating livekit screen share stream store", e);
@@ -124,19 +147,18 @@ export class LiveKitParticipant {
             // Create and attach video element
             this._videoRemoteTrack = track;
 
-            if (track instanceof RemoteVideoTrack) {
-                console.log(">>>>>track.isAdaptiveStream", {
-                    isAdaptiveStream: track.isAdaptiveStream,
-                    currentBitrate: track.currentBitrate,
-                    streamState: track.streamState,
-                    supportsAdaptiveStream: supportsAdaptiveStream(),
-                    supportsDynacast: supportsDynacast(),
-                });
-            }
+            // if (track instanceof RemoteVideoTrack) {
+            //     console.log(">>>>>track.isAdaptiveStream", {
+            //         isAdaptiveStream: track.isAdaptiveStream,
+            //         currentBitrate: track.currentBitrate,
+            //         streamState: track.streamState,
+            //         supportsAdaptiveStream: supportsAdaptiveStream(),
+            //         supportsDynacast: supportsDynacast(),
+            //     });
+            // }
 
             track.on("videoDimensionsChanged", (dimensions) => {
                 const videoQuality = this.getVideoQuality(dimensions.width, dimensions.height);
-                console.log(">>>>>videoDimensionsChanged", dimensions, videoQuality);
                 this._videoQuality.set(videoQuality);
             });
 
@@ -144,7 +166,7 @@ export class LiveKitParticipant {
                 console.log("attach to existing videoElement", videoElement);
                 videoElement.autoplay = true;
                 videoElement.playsInline = true;
-                videoElement.muted = true;
+                videoElement.muted = track.isMuted;
                 track.attach(videoElement);
             });
 
@@ -175,7 +197,7 @@ export class LiveKitParticipant {
                 console.log("attach to existing screenElement", screenElement);
                 screenElement.autoplay = true;
                 screenElement.playsInline = true;
-                screenElement.muted = true;
+                screenElement.muted = track.isMuted;
                 track.attach(screenElement);
             });
 
@@ -263,32 +285,24 @@ export class LiveKitParticipant {
             usePresentationMode: false,
             media: {
                 type: "mediaStore",
-                streamStore: derived(
-                    [this._videoStreamStore, this._audioStreamStore],
-                    ([$videoStreamStore, $audioStreamStore]) => {
-                        const tracks = [];
-                        if ($videoStreamStore) {
-                            tracks.push(...$videoStreamStore.getTracks());
-                        }
-                        if ($audioStreamStore) {
-                            tracks.push(...$audioStreamStore.getTracks());
-                        }
-
-                        if (tracks.length === 0) {
-                            return undefined;
-                        }
-
-                        return new MediaStream(tracks);
-                    }
-                ),
+                streamStore: this._streamStore,
                 attach: (container: HTMLVideoElement) => {
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     videoElements.push(container);
                     this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
-
+                    
+                    console.log("try to attach videoElement", container , this._videoRemoteTrack,videoElements);
                     if (this._videoRemoteTrack) {
+                        console.log("attach videoElement to track", this._videoRemoteTrack);
                         this._videoRemoteTrack.attach(container);
                     }
+                    
+                    // const unsubscriber = this._streamStore.subscribe((stream) => {
+                    //     // this.
+                    // });
+
+                    //this._subscribers.push(unsubscriber);
+
                 },
                 detach: (container: HTMLVideoElement) => {
                     let videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
