@@ -85,6 +85,9 @@ export class LiveKitParticipant {
             if (track) {
                 if (publication.source === Track.Source.Camera) {
                     this._videoStreamStore.set(track.mediaStream);
+
+                    //TODO : remove as RemoteVideoTrack
+                    this._videoRemoteTrack = track as RemoteVideoTrack;
                     this._hasVideo.set(!track.isMuted);
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     console.log("try to attach existing track to videoElements", videoElements, track);
