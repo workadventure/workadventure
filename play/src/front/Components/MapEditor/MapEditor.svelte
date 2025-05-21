@@ -1,34 +1,21 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import {
-        mapEditorModeStore,
-        mapEditorSelectedToolStore,
-        mapEditorVisibilityStore,
-    } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
-    import ButtonClose from "../Input/ButtonClose.svelte";
+    import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
     import { windowSize } from "../../Stores/CoWebsiteStore";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
-
     import MapEditorResizeHandle from "./MapEditorResizeHandle.svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditorSideBarWidthStore";
-    import { IconMinus } from "@wa-icons";
 
     let mapEditor: HTMLElement;
 
-    function closeMapEditor() {
-        analyticsClient.toggleMapEditor(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
-        mapEditorModeStore.switchMode(false);
-    }
     function hideMapEditor() {
         mapEditorVisibilityStore.set(false);
     }
@@ -78,10 +65,18 @@
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class=" h-12 w-12 rounded absolute  hover:bg-secondary   aspect-square right-10 cursor-pointer text-2xl"
-                    on:click={hideMapEditor}><IconMinus font-size="16" /></button
+                    class=" h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    on:click={hideMapEditor}
                 >
-                <ButtonClose dataTestId="mapEditor-close-button" on:click={closeMapEditor} />
+                    <!-- <IconMinus font-size="16" /> -->
+                    <ArrowBarRight
+                        height="h-6"
+                        width="w-6"
+                        strokeColor="stroke-white"
+                        fillColor="fill-transparent"
+                        classList="aspect-ratio transition-all"
+                    />
+                </button>
 
                 {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                     <TrashEditor />

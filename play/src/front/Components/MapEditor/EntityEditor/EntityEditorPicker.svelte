@@ -15,6 +15,7 @@
         selectCategoryStore,
     } from "../../../Stores/MapEditorStore";
     import Input from "../../Input/Input.svelte";
+    import ButtonClose from "../../Input/ButtonClose.svelte";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
@@ -22,7 +23,7 @@
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
-    import { IconChevronLeft, IconDeselect, IconPencil } from "@wa-icons";
+    import { IconChevronLeft, IconPencil } from "@wa-icons";
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
     const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
@@ -212,7 +213,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] bg-dark-purple/90 rounded-2xl w-full"
+                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] bg-white/10 rounded-2xl w-full"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
@@ -228,7 +229,7 @@
                         />
                     {:else}
                         <EntityImage
-                            classNames="h-16 w-[64px] object-contain"
+                            classNames="h-16 w-[64px] object-contain rounded"
                             imageSource={pickedEntity.imagePath}
                             imageAlt={pickedEntity.name}
                         />
@@ -253,11 +254,20 @@
                                 ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
-                        <button
+                        <div class="absolute top-1 right-1 p-1">
+                            <ButtonClose
+                                on:click={clearEntitySelection}
+                                dataTestId="clearEntitySelection"
+                                size="sm"
+                                bgColor="bg-white/30"
+                                hoverColor="bg-white/40"
+                            />
+                        </div>
+                        <!-- <button
                             class="self-start absolute top-1 right-1"
                             data-testid="clearEntitySelection"
                             on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
-                        >
+                        > -->
                     {/if}
                 </div>
             {/if}
