@@ -111,36 +111,7 @@
     {/if}
 
     <div class="flex justify-around items-center w-full">
-        <div class="p-2 grow text-ellipsis overflow-hidden">
-            <div
-                class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
-                    ? 'fill-white'
-                    : ''}"
-            >
-                {#if isLoading}
-                    {#if isJitsi}
-                        {$LL.cowebsite.jitsi()}
-                    {:else if isBBB}
-                        {$LL.cowebsite.bigBlueButton()}
-                    {:else}
-                        {cowebsiteName}
-                    {/if}
-                {:else}
-                    <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
-                {/if}
-            </div>
-            <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
-                {#if isLoading}
-                    {coWebsite.getUrl()}
-                {:else}
-                    <div
-                        class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
-                    />
-                {/if}
-            </div>
-        </div>
-
-        <div class="flex gap-0.5">
+        <div class="flex gap-0.5 flex-row-reverse">
             {#if isDuplicable}
                 <button
                     class="group {active
@@ -184,6 +155,35 @@
                     />
                 </button>
             {/if}
+        </div>
+
+        <div class="p-2 grow text-ellipsis overflow-hidden">
+            <div
+                class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
+                    ? 'fill-white'
+                    : ''}"
+            >
+                {#if isLoading}
+                    {#if isJitsi}
+                        {$LL.cowebsite.jitsi()}
+                    {:else if isBBB}
+                        {$LL.cowebsite.bigBlueButton()}
+                    {:else}
+                        {cowebsiteName}
+                    {/if}
+                {:else}
+                    <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
+                {/if}
+            </div>
+            <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
+                {#if isLoading}
+                    {coWebsite.getUrl()}
+                {:else}
+                    <div
+                        class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
+                    />
+                {/if}
+            </div>
         </div>
     </div>
 </div>
