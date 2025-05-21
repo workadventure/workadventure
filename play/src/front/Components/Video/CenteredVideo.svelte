@@ -151,7 +151,7 @@
         ) {
             const containerRatio = containerWidth / containerHeight;
             // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
-            videoRatio = videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
+            videoRatio = videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
 
             //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
 
