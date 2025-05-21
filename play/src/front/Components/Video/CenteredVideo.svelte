@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import {get, Readable} from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
@@ -33,7 +33,7 @@
     export let detach: (container: HTMLVideoElement) => void | undefined;
 
     //TODO : delete 
-    export let name :string ; 
+    export let name : Readable<string> ;
 
     export let videoUrl: string | undefined = undefined;
     export let videoConfig: VideoConfig | undefined = undefined;
@@ -138,6 +138,7 @@
     let videoStreamHeight: number;
     let overlayWidth: number;
     let overlayHeight: number;
+    let videoRatio: number;
 
     $: {
         if (
@@ -149,7 +150,8 @@
             videoStreamHeight
         ) {
             const containerRatio = containerWidth / containerHeight;
-            const videoRatio = videoStreamWidth / videoStreamHeight;
+            // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
+            videoRatio = videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
 
             //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
 
@@ -345,7 +347,7 @@
 </script>
 
 <div
-    class="h-full w-full relative {(!cover || videoStreamWidth / videoStreamHeight < 1) && withBackground
+    class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground
         ? 'bg-contrast/80 rounded-lg'
         : ''}"
     bind:clientWidth={containerWidth}
@@ -411,13 +413,13 @@
     <!-- This div represents an overlay on top of the video -->
     <div
         class={"absolute border-solid " + (videoEnabled || !withBackground ? "" : "bg-contrast/80 backdrop-blur")}
-        class:w-full={!videoEnabled}
-        class:h-full={!videoEnabled}
-        class:rounded-lg={!videoEnabled}
+        class:w-full={!videoEnabled || displayNoVideoWarning}
+        class:h-full={!videoEnabled || displayNoVideoWarning}
+        class:rounded-lg={!videoEnabled || displayNoVideoWarning}
         class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
         class:border-secondary={!videoEnabled && isTalking}
         class:hidden={videoEnabled && !overlayHeight}
-        style={videoEnabled
+        style={videoEnabled && !displayNoVideoWarning
             ? "width: " +
               overlayWidth +
               "px; height: " +
