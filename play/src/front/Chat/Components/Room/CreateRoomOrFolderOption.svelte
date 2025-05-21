@@ -58,14 +58,16 @@
 
 <button
     data-testid={`openOptionToCreateRoomOrFolder${parentName}`}
-    class="m-0 p-1 rounded-lg hover:bg-white/10 {hideFolderOptions ? 'bg-transparent' : 'bg-secondary'}"
+    class="m-0 p-1 rounded-lg hover:bg-white/10 aspect-square flex items-center justify-center {hideFolderOptions
+        ? 'bg-transparent'
+        : 'bg-secondary'}"
     bind:this={optionButtonRef}
     on:click|preventDefault|stopPropagation={toggleSpaceOption}
 >
     <IconDots />
 </button>
 <div
-    class="bg-contrast/50 backdrop-blur-md rounded-lg overflow-hidden z-50 w-max end-4 top-10 p-1"
+    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-50 w-max end-4 top-10 p-1"
     class:absolute={optionButtonRef !== undefined}
     class:hidden={hideFolderOptions}
 >

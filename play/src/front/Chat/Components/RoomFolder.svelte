@@ -74,9 +74,9 @@
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
-    <div class="flex flex-col overflow-auto">
+    <div class="flex flex-col ">
         {#if isOpen}
-            <div class="flex flex-col overflow-auto">
+            <div class="flex flex-col ">
                 {#if $suggestedRooms.length > 0}
                     <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
                         <div
@@ -114,7 +114,7 @@
                     </div>
                 {/if}
             </div>
-            <div class="flex flex-col overflow-auto">
+            <div class="flex flex-col overflow-visible">
                 {#if $invitations.length > 0}
                     <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                         <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
