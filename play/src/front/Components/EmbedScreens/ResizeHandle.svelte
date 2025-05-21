@@ -1,11 +1,11 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let minHeight: number;
     export let maxHeight: number;
     export let currentHeight: number;
     export let onResize: (height: number) => void;
+    export let onResizeEnd: () => void = () => {};
 
     let dragHandle: HTMLElement;
 
@@ -39,7 +39,7 @@
         document.removeEventListener("mouseup", stopDragging);
         document.removeEventListener("touchmove", handleDragging);
         document.removeEventListener("touchend", stopDragging);
-        analyticsClient.resizeCameraLayout();
+        onResizeEnd();
     }
 
     onMount(() => {

@@ -230,7 +230,7 @@
             <CamArrowIcon />
             {$LL.menu.settings.videoBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+        <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -283,11 +283,11 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
-            <div class="mr-4 opacity-50"><MicOnIcon /></div>
+            <div class="me-4 opacity-50"><MicOnIcon /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
         </div>
-        <div class="flex w-full mb-6 mt-2 pl-6 justify-center">
+        <div class="flex w-full mb-6 mt-2 ps-6 justify-center">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
                     <li
@@ -339,7 +339,7 @@
         </div>
 
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
 
             {$LL.menu.settings.proximityDiscussionVolume()}
         </div>
@@ -443,7 +443,7 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <div class="mr-4 opacity-50"><AdjustmentsIcon /></div>
+            <div class="me-4 opacity-50"><AdjustmentsIcon /></div>
             {$LL.menu.settings.otherSettings()}
         </div>
 

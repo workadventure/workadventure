@@ -65,8 +65,8 @@
                 bind:value={invitations}
                 placeholder={$LL.chat.createRoom.users()}
             />
-            <div class="max-h-96 overflow-auto">
-                <table class="w-full border-separate border-spacing-2">
+            <div class="table-container max-h-96 overflow-auto bg-white/10 rounded-lg">
+                <table class="w-full border-separate border-spacing-2 border-none">
                     <thead>
                         <tr>
                             <th class="text-center">{$LL.chat.manageRoomUsers.participants()}</th>
@@ -94,12 +94,12 @@
         {#if sendingInvitationsToRoom}
             <p>{$LL.chat.createRoom.loadingCreation()}</p>
         {:else}
-            <button class="flex-1 justify-center" on:click={closeModal}
+            <button class="btn btn-secondary flex-1 justify-center" on:click={closeModal}
                 >{$LL.chat.manageRoomUsers.buttons.cancel()}</button
             >
             <button
                 data-testid="createRoomButton"
-                class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                 disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
                 on:click={inviteUsersAndCloseModalOnSuccess}
                 >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}
@@ -107,3 +107,14 @@
         {/if}
     </svelte:fragment>
 </Popup>
+
+<style>
+    /* style scroll bar */
+    .table-container {
+        scrollbar-width: thin;
+        scrollbar-color: #888 #f1f1f1;
+    }
+    .table-container::-webkit-scrollbar {
+        width: 2px;
+    }
+</style>

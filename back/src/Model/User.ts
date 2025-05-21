@@ -6,6 +6,7 @@ import {
     CharacterTextureMessage,
     CompanionTextureMessage,
     PusherToBackMessage,
+    SayMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SetPlayerVariableMessage,
@@ -54,7 +55,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
         public readonly applications?: ApplicationMessage[],
-        public readonly chatID?: string
+        public readonly chatID?: string,
+        private sayMessage?: SayMessage
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -83,7 +85,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
         applications?: ApplicationMessage[],
-        chatID?: string
+        chatID?: string,
+        sayMessage?: SayMessage
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -110,7 +113,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             voiceIndicatorShown,
             activatedInviteUser,
             applications,
-            chatID
+            chatID,
+            sayMessage
         );
     }
 
@@ -166,6 +170,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
     public getAvailabilityStatus(): AvailabilityStatus {
         return this.availabilityStatus;
+    }
+
+    public getSayMessage(): SayMessage | undefined {
+        return this.sayMessage;
     }
 
     public get silent(): boolean {
@@ -271,6 +279,15 @@ export class User implements Movable, CustomJsonReplacerInterface {
                 console.warn("Unrecognized scope for SetPlayerVariableMessage");
             } else {
                 const _exhaustiveCheck: never = scope;
+            }
+        }
+
+        const sayMessage = details.sayMessage;
+        if (sayMessage) {
+            if (sayMessage.message) {
+                this.sayMessage = sayMessage;
+            } else {
+                this.sayMessage = undefined;
             }
         }
 

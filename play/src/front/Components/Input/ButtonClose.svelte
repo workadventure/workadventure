@@ -7,6 +7,7 @@
     export let textColor = "text-white";
 
     export let size: "xs" | "sm" | "md" | "lg" = "lg";
+
     $: sizeClasses =
         size === "xs"
             ? "h-6 w-6 text-sm"
@@ -29,7 +30,7 @@
 
 <button
     type="button"
-    class="{sizeClasses}  rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} hover:{hoverColor} close-btn flex items-center justify-center"
+    class="{sizeClasses} flex items-center justify-center rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} hover:{hoverColor} close-btn"
     data-testid={dataTestId}
     on:click={handleClick}
 >

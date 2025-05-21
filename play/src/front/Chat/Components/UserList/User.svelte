@@ -89,7 +89,7 @@
                     </div>
                 </div>
             </div>
-            <div class={`flex-auto ml-1 ${!$userStatus && "opacity-50"}  cursor-default`}>
+            <div class={`flex-auto ms-1 ${!$userStatus && "opacity-50"}  cursor-default`}>
                 <div class="flex items-center h-4">
                     <div class="text-sm font-bold mb-0 cursor-default flex items-center">
                         {#each chunks as chunk (chunk.key)}
@@ -108,7 +108,7 @@
                         {/if}
                         {#if isAdmin}
                             <div
-                                class="text-xxs bg-secondary rounded-sm px-1 py-0.5 ml-1"
+                                class="text-xxs bg-secondary rounded-sm px-1 py-0.5 ms-1"
                                 title={$LL.chat.role.admin()}
                             >
                                 {$LL.chat.role.adminShort()}
@@ -123,7 +123,7 @@
                         <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
                             {#if $userStatus}
                                 <div
-                                    class="rounded-full mr-1 h-1.5 w-1.5"
+                                    class="rounded-full me-1 h-1.5 w-1.5"
                                     style="background:{getColorHexOfStatus($userStatus)}"
                                 />
                             {/if}
@@ -142,7 +142,7 @@
             {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
                 <div class="relative group">
                     <div
-                        class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 left-[130%] "
+                        class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%] "
                     >
                         {#if user.uuid === chatId}
                             {$LL.chat.remoteUserNotConnected()}

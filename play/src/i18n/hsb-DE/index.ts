@@ -19,6 +19,7 @@ import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
 import form from "./form";
+import say from "./say";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -40,6 +41,7 @@ const hsb_DE = merge(en_US, {
     megaphone,
     video,
     form,
+    say,
 });
 
 export default hsb_DE;

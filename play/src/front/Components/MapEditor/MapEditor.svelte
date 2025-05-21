@@ -42,16 +42,13 @@
 {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
     <ConfigureMyRoom />
 {/if}
-<div
-    id="map-editor-container"
-    class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 right-0"
->
+<div id="map-editor-container" class="z-[500] flex flex-row items-start justify-end gap-4 absolute h-full top-0 end-0">
     <div in:fly={{ x: 100, duration: 250, delay: 300 }} out:fly={{ x: 100, duration: 200, delay: 100 }}>
         <MapEditorSideBar />
     </div>
     <div id="map-editor-right" bind:this={mapEditor} class={`map-editor relative h-dvh ${$mapEditorSelectedToolStore}`}>
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
-            <div class="absolute h-dvh -left-0.5 top-0 flex flex-col z-[2000]">
+            <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
                 <MapEditorResizeHandle
                     minWidth={200}
                     maxWidth={$windowSize.width / 2}
@@ -65,10 +62,9 @@
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class=" h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    class="h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
                     on:click={hideMapEditor}
                 >
-                    <!-- <IconMinus font-size="16" /> -->
                     <ArrowBarRight
                         height="h-6"
                         width="w-6"
@@ -98,18 +94,19 @@
 <style lang="scss">
     .map-editor {
         top: 0;
-        right: 0;
+        inset-inline-end: 0;
+        width: fit-content;
         z-index: 1999;
         pointer-events: auto;
         color: whitesmoke;
 
         button.close-window {
-            right: 0.5rem;
+            inset-inline-end: 0.5rem;
         }
 
         &.WAMSettingsEditor {
             width: 80% !important;
-            left: 10%;
+            inset-inline-start: 10%;
             height: 0 !important;
         }
 

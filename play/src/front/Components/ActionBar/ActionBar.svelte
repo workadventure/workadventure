@@ -112,13 +112,13 @@
 
                         {#if smallArrowVisible}
                             <div
-                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-[2.86rem] m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
+                                class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur start-[2.86rem] m-auto p-1 z-10 opacity-0 transition-all -bottom-3 hidden sm:block {mediaSettingsDisplayed
                                     ? 'opacity-100'
                                     : 'group-hover/hardware:opacity-100'}"
                             >
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
-                                    class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
+                                    class="absolute bottom-1 start-0 end-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                     on:click|stopPropagation|preventDefault={() =>
                                         (mediaSettingsDisplayed = !mediaSettingsDisplayed)}
                                 >
@@ -149,7 +149,7 @@
 
                             {#if camMenuIsDropped}
                                 <div
-                                    class="absolute bottom-20 sm:right-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                    class="absolute bottom-20 sm:end-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:start-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:end-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
                                     transition:fly={{ y: 40, duration: 150 }}
                                 >
                                     <div class="p-0 m-0 list-none">
@@ -225,7 +225,7 @@
                                 {...button.props}
                                 first={firstVisibleItemIndex === index}
                                 classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
-                                    ? "mr-1 @md/actions:mr-2 @xl/actions:mr-4"
+                                    ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                     : ""}
                             />
                         </VisibilityChecker>

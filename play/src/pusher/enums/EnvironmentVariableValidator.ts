@@ -72,6 +72,9 @@ export const EnvironmentVariables = z.object({
     ENABLE_CHAT_UPLOAD: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
     ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional().transform((val) => toBool(val, true)),
+    ENABLE_SAY: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
+        .describe("Whether the users can communicate via comics-style bubbles."),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional().transform((val) => toBool(val, false)),
     START_ROOM_URL: z.string().optional(),

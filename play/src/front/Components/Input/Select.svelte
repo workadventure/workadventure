@@ -14,6 +14,7 @@
     export let variant: "light" | "" = "";
     export let optional = false;
     export let outerClass: string | undefined = undefined;
+    export let extraSelectClass: string | undefined = undefined;
 
     const SLOTS = $$slots;
 
@@ -22,27 +23,26 @@
 
 <div class="flex flex-col {outerClass}">
     <div class="relative flex-grow">
-        <div class="input-label">
-            {#if label}
+        {#if label}
+            <div class="input-label">
                 <label for={uniqueId} class="grow font-light">{label}</label>
-            {/if}
+            </div>
+        {/if}
 
-            {#if SLOTS.info}
-                <InfoButton>
-                    <slot name="info" />
-                </InfoButton>
-            {/if}
+        {#if SLOTS.info}
+            <InfoButton>
+                <slot name="info" />
+            </InfoButton>
+        {/if}
 
-            {#if optional}
-                <div class="text-xs opacity-50 ">
-                    {$LL.form.optional()}
-                </div>
-            {/if}
-        </div>
-
+        {#if optional}
+            <div class="text-xs opacity-50 ">
+                {$LL.form.optional()}
+            </div>
+        {/if}
         <select
             id={uniqueId}
-            class="grow w-full input-select font-light pr-10 text-white"
+            class="grow w-full input-select font-light pe-10 text-white {extraSelectClass}"
             class:input-select-light={variant === "light"}
             data-testid={dataTestId}
             {...$$restProps}
