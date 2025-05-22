@@ -11,7 +11,10 @@ import {
     EncodedFileType,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
+import Debug from "debug";
 import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
+
+const debug = Debug("livekit");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
@@ -40,6 +43,7 @@ export class LiveKitService {
     ) {
         if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
             //TODO : voir si on le gere d'une autre maniere / Sentry
+            debug("Livekit host, api key or secret is not set");
             throw new Error("Livekit host, api key or secret is not set");
         }
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
@@ -65,6 +69,7 @@ export class LiveKitService {
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
+                uuid: user.uuid,
             }),
         });
 
