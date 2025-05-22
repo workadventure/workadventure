@@ -41,7 +41,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import {MAX_DISPLAYED_VIDEOS} from "../../Enum/EnvironmentVariable";
+    import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -245,7 +245,8 @@
     <div
         bind:clientWidth={containerWidth}
         class="pointer-events-auto"
-        style={`gap: ${gap}px; ` + ((!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")) ? "height: " + containerHeight + "px;" : "")}
+        style={`gap: ${gap}px; ` +
+            (!isOnOneLine || (isOnOneLine && oneLineMode === "vertical") ? "height: " + containerHeight + "px;" : "")}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
