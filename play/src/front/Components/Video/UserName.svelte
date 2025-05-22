@@ -41,7 +41,6 @@
                 <Woka src={$picture ?? ""} customWidth="42px" {grayscale} />
             </div>
             <div class="relative px-2 py-1 text-white text-sm pl-12 bold rounded truncate select-none shrink">
-
                 {name}
 
                 <!--{#if $requestedScreenSharingState === true}-->
