@@ -41,8 +41,8 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import ResizeHandle from "./ResizeHandle.svelte";
     import {MAX_DISPLAYED_VIDEOS} from "../../Enum/EnvironmentVariable";
+    import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
 
