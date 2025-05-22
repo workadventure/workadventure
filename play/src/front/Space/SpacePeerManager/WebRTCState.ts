@@ -71,4 +71,8 @@ export class WebRTCState implements ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined {
         return this._peer;
     }
+
+    shouldSynchronizeMediaState(): boolean {
+        return true;
+    }
 }

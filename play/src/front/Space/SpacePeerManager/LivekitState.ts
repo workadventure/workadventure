@@ -68,4 +68,8 @@ export class LivekitState implements ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined {
         return undefined;
     }
+
+    shouldSynchronizeMediaState(): boolean {
+        return true;
+    }
 }

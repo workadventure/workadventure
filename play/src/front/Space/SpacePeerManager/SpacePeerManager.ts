@@ -7,12 +7,13 @@ import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
-import { WebRTCState } from "./WebRTCState";
+import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
     completeSwitch(): void;
+    shouldSynchronizeMediaState(): boolean;
 }
 
 // -------------------- Peer Manager --------------------
@@ -30,11 +31,12 @@ export class SpacePeerManager {
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
-        this._communicationState = new WebRTCState(this.space);
-        this.synchronizeMediaState();
+        this._communicationState = new DefaultCommunicationState(this.space);
     }
 
     private synchronizeMediaState(): void {
+        if (this.isMediaStateSynchronized()) return;
+
         this.unsubscribes.push(
             this.microphoneStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
@@ -59,6 +61,19 @@ export class SpacePeerManager {
         );
     }
 
+    private desynchronizeMediaState(): void {
+        if (!this.isMediaStateSynchronized()) return;
+
+        this.unsubscribes.forEach((unsubscribe) => {
+            unsubscribe();
+        });
+        this.unsubscribes = [];
+    }
+
+    private isMediaStateSynchronized(): boolean {
+        return this.unsubscribes.length > 0;
+    }
+
     destroy(): void {
         if (this._communicationState) {
             this._communicationState.destroy();
@@ -75,6 +90,12 @@ export class SpacePeerManager {
     setState(state: ICommunicationState): void {
         if (this._communicationState) {
             this._communicationState.destroy();
+        }
+
+        if (state.shouldSynchronizeMediaState()) {
+            this.synchronizeMediaState();
+        } else {
+            this.desynchronizeMediaState();
         }
 
         state.completeSwitch();

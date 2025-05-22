@@ -44,13 +44,14 @@ export class Space implements SpaceInterface {
         }
         this.name = name;
 
-        if (
-            this._propertiesToSync.includes("screenSharingState") ||
-            this._propertiesToSync.includes("cameraState") ||
-            this._propertiesToSync.includes("microphoneState")
-        ) {
-            this.peerManager = new SpacePeerManager(this);
-        }
+        //TODO : voir si on a toujours besoin de la condition avec le defaultCommunicationState
+        // if (
+        //     this._propertiesToSync.includes("screenSharingState") ||
+        //     this._propertiesToSync.includes("cameraState") ||
+        //     this._propertiesToSync.includes("microphoneState")
+        // ) {
+        this.peerManager = new SpacePeerManager(this);
+        // }
 
         this.userJoinSpace();
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
