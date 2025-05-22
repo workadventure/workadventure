@@ -7,9 +7,7 @@ import {
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
-import { VideoPeer } from "../WebRtc/VideoPeer";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
@@ -28,17 +26,9 @@ export class Space implements SpaceInterface {
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private peerManager: SpacePeerManager | undefined;
+    public videoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public screenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
 
-    public videoPeerStore: MapStore<string, VideoPeer> = new MapStore<string, VideoPeer>();
-    public screenSharingPeerStore: MapStore<string, ScreenSharingPeer> = new MapStore<string, ScreenSharingPeer>();
-    public livekitVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public livekitScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<
-        string,
-        ExtendedStreamable
-    >();
-
-    public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
-    public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
@@ -247,6 +237,13 @@ export class Space implements SpaceInterface {
 
     get simplePeer(): SimplePeerConnectionInterface | undefined {
         return this.peerManager?.getPeer();
+    }
+
+    get spacePeerManager(): SpacePeerManager {
+        if (!this.peerManager) {
+            throw new Error("SpacePeerManager is not initialized");
+        }
+        return this.peerManager;
     }
 
     /**

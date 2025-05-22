@@ -4,17 +4,12 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { CommunicationMessageType, LivekitState } from "./LivekitState";
-import {
-    SimplePeerConnectionInterface,
-    PeerFactoryInterface,
-    SpacePeerManager,
-    ICommunicationState,
-} from "./SpacePeerManager";
+import { SimplePeerConnectionInterface, PeerFactoryInterface, ICommunicationState } from "./SpacePeerManager";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (space: SpaceInterface) => {
-        const repository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
-        const peer = new SimplePeer(space, repository);
+        const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
+        const peer = new SimplePeer(space, playerRepository);
         const spaceFilter = space.getLastSpaceFilter();
         if (spaceFilter) {
             peer.setSpaceFilter(spaceFilter);
@@ -28,18 +23,13 @@ export class WebRTCState implements ICommunicationState {
     private _nextState: LivekitState | null = null;
     private rxJsUnsubscribers: Subscription[] = [];
 
-    constructor(
-        private space: SpaceInterface,
-        private peerManager: SpacePeerManager,
-        private peerFactory: PeerFactoryInterface = defaultPeerFactory
-    ) {
+    constructor(private space: SpaceInterface, private peerFactory: PeerFactoryInterface = defaultPeerFactory) {
         this._peer = this.peerFactory.create(this.space);
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState === null) {
-                    console.log(">>>>>create next state LivekitState PREPARE_SWITCH_MESSAGE", this._nextState);
-                    this._nextState = new LivekitState(this.space, this.peerManager);
+                    this._nextState = new LivekitState(this.space);
                 }
             })
         );
@@ -52,9 +42,7 @@ export class WebRTCState implements ICommunicationState {
                         console.error("Next state is null");
                         return;
                     }
-                    // TODO: determine if destroy() should be called here or at the end of the switch
-                    console.log(">>>>> set next state EXECUTE_SWITCH_MESSAGE", this._nextState);
-                    this.peerManager.setState(this._nextState);
+                    this.space.spacePeerManager.setState(this._nextState);
                 }
             })
         );
@@ -64,9 +52,8 @@ export class WebRTCState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
-                        const nextState = new LivekitState(this.space, this.peerManager);
-                        console.log(">>>>> set next state COMMUNICATION_STRATEGY_MESSAGE", nextState);
-                        this.peerManager.setState(nextState);
+                        const nextState = new LivekitState(this.space);
+                        this.space.spacePeerManager.setState(nextState);
                     }
                 })
         );
@@ -77,12 +64,8 @@ export class WebRTCState implements ICommunicationState {
     }
 
     destroy() {
-        console.log(">>>>> destroy WebRTCState");
         this._peer.closeAllConnections(false);
         this._peer.unregister();
-        for (const subscription of this.rxJsUnsubscribers) {
-            subscription.unsubscribe();
-        }
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

@@ -2,7 +2,7 @@ import { derived, Readable, readable, Writable, writable } from "svelte/store";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { VideoPeer } from "../WebRtc/VideoPeer";
-import { ExtendedStreamable } from "../Livekit/LivekitParticipant";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 
 export const peerStore: Writable<Readable<Map<string, VideoPeer>>> = writable<Writable<Map<string, VideoPeer>>>(
     writable<Map<string, VideoPeer>>(new Map())

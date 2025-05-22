@@ -11,18 +11,9 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { derived, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
-import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceInterface } from "../Space/SpaceInterface";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-
-//TODO : revoir le nom
-export type ExtendedStreamable = Streamable & {
-    player: RemotePlayerData | undefined;
-    userId: number;
-    media: MediaStoreStreamable;
-};
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -55,11 +46,10 @@ export class LiveKitParticipant {
     private _spaceUser: SpaceUserExtended;
     private _videoRemoteTrack: RemoteTrack | undefined;
     private _screenShareRemoteTrack: RemoteTrack | undefined;
-    private _videoElements: HTMLVideoElement[] = [];
-    private _screenShareElements: HTMLVideoElement[] = [];
+    private _isActiveSpeaker = writable<boolean>(false);
 
     constructor(
-        private participant: Participant,
+        public participant: Participant,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
@@ -82,7 +72,8 @@ export class LiveKitParticipant {
                     //TODO : remove as RemoteVideoTrack
                     this._videoRemoteTrack = track as RemoteVideoTrack;
                     this._hasVideo.set(!track.isMuted);
-                    const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    const videoElements =
+                        this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     videoElements.forEach((videoElement) => {
                         videoElement.autoplay = true;
                         videoElement.playsInline = true;
@@ -103,7 +94,8 @@ export class LiveKitParticipant {
                     });
                 } else if (publication.source === Track.Source.ScreenShare) {
                     this._screenShareStreamStore.set(track.mediaStream);
-                    const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    const screenElements =
+                        this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                     screenElements.forEach((screenElement) => {
                         screenElement.autoplay = true;
                         screenElement.playsInline = true;
@@ -135,7 +127,8 @@ export class LiveKitParticipant {
 
             this._videoRemoteTrack = track;
 
-            this.space.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
+            this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
+                console.log("attach to existing videoElement", videoElement);
                 videoElement.autoplay = true;
                 videoElement.playsInline = true;
                 videoElement.muted = track.isMuted;
@@ -154,10 +147,10 @@ export class LiveKitParticipant {
         } else if (publication.source === Track.Source.ScreenShare) {
             this._screenShareStreamStore.set(track.mediaStream);
 
-            // Create and attach screen share element
             this._screenShareRemoteTrack = track;
 
-            const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+            const screenElements =
+                this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
             screenElements.forEach((screenElement) => {
                 screenElement.autoplay = true;
                 screenElement.playsInline = true;
@@ -178,7 +171,8 @@ export class LiveKitParticipant {
             // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
             if (this._videoRemoteTrack === track) {
                 this._videoRemoteTrack = undefined;
-                const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                const videoElements =
+                    this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                 videoElements.forEach((videoElement) => {
                     track.detach(videoElement);
                     videoElement.remove();
@@ -188,7 +182,8 @@ export class LiveKitParticipant {
             // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
             if (this._screenShareRemoteTrack === track) {
                 this._screenShareRemoteTrack = undefined;
-                const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                const screenElements =
+                    this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                 screenElements.forEach((screenElement) => {
                     track.detach(screenElement);
                     screenElement.remove();
@@ -223,12 +218,14 @@ export class LiveKitParticipant {
 
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
-        this.space.livekitVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+        this.space.videoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+
+        //TODO : faire le attach detach dans cette partie ?
     }
 
     private async updateLivekitScreenShareStreamStore() {
         const screenShareStream = await this.getScreenShareStream();
-        this.space.livekitScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
+        this.space.screenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
     }
 
     public async getVideoStream(): Promise<ExtendedStreamable> {
@@ -238,7 +235,7 @@ export class LiveKitParticipant {
             hasAudio: this._hasAudio,
             hasVideo: this._hasVideo,
             isMuted: this._isMuted,
-            statusStore: writable<PeerStatus>("connected"),
+            statusStore: writable("connected"),
             getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
@@ -251,18 +248,20 @@ export class LiveKitParticipant {
                 type: "mediaStore",
                 streamStore: this._streamStore,
                 attach: (container: HTMLVideoElement) => {
-                    const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    const videoElements =
+                        this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     videoElements.push(container);
-                    this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
+                    this.space.spacePeerManager.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
 
                     if (this._videoRemoteTrack) {
                         this._videoRemoteTrack.attach(container);
                     }
                 },
                 detach: (container: HTMLVideoElement) => {
-                    let videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    let videoElements =
+                        this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     videoElements = videoElements.filter((element) => element !== container);
-                    this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
+                    this.space.spacePeerManager.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
 
                     if (this._videoRemoteTrack) {
                         this._videoRemoteTrack.detach(container);
@@ -283,7 +282,7 @@ export class LiveKitParticipant {
             hasAudio: writable(false),
             hasVideo: writable(true),
             isMuted: writable(false),
-            statusStore: writable<PeerStatus>("connected"),
+            statusStore: writable("connected"),
             getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
             name: this._nameStore,
             showVoiceIndicator: writable(false),
@@ -296,17 +295,25 @@ export class LiveKitParticipant {
                 type: "mediaStore",
                 streamStore: this._screenShareStreamStore,
                 attach: (container: HTMLVideoElement) => {
-                    const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    const screenElements =
+                        this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                     screenElements.push(container);
-                    this.space.screenShareContainerMap.set(this._spaceUser.spaceUserId, screenElements);
+                    this.space.spacePeerManager.screenShareContainerMap.set(
+                        this._spaceUser.spaceUserId,
+                        screenElements
+                    );
                     if (this._screenShareRemoteTrack) {
                         this._screenShareRemoteTrack.attach(container);
                     }
                 },
                 detach: (container: HTMLVideoElement) => {
-                    let screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+                    let screenElements =
+                        this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                     screenElements = screenElements.filter((element) => element !== container);
-                    this.space.screenShareContainerMap.set(this._spaceUser.spaceUserId, screenElements);
+                    this.space.spacePeerManager.screenShareContainerMap.set(
+                        this._spaceUser.spaceUserId,
+                        screenElements
+                    );
                     if (this._screenShareRemoteTrack) {
                         this._screenShareRemoteTrack.detach(container);
                     }
@@ -323,12 +330,22 @@ export class LiveKitParticipant {
         return streamble;
     }
 
+    public setActiveSpeaker(isActiveSpeaker: boolean) {
+        this._isActiveSpeaker.set(isActiveSpeaker);
+    }
+
     public destroy() {
-        this._videoElements.forEach((videoElement) => {
-            videoElement.remove();
+        // Clean up video elements
+
+        const videoElements = this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
+        videoElements.forEach((videoElement) => {
+            this._videoRemoteTrack?.detach(videoElement);
         });
-        this._screenShareElements.forEach((screenElement) => {
-            screenElement.remove();
+
+        const screenShareElements =
+            this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
+        screenShareElements.forEach((screenShareElement) => {
+            this._screenShareRemoteTrack?.detach(screenShareElement);
         });
 
         this.participant.off(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));

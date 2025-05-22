@@ -1,7 +1,7 @@
 import { Subscription } from "rxjs";
 import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
 import { SpaceInterface } from "../SpaceInterface";
-import { SimplePeerConnectionInterface, SpacePeerManager, ICommunicationState } from "./SpacePeerManager";
+import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
 import { WebRTCState } from "./WebRTCState";
 
 //TODO : move in a common file / à séparer en messageSwitch et messageLivekit ?
@@ -17,13 +17,13 @@ export class LivekitState implements ICommunicationState {
     private livekitConnection: LivekitConnection;
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;
-    constructor(private space: SpaceInterface, private peerManager: SpacePeerManager) {
+    constructor(private space: SpaceInterface) {
         this.livekitConnection = new LivekitConnection(this.space);
 
         this.rxJsUnsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.WEBRTC) {
-                    this._nextState = new WebRTCState(this.space, this.peerManager);
+                    this._nextState = new WebRTCState(this.space);
                 }
             })
         );
@@ -37,7 +37,7 @@ export class LivekitState implements ICommunicationState {
                         return;
                     }
                     // TODO: determine if destroy() should be called here or at the end of the switch
-                    this.peerManager.setState(this._nextState);
+                    this.space.spacePeerManager.setState(this._nextState);
                 }
             })
         );
@@ -47,8 +47,8 @@ export class LivekitState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
-                        const nextState = new WebRTCState(this.space, this.peerManager);
-                        this.peerManager.setState(nextState);
+                        const nextState = new WebRTCState(this.space);
+                        this.space.spacePeerManager.setState(nextState);
                     }
                 })
         );

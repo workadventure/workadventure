@@ -32,13 +32,8 @@ function createTrackedSubject<T>(
     return { subject, observable };
 }
 
-// FIXME: refactor from the standpoint of the consumer. addUser, removeUser should be removed...
 export interface SpaceFilterInterface {
-    //userExist(userId: number): boolean;
-    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
-    //removeUser(userId: number): void;
-    //updateUserData(userdata: Partial<SpaceUser>): void;
     getName(): string;
 
     /**
@@ -181,20 +176,20 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         }
 
-        const peerConnection = this._space.livekitVideoStreamStore.get(spaceUserId);
+        const peerConnection = this._space.videoStreamStore.get(spaceUserId);
         if (peerConnection) {
             if (peerConnection instanceof VideoPeer) {
                 peerConnection.destroy();
             }
-            this._space.livekitVideoStreamStore.delete(spaceUserId);
+            this._space.videoStreamStore.delete(spaceUserId);
         }
 
-        const screenSharingPeerConnection = this._space.livekitScreenShareStreamStore.get(spaceUserId);
+        const screenSharingPeerConnection = this._space.screenShareStreamStore.get(spaceUserId);
         if (screenSharingPeerConnection) {
             if (screenSharingPeerConnection instanceof ScreenSharingPeer) {
                 screenSharingPeerConnection.destroy();
             }
-            this._space.livekitScreenShareStreamStore.delete(spaceUserId);
+            this._space.screenShareStreamStore.delete(spaceUserId);
         }
     }
 
@@ -259,7 +254,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             },
             space: this._space,
             getPeerStore: () => {
-                const peerStore = this._space.videoPeerStore;
+                const peerStore = this._space.videoStreamStore;
                 if (peerStore) {
                     return derived(peerStore, ($peerStore) => {
                         return $peerStore.get(user.spaceUserId);
@@ -268,7 +263,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 return undefined;
             },
             getLivekitVideoStreamStore: () => {
-                const livekitVideoStreamStore = this._space.livekitVideoStreamStore;
+                const livekitVideoStreamStore = this._space.videoStreamStore;
 
                 const store = derived(livekitVideoStreamStore, ($livekitVideoStreamStore) => {
                     return $livekitVideoStreamStore.get(user.spaceUserId);
@@ -277,7 +272,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 return store;
             },
             getLivekitScreenShareStreamStore: () => {
-                const livekitScreenShareStreamStore = this._space.livekitScreenShareStreamStore;
+                const livekitScreenShareStreamStore = this._space.screenShareStreamStore;
                 if (livekitScreenShareStreamStore) {
                     return derived(livekitScreenShareStreamStore, ($livekitScreenShareStreamStore) => {
                         return $livekitScreenShareStreamStore.get(user.spaceUserId);
@@ -286,7 +281,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 return undefined;
             },
             getScreenSharingPeerStore: () => {
-                const screenSharingPeerStore = this._space.screenSharingPeerStore;
+                const screenSharingPeerStore = this._space.screenShareStreamStore;
                 if (screenSharingPeerStore) {
                     return derived(screenSharingPeerStore, ($screenSharingPeerStore) => {
                         return $screenSharingPeerStore.get(user.spaceUserId);
@@ -365,7 +360,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         });
     }
     private registerSpaceFilter() {
-        // console.log(this.registerRefCount , '++++');
         if (this.registerRefCount === 0) {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {
@@ -438,10 +432,8 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             return Promise.resolve(this._users.get(spaceUserId));
         }
 
-        // Create a deferred promise that will be resolved when the user is added
         const deferred = new Deferred<SpaceUserExtended>();
 
-        // Subscribe to user joined events to resolve the promise when the user is found
         const subscription = this.observeUserJoined.subscribe((user) => {
             if (user.spaceUserId === spaceUserId) {
                 deferred.resolve(user);
@@ -449,7 +441,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         });
 
-        // Return a promise that either resolves with the user or rejects after a timeout
         return Promise.race([
             deferred.promise,
             new Promise<SpaceUserExtended>((resolve, reject) => {
@@ -462,17 +453,14 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
     }
 
     getUserByUserId(userId: number): Promise<SpaceUserExtended | undefined> {
-        // First check if user exists in current users
         for (const user of this._users.values()) {
             if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 return Promise.resolve(user);
             }
         }
 
-        // Create a deferred promise that will be resolved when the user is added
         const deferred = new Deferred<SpaceUserExtended>();
 
-        // Subscribe to user joined events to resolve the promise when the user is found
         const subscription = this.observeUserJoined.subscribe((user) => {
             if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 deferred.resolve(user);
@@ -480,7 +468,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
             }
         });
 
-        // Return a promise that either resolves with the user or rejects after a timeout
         return Promise.race([
             deferred.promise,
             new Promise<SpaceUserExtended>((resolve, reject) => {

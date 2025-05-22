@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/LivekitState";
 import { LiveKitRoom } from "./LiveKitRoom";
+
 //TODO : trouver le moyen de l'avoir coté front et back
 export enum CommunicationType {
     NONE = "NONE",
@@ -34,7 +35,6 @@ export class LivekitConnection {
                                 return;
                             }
 
-                            console.log(">>>> joinRoom from LivekitConnection initialize");
                             this.livekitRoom.joinRoom().catch((err) => {
                                 console.error("An error occurred in LivekitConnection initialize", err);
                                 Sentry.captureException(err);
@@ -77,8 +77,7 @@ export class LivekitConnection {
             Sentry.captureException(new Error("LivekitRoom not found"));
             return;
         }
-        //TODO : faire une variable pour savoir si on a deja rejoint la room evite de le faire 2fois
-        console.log(">>>> joinRoom from LivekitConnection executeSwitchMessage");
+
         this.livekitRoom.joinRoom().catch((err) => {
             console.error("An error occurred in executeSwitchMessage", err);
             Sentry.captureException(err);

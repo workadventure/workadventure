@@ -21,16 +21,20 @@ export interface ICommunicationState {
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
+    public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+
     constructor(
         private space: SpaceInterface,
-        private microphoneStateStore: Readable<boolean> = requestedMicrophoneState
+        private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
+        private cameraStateStore: Readable<boolean> = requestedCameraState,
+        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
-        this._communicationState = new WebRTCState(this.space, this);
+        this._communicationState = new WebRTCState(this.space);
         this.synchronizeMediaState();
     }
 
     private synchronizeMediaState(): void {
-        //TODO : trouver un moyen d'enlever les dépendances de MediaStore
         this.unsubscribes.push(
             this.microphoneStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
@@ -39,7 +43,7 @@ export class SpacePeerManager {
             })
         );
         this.unsubscribes.push(
-            requestedCameraState.subscribe((state) => {
+            this.cameraStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
                     cameraState: state,
                 });
@@ -47,7 +51,7 @@ export class SpacePeerManager {
         );
 
         this.unsubscribes.push(
-            requestedScreenSharingState.subscribe((state) => {
+            this.screenSharingStateStore.subscribe((state) => {
                 this.space.emitUpdateUser({
                     screenSharingState: state,
                 });
@@ -72,6 +76,7 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
+
         state.completeSwitch();
         this._communicationState = state;
     }

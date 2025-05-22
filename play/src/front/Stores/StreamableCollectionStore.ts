@@ -10,6 +10,7 @@ import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import {
     livekitScreenShareStreamElementsStore,
@@ -81,6 +82,13 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
 }
+
+//TODO : revoir le nom
+export type ExtendedStreamable = Streamable & {
+    player: RemotePlayerData | undefined;
+    userId: number;
+    media: MediaStoreStreamable;
+};
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
     gameSceneStore,

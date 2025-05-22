@@ -1,6 +1,6 @@
 import { MapStore } from "@workadventure/store-utils";
 import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
-import { get, Readable } from "svelte/store";
+import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import {
     LocalStreamStoreValue,
@@ -18,6 +18,7 @@ export class LiveKitRoom {
     private localParticipant: LocalParticipant | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localVideoTrack: LocalVideoTrack | undefined;
+    private unsubscribers: Unsubscriber[] = [];
 
     constructor(
         private serverUrl: string,
@@ -92,9 +93,6 @@ export class LiveKitRoom {
     private synchronizeMediaState() {
         this.unsubscribers.push(
             this.cameraStateStore.subscribe((state) => {
-                console.log("cameraStateStore", state);
-
-                //TODO : voir si on a la permission de partager l'ecran
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
                     Sentry.captureException(new Error("Local participant not found"));
@@ -102,7 +100,6 @@ export class LiveKitRoom {
                 }
 
                 const deviceId = get(this.cameraDeviceIdStore);
-                //TODO : voir si utile de subscribe directement au requestedCameraDeviceIdStore
 
                 this.localParticipant
                     .setCameraEnabled(
@@ -187,7 +184,6 @@ export class LiveKitRoom {
                     return;
                 }
 
-                console.log("cameraDeviceIdStore", deviceId);
                 const state = get(this.cameraStateStore);
 
                 if (!state || !deviceId) return;
@@ -256,25 +252,9 @@ export class LiveKitRoom {
             return;
         }
 
-        this.room.on(RoomEvent.ParticipantConnected, (participant) => {
-            const id = this.getParticipantId(participant);
-            this.space
-                .getSpaceUserBySpaceUserId(id)
-                .then((spaceUser) => {
-                    if (!spaceUser) {
-                        console.log("spaceUser not found for participant", id);
-                        return;
-                    }
-                    this.participants.set(participant.sid, new LiveKitParticipant(participant, this.space, spaceUser));
-                })
-                .catch((err) => {
-                    console.error("An error occurred while getting spaceUser", err);
-                    Sentry.captureException(err);
-                });
-        });
-        this.room.on(RoomEvent.ParticipantDisconnected, (participant) => {
-            this.participants.delete(participant.sid);
-        });
+        this.room.on(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
+        this.room.on(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
+        this.room.on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
     }
 
     public getParticipantId(participant: Participant) {
@@ -295,11 +275,47 @@ export class LiveKitRoom {
         });
     }
 
+    private handleParticipantConnected(participant: Participant) {
+        const id = this.getParticipantId(participant);
+        this.space
+            .getSpaceUserBySpaceUserId(id)
+            .then((spaceUser) => {
+                if (!spaceUser) {
+                    console.info("spaceUser not found for participant", id);
+                    return;
+                }
+                this.participants.set(participant.sid, new LiveKitParticipant(participant, this.space, spaceUser));
+            })
+            .catch((err) => {
+                console.error("An error occurred while getting spaceUser", err);
+                Sentry.captureException(err);
+            });
+    }
+
+    private handleParticipantDisconnected(participant: Participant) {
+        this.participants.delete(participant.sid);
+    }
+
+    private handleActiveSpeakersChanged(speakers: Participant[]) {
+        //TODO : revoir impl iteration sur tout les participants a chaque fois
+        console.log("active speakers", speakers);
+        this.participants.forEach((participant) => {
+            if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
+                console.log("participant is active speaker", participant.participant.sid);
+                participant.setActiveSpeaker(true);
+            } else {
+                console.log("participant is not active speaker", participant.participant.sid);
+                participant.setActiveSpeaker(false);
+            }
+        });
+    }
+
     public destroy() {
-        console.log(">>>>> destroy LiveKitRoom");
-        console.count("destroy LiveKitRoom");
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
         this.participants.forEach((participant) => participant.destroy());
+        this.room?.off(RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
+        this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
+        this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
         this.leaveRoom();
     }
 }

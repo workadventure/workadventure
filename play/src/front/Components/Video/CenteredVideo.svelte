@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {get, Readable} from "svelte/store";
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
@@ -29,12 +28,8 @@
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
-    export let attach: (container: HTMLVideoElement) => void | undefined;
-    export let detach: (container: HTMLVideoElement) => void | undefined;
-
-    //TODO : delete 
-    export let name : Readable<string> ;
-
+    export let attach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    export let detach: ((container: HTMLVideoElement) => void) | undefined = undefined;
     export let videoUrl: string | undefined = undefined;
     export let videoConfig: VideoConfig | undefined = undefined;
 
@@ -68,50 +63,7 @@
         requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
     }
 
-    function isVideoActuallyPlaying(videoEl) {
-  /* 1 – is the element *playing* at all? */
-  const playing = (
-    !videoEl.paused &&
-    !videoEl.ended &&
-    videoEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
-  );
-
-  /* 2 – does it have a *live* video track? */
-  const hasVideoTrack = videoEl.srcObject
-    ? videoEl.srcObject.getVideoTracks()
-        .some(t => t.enabled && t.readyState === 'live')          // MediaStream case
-    : videoEl.videoWidth  > 0 && videoEl.videoHeight > 0;         // file/URL case
-
-  return playing && hasVideoTrack;
-}
-
     let videoElement: HTMLVideoElementExt;
-    const videoID = Math.random().toString(36).substr(2, 9);
-
-    function watchFrames(videoEl: HTMLVideoElementExt, onLost: () => void) {
-        if (!('requestVideoFrameCallback' in HTMLVideoElement.prototype)) { return; }
-
-        let timer: ReturnType<typeof setTimeout>;
-        const maxSilence = 1000; // ms without frames → treat as lost
-
-        function gotFrame() {
-            clearTimeout(timer);
-            if (isVideoActuallyPlaying(videoEl)) {
-               // console.log("video frame displayed and actually playing", get(name));
-            } else {
-               // console.warn("video frame displayed but not actually playing", get(name));
-            }
-            timer = setTimeout(onLost, maxSilence);
-            videoEl.requestVideoFrameCallback(gotFrame);
-        }
-        videoEl.requestVideoFrameCallback(gotFrame);
-    }
-
-    $: if (videoElement) {
-        watchFrames(videoElement, () => {
-          //  console.warn("No video frames received for 1s", get(name));
-        });
-    }
 
     let loop: boolean = videoConfig?.loop ?? false;
 
@@ -122,14 +74,11 @@
             console.warn("User has not interacted with the browser yet. The video will be muted.");
             missingUserActivation = true;
         }
-       // videoElement.srcObject = mediaStream;
-      
     }
-    // $: if (videoUrl && videoElement) {
-    //     videoElement.src = videoUrl;
-    // }
+    $: if (videoUrl && videoElement) {
+        videoElement.src = videoUrl;
+    }
 
-    
     let containerWidth: number;
     let containerHeight: number;
     let videoWidth: number;
@@ -227,7 +176,7 @@
             }
             callbackId = videoElement.requestVideoFrameCallback(() => {
                 // A video frame was displayed. No need to display a warning.
-               // console.log("video frame displayed", videoID);
+                // console.log("video frame displayed", videoID);
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;
@@ -327,7 +276,6 @@
     });
 
     onDestroy(() => {
-
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
@@ -347,9 +295,7 @@
 </script>
 
 <div
-    class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground
-        ? 'bg-contrast/80 rounded-lg'
-        : ''}"
+    class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >

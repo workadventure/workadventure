@@ -181,14 +181,12 @@ import {
     livekitScreenShareStreamStore,
     livekitVideoStreamElementsStore,
     livekitVideoStreamStore,
-    peerStore,
-    screenSharingPeerStore,
 } from "../../Stores/PeerStore";
-import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1593,11 +1591,8 @@ export class GameScene extends DirtyScene {
                 this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
                 this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
-                //TODO : solution pour éviter les dépendances circulaires et passer les stream dans les spaces
-                peerStore.set(this._spaceRegistry.peerStore);
-                screenSharingPeerStore.set(this._spaceRegistry.screenSharingPeerStore);
-                livekitVideoStreamStore.set(this._spaceRegistry.livekitVideoStreamStore);
-                livekitScreenShareStreamStore.set(this._spaceRegistry.livekitScreenShareStreamStore);
+                livekitVideoStreamStore.set(this._spaceRegistry.videoStreamStore);
+                livekitScreenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
 
                 gameManager
                     .getChatConnection()
@@ -3991,12 +3986,12 @@ ${escapedMessage}
         return this.worldUserProvider.userCount;
     }
 
-    get peerStore(): Readable<Map<string, VideoPeer>> {
-        return this.spaceRegistry.peerStore;
+    get videoStreamStore(): Readable<Map<string, ExtendedStreamable>> {
+        return this.spaceRegistry.videoStreamStore;
     }
 
-    get screenSharingPeerStore(): Readable<Map<string, ScreenSharingPeer>> {
-        return this.spaceRegistry.screenSharingPeerStore;
+    get screenShareStreamStore(): Readable<Map<string, ExtendedStreamable>> {
+        return this.spaceRegistry.screenShareStreamStore;
     }
 
     getStartPositionNames(): string[] {

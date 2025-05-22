@@ -414,17 +414,18 @@ export class VideoPeer extends Peer implements Streamable {
                         container.srcObject = stream;
                     }
                 });
-                const videoElements = this.space.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                const videoElements =
+                    this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
                 videoElements.push(container);
-                this.space.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
                 // Store the unsubscribe function in our Map
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
             detach: (container: HTMLVideoElement) => {
                 container.srcObject = null;
-                let videoElements = this.space.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
                 videoElements = videoElements.filter((element) => element !== container);
-                this.space.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
                 // Call the unsubscribe function if it exists and remove it from the Map
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {

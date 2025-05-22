@@ -1,8 +1,6 @@
 import { Readable } from "svelte/store";
-import { VideoPeer } from "../../WebRtc/VideoPeer";
+import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../SpaceInterface";
-import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-import { ExtendedStreamable } from "../../Livekit/LivekitParticipant";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
@@ -10,8 +8,6 @@ export interface SpaceRegistryInterface {
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): void;
     destroy(): void;
-    peerStore: Readable<Map<string, VideoPeer>>;
-    screenSharingPeerStore: Readable<Map<string, ScreenSharingPeer>>;
-    livekitVideoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    livekitScreenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 }

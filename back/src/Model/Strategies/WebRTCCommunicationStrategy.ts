@@ -9,7 +9,6 @@ class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();
 
     addConnection(user1Id: string, user2Id: string): void {
-        // Ajoute la connexion dans les deux sens
         this.getOrCreateUserConnections(user1Id).add(user2Id);
         this.getOrCreateUserConnections(user2Id).add(user1Id);
     }
@@ -24,10 +23,8 @@ class ConnectionManager {
     }
 
     removeUser(userId: string): void {
-        // Supprime toutes les connexions de l'utilisateur
         const userConnections = this.connections.get(userId);
         if (userConnections) {
-            // Supprime les références dans les autres sets
             for (const connectedUserId of userConnections) {
                 this.connections.get(connectedUserId)?.delete(userId);
             }
@@ -102,13 +99,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
         const credentials1 = this._credentialsService.generateCredentials(user1.spaceUserId);
         const credentials2 = this._credentialsService.generateCredentials(user2.spaceUserId);
-
-        console.log({
-            user1,
-            user2,
-            credentials1,
-            credentials2,
-        });
 
         this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, false);
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, true);
