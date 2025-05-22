@@ -401,6 +401,7 @@ export class SocketManager {
                 userJoinedZoneMessage.variables[key] = value;
             }
         }
+        userJoinedZoneMessage.sayMessage = user.getSayMessage();
 
         return {
             message: {

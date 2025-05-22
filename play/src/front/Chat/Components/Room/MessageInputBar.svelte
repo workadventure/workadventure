@@ -402,7 +402,7 @@
                         : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
                 >
                     <button
-                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -left-2 -top-2"
+                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
                         on:click={() => deleteFile(preview.id)}
                     >
                         <IconX font-size="12" />

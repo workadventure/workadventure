@@ -98,7 +98,6 @@
             videoWidth = layout.videoWidth;
             videoHeight = layout.videoHeight;
         }
-        analyticsClient.camLayoutChange();
         gameScene.reposition();
     }
 
@@ -313,6 +312,7 @@
             maxHeight={maxContainerHeight * 0.9}
             currentHeight={containerHeight}
             onResize={onResizeHandler}
+            onResizeEnd={() => analyticsClient.resizeCameraLayout()}
         />
     {/if}
 </div>

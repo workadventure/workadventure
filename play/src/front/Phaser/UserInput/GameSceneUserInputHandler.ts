@@ -12,6 +12,9 @@ import { emoteDataStore, emoteStore } from "../../Stores/EmoteStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { popupStore } from "../../Stores/PopupStore";
+import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
+import { isPopupJustClosed } from "../Game/Say/SayManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -144,11 +147,26 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
+    private openSayPopup(): void {
+        if (!this.gameScene.room.isSayEnabled) {
+            return;
+        }
+        // Don't open if we just closed.
+        if (isPopupJustClosed() || popupStore.hasPopup("say")) {
+            return;
+        }
+        popupStore.addPopup(SayPopUp, {}, "say");
+    }
+
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.key) {
             // SPACE
             case " ": {
                 this.handleActivableEntity();
+                break;
+            }
+            case "Enter": {
+                this.openSayPopup();
                 break;
             }
             default: {

@@ -889,12 +889,5 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
-    camLayoutChange(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa_camera_layout_change");
-            })
-            .catch((e) => console.error(e));
-    }
 }
 export const analyticsClient = new AnalyticsClient();

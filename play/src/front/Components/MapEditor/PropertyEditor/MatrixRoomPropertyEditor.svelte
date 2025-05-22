@@ -28,7 +28,7 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 mr-1" src={messageSvg} alt={$LL.mapEditor.properties.matrixProperties.description()} />
+        <img class="w-6 me-2" src={messageSvg} alt={$LL.mapEditor.properties.matrixProperties.description()} />
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">

@@ -69,6 +69,7 @@ import {
     ExternalModuleMessage,
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
+    SayMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -782,6 +783,17 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "setPlayerDetailsMessage",
                 setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
+    public emitPlayerSayMessage(sayMessage: SayMessage | undefined) {
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
+                    sayMessage,
+                }),
             },
         });
     }
@@ -1717,6 +1729,7 @@ export class RoomConnection implements RoomConnection {
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
             chatID: message.chatID,
+            sayMessage: message.sayMessage,
         };
     }
 

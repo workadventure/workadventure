@@ -57,8 +57,8 @@
                 <div
                     class={`${
                         rootFolder
-                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-left"
-                            : "text-sm font-bold tracking-widest uppercase grow text-left"
+                            ? "text-white/75 group-hover:text-white text-sm font-bold tracking-widest uppercase grow text-start"
+                            : "text-sm font-bold tracking-widest uppercase grow text-start"
                     }`}
                 >
                     {$name}
@@ -74,9 +74,9 @@
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
-    <div class="flex flex-col overflow-auto">
+    <div class="flex flex-col ">
         {#if isOpen}
-            <div class="flex flex-col overflow-auto">
+            <div class="flex flex-col ">
                 {#if $suggestedRooms.length > 0}
                     <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
                         <div
@@ -89,7 +89,7 @@
                                     data-testid="openSuggestedRooms"
                                     on:click={toggleSuggestedRooms}
                                 >
-                                    <div class="text-sm font-bold tracking-widest uppercase grow text-left">
+                                    <div class="text-sm font-bold tracking-widest uppercase grow text-start">
                                         {$LL.chat.suggestedRooms()}
                                     </div>
                                 </button>
@@ -105,7 +105,7 @@
                             </button>
                         </div>
                         {#if suggestedRoomsOpen}
-                            <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                            <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                                 <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
                                     <RoomSuggested roomInformation={room} />
                                 </ShowMore>
@@ -114,9 +114,9 @@
                     </div>
                 {/if}
             </div>
-            <div class="flex flex-col overflow-auto">
+            <div class="flex flex-col overflow-visible">
                 {#if $invitations.length > 0}
-                    <div class="flex flex-col overflow-auto pl-3 pr-4 pb-3">
+                    <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                         <ShowMore items={$invitations} maxNumber={8} idKey="id" let:item={room}>
                             <RoomInvitation {room} />
                         </ShowMore>

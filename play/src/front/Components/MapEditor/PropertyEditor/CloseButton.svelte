@@ -21,7 +21,7 @@
         padding: 3px;
         border-radius: 8px;
         top: 0;
-        right: 0;
+        inset-inline-end: 0;
         cursor: pointer;
     }
 </style>

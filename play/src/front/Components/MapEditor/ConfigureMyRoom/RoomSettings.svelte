@@ -90,7 +90,6 @@
         onerror={() => {
             dynamicStrings.error.name = true;
         }}
-        variant="light"
     />
 
     <p class="help-text">
@@ -102,7 +101,6 @@
         placeHolder="MySpace"
         bind:value={description}
         onKeyPress={() => {}}
-        variant="light"
     />
     <p class="help-text">
         <IconInfoCircle font-size="18" />
@@ -118,7 +116,6 @@
         placeHolder="MySpace"
         bind:value={copyright}
         onKeyPress={() => {}}
-        variant="light"
     />
 
     <div class="flex flex-row justify-center mt-4">
@@ -131,7 +128,7 @@
         </div>
     </div>
 
-    <div class="flex flex-row justify-center ">
+    <div class="flex flex-row justify-center cursor-pointer ">
         <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
     </div>
 </div>

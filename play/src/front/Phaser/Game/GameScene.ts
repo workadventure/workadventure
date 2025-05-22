@@ -209,6 +209,7 @@ import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
+import { SayManager } from "./Say/SayManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
@@ -327,6 +328,7 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
+    private _sayManager: SayManager | undefined;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent = false;
@@ -1102,6 +1104,7 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager?.close();
         this.scriptingVideoManager?.close();
         this.areaManager?.close();
+        this._sayManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
@@ -1281,6 +1284,9 @@ export class GameScene extends DirtyScene {
         }
         if (update.updated.showVoiceIndicator) {
             character.toggleTalk(update.player.showVoiceIndicator);
+        }
+        if (update.updated.sayMessage) {
+            character.say(update.player.sayMessage?.message ?? "", update.player.sayMessage?.type ?? 0);
         }
     }
 
@@ -1809,6 +1815,8 @@ export class GameScene extends DirtyScene {
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 this.scriptingVideoManager = new ScriptingVideoManager();
+
+                this._sayManager = new SayManager(this.connection, this.CurrentPlayer);
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -2752,7 +2760,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
-                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                this.MapPlayersByKey.get(data.id)?.registerWokaMenuAction({
                     actionName: data.actionKey,
                     callback: () => {
                         iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
@@ -2763,7 +2771,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
-                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+                this.MapPlayersByKey.get(data.id)?.unregisterWokaMenuAction(data.actionKey);
             })
         );
 
@@ -3639,7 +3647,10 @@ ${escapedMessage}
                     ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
                     : new CancelablePromise<string>((_, reject) =>
                           reject(new CompanionTextureError("No companion texture"))
-                      )
+                      ),
+                undefined,
+                undefined,
+                addPlayerData.sayMessage
             );
         } catch (error) {
             if (error instanceof CharacterTextureError) {
@@ -3996,5 +4007,12 @@ ${escapedMessage}
 
     getStartPositionNames(): string[] {
         return this.startPositionCalculator.getStartPositionNames();
+    }
+
+    get sayManager(): SayManager {
+        if (!this._sayManager) {
+            throw new Error("_sayManager not yet initialized");
+        }
+        return this._sayManager;
     }
 }

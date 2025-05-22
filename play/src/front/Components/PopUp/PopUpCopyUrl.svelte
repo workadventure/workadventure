@@ -28,7 +28,7 @@
 
 <PopUpContainer reduceOnSmallScreen={true}>
     Url copied to clipboard
-    <svelte:fragment slot="iconButton">
+    <svelte:fragment slot="buttons">
         <button
             class="btn btn-secondary !p-0 w-8 h-8 items-center btn-sm absolute top-2 right-2 z-50 pointer-events-auto"
             on:click={closeBanner}
