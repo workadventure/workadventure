@@ -1,6 +1,6 @@
 import { MapStore } from "@workadventure/store-utils";
 import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
-import { get, Readable, Unsubscriber } from "svelte/store";
+import { get, Readable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import {
     LocalStreamStoreValue,
@@ -18,7 +18,6 @@ export class LiveKitRoom {
     private localParticipant: LocalParticipant | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localVideoTrack: LocalVideoTrack | undefined;
-    private unsubscribers: Unsubscriber[] = [];
 
     constructor(
         private serverUrl: string,

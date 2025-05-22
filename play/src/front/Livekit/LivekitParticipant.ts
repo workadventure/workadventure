@@ -7,11 +7,9 @@ import {
     Track,
     ParticipantEvent,
     RemoteVideoTrack,
-    supportsAdaptiveStream,
-    supportsDynacast,
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
-import { derived, Unsubscriber, Writable, writable } from "svelte/store";
+import { derived, Writable, writable } from "svelte/store";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../WebRtc/VideoPeer";
@@ -31,7 +29,7 @@ export class LiveKitParticipant {
     private _connectionQualityStore: Writable<ConnectionQuality>;
     private _videoStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
-    private _streamStore =  derived(
+    private _streamStore = derived(
         [this._videoStreamStore, this._audioStreamStore],
         ([$videoStreamStore, $audioStreamStore]) => {
             const tracks = [];
@@ -59,12 +57,7 @@ export class LiveKitParticipant {
     private _screenShareRemoteTrack: RemoteTrack | undefined;
     private _videoElements: HTMLVideoElement[] = [];
     private _screenShareElements: HTMLVideoElement[] = [];
-    private _videoQuality: Writable<"low" | "medium" | "high" | undefined> = writable<
-        "low" | "medium" | "high" | "default"
-    >("default");
 
-    private _subscribers : Unsubscriber[] = [];
-    
     constructor(
         private participant: Participant,
         private space: SpaceInterface,
@@ -90,9 +83,7 @@ export class LiveKitParticipant {
                     this._videoRemoteTrack = track as RemoteVideoTrack;
                     this._hasVideo.set(!track.isMuted);
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
-                    console.log("try to attach existing track to videoElements", videoElements, track);
                     videoElements.forEach((videoElement) => {
-                        console.log("attach to existing videoElement and existing track");
                         videoElement.autoplay = true;
                         videoElement.playsInline = true;
                         videoElement.muted = track.isMuted;
@@ -114,12 +105,10 @@ export class LiveKitParticipant {
                     this._screenShareStreamStore.set(track.mediaStream);
                     const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                     screenElements.forEach((screenElement) => {
-                        console.log("attach to existing screenElement and existing track", screenElement, track);
                         screenElement.autoplay = true;
                         screenElement.playsInline = true;
                         screenElement.muted = track.isMuted;
                         track.attach(screenElement);
-                        
                     });
                     this.updateLivekitScreenShareStreamStore().catch((e) => {
                         console.error("Error while updating livekit screen share stream store", e);
@@ -142,31 +131,11 @@ export class LiveKitParticipant {
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
-            // Set initial subscription state based on visibility
-            // const isVisible = get(this._isVisible);
-            // publication.setEnabled(isVisible);
             this._hasVideo.set(!track.isMuted);
 
-            // Create and attach video element
             this._videoRemoteTrack = track;
 
-            // if (track instanceof RemoteVideoTrack) {
-            //     console.log(">>>>>track.isAdaptiveStream", {
-            //         isAdaptiveStream: track.isAdaptiveStream,
-            //         currentBitrate: track.currentBitrate,
-            //         streamState: track.streamState,
-            //         supportsAdaptiveStream: supportsAdaptiveStream(),
-            //         supportsDynacast: supportsDynacast(),
-            //     });
-            // }
-
-            track.on("videoDimensionsChanged", (dimensions) => {
-                const videoQuality = this.getVideoQuality(dimensions.width, dimensions.height);
-                this._videoQuality.set(videoQuality);
-            });
-
             this.space.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
-                console.log("attach to existing videoElement", videoElement);
                 videoElement.autoplay = true;
                 videoElement.playsInline = true;
                 videoElement.muted = track.isMuted;
@@ -188,16 +157,8 @@ export class LiveKitParticipant {
             // Create and attach screen share element
             this._screenShareRemoteTrack = track;
 
-            // this._screenShareElements.forEach((screenElement) => {
-            //     screenElement.autoplay = true;
-            //     screenElement.playsInline = true;
-            //     screenElement.muted = true;
-            //     track.attach(screenElement);
-            // });
-
             const screenElements = this.space.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
             screenElements.forEach((screenElement) => {
-                console.log("attach to existing screenElement", screenElement);
                 screenElement.autoplay = true;
                 screenElement.playsInline = true;
                 screenElement.muted = track.isMuted;
@@ -293,19 +254,10 @@ export class LiveKitParticipant {
                     const videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
                     videoElements.push(container);
                     this.space.videoContainerMap.set(this._spaceUser.spaceUserId, videoElements);
-                    
-                    console.log("try to attach videoElement", container , this._videoRemoteTrack,videoElements);
+
                     if (this._videoRemoteTrack) {
-                        console.log("attach videoElement to track", this._videoRemoteTrack);
                         this._videoRemoteTrack.attach(container);
                     }
-                    
-                    // const unsubscriber = this._streamStore.subscribe((stream) => {
-                    //     // this.
-                    // });
-
-                    //this._subscribers.push(unsubscriber);
-
                 },
                 detach: (container: HTMLVideoElement) => {
                     let videoElements = this.space.videoContainerMap.get(this._spaceUser.spaceUserId) || [];
@@ -316,20 +268,12 @@ export class LiveKitParticipant {
                         this._videoRemoteTrack.detach(container);
                     }
                 },
-                videoQuality: this._videoQuality,
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
             player,
             userId: this._spaceUser.userId,
         };
-    }
-
-    private getVideoQuality(width: number, height: number): "low" | "medium" | "high" {
-        const pixels = width * height;
-        if (pixels <= 320 * 180) return "low";
-        if (pixels <= 640 * 360) return "medium";
-        return "high";
     }
 
     public async getScreenShareStream(): Promise<ExtendedStreamable> {
@@ -367,7 +311,6 @@ export class LiveKitParticipant {
                         this._screenShareRemoteTrack.detach(container);
                     }
                 },
-                videoQuality: this._videoQuality,
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
@@ -381,17 +324,12 @@ export class LiveKitParticipant {
     }
 
     public destroy() {
-        // Clean up video elements
-
-        // ????
         this._videoElements.forEach((videoElement) => {
             videoElement.remove();
         });
         this._screenShareElements.forEach((screenElement) => {
             screenElement.remove();
         });
-
-        //detach ???
 
         this.participant.off(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
         this.participant.off(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
