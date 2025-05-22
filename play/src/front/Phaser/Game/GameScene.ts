@@ -74,6 +74,7 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
+    ViewportInterface,
 } from "../../Connection/ConnexionModels";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -1309,12 +1310,14 @@ export class GameScene extends DirtyScene {
         if (!camera) {
             return;
         }
-        this.connection?.setViewport({
-            left: Math.max(0, camera.scrollX - margin),
-            top: Math.max(0, camera.scrollY - margin),
-            right: camera.scrollX + camera.width + margin,
-            bottom: camera.scrollY + camera.height + margin,
-        });
+        this.connection?.setViewport(
+            this.validateViewport({
+                left: Math.max(0, camera.scrollX - margin),
+                top: Math.max(0, camera.scrollY - margin),
+                right: camera.scrollX + camera.width + margin,
+                bottom: camera.scrollY + camera.height + margin,
+            })
+        );
     }
 
     public reposition(instant = false): void {
@@ -3547,6 +3550,25 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
+    // We need to store the last valid viewport because in rare circumstances, Phaser can return an invalid camera.
+    private lastValidViewport: ViewportInterface = {
+        left: 0,
+        top: 0,
+        right: 100,
+        bottom: 100,
+    };
+    private validateViewport(viewport: ViewportInterface): ViewportInterface {
+        if (isNaN(viewport.left) || isNaN(viewport.top) || isNaN(viewport.right) || isNaN(viewport.bottom)) {
+            // If the viewport is invalid, we need to use the last valid one.
+            // This can happen when the camera is not yet initialized.
+            return this.lastValidViewport;
+        } else {
+            // If the viewport is valid, we need to store it for later use.
+            this.lastValidViewport = viewport;
+        }
+        return viewport;
+    }
+
     private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -3557,6 +3579,7 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         };
+        viewport = this.validateViewport(viewport);
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.
             // We need to adjust it manually. We set it to something very large to make sure the Woka sees
