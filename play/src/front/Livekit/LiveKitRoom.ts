@@ -164,9 +164,13 @@ export class LiveKitRoom {
                     // Create a new track instance
                     this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
 
+                    //TODO : revoir layers pour le screen sharing
                     this.localParticipant
                         .publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare,
+                            videoCodec: "vp8",
+                            simulcast: true,
+                            videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h90],
                         })
                         .catch((err) => {
                             console.error("An error occurred while publishing track", err);
