@@ -284,7 +284,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get media(): MediaStoreStreamable {
-        // Use a closure to keep the videoElementUnsubscribers map private to this getter call
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
@@ -295,13 +294,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                         container.srcObject = stream;
                     }
                 });
-                // Store the unsubscribe function in our Map
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
             detach: (container: HTMLVideoElement) => {
-                // Clean up the stream
                 container.srcObject = null;
-                // Call the unsubscribe function if it exists and remove it from the Map
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();

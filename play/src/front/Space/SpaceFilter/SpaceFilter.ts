@@ -88,7 +88,6 @@ export type Filter = SpaceFilterMessage["filter"];
 //     emitProximityPrivateMessage(message: string, receiverUserId: number): void;
 // }
 
-//TODO : mettre une fonction qui permet de récuperer les peer d'un user dans direct dans un store qui va etre dans le space
 export abstract class SpaceFilter implements SpaceFilterInterface {
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;

@@ -76,7 +76,6 @@ export class VideoPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        //TODO : transform userId to number
         this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
@@ -403,7 +402,6 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     get media(): MediaStoreStreamable {
-        // Use a closure to keep the videoElementUnsubscribers map private to this getter call
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
@@ -418,7 +416,6 @@ export class VideoPeer extends Peer implements Streamable {
                     this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
                 videoElements.push(container);
                 this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
-                // Store the unsubscribe function in our Map
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
             detach: (container: HTMLVideoElement) => {
@@ -426,7 +423,6 @@ export class VideoPeer extends Peer implements Streamable {
                 let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
                 videoElements = videoElements.filter((element) => element !== container);
                 this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
-                // Call the unsubscribe function if it exists and remove it from the Map
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
