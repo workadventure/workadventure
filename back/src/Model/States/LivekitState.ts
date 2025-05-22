@@ -21,7 +21,6 @@ export class LivekitState extends CommunicationState {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
-        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
         super.handleUserAdded(user);
     }
     handleUserDeleted(user: SpaceUser): void {
@@ -62,8 +61,9 @@ export class LivekitState extends CommunicationState {
         const isMaxUsersReached = this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC;
         return this.isSwitching() && isMaxUsersReached;
     }
+
+    //TODO : passer dans la classe abstraite
     protected areAllUsersReady(): boolean {
-        //return true;
         return this._readyUsers.size === this._space.getAllUsers().length;
     }
 

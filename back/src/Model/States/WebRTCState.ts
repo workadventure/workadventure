@@ -29,6 +29,7 @@ export class WebRTCState extends CommunicationState {
         }
         super.handleUserAdded(user, this.isSwitching());
     }
+
     handleUserDeleted(user: SpaceUser): void {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
@@ -61,6 +62,7 @@ export class WebRTCState extends CommunicationState {
         this.setupSwitchTimeout();
     }
 
+    //TODO : passer dans la classe abstraite
     areAllUsersReady(): boolean {
         return this._readyUsers.size === this._space.getAllUsers().length;
     }
