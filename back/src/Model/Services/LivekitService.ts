@@ -50,9 +50,9 @@ export class LiveKitService {
         //TODO : revoir les options
         const createOptions: CreateOptions = {
             name: roomName,
-            emptyTimeout: 10000,
+            emptyTimeout: 5 * 60 * 1000,
             maxParticipants: 1000,
-            departureTimeout: 10000,
+            departureTimeout: 5 * 60 * 1000,
         };
 
         await this.roomServiceClient.createRoom(createOptions);
@@ -61,9 +61,7 @@ export class LiveKitService {
 
     async generateToken(roomName: string, user: SpaceUser): Promise<string> {
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            //TODO : séparateur a maintenir coté front et back : voir comment on peut changer ça
-            //TODO : voir si on utilise pas le uuid si on peut supprimer la partie avant le ||
-            identity: `${user.uuid}||${user.spaceUserId}`,
+            identity: user.spaceUserId,
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,

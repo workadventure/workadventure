@@ -258,8 +258,7 @@ export class LiveKitRoom {
     }
 
     public getParticipantId(participant: Participant) {
-        //TODO : voir si on utilise pas le uuid si on peut supprimer la partie avant le ||
-        return participant.identity.split("||")[1];
+        return participant.identity;
     }
 
     public leaveRoom() {
