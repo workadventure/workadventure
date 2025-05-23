@@ -375,6 +375,8 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public joinSpace(spaceName: string, propertiesToSync: string[]): void {
+        console.log(">>>> joinSpace");
+        console.time(">>>> joinLivekitRoom");
         this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
         const proximityChatRoomSimplePeer = this._space.simplePeer;
         if (proximityChatRoomSimplePeer) {

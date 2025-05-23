@@ -38,6 +38,7 @@ export class LivekitState implements ICommunicationState {
                     }
                     // TODO: determine if destroy() should be called here or at the end of the switch
                     this.space.spacePeerManager.setState(this._nextState);
+                    console.log("switch back to webrtc");
                 }
             })
         );
@@ -55,7 +56,10 @@ export class LivekitState implements ICommunicationState {
     }
 
     completeSwitch() {
-        this.livekitConnection.joinRoom();
+        this.livekitConnection.joinRoom().catch((err) => {
+            console.error("An error occurred in executeSwitchMessage", err);
+            Sentry.captureException(err);
+        });
     }
 
     destroy() {

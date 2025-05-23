@@ -29,16 +29,16 @@ export class LivekitConnection {
                     .prepareConnection()
                     .then(() => {
                         if (message.livekitInvitationMessage.shouldJoinRoomImmediately) {
-                            if (!this.livekitRoom) {
-                                console.error("LivekitRoom not found");
-                                Sentry.captureException(new Error("LivekitRoom not found"));
-                                return;
-                            }
-
-                            this.livekitRoom.joinRoom().catch((err) => {
-                                console.error("An error occurred in LivekitConnection initialize", err);
-                                Sentry.captureException(err);
-                            });
+                            //TODO : utiliser this.joinRoom / duplication de code !
+                            this.joinRoom()
+                                .catch((err) => {
+                                    console.error("An error occurred in executeSwitchMessage", err);
+                                    Sentry.captureException(err);
+                                })
+                                .finally(() => {
+                                    console.log(">>>> joinLivekitRoom");
+                                    console.timeEnd(">>>> joinLivekitRoom");
+                                });
                         } else {
                             this.space.emitPrivateMessage(
                                 {
@@ -71,17 +71,14 @@ export class LivekitConnection {
         );
     }
 
-    joinRoom() {
+    async joinRoom() {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found");
             Sentry.captureException(new Error("LivekitRoom not found"));
-            return;
+            throw new Error("LivekitRoom not found");
         }
 
-        this.livekitRoom.joinRoom().catch((err) => {
-            console.error("An error occurred in executeSwitchMessage", err);
-            Sentry.captureException(err);
-        });
+        await this.livekitRoom.joinRoom();
     }
 
     destroy() {
