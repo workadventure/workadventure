@@ -5,17 +5,16 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -58,13 +57,15 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "cover";
     public readonly displayInPictureInPictureMode = true;
+    public readonly usePresentationMode = false;
 
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
-        private spaceFilter: Promise<SpaceFilterInterface>
+        private space: SpaceInterface,
+        private spaceFilter: Promise<SpaceFilterInterface>,
+        private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -75,7 +76,7 @@ export class VideoPeer extends Peer implements Streamable {
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
-        this.userId = user.userId;
+        this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
 
@@ -206,8 +207,27 @@ export class VideoPeer extends Peer implements Streamable {
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
-                        const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
-                        simplePeer.blockedFromRemotePlayer(this.userId);
+                        const simplePeer = this.space.simplePeer;
+                        this.space
+                            .getSpaceUserByUserId(this.userId)
+                            .then((spaceUser) => {
+                                if (!spaceUser) {
+                                    console.error("spaceUser not found for userId", this.userId);
+                                    return;
+                                }
+                                const spaceUserId = spaceUser.spaceUserId;
+                                if (!spaceUserId) {
+                                    console.error("spaceUserId not found for userId", this.userId);
+                                    return;
+                                }
+                                if (simplePeer) {
+                                    simplePeer.blockedFromRemotePlayer(spaceUserId);
+                                }
+                            })
+                            .catch((e) => {
+                                console.error("Error while getting spaceUser", e);
+                                Sentry.captureException(e);
+                            });
                         break;
                     }
                     case "unblocked": {
@@ -298,7 +318,16 @@ export class VideoPeer extends Peer implements Streamable {
 
     private sendWebrtcSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcSignalToServerMessage",
+                    webRtcSignalToServerMessage: {
+                        receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.user.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);
         }
@@ -373,9 +402,33 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     get media(): MediaStoreStreamable {
+        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
+            attach: (container: HTMLVideoElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        container.srcObject = stream;
+                    }
+                });
+                const videoElements =
+                    this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                videoElements.push(container);
+                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                videoElementUnsubscribers.set(container, unsubscribe);
+            },
+            detach: (container: HTMLVideoElement) => {
+                container.srcObject = null;
+                let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
+                videoElements = videoElements.filter((element) => element !== container);
+                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                const unsubscribe = videoElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    videoElementUnsubscribers.delete(container);
+                }
+            },
         };
     }
 

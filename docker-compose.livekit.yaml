@@ -1,0 +1,95 @@
+#TODO : revoir le docker compose peut etre le simplifier
+services:
+  livekit:
+    image: livekit/livekit-server:v1.8.4
+    command: --config /etc/livekit/config.yaml
+    ports:
+      - "7880:7880" # HTTP API
+      - "7881:7881/udp" # WebRTC UDP
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.livekit.rule=Host(`livekit.workadventure.localhost`)"
+      - "traefik.http.routers.livekit.entryPoints=web"
+      - "traefik.http.services.livekit.loadbalancer.server.port=7880"
+      - "traefik.udp.routers.livekit-udp.entrypoints=udp"
+      - "traefik.udp.routers.livekit-udp.service=livekit-udp"
+      - "traefik.udp.services.livekit-udp.loadbalancer.server.port=7881"
+    volumes:
+      - ./livekit-config.yaml:/etc/livekit/config.yaml
+    depends_on:
+      redis:
+        condition: service_started
+
+  egress:
+    image: livekit/egress:v1.9.0
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # Egress API
+      - "8081:8081" # Egress Health
+      - "7980:7980" # Template port
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.egress.rule=Host(`egress.workadventure.localhost`)"
+      - "traefik.http.routers.egress.entryPoints=web"
+      - "traefik.http.services.egress.loadbalancer.server.port=8080"
+    environment:
+      EGRESS_CONFIG_FILE: /etc/egress/config.yaml
+      DISABLE_CUDA: "true"
+      DISABLE_NVENC: "true"
+      EGRESS_OUTPUT_DIR: "/out"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./egress-config.yaml:/etc/egress/config.yaml
+      - ./out:/out:rw
+      - /tmp:/tmp:rw
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      redis:
+        condition: service_started
+      livekit:
+        condition: service_started
+
+  minio-livekit:
+    image: bitnami/minio:2025.4.22
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio-livekit.rule=Host(`minio-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.minio-livekit.entryPoints=web"
+      - "traefik.http.services.minio-livekit.loadbalancer.server.port=9001"
+      - "traefik.http.routers.minio-livekit.service=minio-livekit"
+      - "traefik.http.routers.cdn-livekit.rule=Host(`cdn-livekit.workadventure.localhost`)"
+      - "traefik.http.routers.cdn-livekit.entryPoints=web"
+      - "traefik.http.services.cdn-livekit.loadbalancer.server.port=9000"
+      - "traefik.http.routers.cdn-livekit.service=cdn-livekit"
+    environment:
+      MINIO_ROOT_USER: "minio-access-key"
+      MINIO_ROOT_PASSWORD: "minio-secret-access-key"
+      MINIO_DEFAULT_BUCKETS: "livekit-recording:public"
+      MINIO_SITE_REGION: "eu-west-1"
+
+  reverse-proxy:
+    networks:
+      default:
+        aliases:
+          - "livekit.workadventure.localhost"
+          - "egress.workadventure.localhost"
+
+  back:
+    environment:
+      LIVEKIT_HOST: "http://livekit.workadventure.localhost"
+      LIVEKIT_API_KEY: "devkey"
+      LIVEKIT_API_SECRET: "12345678901234567890123456789012"
+      LIVEKIT_WS_URL: "ws://livekit.workadventure.localhost"
+      EGRESS_HOST: "http://egress.workadventure.localhost"
+
+
+

@@ -11,7 +11,7 @@ export class ChatUserProvider implements UserProviderInterface {
             [chat.directRoomsUsers, this._searchText],
             ([users, searchText]) => {
                 return (
-                    users?.filter((user) => {
+                    users.filter((user) => {
                         return user?.username?.toLocaleLowerCase().includes(searchText.toLocaleLowerCase());
                     }) || []
                 );

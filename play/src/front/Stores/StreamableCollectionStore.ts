@@ -10,8 +10,14 @@ import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
-import { peerStore, screenSharingStreamStore } from "./PeerStore";
+import {
+    livekitScreenShareStreamElementsStore,
+    livekitVideoStreamElementsStore,
+    peerElementsStore,
+    screenSharingStreamStore,
+} from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreensStore";
@@ -34,6 +40,8 @@ import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 export interface MediaStoreStreamable {
     type: "mediaStore";
     readonly streamStore: Readable<MediaStream | undefined>;
+    readonly attach: (container: HTMLVideoElement) => void;
+    readonly detach: (container: HTMLVideoElement) => void;
 }
 
 export interface JitsiTrackStreamable {
@@ -72,7 +80,15 @@ export interface Streamable {
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
+    readonly usePresentationMode: boolean;
 }
+
+//TODO : revoir le nom
+export type ExtendedStreamable = Streamable & {
+    player: RemotePlayerData | undefined;
+    userId: number;
+    media: MediaStoreStreamable;
+};
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
     gameSceneStore,
@@ -112,12 +128,34 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 });
 
 export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+    const media = {
+        type: "mediaStore" as const,
+        streamStore: localstreamStoreValue,
+        videoElementUnsubscribers: new Map<HTMLVideoElement, () => void>(),
+        attach: (container: HTMLVideoElement) => {
+            const unsubscribe = localstreamStoreValue.subscribe((stream) => {
+                if (stream) {
+                    container.srcObject = stream;
+                }
+            });
+            // Store the unsubscribe function in our Map
+            media.videoElementUnsubscribers.set(container, unsubscribe);
+        },
+        detach: (container: HTMLVideoElement) => {
+            // Clean up the stream
+            container.srcObject = null;
+            // Call the unsubscribe function if it exists and remove it from the Map
+            const unsubscribe = media.videoElementUnsubscribers.get(container);
+            if (unsubscribe) {
+                unsubscribe();
+                media.videoElementUnsubscribers.delete(container);
+            }
+        },
+    };
+
     return {
         uniqueId: "-1",
-        media: {
-            type: "mediaStore" as const,
-            streamStore: localstreamStoreValue,
-        },
+        media,
         volumeStore: localVolumeStore,
         hasVideo: requestedCameraState,
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
@@ -132,6 +170,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         muteAudio: true,
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
+        usePresentationMode: false,
     };
 });
 
@@ -143,7 +182,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
         [
             broadcastTracksStore,
             screenSharingStreamStore,
-            peerStore,
+            peerElementsStore,
             screenSharingLocalMedia,
             scriptingVideoStore,
             myCameraStore,
@@ -151,12 +190,14 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             myCameraPeerStore,
             cameraEnergySavingStore,
             silentStore,
+            livekitVideoStreamElementsStore,
+            livekitScreenShareStreamElementsStore,
         ],
         (
             [
                 $broadcastTracksStore,
                 $screenSharingStreamStore,
-                $peerStore,
+                $peerElementsStore,
                 $screenSharingLocalMedia,
                 $scriptingVideoStore,
                 $myCameraStore,
@@ -164,6 +205,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 $myCameraPeerStore,
                 $cameraEnergySavingStore,
                 $silentStore,
+                $livekitVideoStreamElementsStore,
+                $livekitScreenShareStreamElementsStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, Streamable>();
@@ -171,7 +214,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (peer instanceof ScreenSharingPeer) {
+                if (peer instanceof ScreenSharingPeer || peer.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -184,7 +227,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             }
 
             $screenSharingStreamStore.forEach(addPeer);
-            $peerStore.forEach(addPeer);
+
+            $peerElementsStore.forEach(addPeer);
             $scriptingVideoStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
@@ -211,6 +255,11 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             ) {
                 addPeer($screenSharingLocalMedia);
             }
+
+            $livekitVideoStreamElementsStore.forEach(addPeer);
+
+            // Add LiveKit screen share streams
+            $livekitScreenShareStreamElementsStore.forEach(addPeer);
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
@@ -239,15 +288,21 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, screenSharingStreamStore, peerStore, scriptingVideoStore, silentStore],
-    ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $scriptingVideoStore, $silentStore]) => {
+    [
+        broadcastTracksStore,
+        livekitVideoStreamElementsStore,
+        livekitScreenShareStreamElementsStore,
+        scriptingVideoStore,
+        silentStore,
+    ],
+    ([$broadcastTracksStore, $screenSharingStreamStore, $peerElementsStore, $scriptingVideoStore, $silentStore]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;
         }
 
         // Check if we have any peers
-        if ($peerStore.size > 0) {
+        if ($peerElementsStore.length > 0) {
             return true;
         }
 
@@ -259,7 +314,7 @@ export const isInRemoteConversation = derived(
         }
 
         // Check if we have any screen sharing streams
-        if ($screenSharingStreamStore.size > 0) {
+        if ($screenSharingStreamStore.length > 0) {
             return true;
         }
 
