@@ -411,12 +411,13 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             case SayMessageType.ThinkingCloud: {
                 const thinkElement = new ThinkingCloud({
-                    text: text, //"Hello, I'm thinking about something quite long. It should wrap nicely!",
+                    text: text,
                     maxWidth: 200,
                     fontSize: 11,
                     cornerRadius: 10,
                     padding: 12,
                     fillColor: 0xffffff,
+                    fillAlpha: 0.8,
                 }).getElement();
                 this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 60, thinkElement);
                 this.add(this.bubble);
