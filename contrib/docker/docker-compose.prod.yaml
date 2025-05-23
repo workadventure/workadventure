@@ -55,7 +55,7 @@ services:
       - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
       - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - START_ROOM_URL
-      - OPID_PROMPT=login
+      - OPID_PROMPT
       - OPID_WOKA_NAME_POLICY
       - OPID_CLIENT_ID
       - OPID_CLIENT_SECRET
