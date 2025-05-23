@@ -8,12 +8,10 @@ import { WebRTCState } from "./WebRTCState";
 export class DefaultCommunicationState implements ICommunicationState {
     private rxJsUnsubscribers: Subscription[] = [];
     constructor(private space: SpaceInterface) {
-        
         this.rxJsUnsubscribers.push(
             this.space
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
-                    
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
                         const nextState = new WebRTCState(this.space);
                         this.space.spacePeerManager.setState(nextState);

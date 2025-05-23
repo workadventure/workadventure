@@ -191,7 +191,7 @@ export class LiveKitRoom {
                 });
             })
         );
-        
+
         this.unsubscribers.push(
             this.microphoneDeviceIdStore.subscribe((deviceId) => {
                 if (!this.localParticipant) {
