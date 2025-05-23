@@ -716,6 +716,7 @@ div.emoji-picker {
     border-radius: 20px; 
     padding: 20px;
     max-width: 150px; 
+    min-width: 50px;
     word-wrap: break-word;
     padding: 12px;
 }
@@ -737,6 +738,7 @@ div.emoji-picker {
 
 .thinking-text {
     font-weight: 500;
+    width: 100%;
     font-family: "Comic Sans MS", "Comic Sans", cursive;
     font-size: 12px;
     color: #000000;
@@ -745,13 +747,13 @@ div.emoji-picker {
 
 .thinking-tail {
     position: absolute;
-    bottom: -30px;
-    left: 50%;
+    bottom: -25px;
+    left: 65%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
 }
 
 .circle {
@@ -764,17 +766,17 @@ div.emoji-picker {
 .circle1 {
     width: 10px;
     height: 10px;
-    transform: translateX(calc(10px + 8px));
+    transform: translateX(calc(7px));
 }
 
 .circle2 {
     width: 8px;
     height: 8px;
-    transform: translateX(calc(10px + 5px));
+    transform: translateX(calc(5px));
 }
 
 .circle3 {
     width: 6px;
     height: 6px;
-    transform: translateX(calc(10px));
+    transform: translateX(calc(0px));
 }

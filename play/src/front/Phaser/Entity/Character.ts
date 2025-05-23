@@ -419,7 +419,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                     fillColor: 0xffffff,
                     fillAlpha: 0.8,
                 }).getElement();
-                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 60, thinkElement);
+                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 70, thinkElement);
                 this.add(this.bubble);
                 break;
             }
