@@ -693,7 +693,9 @@ div.emoji-picker {
 }
 
 .say-bubble{
-    font-weight: 600;
+    font-weight: 500;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    text-align: center;
 }
 
 .say-bubble::after {
@@ -716,7 +718,6 @@ div.emoji-picker {
     max-width: 150px; 
     word-wrap: break-word;
     padding: 12px;
-    font-weight: 600;
 }
 
 .thinking-cloud::before {
@@ -735,7 +736,8 @@ div.emoji-picker {
 }
 
 .thinking-text {
-    font-family: Arial, sans-serif;
+    font-weight: 500;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
     font-size: 12px;
     color: #000000;
     text-align: center;
