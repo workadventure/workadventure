@@ -100,7 +100,6 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        //TODO : Remplacer par livekitScreenShareStreamStore
         this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
                 if (media.type === "mediaStore") {

@@ -1,4 +1,5 @@
 import { Subscription } from "rxjs";
+import * as Sentry from "@sentry/svelte";
 import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
 import { SpaceInterface } from "../SpaceInterface";
 import { SimplePeerConnectionInterface, ICommunicationState } from "./SpacePeerManager";
@@ -32,11 +33,12 @@ export class LivekitState implements ICommunicationState {
             this.space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.executeSwitchMessage.strategy === CommunicationType.WEBRTC) {
                     if (!this._nextState) {
+                        //TODO : voir si on peut throw une erreur ici
                         //throw new Error("Next state is null");
                         console.error("Next state is null");
                         return;
                     }
-                    // TODO: determine if destroy() should be called here or at the end of the switch
+
                     this.space.spacePeerManager.setState(this._nextState);
                     console.log("switch back to webrtc");
                 }

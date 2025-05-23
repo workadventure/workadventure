@@ -219,8 +219,6 @@ export class LiveKitParticipant {
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
         this.space.videoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
-
-        //TODO : faire le attach detach dans cette partie ?
     }
 
     private async updateLivekitScreenShareStreamStore() {

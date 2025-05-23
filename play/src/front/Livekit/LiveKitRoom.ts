@@ -24,7 +24,6 @@ export class LiveKitRoom {
         private serverUrl: string,
         private token: string,
         private space: SpaceInterface,
-        //TODO : voir si on ne doit pas utiliser le requestedCameraIdStore a la place de requestedCameraState / meme chose pour le reste
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -122,7 +121,6 @@ export class LiveKitRoom {
 
         this.unsubscribers.push(
             this.microphoneStateStore.subscribe((state) => {
-                //TODO : voir si on a la permission de partager l'ecran
                 if (!this.localParticipant) {
                     console.error("Local participant not found");
                     Sentry.captureException(new Error("Local participant not found"));
@@ -160,7 +158,6 @@ export class LiveKitRoom {
                     // Create a new track instance
                     this.localVideoTrack = new LocalVideoTrack(streamResult.getVideoTracks()[0]);
 
-                    //TODO : revoir layers pour le screen sharing
                     this.localParticipant
                         .publishTrack(this.localVideoTrack, {
                             source: Track.Source.ScreenShare,
@@ -194,7 +191,7 @@ export class LiveKitRoom {
                 });
             })
         );
-        //TODO : voir si on a besoin de set la sortie audio
+        
         this.unsubscribers.push(
             this.microphoneDeviceIdStore.subscribe((deviceId) => {
                 if (!this.localParticipant) {

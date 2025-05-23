@@ -29,7 +29,6 @@ export class LivekitConnection {
                     .prepareConnection()
                     .then(() => {
                         if (message.livekitInvitationMessage.shouldJoinRoomImmediately) {
-                            //TODO : utiliser this.joinRoom / duplication de code !
                             this.joinRoom()
                                 .catch((err) => {
                                     console.error("An error occurred in executeSwitchMessage", err);
