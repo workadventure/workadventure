@@ -24,10 +24,12 @@ export class WebRTCState extends CommunicationState {
         }
 
         if (this.isSwitching()) {
-            this._nextState?.handleUserAdded(user, this.isSwitching());
+            this._nextState?.handleUserAdded(user);
             return;
         }
-        super.handleUserAdded(user, this.isSwitching());
+
+        //TODO : pas utile de passer le switchInProgress ici toujours false / voir
+        super.handleUserAdded(user);
     }
 
     handleUserDeleted(user: SpaceUser): void {
@@ -55,8 +57,7 @@ export class WebRTCState extends CommunicationState {
         this._nextState = new LivekitState(this._space, this._communicationManager);
 
         this._readyUsers.add(user.spaceUserId);
-        this.notifyUserOfCurrentStrategy(user, this._nextCommunicationType);
-        this._nextState.handleUserAdded(user, false);
+        this._nextState.handleUserAdded(user);
 
         this.notifyAllUsersToPrepareSwitchToNextState();
         this.setupSwitchTimeout();
@@ -77,6 +78,6 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected afterSwitchAction(): void {
-        this._currentStrategy.initialize();
+        this._currentStrategy.initialize(this._readyUsers);
     }
 }

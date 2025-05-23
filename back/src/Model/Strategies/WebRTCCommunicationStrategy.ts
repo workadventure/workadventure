@@ -67,7 +67,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return true;
     }
 
-    public addUser(newUser: SpaceUser, switchInProgress: boolean): void {
+    public addUser(newUser: SpaceUser): void {
         const existingUsers = this._space.getAllUsers().filter((user) => user.spaceUserId !== newUser.spaceUserId);
 
         existingUsers.forEach((existingUser) => {

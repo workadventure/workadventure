@@ -19,7 +19,7 @@ export abstract class CommunicationState implements ICommunicationState {
         protected readonly _currentStrategy: ICommunicationStrategy,
         protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC
     ) {
-        this.preparedSwitchAction();
+        this.preparedSwitchAction(this._readyUsers);
     }
     dispatchSwitchEvent(
         userId: string,
@@ -82,9 +82,9 @@ export abstract class CommunicationState implements ICommunicationState {
         }
     }
 
-    handleUserAdded(user: SpaceUser, switchInProgress = false): void {
+    handleUserAdded(user: SpaceUser): void {
         this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        this._currentStrategy.addUser(user, switchInProgress);
+        this._currentStrategy.addUser(user);
     }
     handleUserDeleted(user: SpaceUser): void {
         this._currentStrategy.deleteUser(user);
@@ -123,7 +123,7 @@ export abstract class CommunicationState implements ICommunicationState {
     protected abstract areAllUsersReady(): boolean;
 
     protected afterSwitchAction(): void {}
-    protected preparedSwitchAction(): void {}
+    protected preparedSwitchAction(readyUsers: Set<string>): void {}
     private completeSwitchEarly(): void {
         if (this._switchTimeout) {
             clearTimeout(this._switchTimeout);

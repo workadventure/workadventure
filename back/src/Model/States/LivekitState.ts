@@ -14,6 +14,7 @@ export class LivekitState extends CommunicationState {
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager
     ) {
+        //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
         super(_space, _communicationManager, new LivekitCommunicationStrategy(_space));
         this.SWITCH_TIMEOUT_MS = 5000;
     }
@@ -67,7 +68,7 @@ export class LivekitState extends CommunicationState {
         return this._readyUsers.size === this._space.getAllUsers().length;
     }
 
-    protected preparedSwitchAction(): void {
-        this._currentStrategy.initialize();
+    protected preparedSwitchAction(readyUsers: Set<string>): void {
+        this._currentStrategy.initialize(readyUsers);
     }
 }
