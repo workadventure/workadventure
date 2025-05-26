@@ -78,4 +78,8 @@ export class LivekitState implements ICommunicationState {
     shouldSynchronizeMediaState(): boolean {
         return true;
     }
+
+    dispatchSound(url: URL): Promise<void> {
+        return this.livekitConnection.dispatchSound(url);
+    }
 }

@@ -1,5 +1,14 @@
 import { MapStore } from "@workadventure/store-utils";
-import { LocalParticipant, LocalVideoTrack, Participant, VideoPresets, Room, RoomEvent, Track } from "livekit-client";
+import {
+    LocalParticipant,
+    LocalVideoTrack,
+    Participant,
+    VideoPresets,
+    Room,
+    RoomEvent,
+    Track,
+    LocalTrack,
+} from "livekit-client";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import {
@@ -12,12 +21,14 @@ import {
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
+import { INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 export class LiveKitRoom {
     private room: Room | undefined;
     private localParticipant: LocalParticipant | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     private localVideoTrack: LocalVideoTrack | undefined;
+    private dispatchSoundTrack: LocalTrack | undefined;
     private unsubscribers: Unsubscriber[] = [];
 
     constructor(
@@ -29,7 +40,8 @@ export class LiveKitRoom {
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
         private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
-        private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore
+        private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
+        private nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
     ) {}
 
     public async prepareConnection(): Promise<Room> {
@@ -304,6 +316,56 @@ export class LiveKitRoom {
                 participant.setActiveSpeaker(false);
             }
         });
+    }
+
+    //TODO : Tester la fonction
+    public async dispatchSound(url: URL): Promise<void> {
+        if (!this.localParticipant) {
+            console.error("Local participant not found");
+            Sentry.captureException(new Error("Local participant not found"));
+            return;
+        }
+
+        const audioContext = new AudioContext();
+
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        const destination = audioContext.createMediaStreamDestination();
+        const bufferSource = audioContext.createBufferSource();
+        bufferSource.buffer = audioBuffer;
+        bufferSource.start(0);
+        bufferSource.connect(destination);
+
+        if (this.dispatchSoundTrack) {
+            await this.localParticipant.unpublishTrack(this.dispatchSoundTrack);
+            this.dispatchSoundTrack = undefined;
+        }
+
+        const localTrack = await this.localParticipant.publishTrack(destination.stream.getAudioTracks()[0], {
+            //TODO : unknown ou screenshareAudio ??
+            source: Track.Source.Unknown,
+        });
+
+        this.dispatchSoundTrack = localTrack.track;
+
+        bufferSource.onended = () => {
+            this.nbSoundPlayedInBubbleStore.soundEnded();
+            if (!this.dispatchSoundTrack || !this.localParticipant) return;
+
+            this.localParticipant
+                .unpublishTrack(this.dispatchSoundTrack)
+                .then(() => {
+                    this.dispatchSoundTrack = undefined;
+                })
+                .catch((err) => {
+                    console.error("An error occurred while unpublishing track", err);
+                    Sentry.captureException(err);
+                });
+        };
+
+        this.nbSoundPlayedInBubbleStore.soundStarted();
     }
 
     public destroy() {

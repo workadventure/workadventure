@@ -23,6 +23,7 @@ export class ScriptingOutputAudioStreamManager {
             this.pcmStreamerResolved = true;
             this.pcmStreamerResolving = false;
             this.pcmStreamerDeferred.resolve(pcmStreamer);
+            //TODO : livekit ??
             simplePeer.dispatchStream(pcmStreamer.getMediaStream());
         });
 

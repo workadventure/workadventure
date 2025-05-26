@@ -512,6 +512,15 @@ export class ProximityChatRoom implements ChatRoom {
         shouldRestoreChatStateStore.set(true);
     }
 
+    public dispatchSound(url: URL): Promise<void> {
+        if (!this._space) {
+            console.error("Trying to dispatch sound in a space that is not joined");
+            Sentry.captureMessage("Trying to dispatch sound in a space that is not joined");
+            return Promise.resolve();
+        }
+        return this._space.dispatchSound(url);
+    }
+
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
     }

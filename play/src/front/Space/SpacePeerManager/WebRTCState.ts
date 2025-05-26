@@ -75,4 +75,8 @@ export class WebRTCState implements ICommunicationState {
     shouldSynchronizeMediaState(): boolean {
         return true;
     }
+
+    dispatchSound(url: URL): Promise<void> {
+        return this._peer.dispatchSound(url);
+    }
 }

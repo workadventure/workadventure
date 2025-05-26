@@ -56,4 +56,5 @@ export interface SpaceInterface {
     //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
     getLastSpaceFilter(): SpaceFilter | undefined;
     get spacePeerManager(): SpacePeerManager;
+    dispatchSound(url: URL): Promise<void>;
 }

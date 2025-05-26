@@ -184,7 +184,6 @@ import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
-import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -3249,15 +3248,14 @@ ${escapedMessage}
             scriptUtils.goToPage("/login");
         });
 
-        iframeListener.registerAnswerer(
-            "playSoundInBubble",
-            /*async*/ (message) => {
-                const soundUrl = new URL(message.url, this.mapUrlFile);
-                console.error("playSoundInBubble", soundUrl);
-                //TODO: see how to replace simplepeer with the current space
-                //await this.simplePeer.dispatchSound(soundUrl);
-            }
-        );
+        iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
+            const soundUrl = new URL(message.url, this.mapUrlFile);
+            console.error("playSoundInBubble", soundUrl);
+            //TODO: see how to replace simplepeer with the current space
+            //TODO: gestion error ??
+            const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
+            await proximityChatRoom.dispatchSound(soundUrl);
+        });
     }
 
     private setPropertyLayer(
@@ -3966,7 +3964,6 @@ ${escapedMessage}
         return this._proximityChatRoomDeferred.promise;
     }
 
-    //get spaceStore(): Promise<SpaceProviderInterface> {
     get spaceRegistry(): SpaceRegistryInterface {
         if (!this._spaceRegistry) {
             throw new Error("_spaceRegistry not yet initialized");
@@ -3990,14 +3987,6 @@ ${escapedMessage}
             throw new Error("this.worldUserProvider not yet initialized");
         }
         return this.worldUserProvider.userCount;
-    }
-
-    get videoStreamStore(): Readable<Map<string, ExtendedStreamable>> {
-        return this.spaceRegistry.videoStreamStore;
-    }
-
-    get screenShareStreamStore(): Readable<Map<string, ExtendedStreamable>> {
-        return this.spaceRegistry.screenShareStreamStore;
     }
 
     getStartPositionNames(): string[] {

@@ -267,4 +267,9 @@ export class Space implements SpaceInterface {
 
         return undefined;
     }
+
+    public async dispatchSound(url: URL): Promise<void> {
+        //TODO : voir si on a toujours besoin du getter , on initialise le peerManager dans le constructor
+        await this.spacePeerManager.dispatchSound(url);
+    }
 }

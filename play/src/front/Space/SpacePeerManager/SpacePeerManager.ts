@@ -14,6 +14,7 @@ export interface ICommunicationState {
     destroy(): void;
     completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
+    dispatchSound(url: URL): Promise<void>;
 }
 
 // -------------------- Peer Manager --------------------
@@ -101,6 +102,10 @@ export class SpacePeerManager {
         state.completeSwitch();
         this._communicationState = state;
     }
+
+    dispatchSound(url: URL): Promise<void> {
+        return this._communicationState.dispatchSound(url);
+    }
 }
 // -------------------- Interfaces --------------------
 
@@ -114,6 +119,7 @@ export interface SimplePeerConnectionInterface {
     videoPeerRemoved: Observable<MediaStoreStreamable>;
     cleanupStore(): void;
     removePeer(userId: string): void;
+    dispatchSound(url: URL): Promise<void>;
 }
 
 export interface PeerFactoryInterface {

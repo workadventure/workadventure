@@ -80,6 +80,16 @@ export class LivekitConnection {
         await this.livekitRoom.joinRoom();
     }
 
+    async dispatchSound(url: URL): Promise<void> {
+        if (!this.livekitRoom) {
+            console.error("LivekitRoom not found");
+            Sentry.captureException(new Error("LivekitRoom not found"));
+            throw new Error("LivekitRoom not found");
+        }
+
+        await this.livekitRoom.dispatchSound(url);
+    }
+
     destroy() {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found");
