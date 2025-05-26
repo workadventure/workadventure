@@ -2,7 +2,7 @@ import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
+import { SpacePeerManager } from "../../Space/SpacePeerManager/SpacePeerManager";
 import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
@@ -21,7 +21,7 @@ export class ScriptingInputAudioStreamManager {
     private videoPeerAddedUnsubscriber: Subscription;
     private videoPeerRemovedUnsubscriber: Subscription;
 
-    constructor(simplePeer: SimplePeerConnectionInterface) {
+    constructor(spacePeerManager: SpacePeerManager) {
         this.startListeningToStreamInBubbleStreamUnsubscriber =
             iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
                 (async () => {
@@ -100,7 +100,8 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        this.videoPeerAddedUnsubscriber = simplePeer.videoPeerAdded.subscribe((media) => {
+        //TODO : voir si on doit exposer les videoPeerAdded et videoPeerRemoved dans le spacePeerManager
+        this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
                 if (media.type === "mediaStore") {
                     this.addMediaStreamStore(media.streamStore);
@@ -108,7 +109,7 @@ export class ScriptingInputAudioStreamManager {
             }
         });
 
-        this.videoPeerRemovedUnsubscriber = simplePeer.videoPeerRemoved.subscribe((media) => {
+        this.videoPeerRemovedUnsubscriber = spacePeerManager.videoPeerRemoved.subscribe((media) => {
             if (this.isListening) {
                 if (media.type === "mediaStore") {
                     this.removeMediaStreamStore(media.streamStore);

@@ -4,13 +4,18 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { CommunicationMessageType, LivekitState } from "./LivekitState";
-import { SimplePeerConnectionInterface, PeerFactoryInterface, ICommunicationState } from "./SpacePeerManager";
+import {
+    SimplePeerConnectionInterface,
+    PeerFactoryInterface,
+    ICommunicationState,
+    StreamableSubjects,
+} from "./SpacePeerManager";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
-    create: (space: SpaceInterface) => {
+    create: (_space: SpaceInterface, _streamableSubjects: StreamableSubjects) => {
         const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
-        const peer = new SimplePeer(space, playerRepository);
-        const spaceFilter = space.getLastSpaceFilter();
+        const peer = new SimplePeer(_space, playerRepository, _streamableSubjects);
+        const spaceFilter = _space.getLastSpaceFilter();
         if (spaceFilter) {
             peer.setSpaceFilter(spaceFilter);
         }
@@ -21,39 +26,43 @@ export const defaultPeerFactory: PeerFactoryInterface = {
 export class WebRTCState implements ICommunicationState {
     private _peer: SimplePeerConnectionInterface;
     private _nextState: LivekitState | null = null;
-    private rxJsUnsubscribers: Subscription[] = [];
+    private _rxJsUnsubscribers: Subscription[] = [];
 
-    constructor(private space: SpaceInterface, private peerFactory: PeerFactoryInterface = defaultPeerFactory) {
-        this._peer = this.peerFactory.create(this.space);
+    constructor(
+        private _space: SpaceInterface,
+        private _streamableSubjects: StreamableSubjects,
+        private _peerFactory: PeerFactoryInterface = defaultPeerFactory
+    ) {
+        this._peer = this._peerFactory.create(this._space, this._streamableSubjects);
 
-        this.rxJsUnsubscribers.push(
-            this.space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
+        this._rxJsUnsubscribers.push(
+            this._space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState === null) {
-                    this._nextState = new LivekitState(this.space);
+                    this._nextState = new LivekitState(this._space, this._streamableSubjects);
                 }
             })
         );
 
-        this.rxJsUnsubscribers.push(
-            this.space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
+        this._rxJsUnsubscribers.push(
+            this._space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.executeSwitchMessage.strategy === CommunicationType.LIVEKIT) {
                     if (!this._nextState) {
                         //throw new Error("Next state is null");
                         console.error("Next state is null");
                         return;
                     }
-                    this.space.spacePeerManager.setState(this._nextState);
+                    this._space.spacePeerManager.setState(this._nextState);
                 }
             })
         );
 
-        this.rxJsUnsubscribers.push(
-            this.space
+        this._rxJsUnsubscribers.push(
+            this._space
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
-                        const nextState = new LivekitState(this.space);
-                        this.space.spacePeerManager.setState(nextState);
+                        const nextState = new LivekitState(this._space, this._streamableSubjects);
+                        this._space.spacePeerManager.setState(nextState);
                     }
                 })
         );

@@ -14,6 +14,7 @@ import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -52,6 +53,7 @@ export class LiveKitParticipant {
         public participant: Participant,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
+        private _streamableSubjects: StreamableSubjects,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
         this.listenToParticipantEvents();
@@ -178,6 +180,11 @@ export class LiveKitParticipant {
                     videoElement.remove();
                 });
             }
+
+            const oldVideoStream = this.space.videoStreamStore.get(this._spaceUser.spaceUserId);
+            if (oldVideoStream) {
+                this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
+            }
         } else if (publication.source === Track.Source.ScreenShare) {
             // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
             if (this._screenShareRemoteTrack === track) {
@@ -188,6 +195,11 @@ export class LiveKitParticipant {
                     track.detach(screenElement);
                     screenElement.remove();
                 });
+            }
+
+            const oldScreenShareStream = this.space.screenShareStreamStore.get(this._spaceUser.spaceUserId);
+            if (oldScreenShareStream) {
+                this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
             }
         }
     }
@@ -218,12 +230,28 @@ export class LiveKitParticipant {
 
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
+        const oldVideoStream = this.space.videoStreamStore.get(this._spaceUser.spaceUserId);
+
+        if (oldVideoStream) {
+            this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
+        }
+
         this.space.videoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+
+        this._streamableSubjects.videoPeerAdded.next(videoStream.media);
     }
 
     private async updateLivekitScreenShareStreamStore() {
         const screenShareStream = await this.getScreenShareStream();
+        const oldScreenShareStream = this.space.screenShareStreamStore.get(this._spaceUser.spaceUserId);
+
+        if (oldScreenShareStream) {
+            this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
+        }
+
         this.space.screenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
+
+        this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.media);
     }
 
     public async getVideoStream(): Promise<ExtendedStreamable> {

@@ -22,6 +22,7 @@ import {
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
+import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
 export class LiveKitRoom {
     private room: Room | undefined;
@@ -35,6 +36,7 @@ export class LiveKitRoom {
         private serverUrl: string,
         private token: string,
         private space: SpaceInterface,
+        private _streamableSubjects: StreamableSubjects,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -89,7 +91,7 @@ export class LiveKitRoom {
                         }
                         this.participants.set(
                             spaceUser.uuid,
-                            new LiveKitParticipant(participant, this.space, spaceUser)
+                            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
                         );
                     });
                 })
@@ -292,7 +294,10 @@ export class LiveKitRoom {
                     console.info("spaceUser not found for participant", id);
                     return;
                 }
-                this.participants.set(participant.sid, new LiveKitParticipant(participant, this.space, spaceUser));
+                this.participants.set(
+                    participant.sid,
+                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                );
             })
             .catch((err) => {
                 console.error("An error occurred while getting spaceUser", err);

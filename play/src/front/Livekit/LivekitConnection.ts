@@ -2,6 +2,7 @@ import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/LivekitState";
+import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 //TODO : trouver le moyen de l'avoir coté front et back
@@ -14,7 +15,7 @@ export enum CommunicationType {
 export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
-    constructor(private space: SpaceInterface) {
+    constructor(private space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
         this.initialize();
     }
 
@@ -23,7 +24,7 @@ export class LivekitConnection {
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
-                this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space);
+                this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space, this._streamableSubjects);
 
                 this.livekitRoom
                     .prepareConnection()

@@ -1,6 +1,6 @@
 // -------------------- Default Implementations --------------------x
 
-import { Observable } from "rxjs";
+import { Subject } from "rxjs";
 import { Readable, Unsubscriber } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
@@ -20,11 +20,37 @@ export interface ICommunicationState {
 // -------------------- Peer Manager --------------------
 //Communication manager ?
 
+export interface StreamableSubjects {
+    videoPeerAdded: Subject<MediaStoreStreamable>;
+    videoPeerRemoved: Subject<MediaStoreStreamable>;
+    screenSharingPeerAdded: Subject<MediaStoreStreamable>;
+    screenSharingPeerRemoved: Subject<MediaStoreStreamable>;
+}
+
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
     public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
     public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+
+    private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
+    public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
+
+    private readonly _videoPeerRemoved = new Subject<MediaStoreStreamable>();
+    public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
+
+    private readonly _screenSharingPeerAdded = new Subject<MediaStoreStreamable>();
+    public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
+
+    private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
+    public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
+
+    private readonly _streamableSubjects = {
+        videoPeerAdded: this._videoPeerAdded,
+        videoPeerRemoved: this._videoPeerRemoved,
+        screenSharingPeerAdded: this._screenSharingPeerAdded,
+        screenSharingPeerRemoved: this._screenSharingPeerRemoved,
+    };
 
     constructor(
         private space: SpaceInterface,
@@ -32,7 +58,7 @@ export class SpacePeerManager {
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
-        this._communicationState = new DefaultCommunicationState(this.space);
+        this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
     }
 
     private synchronizeMediaState(): void {
@@ -115,13 +141,11 @@ export interface SimplePeerConnectionInterface {
     setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
     dispatchStream(mediaStream: MediaStream): void;
-    videoPeerAdded: Observable<MediaStoreStreamable>;
-    videoPeerRemoved: Observable<MediaStoreStreamable>;
     cleanupStore(): void;
     removePeer(userId: string): void;
     dispatchSound(url: URL): Promise<void>;
 }
 
 export interface PeerFactoryInterface {
-    create(space: SpaceInterface): SimplePeerConnectionInterface;
+    create(space: SpaceInterface, streamableSubjects: StreamableSubjects): SimplePeerConnectionInterface;
 }
