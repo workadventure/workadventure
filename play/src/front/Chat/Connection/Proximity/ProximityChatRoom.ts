@@ -378,12 +378,10 @@ export class ProximityChatRoom implements ChatRoom {
         console.log(">>>> joinSpace");
         console.time(">>>> joinLivekitRoom");
         this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
-        const proximityChatRoomSimplePeer = this._space.simplePeer;
-        if (proximityChatRoomSimplePeer) {
-            // Set up manager of audio streams received by the scripting API (useful for bots)
-            this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(proximityChatRoomSimplePeer);
-            this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(proximityChatRoomSimplePeer);
-        }
+
+        // Set up manager of audio streams received by the scripting API (useful for bots)
+        this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space.spacePeerManager);
+        this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);
 
         this._spaceWatcher = this._space.watchAllUsers();
         bindMuteEventsToSpace(this._space, this._spaceWatcher);
