@@ -176,9 +176,9 @@ import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEn
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import {
-    livekitScreenShareStreamStore,
-    livekitVideoStreamElementsStore,
-    livekitVideoStreamStore,
+    videoStreamElementsStore,
+    videoStreamStore,
+    screenShareStreamStore,
 } from "../../Stores/PeerStore";
 import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
@@ -1591,8 +1591,8 @@ export class GameScene extends DirtyScene {
                 this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
                 this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
-                livekitVideoStreamStore.set(this._spaceRegistry.videoStreamStore);
-                livekitScreenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
+                videoStreamStore.set(this._spaceRegistry.videoStreamStore);
+                screenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
 
                 gameManager
                     .getChatConnection()
@@ -1801,7 +1801,6 @@ export class GameScene extends DirtyScene {
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getSpaceUserId(),
                     this._spaceRegistry,
-                    //this.simplePeer,
                     iframeListener
                 );
 
@@ -2146,7 +2145,7 @@ export class GameScene extends DirtyScene {
         let screenWakeRelease: (() => Promise<void>) | undefined;
         let alreadyInBubble = false;
         const pendingConnects = new Set<number>();
-        this.peerStoreUnsubscriber = livekitVideoStreamElementsStore.subscribe((peers) => {
+        this.peerStoreUnsubscriber = videoStreamElementsStore.subscribe((peers) => {
             const newPeerNumber = peers.length;
             const newUsers = new Map<number, MessageUserJoined>();
             const players = this.remotePlayersRepository.getPlayers();
@@ -2169,28 +2168,23 @@ export class GameScene extends DirtyScene {
 
                 statusChanger.applyInteractionRules();
 
-                if (peer instanceof VideoPeer) {
-                    pendingConnects.add(peer.userId);
-                    setTimeout(() => {
-                        // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                        pendingConnects.delete(peer.userId);
-                        /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                pendingConnects.add(peer.userId);
+                setTimeout(() => {
+                    // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                    pendingConnects.delete(peer.userId);
+                    /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                    alreadyInBubble = true;
+                    }*/
+                }, 5000);
+
+                peer.once("connect", () => {
+                    pendingConnects.delete(peer.userId);
+                    if (pendingConnects.size === 0) {
                         iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
                         alreadyInBubble = true;
-                        }*/
-                    }, 5000);
-
-                    peer.once("connect", () => {
-                        pendingConnects.delete(peer.userId);
-                        if (pendingConnects.size === 0) {
-                            iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                            alreadyInBubble = true;
-                        }
-                    });
-                } else {
-                    //TODO: voir si on a une meilleur solution que le else
-                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                }
+                    }
+                });
             }
 
             // Left
@@ -2215,37 +2209,27 @@ export class GameScene extends DirtyScene {
                 if (newUser) {
                     if (alreadyInBubble) {
                         const peer = peers.find((p) => p.userId === newUser.userId);
-                        if (peer instanceof VideoPeer) {
-                            peer?.once("connect", () => {
-                                iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                            });
-                        } else {
-                            //TODO: voir si on a une meilleur solution que le else
+                        peer?.once("connect", () => {
                             iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                        }
+                        });
                     } else {
                         const peer = peers.find((p) => p.userId === newUser.userId);
-                        if (peer && peer instanceof VideoPeer) {
-                            pendingConnects.add(newUser.userId);
-                            setTimeout(() => {
-                                // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                                pendingConnects.delete(newUser.userId);
-                                /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }*/
-                            }, 5000);
-                            peer.once("connect", () => {
-                                pendingConnects.delete(newUser.userId);
-                                if (pendingConnects.size === 0) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }
-                            });
-                        } else {
-                            //TODO : voir si on a une meilleur solution que le else
-                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                        }
+                        pendingConnects.add(newUser.userId);
+                        setTimeout(() => {
+                            // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                            pendingConnects.delete(newUser.userId);
+                            /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                alreadyInBubble = true;
+                            }*/
+                        }, 5000);
+                        peer?.once("connect", () => {
+                            pendingConnects.delete(newUser.userId);
+                            if (pendingConnects.size === 0) {
+                                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                alreadyInBubble = true;
+                            }
+                        });
                     }
                 }
             }
@@ -3251,7 +3235,6 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             console.error("playSoundInBubble", soundUrl);
-            //TODO: see how to replace simplepeer with the current space
             //TODO: gestion error ??
             const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
             await proximityChatRoom.dispatchSound(soundUrl);

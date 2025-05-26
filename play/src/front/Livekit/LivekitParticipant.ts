@@ -270,6 +270,9 @@ export class LiveKitParticipant {
             volumeStore: writable(undefined),
             player,
             userId: this._spaceUser.userId,
+            once(event, callback) {
+                callback();
+            },
         };
     }
 
@@ -321,6 +324,9 @@ export class LiveKitParticipant {
             volumeStore: writable(undefined),
             player,
             userId: this._spaceUser.userId,
+            once(event, callback) {
+                callback();
+            },
         };
 
         this.highlightedEmbedScreenStore.toggleHighlight(streamble);

@@ -190,4 +190,8 @@ export class JitsiTrackStreamWrapper implements Streamable {
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
     }
+    
+    once(event: string, callback: (...args: unknown[]) => void) {
+        callback();
+    }
 }
