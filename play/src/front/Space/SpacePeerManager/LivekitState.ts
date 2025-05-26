@@ -19,7 +19,7 @@ export class LivekitState implements ICommunicationState {
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;
     constructor(private _space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
-        this.livekitConnection = new LivekitConnection(this._space);
+        this.livekitConnection = new LivekitConnection(this._space, this._streamableSubjects);
 
         this.rxJsUnsubscribers.push(
             this._space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
@@ -50,7 +50,7 @@ export class LivekitState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
-                        const nextState = new WebRTCState(this._space);
+                        const nextState = new WebRTCState(this._space, this._streamableSubjects);
                         this._space.spacePeerManager.setState(nextState);
                     }
                 })

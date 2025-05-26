@@ -33,8 +33,6 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
  *
  */
 
-//TODO : Profiter que le simplePeer soit lié au space pour refacto et enlever les dépendance
-
 export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly _unsubscribers: (() => void)[] = [];
     private readonly _rxJsUnsubscribers: Subscription[] = [];
@@ -48,7 +46,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _space: SpaceInterface,
         private _remotePlayersRepository: RemotePlayersRepository,
         private _streamableSubjects: StreamableSubjects,
-        //TODO : voir si on mets pas tout dans un objet
         private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
         private _playersStore = playersStore,
         private _analyticsClient = analyticsClient,
