@@ -130,28 +130,28 @@
 
 <!-- TODO HUGO : REMOVE !important -->
 <div
-    class="w-full h-3/4 top-0 flex-col gap-3 @md/main-layout:flex-row [@media(min-height:953px)]/main-layout:h-3/4 @md/main-layout:w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex right-0 left-0 bottom-0 z-[900] m-auto overflow-hidden font-main"
+    class="h-3/4 top-0 flex-col gap-3 @md/main-layout:flex-row [@media(min-height:953px)]/main-layout:h-3/4 w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex right-0 left-0 bottom-0 z-[900] m-auto overflow-hidden font-main"
     transition:fly={{ y: 1000, duration: 150 }}
     on:blur={closeMenu}
 >
-    <div class="menu-nav-sidebar rounded-xl overflow-hidden bg-contrast/80 backdrop-blur min-w-[200px] relative">
+    <div class="menu-nav-sidebar rounded-lg @md/main-layout:rounded-xl overflow-hidden bg-contrast/80 backdrop-blur min-w-[200px] relative">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
         <nav
-            class="mt-0 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col w-full @md/main-layout:w-full items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto p-4 gap-1"
+            class="mt-0 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col w-full @md/main-layout:w-full items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto p-2.5 @md/main-layout:p-3 gap-1"
         >
             {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
                 {@const visibleStore = submenu.visible}
                 {#if get(visibleStore)}
                     <div class="flex flex-row items-center justify-center gap-1 w-full group/menu-item relative">
 
-                        <div class="@md/main-layout: py-1 h-full flex items-center justify-center absolute -left-2">
-                            <div class="h-0 bg-secondary rounded-full w-1 group-hover/menu-item:h-full transition-all duration-300 z-10 {activeSubMenu ===
-                            submenu ? 'h-full' : '' } "></div>
+                        <div class=" w-full @md/main-layout:h-full h-1 @md/main-layout:w-1 @md/main-layout:top-0 px-1 @md/main-layout:px-0 @md/main-layout:py-1 flex items-center justify-center absolute -bottom-2 @md/main-layout:-left-2">
+                            <div class="h-1 @md/main-layout:w-1 bg-secondary rounded-full group-hover/menu-item:h-full transition-all duration-300 z-10 {activeSubMenu ===
+                            submenu ? 'w-full @md/main-layout:h-full' : 'w-0 @md/main-layout:h-0' } "></div>
                         </div>
 
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            class="menu-item-container group flex py-3 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md overflow-hidden {activeSubMenu ===
+                            class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-4 px-6 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                             submenu
                             ? 'active opacity-100 bg-contrast/50 text-white'
                             : 'opacity-60 hover:bg-white/10'}"
@@ -161,7 +161,7 @@
                                 <!-- <div class="left-gradient absolute top-0 left-0 h-full bg-gradient-to-r from-secondary to-transparent {activeSubMenu === submenu ? 'opacity-100 w-[5%]' : 'opacity-0 w-0'} transition-all duration-800">
                                 </div> -->
 
-                                <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex">
+                                <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap">
                                     {subMenuTranslations[i]}
                                 </button>
                                 <img
@@ -176,8 +176,8 @@
                         </div>
                     </div>
                 {/if}
-                {/each}
-                    </nav>
+            {/each}
+        </nav>
         <!-- <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
             <div>
                 <a href="https://workadventu.re/contact/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
@@ -243,8 +243,18 @@
             <svelte:component this={activeComponent} {...props} />
         </div>
     </div>
+    <div class="right-menu-side-bar w-fit h-full flex flex-col items-start justify-start">
+        <div class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit">
+            <ButtonClose on:click={closeMenu} size="md" />
+        </div>
+
+    </div>
 </div>
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
+
+    .menu-nav-sidebar nav::-webkit-scrollbar {
+      display: none;
+    }
 </style>
