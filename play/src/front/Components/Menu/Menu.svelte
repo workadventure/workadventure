@@ -24,6 +24,7 @@
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
+    import ButtonClose from "../Input/ButtonClose.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: ComponentType = ProfileSubMenu;
@@ -129,48 +130,54 @@
 
 <!-- TODO HUGO : REMOVE !important -->
 <div
-    class="w-full h-full top-0 flex-col @md/main-layout:flex-row @md/main-layout:rounded-xl [@media(min-height:953px)]/main-layout:h-3/4 @md/main-layout:w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 bottom-0 z-[900] m-auto backdrop-blur overflow-hidden font-main"
+    class="w-full h-3/4 top-0 flex-col gap-3 @md/main-layout:flex-row [@media(min-height:953px)]/main-layout:h-3/4 @md/main-layout:w-11/12 @2xl:max-w-screen-2xl close-window pointer-events-auto absolute flex right-0 left-0 bottom-0 z-[900] m-auto overflow-hidden font-main"
     transition:fly={{ y: 1000, duration: 150 }}
     on:blur={closeMenu}
 >
-    <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px] relative">
+    <div class="menu-nav-sidebar rounded-xl overflow-hidden bg-contrast/80 backdrop-blur min-w-[200px] relative">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
         <nav
-            class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
+            class="mt-0 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col w-full @md/main-layout:w-full items-stretch @md/main-layout:items-start overflow-auto h-full @md/main-layout:overflow-auto p-4 gap-1"
         >
             {#each $subMenusStore as submenu, i (`${submenu.key}_${submenu.type}`)}
                 {@const visibleStore = submenu.visible}
                 {#if get(visibleStore)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        class="menu-item-container group flex py-4 px-4 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
-                        submenu
-                            ? 'active before:w-full opacity-100 hover:pl-4'
-                            : 'opacity-60'}"
-                        on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
-                        transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
-                    >
-                        <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex">
-                            {subMenuTranslations[i]}
-                        </button>
-                        <img
-                            src={chevronImg}
-                            class="hidden @md/main-layout:block absolute transition-all right-4 group-hover:right-6 top-0 bottom-0 m-auto w-4 z-10 {activeSubMenu ===
-                            submenu
-                                ? 'opacity-100 group-hover:right-4'
-                                : 'opacity-30'}"
-                            alt="open submenu"
-                            draggable="false"
-                        />
+                    <div class="flex flex-row items-center justify-center gap-1 w-full group/menu-item relative">
+
+                        <div class="@md/main-layout: py-1 h-full flex items-center justify-center absolute -left-2">
+                            <div class="h-0 bg-secondary rounded-full w-1 group-hover/menu-item:h-full transition-all duration-300 z-10 {activeSubMenu ===
+                            submenu ? 'h-full' : '' } "></div>
+                        </div>
+
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            class="bg-secondary transition-all left-0 top-0 absolute {activeSubMenu === submenu
-                                ? 'w-full h-1 @md/main-layout:w-1 @md/main-layout:h-full'
-                                : 'w-0'}"
-                        />
+                            class="menu-item-container group flex py-3 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md overflow-hidden {activeSubMenu ===
+                            submenu
+                            ? 'active opacity-100 bg-contrast/50 text-white'
+                            : 'opacity-60 hover:bg-white/10'}"
+                            on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
+                            transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
+                            >
+                                <!-- <div class="left-gradient absolute top-0 left-0 h-full bg-gradient-to-r from-secondary to-transparent {activeSubMenu === submenu ? 'opacity-100 w-[5%]' : 'opacity-0 w-0'} transition-all duration-800">
+                                </div> -->
+
+                                <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex">
+                                    {subMenuTranslations[i]}
+                                </button>
+                                <img
+                                src={chevronImg}
+                                class="hidden @md/main-layout:block absolute transition-all right-4 group-hover:right-6 top-0 bottom-0 m-auto w-4 z-10 {activeSubMenu ===
+                                    submenu
+                                    ? 'opacity-100 group-hover:right-4'
+                                    : 'opacity-30'}"
+                                    alt="open submenu"
+                                    draggable="false"
+                                    />
+                        </div>
                     </div>
                 {/if}
-            {/each}
-        </nav>
+                {/each}
+                    </nav>
         <!-- <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
             <div>
                 <a href="https://workadventu.re/contact/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
@@ -225,31 +232,12 @@
             </div>
         </div> -->
     </div>
-    <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative h-full">
-        <button
-            type="button"
-            class="btn btn-lg btn-ghost btn-light fixed @md/main-layout:absolute right-0 top-0 !p-[0.5rem] @md/main-layout:!p-[1.15rem] !rounded-none cursor-pointer m-0"
-            id="closeMenu"
-            on:click|preventDefault|stopPropagation={closeMenu}
-        >
-            <!-- TODO HUGO : I REMOVE class close-window -->
-            <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g>
-                    <path
-                        d="M33 11L11 33M11 11L33 33"
-                        stroke="white"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
-                </g>
-            </svg>
-        </button>
-        <h2 class="py-5 px-8 text-white h5 border-b border-white/20 absolute top-0 left-0 hidden @md/main-layout:block">
-            {activeSubMenuTranslation}
-        </h2>
+    <div class="menu-submenu-container w-full rounded-xl overflow-y relative h-full bg-contrast/80 backdrop-blur overflow-hidden">
+        <div class="absolute top-4 right-4 z-10">
+            <ButtonClose on:click={closeMenu} />
+        </div>
         <div
-            class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 text-white rounded-none @md/main-layout:rounded-tl overflow-y-scroll @md/main-layout:overflow-none"
+            class="h-full mt-0 text-white rounded-none @md/main-layout:rounded-tl-lg overflow-y-scroll @md/main-layout:overflow-none"
             id="submenu"
         >
             <svelte:component this={activeComponent} {...props} />
