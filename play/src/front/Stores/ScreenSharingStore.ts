@@ -8,7 +8,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMe
 import type {} from "../Api/Desktop";
 import { Streamable } from "./StreamableCollectionStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
-import { livekitVideoStreamElementsStore, peerElementsStore } from "./PeerStore";
+import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -67,8 +67,8 @@ export const screenSharingConstraintsStore = derived(
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
-        peerElementsStore,
-        livekitVideoStreamElementsStore,
+        videoStreamElementsStore,
+        screenShareStreamElementsStore,
     ],
     (
         [
@@ -76,8 +76,8 @@ export const screenSharingConstraintsStore = derived(
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
-            $peerElementsStore,
-            $livekitVideoStreamElementsStore,
+            $videoStreamElementsStore,
+            $screenShareStreamElementsStore,
         ],
         set
     ) => {
@@ -97,7 +97,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($peerElementsStore.length === 0 && $livekitVideoStreamElementsStore.length === 0) {
+        if ($videoStreamElementsStore.length === 0 && $screenShareStreamElementsStore.length === 0) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -228,13 +228,13 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
-export const screenSharingAvailableStore = derived(peerElementsStore, ($peerElementsStore, set) => {
+export const screenSharingAvailableStore = derived(videoStreamElementsStore, ($videoStreamElementsStore, set) => {
     if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
         set(false);
         return;
     }
 
-    set($peerElementsStore.length !== 0);
+    set($videoStreamElementsStore.length !== 0);
 });
 
 export interface ScreenSharingLocalMedia {
@@ -292,6 +292,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         displayMode: "fit" as const,
         displayInPictureInPictureMode: true,
         usePresentationMode: true,
+        once: (event: string, callback: (...args: unknown[]) => void) => {
+            callback();
+        },
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {

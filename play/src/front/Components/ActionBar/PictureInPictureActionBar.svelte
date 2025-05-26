@@ -10,7 +10,7 @@
     } from "../../Stores/MyMediaStore";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
+    import { videoStreamElementsStore } from "../../Stores/PeerStore";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
@@ -30,7 +30,7 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$livekitVideoStreamElementsStore.length >
+    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$videoStreamElementsStore.length >
         0 && $highlightFullScreen
         ? 'hidden'
         : ''}"

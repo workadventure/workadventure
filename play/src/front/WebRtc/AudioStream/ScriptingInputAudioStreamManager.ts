@@ -3,7 +3,7 @@ import { Deferred } from "ts-deferred";
 import { get, Readable, Unsubscriber } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
-import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
+import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
@@ -58,7 +58,7 @@ export class ScriptingInputAudioStreamManager {
                     });
 
                     // Let's add all the peers to the stream
-                    get(livekitVideoStreamElementsStore).forEach((peer) => {
+                    get(videoStreamElementsStore).forEach((peer) => {
                         if (peer.media.type === "mediaStore") {
                             this.addMediaStreamStore(peer.media.streamStore);
                         }
@@ -76,7 +76,7 @@ export class ScriptingInputAudioStreamManager {
                 this.appendPCMDataStreamUnsubscriber = undefined;
 
                 // Let's remove all the peers to the stream
-                get(livekitVideoStreamElementsStore).forEach((peer) => {
+                get(videoStreamElementsStore).forEach((peer) => {
                     if (peer.media.type === "mediaStore") {
                         this.removeMediaStreamStore(peer.media.streamStore);
                     }

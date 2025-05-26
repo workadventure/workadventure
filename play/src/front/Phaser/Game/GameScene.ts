@@ -180,7 +180,6 @@ import {
     videoStreamStore,
     screenShareStreamStore,
 } from "../../Stores/PeerStore";
-import { VideoPeer } from "../../WebRtc/VideoPeer";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";

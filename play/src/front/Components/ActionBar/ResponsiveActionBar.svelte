@@ -1,7 +1,7 @@
 <script lang="ts">
     import debug from "debug";
     import { onMount } from "svelte";
-    import { livekitVideoStreamElementsStore } from "../../Stores/PeerStore";
+    import { videoStreamElementsStore } from "../../Stores/PeerStore";
 
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
@@ -77,7 +77,7 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$livekitVideoStreamElementsStore.length >
+    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$videoStreamElementsStore.length >
         0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
