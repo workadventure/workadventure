@@ -77,7 +77,7 @@ export interface Streamable {
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
-    readonly once : (event: string, callback: (...args: unknown[]) => void) => void;
+    readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
 //TODO : revoir le nom
@@ -148,7 +148,6 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
                 media.videoElementUnsubscribers.delete(container);
             }
         },
-
     };
 
     return {
@@ -169,7 +168,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
         usePresentationMode: false,
-        once: (event : string, callback : (...args: unknown[]) => void) => {
+        once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
     };
@@ -280,14 +279,14 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [
-        broadcastTracksStore,
-        videoStreamElementsStore,
-        screenShareStreamElementsStore,
-        scriptingVideoStore,
-        silentStore,
-    ],
-    ([$broadcastTracksStore, $screenSharingStreamStore, $videoStreamElementsStore, $scriptingVideoStore, $silentStore]) => {
+    [broadcastTracksStore, videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
+    ([
+        $broadcastTracksStore,
+        $screenSharingStreamStore,
+        $videoStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+    ]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;

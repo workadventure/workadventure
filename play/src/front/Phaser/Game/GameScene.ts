@@ -175,11 +175,7 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
-import {
-    videoStreamElementsStore,
-    videoStreamStore,
-    screenShareStreamStore,
-} from "../../Stores/PeerStore";
+import { videoStreamElementsStore, videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
