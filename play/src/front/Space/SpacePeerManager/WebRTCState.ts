@@ -88,4 +88,8 @@ export class WebRTCState implements ICommunicationState {
     dispatchSound(url: URL): Promise<void> {
         return this._peer.dispatchSound(url);
     }
+
+    dispatchStream(mediaStream: MediaStream): void {
+        this._peer.dispatchStream(mediaStream);
+    }
 }

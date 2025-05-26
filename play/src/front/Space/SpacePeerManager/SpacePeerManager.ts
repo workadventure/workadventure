@@ -15,6 +15,7 @@ export interface ICommunicationState {
     completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchSound(url: URL): Promise<void>;
+    dispatchStream(mediaStream: MediaStream): void;
 }
 
 // -------------------- Peer Manager --------------------
@@ -131,6 +132,10 @@ export class SpacePeerManager {
 
     dispatchSound(url: URL): Promise<void> {
         return this._communicationState.dispatchSound(url);
+    }
+
+    dispatchStream(mediaStream: MediaStream): void {
+        this._communicationState.dispatchStream(mediaStream);
     }
 }
 // -------------------- Interfaces --------------------

@@ -91,6 +91,16 @@ export class LivekitConnection {
         await this.livekitRoom.dispatchSound(url);
     }
 
+    async dispatchStream(mediaStream: MediaStream): Promise<void> {
+        if (!this.livekitRoom) {
+            console.error("LivekitRoom not found");
+            Sentry.captureException(new Error("LivekitRoom not found"));
+            throw new Error("LivekitRoom not found");
+        }
+
+        await this.livekitRoom.dispatchStream(mediaStream);
+    }
+
     destroy() {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found");

@@ -82,4 +82,12 @@ export class LivekitState implements ICommunicationState {
     dispatchSound(url: URL): Promise<void> {
         return this.livekitConnection.dispatchSound(url);
     }
+
+    dispatchStream(mediaStream: MediaStream): void {
+        //TODO : voir si on passe le dispatchStream en asynchrone ou non (pour le webrtc aussi)
+        this.livekitConnection.dispatchStream(mediaStream).catch((err) => {
+            console.error("An error occurred in dispatchStream", err);
+            Sentry.captureException(err);
+        });
+    }
 }

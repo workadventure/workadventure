@@ -373,6 +373,28 @@ export class LiveKitRoom {
         this.nbSoundPlayedInBubbleStore.soundStarted();
     }
 
+    //TODO : tester
+    public async dispatchStream(mediaStream: MediaStream): Promise<void> {
+        if (!this.localParticipant) {
+            console.error("Local participant not found");
+            Sentry.captureException(new Error("Local participant not found"));
+            return;
+        }
+
+        const videoTrack = mediaStream.getVideoTracks()[0];
+        if (!videoTrack) {
+            console.error("No video track found in the media stream");
+            Sentry.captureException(new Error("No video track found in the media stream"));
+            return;
+        }
+
+        const localTrack = await this.localParticipant.publishTrack(videoTrack, {
+            source: Track.Source.ScreenShare,
+        });
+
+        this.dispatchSoundTrack = localTrack.track;
+    }
+
     public destroy() {
         this.unsubscribers.forEach((unsubscriber) => unsubscriber());
         this.participants.forEach((participant) => participant.destroy());

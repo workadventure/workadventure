@@ -1,7 +1,7 @@
 import { Deferred } from "ts-deferred";
 import { iframeListener } from "../../Api/IframeListener";
 import { customWebRTCLogger } from "../CustomWebRTCLogger";
-import { SimplePeerConnectionInterface } from "../../Space/SpacePeerManager/SpacePeerManager";
+import { SpacePeerManager } from "../../Space/SpacePeerManager/SpacePeerManager";
 import { OutputPCMStreamer } from "./OutputPCMStreamer";
 
 /**
@@ -12,7 +12,7 @@ export class ScriptingOutputAudioStreamManager {
     private pcmStreamerResolved = false;
     private pcmStreamerResolving = false;
 
-    constructor(simplePeer: SimplePeerConnectionInterface) {
+    constructor(spacePeerManager: SpacePeerManager) {
         iframeListener.registerAnswerer("startStreamInBubble", async (message) => {
             if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
                 throw new Error("A stream is already running");
@@ -23,8 +23,7 @@ export class ScriptingOutputAudioStreamManager {
             this.pcmStreamerResolved = true;
             this.pcmStreamerResolving = false;
             this.pcmStreamerDeferred.resolve(pcmStreamer);
-            //TODO : livekit ??
-            simplePeer.dispatchStream(pcmStreamer.getMediaStream());
+            spacePeerManager.dispatchStream(pcmStreamer.getMediaStream());
         });
 
         iframeListener.registerAnswerer("appendPCMData", async (message) => {
