@@ -62,7 +62,7 @@
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class="h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    class="absolute top-2 right-4 h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
                     on:click={hideMapEditor}
                 >
                     <ArrowBarRight
