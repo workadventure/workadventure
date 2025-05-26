@@ -35,4 +35,8 @@ export class DefaultCommunicationState implements ICommunicationState {
     shouldSynchronizeMediaState(): boolean {
         return false;
     }
+
+    dispatchSound(url: URL): Promise<void> {
+        return Promise.resolve();
+    }
 }
