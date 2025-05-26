@@ -116,29 +116,23 @@ vi.mock("../../Connection/ConnectionManager", () => {
 
 // Mock the PeerStore module
 vi.mock("../../Stores/PeerStore", () => ({
-    peerStore: {
-        getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
-        removePeer: vi.fn(),
-        getPeer: vi.fn(),
-    },
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
         cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
-    peerElementsStore: {
+    videoStreamStore: {
         subscribe: vi.fn().mockImplementation(() => {
             return () => {};
         }),
     },
-    livekitVideoStreamElementsStore: {
+    videoStreamElementsStore: {
         subscribe: vi.fn().mockImplementation(() => {
             return () => {};
         }),
     },
-    livekitScreenShareStreamStore: {
+    screenShareStreamElementsStore: {
         subscribe: vi.fn().mockImplementation(() => {
             return () => {};
         }),
