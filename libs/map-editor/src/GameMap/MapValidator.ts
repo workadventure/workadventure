@@ -35,7 +35,11 @@ export type OrganizedErrors = z.infer<typeof OrganizedErrors>;
 export class MapValidator {
     private logLevel: number;
 
-    constructor(level: ErrorType, private fileFetcher: FileFetcherInterface) {
+    constructor(
+        level: ErrorType,
+        private fileFetcher: FileFetcherInterface,
+        private _wamFileMigration = wamFileMigration
+    ) {
         this.logLevel = this.toLogNumber(level);
     }
 
@@ -170,7 +174,7 @@ export class MapValidator {
     // TODO: More detailed validation later on
     public validateWAMFile(data: string): WamValidation {
         try {
-            const migratedWAM = wamFileMigration.migrate(JSON.parse(data));
+            const migratedWAM = this._wamFileMigration.migrate(JSON.parse(data));
             const parsedWAM = WAMFileFormat.safeParse(migratedWAM);
             if (!parsedWAM.success) {
                 return {
