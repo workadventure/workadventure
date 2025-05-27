@@ -16,8 +16,8 @@ class WamFileMigration {
     constructor() {
         this.migrations = {
             "1.0.0": (fileContent: any) => this.migrate_v1_to_v2(fileContent),
-            "2.0.0": (fileContent) => fileContent,
-            "2.0.1": (fileContent: any) => this.migrate_v2_to_v201(fileContent),
+            "2.0.0": (fileContent: any) => this.migrate_v2_to_v201(fileContent),
+            "2.0.1": (fileContent) => fileContent,
         };
     }
 
