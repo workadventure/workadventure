@@ -1282,6 +1282,7 @@ export class SocketManager {
         // If no anymore watchers we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
+            space.destroy();
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
         }
@@ -1291,6 +1292,23 @@ export class SocketManager {
         const space = this.spaces.get(addSpaceUserMessage.spaceName);
         if (space && addSpaceUserMessage.user) {
             space.addUser(pusher, addSpaceUserMessage.user);
+        }
+    }
+
+    handleStartRecordingMessage(pusher: SpacesWatcher, startRecordingMessage: StartRecordingMessage) {
+        //TODO : voir les regles métiers JIRA / voir les informations de l'utilisateur pour enregistrer
+        //TODO : passer des infos sur le users pour le mettre dans le bon répertoire  
+        const space = this.spaces.get(startRecordingMessage.spaceName);
+        if (space) {
+            space.startRecording();
+        }
+    }
+
+    handleStopRecordingMessage(pusher: SpacesWatcher, stopRecordingMessage: StopRecordingMessage) {
+        //TODO : vérifier que c'est bien le user qui a commencé l'enregistrement qui arrête l'enregistrement
+        const space = this.spaces.get(stopRecordingMessage.spaceName);
+        if (space) {
+            space.stopRecording();
         }
     }
 
@@ -1318,6 +1336,7 @@ export class SocketManager {
             space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
             if (space.canBeDeleted()) {
                 debug("[space] Space %s => deleted", space.name);
+                space.destroy();
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);
             }

@@ -1,15 +1,82 @@
+import * as Sentry from "@sentry/node";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState } from "./Interfaces/ICommunicationState";
+import { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
 import { DefaultState } from "./States/DefaultState";
+import { LivekitState } from "./States/LivekitState";
+
+export interface IRecordingManager {
+    startRecording(user: SpaceUser): Promise<void>;
+    stopRecording(user: SpaceUser): Promise<void>;
+    destroy(): void;
+}
+
+export class RecordingManager implements IRecordingManager {
+    private _isRecording: boolean = false;
+    private _user: SpaceUser | undefined;
+
+    constructor(private readonly communicationManager: ICommunicationManager, private readonly space: ICommunicationSpace) {}
+
+    public async startRecording(user: SpaceUser): Promise<void> {
+        if (this._isRecording) {
+            throw new Error("Recording already started");
+        }
+        this._isRecording = true;
+        const currentState = this.communicationManager.currentState;
+
+        if (this.isRecordableState(currentState)) {
+            await currentState.handleStartRecording();
+        } else {
+            const livekitState = new LivekitState(this.space, this.communicationManager);
+            this.communicationManager.setState(livekitState);
+            await livekitState.handleStartRecording();
+        }
+
+        this._isRecording = true;
+    }
+
+    public async stopRecording(user: SpaceUser): Promise<void> {
+        if (!this._isRecording) {
+            throw new Error("No recording to stop");
+        }
+
+        //TODO : verifier que ce soit le bon user qui stop 
+        
+        this._isRecording = false;
+        const currentState = this.communicationManager.currentState;
+        
+        if (this.isRecordableState(currentState)) {
+            await currentState.handleStopRecording();
+            this._isRecording = false;
+        }
+
+
+    }
+
+    public destroy(): void {
+        if(this._isRecording && this._user) {
+            this.stopRecording(this._user).catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
+        }
+    }
+
+    //TODO : voir si on a un autre moyen de faire ça 
+    private isRecordableState(state: ICommunicationState): state is IRecordableState {
+        return 'handleStartRecording' in state && 'handleStopRecording' in state;
+    }
+}
 
 export class CommunicationManager implements ICommunicationManager {
     private _currentState: ICommunicationState;
+    private _recordingManager: IRecordingManager;
 
     constructor(private readonly space: ICommunicationSpace) {
         this._currentState = this.getInitialState();
+        this._recordingManager = new RecordingManager(this, this.space);
     }
 
     public handleUserAdded(user: SpaceUser): void {
@@ -28,6 +95,24 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
+    public handleStartRecording(user: SpaceUser): void {
+        this._recordingManager.startRecording(user).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
+    }
+
+    public  handleStopRecording(user: SpaceUser): void {
+        this._recordingManager.stopRecording(user).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
+    }
+
+    get currentState(): ICommunicationState {
+        return this._currentState;
+    }
+
     public setState(state: ICommunicationState): void {
         this._currentState = state;
     }
@@ -40,8 +125,13 @@ export class CommunicationManager implements ICommunicationManager {
     private hasMediaProperties(properties: string[]): boolean {
         return properties.some((prop) => ["cameraState", "microphoneState", "screenSharingState"].includes(prop));
     }
+
+    public destroy() {
+        this._recordingManager.destroy();
+    }
 }
 
 export const CommunicationConfig = {
+    //TODO : switch back to 4
     MAX_USERS_FOR_WEBRTC: 4,
 };

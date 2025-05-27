@@ -120,7 +120,6 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     protected abstract shouldSwitchBackToCurrentState(): boolean;
     protected abstract shouldSwitchToNextState(): boolean;
-    protected abstract areAllUsersReady(): boolean;
 
     protected afterSwitchAction(): void {}
     protected preparedSwitchAction(readyUsers: Set<string>): void {}
@@ -133,5 +132,9 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     protected isSwitching(): boolean {
         return !!this._nextState;
+    }
+
+    protected areAllUsersReady(): boolean {
+        return this._readyUsers.size === this._space.getAllUsers().length;
     }
 }

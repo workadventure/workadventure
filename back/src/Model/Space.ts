@@ -346,4 +346,16 @@ export class Space implements CustomJsonReplacerInterface {
     public getPropertiesToSync(): string[] {
         return this.propertiesToSync;
     }
+    public startRecording(user: SpaceUser) {
+        this.communicationManager.handleStartRecording(user);
+    }
+    public stopRecording(user: SpaceUser) {
+        this.communicationManager.handleStopRecording(user);
+    }
+    public destroy() {
+        // this.users.clear();
+        // this.metadata.clear();
+        this.communicationManager.destroy();
+        debug(`${this.name} => destroyed`);
+    }
 }

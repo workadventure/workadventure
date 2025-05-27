@@ -9,3 +9,8 @@ export interface ICommunicationStrategy {
     canSwitch(): boolean;
     cleanup(): void;
 }
+
+export interface IRecordableStrategy extends ICommunicationStrategy {
+    startRecording(): Promise<void>;
+    stopRecording(): Promise<void>;
+}

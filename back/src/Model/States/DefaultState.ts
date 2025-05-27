@@ -14,4 +14,10 @@ export class DefaultState implements ICommunicationState {
     handleUserReadyForSwitch(userId: string): void {
         console.info("DefaultState handleUserReadyForSwitch", userId);
     }
+    handleStartRecording(): void {
+        console.info("DefaultState handleStartRecording");
+    }
+    handleStopRecording(): void {
+        console.info("DefaultState handleStopRecording");
+    }
 }

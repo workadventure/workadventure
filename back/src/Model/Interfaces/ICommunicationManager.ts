@@ -6,5 +6,8 @@ export interface ICommunicationManager {
     handleUserDeleted(user: SpaceUser): void;
     handleUserUpdated(user: SpaceUser): void;
     handleUserReadyForSwitch(userId: string): void;
+    handleStartRecording(user: SpaceUser): void;
+    handleStopRecording(user: SpaceUser): void;
     setState(state: ICommunicationState): void;
+    currentState: ICommunicationState;
 }
