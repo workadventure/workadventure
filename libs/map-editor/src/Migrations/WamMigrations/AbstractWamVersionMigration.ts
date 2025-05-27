@@ -1,4 +1,4 @@
-import { WAMFileFormat } from "../../types";
+import { EntityCollectionRaw, WAMFileFormat } from "../../types";
 
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
@@ -6,15 +6,13 @@ import { WAMFileFormat } from "../../types";
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export abstract class WamVersionMigration {
+export abstract class VersionMigration<T extends WAMFileFormat | EntityCollectionRaw> {
     abstract version: string;
 
-    constructor(private readonly previousVersion?: WamVersionMigration) {
-        this.validatePreviousVersion();
-    }
+    constructor(protected firstVersion: string, private readonly previousVersion?: VersionMigration<T>) {}
 
-    public migrate(fileContent: any): WAMFileFormat {
-        if (this.previousVersion) {
+    public migrate(fileContent: any): T {
+        if (this.previousVersion && fileContent.version !== this.version) {
             return this.migration(this.previousVersion.migrate(fileContent));
         }
         return this.migration(fileContent);
@@ -24,11 +22,20 @@ export abstract class WamVersionMigration {
         return this.version;
     }
 
-    private validatePreviousVersion(): void {
-        if (this.previousVersion && this.previousVersion.version === this.version) {
-            throw new Error(`Previous version is the same as the current version for version ${this.version}.`);
-        }
+    protected abstract migration(fileContent: any): T;
+}
+
+export abstract class WamVersionMigration extends VersionMigration<WAMFileFormat> {
+    constructor(previousVersion?: WamVersionMigration) {
+        super("1.0.0", previousVersion);
     }
 
     protected abstract migration(fileContent: any): WAMFileFormat;
+}
+
+export abstract class EntitiesVersionMigration extends VersionMigration<EntityCollectionRaw> {
+    constructor(previousVersion?: EntitiesVersionMigration) {
+        super("0.0", previousVersion);
+    }
+    protected abstract migration(fileContent: any): EntityCollectionRaw;
 }
