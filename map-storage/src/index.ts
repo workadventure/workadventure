@@ -51,6 +51,7 @@ import { PingController } from "./Upload/PingController";
 import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
 import { hookManager } from "./Modules/HookManager";
 import { FileModule } from "./Modules/FileModule";
+import { verifyJWT } from "./Services/VerifyJwt";
 
 const resourceUrlModule = new ResourceUrlModule();
 resourceUrlModule.init(hookManager);
@@ -125,6 +126,8 @@ const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOO
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
+
+app.use(verifyJWT);
 
 app.use(proxyFiles(fileSystem));
 

@@ -442,7 +442,11 @@ message QueryMessage {
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
     EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
+    MapStorageJwtQuery mapStorageJwtQuery = 14;
   }
+}
+
+message MapStorageJwtQuery {
 }
 
 message JitsiJwtQuery {
@@ -518,12 +522,17 @@ message AnswerMessage {
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
     EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
+    MapStorageJwtAnswer mapStorageJwtAnswer = 16;
   }
 }
 
 message JitsiJwtAnswer {
   string jwt = 1;
   string url = 2;
+}
+
+message MapStorageJwtAnswer {
+  string jwt = 1;
 }
 
 message JoinBBBMeetingAnswer {

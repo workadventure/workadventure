@@ -1,3 +1,4 @@
+import Jwt from "jsonwebtoken";
 import Debug from "debug";
 import {
     AddSpaceFilterMessage,
@@ -57,7 +58,7 @@ import type { BackSpaceConnection, SocketData } from "../models/Websocket/Socket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST, SECRET_KEY } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
@@ -1584,6 +1585,19 @@ export class SocketManager implements ZoneEventListener {
         if (isAdmin) {
             await matrixProvider.promoteUserToModerator(socketData.chatID, roomID).catch((e) => console.error(e));
         }
+    }
+
+    async handleMapStorageJwtQuery(socket: Socket): Promise<string> {
+        const userData = socket.getUserData();
+
+        const mapDetails = await adminService.fetchMapDetails(userData.roomId);
+
+        const wamUrl = !("wamUrl" in mapDetails) ? "" : mapDetails.wamUrl;
+
+        const jwtToken = Jwt.sign({ wamUrl, tags: userData.tags }, SECRET_KEY, {
+            expiresIn: "1h",
+        });
+        return jwtToken;
     }
 }
 

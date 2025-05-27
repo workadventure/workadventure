@@ -913,6 +913,16 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "mapStorageJwtQuery": {
+                                        answerMessage.answer = {
+                                            $case: "mapStorageJwtAnswer",
+                                            mapStorageJwtAnswer: {
+                                                jwt: await socketManager.handleMapStorageJwtQuery(socket),
+                                            },
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     default: {
                                         socketManager.forwardMessageToBack(socket, message.message);
                                     }

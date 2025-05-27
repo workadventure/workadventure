@@ -275,6 +275,7 @@ services:
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       PUSHER_URL: http://play.workadventure.localhost
       WHITELISTED_RESOURCE_URLS: ""
+      SECRET_KEY: "$SECRET_KEY"
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp
