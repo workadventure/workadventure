@@ -240,7 +240,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openPdf": {
-                this.handleOpenPdfOnEnter(property);
+                this.handleOpenPdfOnEnter(property).catch((error) => console.error("Error opening PDF:", error));
                 break;
             }
 
@@ -320,7 +320,7 @@ export class AreasPropertiesListener {
             case "openPdf": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleOpenPdfOnLeave(oldProperty);
-                this.handleOpenPdfOnEnter(newProperty);
+                this.handleOpenPdfOnEnter(newProperty).catch((error) => console.error("Error opening PDF:", error));
                 break;
             }
             case "silent":
@@ -1088,11 +1088,23 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(property.id);
     }
 
-    private handleOpenPdfOnEnter(property: OpenPdfPropertyData): void {
+    private async handleOpenPdfOnEnter(property: OpenPdfPropertyData): Promise<void> {
         console.log("handleOpenPdfOnEnter");
         if (!property.link) {
             return;
         }
+
+        if (!this.scene.connection) {
+            console.info("Cannot open Pdf. No connection to Pusher server.");
+            return;
+        }
+
+        const answer = await this.scene.connection?.queryMapStorageJwtToken();
+
+        const url = `${property.link}?token=${answer.jwt}`;
+        console.log("Open PDF URL: ", url, answer.jwt);
+
+        property.link = url;
 
         const actionId = "openWebsite-" + uuidv4();
 
@@ -1111,19 +1123,21 @@ export class AreasPropertiesListener {
                         message: message,
                         click: () => {
                             popupStore.removePopup(actionId);
-                            scriptUtils.openTab(property.link as string);
+                            scriptUtils.openTab(url);
                         },
                         userInputManager: this.scene.userInputManager,
                     },
                     actionId
                 );
             } else {
-                scriptUtils.openTab(property.link);
+                scriptUtils.openTab(url);
             }
+            property.link = url.split("?")[0];
             return;
         }
 
         if (this.openedCoWebsites.has(property.id)) {
+            property.link = url.split("?")[0];
             return;
         }
 
@@ -1153,15 +1167,15 @@ export class AreasPropertiesListener {
                 actionId
             );
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
-            let url = property.link ?? "";
+            let cowebsiteUrl = url ?? "";
             try {
-                url = scriptUtils.getWebsiteUrl(property.link ?? "");
+                cowebsiteUrl = scriptUtils.getWebsiteUrl(url ?? "");
             } catch (e) {
                 console.error("Error on getWebsiteUrl: ", e);
             }
             const coWebsite = new SimpleCoWebsite(
-                new URL(url, this.scene.mapUrlFile),
-                property.allowAPI,
+                new URL(cowebsiteUrl, this.scene.mapUrlFile),
+                false,
                 property.policy,
                 property.width,
                 property.closable
@@ -1177,6 +1191,7 @@ export class AreasPropertiesListener {
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }
+        property.link = url.split("?")[0];
     }
 
     private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
