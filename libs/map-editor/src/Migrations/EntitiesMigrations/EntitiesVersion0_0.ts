@@ -1,5 +1,5 @@
-import { WAMFileFormat } from "../../types";
-import { WamVersionMigration } from "./AbstractWamVersionMigration";
+import { EntityCollectionRaw } from "../..";
+import { EntitiesVersionMigration } from "../WamMigrations/AbstractWamVersionMigration";
 
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
@@ -7,13 +7,13 @@ import { WamVersionMigration } from "./AbstractWamVersionMigration";
  */
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return */
 
-export class WamVersion100 extends WamVersionMigration {
-    version = "1.0.0";
+export class EntitiesVersion00 extends EntitiesVersionMigration {
+    version = "0.0";
     constructor() {
         super();
     }
 
-    public migration(fileContent: any): WAMFileFormat {
+    protected migration(fileContent: any): EntityCollectionRaw {
         return fileContent;
     }
 }

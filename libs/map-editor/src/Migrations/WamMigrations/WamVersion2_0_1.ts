@@ -14,10 +14,10 @@ export class WamVersion201 extends WamVersionMigration {
         super(new WamVersion200());
     }
 
-    public applyMigration(fileContent: any): WAMFileFormat {
+    public migration(fileContent: any): WAMFileFormat {
         return {
             ...fileContent,
-            version: this.getMigrationVersion(),
+            version: this.getVersion(),
             entityCollections: fileContent.entityCollections.concat([
                 {
                     url: "https://limezujulio.workadventu.re/modern-office/collection.json",

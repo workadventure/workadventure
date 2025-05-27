@@ -16,10 +16,10 @@ export class WamVersion200 extends WamVersionMigration {
         super(new WamVersion100());
     }
 
-    public applyMigration(fileContent: any): WAMFileFormat {
+    public migration(fileContent: any): WAMFileFormat {
         return {
             ...fileContent,
-            version: this.getMigrationVersion(),
+            version: this.getVersion(),
             areas: fileContent?.areas.map((area: any) => ({
                 ...area,
                 properties: area.properties?.map((property: any) => {
