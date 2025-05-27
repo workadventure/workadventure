@@ -56,7 +56,6 @@
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
     let hasTooltipPropertyData: boolean;
-    let hasOpenPdf: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -379,7 +378,6 @@
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
-        hasOpenPdf = hasProperty("openPdf");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -523,14 +521,12 @@
                     }}
                 />
             {/if}
-            {#if !hasOpenPdf}
-                <AddPropertyButtonWrapper
-                    property="openPdf"
-                    on:click={() => {
-                        onAddProperty("openPdf");
-                    }}
-                />
-            {/if}
+            <AddPropertyButtonWrapper
+                property="openPdf"
+                on:click={() => {
+                    onAddProperty("openPdf");
+                }}
+            />
         </div>
         {#if extensionModulesAreaMapEditor.length > 0}
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
