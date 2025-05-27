@@ -218,6 +218,10 @@
         }
         currentDeviceId = deviceId;
 
+        // The sinkId not works for screensharing.
+        //Check if the mediaStream has an audio track (if not it's a screensharing)
+        if (mediaStream?.getAudioTracks().length === 0) return;
+
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         debug("Awaiting to set sink id to ", deviceId);
         sinkIdPromise = sinkIdPromise.then(async () => {

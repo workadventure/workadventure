@@ -164,9 +164,13 @@
 
         return () => {
             unsubscribe();
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
+            try {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                //@ts-ignore
+                navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
+            } catch (e: unknown) {
+                debug("PictureInPicture enterpictureinpicture handler is not supported", e);
+            }
         };
     });
 

@@ -692,9 +692,10 @@ div.emoji-picker {
     left: -12px;
 }
 
-
-say-bubble{
-    font-size: 8px
+.say-bubble{
+    font-weight: 500;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
+    text-align: center;
 }
 
 .say-bubble::after {
@@ -705,7 +706,7 @@ say-bubble{
     transform: translateX(-50%);
     border-width: 5px;
     border-style: solid;
-    border-color: rgba(255, 255, 255, 0.50) transparent transparent transparent;
+    border-color: rgba(255, 255, 255, 0.80) transparent transparent transparent;
 }
 
 .thinking-cloud {
@@ -715,6 +716,7 @@ say-bubble{
     border-radius: 20px; 
     padding: 20px;
     max-width: 150px; 
+    min-width: 50px;
     word-wrap: break-word;
     padding: 12px;
 }
@@ -731,12 +733,13 @@ say-bubble{
     backdrop-filter: blur(12px);
     background-color: rgb(255, 255, 255);
     z-index: -1;
-    opacity: 0.8;
     filter: url(#cloudy-filter);
 }
 
 .thinking-text {
-    font-family: Arial, sans-serif;
+    font-weight: 500;
+    width: 100%;
+    font-family: "Comic Sans MS", "Comic Sans", cursive;
     font-size: 12px;
     color: #000000;
     text-align: center;
@@ -744,18 +747,18 @@ say-bubble{
 
 .thinking-tail {
     position: absolute;
-    bottom: -30px;
-    left: 50%;
+    bottom: -25px;
+    left: 65%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
 }
 
 .circle {
     background-color: #ffffff;
-    opacity: 0.8; 
+    opacity: 1; 
     filter: blur(0.5px); 
     border-radius: 50%;
 }
@@ -763,17 +766,17 @@ say-bubble{
 .circle1 {
     width: 10px;
     height: 10px;
-    transform: translateX(calc(10px + 8px));
+    transform: translateX(calc(7px));
 }
 
 .circle2 {
     width: 8px;
     height: 8px;
-    transform: translateX(calc(10px + 5px));
+    transform: translateX(calc(5px));
 }
 
 .circle3 {
     width: 6px;
     height: 6px;
-    transform: translateX(calc(10px));
+    transform: translateX(calc(0px));
 }

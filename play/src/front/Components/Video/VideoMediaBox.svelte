@@ -292,6 +292,7 @@
         </button>
     {/if}
     {#if missingUserActivation && !peer.muteAudio}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
             on:click={() => (missingUserActivation = false)}
