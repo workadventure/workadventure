@@ -74,6 +74,8 @@
         dispatch("copy");
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
     }
+
+    $: isVerySmall = availableWidth < 190;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -104,6 +106,21 @@
                 </div>
             {/if}
         </div>
+        {#if isVerySmall && coWebsite.isClosable()}
+            <button
+                class="group {active
+                    ? 'hover:bg-contrast/10'
+                    : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                on:click|stopPropagation={closeTab}
+            >
+                <XIcon
+                    height="h-6"
+                    width="w-6"
+                    strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                    hover={active ? "" : ""}
+                />
+            </button>
+        {/if}
 
         <div class="p-2 min-w-0">
             <div
@@ -168,7 +185,7 @@
                     />
                 </button>
             </div>
-            {#if coWebsite.isClosable() === true}
+            {#if coWebsite.isClosable() && !isVerySmall}
                 <button
                     class="group {active
                         ? 'hover:bg-contrast/10'
