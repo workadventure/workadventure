@@ -508,11 +508,14 @@ test.describe("Map editor @oidc", () => {
 
         // close object selector
         await Menu.closeMapEditor(page);
-
+        
+        await page.getByTestId("camera-container").waitFor({ state: 'detached' });
+        await page2.getByTestId("camera-container").waitFor({ state: 'detached' });
         // click on the object and open popup on both pages
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
         await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
+        
         // check if the popup with application is opened on both pages
         await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
         await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();

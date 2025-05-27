@@ -271,6 +271,7 @@
         class:mt-0={!isOnOneLine}
         class:h-full={isOnOneLine && oneLineMode === "vertical"}
         id="cameras-container"
+        data-testid="cameras-container"
     >
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
