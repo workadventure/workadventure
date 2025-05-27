@@ -18,6 +18,7 @@
     export let coWebsite: CoWebsite;
     export let isLoading = false;
     export let active = false;
+    export let availableWidth: number;
 
     let isDuplicable = true;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
@@ -92,72 +93,28 @@
     on:click={toggleActive}
     on:click={() => (active = !active)}
 >
-    {#if isLoading}
-        {#if isJitsi}
-            <img src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
-        {:else if isBBB}
-            <img src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
-        {:else}
-            <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
-        {/if}
-    {:else}
-        <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
-            <LoaderIcon
-                size="24"
-                color1={active ? "stroke-contrast" : "stroke-white"}
-                color2={active ? "stroke-contrast" : "stroke-white"}
-            />
-        </div>
-    {/if}
-
-    <div class="flex justify-around items-center w-full">
-        <div class="flex gap-0.5 flex-row-reverse">
-            {#if isDuplicable}
-                <button
-                    class="group {active
-                        ? 'hover:bg-contrast/10'
-                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click={copyUrl}
-                >
-                    <ExternalLinkIcon
-                        height="h-6"
-                        width="w-6"
-                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
-                        hover={active ? "" : ""}
+    <div class="flex items-center flex-1 min-w-0 overflow-hidden">
+        <div class="flex-shrink-0">
+            {#if isLoading}
+                {#if isJitsi}
+                    <img src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+                {:else if isBBB}
+                    <img src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+                {:else}
+                    <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+                {/if}
+            {:else}
+                <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
+                    <LoaderIcon
+                        size="24"
+                        color1={active ? "stroke-contrast" : "stroke-white"}
+                        color2={active ? "stroke-contrast" : "stroke-white"}
                     />
-                </button>
-            {/if}
-            <button
-                class="group {active
-                    ? 'hover:bg-contrast/10'
-                    : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click={handleClick}
-            >
-                <CopyIcon
-                    height="h-6"
-                    width="w-6"
-                    strokeColor={active ? "stroke-contrast" : "stroke-white"}
-                    hover={active ? "" : ""}
-                />
-            </button>
-            {#if coWebsite.isClosable() === true}
-                <button
-                    class="group {active
-                        ? 'hover:bg-contrast/10'
-                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                    on:click={closeTab}
-                >
-                    <XIcon
-                        height="h-6"
-                        width="w-6"
-                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
-                        hover={active ? "" : ""}
-                    />
-                </button>
+                </div>
             {/if}
         </div>
 
-        <div class="p-2 grow text-ellipsis overflow-hidden">
+        <div class="p-2 min-w-0">
             <div
                 class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
                     ? 'fill-white'
@@ -185,18 +142,72 @@
                 {/if}
             </div>
         </div>
+
+        <div class="flex gap-0.5 flex-shrink-0 ml-2">
+            <div class="flex gap-0.5 {availableWidth < 200 ? 'hidden' : ''}">
+                {#if isDuplicable}
+                    <button
+                        class="group {active
+                            ? 'hover:bg-contrast/10'
+                            : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                        on:click={copyUrl}
+                    >
+                        <ExternalLinkIcon
+                            height="h-6"
+                            width="w-6"
+                            strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                            hover={active ? "" : ""}
+                        />
+                    </button>
+                {/if}
+                <button
+                    class="group {active
+                        ? 'hover:bg-contrast/10'
+                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                    on:click={() => {
+                        window.open(coWebsite.getUrl().toString(), "_blank");
+                        analyticsClient.openCowebsiteInNewTab();
+                    }}
+                >
+                    <CopyIcon
+                        height="h-6"
+                        width="w-6"
+                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                        hover={active ? "" : ""}
+                    />
+                </button>
+            </div>
+            {#if coWebsite.isClosable() === true}
+                <button
+                    class="group {active
+                        ? 'hover:bg-contrast/10'
+                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                    on:click={closeTab}
+                >
+                    <XIcon
+                        height="h-6"
+                        width="w-6"
+                        strokeColor={active ? "stroke-contrast" : "stroke-white"}
+                        hover={active ? "" : ""}
+                    />
+                </button>
+            {/if}
+        </div>
     </div>
 </div>
 
 <style>
     .tab {
-        width: 300px;
+        min-width: 120px;
+        max-width: 300px;
+        width: auto;
+        overflow: hidden;
     }
 
     @media (max-width: 768px) {
         .tab {
-            width: 220px;
-            padding-right: 1.5rem;
+            min-width: 100px;
+            max-width: 220px;
         }
     }
 </style>

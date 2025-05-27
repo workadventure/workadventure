@@ -206,7 +206,7 @@
     style="transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;"
 >
     <div class="h-full w-full flex flex-col">
-        <div class="flex py-2 ms-3 items-center height-tab overflow-hidden flex-none">
+        <div class="flex py-2 ms-3 items-center height-tab flex-none gap-x-2">
             {#if tabsOverflowing && tabsScrollX > 0}
                 <div class="flex-0 w-10">
                     <button
@@ -219,10 +219,10 @@
             {/if}
             <!-- For some weird reason, we need to put a random width so that flex-1 can work and ignore the width...
                  Otherwise, flex-1 does nothing -->
-            <div class="tab-bar flex-1 w-32" bind:clientWidth={tabsContainerWidth}>
+            <div class="tab-bar flex-1 w-32 min-w-0 " bind:clientWidth={tabsContainerWidth}>
                 <div
                     bind:this={tabsContainer}
-                    class="flex items-center overflow-x-hidden space-x-2 snap-x touch-pan-x"
+                    class="flex items-center space-x-2  snap-x touch-pan-x overflow-x-auto scrollbar-hide"
                     on:scroll={onTabsScroll}
                 >
                     {#each $coWebsites as coWebsite, index (coWebsite.getId())}
@@ -230,13 +230,17 @@
                         <div
                             on:click={() => setActiveCowebsite(coWebsite)}
                             data-testid="tab{index + 1}"
-                            class="snap-start"
+                            class="snap-start flex-shrink"
                         >
                             <CoWebsiteTab
                                 {coWebsite}
                                 isLoading={true}
                                 active={activeCowebsite === coWebsite}
                                 on:close={() => coWebsites.remove(coWebsite)}
+                                availableWidth={Math.max(
+                                    120,
+                                    (tabsContainerWidth - ($coWebsites.length - 1) * 8) / $coWebsites.length
+                                )}
                             />
                         </div>
                     {/each}
@@ -340,5 +344,9 @@
         right: 0;
         bottom: 0;
         z-index: 1000;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
     }
 </style>
