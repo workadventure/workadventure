@@ -200,9 +200,11 @@ export class S3FileSystem implements FileSystemInterface {
                 new PutObjectCommand({
                     Bucket: this.bucketName,
                     Key: targetFilePath,
-                    Body: zipEntry.stream(),
-                    ContentType: mime.getType(targetFilePath) ?? undefined,
-                    ContentLength: zipEntry.uncompressedSize,
+                    Body: await zipEntry.buffer(),
+                    // TODO: the stream() + contentLength would be optimal, but it seems to fail with MinIO or other S3-compatible providers
+                    //Body: zipEntry.stream(),
+                    //ContentType: mime.getType(targetFilePath) ?? undefined,
+                    //ContentLength: zipEntry.uncompressedSize,
                 })
             );
         });
