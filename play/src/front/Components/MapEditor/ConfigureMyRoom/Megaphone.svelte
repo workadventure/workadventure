@@ -92,7 +92,7 @@
 </script>
 
 <div class="flex flex-wrap gap-x-4 items-center h-fit">
-    <InputSwitch id="" bind:value={enabled} onChange={partialSave} disabled={loading} />
+    <InputSwitch id="megaphone-switch" bind:value={enabled} onChange={partialSave} disabled={loading} />
     <h3 id="megaphone" style="color: white;">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
 
