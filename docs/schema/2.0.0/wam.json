@@ -279,9 +279,6 @@
                         "closable": {
                           "type": "boolean"
                         },
-                        "allowAPI": {
-                          "type": "boolean"
-                        },
                         "trigger": {
                           "type": "string",
                           "enum": [
