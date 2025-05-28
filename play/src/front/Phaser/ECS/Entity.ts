@@ -48,8 +48,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private speechDomElement: SpeechDomElement | null = null;
 
+    private gameScene: GameScene;
+
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
+        this.gameScene = scene;
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
@@ -405,6 +408,41 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             });
                             // Fixme: close the menu without impact audio manager and playing
                             //actionsMenuStore.clear();
+                        },
+                    });
+                    break;
+                }
+                case "openPdf": {
+                    if (!property.link) break;
+                    const newTab = property.newTab;
+                    actions.push({
+                        actionName: property.buttonLabel ?? "",
+                        protected: true,
+                        priority: 1,
+                        callback: async () => {
+                            const answer = await (this.scene as GameScene).connection?.queryMapStorageJwtToken();
+                            const link = property.link + (answer && answer.jwt ? `?token=${answer.jwt}` : "");
+
+                            if (newTab) {
+                                this.emit(EntityEvent.PropertyActivated, {
+                                    propertyName: GameMapProperties.OPEN_TAB,
+                                    propertyValue: link,
+                                });
+                            } else {
+                                const coWebsite = new SimpleCoWebsite(
+                                    new URL(link),
+                                    false, // No need for API in PDF
+                                    property.policy,
+                                    property.width,
+                                    property.closable
+                                );
+                                try {
+                                    coWebsites.add(coWebsite);
+                                } catch (error) {
+                                    console.error("Error during loading a co-website: " + coWebsite.getUrl(), error);
+                                }
+                            }
+                            actionsMenuStore.clear();
                         },
                     });
                     break;
