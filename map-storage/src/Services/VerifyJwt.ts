@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs/promises";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import z from "zod";
@@ -12,15 +14,15 @@ const AuthTokenData = z.object({
 });
 type AuthTokenData = z.infer<typeof AuthTokenData>;
 
-export function verifyJWT(req: Request, res: Response, next: NextFunction) {
-    if (!req.url.includes("/file/")) return next(); // Skip JWT verification for non-file requests
+export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
+    if (!req.url.includes("/file/")) return next();
 
     let token: string | null = null;
 
     if (typeof req.query.token === "string") {
         token = req.query.token;
     } else {
-        return res.status(401).json({ message: "Missing token" });
+        return await sendHtmlError(res, "Forbidden", 403);
     }
 
     try {
@@ -28,27 +30,23 @@ export function verifyJWT(req: Request, res: Response, next: NextFunction) {
         const parsed = AuthTokenData.parse(decoded);
         const url = req.protocol + "://" + req.get("host") + req.url.split("?")[0];
 
-        verifyWam(parsed, url).catch((err) => {
-            console.error("Error verifying JWT:", err);
-            return res
-                .status(403)
-                .json({ message: "Forbidden", error: err instanceof Error ? err.message : String(err) });
-        });
+        await verifyWam(parsed, url);
 
+        // eslint-disable-next-line require-atomic-updates
         req.url = url;
         return next();
     } catch (err) {
         if (err instanceof z.ZodError) {
-            return res.status(403).json({ message: "Invalid token", details: err.errors });
+            return await sendHtmlError(res, "Invalid JWT format", 400);
         }
-        return res.status(403).json({ message: "Forbidden" });
+        return await sendHtmlError(res, "Forbidden", 403);
     }
 }
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
     console.log("Verifying WAM URL:", jwt.wamUrl);
     const parsedUrl = new URL(jwt.wamUrl);
-    const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname); // je sais pas si le domain name c'est bien ca
+    const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
 
     const wamFileString = await fileSystem.readFileAsString(mapPath);
     const wam = WAMFileFormat.parse(JSON.parse(wamFileString));
@@ -79,5 +77,18 @@ async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
         }
 
         return; // Access granted
+    }
+}
+
+async function sendHtmlError(res: Response, message: string, statusCode: number = 403) {
+    const errorFilePath = path.join(__dirname, "../../src-ui/error.html");
+
+    try {
+        let html = await fs.readFile(errorFilePath, "utf-8");
+        html = html.replace("{{errorMessage}}", message);
+        res.status(statusCode).send(html);
+    } catch (err) {
+        console.error("Error reading or sending HTML file:", err);
+        res.status(500).send("Internal Server Error");
     }
 }
