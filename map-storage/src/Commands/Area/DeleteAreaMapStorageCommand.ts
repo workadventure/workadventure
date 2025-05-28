@@ -17,12 +17,10 @@ export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
         super(gameMap, id, commandId);
     }
     public async execute(): Promise<void> {
-        console.log("delete area", this.areaConfig);
         await super.execute();
         const promises =
             this.areaConfig?.properties.reduce((acc: Promise<void>[], property) => {
                 const resourceUrl = property.resourceUrl;
-                console.log("resourceUrl", resourceUrl);
                 acc.push(
                     limit(async () => {
                         if (this.areaConfig) {

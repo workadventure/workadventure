@@ -11,7 +11,6 @@ export class UploadFileFrontCommand extends UploadFileCommand implements FrontCo
     }
 
     emitEvent(roomConnection: RoomConnection): void {
-        console.log("UploadFileFrontCommand emitEvent", this.commandId, this.uploadFileMessage);
         roomConnection.emitMapEditorUploadFile(this.commandId, this.uploadFileMessage);
     }
 
