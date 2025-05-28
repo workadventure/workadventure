@@ -401,6 +401,12 @@ export class SocketManager implements ZoneEventListener {
                                     const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
                                     const space = this.spaces.get(addSpaceUserMessage.spaceName);
                                     if (space) {
+                                        console.log(
+                                            "[SocketManager] user added",
+                                            addSpaceUserMessage.user.spaceUserId,
+                                            "in space",
+                                            space.name
+                                        );
                                         space.localAddUser(addSpaceUserMessage.user, undefined);
                                     }
                                     break;
@@ -546,6 +552,7 @@ export class SocketManager implements ZoneEventListener {
             }
 
             space.addUser(socketData.spaceUser, client);
+
             if (socketData.spaces.has(spaceName)) {
                 console.error(`User ${socketData.name} is trying to join a space he is already in.`);
                 Sentry.captureException(

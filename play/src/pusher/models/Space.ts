@@ -90,6 +90,7 @@ export class Space {
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user add sent ${spaceUser.spaceUserId}`);
+        console.log("[Space] user add sent", spaceUser.spaceUserId, "in space", this.name);
         this.localAddUser(spaceUser, client);
     }
 
@@ -103,7 +104,6 @@ export class Space {
         }
         this.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
         debug(`${this.name} : user added ${spaceUser.spaceUserId}. User count ${this.users.size}`);
-
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
