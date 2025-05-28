@@ -18,6 +18,9 @@
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenPdfPropertyData;
+    export let isArea = false;
+    export let triggerOptionActivated = true;
+    export let triggerOnActionChoosen: boolean = property.trigger === ON_ACTION_TRIGGER_BUTTON;
 
     type Option = {
         value: string;
@@ -69,7 +72,7 @@
     }>();
 
     function shouldDisplayAdvancedOption(): boolean {
-        return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
+        return !!(property.policy || !property.closable || property.width || property.newTab);
     }
 
     onMount(() => {
@@ -86,6 +89,11 @@
     });
 
     function onValueChange() {
+        dispatch("change");
+    }
+
+    function onTriggerValueChange() {
+        triggerOnActionChoosen = property.trigger === ON_ACTION_TRIGGER_BUTTON;
         dispatch("change");
     }
 
@@ -124,23 +132,26 @@
     </span>
 
     <span slot="content">
-        <Select
-            id="trigger"
-            label={$LL.mapEditor.properties.linkProperties.trigger()}
-            bind:value={property.trigger}
-            onChange={onValueChange}
-        >
-            <option value={ON_ACTION_TRIGGER_ENTER}
-                >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
+        {#if isArea}
+            <Select
+                id="trigger"
+                label={$LL.mapEditor.properties.linkProperties.trigger()}
+                bind:value={property.trigger}
+                onChange={onTriggerValueChange}
             >
-            {#if !property.newTab}
-                <option value={ON_ICON_TRIGGER_BUTTON}
-                    >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
+                <option value={ON_ACTION_TRIGGER_ENTER}
+                    >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
                 >
-            {/if}
-            <option value={ON_ACTION_TRIGGER_BUTTON}>{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
-            >
-        </Select>
+                {#if !property.newTab}
+                    <option value={ON_ICON_TRIGGER_BUTTON}
+                        >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
+                    >
+                {/if}
+                <option value={ON_ACTION_TRIGGER_BUTTON}
+                    >{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
+                >
+            </Select>
+        {/if}
 
         <FileUpload
             {property}
@@ -152,6 +163,18 @@
             }}
         />
 
+        {#if !property.hideButtonLabel}
+            <div class=" flex flex-col">
+                <Input
+                    label={$LL.mapEditor.entityEditor.buttonLabel()}
+                    id="linkButton"
+                    type="text"
+                    bind:value={property.buttonLabel}
+                    onChange={onValueChange}
+                />
+            </div>
+        {/if}
+
         <InputSwitch
             id="advancedOption"
             label={$LL.mapEditor.properties.advancedOptions()}
@@ -160,6 +183,17 @@
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             {#if property.trigger == ON_ACTION_TRIGGER_BUTTON}
+                <Input
+                    id="triggerMessage"
+                    type="text"
+                    placeholder={$LL.trigger.object()}
+                    label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
+                    bind:value={property.triggerMessage}
+                    onChange={onValueChange}
+                />
+            {/if}
+
+            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
                     type="text"
@@ -216,13 +250,6 @@
                     id="closable"
                     label={$LL.mapEditor.properties.linkProperties.closable()}
                     bind:value={property.closable}
-                    onChange={onValueChange}
-                />
-
-                <InputCheckbox
-                    id="allowAPI"
-                    label={$LL.mapEditor.properties.linkProperties.allowAPI()}
-                    bind:value={property.allowAPI}
                     onChange={onValueChange}
                 />
 

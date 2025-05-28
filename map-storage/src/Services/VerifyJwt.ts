@@ -22,6 +22,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
     if (typeof req.query.token === "string") {
         token = req.query.token;
     } else {
+        console.error("Invalid token format in query parameters");
         return await sendHtmlError(res, "Forbidden", 403);
     }
 
@@ -37,8 +38,10 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
         return next();
     } catch (err) {
         if (err instanceof z.ZodError) {
+            console.error("Invalid Jwt format zodError", err.errors);
             return await sendHtmlError(res, "Invalid JWT format", 400);
         }
+        console.error("Forbidden", err);
         return await sendHtmlError(res, "Forbidden", 403);
     }
 }
@@ -55,11 +58,23 @@ async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
         area.properties.some((prop) => prop.type === "openPdf" && decodeURI(prop.link ?? "") === decodeURI(url))
     );
 
-    if (!area) {
-        throw new Error(`No area found with a PDF link matching the URL: ${url}`);
+    const entity = Object.values(wam.entities).find((value) =>
+        value.properties?.some((prop) => prop.type === "openPdf" && decodeURI(prop.link ?? "") === decodeURI(url))
+    );
+
+    if (!area && !entity) {
+        throw new Error(`No area or entity found with a PDF link matching the URL: ${url}`);
     }
 
-    const restrictionProperty = area.properties.find((prop) => prop.type === "restrictedRightsPropertyData");
+    let restrictionProperty;
+
+    if (area) {
+        restrictionProperty = area.properties.find((prop) => prop.type === "restrictedRightsPropertyData");
+    }
+    /* Add this if resticted rights are added to entities
+    else if (entity) {
+        restrictionProperty = entity.properties?.find((prop) => prop.type === "restrictedRightsPropertyData");
+    } */
 
     if (!restrictionProperty) {
         return; // No restrictions, access granted

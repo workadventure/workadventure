@@ -127,7 +127,9 @@ new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
 
-app.use(verifyJWT);
+app.use((req, res, next) => {
+    Promise.resolve(verifyJWT(req, res, next)).catch(next);
+});
 
 app.use(proxyFiles(fileSystem));
 

@@ -251,7 +251,6 @@
                     closable: true,
                     newTab: false,
                     hideButtonLabel: true,
-                    allowAPI: false,
                     policy,
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
@@ -783,6 +782,7 @@
                     {:else if property.type === "openPdf"}
                         <OpenPdfPropertyEditor
                             {property}
+                            isArea={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
