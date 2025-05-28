@@ -45,7 +45,6 @@ export class CustomFileService {
 
         const mapPath = mapPathUsingDomainWithPrefix(`/file/${filename}-${property.id}${fileExtension}`, this.hostname);
 
-        console.log("Deleting file: ", property.name);
         await fileSystem.deleteFiles(mapPath);
         return;
     }

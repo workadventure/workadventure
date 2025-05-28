@@ -199,7 +199,13 @@ const mapStorageServer: MapStorageServer = {
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
-                            new DeleteAreaMapStorageCommand(gameMap, message.id, commandId, mapUrl.hostname)
+                            new DeleteAreaMapStorageCommand(
+                                gameMap,
+                                message.id,
+                                commandId,
+                                mapUrl.hostname,
+                                hookManager
+                            )
                         );
                         break;
                     }
