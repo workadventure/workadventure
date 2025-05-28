@@ -20,6 +20,7 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
+            console.log("Operation", operation);
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = AreaDataProperty.safeParse(operation.value);
 

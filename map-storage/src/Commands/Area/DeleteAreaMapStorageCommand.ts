@@ -2,20 +2,35 @@ import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/node";
 import pLimit from "p-limit";
 import { _axios } from "../../Services/axiosInstance";
+import { HookManager } from "../../Modules/HookManager";
 
 const limit = pLimit(10);
 
 export class DeleteAreaMapStorageCommand extends DeleteAreaCommand {
-    constructor(gameMap: GameMap, id: string, commandId: string | undefined, private hostname: string) {
+    constructor(
+        gameMap: GameMap,
+        id: string,
+        commandId: string | undefined,
+        private hostname: string,
+        private hookManager: HookManager
+    ) {
         super(gameMap, id, commandId);
     }
     public async execute(): Promise<void> {
+        console.log("delete area", this.areaConfig);
         await super.execute();
         const promises =
             this.areaConfig?.properties.reduce((acc: Promise<void>[], property) => {
                 const resourceUrl = property.resourceUrl;
-                if (!resourceUrl) return acc;
-                acc.push(limit(() => _axios.delete(resourceUrl, { data: property })));
+                console.log("resourceUrl", resourceUrl);
+                acc.push(
+                    limit(async () => {
+                        if (this.areaConfig) {
+                            await this.hookManager.fireAreaPropertyDelete(this.areaConfig, property, this.hostname);
+                        }
+                        if (resourceUrl) return _axios.delete(resourceUrl, { data: property });
+                    })
+                );
 
                 return acc;
             }, []) || [];
