@@ -150,7 +150,6 @@ export class AreasPropertiesListener {
 
     public onLeaveAreasHandler(areasData: AreaData[], areas?: Area[]): void {
         for (const areaData of areasData) {
-            console.log("Leave area: ", areaData);
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(areaData.id, areaData.name);
 
@@ -1083,7 +1082,6 @@ export class AreasPropertiesListener {
     }
 
     private async handleOpenPdfOnEnter(property: OpenPdfPropertyData): Promise<void> {
-        console.log("handleOpenPdfOnEnter");
         if (!property.link) {
             return;
         }
@@ -1096,7 +1094,6 @@ export class AreasPropertiesListener {
         const answer = await this.scene.connection?.queryMapStorageJwtToken();
 
         const url = `${property.link}?token=${answer.jwt}`;
-        console.log("Open PDF URL: ", url, answer.jwt);
 
         property.link = url;
 
@@ -1189,7 +1186,6 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
-        console.log("handleOpenPdfOnLeave");
         const openWebsiteProperty: string | null = property.link;
 
         if (!openWebsiteProperty) {

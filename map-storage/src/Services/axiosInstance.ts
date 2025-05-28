@@ -9,8 +9,6 @@ export const _axios = axios.create({
     },
 });
 
-console.log("MAP_STORAGE_API_TOKEN", MAP_STORAGE_API_TOKEN);
-
 _axios.interceptors.request.use(
     (config) => {
         const url = new URL(config.url || "");

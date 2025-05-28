@@ -20,7 +20,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
     public async execute(): Promise<void> {
         const patch = jsonpatch.compare(this.oldConfig, this.newConfig);
         const promises = patch.reduce((acc: Promise<void>[], operation) => {
-            console.log("Operation", operation);
             if (operation.op === "add" && operation.path.match(new RegExp("^/properties/*"))) {
                 const value = AreaDataProperty.safeParse(operation.value);
 
@@ -83,7 +82,6 @@ export class UpdateAreaMapStorageCommand extends UpdateAreaCommand {
             Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
         }
 
-        console.log("UpdateAreaMapStorageCommand", this.newConfig);
         return await super.execute();
     }
 }
