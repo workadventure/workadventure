@@ -1390,7 +1390,7 @@ export class SocketManager {
             space = new Space(joinSpaceMessage.spaceName);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         } else {
-            console.log("[SocketManager] space already exists", joinSpaceMessage.spaceName);
+            debug(" space already exists", joinSpaceMessage.spaceName);
         }
 
         pusher.watchSpace(space.name);

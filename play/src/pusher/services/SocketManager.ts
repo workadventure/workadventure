@@ -401,7 +401,7 @@ export class SocketManager implements ZoneEventListener {
                                     const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
                                     const space = this.spaces.get(addSpaceUserMessage.spaceName);
                                     if (space) {
-                                        console.log(
+                                        debug(
                                             "[SocketManager] user added",
                                             addSpaceUserMessage.user.spaceUserId,
                                             "in space",

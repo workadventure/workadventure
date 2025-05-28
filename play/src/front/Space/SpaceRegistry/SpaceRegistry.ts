@@ -171,7 +171,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     }
 
     reconnect(connection: RoomConnectionForSpacesInterface) {
-        console.log("[SpaceRegistry] try to reconnect");
+        console.info("[SpaceRegistry] try to reconnect");
         // this.roomConnection = connection;
         // this.spaces.forEach((space) => {
         //     this.leaveSpace(space);

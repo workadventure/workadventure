@@ -90,7 +90,6 @@ export class Space {
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         debug(`${this.name} : user add sent ${spaceUser.spaceUserId}`);
-        console.log("[Space] user add sent", spaceUser.spaceUserId, "in space", this.name);
         this.localAddUser(spaceUser, client);
     }
 
