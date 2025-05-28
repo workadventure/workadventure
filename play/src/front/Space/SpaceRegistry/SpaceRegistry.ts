@@ -46,6 +46,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
     private roomConnectionStreamSubscription: Subscription;
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream
@@ -170,12 +171,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     }
 
     reconnect(connection: RoomConnectionForSpacesInterface) {
-        this.roomConnection = connection;
-        this.spaces.forEach((space) => {
-            this.leaveSpace(space);
-            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
-            this.spaces.set(newSpace.getName(), newSpace);
-        });
+        console.log("[SpaceRegistry] try to reconnect");
+        // this.roomConnection = connection;
+        // this.spaces.forEach((space) => {
+        //     this.leaveSpace(space);
+        //     const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
+        //     this.spaces.set(newSpace.getName(), newSpace);
+        // });
     }
 
     destroy() {
