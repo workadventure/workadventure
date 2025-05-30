@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import z from "zod";
-import { WAMFileFormat } from "@workadventure/map-editor";
+import { AreaData, WAMFileFormat } from "@workadventure/map-editor";
 import { fileSystem } from "../fileSystem";
 import { SECRET_KEY } from "../Enum/EnvironmentVariable";
 import { mapPathUsingDomain } from "./PathMapper";
@@ -51,30 +51,13 @@ async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
     const parsedUrl = new URL(jwt.wamUrl);
     const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
 
-    const wamFileString = await fileSystem.readFileAsString(mapPath);
-    const wam = WAMFileFormat.parse(JSON.parse(wamFileString));
+    const test = await getAndCheckWamFile(mapPath, url);
 
-    const area = wam.areas.find((area) =>
-        area.properties.some((prop) => prop.type === "openPdf" && decodeURI(prop.link ?? "") === decodeURI(url))
-    );
-
-    const entity = Object.values(wam.entities).find((value) =>
-        value.properties?.some((prop) => prop.type === "openPdf" && decodeURI(prop.link ?? "") === decodeURI(url))
-    );
-
-    if (!area && !entity) {
-        throw new Error(`No area or entity found with a PDF link matching the URL: ${url}`);
+    if (test === "entity") {
+        return;
     }
 
-    let restrictionProperty;
-
-    if (area) {
-        restrictionProperty = area.properties.find((prop) => prop.type === "restrictedRightsPropertyData");
-    }
-    /* Add this if resticted rights are added to entities
-    else if (entity) {
-        restrictionProperty = entity.properties?.find((prop) => prop.type === "restrictedRightsPropertyData");
-    } */
+    const restrictionProperty = test.properties?.find((prop) => prop.type === "restrictedRightsPropertyData");
 
     if (!restrictionProperty) {
         return; // No restrictions, access granted
@@ -106,4 +89,50 @@ async function sendHtmlError(res: Response, message: string, statusCode: number 
         console.error("Error reading or sending HTML file:", err);
         res.status(500).send("Internal Server Error");
     }
+}
+
+// Wam File Verification Function
+// Wam is updated every 15 seconds so we need to set a timeout to check the file if we don't find the area or entity
+async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaData | "entity"> {
+    const INTERVAL = 2000;
+    const TIMEOUT = 16000;
+    const deadline = Date.now() + TIMEOUT;
+
+    return new Promise((resolve, reject) => {
+        const poll = async () => {
+            try {
+                const wamString = await fileSystem.readFileAsString(mapPath);
+                const wam = WAMFileFormat.parse(JSON.parse(wamString));
+
+                const area = wam.areas.find((a) =>
+                    a.properties.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                );
+
+                const entity = Object.values(wam.entities).find((e) =>
+                    e.properties?.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                );
+
+                if (area) {
+                    clearInterval(interval);
+                    resolve(area);
+                } else if (entity) {
+                    clearInterval(interval);
+                    console.log("Found entity with PDF link matching:", url, entity);
+                    resolve("entity");
+                } else if (Date.now() >= deadline) {
+                    clearInterval(interval);
+                    reject(new Error(`No area or entity found with a PDF link matching: ${url}`));
+                }
+            } catch (err) {
+                clearInterval(interval);
+                reject(err instanceof Error ? err : new Error(String(err)));
+            }
+        };
+
+        const interval = setInterval(() => {
+            void poll();
+        }, INTERVAL);
+
+        void poll();
+    });
 }
