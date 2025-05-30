@@ -101,26 +101,27 @@ export class S3FileSystem implements FileSystemInterface {
             const objects = listObjectsResponse.Contents;
 
             if (objects && objects.length > 0) {
-                await this.s3.send(
-                    new DeleteObjectsCommand({
-                        Bucket: this.bucketName,
-                        Delete: {
-                            Objects: objects
-                                .filter((o) => {
-                                    if (o.Key?.includes(".wam")) {
-                                        const wamKey = o.Key?.slice().replace(directory, "");
-                                        const tmjKey = wamKey.slice().replace(".wam", ".tmj");
-                                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
-                                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(wamKey)) {
-                                            return false;
-                                        }
-                                    }
-                                    return true;
-                                })
-                                .map((o) => ({ Key: o.Key })),
-                        },
-                    })
-                );
+                const filteredObjects = objects.filter((o) => {
+                    if (o.Key?.includes(".wam")) {
+                        const wamKey = o.Key?.slice().replace(directory, "");
+                        const tmjKey = wamKey.slice().replace(".wam", ".tmj");
+                        // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists
+                        if (filesFromZip.includes(tmjKey) && !filesFromZip.includes(wamKey)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+                if (filteredObjects.length > 0) {
+                    await this.s3.send(
+                        new DeleteObjectsCommand({
+                            Bucket: this.bucketName,
+                            Delete: {
+                                Objects: filteredObjects.map((o) => ({ Key: o.Key })),
+                            },
+                        })
+                    );
+                }
             }
             continuationToken = listObjectsResponse.NextContinuationToken;
         } while (listObjectsResponse.IsTruncated);
