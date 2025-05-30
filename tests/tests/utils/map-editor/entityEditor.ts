@@ -114,6 +114,13 @@ class EntityEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
   }
 
+  async setOpenPdfProperty(page: Page) {
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(path.join(__dirname, `../../assets/ipsum-lorem.pdf`));
+  }
+
   getTestAssetFile(){
     return `${this.getTestAssetName()}.png`;
   }

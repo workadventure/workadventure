@@ -151,6 +151,12 @@ export const EnvironmentVariables = z.object({
         .string()
         .optional()
         .transform((val) => (val && val.trim().length > 0 ? val.split(",") : [])),
+    SECRET_KEY: z
+        .string()
+        .optional()
+        .describe(
+            "The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files."
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

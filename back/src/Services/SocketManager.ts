@@ -801,6 +801,7 @@ export class SocketManager {
                 case "searchTagsQuery":
                 case "chatMembersQuery":
                 case "oauthRefreshTokenQuery":
+                case "mapStorageJwtQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
