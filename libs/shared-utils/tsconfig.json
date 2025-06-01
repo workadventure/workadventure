@@ -13,6 +13,8 @@
       "declaration": true,
       "sourceMap": true,
       "importsNotUsedAsValues": "remove",
-      "skipLibCheck": true
+      "skipLibCheck": true,
+      "allowImportingTsExtensions": true,
+      "noEmit": true,
     }
 }

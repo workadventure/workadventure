@@ -28,6 +28,8 @@
     // generated source code references. This allows Sentry to match source files
     // relative to your source root folder.
     "sourceRoot": "/",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
       "@wa-icons": ["./src/front/Components/Icons.ts"]
     }
