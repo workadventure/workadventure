@@ -29,10 +29,10 @@ class LaSuiteDocsProvider {
         }
     }
 
-    public async deleteDocument(laSuiteDocsId: string): Promise<void> {
+    public async deleteDocument(laSuiteNumeriqueDocsId: string): Promise<void> {
         try {
             const axiosInstance = this.getAxios();
-            const response = await axiosInstance.delete(`${LASUITE_DOCS_API_URI}/documents/${laSuiteDocsId}`);
+            const response = await axiosInstance.delete(`${LASUITE_DOCS_API_URI}/documents/${laSuiteNumeriqueDocsId}`);
 
             if (response.status === 200) {
                 return;

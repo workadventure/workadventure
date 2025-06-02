@@ -1,9 +1,9 @@
-import { LaSuiteDocsPropertyData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/node";
 import { Request, Response } from "express";
 import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
 import { laSuiteDocsProvider } from "../services/LaSuite/docsProvider";
+import { LaSuiteNumeriqueDocsPropertyData } from "../../common/external-modules/lasuitenumerique-docs/MapEditor/types";
 import { BaseHttpController } from "./BaseHttpController";
 
 /*
@@ -50,16 +50,16 @@ export class LaSuiteDocsAreaController extends BaseHttpController {
          */
         this.app.post("/laSuiteDocsArea", [mapStorageToken], async (req: Request, res: Response) => {
             try {
-                const body = validatePostQuery(req, res, LaSuiteDocsPropertyData);
+                const body = validatePostQuery(req, res, LaSuiteNumeriqueDocsPropertyData);
 
                 if (!body) {
                     res.status(400).send("Invalid Request Body");
                     return;
                 }
 
-                const laSuiteDocsId = await laSuiteDocsProvider.createDocument();
+                const laSuiteNumeriqueDocsId = await laSuiteDocsProvider.createDocument();
                 body.serverData = {
-                    laSuiteDocsId: laSuiteDocsId,
+                    laSuiteNumeriqueDocsId: laSuiteNumeriqueDocsId,
                 };
                 res.status(201).json(body);
                 return;
@@ -109,15 +109,17 @@ export class LaSuiteDocsAreaController extends BaseHttpController {
         this.app.delete("/laSuiteDocsArea", [mapStorageToken], async (req: Request, res: Response) => {
             try {
                 const body = req.body;
-                const isLaSuiteDocsPropertyData = LaSuiteDocsPropertyData.safeParse(body);
+                const isLaSuiteDocsPropertyData = LaSuiteNumeriqueDocsPropertyData.safeParse(body);
 
                 if (!isLaSuiteDocsPropertyData.success) {
                     res.status(400).send("Invalid request body");
                     return;
                 }
 
-                if (isLaSuiteDocsPropertyData.data.serverData?.laSuiteDocsId) {
-                    await laSuiteDocsProvider.deleteDocument(isLaSuiteDocsPropertyData.data.serverData.laSuiteDocsId);
+                if (isLaSuiteDocsPropertyData.data.serverData?.laSuiteNumeriqueDocsId) {
+                    await laSuiteDocsProvider.deleteDocument(
+                        isLaSuiteDocsPropertyData.data.serverData.laSuiteNumeriqueDocsId
+                    );
                 }
                 res.status(204).send();
                 return;
