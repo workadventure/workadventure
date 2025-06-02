@@ -20,11 +20,15 @@ export class WamVersion201 extends WamVersionMigration {
             version: this.getVersion(),
             entityCollections: fileContent.entityCollections.concat([
                 {
-                    url: "https://limezujulio.workadventu.re/modern-office/collection.json",
+                    url: "https://limezu-entities-julio.workadventu.re/modern-office/collection.json",
                     type: "file",
                 },
                 {
-                    url: "https://limezujulio.workadventu.re/modern-interior/collection.json",
+                    url: "https://limezu-entities-julio.workadventu.re/modern-interior/collection.json",
+                    type: "file",
+                },
+                {
+                    url: "https://limezu-entities-julio.workadventu.re/modern-exterior/collection.json",
                     type: "file",
                 },
             ]),
