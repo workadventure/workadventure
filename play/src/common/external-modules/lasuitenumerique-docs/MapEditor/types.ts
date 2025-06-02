@@ -12,6 +12,7 @@ export const LaSuiteNumeriqueDocsPropertyData = ExtensionModuleAreaProperty.exte
     serverData: z
         .object({
             laSuiteNumeriqueDocsId: z.string().optional(),
+            url: z.string().optional(),
         })
         .optional(),
 });

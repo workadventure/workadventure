@@ -2,7 +2,11 @@ import * as Sentry from "@sentry/node";
 import { Request, Response } from "express";
 import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
-import { laSuiteDocsProvider } from "../services/LaSuite/docsProvider";
+import {
+    LASUITE_NUMERIQUE_DOCS_ROLE,
+    LASUITE_NUMERIQUE_DOCS_VISIBILITY,
+    laSuiteDocsProvider,
+} from "../services/LaSuite/docsProvider";
 import { LaSuiteNumeriqueDocsPropertyData } from "../../common/external-modules/lasuitenumerique-docs/MapEditor/types";
 import { BaseHttpController } from "./BaseHttpController";
 
@@ -57,10 +61,18 @@ export class LaSuiteDocsAreaController extends BaseHttpController {
                     return;
                 }
 
-                const laSuiteNumeriqueDocsId = await laSuiteDocsProvider.createDocument();
-                body.serverData = {
-                    laSuiteNumeriqueDocsId: laSuiteNumeriqueDocsId,
-                };
+                const serverData = await laSuiteDocsProvider.createDocument();
+
+                body.serverData = serverData.serverData;
+
+                if (serverData.serverData?.laSuiteNumeriqueDocsId) {
+                    await laSuiteDocsProvider.changeDocumentVisibility(
+                        serverData.serverData.laSuiteNumeriqueDocsId,
+                        LASUITE_NUMERIQUE_DOCS_VISIBILITY.PUBLIC,
+                        LASUITE_NUMERIQUE_DOCS_ROLE.EDITOR
+                    );
+                }
+
                 res.status(201).json(body);
                 return;
             } catch (error) {
