@@ -12,6 +12,7 @@
     export let property: LaSuiteNumeriqueDocsPropertyData;
     //export let extensionModuleAreaMapEditor: TeamsAreaMapEditorData;
 
+
     const dispatch = createEventDispatcher<{
         change: LaSuiteNumeriqueDocsPropertyData["data"];
         close: void;
@@ -34,7 +35,7 @@
         if (!property.data) {
             property.data = {
                 width: 50,
-                shouldOpenAutomatically: false,
+                //shouldOpenAutomatically: false,
             };
         }
     });
@@ -46,7 +47,6 @@
         Docs (Suite Numérique)
     </span>
     <span slot="content">
-        <p>Hello world</p>
         <InputSwitch
             id="laSuiteNumeriqueDocsToggleAdvancedOption"
             label={optionAdvancedActivated ? "Clear advanced option" : $LL.mapEditor.properties.advancedOptions()}

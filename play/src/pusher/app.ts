@@ -24,6 +24,7 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
+import { LaSuiteDocsAreaController } from "./controllers/laSuiteDocsAreaController";
 
 class App {
     private readonly app: Application;
@@ -95,6 +96,7 @@ class App {
         new FrontController(this.app);
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
+        new LaSuiteDocsAreaController(this.app);
 
         const staticOptions = {
             extensions: [
