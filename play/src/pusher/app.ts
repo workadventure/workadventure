@@ -1,4 +1,7 @@
 import fs from "fs";
+import { readdir } from "fs/promises";
+import * as pathPackage from "path";
+import { fileURLToPath } from "url";
 import express, { Application } from "express";
 import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
@@ -24,6 +27,7 @@ import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
+import { ExtensionModule } from "./ExternalModule/ExtensionModule";
 
 class App {
     private readonly app: Application;
@@ -156,6 +160,51 @@ class App {
         );
 
         this.app.use(globalErrorHandler);
+
+        this.initExternalModules().catch((error) => {
+            console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
+            Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
+        });
+    }
+
+    private async initExternalModules() {
+        const __dirname = pathPackage.dirname(fileURLToPath(import.meta.url));
+
+        const externalModulesDir = pathPackage.join(__dirname, "./external-modules");
+        const moduleDirs = await readdir(externalModulesDir);
+        const files: string[] = [];
+        for (const dir of moduleDirs) {
+            const indexPath = pathPackage.join(externalModulesDir, dir, "index.ts");
+            if (fs.existsSync(indexPath) && /index\.ts$/.test(indexPath)) {
+                files.push(pathPackage.join("external-modules", dir, "index.ts"));
+            }
+        }
+
+        const modules: Record<string, () => Promise<{ default: ExtensionModule }>> = {};
+
+        for (const file of files) {
+            if (file.endsWith(".ts")) {
+                const filepath = pathPackage.join(__dirname, file);
+                modules[`./external-modules/${file}`] = async () => {
+                    const module = await import(filepath);
+                    const defaultExtensionModule = module.default;
+                    return { default: defaultExtensionModule };
+                };
+            }
+        }
+
+        for (const moduleKey in modules) {
+            const module = modules[moduleKey];
+            (async () => {
+                const { default: defaultExtensionModule } = await module();
+                defaultExtensionModule.init({
+                    app: this.app,
+                });
+            })().catch((error) => {
+                console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
+                Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
+            });
+        }
     }
 
     public async init() {
