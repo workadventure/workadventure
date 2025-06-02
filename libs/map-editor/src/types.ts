@@ -164,6 +164,15 @@ export const MatrixRoomPropertyData = PropertyBase.extend({
         .optional(),
 });
 
+export const LaSuiteDocsPropertyData = PropertyBase.extend({
+    type: z.literal("laSuiteDocsAreaPropertyData"),
+    serverData: z
+        .object({
+            laSuiteDocsId: z.string().optional(),
+        })
+        .optional(),
+});
+
 export const TooltipPropertyData = PropertyBase.extend({
     type: z.literal("tooltipPropertyData"),
     id: z.string(),
@@ -398,6 +407,7 @@ export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionProperty
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type MatrixRoomPropertyData = z.infer<typeof MatrixRoomPropertyData>;
+export type LaSuiteDocsPropertyData = z.infer<typeof LaSuiteDocsPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 export type ExtensionModuleAreaPropertyData = z.infer<typeof ExtensionModuleAreaProperty>;
 export type TooltipPropertyData = z.infer<typeof TooltipPropertyData>;
