@@ -266,6 +266,8 @@ services:
       ENABLE_BASIC_AUTHENTICATION: "true"
       AUTHENTICATION_USER: "john.doe"
       AUTHENTICATION_PASSWORD: "password"
+      ENABLE_BEARER_AUTHENTICATION: "true"
+      AUTHENTICATION_TOKEN: "123"
       API_URL: back:50051
       # Sentry integration
       SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
