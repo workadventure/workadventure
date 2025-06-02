@@ -67,11 +67,29 @@
     }
 
     function copyUrl() {
-        url = coWebsite.getUrl().toString();
+        if (isJitsi) {
+            const jitsiCoWebsite = coWebsite as JitsiCoWebsite;
+            url = jitsiCoWebsite.getJitsiUrl() || "";
+        } else {
+            url = coWebsite.getUrl().toString();
+        }
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         analyticsClient.copyCowebsiteLink();
         dispatch("copy");
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
+    }
+
+    function handleClick() {
+        if (isJitsi) {
+            const jitsiCoWebsite = coWebsite as JitsiCoWebsite;
+            url = jitsiCoWebsite.getJitsiUrl() || "";
+        } else {
+            url = coWebsite.getUrl().toString();
+        }
+
+        window.open(url, "_blank");
+        analyticsClient.openCowebsiteInNewTab();
+        if (isJitsi) closeTab();
     }
 </script>
 
@@ -151,10 +169,7 @@
                 class="group {active
                     ? 'hover:bg-contrast/10'
                     : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click={() => {
-                    window.open(coWebsite.getUrl().toString(), "_blank");
-                    analyticsClient.openCowebsiteInNewTab();
-                }}
+                on:click={handleClick}
             >
                 <CopyIcon
                     height="h-6"

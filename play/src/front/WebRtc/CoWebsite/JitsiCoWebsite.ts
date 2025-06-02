@@ -123,6 +123,8 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
+    private jitsiUrl: string | undefined;
+
     constructor(
         url: URL,
         widthPercent: number | undefined,
@@ -141,5 +143,13 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     getDomain(): string {
         return this.domain;
+    }
+
+    setJitsiUrl(url: string): void {
+        this.jitsiUrl = url;
+    }
+
+    getJitsiUrl(): string | undefined {
+        return this.jitsiUrl;
     }
 }

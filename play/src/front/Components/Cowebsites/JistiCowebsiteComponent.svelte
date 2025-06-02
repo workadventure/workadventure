@@ -30,6 +30,15 @@
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jistiMeetLoadedPromise: CancelablePromise<void>;
+    let jitsiUrl: string;
+
+    // Expose the Jitsi URL to the parent component
+    onMount(() => {
+        jitsiUrl = jitsiExternalApiFactory
+            .getJitsiApiUrl(domain)
+            .replace("/external_api.js", `/${actualCowebsite.roomName}`);
+        actualCowebsite.setJitsiUrl(jitsiUrl);
+    });
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
@@ -74,7 +83,6 @@
 
     onMount(() => {
         let cancelled = false;
-
         inExternalServiceStore.set(true);
 
         jitsiExternalApiFactory
