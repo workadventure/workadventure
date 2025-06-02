@@ -341,7 +341,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
     public updateCameraOffset(box: Box, instant = false): void {
-        if (this.cameraMode !== CameraMode.Follow) {
+        if (this.cameraMode !== CameraMode.Follow || box.xEnd === undefined || box.yEnd === undefined) {
             return;
         }
         const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;

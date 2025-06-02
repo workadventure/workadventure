@@ -26,7 +26,7 @@
     let domain = actualCowebsite.getDomain();
     let jitsiContainer: HTMLDivElement;
     let playerName = gameManager.getPlayerName();
-    let jwt: string | undefined;
+    let jwt: string | undefined = actualCowebsite.jwt;
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jistiMeetLoadedPromise: CancelablePromise<void>;

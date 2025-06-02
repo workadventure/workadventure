@@ -6,7 +6,7 @@ export class SpeechBubble {
         this.element.textContent = text;
         this.element.classList.add(
             "absolute",
-            "bg-white/50",
+            "bg-white/80",
             "backdrop-blur-[1px]",
             "rounded-full",
             "py-1",

@@ -22,7 +22,6 @@
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import XIcon from "../../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../../Icons/MenuBurgerIcon.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -40,6 +39,7 @@
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import AdjustmentsIcon from "../../Icons/AdjustmentsIcon.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconLogout } from "@wa-icons";
@@ -227,14 +227,14 @@
                     <CamSettingsIcon />
                 </ActionBarButton>
                 <ActionBarButton
-                    label={$LL.actionbar.otherSettings()}
+                    label={$LL.actionbar.allSettings()}
                     on:click={() => {
                         showMenuItem(SubMenusInterface.settings);
                         analyticsClient.openedMenu();
                         openedMenuStore.close("profileMenu");
                     }}
                 >
-                    <SettingsIcon />
+                    <AdjustmentsIcon />
                 </ActionBarButton>
 
                 <div class="@sm/actions:hidden items-center">

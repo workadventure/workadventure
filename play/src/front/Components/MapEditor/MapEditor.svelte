@@ -14,6 +14,8 @@
     import MapEditorResizeHandle from "./MapEditorResizeHandle.svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditorSideBarWidthStore";
 
+    const direction = document.documentElement.getAttribute("dir") || "ltr";
+
     let mapEditor: HTMLElement;
 
     function hideMapEditor() {
@@ -62,7 +64,9 @@
                 out:fly={{ x: 100, duration: 200 }}
             >
                 <button
-                    class="h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    class="absolute top-2 right-4 h-12 w-12 rounded flex items-center justify-center hover:bg-white/20 transition-all aspect-square cursor-pointer text-2xl"
+                    class:right-4={direction === "ltr"}
+                    class:left-4={direction === "rtl"}
                     on:click={hideMapEditor}
                 >
                     <ArrowBarRight
@@ -70,7 +74,7 @@
                         width="w-6"
                         strokeColor="stroke-white"
                         fillColor="fill-transparent"
-                        classList="aspect-ratio transition-all"
+                        classList={`aspect-ratio transition-all ${direction === "rtl" ? "rotate-180" : ""}`}
                     />
                 </button>
 
