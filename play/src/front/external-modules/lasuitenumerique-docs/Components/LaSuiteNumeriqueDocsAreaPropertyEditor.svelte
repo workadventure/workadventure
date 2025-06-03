@@ -12,6 +12,7 @@
     export let property: LaSuiteNumeriqueDocsPropertyData;
     //export let extensionModuleAreaMapEditor: TeamsAreaMapEditorData;
 
+
     const dispatch = createEventDispatcher<{
         change: LaSuiteNumeriqueDocsPropertyData["data"];
         close: void;
@@ -30,16 +31,11 @@
         dispatch("change", property.data);
     }
 
-    function toggleAdvancedOption() {
-        optionAdvancedActivated = !optionAdvancedActivated;
-        if (optionAdvancedActivated) return;
-    }
-
     onMount(() => {
         if (!property.data) {
             property.data = {
                 width: 50,
-                shouldOpenAutomatically: false,
+                //shouldOpenAutomatically: false,
             };
         }
     });
@@ -51,21 +47,19 @@
         Docs (Suite Numérique)
     </span>
     <span slot="content">
-        <p>Hello world</p>
         <InputSwitch
             id="laSuiteNumeriqueDocsToggleAdvancedOption"
             label={optionAdvancedActivated ? "Clear advanced option" : $LL.mapEditor.properties.advancedOptions()}
-            onChange={toggleAdvancedOption}
             bind:value={optionAdvancedActivated}
         />
         {#if optionAdvancedActivated}
-            <div class="advanced-option px-2 flex flex-row items-center gap-2">
+            <div class="advanced-option px-2 flex-row items-center gap-2">
                 <RangeSlider
                         label={$LL.mapEditor.properties.jitsiProperties.width()}
                         min={15}
                         max={85}
                         placeholder="50"
-                        bind:value={property.width}
+                        bind:value={property.data.width}
                         onChange={onValueChange}
                         variant="secondary"
                         buttonShape="square"

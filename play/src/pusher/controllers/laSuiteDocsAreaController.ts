@@ -13,6 +13,7 @@ import { BaseHttpController } from "./BaseHttpController";
 /*
    This controller is used as the resource URL for the lasuite docs area. It is called by the map storage. 
 */
+//TODO: bouger dans l'extension module
 export class LaSuiteDocsAreaController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
     routes(): void {
