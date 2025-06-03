@@ -264,6 +264,7 @@
         selectedAreaPreviewUnsubscriber();
     });
 
+    /** @deprecated Use addProperty instead */
     function onAddProperty(type: AreaDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
@@ -277,6 +278,19 @@
 
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
+            refreshFlags();
+        }
+    }
+
+    function addProperty(event: Omit<AreaDataProperty, "id">) {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            const id = uuid();
+
+            const areaDataProperty = {
+                ...event,
+                id,
+            } as AreaDataProperty;
+            $mapEditorSelectedAreaPreviewStore.addProperty(areaDataProperty);
             refreshFlags();
         }
     }
@@ -421,7 +435,7 @@
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
-                    on:click={() => onAddProperty("personalAreaPropertyData")}
+                    on:click={(event) => addProperty(event.detail)}
                 />
             {/if}
             {#if !hasPersonalAreaProperty && !hasRightsProperty}
@@ -535,8 +549,8 @@
                             <AddPropertyButtonWrapper
                                 property="extensionModule"
                                 subProperty={subtype}
-                                on:click={() => {
-                                    onAddProperty("extensionModule", subtype);
+                                on:click={(event) => {
+                                    addProperty(event.detail);
                                 }}
                             />
                         {/if}

@@ -1,2 +1,4 @@
 *
 !.gitignore
+!lasuitenumerique-docs
+!lasuitenumerique-docs/**

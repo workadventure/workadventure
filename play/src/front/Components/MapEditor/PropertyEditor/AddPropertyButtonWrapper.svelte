@@ -1,6 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
+    import {
+        AreaDataPropertiesKeys, AreaDataPropertyWithoutId,
+        EntityDataPropertiesKeys,
+        PersonalAreaAccessClaimMode
+    } from "@workadventure/map-editor";
     import audioSvg from "../../images/audio-white.svg";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../images/applications/icon_klaxoon.svg";
@@ -29,7 +33,7 @@
     const dispatch = createEventDispatcher<{
         change: undefined;
         close: undefined;
-        click: CustomEvent;
+        click: AreaDataPropertyWithoutId;
     }>();
 
     let modulesExtensionMapEditor = $extensionModuleStore.reduce(
@@ -52,7 +56,12 @@
         style={`z-index: 310;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="personalAreaPropertyData"
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                type: "personalAreaPropertyData",
+                accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
+                allowedTags: [],
+                ownerId: null,
+            });
         }}
     />
 {/if}
@@ -361,7 +370,7 @@
         <svelte:component
             this={moduleExtension[subProperty].AddAreaPropertyButton}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", event.detail);
             }}
         />
     {/each}

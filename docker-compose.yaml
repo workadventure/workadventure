@@ -159,6 +159,10 @@ services:
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       IFRAMELY_KEY: "$IFRAMELY_KEY"
+      # LaSuite Docs
+      LASUITE_DOCS_BACKEND: $LASUITE_DOCS_BACKEND
+      LASUITE_DOCS_FRONTEND: $LASUITE_DOCS_FRONTEND
+      LASUITE_DOCS_ADMIN_ACCESS_TOKEN: $LASUITE_DOCS_ADMIN_ACCESS_TOKEN
     labels:
       - "traefik.enable=true"
 

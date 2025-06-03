@@ -123,6 +123,10 @@ export const MATRIX_API_URI: string | undefined = env.MATRIX_API_URI;
 export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
+// LaSuite Docs
+export const LASUITE_DOCS_BACKEND: string | undefined = env.LASUITE_DOCS_BACKEND;
+export const LASUITE_DOCS_FRONTEND:  string | undefined = env.LASUITE_DOCS_FRONTEND;
+export const LASUITE_DOCS_ADMIN_ACCESS_TOKEN: string | undefined = env.LASUITE_DOCS_ADMIN_ACCESS_TOKEN;
 
 export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
 // Front container:

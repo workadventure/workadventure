@@ -283,6 +283,7 @@ class LocalAdmin implements AdminInterface {
             metatags: {
                 ...MetaTagsDefaultValue,
             },
+            modules: ["lasuitenumerique-docs"],
         });
     }
 
