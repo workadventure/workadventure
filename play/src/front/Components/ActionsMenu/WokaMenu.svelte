@@ -19,6 +19,7 @@
 
     let wokaMenuData: WokaMenuData | undefined;
     let sortedActions: WokaMenuAction[] | undefined;
+    let remotePlayer: { chatID?: string } | undefined;
 
     let wokaMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -48,7 +49,7 @@
         try {
             closeActionsMenu();
 
-            const remotePlayer = gameManager
+            remotePlayer = gameManager
                 .getCurrentGameScene()
                 .getRemotePlayersRepository()
                 .getPlayers()
@@ -67,6 +68,11 @@
     wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
         wokaMenuData = value;
         if (wokaMenuData) {
+            remotePlayer = gameManager
+                .getCurrentGameScene()
+                .getRemotePlayersRepository()
+                .getPlayers()
+                .get(wokaMenuData.userId);
             sortedActions = [...wokaMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
                 const bp = b.priority ?? 0;
@@ -170,7 +176,7 @@
                     </button>
                 {/each}
 
-                {#if wokaMenuData.wokaName}
+                {#if remotePlayer?.chatID}
                     <button
                         type="button"
                         class="btn  btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
