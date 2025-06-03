@@ -134,7 +134,7 @@
 >
     <div class="flex flex-row items-center gap-2">
         <div
-            class="menu-nav-sidebar rounded-lg @md/main-layout:rounded-xl overflow-hidden bg-contrast/80 backdrop-blur min-w-[200px] relative h-full"
+            class="menu-nav-sidebar rounded-lg @md/main-layout:rounded-xl overflow-hidden bg-contrast/80 backdrop-blur w-md relative h-full"
         >
             <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
             <nav
