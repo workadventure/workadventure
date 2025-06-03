@@ -358,6 +358,8 @@ export class GameScene extends DirtyScene {
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+    // Listeners for when the player finishes moving
+    private onPlayerMovementEndedCallbacks: Array<(event: HasPlayerMovedInterface) => void> = [];
 
     public _chatConnection: ChatConnectionInterface | undefined;
 
@@ -2062,6 +2064,7 @@ export class GameScene extends DirtyScene {
                             errorScreenStore.setException(error);
                             gameManager.closeGameScene();
                         },
+                        onPlayerMovementEnded: this.onPlayerMovementEnded.bind(this),
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
@@ -3452,6 +3455,11 @@ ${escapedMessage}
             ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+
+        // Call movement ended callbacks if movement just ended
+        for (const cb of this.onPlayerMovementEndedCallbacks) {
+            cb(event);
+        }
     }
 
     private createCollisionWithPlayer() {
@@ -3962,5 +3970,10 @@ ${escapedMessage}
             throw new Error("_sayManager not yet initialized");
         }
         return this._sayManager;
+    }
+
+    // Register a callback that will be called when the player movement ends
+    public onPlayerMovementEnded(callback: (event: HasPlayerMovedInterface) => void): void {
+        this.onPlayerMovementEndedCallbacks.push(callback);
     }
 }
