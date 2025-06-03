@@ -1,14 +1,21 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
+    import { openModal } from "svelte-modals";
     import { wokaMenuStore } from "../../Stores/WokaMenuStore";
+    import { openDirectChatRoom } from "../../Chat/Utils";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
+    import chat from "../images/chat.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
-
-    import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+
+    import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
 
     let wokaMenuData: WokaMenuData | undefined;
     let sortedActions: WokaMenuAction[] | undefined;
@@ -26,6 +33,36 @@
     }
 
     let buttonsLayout: "row" | "column" = "row";
+
+    async function openChat() {
+        const currentData = get(wokaMenuStore);
+        if (!currentData?.userId) {
+            return;
+        }
+
+        if (!get(userIsConnected)) {
+            openModal(RequiresLoginForChatModal);
+            return;
+        }
+
+        try {
+            closeActionsMenu();
+
+            const remotePlayer = gameManager
+                .getCurrentGameScene()
+                .getRemotePlayersRepository()
+                .getPlayers()
+                .get(currentData.userId);
+            if (!remotePlayer?.chatID) {
+                return;
+            }
+
+            await openDirectChatRoom(remotePlayer.chatID);
+            analyticsClient.openedChat();
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
         wokaMenuData = value;
@@ -103,7 +140,7 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast px-2"
+                class="flex items-center bg-contrast  w-full"
                 class:margin-close={!wokaMenuData.wokaName}
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
@@ -111,7 +148,8 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 flex-1 min-w-0 {action.style ??
+                            ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
@@ -131,6 +169,21 @@
                         </span>
                     </button>
                 {/each}
+
+                {#if wokaMenuData.wokaName}
+                    <button
+                        type="button"
+                        class="btn  btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                        on:click={openChat}
+                    >
+                        <img src={chat} alt="chat" class="w-6 h-6" />
+                        <span class="flex flex-row gap-2 items-center justify-center">
+                            {$LL.menu.visitCard.sendMessage()}
+                        </span>
+                    </button>
+                {/if}
+
                 {#if !wokaMenuData.wokaName}
                     <button
                         type="button"
