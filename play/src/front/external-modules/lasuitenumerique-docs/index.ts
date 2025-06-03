@@ -50,6 +50,7 @@ class LaSuiteNumeriqueDocs implements ExtensionModule {
         }
 
         // Check if the LaSuiteNumeriqueDocs property is defined
+        console.log("area", area.properties);
         const docsAreaProperties = area.properties?.filter(
             (property) => property.type === "extensionModule" && property.subtype === "laSuiteNumeriqueDocs"
         ) as LaSuiteNumeriqueDocsPropertyData[];

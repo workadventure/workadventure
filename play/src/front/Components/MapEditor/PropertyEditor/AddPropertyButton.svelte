@@ -62,7 +62,7 @@
 
 {#if isHovered}
     <div
-        class="tooltiptext z-[310] p-2 absolute text-xs bg-contrast backdrop-blur rounded-md text-white max-w-full"
+        class="tooltiptext z-[320] p-2 absolute text-xs bg-contrast backdrop-blur rounded-md text-white max-w-full"
         use:floatingUiContent
         transition:fade={{ duration: 200 }}
     >
