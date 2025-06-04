@@ -321,9 +321,3 @@
         on:touchend={removeDivForResize}
     />
 </div>
-
-<style>
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-</style>
