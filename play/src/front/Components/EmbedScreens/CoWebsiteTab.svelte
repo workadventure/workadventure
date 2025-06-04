@@ -67,12 +67,8 @@
     }
 
     function copyUrl() {
-        if (isJitsi) {
-            const jitsiCoWebsite = coWebsite as JitsiCoWebsite;
-            url = jitsiCoWebsite.getJitsiUrl() || "";
-        } else {
-            url = coWebsite.getUrl().toString();
-        }
+        url = coWebsite.getUrl().toString();
+
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         analyticsClient.copyCowebsiteLink();
         dispatch("copy");
@@ -80,12 +76,7 @@
     }
 
     function handleClick() {
-        if (isJitsi) {
-            const jitsiCoWebsite = coWebsite as JitsiCoWebsite;
-            url = jitsiCoWebsite.getJitsiUrl() || "";
-        } else {
-            url = coWebsite.getUrl().toString();
-        }
+        url = coWebsite.getUrl().toString();
 
         window.open(url, "_blank");
         analyticsClient.openCowebsiteInNewTab();

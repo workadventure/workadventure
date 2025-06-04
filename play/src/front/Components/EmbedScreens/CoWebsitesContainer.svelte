@@ -125,19 +125,6 @@
 
         if ($fullScreenCowebsite) {
             fullScreenCowebsite.set(false);
-
-            setTimeout(() => {
-                const container = document.getElementById("cowebsites-container");
-                if (container) {
-                    container.style.backgroundColor = "";
-                    container.style.backdropFilter = "";
-                    container.style.zIndex = "";
-
-                    container.style.display = "none";
-                    void container.offsetHeight;
-                    container.style.display = "";
-                }
-            }, 100);
         } else {
             fullScreenCowebsite.set(true);
             analyticsClient.fullScreenCowebsite();

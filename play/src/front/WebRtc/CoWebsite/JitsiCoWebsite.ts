@@ -123,8 +123,6 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-    private jitsiUrl: string | undefined;
-
     constructor(
         url: URL,
         widthPercent: number | undefined,
@@ -135,25 +133,20 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private _jwt: string | undefined,
         public readonly jitsiConfig: JitsiRoomConfigData | undefined,
         public readonly jitsiInterfaceConfig: object | undefined,
-        private domain: string,
         public readonly jitsiRoomAdminTag: string | null
     ) {
         super(url, false, undefined, widthPercent, closable);
     }
 
-    getDomain(): string {
-        return this.domain;
-    }
-
-    setJitsiUrl(url: string): void {
-        this.jitsiUrl = url;
-    }
-
-    getJitsiUrl(): string | undefined {
-        return this.jitsiUrl;
-    }
-
     public get jwt(): string | undefined {
         return this._jwt;
+    }
+
+    public getJitsiDomain(): string {
+        return this.url.toString();
+    }
+
+    public getUrl(): URL {
+        return new URL(this.roomName, this.url);
     }
 }
