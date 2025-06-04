@@ -106,21 +106,6 @@
                 </div>
             {/if}
         </div>
-        {#if isVerySmall && coWebsite.isClosable()}
-            <button
-                class="group {active
-                    ? 'hover:bg-contrast/10'
-                    : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click|stopPropagation={closeTab}
-            >
-                <XIcon
-                    height="h-6"
-                    width="w-6"
-                    strokeColor={active ? "stroke-contrast" : "stroke-white"}
-                    hover={active ? "" : ""}
-                />
-            </button>
-        {/if}
 
         <div class="p-2 min-w-0">
             <div
@@ -185,11 +170,13 @@
                     />
                 </button>
             </div>
-            {#if coWebsite.isClosable() && !isVerySmall}
+            {#if (coWebsite.isClosable() && !isVerySmall) || active}
                 <button
                     class="group {active
                         ? 'hover:bg-contrast/10'
-                        : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
+                        : 'hover:bg-white/10'} transition-all aspect-ratio {isVerySmall
+                        ? '-ml-4'
+                        : ''} h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}
                 >
                     <XIcon
@@ -206,7 +193,7 @@
 
 <style>
     .tab {
-        min-width: 120px;
+        min-width: auto;
         max-width: 300px;
         width: auto;
         overflow: hidden;

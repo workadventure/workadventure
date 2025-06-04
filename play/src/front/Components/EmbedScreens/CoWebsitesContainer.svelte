@@ -177,21 +177,21 @@
         if (!tabsContainer) {
             return;
         }
-        const scrollX = tabsContainer.scrollLeft;
-        for (let i = 0; i < tabsContainer.childNodes.length; i++) {
-            const tab = tabsContainer.childNodes[i] as HTMLElement;
-            if (tab.offsetLeft > scrollX) {
-                tabsContainer.scrollTo({
-                    left: tab.offsetLeft,
-                    behavior: "smooth",
-                });
-                break;
-            }
-        }
+        const containerWidth = tabsContainer.clientWidth;
+        const scrollWidth = tabsContainer.scrollWidth;
+
+        const newScrollX = scrollWidth - containerWidth;
+
+        tabsContainer.scrollTo({
+            left: newScrollX,
+            behavior: "smooth",
+        });
     }
 
     function onTabsScroll() {
-        tabsScrollX = tabsContainer?.scrollLeft ?? 0;
+        if (!tabsContainer) return;
+        tabsScrollX = tabsContainer.scrollLeft;
+        tabsOverflowing = tabsContainer.scrollWidth > tabsContainer.clientWidth;
     }
 </script>
 
@@ -213,7 +213,7 @@
             <div class="tab-bar flex-1 w-32 min-w-0 " bind:clientWidth={tabsContainerWidth}>
                 <div
                     bind:this={tabsContainer}
-                    class="flex items-center space-x-2  snap-x touch-pan-x overflow-x-auto scrollbar-hide"
+                    class="flex items-center space-x-2 snap-x touch-pan-x overflow-x-hidden"
                     on:scroll={onTabsScroll}
                 >
                     {#each $coWebsites as coWebsite, index (coWebsite.getId())}
@@ -221,7 +221,7 @@
                         <div
                             on:click={() => setActiveCowebsite(coWebsite)}
                             data-testid="tab{index + 1}"
-                            class="snap-start flex-shrink"
+                            class="snap-start flex-shrink min-w-[90px] basis-auto"
                         >
                             <CoWebsiteTab
                                 {coWebsite}
@@ -230,7 +230,7 @@
                                 on:close={() => coWebsites.remove(coWebsite)}
                                 availableWidth={Math.max(
                                     120,
-                                    (tabsContainerWidth - ($coWebsites.length - 1) * 8) / $coWebsites.length
+                                    (tabsContainerWidth - ($coWebsites.length - 1) * 8 - 80) / $coWebsites.length
                                 )}
                             />
                         </div>
