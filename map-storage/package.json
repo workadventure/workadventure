@@ -47,7 +47,7 @@
     "front:test:unit": "vitest"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.810.0",
+    "@aws-sdk/client-s3": "^3.817.0",
     "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "^0.7.8",
     "@sentry/node": "^7.48.0",

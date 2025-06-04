@@ -8,6 +8,7 @@ import {
     AWS_URL,
     S3_UPLOAD_CONCURRENCY_LIMIT,
 } from "../Enum/EnvironmentVariable";
+import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5";
 
 let s3: S3 | undefined;
 
@@ -24,9 +25,10 @@ export function getS3Client(): S3 {
     if (AWS_URL) {
         config.endpoint = AWS_URL;
         config.forcePathStyle = true;
+        return (s3 = createS3ClientWithMD5(config));
+    } else {
+        return (s3 = new S3(config));
     }
-
-    return (s3 = new S3(config));
 }
 
 export function hasS3Bucket(): boolean {
