@@ -247,16 +247,17 @@
                 </div>
             </div>
 
-            {#if tabsOverflowing && tabsScrollX < tabsContainer?.scrollWidth - tabsContainer?.clientWidth}
-                <div class="flex-0 w-10">
-                    <button
-                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
-                        on:click={scrollTabsRight}
-                    >
-                        <ChevronRightIcon />
-                    </button>
-                </div>
-            {/if}
+            <div class="flex-0 w-10">
+                <button
+                    class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2 {tabsScrollX >=
+                    tabsContainer?.scrollWidth - tabsContainer?.clientWidth
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''}"
+                    on:click={scrollTabsRight}
+                >
+                    <ChevronRightIcon />
+                </button>
+            </div>
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="flex justify-end w-10 flex-none">

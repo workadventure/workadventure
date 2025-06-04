@@ -288,7 +288,6 @@ test.describe("Map editor @oidc", () => {
         // check if the iframe was opened and button thumbnail is visible
         await page.getByTestId('tab1').getByText('Docs', { exact: true }).click();
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
-        await page.locator('.flex-0 > .w-10').click();
         await page.getByTestId('tab2').getByText('Docs', { exact: true }).click();
         await page.getByTestId('tab3').getByText('Docs', { exact: true }).click();
         await page.locator('div:nth-child(3) > .w-10').click();
