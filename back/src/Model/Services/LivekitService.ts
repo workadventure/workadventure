@@ -18,8 +18,10 @@ const debug = Debug("livekit");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
+
 const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
+
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
@@ -130,7 +132,6 @@ export class LiveKitService {
         return this.livekitFrontendUrl;
     }
 
-    //TODO : voir si on autorise plusieurs enregistrements en même temps
     async startRecording(roomName: string, layout = "grid"): Promise<void> {
         try {
             //TODO : use env variable / voir si on utilise toujours un S3
@@ -139,6 +140,8 @@ export class LiveKitService {
             const secret = "minio-secret-access-key";
             const region = "eu-west-1";
             const bucket = "livekit-recording";
+
+            //TODO : intégrer le nom de l'utilisateur dans le chemin de l'enregistrement pour pouvoir le retrouver plus tard (voir si on mets cette parttie dans une autre classe qui gere la recuperation des fichiers etc...)
             const filepath = `out/test-${new Date().toISOString().slice(0, 19)}`;
 
             const output = new EncodedFileOutput({
