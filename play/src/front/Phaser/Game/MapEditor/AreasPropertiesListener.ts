@@ -904,7 +904,6 @@ export class AreasPropertiesListener {
             const areaMapEditor = module.areaMapEditor();
             if (areaMapEditor == undefined) continue;
             areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
-            inJitsiStore.set(true);
         }
     }
 

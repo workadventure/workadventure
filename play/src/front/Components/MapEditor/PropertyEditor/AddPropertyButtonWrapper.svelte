@@ -25,10 +25,13 @@
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import { mapEditorRestrictedPropertiesStore } from "../../../Stores/MapEditorStore";
     import AddPropertyButton from "./AddPropertyButton.svelte";
+    import { ON_ACTION_TRIGGER_ENTER } from "../../../WebRtc/LayoutManager";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
     export let subProperty: string | undefined = undefined;
     export let isActive = false;
+
+    const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
     const dispatch = createEventDispatcher<{
         change: undefined;
@@ -73,7 +76,11 @@
         style={`z-index: 300;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="restrictedRightsPropertyData"
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "restrictedRightsPropertyData",
+                    readTags: [],
+                    writeTags: [],
+                });
         }}
     />
 {/if}
@@ -85,7 +92,11 @@
         style={`z-index: 280;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="focusable"
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "focusable",
+                    zoom_margin: 0.5,
+                    hideButtonLabel: true,
+                });
         }}
     />
 {/if}
@@ -96,7 +107,10 @@
         img="resources/icons/icon_silent.png"
         style={`z-index: 270;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "silent",
+                    hideButtonLabel: true,
+                });
         }}
         testId="addSilentProperty"
     />
@@ -109,7 +123,14 @@
             img="resources/icons/icon_meeting.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", {
+                    type: "jitsiRoomProperty",
+                    closable: true,
+                    jitsiRoomConfig: {},
+                    hideButtonLabel: true,
+                    roomName: $LL.mapEditor.properties.jitsiProperties.label(),
+                    trigger: ON_ACTION_TRIGGER_ENTER,
+                });
             }}
             disabled={true}
             testId="jitsiRoomProperty"
@@ -121,7 +142,14 @@
             img="resources/icons/icon_meeting.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click",  {
+                    type: "jitsiRoomProperty",
+                    closable: true,
+                    jitsiRoomConfig: {},
+                    hideButtonLabel: true,
+                    roomName: $LL.mapEditor.properties.jitsiProperties.label(),
+                    trigger: ON_ACTION_TRIGGER_ENTER,
+                });
             }}
             testId="jitsiRoomProperty"
         />
@@ -135,7 +163,11 @@
             img="resources/icons/icon_speaker.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", {
+                    type: "speakerMegaphone",
+                    name: "",
+                    chatEnabled: false,
+                });
             }}
             disabled={true}
             testId="speakerMegaphone"
@@ -147,7 +179,11 @@
             img="resources/icons/icon_speaker.png"
             style={`z-index: 250;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", {
+                    type: "speakerMegaphone",
+                    name: "",
+                    chatEnabled: false,
+                });
             }}
             testId="speakerMegaphone"
         />
@@ -161,7 +197,11 @@
             img="resources/icons/icon_listener.png"
             style={`z-index: 260;${isActive ? "background-color: #4156f6;cursor:not-allowed;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", {
+                    type: "listenerMegaphone",
+                    speakerZoneName: "",
+                    chatEnabled: false,
+                });
             }}
             disabled={true}
             testId="listenerMegaphone"
@@ -173,7 +213,11 @@
             img="resources/icons/icon_listener.png"
             style={`z-index: 240;${isActive ? "background-color: #4156f6;" : ""}`}
             on:click={(event) => {
-                dispatch("click", event);
+                dispatch("click", {
+                    type: "listenerMegaphone",
+                    speakerZoneName: "",
+                    chatEnabled: false,
+                });
             }}
             testId="listenerMegaphone"
         />
@@ -186,7 +230,10 @@
         img="resources/icons/icon_start.png"
         style={`z-index: 230;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "start",
+                    isDefault: true,
+                });
         }}
         testId="startAreaProperty"
     />
@@ -198,7 +245,11 @@
         img="resources/icons/icon_exit.png"
         style={`z-index: 220;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "exit",
+                    url: "",
+                    areaName: "",
+                });
         }}
         testId="exitAreaProperty"
     />
@@ -210,7 +261,12 @@
         img={audioSvg}
         style={`z-index: 210;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "playAudio",
+                    hideButtonLabel: true,
+                    audioLink: "",
+                    volume: 1,
+                });
         }}
         testId="playAudio"
     />
@@ -384,7 +440,15 @@
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="matrixRoomPropertyData"
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "matrixRoomPropertyData",
+                    shouldOpenAutomatically: false,
+                    displayName: "",
+                    resourceUrl: ROOM_AREA_PUSHER_URL,
+                    serverData: {
+                        matrixRoomId: undefined,
+                    },
+                });
         }}
     />
 {/if}
@@ -396,7 +460,11 @@
         img={infoBulleSvg}
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "tooltipPropertyData",
+                    content: "",
+                    duration: 2,
+                });
         }}
         testId="addTooltipProperty"
     />
@@ -409,7 +477,18 @@
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="openPdf"
         on:click={(event) => {
-            dispatch("click", event);
+            dispatch("click", {
+                    type: "openPdf",
+                    link: "",
+                    name: "",
+                    closable: true,
+                    newTab: false,
+                    hideButtonLabel: true,
+                    //TODO : revoir
+                    policy: undefined,
+                    width: 50,
+                    trigger: ON_ACTION_TRIGGER_ENTER,
+                });
         }}
     />
 {/if}
