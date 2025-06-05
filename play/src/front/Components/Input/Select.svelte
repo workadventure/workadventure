@@ -7,7 +7,7 @@
     export let options: { value: string | undefined; label: string }[] = [];
     export let id: string | undefined = undefined;
     export let value: string | boolean | null | undefined;
-    export let onChange = () => {};
+    export let onChange: (e: Event) => void = () => {};
     export let onClick = () => {};
     export let disabled = false;
     export let placeholder = "";

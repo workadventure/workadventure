@@ -216,7 +216,7 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] bg-white/10 rounded-2xl w-full"
+                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 p-4 mb-2 min-h-[200px] bg-white/10 rounded-2xl w-full"
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
@@ -251,7 +251,7 @@
                         </div>
                         {#if pickedEntity.type === "Custom"}
                             <button
-                                class="bg-blue-500 rounded"
+                                class="btn btn-secondary"
                                 data-testid="editEntity"
                                 on:click={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
