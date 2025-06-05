@@ -134,7 +134,7 @@
 >
     <div class="flex flex-row items-center gap-2">
         <div
-            class="menu-nav-sidebar rounded-lg @md/main-layout:rounded-xl overflow-hidden bg-contrast/80 backdrop-blur w-md relative h-full"
+            class="menu-nav-sidebar rounded-lg @md/main-layout:w-[200px] @md/main-layout:rounded-xl overflow-hidden bg-contrast/80 backdrop-blur w-md relative h-full"
         >
             <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
             <nav
@@ -157,7 +157,7 @@
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-4 px-6 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
+                                class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu
                                     ? 'active opacity-100 bg-contrast/50 text-white'
                                     : 'opacity-60 hover:bg-white/10'}"
@@ -243,8 +243,9 @@
         </div>
         <div
             class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit @md/main-layout:hidden"
+            id="closeMenu"
         >
-            <ButtonClose on:click={closeMenu} id="closeMenu" />
+            <ButtonClose on:click={closeMenu} />
         </div>
     </div>
     <div
