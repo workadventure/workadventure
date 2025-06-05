@@ -23,13 +23,15 @@
 
     export let actualCowebsite: JitsiCoWebsite;
     export let visible: boolean;
-    let domain = actualCowebsite.getDomain();
+    let domain = actualCowebsite.getJitsiDomain();
     let jitsiContainer: HTMLDivElement;
     let playerName = gameManager.getPlayerName();
     let jwt: string | undefined = actualCowebsite.jwt;
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jistiMeetLoadedPromise: CancelablePromise<void>;
+
+    // Expose the Jitsi URL to the parent component
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
@@ -74,7 +76,6 @@
 
     onMount(() => {
         let cancelled = false;
-
         inExternalServiceStore.set(true);
 
         jitsiExternalApiFactory
@@ -113,7 +114,7 @@
                         resolve();
                     };
 
-                    jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+                    jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).hostname, options);
 
                     jitsiApi.addListener("videoConferenceJoined", () => {
                         jitsiApi.executeCommand("displayName", playerName);
