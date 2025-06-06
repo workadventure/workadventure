@@ -21,7 +21,7 @@ import {
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
-import { INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
+import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
 export class LiveKitRoom {
@@ -43,7 +43,7 @@ export class LiveKitRoom {
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
         private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
-        private nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
+        private _nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
     ) {}
 
     public async prepareConnection(): Promise<Room> {
@@ -356,7 +356,7 @@ export class LiveKitRoom {
         this.dispatchSoundTrack = localTrack.track;
 
         bufferSource.onended = () => {
-            this.nbSoundPlayedInBubbleStore.soundEnded();
+            this._nbSoundPlayedInBubbleStore.soundEnded();
             if (!this.dispatchSoundTrack || !this.localParticipant) return;
 
             this.localParticipant
@@ -370,7 +370,7 @@ export class LiveKitRoom {
                 });
         };
 
-        this.nbSoundPlayedInBubbleStore.soundStarted();
+        this._nbSoundPlayedInBubbleStore.soundStarted();
     }
 
     //TODO : tester
