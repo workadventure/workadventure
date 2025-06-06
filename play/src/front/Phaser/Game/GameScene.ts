@@ -55,7 +55,6 @@ import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
@@ -79,7 +78,6 @@ import type {
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore } from "../../Stores/EmoteStore";
@@ -107,6 +105,7 @@ import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGrou
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import {
     availabilityStatusStore,
+    batchGetUserMediaStore,
     lastNewMediaDeviceDetectedStore,
     localVoiceIndicatorStore,
     requestedCameraDeviceIdStore,
@@ -170,8 +169,6 @@ import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelt
 import { ExtensionModule } from "../../ExternalModule/ExtensionModule";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { UserProviderInterface } from "../../Chat/UserProvider/UserProviderInterface";
-import { ScriptingOutputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
-import { ScriptingInputAudioStreamManager } from "../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 import { faviconManager } from "../../WebRtc/FaviconManager";
 import { popupStore } from "../../Stores/PopupStore";
 import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
@@ -179,6 +176,7 @@ import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerAction
 import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
 import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import { videoStreamElementsStore, videoStreamStore, screenShareStreamStore } from "../../Stores/PeerStore";
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
@@ -269,7 +267,6 @@ export class GameScene extends DirtyScene {
     public readonly superLoad: SuperLoaderPlugin;
     private initPosition?: PositionInterface;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private simplePeer!: SimplePeer;
     private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
@@ -279,7 +276,6 @@ export class GameScene extends DirtyScene {
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
     private rxJsSubscriptions: Array<Subscription> = [];
-    private peerStoreUnsubscriber!: Unsubscriber;
     private emoteUnsubscriber!: Unsubscriber;
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
@@ -293,6 +289,7 @@ export class GameScene extends DirtyScene {
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private lastNewMediaDeviceDetectedStoreUnsubscriber!: Unsubscriber;
+    private peerStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
@@ -317,8 +314,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
-    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
-    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
+
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private scriptingVideoManager: ScriptingVideoManager | undefined;
     private objectsByType = new Map<string, ITiledMapObject[]>();
@@ -361,6 +357,7 @@ export class GameScene extends DirtyScene {
     public landingAreas: AreaData[] = [];
 
     public _chatConnection: ChatConnectionInterface | undefined;
+    private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -1022,10 +1019,6 @@ export class GameScene extends DirtyScene {
         });
     }
 
-    public getSimplePeer() {
-        return this.simplePeer;
-    }
-
     public cleanupClosingScene(): void {
         // make sure we restart own medias
         mediaManager.disableMyCamera();
@@ -1048,12 +1041,10 @@ export class GameScene extends DirtyScene {
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {
-            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+            this.spaceRegistry.leaveSpace(this.allUserSpace);
         }
 
         this.connection?.closeConnection();
-        this.simplePeer?.closeAllConnections();
-        this.simplePeer?.unregister();
         this.outlineManager?.clear();
         this.userInputManager?.destroy();
         this.pinchManager?.destroy();
@@ -1063,7 +1054,6 @@ export class GameScene extends DirtyScene {
         this._broadcastService?.destroy();
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
-        this.peerStoreUnsubscriber?.();
         this.mapEditorModeStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
@@ -1076,6 +1066,7 @@ export class GameScene extends DirtyScene {
         this.mapExplorationStoreUnsubscriber?.();
         this.cameraResistanceModeStoreUnsubscriber?.();
         this.lastNewMediaDeviceDetectedStoreUnsubscriber?.();
+        this.peerStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -1110,9 +1101,7 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-        this.scriptingOutputAudioStreamManager?.close();
-        this.scriptingInputAudioStreamManager?.close();
-        this._spaceRegistry?.destroy();
+        this.spaceRegistry.destroy();
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1597,8 +1586,11 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
                 this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
+
+                videoStreamStore.set(this._spaceRegistry.videoStreamStore);
+                screenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
 
                 gameManager
                     .getChatConnection()
@@ -1796,26 +1788,21 @@ export class GameScene extends DirtyScene {
                     this.showWorldFullError(message);
                 });
 
-                // When connection is performed, let's connect SimplePeer
+                //TODO : voir si c'est le bon endroit ou le deplacer dans le proximityChatRoom
+                batchGetUserMediaStore.startBatch();
+                mediaManager.enableMyCamera();
+                mediaManager.enableMyMicrophone();
+                batchGetUserMediaStore.commitChanges();
 
-                /*const me = this;
-                this.events.once("render", () => {
-                    if (me.connection) {*/
-                this.simplePeer = new SimplePeer(this.connection, this.remotePlayersRepository);
-                /*} else {
-                        console.warn("Connection to peers not started!");
-                    }
-                });*/
                 // Set up manager of audio streams received by the scripting API (useful for bots)
-                this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this.simplePeer);
-                this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this.simplePeer);
 
                 this._proximityChatRoom = new ProximityChatRoom(
                     this.connection.getSpaceUserId(),
                     this._spaceRegistry,
-                    this.simplePeer,
                     iframeListener
                 );
+
+                this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
                 this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoom);
 
                 this.scriptingVideoManager = new ScriptingVideoManager();
@@ -1993,7 +1980,7 @@ export class GameScene extends DirtyScene {
                 if (onConnect.room.webRtcUserName && onConnect.room.webRtcPassword) {
                     try {
                         checkCoturnServer({
-                            userId: onConnect.connection.getUserId(),
+                            userId: onConnect.connection.getSpaceUserId(),
                             webRtcUser: onConnect.room.webRtcUserName,
                             webRtcPassword: onConnect.room.webRtcPassword,
                         });
@@ -2052,7 +2039,7 @@ export class GameScene extends DirtyScene {
                         getOauthRefreshToken: connection.getOauthRefreshToken.bind(this.connection),
                         adminUrl: ADMIN_URL,
                         externalSvelteComponent: externalSvelteComponentService,
-                        spaceRegistry: this.spaceRegistry,
+                        spaceRegistry: this._spaceRegistry,
                         logoutCallback: () => {
                             connectionManager.logout();
                         },
@@ -2083,7 +2070,6 @@ export class GameScene extends DirtyScene {
             this.availabilityStatusStoreUnsubscriber != undefined ||
             this.emoteUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
             this.mapExplorationStoreUnsubscriber != undefined ||
             this.lastNewMediaDeviceDetectedStoreUnsubscriber != undefined
@@ -2095,7 +2081,6 @@ export class GameScene extends DirtyScene {
                 this.availabilityStatusStoreUnsubscriber,
                 this.emoteUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
                 this.mapExplorationStoreUnsubscriber,
                 this.lastNewMediaDeviceDetectedStoreUnsubscriber
@@ -2156,11 +2141,10 @@ export class GameScene extends DirtyScene {
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
         let screenWakeRelease: (() => Promise<void>) | undefined;
-
         let alreadyInBubble = false;
         const pendingConnects = new Set<number>();
-        this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
-            const newPeerNumber = peers.size;
+        this.peerStoreUnsubscriber = videoStreamElementsStore.subscribe((peers) => {
+            const newPeerNumber = peers.length;
             const newUsers = new Map<number, MessageUserJoined>();
             const players = this.remotePlayersRepository.getPlayers();
 
@@ -2177,7 +2161,9 @@ export class GameScene extends DirtyScene {
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
-                statusChanger.setUserNameInteraction(peer.player.name);
+
+                statusChanger.setUserNameInteraction(peer.player?.name ?? "unknow");
+
                 statusChanger.applyInteractionRules();
 
                 pendingConnects.add(peer.userId);
@@ -2185,10 +2171,11 @@ export class GameScene extends DirtyScene {
                     // In case the peer never connects, we should remove it from the pendingConnects after a timeout
                     pendingConnects.delete(peer.userId);
                     /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
-                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                        alreadyInBubble = true;
+                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                    alreadyInBubble = true;
                     }*/
                 }, 5000);
+
                 peer.once("connect", () => {
                     pendingConnects.delete(peer.userId);
                     if (pendingConnects.size === 0) {
@@ -2219,29 +2206,28 @@ export class GameScene extends DirtyScene {
 
                 if (newUser) {
                     if (alreadyInBubble) {
-                        peers.get(newUser.userId)?.once("connect", () => {
+                        const peer = peers.find((p) => p.userId === newUser.userId);
+                        peer?.once("connect", () => {
                             iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
                         });
                     } else {
-                        const peer = peers.get(newUser.userId);
-                        if (peer) {
-                            pendingConnects.add(newUser.userId);
-                            setTimeout(() => {
-                                // In case the peer never connects, we should remove it from the pendingConnects after a timeout
-                                pendingConnects.delete(newUser.userId);
-                                /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }*/
-                            }, 5000);
-                            peer.once("connect", () => {
-                                pendingConnects.delete(newUser.userId);
-                                if (pendingConnects.size === 0) {
-                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                                    alreadyInBubble = true;
-                                }
-                            });
-                        }
+                        const peer = peers.find((p) => p.userId === newUser.userId);
+                        pendingConnects.add(newUser.userId);
+                        setTimeout(() => {
+                            // In case the peer never connects, we should remove it from the pendingConnects after a timeout
+                            pendingConnects.delete(newUser.userId);
+                            /*if (pendingConnects.size === 0 && !alreadyInBubble && !this.cleanupDone) {
+                                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                alreadyInBubble = true;
+                            }*/
+                        }, 5000);
+                        peer?.once("connect", () => {
+                            pendingConnects.delete(newUser.userId);
+                            if (pendingConnects.size === 0) {
+                                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                alreadyInBubble = true;
+                            }
+                        });
                     }
                 }
             }
@@ -2603,38 +2589,56 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
-                switch (chatMessage.options.scope) {
-                    case "local": {
-                        const room = this.proximityChatRoom;
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        switch (chatMessage.options.scope) {
+                            case "local": {
+                                room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
+                                selectedRoomStore.set(room);
+                                chatVisibilityStore.set(true);
 
-                        room.addExternalMessage("local", chatMessage.message, chatMessage.options.author);
-                        selectedRoomStore.set(room);
-                        chatVisibilityStore.set(true);
-                        break;
-                    }
-                    case "bubble": {
-                        const room = this.proximityChatRoom;
-
-                        room.addExternalMessage("bubble", chatMessage.message);
-                        selectedRoomStore.set(room);
-                        chatVisibilityStore.set(true);
-                    }
-                }
+                                break;
+                            }
+                            case "bubble": {
+                                room.addExternalMessage("bubble", chatMessage.message);
+                                selectedRoomStore.set(room);
+                                chatVisibilityStore.set(true);
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error while sending proximity chat message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.startTypingProximityMessageStream.subscribe((sartWriting) => {
-                const room = this.proximityChatRoom;
-
-                room.addExternalTypingUser(btoa(sartWriting.author ?? "unknow"), sartWriting.author ?? "unknow", null);
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        room.addExternalTypingUser(
+                            btoa(sartWriting.author ?? "unknow"),
+                            sartWriting.author ?? "unknow",
+                            null
+                        );
+                    })
+                    .catch((error) => {
+                        console.error("Error while starting typing proximity message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
         this.iframeSubscriptionList.push(
             iframeListener.stopTypingProximityMessageStream.subscribe((stopWriting) => {
-                const room = this.proximityChatRoom;
-
-                room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
+                this.proximityChatRoomPromise()
+                    .then((room) => {
+                        room.removeExternalTypingUser(btoa(stopWriting.author ?? "unknow"));
+                    })
+                    .catch((error) => {
+                        console.error("Error while stopping typing proximity message", error);
+                        Sentry.captureException(error);
+                    });
             })
         );
 
@@ -3228,7 +3232,10 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
-            await this.simplePeer.dispatchSound(soundUrl);
+            console.error("playSoundInBubble", soundUrl);
+            //TODO: gestion error ??
+            const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
+            await proximityChatRoom.dispatchSound(soundUrl);
         });
     }
 
@@ -3950,7 +3957,14 @@ ${escapedMessage}
         this.cameraManager.disableResistanceZone();
     }
 
-    //get spaceStore(): Promise<SpaceProviderInterface> {
+    private proximityChatRoomPromise(): Promise<ProximityChatRoom> {
+        if (this._proximityChatRoom) {
+            return Promise.resolve(this._proximityChatRoom);
+        }
+
+        return this._proximityChatRoomDeferred.promise;
+    }
+
     get spaceRegistry(): SpaceRegistryInterface {
         if (!this._spaceRegistry) {
             throw new Error("_spaceRegistry not yet initialized");

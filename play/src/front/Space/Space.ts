@@ -1,20 +1,33 @@
 import { Observable, Subject } from "rxjs";
-import { PrivateEvent, PublicEvent, SpaceEvent, UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import {
+    PrivateEvent,
+    PrivateSpaceEvent,
+    PublicEvent,
+    SpaceEvent,
+    UpdateSpaceMetadataMessage,
+} from "@workadventure/messages";
+import { MapStore } from "@workadventure/store-utils";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
-import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
+import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 import { AllUsersSpaceFilter, AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
 import { LiveStreamingUsersSpaceFilter } from "./SpaceFilter/LiveStreamingUsersSpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
+import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
-    private filters: Map<string, SpaceFilter> = new Map<string, SpaceFilter>();
+    private filters: MapStore<string, SpaceFilter> = new MapStore<string, SpaceFilter>();
+    private lastSpaceFilter: SpaceFilter | undefined;
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private filterNumber = 0;
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
+    private peerManager: SpacePeerManager | undefined;
+    public videoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public screenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -22,27 +35,28 @@ export class Space implements SpaceInterface {
      */
     constructor(
         name: string,
-        private metadata = new Map<string, unknown>(),
-        private _connection: RoomConnectionForSpacesInterface
+        private _metadata = new Map<string, unknown>(),
+        private _connection: RoomConnectionForSpacesInterface,
+        private _propertiesToSync: string[] = []
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
+        this.peerManager = new SpacePeerManager(this);
 
         this.userJoinSpace();
-
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
     getName(): string {
         return this.name;
     }
     getMetadata(): Map<string, unknown> {
-        return this.metadata;
+        return this._metadata;
     }
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
-            this.metadata.set(key, value);
+            this._metadata.set(key, value);
         });
     }
 
@@ -51,6 +65,10 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new AllUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
+        if (this.peerManager) {
+            this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        }
+        this.lastSpaceFilter = newFilter;
         return newFilter;
     }
 
@@ -59,6 +77,10 @@ export class Space implements SpaceInterface {
         this.filterNumber += 1;
         const newFilter = new LiveStreamingUsersSpaceFilter(filterName, this, this._connection);
         this.filters.set(filterName, newFilter);
+        if (this.peerManager) {
+            this.peerManager.getPeer()?.setSpaceFilter(newFilter);
+        }
+        this.lastSpaceFilter = newFilter;
         return newFilter;
     }
 
@@ -70,6 +92,10 @@ export class Space implements SpaceInterface {
             );
         }
         return spaceFilter;
+    }
+
+    getLastSpaceFilter(): SpaceFilter | undefined {
+        return this.lastSpaceFilter;
     }
 
     // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).
@@ -86,7 +112,7 @@ export class Space implements SpaceInterface {
     }
 
     private userJoinSpace() {
-        this._connection.emitJoinSpace(this.name);
+        this._connection.emitJoinSpace(this.name, this._propertiesToSync);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
@@ -102,7 +128,6 @@ export class Space implements SpaceInterface {
         }
         return observable;
     }
-
     public observePrivateEvent<K extends keyof PrivateEventsObservables>(
         key: K
     ): NonNullable<PrivateEventsObservables[K]> {
@@ -171,6 +196,10 @@ export class Space implements SpaceInterface {
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
+    public emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: string): void {
+        this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
+    }
+
     /**
      * Sends a message to the server to update our user in the space.
      */
@@ -193,6 +222,21 @@ export class Space implements SpaceInterface {
         }
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
+
+        if (this.peerManager) {
+            this.peerManager.destroy();
+        }
+    }
+
+    get simplePeer(): SimplePeerConnectionInterface | undefined {
+        return this.peerManager?.getPeer();
+    }
+
+    get spacePeerManager(): SpacePeerManager {
+        if (!this.peerManager) {
+            throw new Error("SpacePeerManager is not initialized");
+        }
+        return this.peerManager;
     }
 
     /**
@@ -200,5 +244,32 @@ export class Space implements SpaceInterface {
      */
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage> {
         return this._connection.updateSpaceMetadataMessageStream;
+    }
+
+    public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
+        const promises = Array.from(this.filters.values()).map((filter) => filter.getUserBySpaceUserId(id));
+        const users = await Promise.all(promises);
+        const foundUser = users.find((user) => user !== undefined);
+        if (foundUser) {
+            return foundUser;
+        }
+        return undefined;
+    }
+
+    //TODO : revoir le nom de la fonction
+    public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
+        const promises = Array.from(this.filters.values()).map((filter) => filter.getUserByUserId(id));
+        const users = await Promise.all(promises);
+        const foundUser = users.find((user) => user !== undefined);
+        if (foundUser) {
+            return foundUser;
+        }
+
+        return undefined;
+    }
+
+    public async dispatchSound(url: URL): Promise<void> {
+        //TODO : voir si on a toujours besoin du getter , on initialise le peerManager dans le constructor
+        await this.spacePeerManager.dispatchSound(url);
     }
 }

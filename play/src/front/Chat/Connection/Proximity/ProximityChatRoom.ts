@@ -22,7 +22,6 @@ import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../.
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
-import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
@@ -30,6 +29,8 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
+import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -100,10 +101,12 @@ export class ProximityChatRoom implements ChatRoom {
         spaceUserId: undefined,
     } as ChatUser;
 
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
+
     constructor(
         private _spaceUserId: string,
         private spaceRegistry: SpaceRegistryInterface,
-        private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
@@ -371,8 +374,14 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public joinSpace(spaceName: string): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName);
+    public joinSpace(spaceName: string, propertiesToSync: string[]): void {
+        console.log(">>>> joinSpace");
+        console.time(">>>> joinLivekitRoom");
+        this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
+
+        // Set up manager of audio streams received by the scripting API (useful for bots)
+        this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space.spacePeerManager);
+        this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);
 
         this._spaceWatcher = this._space.watchAllUsers();
         bindMuteEventsToSpace(this._space, this._spaceWatcher);
@@ -421,7 +430,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this.simplePeer.setSpaceFilter(this._spaceWatcher);
+        this._space.simplePeer?.setSpaceFilter(this._spaceWatcher);
 
         this.saveChatState();
 
@@ -478,7 +487,10 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
-        this.simplePeer.setSpaceFilter(undefined);
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
+        this.scriptingOutputAudioStreamManager = undefined;
+        this.scriptingInputAudioStreamManager = undefined;
     }
 
     private restoreChatState() {
@@ -496,6 +508,15 @@ export class ProximityChatRoom implements ChatRoom {
         this.currentChatVisibility = currentChatVisibility;
         this.currentMatrixRoom = currentRoom;
         shouldRestoreChatStateStore.set(true);
+    }
+
+    public dispatchSound(url: URL): Promise<void> {
+        if (!this._space) {
+            console.error("Trying to dispatch sound in a space that is not joined");
+            Sentry.captureMessage("Trying to dispatch sound in a space that is not joined");
+            return Promise.resolve();
+        }
+        return this._space.dispatchSound(url);
     }
 
     public destroy(): void {

@@ -328,8 +328,6 @@ class LocalUserStore {
     }
 
     hasFolderOpened(folderId: string): boolean {
-        console.log(">>>>> On check si le folder: ", folderId, "est ouvert");
-        console.log(">>>>>", this.getFoldersOpened());
         return this.getFoldersOpened().has(folderId);
     }
 
