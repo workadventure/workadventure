@@ -164,6 +164,7 @@ export class LiveKitParticipant {
                 console.error("Error updating livekit screen share stream store");
             });
         } else if (publication.source === Track.Source.ScreenShareAudio) {
+            //TODO : meme chose que pour les cameras et les micros , juste un partage de son du screenShare
             //this._screenShareAudioStreamStore.set(track.mediaStream);
         }
     }
