@@ -216,61 +216,62 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="relative flex flex-row gap-2 items-center justify-center border-b-blue-50 mb-2 min-h-[200px] bg-white/10 rounded-2xl w-full"
+                    class="relative flex flex-col gap-2 items-start justify-start border-b-blue-50 mb-2 h-fit p-2 bg-white/10 rounded-2xl w-full"
                 >
-                    {#if isEditingCustomEntity}
-                        <CustomEntityEditionForm
-                            customEntity={pickedEntity}
-                            on:closeForm={() => {
-                                setIsEditingCustomEntity(false);
-                            }}
-                            on:removeEntity={({ detail: { entityId } }) => {
-                                removeEntity(entityId);
-                            }}
-                            on:applyEntityModifications={({ detail: customModifiedEntity }) =>
-                                saveCustomEntityModifications(customModifiedEntity)}
+                    <div class="flex flex-row items-end justify-end w-full">
+                        <ButtonClose
+                            on:click={clearEntitySelection}
+                            dataTestId="clearEntitySelection"
+                            size="sm"
+                            bgColor="bg-white/30"
+                            hoverColor="bg-white/40"
                         />
-                    {:else}
-                        <EntityImage
-                            classNames="h-16 w-[64px] object-contain rounded"
-                            imageSource={pickedEntity.imagePath}
-                            imageAlt={pickedEntity.name}
-                        />
-                        <div>
-                            <p class="m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
-                            <EntityVariantColorPicker
-                                colors={pickedEntityVariant.colors}
-                                {selectedColor}
-                                {onColorChange}
+                    </div>
+                    <div class="flex flex-row gap-2 items-center justify-start w-full">
+                        {#if isEditingCustomEntity}
+                            <CustomEntityEditionForm
+                                customEntity={pickedEntity}
+                                on:closeForm={() => {
+                                    setIsEditingCustomEntity(false);
+                                }}
+                                on:removeEntity={({ detail: { entityId } }) => {
+                                    removeEntity(entityId);
+                                }}
+                                on:applyEntityModifications={({ detail: customModifiedEntity }) =>
+                                    saveCustomEntityModifications(customModifiedEntity)}
                             />
-                            <EntityVariantPositionPicker
-                                entityPrefabsPositions={pickedEntityVariant.getEntityPrefabsPositions(selectedColor)}
-                                selectedEntity={pickedEntity}
-                                {onPickItem}
+                        {:else}
+                            <EntityImage
+                                classNames="h-16 w-[64px] object-contain rounded"
+                                imageSource={pickedEntity.imagePath}
+                                imageAlt={pickedEntity.name}
                             />
-                        </div>
-                        {#if pickedEntity.type === "Custom"}
-                            <button
-                                class="bg-blue-500 rounded"
-                                data-testid="editEntity"
-                                on:click={() => setIsEditingCustomEntity(true)}
-                                ><IconPencil font-size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
-                            >
+                            <div>
+                                <p class="m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
+                                <EntityVariantColorPicker
+                                    colors={pickedEntityVariant.colors}
+                                    {selectedColor}
+                                    {onColorChange}
+                                />
+                                <EntityVariantPositionPicker
+                                    entityPrefabsPositions={pickedEntityVariant.getEntityPrefabsPositions(
+                                        selectedColor
+                                    )}
+                                    selectedEntity={pickedEntity}
+                                    {onPickItem}
+                                />
+                            </div>
                         {/if}
-                        <div class="absolute top-1 right-1 p-1">
-                            <ButtonClose
-                                on:click={clearEntitySelection}
-                                dataTestId="clearEntitySelection"
-                                size="sm"
-                                bgColor="bg-white/30"
-                                hoverColor="bg-white/40"
-                            />
-                        </div>
-                        <!-- <button
-                            class="self-start absolute top-1 right-1"
-                            data-testid="clearEntitySelection"
-                            on:click={clearEntitySelection}><IconDeselect font-size={20} /></button
-                        > -->
+                    </div>
+                    {#if !isEditingCustomEntity && pickedEntity.type === "Custom"}
+                        <button
+                            class="bg-blue-500 py-2 rounded w-full flex items-center justify-center"
+                            data-testid="editEntity"
+                            on:click={() => setIsEditingCustomEntity(true)}
+                        >
+                            <IconPencil font-size={16} />
+                            {$LL.mapEditor.entityEditor.buttons.editEntity()}
+                        </button>
                     {/if}
                 </div>
             {/if}

@@ -126,9 +126,9 @@
         </div>
     {/if}
     <div>
-        <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
+        <label for="name"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
         <input
-            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
+            class="px-2 py-2.5 text-[16px] rounded-md bg-contrast border-solid border border-contrast-400 text-white min-w-full"
             bind:value={name}
             id="name"
             data-testid="name"
@@ -145,7 +145,7 @@
         <label for="type"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.depth()}</b></label>
         <select
             bind:value={selectedDepthOption}
-            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
+            class="px-2 py-2.5 text-[16px] rounded-md bg-contrast border-solid border border-contrast-400 text-white min-w-full"
         >
             {#each Object.values(depthOptions) as depthOption (depthOption)}
                 <option value={depthOption}>{getTranslationForDepthOption(depthOption)}</option>
@@ -156,7 +156,7 @@
         <div class="flex gap-2 mt-2 hover:cursor-pointer">
             <input
                 type="checkbox"
-                class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white"
+                class="p-1 rounded-md bg-contrast border-solid border border-contrast-400 text-white"
                 id="floatingObject"
                 data-testid="floatingObject"
                 bind:checked={floatingObject}
@@ -171,17 +171,17 @@
     <div class="flex flex-row gap-2 flex-wrap justify-end text-sm">
         {#if !isUploadForm}
             <button
-                class="bg-red-500 rounded"
+                class="bg-red-500 rounded py-3 px-4"
                 data-testid="removeEntity"
                 on:click={() => dispatch("removeEntity", { entityId: customEntity.id })}
                 >{$LL.mapEditor.entityEditor.buttons.delete()}</button
             >
         {/if}
-        <button class="rounded border-white border border-solid" on:click={() => dispatch("closeForm")}
+        <button class="py-3 px-4 rounded border-white border border-solid" on:click={() => dispatch("closeForm")}
             >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
         >
         <button
-            class="bg-blue-500 rounded"
+            class="bg-blue-500 rounded py-3 px-4"
             data-testid="applyEntityModifications"
             on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
             >{isUploadForm
