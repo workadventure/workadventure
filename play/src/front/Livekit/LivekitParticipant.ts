@@ -39,7 +39,32 @@ export class LiveKitParticipant {
             return new MediaStream(tracks);
         }
     );
-    private _screenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
+    private _videoScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
+        undefined
+    );
+    private _audioScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
+        undefined
+    );
+
+    private _screenShareStreamStore = derived(
+        [this._videoScreenShareStreamStore, this._audioScreenShareStreamStore],
+        ([$videoScreenShareStreamStore, $audioScreenShareStreamStore]) => {
+            const tracks = [];
+            if ($videoScreenShareStreamStore) {
+                tracks.push(...$videoScreenShareStreamStore.getTracks());
+            }
+            if ($audioScreenShareStreamStore) {
+                tracks.push(...$audioScreenShareStreamStore.getTracks());
+            }
+
+            if (tracks.length === 0) {
+                return undefined;
+            }
+
+            return new MediaStream(tracks);
+        }
+    );
+
     private _nameStore: Writable<string>;
     private _hasAudio = writable<boolean>(true);
     private _hasVideo = writable<boolean>(false);
@@ -68,6 +93,7 @@ export class LiveKitParticipant {
         this.participant.trackPublications.forEach((publication: TrackPublication) => {
             const track = publication.track;
             if (track) {
+                //TODO : duplication de code avec les handleTrackSubscribed
                 if (publication.source === Track.Source.Camera) {
                     this._videoStreamStore.set(track.mediaStream);
 
@@ -95,7 +121,7 @@ export class LiveKitParticipant {
                         Sentry.captureException(e);
                     });
                 } else if (publication.source === Track.Source.ScreenShare) {
-                    this._screenShareStreamStore.set(track.mediaStream);
+                    this._videoScreenShareStreamStore.set(track.mediaStream);
                     const screenElements =
                         this.space.spacePeerManager.screenShareContainerMap.get(this._spaceUser.spaceUserId) || [];
                     screenElements.forEach((screenElement) => {
@@ -104,6 +130,12 @@ export class LiveKitParticipant {
                         screenElement.muted = track.isMuted;
                         track.attach(screenElement);
                     });
+                    this.updateLivekitScreenShareStreamStore().catch((e) => {
+                        console.error("Error while updating livekit screen share stream store", e);
+                        Sentry.captureException(e);
+                    });
+                } else if (publication.source === Track.Source.ScreenShareAudio) {
+                    this._audioScreenShareStreamStore.set(track.mediaStream);
                     this.updateLivekitScreenShareStreamStore().catch((e) => {
                         console.error("Error while updating livekit screen share stream store", e);
                         Sentry.captureException(e);
@@ -123,6 +155,7 @@ export class LiveKitParticipant {
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
+        //TODO : duplication de code avec les initializeTracks
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
@@ -147,7 +180,7 @@ export class LiveKitParticipant {
                 console.error("Error updating livekit video stream store");
             });
         } else if (publication.source === Track.Source.ScreenShare) {
-            this._screenShareStreamStore.set(track.mediaStream);
+            this._videoScreenShareStreamStore.set(track.mediaStream);
 
             this._screenShareRemoteTrack = track;
 
@@ -164,8 +197,11 @@ export class LiveKitParticipant {
                 console.error("Error updating livekit screen share stream store");
             });
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            //TODO : meme chose que pour les cameras et les micros , juste un partage de son du screenShare
-            //this._screenShareAudioStreamStore.set(track.mediaStream);
+            //TODO : tester les screenShareAudio
+            this._audioScreenShareStreamStore.set(track.mediaStream);
+            this.updateLivekitScreenShareStreamStore().catch(() => {
+                console.error("Error updating livekit screen share stream store");
+            });
         }
     }
 
@@ -307,7 +343,7 @@ export class LiveKitParticipant {
 
     public async getScreenShareStream(): Promise<ExtendedStreamable> {
         const player = await this._spaceUser.getPlayer();
-        const streamble: ExtendedStreamable = {
+        const streamable: ExtendedStreamable = {
             uniqueId: this.participant.sid,
             hasAudio: writable(false),
             hasVideo: writable(true),
@@ -358,9 +394,9 @@ export class LiveKitParticipant {
             },
         };
 
-        this.highlightedEmbedScreenStore.toggleHighlight(streamble);
+        this.highlightedEmbedScreenStore.toggleHighlight(streamable);
 
-        return streamble;
+        return streamable;
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {
