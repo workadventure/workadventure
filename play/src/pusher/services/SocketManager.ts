@@ -401,114 +401,121 @@ export class SocketManager implements ZoneEventListener {
                                 console.warn("spaceStreamToBack => Empty message received.", message);
                                 return;
                             }
-                            switch (message.message.$case) {
-                                case "addSpaceUserMessage": {
-                                    const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
-                                    const space = this.spaces.get(addSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.localAddUser(addSpaceUserMessage.user, undefined);
+                            try {
+                                switch (message.message.$case) {
+                                    case "addSpaceUserMessage": {
+                                        const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
+                                        const space = this.spaces.get(addSpaceUserMessage.spaceName);
+                                        if (space) {
+                                            space.localAddUser(addSpaceUserMessage.user, undefined);
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                                case "updateSpaceUserMessage": {
-                                    const updateSpaceUserMessage = noUndefined(message.message.updateSpaceUserMessage);
-                                    const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.localUpdateUser(
-                                            updateSpaceUserMessage.user,
-                                            updateSpaceUserMessage.updateMask
+                                    case "updateSpaceUserMessage": {
+                                        const updateSpaceUserMessage = noUndefined(
+                                            message.message.updateSpaceUserMessage
                                         );
+                                        const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+                                        if (space) {
+                                            space.localUpdateUser(
+                                                updateSpaceUserMessage.user,
+                                                updateSpaceUserMessage.updateMask
+                                            );
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                                case "removeSpaceUserMessage": {
-                                    const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
-                                    const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.localRemoveUser(removeSpaceUserMessage.spaceUserId);
+                                    case "removeSpaceUserMessage": {
+                                        const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
+                                        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
+                                        if (space) {
+                                            space.localRemoveUser(removeSpaceUserMessage.spaceUserId);
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                                case "updateSpaceMetadataMessage": {
-                                    const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
-                                    const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
+                                    case "updateSpaceMetadataMessage": {
+                                        const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
+                                        const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
 
-                                    const isMetadata = z
-                                        .record(z.string(), z.unknown())
-                                        .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
-                                    if (!isMetadata.success) {
-                                        Sentry.captureException(
-                                            `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
-                                        );
-                                        console.error(
-                                            "Invalid metadata received.",
-                                            message.message.updateSpaceMetadataMessage.metadata
-                                        );
-                                        return;
+                                        const isMetadata = z
+                                            .record(z.string(), z.unknown())
+                                            .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+                                        if (!isMetadata.success) {
+                                            Sentry.captureException(
+                                                `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                            );
+                                            console.error(
+                                                "Invalid metadata received.",
+                                                message.message.updateSpaceMetadataMessage.metadata
+                                            );
+                                            return;
+                                        }
+                                        if (space) {
+                                            space.localUpdateMetadata(isMetadata.data);
+                                        }
+                                        break;
                                     }
-                                    if (space) {
-                                        space.localUpdateMetadata(isMetadata.data);
-                                    }
-                                    break;
-                                }
-                                case "pingMessage": {
-                                    if (spaceStreamToBack.pingTimeout) {
-                                        clearTimeout(spaceStreamToBack.pingTimeout);
-                                        spaceStreamToBack.pingTimeout = undefined;
-                                    }
-                                    const pusherToBackMessage: PusherToBackSpaceMessage = {
-                                        message: {
-                                            $case: "pongMessage",
-                                            pongMessage: {},
-                                        },
-                                    } as PusherToBackSpaceMessage;
-                                    spaceStreamToBack.write(pusherToBackMessage);
-
-                                    spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                        console.error("Error spaceStreamToBack timed out for back:", backId);
-                                        Sentry.captureException(
-                                            "Error spaceStreamToBack timed out for back: " + backId
-                                        );
-                                        spaceStreamToBack.end();
-                                        cleanupSpaceStreamToBack();
-                                    }, 1000 * 60);
-                                    break;
-                                }
-                                case "kickOffMessage": {
-                                    debug("[space] kickOffSMessage received");
-                                    spaceStreamToBack.write({
-                                        message: {
-                                            $case: "kickOffMessage",
-                                            kickOffMessage: {
-                                                userId: message.message.kickOffMessage.userId,
-                                                spaceName: message.message.kickOffMessage.spaceName,
-                                                filterName: message.message.kickOffMessage.filterName,
+                                    case "pingMessage": {
+                                        if (spaceStreamToBack.pingTimeout) {
+                                            clearTimeout(spaceStreamToBack.pingTimeout);
+                                            spaceStreamToBack.pingTimeout = undefined;
+                                        }
+                                        const pusherToBackMessage: PusherToBackSpaceMessage = {
+                                            message: {
+                                                $case: "pongMessage",
+                                                pongMessage: {},
                                             },
-                                        },
-                                    });
-                                    break;
-                                }
-                                case "publicEvent": {
-                                    debug("[space] publicEvent received");
-                                    const publicEvent = message.message.publicEvent;
-                                    const space = this.spaces.get(publicEvent.spaceName);
-                                    if (space) {
-                                        space.sendPublicEvent(noUndefined(publicEvent));
+                                        } as PusherToBackSpaceMessage;
+                                        spaceStreamToBack.write(pusherToBackMessage);
+
+                                        spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                            console.error("Error spaceStreamToBack timed out for back:", backId);
+                                            Sentry.captureException(
+                                                "Error spaceStreamToBack timed out for back: " + backId
+                                            );
+                                            spaceStreamToBack.end();
+                                            cleanupSpaceStreamToBack();
+                                        }, 1000 * 60);
+                                        break;
                                     }
-                                    break;
-                                }
-                                case "privateEvent": {
-                                    debug("[space] privateEvent received");
-                                    const privateEvent = message.message.privateEvent;
-                                    const space = this.spaces.get(privateEvent.spaceName);
-                                    if (space) {
-                                        space.sendPrivateEvent(noUndefined(privateEvent));
+                                    case "kickOffMessage": {
+                                        debug("[space] kickOffSMessage received");
+                                        spaceStreamToBack.write({
+                                            message: {
+                                                $case: "kickOffMessage",
+                                                kickOffMessage: {
+                                                    userId: message.message.kickOffMessage.userId,
+                                                    spaceName: message.message.kickOffMessage.spaceName,
+                                                    filterName: message.message.kickOffMessage.filterName,
+                                                },
+                                            },
+                                        });
+                                        break;
                                     }
-                                    break;
+                                    case "publicEvent": {
+                                        debug("[space] publicEvent received");
+                                        const publicEvent = message.message.publicEvent;
+                                        const space = this.spaces.get(publicEvent.spaceName);
+                                        if (space) {
+                                            space.sendPublicEvent(noUndefined(publicEvent));
+                                        }
+                                        break;
+                                    }
+                                    case "privateEvent": {
+                                        debug("[space] privateEvent received");
+                                        const privateEvent = message.message.privateEvent;
+                                        const space = this.spaces.get(privateEvent.spaceName);
+                                        if (space) {
+                                            space.sendPrivateEvent(noUndefined(privateEvent));
+                                        }
+                                        break;
+                                    }
+                                    default: {
+                                        const _exhaustiveCheck: never = message.message;
+                                    }
                                 }
-                                default: {
-                                    const _exhaustiveCheck: never = message.message;
-                                }
+                            } catch (error) {
+                                console.error(error);
+                                Sentry.captureException(error);
                             }
                         })
                         .on("end", () => {
