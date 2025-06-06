@@ -243,9 +243,8 @@
         </div>
         <div
             class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit @md/main-layout:hidden"
-            id="closeMenu"
         >
-            <ButtonClose on:click={closeMenu} />
+            <ButtonClose on:click={closeMenu} dataTestId="closeMenuBtn" />
         </div>
     </div>
     <div
