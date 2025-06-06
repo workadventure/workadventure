@@ -550,13 +550,17 @@ export class Space {
         const receiver = this.users.get(message.receiverUserId);
 
         if (!receiver) {
-            throw new Error(`Private message receiver ${message.receiverUserId} not found in space ${this.name}`);
+            throw new Error(
+                `Private message receiver ${message.receiverUserId} not found in space ${this.name} for event ${spaceEvent.event.$case}`
+            );
         }
 
         const sender = this.users.get(message.senderUserId);
 
         if (!sender) {
-            throw new Error(`Private message sender ${message.senderUserId} not found in space ${this.name}`);
+            throw new Error(
+                `Private message sender ${message.senderUserId} not found in space ${this.name} for event ${spaceEvent.event.$case} and receiver ${message.receiverUserId}`
+            );
         }
 
         receiver.client?.getUserData().emitInBatch({
