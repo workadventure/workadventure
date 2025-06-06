@@ -17,6 +17,7 @@
     }>();
 
     function onValueChange() {
+        console.log("onValueChange", property.content, property.duration);
         dispatch("change");
     }
 
@@ -67,6 +68,7 @@
                     disabled={infinity}
                     bind:value={property.duration}
                     on:change={onValueChange}
+                    onInput={onValueChange}
                 />
             </div>
         {/if}
