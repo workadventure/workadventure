@@ -646,6 +646,18 @@ export class SocketManager implements ZoneEventListener {
         this.handleViewport(client, viewport);
     }
 
+    onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void {
+        emitInBatch(listener, {
+            message: {
+                $case: "groupUsersUpdateMessage",
+                groupUsersUpdateMessage: {
+                    groupId: group.groupId,
+                    userIds: group.userIds,
+                },
+            },
+        });
+    }
+
     onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void {
         emitInBatch(listener, {
             message: {

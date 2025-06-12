@@ -14,6 +14,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -180,6 +181,7 @@ import { videoStreamElementsStore, videoStreamStore, screenShareStreamStore } fr
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { ConversationBubble } from "../Entity/ConversationBubble";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -234,6 +236,11 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
+interface GroupUsersUpdatedEventInterface {
+    type: "GroupUsersUpdatedEvent";
+    event: GroupUsersUpdateMessage;
+}
+
 const WORLD_SPACE_NAME = "allWorldUser";
 
 export class GameScene extends DirtyScene {
@@ -245,10 +252,12 @@ export class GameScene extends DirtyScene {
     mapFile!: ITiledMap;
     wamFile!: WAMFileFormat;
     animatedTiles!: AnimatedTiles;
-    groups: Map<number, Sprite>;
+    groups: Map<number, ConversationBubble>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents = new Queue<GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface>();
+    pendingEvents = new Queue<
+        GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface | GroupUsersUpdatedEventInterface
+    >();
     public connection: RoomConnection | undefined;
     mapUrlFile!: string;
     wamUrlFile?: string;
@@ -314,6 +323,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private hasMovedThisFrame: boolean = false;
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private scriptingVideoManager: ScriptingVideoManager | undefined;
@@ -367,7 +377,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.Terrains = [];
-        this.groups = new Map<number, Sprite>();
+        this.groups = new Map<number, ConversationBubble>();
 
         // TODO: How to get mapUrl from WAM here?
         if (_room.mapUrl) {
@@ -1218,9 +1228,13 @@ export class GameScene extends DirtyScene {
                     }
                     break;
                 }
-                /*default: {
+                case "GroupUsersUpdatedEvent": {
+                    this.doUpdateGroupUsers(event.event.groupId, event.event.userIds);
+                    break;
+                }
+                default: {
                     const _exhaustiveCheck: never = event;
-                }*/
+                }
             }
         }
         // Let's move all users
@@ -1233,6 +1247,13 @@ export class GameScene extends DirtyScene {
             }
             player.updatePosition(moveEvent);
         });
+        // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
+        if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame) {
+            for (const group of this.groups.values()) {
+                group.step();
+            }
+        }
+        this.hasMovedThisFrame = false;
     }
 
     deleteGroup(groupId: number): void {
@@ -1249,6 +1270,15 @@ export class GameScene extends DirtyScene {
         }
         group.destroy();
         this.groups.delete(groupId);
+    }
+
+    doUpdateGroupUsers(groupId: number, userIds: number[]): void {
+        const group = this.groups.get(groupId);
+        if (!group) {
+            console.warn("Could not find group with ID", groupId);
+            return;
+        }
+        group.updateUsers(userIds);
     }
 
     doUpdatePlayerDetails(update: PlayerDetailsUpdate): void {
@@ -1762,7 +1792,15 @@ export class GameScene extends DirtyScene {
                 // The groupUsersUpdateMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
-                    this.currentPlayerGroupId = message.groupId;
+                    const userId = this.connection?.getUserId();
+                    if (userId && message.userIds.includes(userId)) {
+                        this.currentPlayerGroupId = message.groupId;
+                    }
+
+                    this.pendingEvents.enqueue({
+                        type: "GroupUsersUpdatedEvent",
+                        event: message,
+                    });
                 });
 
                 // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -3462,6 +3500,7 @@ ${escapedMessage}
             ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+        this.hasMovedThisFrame = true;
     }
 
     private createCollisionWithPlayer() {
@@ -3785,11 +3824,33 @@ ${escapedMessage}
         });
     }
 
-    private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
-        //delete previous group
-        this.doDeleteGroup(groupPositionMessage.groupId);
+    private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        // TODO: keep a reference to the group sprite in the conversationBubble
+        const existingGroup = this.groups.get(groupPositionMessage.groupId);
+        if (existingGroup) {
+            existingGroup.setCenter(
+                Math.round(groupPositionMessage.position.x),
+                Math.round(groupPositionMessage.position.y)
+            );
+            existingGroup.setLocked(
+                groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false)
+            );
+            return;
+        }
 
-        // TODO: circle radius should not be hard stored
+        const conversationBubble = new ConversationBubble(
+            this,
+            Math.round(groupPositionMessage.position.x),
+            Math.round(groupPositionMessage.position.y),
+            groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false),
+            groupPositionMessage.userIds
+        );
+
+        //delete previous group
+        /*        this.doDeleteGroup(groupPositionMessage.groupId);
+
+
+        // TODO: DELETE SPRITE REFERENCES
         //create new group
         const sprite = new Sprite(
             this,
@@ -3800,12 +3861,11 @@ ${escapedMessage}
                 : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
-        this.add.existing(sprite);
-        this.groups.set(groupPositionMessage.groupId, sprite);
+        this.add.existing(sprite);*/
+        this.groups.set(groupPositionMessage.groupId, conversationBubble);
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
             currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
         }
-        return sprite;
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
