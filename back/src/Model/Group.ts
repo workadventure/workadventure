@@ -167,6 +167,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         this.users.add(user);
         user.group = this;
         this.connectCallback(user, this);
+        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
     }
 
     leave(user: User): void {
@@ -182,6 +183,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
+        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
     }
 
     lock(lock = true): void {

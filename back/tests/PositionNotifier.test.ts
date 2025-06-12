@@ -35,6 +35,7 @@ describe("PositionNotifier", () => {
             },
             () => {},
             () => {},
+            () => {},
             () => {}
         );
 
@@ -151,6 +152,7 @@ describe("PositionNotifier", () => {
             (thing: Movable) => {
                 leaveTriggered = true;
             },
+            () => {},
             () => {},
             () => {},
             () => {}

@@ -14,6 +14,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -180,6 +181,7 @@ import { videoStreamElementsStore, videoStreamStore, screenShareStreamStore } fr
 import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { ConversationBubble } from "../Entity/ConversationBubble";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -210,7 +212,6 @@ import { FollowManager } from "./FollowManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { ScriptingVideoManager } from "./ScriptingVideoManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
-import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import DOMElement = Phaser.GameObjects.DOMElement;
@@ -234,6 +235,11 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
+interface GroupUsersUpdatedEventInterface {
+    type: "GroupUsersUpdatedEvent";
+    event: GroupUsersUpdateMessage;
+}
+
 const WORLD_SPACE_NAME = "allWorldUser";
 
 export class GameScene extends DirtyScene {
@@ -245,10 +251,12 @@ export class GameScene extends DirtyScene {
     mapFile!: ITiledMap;
     wamFile!: WAMFileFormat;
     animatedTiles!: AnimatedTiles;
-    groups: Map<number, Sprite>;
+    groups: Map<number, ConversationBubble>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents = new Queue<GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface>();
+    pendingEvents = new Queue<
+        GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface | GroupUsersUpdatedEventInterface
+    >();
     public connection: RoomConnection | undefined;
     mapUrlFile!: string;
     wamUrlFile?: string;
@@ -314,6 +322,7 @@ export class GameScene extends DirtyScene {
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
     private followManager!: FollowManager;
+    private hasMovedThisFrame: boolean = false;
 
     private proximitySpaceManager: ProximitySpaceManager | undefined;
     private scriptingVideoManager: ScriptingVideoManager | undefined;
@@ -367,7 +376,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.Terrains = [];
-        this.groups = new Map<number, Sprite>();
+        this.groups = new Map<number, ConversationBubble>();
 
         // TODO: How to get mapUrl from WAM here?
         if (_room.mapUrl) {
@@ -786,8 +795,6 @@ export class GameScene extends DirtyScene {
         if (localUserStore.getDisableAnimations()) {
             this.animatedTiles.pause();
         }
-
-        this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
         if (!this._room.isDisconnected()) {
@@ -1217,9 +1224,13 @@ export class GameScene extends DirtyScene {
                     }
                     break;
                 }
-                /*default: {
+                case "GroupUsersUpdatedEvent": {
+                    this.doUpdateGroupUsers(event.event.groupId, event.event.userIds);
+                    break;
+                }
+                default: {
                     const _exhaustiveCheck: never = event;
-                }*/
+                }
             }
         }
         // Let's move all users
@@ -1232,6 +1243,13 @@ export class GameScene extends DirtyScene {
             }
             player.updatePosition(moveEvent);
         });
+        // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
+        if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame) {
+            for (const group of this.groups.values()) {
+                group.step();
+            }
+        }
+        this.hasMovedThisFrame = false;
     }
 
     deleteGroup(groupId: number): void {
@@ -1248,6 +1266,15 @@ export class GameScene extends DirtyScene {
         }
         group.destroy();
         this.groups.delete(groupId);
+    }
+
+    doUpdateGroupUsers(groupId: number, userIds: number[]): void {
+        const group = this.groups.get(groupId);
+        if (!group) {
+            console.warn("Could not find group with ID", groupId);
+            return;
+        }
+        group.updateUsers(userIds);
     }
 
     doUpdatePlayerDetails(update: PlayerDetailsUpdate): void {
@@ -1761,7 +1788,15 @@ export class GameScene extends DirtyScene {
                 // The groupUsersUpdateMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
-                    this.currentPlayerGroupId = message.groupId;
+                    const userId = this.connection?.getUserId();
+                    if (userId && message.userIds.includes(userId)) {
+                        this.currentPlayerGroupId = message.groupId;
+                    }
+
+                    this.pendingEvents.enqueue({
+                        type: "GroupUsersUpdatedEvent",
+                        event: message,
+                    });
                 });
 
                 // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -2366,62 +2401,6 @@ export class GameScene extends DirtyScene {
                 this.load.start();
             })
         );
-    }
-
-    //todo: into dedicated classes
-    private initCirclesCanvas(): void {
-        // Let's generate the circle for the group delimiter
-        let circleElement = Object.values(this.textures.list).find(
-            (object: Texture) => object.key === "circleSprite-white"
-        );
-        if (circleElement) {
-            this.textures.remove("circleSprite-white");
-        }
-
-        circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === "circleSprite-red");
-        if (circleElement) {
-            this.textures.remove("circleSprite-red");
-        }
-
-        //create white circle canvas use to create sprite
-        let texture = this.textures.createCanvas("circleSprite-white", 96, 96);
-        if (!texture) {
-            console.warn("Failed to create white circle texture");
-            return;
-        }
-        this.circleTexture = texture;
-        const context = this.circleTexture.context;
-        context.beginPath();
-        context.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        // context.lineWidth = 5;
-        context.strokeStyle = "#ffffff";
-        context.fillStyle = "#ffffff44";
-        context.stroke();
-        context.fill();
-        // Phaser crashes in headless mode if we try to refresh the texture
-        if (this.game.renderer) {
-            this.circleTexture.refresh();
-        }
-
-        //create red circle canvas use to create sprite
-        texture = this.textures.createCanvas("circleSprite-red", 96, 96);
-        if (!texture) {
-            console.warn("Failed to create red circle texture");
-            return;
-        }
-        this.circleRedTexture = texture;
-        const contextRed = this.circleRedTexture.context;
-        contextRed.beginPath();
-        contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        //context.lineWidth = 5;
-        contextRed.strokeStyle = "#ff0000";
-        contextRed.fillStyle = "#ff000044";
-        contextRed.stroke();
-        contextRed.fill();
-        // Phaser crashes in headless mode if we try to refresh the texture
-        if (this.game.renderer) {
-            this.circleRedTexture.refresh();
-        }
     }
 
     private listenToIframeEvents(): void {
@@ -3452,6 +3431,7 @@ ${escapedMessage}
             ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+        this.hasMovedThisFrame = true;
     }
 
     private createCollisionWithPlayer() {
@@ -3775,27 +3755,33 @@ ${escapedMessage}
         });
     }
 
-    private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
-        //delete previous group
-        this.doDeleteGroup(groupPositionMessage.groupId);
+    private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        // TODO: keep a reference to the group sprite in the conversationBubble
+        const existingGroup = this.groups.get(groupPositionMessage.groupId);
+        if (existingGroup) {
+            existingGroup.setCenter(
+                Math.round(groupPositionMessage.position.x),
+                Math.round(groupPositionMessage.position.y)
+            );
+            existingGroup.setLocked(
+                groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false)
+            );
+            return;
+        }
 
-        // TODO: circle radius should not be hard stored
-        //create new group
-        const sprite = new Sprite(
+        // If we have a new group
+        const conversationBubble = new ConversationBubble(
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
-                ? "circleSprite-red"
-                : "circleSprite-white"
+            groupPositionMessage.groupSize === MAX_PER_GROUP || (groupPositionMessage.locked ?? false),
+            groupPositionMessage.userIds
         );
-        sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
-        this.add.existing(sprite);
-        this.groups.set(groupPositionMessage.groupId, sprite);
+
+        this.groups.set(groupPositionMessage.groupId, conversationBubble);
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
             currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
         }
-        return sprite;
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
