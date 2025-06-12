@@ -454,6 +454,10 @@ export class RoomConnection implements RoomConnection {
                                 this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
                                 break;
                             }
+                            case "groupUsersUpdateMessage": {
+                                this._groupUsersUpdateMessageStream.next(subMessage.groupUsersUpdateMessage);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = subMessage;
                             }
@@ -572,10 +576,6 @@ export class RoomConnection implements RoomConnection {
                 case "teleportMessageMessage": {
                     // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
                     this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
-                    break;
-                }
-                case "groupUsersUpdateMessage": {
-                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
                 }
                 case "sendUserMessage": {
@@ -1744,6 +1744,7 @@ export class RoomConnection implements RoomConnection {
             position: position,
             groupSize: message.groupSize,
             locked: message.locked,
+            userIds: message.userIds,
         };
     }
 
