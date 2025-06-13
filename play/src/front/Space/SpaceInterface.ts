@@ -1,8 +1,10 @@
 import { Observable, Subject } from "rxjs";
 import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } from "@workadventure/messages";
-import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
+import { MapStore } from "@workadventure/store-utils";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
-
+import { SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
+import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
 export type PublicEventsObservables = {
@@ -38,8 +40,21 @@ export interface SpaceInterface {
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
+    emitPrivateMessage(
+        message: NonNullable<PrivateSpaceEvent["event"]>,
+        receiverUserId: SpaceUser["spaceUserId"]
+    ): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    videoStreamStore: MapStore<SpaceUser["spaceUserId"], ExtendedStreamable>;
+    screenShareStreamStore: MapStore<SpaceUser["spaceUserId"], ExtendedStreamable>;
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
+    getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
+    simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
+    //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
+    getLastSpaceFilter(): SpaceFilter | undefined;
+    get spacePeerManager(): SpacePeerManager;
+    dispatchSound(url: URL): Promise<void>;
 }

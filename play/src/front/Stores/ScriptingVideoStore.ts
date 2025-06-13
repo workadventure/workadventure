@@ -25,6 +25,10 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         // FIXME: move this to fit after our tests
         displayMode: "cover",
         displayInPictureInPictureMode: false,
+        usePresentationMode: false,
+        once: (event: string, callback: (...args: unknown[]) => void) => {
+            callback();
+        },
     };
 }
 
