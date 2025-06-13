@@ -88,6 +88,7 @@ export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;
     media: MediaStoreStreamable;
+    priority: number;
 };
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
