@@ -256,7 +256,6 @@ export class Space implements SpaceInterface {
         return undefined;
     }
 
-    //TODO : revoir le nom de la fonction
     public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
         const promises = Array.from(this.filters.values()).map((filter) => filter.getUserByUserId(id));
         const users = await Promise.all(promises);
@@ -269,7 +268,6 @@ export class Space implements SpaceInterface {
     }
 
     public async dispatchSound(url: URL): Promise<void> {
-        //TODO : voir si on a toujours besoin du getter , on initialise le peerManager dans le constructor
         await this.spacePeerManager.dispatchSound(url);
     }
 }

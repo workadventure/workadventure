@@ -917,10 +917,9 @@ export class GameScene extends DirtyScene {
                     connection.emitPlayerChatID(chatId);
                 }
             })
-            .catch((e: unknown) => {
-                console.error("Initialization failed", e);
+            .catch((e) => {
+                console.error(e);
                 Sentry.captureException(e);
-                errorScreenStore.setException(e);
             });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
@@ -1788,7 +1787,6 @@ export class GameScene extends DirtyScene {
                     this.showWorldFullError(message);
                 });
 
-                //TODO : voir si c'est le bon endroit ou le deplacer dans le proximityChatRoom
                 batchGetUserMediaStore.startBatch();
                 mediaManager.enableMyCamera();
                 mediaManager.enableMyMicrophone();
@@ -3110,13 +3108,6 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer("triggerPlayerMessage", (message) =>
-            this.CurrentPlayer.playText(message.uuid, message.message, undefined, () => {
-                this.CurrentPlayer.destroyText(message.uuid);
-                iframeListener.sendActionMessageTriggered(message.uuid);
-            })
-        );
-
         iframeListener.registerAnswerer("setVariable", (event, source) => {
             // TODO: "setVariable" message has a useless "target"
             // TODO: "setVariable" message has a useless "target"
@@ -3148,10 +3139,6 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             popupStore.removePopup(message.uuid);
-        });
-
-        iframeListener.registerAnswerer("removePlayerMessage", (message) => {
-            this.CurrentPlayer.destroyText(message.uuid);
         });
 
         iframeListener.registerAnswerer("removePlayerMessage", (message) => {
@@ -3233,9 +3220,12 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             console.error("playSoundInBubble", soundUrl);
-            //TODO: gestion error ??
-            const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
-            await proximityChatRoom.dispatchSound(soundUrl);
+            try {
+                const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
+                await proximityChatRoom.dispatchSound(soundUrl);
+            } catch (error) {
+                console.error("Error playing sound in bubble:", error);
+            }
         });
     }
 

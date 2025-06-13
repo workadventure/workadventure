@@ -80,7 +80,6 @@ export interface Streamable {
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
-//TODO : revoir le nom
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;

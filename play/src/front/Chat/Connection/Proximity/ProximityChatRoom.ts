@@ -375,8 +375,6 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public joinSpace(spaceName: string, propertiesToSync: string[]): void {
-        console.log(">>>> joinSpace");
-        console.time(">>>> joinLivekitRoom");
         this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
 
         // Set up manager of audio streams received by the scripting API (useful for bots)

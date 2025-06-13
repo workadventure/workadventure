@@ -91,13 +91,11 @@ export class LiveKitParticipant {
 
     private initializeTracks() {
         this.participant.trackPublications.forEach((publication: TrackPublication) => {
-            const track = publication.track;
+            const track: RemoteTrack | Track | undefined = publication.track;
             if (track) {
-                //TODO : duplication de code avec les handleTrackSubscribed
                 if (publication.source === Track.Source.Camera) {
                     this._videoStreamStore.set(track.mediaStream);
 
-                    //TODO : remove as RemoteVideoTrack
                     this._videoRemoteTrack = track as RemoteVideoTrack;
                     this._hasVideo.set(!track.isMuted);
                     const videoElements =
@@ -145,17 +143,7 @@ export class LiveKitParticipant {
         });
     }
 
-    private listenToParticipantEvents() {
-        this.participant.on(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
-        this.participant.on(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
-        this.participant.on(ParticipantEvent.TrackMuted, this.handleTrackMuted.bind(this));
-        this.participant.on(ParticipantEvent.TrackUnmuted, this.handleTrackUnmuted.bind(this));
-        this.participant.on(ParticipantEvent.ConnectionQualityChanged, this.handleConnectionQualityChanged.bind(this));
-        this.participant.on(ParticipantEvent.IsSpeakingChanged, this.handleIsSpeakingChanged.bind(this));
-    }
-
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
-        //TODO : duplication de code avec les initializeTracks
         if (publication.source === Track.Source.Camera) {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
@@ -163,7 +151,6 @@ export class LiveKitParticipant {
             this._videoRemoteTrack = track;
 
             this.space.spacePeerManager.videoContainerMap.get(this._spaceUser.spaceUserId)?.forEach((videoElement) => {
-                console.log("attach to existing videoElement", videoElement);
                 videoElement.autoplay = true;
                 videoElement.playsInline = true;
                 videoElement.muted = track.isMuted;
@@ -263,6 +250,15 @@ export class LiveKitParticipant {
 
     private handleIsSpeakingChanged(isSpeaking: boolean) {
         this._isSpeakingStore.set(isSpeaking);
+    }
+
+    private listenToParticipantEvents() {
+        this.participant.on(ParticipantEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
+        this.participant.on(ParticipantEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
+        this.participant.on(ParticipantEvent.TrackMuted, this.handleTrackMuted.bind(this));
+        this.participant.on(ParticipantEvent.TrackUnmuted, this.handleTrackUnmuted.bind(this));
+        this.participant.on(ParticipantEvent.ConnectionQualityChanged, this.handleConnectionQualityChanged.bind(this));
+        this.participant.on(ParticipantEvent.IsSpeakingChanged, this.handleIsSpeakingChanged.bind(this));
     }
 
     private async updateLivekitVideoStreamStore() {

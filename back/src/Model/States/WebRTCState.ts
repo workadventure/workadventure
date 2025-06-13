@@ -28,7 +28,6 @@ export class WebRTCState extends CommunicationState {
             return;
         }
 
-        //TODO : pas utile de passer le switchInProgress ici toujours false / voir
         super.handleUserAdded(user);
     }
 
@@ -63,7 +62,6 @@ export class WebRTCState extends CommunicationState {
         this.setupSwitchTimeout();
     }
 
-    //TODO : passer dans la classe abstraite
     areAllUsersReady(): boolean {
         return this._readyUsers.size === this._space.getAllUsers().length;
     }

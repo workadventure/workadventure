@@ -453,7 +453,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
     getUserByUserId(userId: number): Promise<SpaceUserExtended | undefined> {
         for (const user of this._users.values()) {
-            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+            if (this.extractUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 return Promise.resolve(user);
             }
         }
@@ -461,7 +461,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         const deferred = new Deferred<SpaceUserExtended>();
 
         const subscription = this.observeUserJoined.subscribe((user) => {
-            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+            if (this.extractUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 deferred.resolve(user);
                 subscription.unsubscribe();
             }
@@ -478,8 +478,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         ]);
     }
 
-    //TODO : revoir le nom de la fonction
-    private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
+    private extractUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
         const parts = spaceUserId.split("_");
         const lastPart = parts[parts.length - 1];
         const num = Number(lastPart);

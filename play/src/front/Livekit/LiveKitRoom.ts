@@ -47,7 +47,6 @@ export class LiveKitRoom {
     ) {}
 
     public async prepareConnection(): Promise<Room> {
-        //TODO : revoir les paramètres de la room
         this.room = new Room({
             adaptiveStream: {
                 pixelDensity: "screen",
