@@ -92,7 +92,7 @@ export const EnvironmentVariables = z.object({
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional().transform((val) => toNumber(val, 10)),
-    MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
+    MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 4)),
     MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 16))
         .describe(

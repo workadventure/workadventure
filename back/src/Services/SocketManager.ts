@@ -1251,6 +1251,7 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
+            //FIXME : JWT 
             space = new Space(joinSpaceMessage.spaceName, eventProcessor, joinSpaceMessage.propertiesToSync);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }

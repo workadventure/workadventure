@@ -4,7 +4,6 @@ import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-    //TODO : voir pourquoi array simple et pas set
     private usersReady: string[] = [];
 
     constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
@@ -14,13 +13,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    //TODO ; voir si on peut integrer une notion de salle d'attente directement dans cette partie
-    // avec un salon ouvert / fermé
-
     addUser(user: SpaceUser, switchInProgress = false): void {
-        console.log(">>> send invitation to addUser", user.spaceUserId, switchInProgress);
-        console.trace(">>> send invitation to addUser");
-
         this.livekitService
             .generateToken(this.space.getSpaceName(), user)
             .then((token) => {
@@ -68,13 +61,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             });
     }
 
-    updateUser(user: SpaceUser): void {
-        //TODO : voir si besoin
-    }
+    updateUser(user: SpaceUser): void {}
 
     initialize(readyUsers: Set<string>): void {
         const users = this.space.getAllUsers().filter((user) => !readyUsers.has(user.spaceUserId));
-        console.log(">>> initialize livekit with ", users.length, " users");
         users.forEach((user) => {
             this.addUser(user, false);
         });

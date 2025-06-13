@@ -1,7 +1,6 @@
 import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
-//import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import { User } from "./User";

@@ -70,8 +70,6 @@ export type SpaceUserExtended = SpaceUser & {
     reactiveUser: ReactiveSpaceUser;
     getPeerStore: () => Readable<VideoPeer> | undefined;
     getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
-    getLivekitVideoStreamStore: () => Readable<Streamable> | undefined;
-    getLivekitScreenShareStreamStore: () => Readable<Streamable> | undefined;
     getPlayer: () => Promise<RemotePlayerData> | undefined;
     userId: number;
 };
@@ -261,24 +259,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
                 }
                 return undefined;
             },
-            getLivekitVideoStreamStore: () => {
-                const livekitVideoStreamStore = this._space.videoStreamStore;
-
-                const store = derived(livekitVideoStreamStore, ($livekitVideoStreamStore) => {
-                    return $livekitVideoStreamStore.get(user.spaceUserId);
-                });
-
-                return store;
-            },
-            getLivekitScreenShareStreamStore: () => {
-                const livekitScreenShareStreamStore = this._space.screenShareStreamStore;
-                if (livekitScreenShareStreamStore) {
-                    return derived(livekitScreenShareStreamStore, ($livekitScreenShareStreamStore) => {
-                        return $livekitScreenShareStreamStore.get(user.spaceUserId);
-                    });
-                }
-                return undefined;
-            },
             getScreenSharingPeerStore: () => {
                 const screenSharingPeerStore = this._space.screenShareStreamStore;
                 if (screenSharingPeerStore) {
@@ -400,32 +380,6 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         });
     }
 
-    public getAllLivekitVideoStreamStores(): Readable<Map<string, Readable<Streamable>>> {
-        return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<string, Readable<Streamable>> = new Map();
-            for (const user of $usersStore.values()) {
-                const peerStore = user.getLivekitVideoStreamStore();
-                if (peerStore !== undefined) {
-                    allPeers.set(user.spaceUserId, peerStore);
-                }
-            }
-            return allPeers;
-        });
-    }
-
-    public getAllLivekitScreenShareStreamStores(): Readable<Map<string, Readable<Streamable>>> {
-        return derived(this.usersStore, ($usersStore) => {
-            const allPeers: Map<string, Readable<Streamable>> = new Map();
-            for (const user of $usersStore.values()) {
-                const peerStore = user.getLivekitScreenShareStreamStore();
-                if (peerStore !== undefined) {
-                    allPeers.set(user.spaceUserId, peerStore);
-                }
-            }
-            return allPeers;
-        });
-    }
-
     getUserBySpaceUserId(spaceUserId: string): Promise<SpaceUserExtended | undefined> {
         if (this._users.has(spaceUserId)) {
             return Promise.resolve(this._users.get(spaceUserId));
@@ -453,7 +407,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
 
     getUserByUserId(userId: number): Promise<SpaceUserExtended | undefined> {
         for (const user of this._users.values()) {
-            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+            if (this.extractUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 return Promise.resolve(user);
             }
         }
@@ -461,7 +415,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         const deferred = new Deferred<SpaceUserExtended>();
 
         const subscription = this.observeUserJoined.subscribe((user) => {
-            if (this.getUserIdFromSpaceUserId(user.spaceUserId) === userId) {
+            if (this.extractUserIdFromSpaceUserId(user.spaceUserId) === userId) {
                 deferred.resolve(user);
                 subscription.unsubscribe();
             }
@@ -478,8 +432,7 @@ export abstract class SpaceFilter implements SpaceFilterInterface {
         ]);
     }
 
-    //TODO : revoir le nom de la fonction
-    private getUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
+    private extractUserIdFromSpaceUserId(spaceUserId: string): number | undefined {
         const parts = spaceUserId.split("_");
         const lastPart = parts[parts.length - 1];
         const num = Number(lastPart);

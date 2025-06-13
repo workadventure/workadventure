@@ -174,7 +174,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 };
 
                 this.receiveWebrtcStart(user).catch((e) => {
-                    console.trace(">>>>> receiveWebrtcStart", e);
                     console.error("Error while receiving WebRTC signal", e);
                     Sentry.captureException(e);
                 });

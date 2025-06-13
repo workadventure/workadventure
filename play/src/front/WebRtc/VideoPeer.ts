@@ -62,6 +62,7 @@ export class VideoPeer extends Peer implements Streamable {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
+        //TODO : remove player passer les infos dnas le spaceUser
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
         private spaceFilter: Promise<SpaceFilterInterface>,

@@ -47,7 +47,6 @@ export class LiveKitRoom {
     ) {}
 
     public async prepareConnection(): Promise<Room> {
-        //TODO : revoir les paramètres de la room
         this.room = new Room({
             adaptiveStream: {
                 pixelDensity: "screen",
@@ -311,13 +310,10 @@ export class LiveKitRoom {
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
         //TODO : revoir impl iteration sur tout les participants a chaque fois
-        console.log("active speakers", speakers);
         this.participants.forEach((participant) => {
             if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
-                console.log("participant is active speaker", participant.participant.sid);
                 participant.setActiveSpeaker(true);
             } else {
-                console.log("participant is not active speaker", participant.participant.sid);
                 participant.setActiveSpeaker(false);
             }
         });
