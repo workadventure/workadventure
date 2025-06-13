@@ -1,10 +1,10 @@
 import * as Sentry from "@sentry/svelte";
+import { get } from "svelte/store";
 import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
-    ErrorScreenMessage,
     isRegisterData,
     MeResponse,
 } from "@workadventure/messages";
@@ -33,13 +33,14 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
+import { messageScreenStore } from "../Stores/MessageScreenStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
-import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import LL from "../../i18n/i18n-svelte";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -577,19 +578,22 @@ class ConnectionManager {
                     }
                 }
                 this._roomConnectionStream.next(connection);
-                errorScreenStore.delete();
+                // errorScreenStore.delete();
+                messageScreenStore.hide();
                 resolve(connect);
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
-            errorScreenStore.setError(
-                ErrorScreenMessage.fromPartial({
-                    type: "reconnecting",
-                    code: "reconnecting",
-                    title: "Reconnecting...",
-                })
-            );
+            // errorScreenStore.setError(
+            //     ErrorScreenMessage.fromPartial({
+            //         type: "reconnecting",
+            //         code: "reconnecting",
+            //         title: "Connecting...",
+            //     })
+            // );
+            console.log("[ConnectionManager] Message Screen text 🚀🚀🚀", get(LL).messageScreen.connecting);
+            messageScreenStore.show(get(LL).messageScreen.connecting(), get(LL).messageScreen.pleaseWait());
 
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
