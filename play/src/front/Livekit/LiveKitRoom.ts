@@ -24,6 +24,7 @@ import { SpaceInterface } from "../Space/SpaceInterface";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
+import {SpaceUserExtended} from "../Space/SpaceFilter/SpaceFilter";
 export class LiveKitRoom {
     private room: Room | undefined;
     private localParticipant: LocalParticipant | undefined;
@@ -310,6 +311,27 @@ export class LiveKitRoom {
     }
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
+        let priority = 0;
+
+        for (const speaker of speakers) {
+            const extendedVideoStream = this.space.videoStreamStore.get(speaker.identity);
+            if (extendedVideoStream) {
+                extendedVideoStream.priority = priority;
+            }
+            priority++;
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+        }
+
+
         //TODO : revoir impl iteration sur tout les participants a chaque fois
         console.log("active speakers", speakers);
         this.participants.forEach((participant) => {
