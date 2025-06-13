@@ -578,21 +578,13 @@ class ConnectionManager {
                     }
                 }
                 this._roomConnectionStream.next(connection);
-                // errorScreenStore.delete();
                 messageScreenStore.hide();
                 resolve(connect);
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
-            // errorScreenStore.setError(
-            //     ErrorScreenMessage.fromPartial({
-            //         type: "reconnecting",
-            //         code: "reconnecting",
-            //         title: "Connecting...",
-            //     })
-            // );
-            console.log("[ConnectionManager] Message Screen text 🚀🚀🚀", get(LL).messageScreen.connecting);
+            // TODO: understand why sometimes first connection fails
             messageScreenStore.show(get(LL).messageScreen.connecting(), get(LL).messageScreen.pleaseWait());
 
             // Let's retry in 4-6 seconds
