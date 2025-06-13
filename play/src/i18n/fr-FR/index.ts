@@ -18,7 +18,7 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
-import say from "./statusModal";
+import say from "./say";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
