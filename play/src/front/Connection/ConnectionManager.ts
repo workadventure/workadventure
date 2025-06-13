@@ -1,12 +1,13 @@
 import * as Sentry from "@sentry/svelte";
+import { get } from "svelte/store";
 import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
-    ErrorScreenMessage,
     isRegisterData,
     MeResponse,
+    ErrorScreenMessage,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
@@ -39,6 +40,8 @@ import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
+import LL from "../../i18n/i18n-svelte";
+import waLogo from "../Components/images/logo.svg";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
@@ -587,10 +590,11 @@ class ConnectionManager {
                 ErrorScreenMessage.fromPartial({
                     type: "reconnecting",
                     code: "reconnecting",
-                    title: "Reconnecting...",
+                    title: get(LL).messageScreen.connecting(),
+                    subtitle: get(LL).messageScreen.pleaseWait(),
+                    image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
                 })
             );
-
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");
