@@ -7,6 +7,7 @@ import {
     ErrorApiUnauthorizedData,
     isRegisterData,
     MeResponse,
+    ErrorScreenMessage,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
@@ -33,7 +34,6 @@ import {
 } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
-import { messageScreenStore } from "../Stores/MessageScreenStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
@@ -41,6 +41,8 @@ import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
 import LL from "../../i18n/i18n-svelte";
+import waLogo from "../Components/images/logo.svg";
+import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -578,15 +580,21 @@ class ConnectionManager {
                     }
                 }
                 this._roomConnectionStream.next(connection);
-                messageScreenStore.hide();
+                errorScreenStore.delete();
                 resolve(connect);
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
-            // TODO: understand why sometimes first connection fails
-            messageScreenStore.show(get(LL).messageScreen.connecting(), get(LL).messageScreen.pleaseWait());
-
+            errorScreenStore.setError(
+                ErrorScreenMessage.fromPartial({
+                    type: "reconnecting",
+                    code: "reconnecting",
+                    title: get(LL).messageScreen.connecting(),
+                    subtitle: get(LL).messageScreen.pleaseWait(),
+                    image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
+                })
+            );
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");

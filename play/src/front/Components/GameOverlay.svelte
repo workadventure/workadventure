@@ -18,7 +18,6 @@
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
-    import { messageScreenStore } from "../Stores/MessageScreenStore";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
@@ -36,7 +35,6 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-    import MessageScreen from "./UI/MessageScreen.svelte";
 
     export let game: Game;
 
@@ -63,10 +61,6 @@
 {:else if $errorStore.length > 0}
     <div class="bg-contrast">
         <ErrorDialog />
-    </div>
-{:else if $messageScreenStore !== null}
-    <div class="bg-contrast">
-        <MessageScreen />
     </div>
 {:else if $loginSceneVisibleStore}
     <div class="h-dvh overflow-y-auto">
