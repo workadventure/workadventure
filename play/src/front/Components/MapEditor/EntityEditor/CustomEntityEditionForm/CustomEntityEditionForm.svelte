@@ -153,7 +153,7 @@
     </div>
     {#if isUploadForm}
         <div class="flex gap-2 mt-2 hover:cursor-pointer">
-            <InputCheckbox id="floatingObject" data-testid="floatingObject" bind:value={floatingObject} />
+            <InputCheckbox id="floatingObject" dataTestId="floatingObject" bind:value={floatingObject} />
             <label class="my-[4px]" for="floatingObject"
                 ><b class="-mb-2 block">{$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObject()}</b>
                 <br />
