@@ -106,7 +106,9 @@ export class LiveKitService {
 
             if (rooms && rooms.length > 0) {
                 const participants = await this.roomServiceClient.listParticipants(roomName);
-                const participantExists = participants.some((p) => p.identity === participantName);
+                const participantExists = participants.some(
+                    (p: { identity: string }) => p.identity === participantName
+                );
 
                 if (!participantExists) {
                     console.warn(`Participant ${participantName} not found in room ${roomName}`);
