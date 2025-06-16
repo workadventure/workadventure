@@ -11,10 +11,6 @@ import {
     EncodedFileType,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
-import Debug from "debug";
-import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
-
-const debug = Debug("livekit");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
@@ -23,9 +19,11 @@ const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekit
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
-    private currentRecordingInformation: EgressInfo | null = null;
-
     constructor(
+        private livekitHost: string,
+        private livekitApiKey: string,
+        private livekitApiSecret: string,
+        private livekitFrontendUrl: string,
         createRoomServiceClient: (
             livekitHost: string,
             livekitApiKey: string,
@@ -35,11 +33,7 @@ export class LiveKitService {
             livekitHost: string,
             livekitApiKey: string,
             livekitApiSecret: string
-        ) => EgressClient = defaultEgressClient,
-        private livekitHost = LIVEKIT_HOST,
-        private livekitApiKey = LIVEKIT_API_KEY,
-        private livekitApiSecret = LIVEKIT_API_SECRET,
-        private livekitFrontendUrl = LIVEKIT_WS_URL
+        ) => EgressClient = defaultEgressClient
     ) {
         if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
             debug("Livekit host, api key or secret is not set");
@@ -48,6 +42,8 @@ export class LiveKitService {
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
+
+    private currentRecordingInformation: EgressInfo | null = null;
 
     async createRoom(roomName: string): Promise<void> {
         const createOptions: CreateOptions = {
@@ -157,7 +153,7 @@ export class LiveKitService {
                 disableManifest: true,
             });
 
-            const result = await this.egressClient.startRoomCompositeEgress(
+            this.currentRecordingInformation = await this.egressClient.startRoomCompositeEgress(
                 roomName,
                 {
                     file: output,
@@ -166,8 +162,6 @@ export class LiveKitService {
                     layout,
                 }
             );
-
-            this.currentRecordingInformation = result;
 
             // Stop recording after 60 seconds
             // setTimeout(async () => {
