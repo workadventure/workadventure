@@ -912,19 +912,27 @@ export class GameScene extends DirtyScene {
                 gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
-
-                const chatId = localUserStore.getChatId();
-                const email: string | null = localUserStore.getLocalUser()?.email || null;
-                const connection = this.connection;
-                if (email && chatId && connection) {
-                    connection.emitUpdateChatId(email, chatId);
-                    connection.emitPlayerChatID(chatId);
-                }
             })
             .catch((e: unknown) => {
                 console.error("Initialization failed", e);
                 Sentry.captureException(e);
                 errorScreenStore.setException(e);
+            });
+
+        gameManager
+            .getChatConnection()
+            .then(() => {
+                const connection = this.connection;
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
+            })
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
             });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
