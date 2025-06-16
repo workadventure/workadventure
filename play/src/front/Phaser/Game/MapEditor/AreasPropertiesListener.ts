@@ -25,7 +25,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
@@ -696,18 +696,21 @@ export class AreasPropertiesListener {
         if (connectedUserUUID != ownerId) {
             const connection = this.scene.connection;
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
-                connection
-                    .queryMember(ownerId)
-                    .then((member: Member) => {
-                        if (get(canRequestVisitCardsStore) === false) return;
-                        if (member?.visitCardUrl) {
-                            requestVisitCardsStore.set(member.visitCardUrl);
-                        }
-                        if (member?.chatID) {
-                            selectedChatIDRemotePlayerStore.set(member?.chatID);
-                        }
-                    })
-                    .catch((error) => console.error(error));
+                if (ADMIN_URL) {
+                    connection
+                        .queryMember(ownerId)
+                        .then((member: Member) => {
+                            if (get(canRequestVisitCardsStore) === false) return;
+                            if (member?.visitCardUrl) {
+                                requestVisitCardsStore.set(member.visitCardUrl);
+                            }
+                            if (member?.chatID) {
+                                selectedChatIDRemotePlayerStore.set(member?.chatID);
+                            }
+                        })
+                        .catch((error) => console.error(error));
+                }
+
                 area?.highLightArea(true);
             }
         }
