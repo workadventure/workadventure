@@ -1,15 +1,18 @@
+import * as Sentry from "@sentry/node";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { ADMIN_API_URL } from "../../Enum/EnvironmentVariable";
+import { adminApi } from "../../Services/AdminApi";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { LivekitState } from "./LivekitState";
 
 export class WebRTCState extends CommunicationState {
     protected _currentCommunicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
-
+    private _nextStatePromise: Promise<LivekitState> | undefined;
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager
@@ -24,6 +27,7 @@ export class WebRTCState extends CommunicationState {
         }
 
         if (this.isSwitching()) {
+            this._waitingList.add(user.spaceUserId);
             this._nextState?.handleUserAdded(user);
             return;
         }
@@ -38,6 +42,7 @@ export class WebRTCState extends CommunicationState {
         }
 
         if (this.isSwitching()) {
+            this._waitingList.delete(user.spaceUserId);
             this._nextState?.handleUserDeleted(user);
         }
 
@@ -54,13 +59,27 @@ export class WebRTCState extends CommunicationState {
     }
 
     private switchToNextState(user: SpaceUser): void {
-        this._nextState = new LivekitState(this._space, this._communicationManager);
+        this._nextStatePromise = (async () => {
+            let nextState: LivekitState | undefined;
+            if (ADMIN_API_URL) {
+                const res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
+                nextState = new LivekitState(this._space, this._communicationManager, res);
+            } else {
+                nextState = new LivekitState(this._space, this._communicationManager);
+            }
 
-        this._readyUsers.add(user.spaceUserId);
-        this._nextState.handleUserAdded(user);
+            this._nextState = nextState;
+            this._readyUsers.add(user.spaceUserId);
+            this._nextState.handleUserAdded(user);
 
-        this.notifyAllUsersToPrepareSwitchToNextState();
-        this.setupSwitchTimeout();
+            this.notifyAllUsersToPrepareSwitchToNextState();
+            this.setupSwitchTimeout();
+            return nextState;
+        })();
+        this._nextStatePromise.catch((err) => {
+            Sentry.captureException(err);
+            console.error(err);
+        });
     }
 
     //TODO : passer dans la classe abstraite
@@ -69,7 +88,11 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
-        return this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC && !this.isSwitching();
+        return (
+            this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC &&
+            !this.isSwitching() &&
+            !this._nextStatePromise
+        );
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {

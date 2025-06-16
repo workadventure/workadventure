@@ -3,6 +3,9 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
+import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST, LIVEKIT_WS_URL } from "../../Enum/EnvironmentVariable";
+import { LiveKitService } from "../Services/LivekitService";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
 
@@ -12,16 +15,40 @@ export class LivekitState extends CommunicationState {
 
     constructor(
         protected readonly _space: ICommunicationSpace,
-        protected readonly _communicationManager: ICommunicationManager
+        protected readonly _communicationManager: ICommunicationManager,
+        protected readonly _livekitServerCredentials: LivekitCredentialsResponse = {
+            livekitApiKey: LIVEKIT_API_KEY ?? "",
+            livekitApiSecret: LIVEKIT_API_SECRET ?? "",
+            livekitHost: LIVEKIT_HOST ?? "",
+            livekitWSurl: LIVEKIT_WS_URL ?? "",
+        }
     ) {
         //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
-        super(_space, _communicationManager, new LivekitCommunicationStrategy(_space));
+        super(
+            _space,
+            _communicationManager,
+            new LivekitCommunicationStrategy(
+                _space,
+                new LiveKitService(
+                    _livekitServerCredentials.livekitHost,
+                    _livekitServerCredentials.livekitApiKey,
+                    _livekitServerCredentials.livekitApiSecret,
+                    _livekitServerCredentials.livekitWSurl
+                )
+            )
+        );
         this.SWITCH_TIMEOUT_MS = 5000;
     }
     handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
+
+        if (this.isSwitching()) {
+            this._waitingList.delete(user.spaceUserId);
+            this._nextState?.handleUserAdded(user);
+        }
+
         super.handleUserAdded(user);
     }
     handleUserDeleted(user: SpaceUser): void {
@@ -30,6 +57,7 @@ export class LivekitState extends CommunicationState {
         }
 
         if (this.isSwitching()) {
+            this._waitingList.add(user.spaceUserId);
             this._nextState?.handleUserDeleted(user);
         }
 

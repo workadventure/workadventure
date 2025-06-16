@@ -12,6 +12,7 @@ export abstract class CommunicationState implements ICommunicationState {
     protected _nextState: CommunicationState | null = null;
     protected abstract _currentCommunicationType: CommunicationType;
     protected abstract _nextCommunicationType: CommunicationType;
+    protected _waitingList: Set<string> = new Set<string>();
 
     constructor(
         protected readonly _space: ICommunicationSpace,
@@ -47,6 +48,15 @@ export abstract class CommunicationState implements ICommunicationState {
         }
         this._nextState = null;
         this._readyUsers.clear();
+        const spaceUsers = this._space.getAllUsers();
+
+        this._waitingList.forEach((userId) => {
+            const waitingUser = spaceUsers.find(({ spaceUserId }) => spaceUserId === userId);
+            if (waitingUser) {
+                this.handleUserAdded(waitingUser);
+            }
+        });
+        this._waitingList.clear();
     }
 
     protected setupSwitchTimeout(): void {
