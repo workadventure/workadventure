@@ -550,21 +550,21 @@ export class AreasPropertiesListener {
                 jitsiUrl = answer.url;
             }
 
-            let domain = jitsiUrl || JITSI_URL;
-            if (domain === undefined) {
+            jitsiUrl = jitsiUrl || JITSI_URL;
+            if (jitsiUrl === undefined) {
                 throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
 
-            if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
-                domain = `https://${domain}`;
+            if (!jitsiUrl.startsWith("http://") && !jitsiUrl.startsWith("https://")) {
+                jitsiUrl = `https://${jitsiUrl}`;
             }
 
-            domain = domain.replace(/\/+/g, "/");
+            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(domain),
+                new URL(jitsiUrl),
                 property.width,
                 property.closable,
                 roomName,
