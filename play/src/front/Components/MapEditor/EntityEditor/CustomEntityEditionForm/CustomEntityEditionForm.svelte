@@ -131,7 +131,12 @@
     <div>
         <label class="mb-2 block" for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label
         >
-        <Input bind:value={name} id="name" data-testid="name" />
+        <Input
+            class="px-2 py-2.5 text-[16px] rounded-md bg-contrast border-solid border border-contrast-400 text-white min-w-full"
+            bind:value={name}
+            id="name"
+            data-testid="name"
+        />
     </div>
     <div>
         <label class="mb-2 block" for="tags"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.tags()}</b></label>
