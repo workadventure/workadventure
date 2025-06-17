@@ -202,7 +202,7 @@ services:
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: thecodingmachine/nodejs:v2-22-bullseye
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
