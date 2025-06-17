@@ -39,39 +39,41 @@ export class LivekitState extends CommunicationState {
         );
         this.SWITCH_TIMEOUT_MS = 5000;
     }
-    handleUserAdded(user: SpaceUser): void {
+    async handleUserAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
 
-        if (this.isSwitching()) {
+        if (this._nextStatePromise) {
             this._waitingList.delete(user.spaceUserId);
-            this._nextState?.handleUserAdded(user);
+            const nextState = await this._nextStatePromise;
+            await nextState.handleUserAdded(user);
         }
 
-        super.handleUserAdded(user);
+        return super.handleUserAdded(user);
     }
-    handleUserDeleted(user: SpaceUser): void {
+    async handleUserDeleted(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchToNextState()) {
             this.switchToNextState(user);
         }
 
-        if (this.isSwitching()) {
+        if (this._nextStatePromise) {
             this._waitingList.add(user.spaceUserId);
-            this._nextState?.handleUserDeleted(user);
+            const nextState = await this._nextStatePromise;
+            await nextState.handleUserAdded(user);
         }
 
-        super.handleUserDeleted(user);
+        return super.handleUserDeleted(user);
     }
-    handleUserUpdated(user: SpaceUser): void {
-        super.handleUserUpdated(user);
+    async handleUserUpdated(user: SpaceUser): Promise<void> {
+        return super.handleUserUpdated(user);
     }
-    handleUserReadyForSwitch(userId: string): void {
-        super.handleUserReadyForSwitch(userId);
+    async handleUserReadyForSwitch(userId: string): Promise<void> {
+        return super.handleUserReadyForSwitch(userId);
     }
 
     private switchToNextState(user: SpaceUser): void {
-        this._nextState = new WebRTCState(this._space, this._communicationManager);
+        this._nextStatePromise = Promise.resolve(new WebRTCState(this._space, this._communicationManager));
         if (user) {
             this._readyUsers.add(user.spaceUserId);
             this.notifyUserOfCurrentStrategy(user, this._nextCommunicationType);

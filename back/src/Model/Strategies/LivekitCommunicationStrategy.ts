@@ -14,6 +14,9 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
+        //console.log(">>> send invitation to addUser", user.spaceUserId, switchInProgress);
+        //console.trace(">>> send invitation to addUser");
+
         this.livekitService
             .generateToken(this.space.getSpaceName(), user)
             .then((token) => {
