@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { FilterType } from "@workadventure/messages";
 import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -47,14 +48,14 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         expect(() => {
-            new Space(spaceName, metadata, defaultRoomConnectionMock);
+            new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
         }).toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
         expect(space.getName()).toBe(spaceName);
     });
     it("should emit joinSpace event when you create the space", () => {
@@ -64,7 +65,7 @@ describe("Space test", () => {
             emitJoinSpace: vi.fn(),
         };
 
-        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection, FilterType.ALL_USERS);
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
@@ -80,7 +81,12 @@ describe("Space test", () => {
             emitLeaveSpace: vi.fn(),
         };
 
-        const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        const space = new Space(
+            spaceName,
+            metadata,
+            mockRoomConnection as unknown as RoomConnection,
+            FilterType.ALL_USERS
+        );
 
         space.destroy();
 
@@ -92,7 +98,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -110,7 +116,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -125,7 +131,7 @@ describe("Space test", () => {
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],

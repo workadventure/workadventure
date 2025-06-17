@@ -8,7 +8,6 @@ import {
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SpaceFilterMessage,
     SpaceUser,
     SubMessage,
     WokaDetail,
@@ -28,7 +27,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { SocketData } from "../models/Websocket/SocketData";
+import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
@@ -501,8 +500,8 @@ export class IoSocketController {
                             backConnection: undefined,
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
-                            spaces: new Set<string>(),
-                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                            spaces: new Set<SpaceName>(),
+                            spacesFilters: new Set<SpaceName>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -724,17 +723,6 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "updateSpaceFilterMessage": {
-                            if (message.message.updateSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleUpdateSpaceFilterMessage(
-                                socket,
-                                noUndefined(message.message.updateSpaceFilterMessage)
-                            );
-                            break;
-                        }
                         case "removeSpaceFilterMessage": {
                             if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
@@ -759,7 +747,8 @@ export class IoSocketController {
                             await socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
-                                localSpaceName
+                                localSpaceName,
+                                message.message.joinSpaceMessage.filterType
                             );
                             break;
                         }
