@@ -135,7 +135,7 @@ export abstract class CommunicationState implements ICommunicationState {
     protected notifyAllUsersToPrepareSwitchToNextState(): void {
         const users = this._space.getAllUsers();
         const usersToNotify = users.filter((user) => !this._readyUsers.has(user.spaceUserId));
-
+        console.log(">>>> userToNotify length ", usersToNotify.length);
         usersToNotify.forEach((user) => {
             this.dispatchSwitchEvent(user.spaceUserId, "prepareSwitchMessage", {
                 strategy: this._nextCommunicationType,

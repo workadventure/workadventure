@@ -47,9 +47,7 @@ export class CommunicationManager implements ICommunicationManager {
 
     private getInitialState(): ICommunicationState {
         const propertiesToSync = this.space.getPropertiesToSync();
-        return this.hasMediaProperties(propertiesToSync)
-            ? new WebRTCState(this.space, this)
-            : new DefaultState(this.space, this);
+        return this.hasMediaProperties(propertiesToSync) ? new WebRTCState(this.space, this) : new DefaultState();
     }
 
     private hasMediaProperties(properties: string[]): boolean {

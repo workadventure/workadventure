@@ -71,7 +71,7 @@ export class WebRTCState extends CommunicationState {
             }
             console.log("In the promise");
             this._readyUsers.add(user.spaceUserId);
-            nextState.handleUserAdded(user).catch((e) => {
+            await nextState.handleUserAdded(user).catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
             });

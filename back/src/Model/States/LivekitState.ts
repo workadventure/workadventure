@@ -24,6 +24,12 @@ export class LivekitState extends CommunicationState {
         }
     ) {
         //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
+        console.log(
+            _livekitServerCredentials.livekitHost,
+            _livekitServerCredentials.livekitApiKey,
+            _livekitServerCredentials.livekitApiSecret,
+            _livekitServerCredentials.livekitWSurl
+        );
         super(
             _space,
             _communicationManager,
