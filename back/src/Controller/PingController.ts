@@ -1,12 +1,11 @@
-import { HttpRequest, HttpResponse } from "uWebSockets.js";
-import { App } from "../Server/sifrr.server";
+import { Express, Request, Response } from "express";
 
 export class PingController {
-    constructor(private App: App) {
-        this.App.get("/ping", this.ping.bind(this));
+    constructor(private app: Express) {
+        this.app.get("/ping", this.ping.bind(this));
     }
 
-    private ping(res: HttpResponse, req: HttpRequest): void {
-        res.writeStatus("200").end("pong");
+    private ping(req: Request, res: Response): void {
+        res.status(200).send("pong");
     }
 }
