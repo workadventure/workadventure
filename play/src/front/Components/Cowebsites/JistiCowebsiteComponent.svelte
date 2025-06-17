@@ -31,8 +31,6 @@
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jistiMeetLoadedPromise: CancelablePromise<void>;
 
-    // Expose the Jitsi URL to the parent component
-
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
             userIsJitsiDominantSpeakerStore.set(data.id === getCurrentParticipantId(jitsiApi.getParticipantsInfo()));

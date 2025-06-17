@@ -2,7 +2,7 @@ class JitsiExternalApiFactory {
     private loadingPromise: Promise<void> | undefined;
 
     public getJitsiApiUrl(domain: string): string {
-        if (!domain.startsWith("https://")) {
+        if (!domain.startsWith("https://") && !domain.startsWith("http://")) {
             domain = "https://" + domain;
         }
         return domain + "/external_api.js";

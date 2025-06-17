@@ -550,10 +550,16 @@ export class AreasPropertiesListener {
                 jitsiUrl = answer.url;
             }
 
-            const domain = jitsiUrl || JITSI_URL;
+            let domain = jitsiUrl || JITSI_URL;
             if (domain === undefined) {
                 throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
+
+            if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
+                domain = `https://${domain}`;
+            }
+
+            domain = domain.replace(/\/+/g, "/");
 
             inJitsiStore.set(true);
 
