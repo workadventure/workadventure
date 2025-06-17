@@ -1,34 +1,39 @@
 import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
-import { HttpRequest, HttpResponse } from "uWebSockets.js";
+import { Express, Request, Response } from "express";
 import { parse } from "query-string";
 import debug from "debug";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
-import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
 
 export class DebugController {
     private debugTimeout: NodeJS.Timeout | undefined;
 
-    constructor(private App: App) {
+    constructor(private app: Express) {
         this.getDump();
         this.enableDebug();
         this.disableDebug();
     }
 
-    getDump() {
-        this.App.get("/dump", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
+    private validateToken(req: Request, res: Response): boolean {
+        if (!ADMIN_API_TOKEN) {
+            res.status(401).send("No token configured!");
+            return false;
+        }
 
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
+        const query = parse(req.url.split("?")[1] || "");
+        if (query.token !== ADMIN_API_TOKEN) {
+            res.status(401).send("Invalid token sent!");
+            return false;
+        }
 
-            res.writeStatus("200 OK").end(
+        return true;
+    }
+
+    private getDump() {
+        this.app.get("/dump", (req: Request, res: Response): void => {
+            if (!this.validateToken(req, res)) return;
+
+            res.status(200).send(
                 dumpVariable(socketManager, (value: unknown) => {
                     if (value && typeof value === "object" && value.constructor) {
                         if (value.constructor.name === "uWS.WebSocket") {
@@ -48,24 +53,14 @@ export class DebugController {
                     return value;
                 })
             );
-            return;
         });
     }
 
-    enableDebug() {
-        this.App.put("/debug/enable", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
+    private enableDebug() {
+        this.app.put("/debug/enable", (req: Request, res: Response): void => {
+            if (!this.validateToken(req, res)) return;
 
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
-
+            const query = parse(req.url.split("?")[1] || "");
             let namespaces = "*";
 
             if (query.namespaces) {
@@ -80,22 +75,13 @@ export class DebugController {
                 debug.disable();
             }, ONE_DAY_IN_MS);
 
-            res.writeStatus("200 OK").end("Active debug");
+            res.status(200).send("Active debug");
         });
     }
-    disableDebug() {
-        this.App.put("/debug/disable", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
 
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
+    private disableDebug() {
+        this.app.put("/debug/disable", (req: Request, res: Response): void => {
+            if (!this.validateToken(req, res)) return;
 
             debug.disable();
 
@@ -104,7 +90,7 @@ export class DebugController {
                 this.debugTimeout = undefined;
             }
 
-            res.writeStatus("200 OK").end("Debug disabled");
+            res.status(200).send("Debug disabled");
         });
     }
 }
