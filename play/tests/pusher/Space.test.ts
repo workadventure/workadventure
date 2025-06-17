@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import {
     AvailabilityStatus,
+    FilterType,
     PusherToBackSpaceMessage,
-    SpaceFilterMessage,
     SpaceUser,
     SubMessage,
 } from "@workadventure/messages";
@@ -76,21 +76,7 @@ describe("Space", () => {
         listenedZones: new Set<Zone>(),
         pusherRoom: undefined,
         spaces: [],
-        spacesFilters: new Map<string, SpaceFilterMessage[]>([
-            [
-                "test",
-                [
-                    {
-                        filterName: "default",
-                        spaceName: "test",
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    },
-                ],
-            ],
-        ]),
+        spacesFilters: new Set<string>(["test"]),
         cameraState: undefined,
         microphoneState: undefined,
         screenSharingState: undefined,
@@ -102,7 +88,7 @@ describe("Space", () => {
     const client = mock<Socket>({
         getUserData: vi.fn().mockReturnValue(clientData),
     });
-    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor());
+    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor(), FilterType.ALL_USERS);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
     });
@@ -193,44 +179,11 @@ describe("Space", () => {
     // even if another filter already exists.
     it("should add the name filter 'test' and send me the delta (nothing because user is already sent, and delta return nothing)", () => {
         eventsClient = [];
-        const filter: SpaceFilterMessage = {
-            filterName: "test",
-            spaceName: "test",
-            filter: {
-                $case: "spaceFilterContainName",
-                spaceFilterContainName: {
-                    value: "es",
-                },
-            },
-        };
-        client.getUserData().spacesFilters.set("test", [filter]);
-        space.handleAddFilter(client, { spaceFilterMessage: filter });
+        client.getUserData().spacesFilters.add("test");
+        space.handleAddFilter(client);
         expect(eventsClient.length).toBe(1);
     });
-    it("should update the name filter 'john' and send me the delta (remove userMessage)", () => {
-        const spaceFilterMessage: SpaceFilterMessage = {
-            filterName: "test",
-            spaceName: "test",
-            filter: {
-                $case: "spaceFilterContainName",
-                spaceFilterContainName: {
-                    value: "john",
-                },
-            },
-        };
-        space.handleUpdateFilter(client, { spaceFilterMessage });
-        client.getUserData().spacesFilters.set("test", [spaceFilterMessage]);
-        expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
-        const message = eventsClient.find((message) => message.message?.$case === "removeSpaceUserMessage");
-        expect(message).toBeDefined();
-        const subMessage = message?.message;
-        if (!subMessage || subMessage.$case !== "removeSpaceUserMessage") {
-            throw new Error("subMessage is not defined");
-        }
-        const removeSpaceUserMessage = subMessage.removeSpaceUserMessage;
-        expect(removeSpaceUserMessage).toBeDefined();
-        expect(removeSpaceUserMessage?.spaceUserId).toBe("foo_1");
-    });
+
     it("should notify client that have filters that match the user", () => {
         eventsClient = [];
         const spaceUser = SpaceUser.fromPartial({
@@ -272,29 +225,9 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and NOT send me anything", () => {
-        client.getUserData().spacesFilters = new Map<string, SpaceFilterMessage[]>([
-            [
-                "test",
-                [
-                    {
-                        filterName: "default",
-                        spaceName: "test",
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    },
-                ],
-            ],
-        ]);
+        client.getUserData().spacesFilters = new Set<string>(["test"]);
         eventsClient = [];
-        space.handleRemoveFilter(client, {
-            spaceFilterMessage: {
-                filterName: "test",
-                spaceName: "test",
-                filter: undefined,
-            },
-        });
+        space.handleRemoveFilter(client);
         expect(eventsClient.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(false);
     });
 

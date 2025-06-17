@@ -3,7 +3,7 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import { AvailabilityStatus } from "@workadventure/messages";
+import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import {
     ChatMessage,
@@ -20,7 +20,7 @@ import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegist
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
@@ -72,7 +72,6 @@ export class ProximityChatRoom implements ChatRoom {
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     private _space: SpaceInterface | undefined;
-    private _spaceWatcher: SpaceFilterInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
     // Users by spaceUserId
@@ -372,11 +371,10 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public joinSpace(spaceName: string): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName);
+        this._space = this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
-        this._spaceWatcher = this._space.watchAllUsers();
-        bindMuteEventsToSpace(this._space, this._spaceWatcher);
-        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
+        bindMuteEventsToSpace(this._space);
+        this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
             this.hasUserInProximityChat.set(users.size > 1);
         });
@@ -386,14 +384,14 @@ export class ProximityChatRoom implements ChatRoom {
             return uuid && blackListManager.isBlackListed(uuid);
         };
 
-        this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
+        this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
             this.addIncomingUser(spaceUser);
         });
 
-        this.spaceWatcherUserLeftObserver = this._spaceWatcher.observeUserLeft.subscribe((spaceUser) => {
+        this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
             this.addOutcomingUser(spaceUser);
         });
 
@@ -421,7 +419,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this.simplePeer.setSpaceFilter(this._spaceWatcher);
+        this.simplePeer.setSpace(this._space);
 
         this.saveChatState();
 
@@ -478,7 +476,7 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
-        this.simplePeer.setSpaceFilter(undefined);
+        this.simplePeer.setSpace(undefined);
     }
 
     private restoreChatState() {

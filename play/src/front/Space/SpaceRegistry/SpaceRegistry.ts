@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/svelte";
+import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
 import { SpaceInterface } from "../SpaceInterface";
@@ -24,7 +25,6 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitPublicSpaceEvent"
     | "emitRemoveSpaceFilter"
     | "emitAddSpaceFilter"
-    | "emitUpdateSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
@@ -51,38 +51,34 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         private connectStream = connectionManager.roomConnectionStream
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
-            if (!message.user || !message.filterName) {
+            if (!message.user) {
                 console.error(message);
                 throw new Error("addSpaceUserMessage is missing a user or a filterName");
             }
 
             this.spaces
                 .get(message.spaceName)
-                ?.getSpaceFilter(message.filterName)
-                .addUser(message.user)
+                ?.addUser(message.user)
                 .catch((e) => console.error(e));
         });
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.user || !message.filterName || !message.updateMask) {
-                    throw new Error("updateSpaceUserMessage is missing a user or a filterName or an updateMask");
+                if (!message.user || !message.updateMask) {
+                    throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
-                this.spaces
-                    .get(message.spaceName)
-                    ?.getSpaceFilter(message.filterName)
-                    .updateUserData(message.user, message.updateMask);
+                this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
             }
         );
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.spaceUserId || !message.filterName) {
-                    throw new Error("removeSpaceUserMessage is missing a spaceUserId or a filterName");
+                if (!message.spaceUserId) {
+                    throw new Error("removeSpaceUserMessage is missing a spaceUserId");
                 }
 
-                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.spaceUserId);
+                this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
             }
         );
 
@@ -140,9 +136,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
     }
 
-    joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
+    joinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        metadata: Map<string, unknown> = new Map<string, unknown>()
+    ): SpaceInterface {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection);
+        const newSpace = new Space(spaceName, metadata, this.roomConnection, filterType);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
@@ -173,7 +173,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.roomConnection = connection;
         this.spaces.forEach((space) => {
             this.leaveSpace(space);
-            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
+            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection, space.filterType);
             this.spaces.set(newSpace.getName(), newSpace);
         });
     }
