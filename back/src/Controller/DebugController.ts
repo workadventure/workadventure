@@ -1,9 +1,24 @@
 import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
-import { Express, Request, Response } from "express";
-import { parse } from "query-string";
+import { Express, Request, Response, NextFunction } from "express";
 import debug from "debug";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { socketManager } from "../Services/SocketManager";
+
+// Middleware pour valider le token d'authentification
+const validateTokenMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+    if (!ADMIN_API_TOKEN) {
+        res.status(401).send("No token configured!");
+        return;
+    }
+
+    const query = req.query;
+    if (query.token !== ADMIN_API_TOKEN) {
+        res.status(401).send("Invalid token sent!");
+        return;
+    }
+
+    next();
+};
 
 export class DebugController {
     private debugTimeout: NodeJS.Timeout | undefined;
@@ -14,25 +29,8 @@ export class DebugController {
         this.disableDebug();
     }
 
-    private validateToken(req: Request, res: Response): boolean {
-        if (!ADMIN_API_TOKEN) {
-            res.status(401).send("No token configured!");
-            return false;
-        }
-
-        const query = parse(req.url.split("?")[1] || "");
-        if (query.token !== ADMIN_API_TOKEN) {
-            res.status(401).send("Invalid token sent!");
-            return false;
-        }
-
-        return true;
-    }
-
     private getDump() {
-        this.app.get("/dump", (req: Request, res: Response): void => {
-            if (!this.validateToken(req, res)) return;
-
+        this.app.get("/dump", validateTokenMiddleware, (req: Request, res: Response): void => {
             res.status(200).send(
                 dumpVariable(socketManager, (value: unknown) => {
                     if (value && typeof value === "object" && value.constructor) {
@@ -57,14 +55,16 @@ export class DebugController {
     }
 
     private enableDebug() {
-        this.app.put("/debug/enable", (req: Request, res: Response): void => {
-            if (!this.validateToken(req, res)) return;
-
-            const query = parse(req.url.split("?")[1] || "");
+        this.app.put("/debug/enable", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const query = req.query;
             let namespaces = "*";
 
             if (query.namespaces) {
-                namespaces = Array.isArray(query.namespaces) ? query.namespaces.join(",") : query.namespaces;
+                if (Array.isArray(query.namespaces)) {
+                    namespaces = (query.namespaces as string[]).join(",");
+                } else {
+                    namespaces = query.namespaces as string;
+                }
             }
 
             debug.enable(namespaces);
@@ -80,9 +80,7 @@ export class DebugController {
     }
 
     private disableDebug() {
-        this.app.put("/debug/disable", (req: Request, res: Response): void => {
-            if (!this.validateToken(req, res)) return;
-
+        this.app.put("/debug/disable", validateTokenMiddleware, (req: Request, res: Response): void => {
             debug.disable();
 
             if (this.debugTimeout) {
