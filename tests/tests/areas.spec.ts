@@ -64,7 +64,7 @@ test.describe('Areas', () => {
         await Menu.openMenu(page);
         await page.getByRole('button', { name: 'All settings' }).click();
         await page.getByText('Block ambient sounds and music').click();
-        await page.getByTestId('closeMenuBtn').click();
+        await page.locator('#closeMenu').click();
 
         // Verify audio area is working
         await evaluateScript(page, async () => {
