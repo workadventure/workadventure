@@ -119,7 +119,7 @@
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl ">
                             <div
                                 id="woka"
-                                class=" bt-3 overflow-hidden mt-3 border w-fit h-fit rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
+                                class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
                             >
                                 <WokaFromUserId
                                     userId={wokaMenuData.userId}
@@ -179,7 +179,7 @@
                 {#if remotePlayer?.chatID}
                     <button
                         type="button"
-                        class="btn  btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                        class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                         data-testid="sendMessagefromVisitCardButton"
                         on:click={openChat}
                     >
