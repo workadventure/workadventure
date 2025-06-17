@@ -1377,16 +1377,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    //TODO : delete in tests
-    // public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-    //     this.send({
-    //         message: {
-    //             $case: "updateSpaceFilterMessage",
-    //             updateSpaceFilterMessage: filter,
-    //         },
-    //     });
-    // }
-
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
         this.send({
             message: {
