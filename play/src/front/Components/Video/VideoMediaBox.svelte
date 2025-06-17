@@ -36,8 +36,13 @@
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
     let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    let attach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    let detach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+
     if (peer.media.type === "mediaStore") {
         streamStore = peer.media.streamStore;
+        attach = peer.media.attach;
+        detach = peer.media.detach;
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
@@ -171,7 +176,7 @@
         {#if $statusStore === "connecting" && showAfterDelay}
             <div class="absolute w-full h-full z-50 overflow-hidden">
                 <div
-                    class="flex w-8 h-8 flex justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
+                    class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
                     <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
@@ -189,6 +194,8 @@
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
                 mediaStream={$streamStore}
+                {attach}
+                {detach}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
                 outputDeviceId={$speakerSelectedStore}
@@ -210,7 +217,7 @@
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
                     position={videoEnabled
-                        ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
                 >
@@ -278,7 +285,7 @@
 
     {#if inCameraContainer && videoEnabled && !missingUserActivation}
         <button
-            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
             on:click={() => highlightPeer(peer)}
         >
             <ArrowsMaximizeIcon />

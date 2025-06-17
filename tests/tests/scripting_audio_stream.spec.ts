@@ -29,6 +29,8 @@ test.describe("Scripting audio streams", () => {
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
 
+    await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+
     // Test play sound scripting
     await evaluateScript(page, async () => {
       const sampleRate = 24000;

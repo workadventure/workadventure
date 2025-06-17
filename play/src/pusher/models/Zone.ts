@@ -33,6 +33,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: Socket): void;
     onGroupMoves(group: GroupDescriptor, listener: Socket): void;
     onGroupLeaves(groupId: number, listener: Socket): void;
+    onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void;
     onError(errorMessage: ErrorMessage, listener: Socket): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: Socket): void;
@@ -146,7 +147,8 @@ export class GroupDescriptor {
         public readonly groupId: number,
         private groupSize: number | undefined,
         private position: PointMessage,
-        private locked: boolean | undefined
+        private locked: boolean | undefined,
+        private _userIds: number[]
     ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
@@ -154,13 +156,17 @@ export class GroupDescriptor {
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.groupId, message.groupSize, position, message.locked);
+        return new GroupDescriptor(message.groupId, message.groupSize, position, message.locked, message.userIds);
     }
 
     public update(groupDescriptor: GroupDescriptor): void {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
         this.locked = groupDescriptor.locked;
+    }
+
+    public updateUsers(userIds: number[]): void {
+        this._userIds = userIds;
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
@@ -172,7 +178,12 @@ export class GroupDescriptor {
             groupSize: this.groupSize,
             position: this.position,
             locked: this.locked,
+            userIds: this._userIds,
         };
+    }
+
+    public get userIds(): number[] {
+        return this._userIds;
     }
 }
 
@@ -245,6 +256,20 @@ export class Zone {
                                     const fromZone = groupUpdateZoneMessage.fromZone;
                                     this.notifyGroupEnter(groupDescriptor, fromZone);
                                 }
+                                break;
+                            }
+                            case "groupUsersUpdateMessage": {
+                                const groupUsersUpdateMessage = message.message.groupUsersUpdateMessage;
+                                const groupId = groupUsersUpdateMessage.groupId;
+                                const oldGroupDescriptor = this.groups.get(groupId);
+
+                                if (oldGroupDescriptor !== undefined) {
+                                    oldGroupDescriptor.updateUsers(message.message.groupUsersUpdateMessage.userIds);
+                                    this.notifyGroupUsersUpdated(oldGroupDescriptor);
+                                } else {
+                                    console.warn("Could not find group with id " + groupId + " to update users.");
+                                }
+
                                 break;
                             }
                             case "userLeftZoneMessage": {
@@ -424,6 +449,12 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyGroupUsersUpdated(groupDescriptor: GroupDescriptor): void {
+        for (const listener of this.listeners) {
+            this.socketListener.onGroupUsersUpdated(groupDescriptor, listener);
         }
     }
 

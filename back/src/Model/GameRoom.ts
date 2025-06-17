@@ -41,6 +41,7 @@ import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import {
     EmoteCallback,
     EntersCallback,
+    GroupUsersUpdatedCallback,
     LeavesCallback,
     LockGroupCallback,
     MovesCallback,
@@ -95,6 +96,7 @@ export class GameRoom implements BrothersFinder {
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        onGroupUsersUpdated: GroupUsersUpdatedCallback,
         private thirdParty: MapThirdPartyData | undefined,
         private editable: boolean,
         private _mapUrl: string,
@@ -113,7 +115,8 @@ export class GameRoom implements BrothersFinder {
             onLeaves,
             onEmote,
             onLockGroup,
-            onPlayerDetailsUpdated
+            onPlayerDetailsUpdated,
+            onGroupUsersUpdated
         );
     }
 
@@ -128,7 +131,8 @@ export class GameRoom implements BrothersFinder {
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
-        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        onGroupUsersUpdated: GroupUsersUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
         const wamUrl = mapDetails.wamUrl;
@@ -158,6 +162,7 @@ export class GameRoom implements BrothersFinder {
             onEmote,
             onLockGroup,
             onPlayerDetailsUpdated,
+            onGroupUsersUpdated,
             mapDetails.thirdParty ?? undefined,
             mapDetails.editable ?? false,
             mapUrl,

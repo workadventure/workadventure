@@ -314,8 +314,6 @@ message ClientToServerMessage {
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 11;
     EmotePromptMessage emotePromptMessage = 13;
@@ -626,6 +624,7 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
     // FIXME: remove all this
     KickOffMessage kickOffMessage = 22;
     PublicEvent publicEvent = 29;
@@ -645,6 +644,7 @@ message GroupUpdateMessage {
   PointMessage position = 2;
   google.protobuf.UInt32Value groupSize = 3;
   google.protobuf.BoolValue locked = 4;
+  repeated int32 userIds = 5;
 }
 
 message GroupDeleteMessage {
@@ -732,14 +732,14 @@ message MegaphoneSettings{
 }
 
 message WebRtcStartMessage {
-  int32 userId = 1;
+  string userId = 1;
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
-  int32 userId = 1;
+  string userId = 1;
 }
 
 message WebRtcSignalToClientMessage {
@@ -846,13 +846,49 @@ message PrivateSpaceEvent {
     MuteVideoPrivateMessage muteVideo = 1;
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
+    WebRtcStartMessage webRtcStartMessage = 4;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
+    CommunicationStrategyMessage communicationStrategyMessage = 10;
+    PrepareSwitchMessage prepareSwitchMessage = 11;
+    ExecuteSwitchMessage executeSwitchMessage = 12;
+    LivekitInvitationMessage livekitInvitationMessage = 13;
+    LivekitDisconnectMessage livekitDisconnectMessage = 14;
+    UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
   }
+}
+
+message CommunicationStrategyMessage {
+  string strategy = 1;
+}
+
+message PrepareSwitchMessage {
+  string strategy = 1;
+}
+
+message ExecuteSwitchMessage {
+  string strategy = 1;
+}
+
+message LivekitInvitationMessage {
+  string token = 1;
+  string serverUrl = 2;
+  bool shouldJoinRoomImmediately = 3;
+}
+
+message LivekitDisconnectMessage {
+}
+
+message UserReadyForSwitchEvent {
+  string strategy = 1;
 }
 
 message SpaceMessage {
   string message = 1;
 }
-
 message SpaceIsTyping {
   bool isTyping = 1;
 }
@@ -875,6 +911,7 @@ message PrivateEventFrontToPusher {
  */
 message JoinSpaceRequestMessage {
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 
 /**
@@ -892,10 +929,10 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    WebRtcStartMessage webRtcStartMessage = 4;
-    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
-    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
-    WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
+    //WebRtcStartMessage webRtcStartMessage = 4;
+    //WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
+    //WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
+    //WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
@@ -910,7 +947,6 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
@@ -972,6 +1008,7 @@ message GroupUpdateZoneMessage {
   int32  groupSize = 3;
   Zone fromZone = 4;
   bool locked = 5;
+  repeated int32 userIds = 6;
 }
 
 message GroupLeftZoneMessage {
@@ -1005,8 +1042,6 @@ message PusherToBackMessage {
     UserMovesMessage userMovesMessage = 2;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -1042,6 +1077,7 @@ message SubToPusherMessage {
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 12;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
   }
 }
 
@@ -1244,6 +1280,7 @@ message BackToPusherSpaceMessage{
  */
 message JoinSpaceMessage{
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;

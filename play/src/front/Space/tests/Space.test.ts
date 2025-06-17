@@ -3,28 +3,69 @@ import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
-    return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
-        },
-    };
-});
+// Mock the entire GameManager module
+vi.mock("../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: vi.fn(() => ({})),
+    },
+}));
 
-vi.mock("../../Phaser/Game/GameManager", () => {
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
     return {
-        gameManager: {
-            getCurrentGameScene: () => ({}),
-        },
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
     };
 });
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
+    emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
+
+const defaultPropertiesToSync = ["x", "y", "z"];
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -47,14 +88,14 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         expect(() => {
-            new Space(spaceName, metadata, defaultRoomConnectionMock);
+            new Space(spaceName, metadata, defaultRoomConnectionMock, defaultPropertiesToSync);
         }).toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, defaultPropertiesToSync);
         expect(space.getName()).toBe(spaceName);
     });
     it("should emit joinSpace event when you create the space", () => {
@@ -64,11 +105,10 @@ describe("Space test", () => {
             emitJoinSpace: vi.fn(),
         };
 
-        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection, defaultPropertiesToSync);
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
-
-        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, defaultPropertiesToSync);
     });
 
     it("should emit leaveSpace event when you call destroy", () => {
@@ -80,7 +120,12 @@ describe("Space test", () => {
             emitLeaveSpace: vi.fn(),
         };
 
-        const space = new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection);
+        const space = new Space(
+            spaceName,
+            metadata,
+            mockRoomConnection as unknown as RoomConnection,
+            defaultPropertiesToSync
+        );
 
         space.destroy();
 
@@ -92,7 +137,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, defaultPropertiesToSync);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -110,7 +155,7 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, defaultPropertiesToSync);
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -122,10 +167,9 @@ describe("Space test", () => {
     });
     it("should not delete metadata who is in space data but not in newMetadata map ", () => {
         const spaceName = "space-name";
-
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock);
+        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, defaultPropertiesToSync);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],
