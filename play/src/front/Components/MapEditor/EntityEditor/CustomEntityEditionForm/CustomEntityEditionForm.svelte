@@ -5,8 +5,11 @@
     import EntityImage from "../EntityItem/EntityImage.svelte";
     import { InputTagOption } from "../../../Input/InputTagOption";
     import InputTags from "../../../Input/InputTags.svelte";
-    import EntityEditionCollisionGrid from "./EntityEditionCollisionGrid.svelte";
+    import Select from "../../../Input/Select.svelte";
+    import Input from "../../../Input/Input.svelte";
+    import InputCheckbox from "../../../Input/InputCheckbox.svelte";
     import LogoCollisionGrid from "./LogoCollisionGrid.svg";
+    import EntityEditionCollisionGrid from "./EntityEditionCollisionGrid.svelte";
 
     export let customEntity: EntityPrefab;
     export let isUploadForm = false;
@@ -61,10 +64,6 @@
         collisionGrid[rowIndex][columnIndex] = collisionGrid[rowIndex][columnIndex] === 0 ? 1 : 0;
     }
 
-    $: {
-        updateDepthOffset(selectedDepthOption);
-    }
-
     function updateDepthOffset(depthOption: depthOptions) {
         if (depthOption === depthOptions.STANDING) {
             depthOffset = 0;
@@ -85,6 +84,10 @@
             return $LL.mapEditor.entityEditor.customEntityEditorForm.custom();
         }
         return $LL.mapEditor.entityEditor.customEntityEditorForm.groundLevel();
+    }
+
+    $: if (selectedDepthOption) {
+        updateDepthOffset(selectedDepthOption);
     }
 </script>
 
@@ -126,68 +129,62 @@
         </div>
     {/if}
     <div>
-        <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
-        <input
-            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
-            bind:value={name}
-            id="name"
-            data-testid="name"
-        />
+        <label class="mb-2 block" for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label
+        >
+        <Input bind:value={name} id="name" data-testid="name" />
     </div>
     <div>
-        <label for="tags"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.tags()}</b></label>
+        <label class="mb-2 block" for="tags"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.tags()}</b></label>
         <InputTags
             bind:value={inputTagOptions}
             placeholder={$LL.mapEditor.entityEditor.customEntityEditorForm.writeTag()}
         />
     </div>
     <div>
-        <label for="type"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.depth()}</b></label>
-        <select
+        <Select
+            id="type"
+            label={$LL.mapEditor.entityEditor.customEntityEditorForm.depth()}
             bind:value={selectedDepthOption}
-            class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white min-w-full"
         >
             {#each Object.values(depthOptions) as depthOption (depthOption)}
                 <option value={depthOption}>{getTranslationForDepthOption(depthOption)}</option>
             {/each}
-        </select>
+        </Select>
     </div>
     {#if isUploadForm}
         <div class="flex gap-2 mt-2 hover:cursor-pointer">
-            <input
-                type="checkbox"
-                class="p-1 rounded-md bg-dark-purple !border-solid !border !border-gray-400 text-white"
-                id="floatingObject"
-                data-testid="floatingObject"
-                bind:checked={floatingObject}
-            />
-            <label class="mt-[-4px]" for="floatingObject"
-                ><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObject()}</b>
+            <InputCheckbox id="floatingObject" dataTestId="floatingObject" bind:value={floatingObject} />
+            <label class="my-[4px]" for="floatingObject"
+                ><b class="-mb-2 block">{$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObject()}</b>
                 <br />
                 {$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObjectDescription()}
             </label>
         </div>
     {/if}
-    <div class="flex flex-row gap-2 flex-wrap justify-end text-sm">
+    <div class="flex gap-2 flex-wrap justify-center w-full text-sm">
         {#if !isUploadForm}
             <button
-                class="bg-red-500 rounded"
+                class="btn-lg btn btn-danger w-full"
                 data-testid="removeEntity"
                 on:click={() => dispatch("removeEntity", { entityId: customEntity.id })}
                 >{$LL.mapEditor.entityEditor.buttons.delete()}</button
             >
         {/if}
-        <button class="rounded border-white border border-solid" on:click={() => dispatch("closeForm")}
-            >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
-        >
-        <button
-            class="bg-blue-500 rounded"
-            data-testid="applyEntityModifications"
-            on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
-            >{isUploadForm
-                ? $LL.mapEditor.entityEditor.buttons.upload()
-                : $LL.mapEditor.entityEditor.buttons.save()}</button
-        >
+
+        <div class="flex gap-2 w-full mt-2">
+            <button class="btn-lg btn btn-contrast w-full" on:click={() => dispatch("closeForm")}
+                >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
+            >
+
+            <button
+                class="btn-lg btn btn-secondary w-full"
+                data-testid="applyEntityModifications"
+                on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
+                >{isUploadForm
+                    ? $LL.mapEditor.entityEditor.buttons.upload()
+                    : $LL.mapEditor.entityEditor.buttons.save()}</button
+            >
+        </div>
     </div>
 </div>
 

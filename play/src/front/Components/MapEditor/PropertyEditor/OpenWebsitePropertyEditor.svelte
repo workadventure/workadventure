@@ -113,9 +113,14 @@
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
     }
 
+    // The parameter that determines if the link has already been checked, like if it's embeddable or not.
+    // If the link cannot be embedded, we suggest that the user open a new tab automatically.
+    let firstCheckLink = false;
+
     onMount(() => {
         // if the link is not set, try to open the picker
         if (property.link == undefined || property.link === "") {
+            firstCheckLink = true; // It will use to set new tab automatically if the link is not embeddable
             openPicker();
         }
 
@@ -480,7 +485,7 @@
                         }
                     } else {
                         //optionAdvancedActivated = true;
-                        property.newTab = true;
+                        if (firstCheckLink) property.newTab = true;
                         embeddable = false;
                     }
                     optionAdvancedActivated = shouldDisplayAdvancedOption();
@@ -503,12 +508,6 @@
 
     function onKeyPressed() {
         dispatch("change", property.link);
-    }
-
-    function onClickInputHandler() {
-        // If Klaxoon application, open the activity picker
-        if (property.link != undefined && property.link != "") return;
-        openPicker();
     }
 
     function openKlaxoonActivityPicker() {
@@ -742,7 +741,6 @@
                     bind:value={property.link}
                     onChange={onValueChange}
                     onBlur={() => checkWebsiteProperty()}
-                    onClick={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
 
@@ -788,7 +786,7 @@
             {#if warning !== ""}
                 <span class="err text-warning-900 text-xs italic mt-1">{warning}</span>
             {/if}
-            {#if !embeddable && error === ""}
+            {#if !embeddable && property.newTab == false && error === ""}
                 <span class="err text-warning-900 text-xs italic mt-1"
                     ><IconAlertTriangle font-size="12" />
                     {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
@@ -833,7 +831,12 @@
                 id="newTab"
                 label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
                 bind:value={property.newTab}
-                onChange={onNewTabValueChange}
+                onChange={() => {
+                    // The "newTab" property won't be changed automatically by the service.
+                    firstCheckLink = false;
+                    oldNewTabValue = property.newTab;
+                    onNewTabValueChange();
+                }}
                 disabled={property.forceNewTab}
             />
 

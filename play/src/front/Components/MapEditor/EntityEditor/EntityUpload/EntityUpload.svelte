@@ -108,7 +108,7 @@
 </script>
 
 {#if customEntityToUpload}
-    <div class="absolute top-0 left-0 w-full bg-dark-blue/95 backdrop-blur-md p-8 h-full overflow-auto">
+    <div class="absolute top-0 left-0 w-full bg-contrast/80 backdrop-blur p-8 h-full overflow-auto">
         <CustomEntityEditionForm
             isUploadForm
             customEntity={customEntityToUpload}
