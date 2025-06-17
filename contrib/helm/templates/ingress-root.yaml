@@ -38,39 +38,4 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-play
                 port:
                   number: {{ .Values.play.service.port }}
-          - path: /api{{ .Values.ingress.rewritePathSuffix }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-back
-                port:
-                  number: {{ .Values.back.service.port }}
-          - path: /uploader{{ .Values.ingress.rewritePathSuffix }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-uploader
-                port:
-                  number: {{ .Values.uploader.service.port }}
-          - path: /icon{{ .Values.ingress.rewritePathSuffix }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-icon
-                port:
-                  number: {{ .Values.icon.service.port }}
-          - path: /map-storage{{ .Values.ingress.rewritePathSuffix }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-mapstorage
-                port:
-                  number: {{ .Values.mapstorage.service.port }}
-          - path: /room-api
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-room-api
-                port:
-                  number: {{ .Values.play.roomApiService.port }}
 {{- end }}

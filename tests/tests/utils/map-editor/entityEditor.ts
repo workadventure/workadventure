@@ -75,7 +75,7 @@ class EntityEditor {
     await page
       .getByTestId("uploadCustomAsset")
       .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
-    await page.getByTestId("floatingObject").check();
+    await page.getByTestId("floatingObject").click();
     await this.applyEntityModifications(page);
   }
 
@@ -83,7 +83,7 @@ class EntityEditor {
     await page
       .getByTestId("uploadCustomAsset")
       .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFileWithOddSize()}`));
-    await page.getByTestId("floatingObject").check();
+    await page.getByTestId("floatingObject").click();
     await this.applyEntityModifications(page);
   }
 
