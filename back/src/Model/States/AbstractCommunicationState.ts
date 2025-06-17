@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { SpaceUser, PrivateEvent } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
@@ -9,7 +10,7 @@ export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
     protected _readyUsers: Set<string> = new Set();
     protected SWITCH_TIMEOUT_MS = 0;
-    protected _nextState: CommunicationState | null = null;
+    protected _nextStatePromise: Promise<CommunicationState> | null = null;
     protected abstract _currentCommunicationType: CommunicationType;
     protected abstract _nextCommunicationType: CommunicationType;
     protected _waitingList: Set<string> = new Set<string>();
@@ -46,24 +47,33 @@ export abstract class CommunicationState implements ICommunicationState {
             clearTimeout(this._switchTimeout);
             this._switchTimeout = null;
         }
-        this._nextState = null;
+        this._nextStatePromise = null;
         this._readyUsers.clear();
         const spaceUsers = this._space.getAllUsers();
 
         this._waitingList.forEach((userId) => {
             const waitingUser = spaceUsers.find(({ spaceUserId }) => spaceUserId === userId);
             if (waitingUser) {
-                this.handleUserAdded(waitingUser);
+                this.handleUserAdded(waitingUser).catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             }
         });
         this._waitingList.clear();
     }
 
     protected setupSwitchTimeout(): void {
-        this._switchTimeout = setTimeout(() => this.executeFinalSwitch(), this.SWITCH_TIMEOUT_MS);
+        this._switchTimeout = setTimeout(() => {
+            this.executeFinalSwitch().catch((e) => {
+                //TODO : handle error
+                Sentry.captureException(e);
+                console.error(e);
+            });
+        }, this.SWITCH_TIMEOUT_MS);
     }
 
-    protected executeFinalSwitch(): void {
+    protected async executeFinalSwitch(): Promise<void> {
         if (this._switchTimeout) {
             clearTimeout(this._switchTimeout);
             this._switchTimeout = null;
@@ -73,7 +83,7 @@ export abstract class CommunicationState implements ICommunicationState {
             return;
         }
 
-        if (!this._nextState) {
+        if (!this._nextStatePromise) {
             return;
         }
 
@@ -86,32 +96,40 @@ export abstract class CommunicationState implements ICommunicationState {
                 });
             });
         } finally {
-            this._communicationManager.setState(this._nextState);
-            this._nextState.afterSwitchAction();
+            const nextState = await this._nextStatePromise;
+            this._communicationManager.setState(nextState);
+            nextState.afterSwitchAction();
             this._readyUsers.clear();
         }
     }
 
-    handleUserAdded(user: SpaceUser): void {
+    handleUserAdded(user: SpaceUser): Promise<void> {
         this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
         this._currentStrategy.addUser(user);
+        return Promise.resolve();
     }
-    handleUserDeleted(user: SpaceUser): void {
+    handleUserDeleted(user: SpaceUser): Promise<void> {
         this._currentStrategy.deleteUser(user);
+        return Promise.resolve();
     }
-    handleUserUpdated(user: SpaceUser): void {
+    handleUserUpdated(user: SpaceUser): Promise<void> {
         this._currentStrategy.updateUser(user);
+        return Promise.resolve();
     }
-    handleUserReadyForSwitch(userId: string): void {
+    handleUserReadyForSwitch(userId: string): Promise<void> {
         if (!this.isSwitching()) {
-            return;
+            return Promise.resolve();
         }
 
         this._readyUsers.add(userId);
 
         if (this.areAllUsersReady()) {
-            this.completeSwitchEarly();
+            this.completeSwitchEarly().catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
         }
+        return Promise.resolve();
     }
 
     protected notifyAllUsersToPrepareSwitchToNextState(): void {
@@ -134,14 +152,14 @@ export abstract class CommunicationState implements ICommunicationState {
 
     protected afterSwitchAction(): void {}
     protected preparedSwitchAction(readyUsers: Set<string>): void {}
-    private completeSwitchEarly(): void {
+    private async completeSwitchEarly(): Promise<void> {
         if (this._switchTimeout) {
             clearTimeout(this._switchTimeout);
             this._switchTimeout = null;
         }
-        this.executeFinalSwitch();
+        await this.executeFinalSwitch();
     }
     protected isSwitching(): boolean {
-        return !!this._nextState;
+        return !!this._nextStatePromise;
     }
 }

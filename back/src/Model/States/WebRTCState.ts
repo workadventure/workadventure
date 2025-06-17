@@ -12,7 +12,6 @@ import { LivekitState } from "./LivekitState";
 export class WebRTCState extends CommunicationState {
     protected _currentCommunicationType: CommunicationType = CommunicationType.WEBRTC;
     protected _nextCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
-    private _nextStatePromise: Promise<LivekitState> | undefined;
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager
@@ -20,45 +19,49 @@ export class WebRTCState extends CommunicationState {
         super(_space, _communicationManager, new WebRTCCommunicationStrategy(_space));
         this.SWITCH_TIMEOUT_MS = 5000;
     }
-    handleUserAdded(user: SpaceUser): void {
+    async handleUserAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchToNextState()) {
             this.switchToNextState(user);
             return;
         }
 
-        if (this.isSwitching()) {
+        if (this._nextStatePromise) {
             this._waitingList.add(user.spaceUserId);
-            this._nextState?.handleUserAdded(user);
+            const nextState = await this._nextStatePromise;
+            await nextState.handleUserAdded(user);
             return;
         }
 
         //TODO : pas utile de passer le switchInProgress ici toujours false / voir
-        super.handleUserAdded(user);
+        return super.handleUserAdded(user);
     }
 
-    handleUserDeleted(user: SpaceUser): void {
+    async handleUserDeleted(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
 
-        if (this.isSwitching()) {
+        if (this._nextStatePromise) {
             this._waitingList.delete(user.spaceUserId);
-            this._nextState?.handleUserDeleted(user);
+            const nextState = await this._nextStatePromise;
+            await nextState.handleUserDeleted(user);
         }
 
-        super.handleUserDeleted(user);
+        return super.handleUserDeleted(user);
     }
 
-    handleUserUpdated(user: SpaceUser): void {
-        if (this.isSwitching()) {
-            this._nextState?.handleUserUpdated(user);
+    async handleUserUpdated(user: SpaceUser): Promise<void> {
+        if (this._nextStatePromise) {
+            const nextState = await this._nextStatePromise;
+            await nextState.handleUserUpdated(user);
             return;
         }
 
-        super.handleUserUpdated(user);
+        return super.handleUserUpdated(user);
     }
 
     private switchToNextState(user: SpaceUser): void {
+        console.log("in the switch");
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;
             if (ADMIN_API_URL) {
@@ -67,19 +70,17 @@ export class WebRTCState extends CommunicationState {
             } else {
                 nextState = new LivekitState(this._space, this._communicationManager);
             }
-
-            this._nextState = nextState;
+            console.log("In the promise");
             this._readyUsers.add(user.spaceUserId);
-            this._nextState.handleUserAdded(user);
+            nextState.handleUserAdded(user).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
 
             this.notifyAllUsersToPrepareSwitchToNextState();
             this.setupSwitchTimeout();
             return nextState;
         })();
-        this._nextStatePromise.catch((err) => {
-            Sentry.captureException(err);
-            console.error(err);
-        });
     }
 
     //TODO : passer dans la classe abstraite

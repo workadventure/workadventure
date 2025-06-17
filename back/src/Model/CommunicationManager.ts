@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
@@ -13,19 +14,31 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserAdded(user: SpaceUser): void {
-        this._currentState.handleUserAdded(user);
+        this._currentState.handleUserAdded(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserDeleted(user: SpaceUser): void {
-        this._currentState.handleUserDeleted(user);
+        this._currentState.handleUserDeleted(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserUpdated(user: SpaceUser): void {
-        this._currentState.handleUserUpdated(user);
+        this._currentState.handleUserUpdated(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserReadyForSwitch(userId: string): void {
-        this._currentState.handleUserReadyForSwitch(userId);
+        this._currentState.handleUserReadyForSwitch(userId).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public setState(state: ICommunicationState): void {
@@ -34,7 +47,9 @@ export class CommunicationManager implements ICommunicationManager {
 
     private getInitialState(): ICommunicationState {
         const propertiesToSync = this.space.getPropertiesToSync();
-        return this.hasMediaProperties(propertiesToSync) ? new WebRTCState(this.space, this) : new DefaultState();
+        return this.hasMediaProperties(propertiesToSync)
+            ? new WebRTCState(this.space, this)
+            : new DefaultState(this.space, this);
     }
 
     private hasMediaProperties(properties: string[]): boolean {
@@ -43,5 +58,5 @@ export class CommunicationManager implements ICommunicationManager {
 }
 
 export const CommunicationConfig = {
-    MAX_USERS_FOR_WEBRTC: 4,
+    MAX_USERS_FOR_WEBRTC: 2,
 };
