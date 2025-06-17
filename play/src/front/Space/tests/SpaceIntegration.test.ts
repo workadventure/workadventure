@@ -14,7 +14,7 @@ import {
     SpaceDestroyedMessage,
     SpaceIsTyping,
     SpaceMessage,
-    UpdateSpaceFilterMessage,
+    FilterType,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
@@ -61,9 +61,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     ): void {
         throw new Error("Method not implemented.");
     }
-    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage): void {
-        throw new Error("Method not implemented.");
-    }
+
     public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
         throw new Error("Method not implemented.");
     }
@@ -100,17 +98,15 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
-        const filter = space.watchAllUsers();
-
-        const unsubscribeUserStore = filter.usersStore.subscribe(() => {});
+        const unsubscribeUserStore = space.usersStore.subscribe(() => {});
 
         expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
 
-        const observeUserLeft = filter.observeUserJoined.subscribe(() => {});
+        const observeUserLeft = space.observeUserJoined.subscribe(() => {});
 
         expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
 
@@ -127,8 +123,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -153,12 +148,11 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
         let users: Map<string, SpaceUserExtended> = new Map();
-        const unsubscribe = spaceFilter.usersStore.subscribe((newUsers) => {
+        const unsubscribe = space.usersStore.subscribe((newUsers) => {
             users = newUsers;
         });
 
@@ -179,8 +173,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -205,7 +198,6 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -213,7 +205,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
+        const userToCompare = get(space.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -226,8 +218,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -252,7 +243,6 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -268,10 +258,9 @@ describe("", () => {
             spaceName,
             user: spaceUserUpdate,
             updateMask: ["chatID"],
-            filterName: spaceFilter.getName(),
         };
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
+        const userToCompare = get(space.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -284,7 +273,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
 
-        expect(get(spaceFilter.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
+        expect(get(space.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
 
         unsubscriber();
     });
@@ -295,7 +284,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const subscriber = vi.fn();
 
@@ -335,7 +324,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const subscriber = vi.fn();
 

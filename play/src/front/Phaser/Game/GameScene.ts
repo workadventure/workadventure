@@ -14,6 +14,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    FilterType,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -1604,7 +1605,7 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
+                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS);
                 this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
                 gameManager

@@ -1,15 +1,12 @@
 import {
-    AddSpaceFilterMessage,
     NonUndefinedFields,
     noUndefined,
     PrivateEvent,
     PublicEvent,
     PusherToBackSpaceMessage,
-    RemoveSpaceFilterMessage,
-    SpaceFilterMessage,
     SpaceUser,
     SubMessage,
-    UpdateSpaceFilterMessage,
+    FilterType,
 } from "@workadventure/messages";
 import { applyFieldMask } from "protobuf-fieldmask";
 import merge from "lodash/merge";
@@ -27,7 +24,6 @@ export type SpaceUserExtended = {
 } & SpaceUser;
 
 type PartialSpaceUser = Partial<Omit<SpaceUser, "spaceUserId">> & Pick<SpaceUser, "spaceUserId">;
-
 const debug = Debug("space");
 
 export class Space {
@@ -44,7 +40,8 @@ export class Space {
         private readonly localName: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        private eventProcessor: EventProcessor
+        private eventProcessor: EventProcessor,
+        private filterType: FilterType
     ) {
         this.users = new Map<string, SpaceUserExtended>();
         this._metadata = new Map<string, unknown>();
@@ -63,14 +60,10 @@ export class Space {
         this.clientWatchers.set(socketData.spaceUser.spaceUserId, watcher);
         this.users.forEach((user) => {
             if (this.isWatcherTargeted(watcher, user)) {
-                const filterOfThisSpace = socketData.spacesFilters.get(this.name) ?? [];
-                const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
-                    this.filterOneUser(spaceFilter, user)
-                );
-
-                filtersTargeted.forEach((spaceFilter) => {
-                    this.notifyMeAddUser(watcher, user, spaceFilter.filterName);
-                });
+                const filterOfThisSpace = socketData.spacesFilters.has(this.name);
+                if (filterOfThisSpace && this.filterOneUser(user)) {
+                    this.notifyMeAddUser(watcher, user);
+                }
             }
         });
         debug(`${this.name} : watcher added ${socketData.name}. Watcher count ${this.clientWatchers.size}`);
@@ -110,7 +103,6 @@ export class Space {
                 addSpaceUserMessage: {
                     spaceName: this.localName,
                     user: spaceUser,
-                    filterName: "", // Will be filled by notifyAll
                 },
             },
         };
@@ -151,7 +143,6 @@ export class Space {
                 updateSpaceUserMessage: {
                     spaceName: this.name,
                     user: SpaceUser.fromPartial(spaceUser),
-                    filterName: "", // Will be filled by notifyAll
                     updateMask,
                 },
             },
@@ -198,7 +189,6 @@ export class Space {
                     removeSpaceUserMessage: {
                         spaceName: this.name,
                         spaceUserId,
-                        filterName: "", // Will be filled by notifyAll
                     },
                 },
             };
@@ -222,7 +212,6 @@ export class Space {
                 updateSpaceMetadataMessage: {
                     spaceName: this.name,
                     metadata: JSON.stringify(metadata),
-                    filterName: undefined,
                 },
             },
         };
@@ -249,64 +238,21 @@ export class Space {
 
             debug(`${this.name} : ${socketData.name} targeted`);
 
-            const filterOfThisSpace = socketData.spacesFilters.get(this.name) ?? [];
-
-            const filtersTargeted = filterOfThisSpace.filter(
-                (spaceFilter) =>
-                    this.filterOneUser(spaceFilter, youngUser) || (oldUser && this.filterOneUser(spaceFilter, oldUser))
-            );
-
-            filtersTargeted.forEach((spaceFilter) => {
+            const filterOfThisSpace = socketData.spacesFilters.has(this.name);
+            if (filterOfThisSpace && (this.filterOneUser(youngUser) || (oldUser && this.filterOneUser(oldUser)))) {
                 switch (subMessage.message?.$case) {
                     case "addSpaceUserMessage":
-                        subMessage.message.addSpaceUserMessage.filterName = spaceFilter.filterName;
                         debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${socketData.name}`);
                         subMessage.message.addSpaceUserMessage.spaceName = this.localName;
                         socketData.emitInBatch(subMessage);
                         break;
                     case "removeSpaceUserMessage":
                         subMessage.message.removeSpaceUserMessage.spaceName = this.localName;
-                        subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
                         socketData.emitInBatch(subMessage);
                         debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${socketData.name}`);
                         break;
-                    case "updateSpaceUserMessage": {
-                        subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
-                        subMessage.message.updateSpaceUserMessage.spaceName = this.localName;
-
-                        const shouldRemoveUser: boolean = oldUser
-                            ? this.filterOneUser(spaceFilter, oldUser) && !this.filterOneUser(spaceFilter, youngUser)
-                            : false;
-
-                        const shouldAddUser: boolean = oldUser
-                            ? !this.filterOneUser(spaceFilter, oldUser) && this.filterOneUser(spaceFilter, youngUser)
-                            : false;
-
-                        if (!oldUser || (!shouldRemoveUser && !shouldAddUser)) {
-                            socketData.emitInBatch(subMessage);
-                            debug(`${this.name} : user ${youngUser.lowercaseName} update sent to ${socketData.name}`);
-                            return;
-                        }
-
-                        if (shouldAddUser) {
-                            this.notifyMeAddUser(watcher, youngUser, spaceFilter.filterName);
-                            debug(
-                                `${this.name} : user ${youngUser.lowercaseName} update caused add user sent to ${socketData.name}`
-                            );
-                            return;
-                        }
-
-                        if (shouldRemoveUser) {
-                            this.notifyMeRemoveUser(watcher, youngUser, spaceFilter.filterName);
-                            debug(
-                                `${this.name} : user ${youngUser.lowercaseName} update caused remove user sent to ${socketData.name}`
-                            );
-                            return;
-                        }
-                        break;
-                    }
                 }
-            });
+            }
         });
     }
 
@@ -315,26 +261,24 @@ export class Space {
     }
 
     private isWatcherTargeted(watcher: Socket, user: SpaceUserExtended) {
-        const filtersOfThisSpace = watcher.getUserData().spacesFilters.get(this.name) ?? [];
-        return filtersOfThisSpace.filter((spaceFilter) => this.filterOneUser(spaceFilter, user)).length > 0;
+        const filtersOfThisSpace = watcher.getUserData().spacesFilters.has(this.name);
+        if (!filtersOfThisSpace) return false;
+        return this.filterOneUser(user);
     }
 
-    public filter(
-        spaceFilter: SpaceFilterMessage,
-        users: Map<string, SpaceUserExtended> | null = null
-    ): Map<string, SpaceUserExtended> {
+    public filter(users: Map<string, SpaceUserExtended> | null = null): Map<string, SpaceUserExtended> {
         const usersFiltered = new Map<string, SpaceUserExtended>();
         const usersToFilter = users ?? this.users;
         usersToFilter.forEach((user) => {
-            if (this.filterOneUser(spaceFilter, user)) {
+            if (this.filterOneUser(user)) {
                 usersFiltered.set(user.spaceUserId, user);
             }
         });
         return usersFiltered;
     }
 
-    private filterOneUser(spaceFilters: SpaceFilterMessage, user: SpaceUserExtended): boolean {
-        if (!spaceFilters.filter) {
+    private filterOneUser(user: SpaceUserExtended): boolean {
+        if (this.filterType === FilterType.UNRECOGNIZED) {
             // Sentry event is commented because the line below can cause a complete explosion of number of events sent
             // to Sentry
             //Sentry.captureException("Empty filter received" + spaceFilters.spaceName);
@@ -342,86 +286,52 @@ export class Space {
             return false;
         }
 
-        switch (spaceFilters.filter.$case) {
-            case "spaceFilterContainName": {
-                const spaceFilterContainName = spaceFilters.filter.spaceFilterContainName;
-                return user.lowercaseName.includes(spaceFilterContainName.value.toLowerCase());
-            }
-            case "spaceFilterEverybody": {
+        switch (this.filterType) {
+            case FilterType.ALL_USERS: {
                 return true;
             }
-            case "spaceFilterLiveStreaming": {
+            case FilterType.LIVE_STREAMING_USERS: {
                 return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
             }
             default: {
-                const _exhaustiveCheck: never = spaceFilters.filter;
+                const _exhaustiveCheck: never = this.filterType;
             }
         }
         return false;
     }
 
-    public handleAddFilter(watcher: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
-        const newFilter = addSpaceFilterMessage.spaceFilterMessage;
-        if (!newFilter) {
-            throw new Error("Filter is required in addSpaceFilterMessage");
-        }
-        debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
-        const newData = this.filter(newFilter);
+    //TODO : est ce qu'on a besoin de stocker le filtre pour chaque watcher sachant qu'on a le meme type de filtre pour tout le monde ?
+    //  juste un boolean pour savoir si on watch ou non
+    public handleAddFilter(watcher: Socket) {
+        debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
+        const newData = this.filter();
         const userData = watcher.getUserData();
-        const currentSpaceFilterList = userData.spacesFilters.get(this.name) ?? [];
-        userData.spacesFilters.set(this.name, [...(currentSpaceFilterList || []), newFilter]);
-        this.delta(watcher, new Map(), newData, newFilter.filterName);
-    }
+        const currentSpaceFilterList = userData.spacesFilters.has(this.name);
 
-    public handleUpdateFilter(watcher: Socket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
-        const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
-        if (newFilter) {
-            const oldFilter = watcher
-                .getUserData()
-                .spacesFilters.get(this.name)
-                ?.find((filter) => filter.filterName === newFilter.filterName);
-            if (oldFilter) {
-                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
-                const usersInOldFilter = this.filter(oldFilter);
-                const usersInNewFilter = this.filter(newFilter);
-                this.delta(watcher, usersInOldFilter, usersInNewFilter, newFilter.filterName);
-            }
+        if (currentSpaceFilterList) {
+            console.warn(`${this.name} : filter already exists for ${watcher.getUserData().userId}`);
+            return;
         }
+        userData.spacesFilters.add(this.name);
+        this.delta(watcher, new Map(), newData);
     }
 
-    public handleRemoveFilter(watcher: Socket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
-        const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        if (!oldFilter) return;
-
+    public handleRemoveFilter(watcher: Socket) {
         const socketData = watcher.getUserData();
-        const spaceFilters = socketData.spacesFilters.get(this.name);
-        if (spaceFilters) {
-            socketData.spacesFilters.set(
-                this.name,
-                spaceFilters.filter((filter) => filter.filterName !== oldFilter.filterName)
-            );
-        } else {
-            console.warn(
-                `SocketManager => handleRemoveSpaceFilterMessage => spacesFilter ${removeSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
-            );
-        }
-        debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
+        socketData.spacesFilters.delete(this.name);
+
+        debug(`${this.name} : filter removed for ${watcher.getUserData().userId}`);
 
         //const oldUsers = this.filter(oldFilter);
         //this.delta(watcher, oldUsers, new Map(), undefined);
     }
 
-    private delta(
-        watcher: Socket,
-        oldData: Map<string, SpaceUserExtended>,
-        newData: Map<string, SpaceUserExtended>,
-        filterName: string
-    ) {
+    private delta(watcher: Socket, oldData: Map<string, SpaceUserExtended>, newData: Map<string, SpaceUserExtended>) {
         let addedUsers = 0;
         // Check delta between responses by old and new filter
         newData.forEach((user) => {
             if (!oldData.has(user.spaceUserId)) {
-                this.notifyMeAddUser(watcher, user, filterName);
+                this.notifyMeAddUser(watcher, user);
                 addedUsers++;
             }
         });
@@ -429,7 +339,7 @@ export class Space {
         let removedUsers = 0;
         oldData.forEach((user) => {
             if (!newData.has(user.spaceUserId)) {
-                this.notifyMeRemoveUser(watcher, user, filterName);
+                this.notifyMeRemoveUser(watcher, user);
                 removedUsers++;
             }
         });
@@ -441,14 +351,13 @@ export class Space {
         );
     }
 
-    private notifyMeAddUser(watcher: Socket, user: SpaceUserExtended, filterName: string) {
+    private notifyMeAddUser(watcher: Socket, user: SpaceUserExtended) {
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
                 addSpaceUserMessage: {
                     spaceName: this.localName,
                     user,
-                    filterName,
                 },
             },
         };
@@ -468,14 +377,13 @@ export class Space {
         };
         this.notifyMe(watcher, subMessage);
     }*/
-    private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended, filterName: string) {
+    private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended) {
         const subMessage: SubMessage = {
             message: {
                 $case: "removeSpaceUserMessage",
                 removeSpaceUserMessage: {
                     spaceName: this.localName,
                     spaceUserId: user.spaceUserId,
-                    filterName,
                 },
             },
         };
@@ -606,7 +514,6 @@ export class Space {
                     removeSpaceUserMessage: {
                         spaceName: this.name,
                         spaceUserId,
-                        filterName: "", // Will be filled by notifyAll
                     },
                 },
             };
@@ -615,13 +522,7 @@ export class Space {
         // Let's remove any reference to the space in the watchers
         for (const watcher of this.clientWatchers.values()) {
             const socketData = watcher.getUserData();
-            const filters = socketData.spacesFilters.get(this.name);
-            if (filters) {
-                socketData.spacesFilters.set(
-                    this.name,
-                    filters.filter((filter) => filter.spaceName !== this.name)
-                );
-            }
+            socketData.spacesFilters.delete(this.name);
             const success = socketData.spaces.delete(this.name);
             if (!success) {
                 console.error(`Impossible to remove space ${this.name} from the user's spaces. Space not found.`);

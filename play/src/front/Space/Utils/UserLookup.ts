@@ -1,20 +1,17 @@
 import { Unsubscriber } from "svelte/store";
-import { SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { SpaceInterface } from "../SpaceInterface";
+import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 
 /**
  * Waits for the user whose id is "id" to be present in the space.
  */
-export function lookupUserById(
-    id: number,
-    spaceFilter: SpaceFilterInterface,
-    timeout?: number
-): Promise<SpaceUserExtended> {
+export function lookupUserById(id: number, space: SpaceInterface, timeout?: number): Promise<SpaceUserExtended> {
     const promise = new Promise<SpaceUserExtended>((resolve, reject) => {
         let instantUnsubscribe = false;
         let unsubscribe: Unsubscriber | undefined;
         // eslint-disable-next-line prefer-const
-        unsubscribe = spaceFilter.usersStore.subscribe((users) => {
+        unsubscribe = space.usersStore.subscribe((users) => {
             const spaceUserId = gameManager.getCurrentGameScene().roomUrl + "_" + id;
             const user = users.get(spaceUserId);
             if (user) {

@@ -43,7 +43,6 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
@@ -71,6 +70,7 @@ import {
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
+    FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
 } from "@workadventure/messages";
@@ -1399,14 +1399,15 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-        this.send({
-            message: {
-                $case: "updateSpaceFilterMessage",
-                updateSpaceFilterMessage: filter,
-            },
-        });
-    }
+    //TODO : delete in tests
+    // public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
+    //     this.send({
+    //         message: {
+    //             $case: "updateSpaceFilterMessage",
+    //             updateSpaceFilterMessage: filter,
+    //         },
+    //     });
+    // }
 
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
         this.send({
@@ -1507,12 +1508,13 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinSpace(spaceName: string): void {
+    public emitJoinSpace(spaceName: string, filterType: FilterType): void {
         this.send({
             message: {
                 $case: "joinSpaceMessage",
                 joinSpaceMessage: {
                     spaceName,
+                    filterType,
                 },
             },
         });

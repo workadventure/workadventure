@@ -8,15 +8,10 @@ import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { peerStore } from "../../Stores/PeerStore";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { popupStore } from "../../Stores/PopupStore";
 import MuteDialogPopup from "../../Components/PopUp/MuteDialogPopup.svelte";
 
-function displayMuteDialog(
-    event: PrivateEvents["muteAudio"] | PrivateEvents["muteVideo"],
-    space: SpaceInterface,
-    spaceFilter: SpaceFilterInterface
-) {
+function displayMuteDialog(event: PrivateEvents["muteAudio"] | PrivateEvents["muteVideo"], space: SpaceInterface) {
     const message =
         event.$case === "muteAudio"
             ? get(LL).notification.askToMuteMicrophone()
@@ -24,7 +19,7 @@ function displayMuteDialog(
 
     const popupName = event.$case + "-dialog-popup-" + event.sender;
 
-    const senderUser = get(spaceFilter.usersStore).get(event.sender);
+    const senderUser = get(space.usersStore).get(event.sender);
 
     let subscription: Subscription | undefined;
 
@@ -36,7 +31,7 @@ function displayMuteDialog(
 
     // In case the sender leaves the space, we remove the popup
     if (senderUser) {
-        subscription = spaceFilter.observeUserLeft.subscribe((user) => {
+        subscription = space.observeUserLeft.subscribe((user) => {
             if (user.spaceUserId === event.sender) {
                 cleanup();
             }
@@ -71,7 +66,7 @@ function displayMuteDialog(
 /**
  * This function listens to the space events and mutes the user when a mute request is received.
  */
-export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceFilterInterface): void {
+export function bindMuteEventsToSpace(space: SpaceInterface): void {
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("muteAudio").subscribe((event) => {
@@ -80,7 +75,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
             requestedMicrophoneState.disableMicrophone();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
-            displayMuteDialog(event, space, spaceFilter);
+            displayMuteDialog(event, space);
         }
     });
 
@@ -92,7 +87,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
             requestedCameraState.disableWebcam();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-            displayMuteDialog(event, space, spaceFilter);
+            displayMuteDialog(event, space);
         }
     });
 

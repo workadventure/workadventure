@@ -15,6 +15,7 @@ import {
     ErrorApiData,
     ErrorMessage,
     ErrorScreenMessage,
+    FilterType,
     GetMemberAnswer,
     GetMemberQuery,
     JoinRoomMessage,
@@ -39,10 +40,8 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SpaceFilterMessage,
     SpaceUser,
     SubMessage,
-    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
     UserMovesMessage,
@@ -371,7 +370,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string): Promise<void> {
+    public async handleJoinSpace(
+        client: Socket,
+        spaceName: string,
+        localSpaceName: string,
+        filterType: FilterType
+    ): Promise<void> {
         const socketData = client.getUserData();
 
         try {
@@ -539,7 +543,8 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor);
+                //TODO : passer le type de filtre directement dans le constructeur ??
+                space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor, filterType);
 
                 this.spaces.set(spaceName, space);
 
@@ -548,6 +553,7 @@ export class SocketManager implements ZoneEventListener {
                         $case: "joinSpaceMessage",
                         joinSpaceMessage: {
                             spaceName,
+                            filterType,
                         },
                     },
                 });
@@ -570,7 +576,6 @@ export class SocketManager implements ZoneEventListener {
                     updateSpaceMetadataMessage: {
                         spaceName: space.name,
                         metadata: JSON.stringify(Object.fromEntries(space.metadata.entries())),
-                        filterName: undefined,
                     },
                 },
             };
@@ -791,7 +796,7 @@ export class SocketManager implements ZoneEventListener {
 
     leaveSpaces(socket: Socket) {
         const socketData = socket.getUserData();
-        socketData.spacesFilters = new Map<string, SpaceFilterMessage[]>();
+        socketData.spacesFilters = new Set<string>();
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
@@ -1161,45 +1166,12 @@ export class SocketManager implements ZoneEventListener {
 
         const space = this.spaces.get(newFilter.spaceName);
         if (space) {
-            space.handleAddFilter(client, addSpaceFilterMessage);
-            let spacesFilter = socketData.spacesFilters.get(space.name) || [];
-            if (!spacesFilter) {
-                spacesFilter = [...spacesFilter, newFilter];
-                socketData.spacesFilters.set(space.name, spacesFilter);
-            }
+            space.handleAddFilter(client);
+            socketData.spacesFilters.add(space.name);
         } else {
             console.error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`);
             Sentry.captureException(
                 new Error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`)
-            );
-        }
-    }
-
-    handleUpdateSpaceFilterMessage(
-        client: Socket,
-        updateSpaceFilterMessage: NonUndefinedFields<UpdateSpaceFilterMessage>
-    ) {
-        const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
-        const socketData = client.getUserData();
-        this.checkClientIsPartOfSpace(client, newFilter.spaceName);
-        const space = this.spaces.get(newFilter.spaceName);
-        if (space) {
-            space.handleUpdateFilter(client, updateSpaceFilterMessage);
-            const spacesFilter = socketData.spacesFilters.get(space.name);
-            if (spacesFilter) {
-                socketData.spacesFilters.set(
-                    space.name,
-                    spacesFilter.map((filter) => (filter.filterName === newFilter.filterName ? newFilter : filter))
-                );
-            } else {
-                console.trace(
-                    `SocketManager => handleUpdateSpaceFilterMessage => spacesFilter ${updateSpaceFilterMessage.spaceFilterMessage?.filterName} is undefined`
-                );
-            }
-        } else {
-            console.error(`Update space filter called on a space (${newFilter.spaceName}) that does not exist`);
-            Sentry.captureException(
-                new Error(`Update space filter called on a space (${newFilter.spaceName}) that does not exist`)
             );
         }
     }
@@ -1212,7 +1184,7 @@ export class SocketManager implements ZoneEventListener {
         this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
-            space.handleRemoveFilter(client, removeSpaceFilterMessage);
+            space.handleRemoveFilter(client);
             this.deleteSpaceIfEmpty(space);
         } else {
             // This function is called when the userStore of a space in front is unsubscribed.

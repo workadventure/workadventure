@@ -1,7 +1,7 @@
 import { Observable, Subject } from "rxjs";
+import { Readable } from "svelte/store";
 import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } from "@workadventure/messages";
-import { SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
-import { AllUsersSpaceFilterInterface } from "./SpaceFilter/AllUsersSpaceFilter";
+import { SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -32,8 +32,6 @@ export interface SpaceInterface {
     getName(): string;
     setMetadata(metadata: Map<string, unknown>): void;
     getMetadata(): Map<string, unknown>;
-    watchAllUsers(): AllUsersSpaceFilterInterface;
-    watchLiveStreamingUsers(): SpaceFilterInterface;
     //stopWatching(spaceFilter: SpaceFilterInterface): void;
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
@@ -42,4 +40,20 @@ export interface SpaceInterface {
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     readonly onLeaveSpace: Observable<void>;
+    //userExist(userId: number): boolean;
+    //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
+    readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
+    //removeUser(userId: number): void;
+    //updateUserData(userdata: Partial<SpaceUser>): void;
+
+    /**
+     * Use this observer to get a description of new users.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the new user is.
+     */
+    readonly observeUserJoined: Observable<SpaceUserExtended>;
+    /**
+     * Use this observer to get a description of users who left.
+     * It can be easier than subscribing to the usersStore and trying to deduce who the gone user is.
+     */
+    readonly observeUserLeft: Observable<SpaceUserExtended>;
 }

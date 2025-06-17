@@ -347,7 +347,6 @@ message ClientToServerMessage {
     EditMapCommandMessage editMapCommandMessage = 24;
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
-    UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
     JoinSpaceMessage joinSpaceMessage = 28;
     LeaveSpaceMessage leaveSpaceMessage = 29;
     UpdateSpaceUserMessage updateSpaceUserMessage = 30;
@@ -1269,6 +1268,12 @@ message BackToPusherSpaceMessage{
  */
 message JoinSpaceMessage{
   string spaceName = 1;
+  FilterType filterType = 2;
+}
+
+enum FilterType{
+  ALL_USERS = 0;
+  LIVE_STREAMING_USERS = 1;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;
@@ -1325,7 +1330,6 @@ message AddSpaceUserMessage{
 message AddSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  string filterName = 3;
 }
 
 /**
@@ -1339,7 +1343,6 @@ message UpdateSpaceUserMessage{
 message UpdateSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  string filterName = 3;
   google.protobuf.FieldMask updateMask = 4;
 }
 
@@ -1353,12 +1356,10 @@ message RemoveSpaceUserMessage{
 message RemoveSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   string spaceUserId = 2;
-  string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
-  google.protobuf.StringValue filterName = 3;
 }
 /**
  * The space we were listening to has been destroyed for some awful reason (connection to back was lost)
@@ -1376,20 +1377,12 @@ message KickOffMessage{
 message AddSpaceFilterMessage{
   SpaceFilterMessage spaceFilterMessage = 1;
 }
-message UpdateSpaceFilterMessage{
-  SpaceFilterMessage spaceFilterMessage = 1;
-}
+
 message RemoveSpaceFilterMessage{
   SpaceFilterMessage spaceFilterMessage = 1;
 }
 message SpaceFilterMessage{
-  string filterName = 1;
-  string spaceName = 2;
-  oneof filter {
-    SpaceFilterEverybody spaceFilterEverybody = 3;
-    SpaceFilterContainName spaceFilterContainName = 4;
-    SpaceFilterLiveStreaming spaceFilterLiveStreaming = 5;
-  }
+  string spaceName = 1;
 }
 message SpaceFilterContainName{
   string value = 1;
@@ -1451,4 +1444,3 @@ message DispatchEventRequest {
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
   repeated int32 targetUserIds = 4;
 }
-
