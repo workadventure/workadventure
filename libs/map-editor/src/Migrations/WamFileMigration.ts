@@ -16,7 +16,8 @@ class WamFileMigration {
     constructor() {
         this.migrations = {
             "1.0.0": (fileContent: any) => this.migrate_v1_to_v2(fileContent),
-            "2.0.0": (fileContent) => fileContent,
+            "2.0.0": (fileContent: any) => this.migrate_v2_to_v201(fileContent),
+            "2.0.1": (fileContent) => fileContent,
         };
     }
 
@@ -67,6 +68,23 @@ class WamFileMigration {
                     return property;
                 }),
             })),
+        };
+    }
+
+    private migrate_v2_to_v201(fileContent: any): any {
+        return {
+            ...fileContent,
+            version: "2.0.1",
+            entityCollections: fileContent.entityCollections.concat([
+                {
+                    url: "https://limezujulio.workadventu.re/modern-office/collection.json",
+                    type: "file",
+                },
+                {
+                    url: "https://limezujulio.workadventu.re/modern-interior/collection.json",
+                    type: "file",
+                },
+            ]),
         };
     }
 
