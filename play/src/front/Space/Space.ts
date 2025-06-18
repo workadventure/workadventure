@@ -1,4 +1,4 @@
-import { get, readable, Readable, Writable } from "svelte/store";
+import { get, readable, Readable, Writable, writable } from "svelte/store";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Observable, Subject, Subscriber } from "rxjs";
 import { merge } from "lodash";
