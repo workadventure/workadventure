@@ -105,7 +105,11 @@ export abstract class CommunicationState implements ICommunicationState {
 
     handleUserAdded(user: SpaceUser): Promise<void> {
         this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        this._currentStrategy.addUser(user);
+        const switchInProgress = this.isSwitching();
+        console.log(
+            `Adding user ${user.name} (${user.spaceUserId}) to ${this._currentCommunicationType} with switchInProgress=${switchInProgress}`
+        );
+        this._currentStrategy.addUser(user, switchInProgress);
         return Promise.resolve();
     }
     handleUserDeleted(user: SpaceUser): Promise<void> {

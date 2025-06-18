@@ -54,8 +54,16 @@ export class LivekitState extends CommunicationState {
             this._waitingList.delete(user.spaceUserId);
             const nextState = await this._nextStatePromise;
             await nextState.handleUserAdded(user);
+            // Don't call super.handleUserAdded if the user is already handled by the next state
+            console.log(
+                `LivekitState.handleUserAdded: User ${user.name} (${user.spaceUserId}) already handled by next state, skipping super.handleUserAdded`
+            );
+            return;
         }
 
+        console.log(
+            `LivekitState.handleUserAdded: Adding user ${user.name} (${user.spaceUserId}) to current Livekit strategy`
+        );
         return super.handleUserAdded(user);
     }
     async handleUserDeleted(user: SpaceUser): Promise<void> {
