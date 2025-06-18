@@ -61,23 +61,55 @@ export class WebRTCState extends CommunicationState {
     }
 
     private switchToNextState(user: SpaceUser): void {
-        console.log("in the switch");
+        console.log(
+            `WebRTCState.switchToNextState: Starting switch to Livekit for user ${user.name} (${user.spaceUserId})`
+        );
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;
             if (ADMIN_API_URL) {
+                console.log(
+                    `WebRTCState.switchToNextState: Fetching Livekit credentials from admin API for space ${this._space.getSpaceName()}`
+                );
                 const res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
                 nextState = new LivekitState(this._space, this._communicationManager, res);
             } else {
+                console.log(
+                    `WebRTCState.switchToNextState: Creating Livekit state with default credentials for space ${this._space.getSpaceName()}`
+                );
                 nextState = new LivekitState(this._space, this._communicationManager);
             }
-            console.log("In the promise");
+            console.log(
+                `WebRTCState.switchToNextState: Created Livekit state, adding user ${user.name} (${user.spaceUserId}) to ready users`
+            );
             this._readyUsers.add(user.spaceUserId);
-            await nextState.handleUserAdded(user).catch((e) => {
+            console.log(
+                `WebRTCState.switchToNextState: Calling handleUserAdded for user ${user.name} (${user.spaceUserId}) in Livekit state`
+            );
+            try {
+                await nextState.handleUserAdded(user);
+                console.log(
+                    `WebRTCState.switchToNextState: Successfully added user ${user.name} (${user.spaceUserId}) to Livekit state`
+                );
+            } catch (e) {
+                console.error(
+                    `WebRTCState.switchToNextState: Error adding user ${user.name} (${user.spaceUserId}) to Livekit state:`,
+                    e
+                );
                 Sentry.captureException(e);
-                console.error(e);
-            });
+            }
 
+            // Log current state of users and waiting list
+            console.log(
+                `WebRTCState.switchToNextState: Current ready users: ${Array.from(this._readyUsers).join(", ")}`
+            );
+            console.log(
+                `WebRTCState.switchToNextState: Current waiting list: ${Array.from(this._waitingList).join(", ")}`
+            );
+            console.log(`WebRTCState.switchToNextState: Total users in space: ${this._space.getAllUsers().length}`);
+
+            console.log(`WebRTCState.switchToNextState: Notifying all users to prepare for switch to Livekit`);
             this.notifyAllUsersToPrepareSwitchToNextState();
+            console.log(`WebRTCState.switchToNextState: Setting up switch timeout (${this.SWITCH_TIMEOUT_MS}ms)`);
             this.setupSwitchTimeout();
             return nextState;
         })();
