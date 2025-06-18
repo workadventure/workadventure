@@ -17,7 +17,6 @@
     }>();
 
     function onValueChange() {
-        console.log("onValueChange", property.content, property.duration);
         dispatch("change");
     }
 
