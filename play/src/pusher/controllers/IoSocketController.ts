@@ -744,7 +744,7 @@ export class IoSocketController {
                                 message.message.joinSpaceMessage.spaceName
                             }`;
 
-                            await socketManager.handleJoinSpace(
+                            socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
                                 localSpaceName,
