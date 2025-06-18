@@ -48,7 +48,7 @@ const menu: BaseTranslation = {
             microphoneToggle: 'Keep microphone active in "away mode"',
         },
         save: "Save",
-        otherSettings: "Settings",
+        otherSettings: "All settings",
         fullscreen: "Fullscreen",
         notifications: "Notifications",
         enablePictureInPicture: "Enable picture-in-picture",

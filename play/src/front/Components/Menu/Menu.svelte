@@ -164,9 +164,6 @@
                                 on:click|preventDefault|stopPropagation={() => switchMenu(submenu)}
                                 transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                             >
-                                <!-- <div class="left-gradient absolute top-0 left-0 h-full bg-gradient-to-r from-secondary to-transparent {activeSubMenu === submenu ? 'opacity-100 w-[5%]' : 'opacity-0 w-0'} transition-all duration-800">
-                                    </div> -->
-
                                 <button
                                     type="button"
                                     class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap"
@@ -187,59 +184,6 @@
                     {/if}
                 {/each}
             </nav>
-            <!-- <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
-                <div>
-                    <a href="https://workadventu.re/contact/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-bug mr-4"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M9 9v-1a3 3 0 0 1 6 0v1" />
-                            <path d="M8 9h8a6 6 0 0 1 1 3v3a5 5 0 0 1 -10 0v-3a6 6 0 0 1 1 -3" />
-                            <path d="M3 13l4 0" />
-                            <path d="M17 13l4 0" />
-                            <path d="M12 20l0 -6" />
-                            <path d="M4 19l3.35 -2" />
-                            <path d="M20 19l-3.35 -2" />
-                            <path d="M4 7l3.75 2.4" />
-                            <path d="M20 7l-3.75 2.4" />
-                        </svg>
-                        {$LL.menu.sub.report()}
-                        TODO Hugo : Icon and link
-                    </a>
-                </div>
-                <div>
-                    <a href="https://workadventu.re/faq/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-help-square mr-4"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z" />
-                            <path d="M12 16v.01" />
-                            <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
-                        </svg>
-                        {$LL.menu.sub.report()} TODO Hugo : Icon and link
-                    </a>
-                </div>
-            </div> -->
         </div>
         <div
             class="p-2 rounded-lg bg-contrast/80 backdrop-blur-md flex items-center justify-center w-fit @md/main-layout:hidden"
