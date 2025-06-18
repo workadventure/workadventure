@@ -263,37 +263,36 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = ABSOLUTE_PUSHER_URL;
-        url = url.replace("http://", "ws://").replace("https://", "wss://");
-        if (!url.endsWith("/")) {
-            url += "/";
-        }
-        url += "ws/room";
-        url += "?roomId=" + encodeURIComponent(roomUrl);
-        if (token) {
-            url += "&token=" + encodeURIComponent(token);
-        }
-        url += "&name=" + encodeURIComponent(name);
-        for (const textureId of characterTextureIds) {
-            url += "&characterTextureIds=" + encodeURIComponent(textureId);
-        }
-        url += "&x=" + Math.floor(position.x);
-        url += "&y=" + Math.floor(position.y);
-        url += "&top=" + Math.floor(viewport.top);
-        url += "&bottom=" + Math.floor(viewport.bottom);
-        url += "&left=" + Math.floor(viewport.left);
-        url += "&right=" + Math.floor(viewport.right);
-        if (companionTextureId) {
-            url += "&companionTextureId=" + encodeURIComponent(companionTextureId);
-        }
-        url += "&availabilityStatus=" + availabilityStatus;
-        if (lastCommandId) {
-            url += "&lastCommandId=" + lastCommandId;
-        }
-        url += "&version=" + apiVersionHash;
-        url += "&chatID=" + (localUserStore.getChatId() ?? "");
-        url += "&roomName=" + encodeURIComponent(gameManager.currentStartedRoom.roomName ?? "");
+        const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
+        urlObj.protocol = urlObj.protocol.replace("http", "ws");
 
+        const params = urlObj.searchParams;
+        params.set("roomId", roomUrl);
+        if (token) {
+            params.set("token", token);
+        }
+        params.set("name", name);
+        for (const textureId of characterTextureIds) {
+            params.append("characterTextureIds", textureId);
+        }
+        params.set("x", Math.floor(position.x).toString());
+        params.set("y", Math.floor(position.y).toString());
+        params.set("top", Math.floor(viewport.top).toString());
+        params.set("bottom", Math.floor(viewport.bottom).toString());
+        params.set("left", Math.floor(viewport.left).toString());
+        params.set("right", Math.floor(viewport.right).toString());
+        if (companionTextureId) {
+            params.set("companionTextureId", companionTextureId);
+        }
+        params.set("availabilityStatus", availabilityStatus.toString());
+        if (lastCommandId) {
+            params.set("lastCommandId", lastCommandId);
+        }
+        params.set("version", apiVersionHash);
+        params.set("chatID", localUserStore.getChatId() ?? "");
+        params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
+
+        const url = urlObj.toString();
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
         } else {
