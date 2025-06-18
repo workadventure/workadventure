@@ -16,6 +16,7 @@ import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
+import { asError } from "catch-unknown";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -501,7 +502,6 @@ export class IoSocketController {
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
                             spaces: new Set<SpaceName>(),
-                            spacesFilters: new Set<SpaceName>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -686,8 +686,8 @@ export class IoSocketController {
                 });
             },
             message: (ws, arrayBuffer): void => {
+                const socket = ws as Socket;
                 (async () => {
-                    const socket = ws as Socket;
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
 
                     if (!message.message) {
@@ -770,7 +770,8 @@ export class IoSocketController {
                             message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.updateSpaceMetadataMessage.spaceName
                             }`;
-                            await socketManager.handleUpdateSpaceMetadata(
+
+                            socketManager.handleUpdateSpaceMetadata(
                                 socket,
                                 message.message.updateSpaceMetadataMessage.spaceName,
                                 isMetadata.data
@@ -1049,6 +1050,22 @@ export class IoSocketController {
                 })().catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
+
+                    try {
+                        socket.send(
+                            ServerToClientMessage.encode({
+                                message: {
+                                    $case: "errorMessage",
+                                    errorMessage: {
+                                        message: "An error occurred in pusher: " + asError(e).message,
+                                    },
+                                },
+                            }).finish()
+                        );
+                    } catch (error) {
+                        Sentry.captureException(error);
+                        console.error(error);
+                    }
                 });
             },
             drain: (ws) => {

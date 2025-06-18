@@ -57,7 +57,6 @@ export type SocketData = {
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
-    spacesFilters: Set<SpaceName>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];

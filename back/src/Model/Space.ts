@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
     BackToPusherSpaceMessage,
+    FilterType,
     PrivateEvent,
     PublicEvent,
     RemoveSpaceUserMessage,
@@ -16,12 +17,14 @@ import { SpacesWatcher } from "./SpacesWatcher";
 
 const debug = Debug("space");
 
+type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
+
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
 
-    constructor(name: string) {
+    constructor(name: string, private filterType: Filter) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
@@ -32,18 +35,20 @@ export class Space implements CustomJsonReplacerInterface {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
-            this.notifyWatchers(
-                {
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            user: spaceUser,
-                        }),
-                    },
+
+            if (!this.filterOneUser(spaceUser)) {
+                return;
+            }
+
+            this.notifyWatchers({
+                message: {
+                    $case: "addSpaceUserMessage",
+                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        user: spaceUser,
+                    }),
                 },
-                sourceWatcher
-            );
+            });
             debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
         } catch (e) {
             console.error("Error while adding user", e);
@@ -51,18 +56,15 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.notifyWatchers(
-                {
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            spaceUserId: spaceUser.spaceUserId,
-                        }),
-                    },
+            this.notifyWatchers({
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        spaceUserId: spaceUser.spaceUserId,
+                    }),
                 },
-                sourceWatcher
-            );
+            });
         }
     }
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
@@ -75,12 +77,37 @@ export class Space implements CustomJsonReplacerInterface {
                 return;
             }
 
+            const oldFilter = this.filterOneUser(user);
+
             const updateValues = applyFieldMask(spaceUser, updateMask);
             merge(user, updateValues);
+
+            const newFilter = this.filterOneUser(user);
+
             usersList.set(spaceUser.spaceUserId, user);
 
-            this.notifyWatchers(
-                {
+            if (!oldFilter && newFilter) {
+                this.notifyWatchers({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            user,
+                        }),
+                    },
+                });
+            } else if (oldFilter && !newFilter) {
+                this.notifyWatchers({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: user.spaceUserId,
+                        }),
+                    },
+                });
+            } else if (oldFilter && newFilter) {
+                this.notifyWatchers({
                     message: {
                         $case: "updateSpaceUserMessage",
                         updateSpaceUserMessage: {
@@ -89,29 +116,26 @@ export class Space implements CustomJsonReplacerInterface {
                             updateMask,
                         },
                     },
-                },
-                sourceWatcher
-            );
+                });
+            }
         } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
             debug("Error while updating user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.notifyWatchers(
-                {
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            spaceUserId: spaceUser.spaceUserId,
-                        }),
-                    },
+            this.notifyWatchers({
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        spaceUserId: spaceUser.spaceUserId,
+                    }),
                 },
-                sourceWatcher
-            );
+            });
         }
     }
+
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
         try {
             const usersList = this.usersList(sourceWatcher);
@@ -127,18 +151,15 @@ export class Space implements CustomJsonReplacerInterface {
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
-            this.notifyWatchers(
-                {
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            spaceUserId: spaceUserId,
-                        }),
-                    },
+            this.notifyWatchers({
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        spaceUserId: spaceUserId,
+                    }),
                 },
-                sourceWatcher
-            );
+            });
         }
     }
 
@@ -157,6 +178,21 @@ export class Space implements CustomJsonReplacerInterface {
             },
         });
         debug(`${this.name} : metadata => updated`);
+    }
+
+    private filterOneUser(user: SpaceUser): boolean {
+        switch (this.filterType) {
+            case FilterType.ALL_USERS: {
+                return true;
+            }
+            case FilterType.LIVE_STREAMING_USERS: {
+                return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
+            }
+            default: {
+                const _exhaustiveCheck: never = this.filterType;
+            }
+        }
+        return false;
     }
 
     public addWatcher(watcher: SpacesWatcher) {
@@ -201,11 +237,8 @@ export class Space implements CustomJsonReplacerInterface {
     /**
      * Notify all watchers expect the one that sent the message
      */
-    private notifyWatchers(message: BackToPusherSpaceMessage, exceptWatcher?: SpacesWatcher) {
+    private notifyWatchers(message: BackToPusherSpaceMessage) {
         for (const watcher_ of this.users.keys()) {
-            if (exceptWatcher && watcher_.id === exceptWatcher.id) {
-                continue;
-            }
             watcher_.write(message);
         }
     }

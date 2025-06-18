@@ -50,6 +50,7 @@ import {
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
+    FilterType,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1388,7 +1389,10 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            if (joinSpaceMessage.filterType === FilterType.UNRECOGNIZED) {
+                throw new Error("Unrecognized filter type when joining space");
+            }
+            space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
         pusher.watchSpace(space.name);

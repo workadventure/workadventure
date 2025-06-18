@@ -136,7 +136,7 @@ describe("Space", () => {
             tags: [],
             visitCardUrl: "test",
         });
-        space.updateUser(spaceUser, [
+        space.forwardToBackUpdateMessage(spaceUser, [
             "name",
             "playUri",
             "color",
@@ -179,8 +179,7 @@ describe("Space", () => {
     // even if another filter already exists.
     it("should add the name filter 'test' and send me the delta (nothing because user is already sent, and delta return nothing)", () => {
         eventsClient = [];
-        client.getUserData().spacesFilters.add("test");
-        space.handleAddFilter(client);
+        space.handleWatch(client);
         expect(eventsClient.length).toBe(1);
     });
 
@@ -225,16 +224,15 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and NOT send me anything", () => {
-        client.getUserData().spacesFilters = new Set<string>(["test"]);
         eventsClient = [];
-        space.handleRemoveFilter(client);
+        space.handleUnwatch(client);
         expect(eventsClient.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(false);
     });
 
     it("should notify client and back that a user is removed", () => {
         eventsClient = [];
         eventsWatcher = [];
-        space.removeUser(client);
+        space.unregisterUserAndForwardToBack(client);
         //expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
         expect(eventsWatcher.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
     });
