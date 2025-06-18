@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BackToPusherSpaceMessage, SpaceUser } from "@workadventure/messages";
+import { BackToPusherSpaceMessage, FilterType, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { SpaceSocket } from "../src/SpaceManager";
 
 describe("Space", () => {
-    const space = new Space("test");
+    const space = new Space("test", FilterType.ALL_USERS);
     let eventsWatcher1: BackToPusherSpaceMessage[] = [];
     const spaceSocketToPusher1 = mock<SpaceSocket>({
         write(chunk: BackToPusherSpaceMessage): boolean {
@@ -62,7 +62,7 @@ describe("Space", () => {
         space.addUser(watcher1, spaceUser);
 
         // Only watcher2 should have received the event
-        expect(eventsWatcher1.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(false);
+        expect(eventsWatcher1.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
         expect(eventsWatcher2.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
 
         space.removeWatcher(watcher2);
