@@ -170,19 +170,13 @@ describe("SpaceFilter", () => {
 
     describe("emitFilterEvent", () => {
         it("emit addSpaceFilter event when you create spaceFilter", () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                FilterType.ALL_USERS
-            );
-
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
+
+            const space = new Space("space-name", new Map<string, unknown>(), mockRoomConnection, FilterType.ALL_USERS);
 
             const unsubscribe = space.usersStore.subscribe(() => {});
 
@@ -191,12 +185,7 @@ describe("SpaceFilter", () => {
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitAddSpaceFilter).toHaveBeenCalledWith({
                 spaceFilterMessage: {
-                    filterName: spaceFilterName,
                     spaceName: space.getName(),
-                    filter: {
-                        $case: "spaceFilterEverybody",
-                        spaceFilterEverybody: {},
-                    },
                 },
             });
 
@@ -204,18 +193,13 @@ describe("SpaceFilter", () => {
         });
 
         it("emit removeSpaceFilter event when you stop listening to a spaceFilter", () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space(
-                "space-name",
-                new Map<string, unknown>(),
-                defaultRoomConnectionMock,
-                FilterType.ALL_USERS
-            );
-
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
+                emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
+
+            const space = new Space("space-name", new Map<string, unknown>(), mockRoomConnection, FilterType.ALL_USERS);
 
             const unsubscribe = space.usersStore.subscribe(() => {});
             unsubscribe();
@@ -225,7 +209,6 @@ describe("SpaceFilter", () => {
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitRemoveSpaceFilter).toHaveBeenLastCalledWith({
                 spaceFilterMessage: {
-                    filterName: spaceFilterName,
                     spaceName: space.getName(),
                 },
             });
