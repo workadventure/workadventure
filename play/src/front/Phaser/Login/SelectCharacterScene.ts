@@ -11,6 +11,7 @@ import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import {
@@ -188,8 +189,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         myMicrophoneStore.set(false);
         batchGetUserMediaStore.commitChanges();
         this.scene.sleep(SelectCharacterSceneName);
-        this.scene.run(CustomizeSceneName);
+        // this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
+        gameManager.tryResumingGame(EnableCameraSceneName)
+        selectCharacterCustomizeSceneVisibleStore.set(true);
     }
 
     public update(): void {

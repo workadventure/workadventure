@@ -35,6 +35,7 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
+    import WokaCustomizeScene from "./Woka/WokaCustomizeScene.svelte";
 
     export let game: Game;
 
@@ -69,6 +70,10 @@
 {:else if $selectCharacterSceneVisibleStore}
     <div>
         <SelectCharacterScene {game} />
+    </div>
+{:else if $selectCharacterCustomizeSceneVisibleStore}
+    <div>
+        <WokaCustomizeScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>

@@ -8,6 +8,7 @@
         customizeAvailableStore,
         selectedCollection,
     } from "../../Stores/SelectCharacterSceneStore";
+
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { IconChevronLeft, IconChevronRight } from "@wa-icons";
 
