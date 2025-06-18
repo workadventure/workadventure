@@ -6,7 +6,6 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     AvailabilityStatus,
-    BackToPusherSpaceMessage,
     BanMessage,
     BanPlayerMessage,
     ChatMembersAnswer,
@@ -29,7 +28,6 @@ import {
     PrivateEventFrontToPusher,
     PublicEventFrontToPusher,
     PusherToBackMessage,
-    PusherToBackSpaceMessage,
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
@@ -47,10 +45,9 @@ import {
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
-import { z } from "zod";
 import { WebSocket } from "uWebSockets.js";
 import { PusherRoom } from "../models/PusherRoom";
-import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
+import type { SocketData } from "../models/Websocket/SocketData";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
@@ -76,10 +73,6 @@ export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, Space> = new Map<string, Space>();
-    private spaceStreamsToBack: Map<number, Promise<BackSpaceConnection>> = new Map<
-        number,
-        Promise<BackSpaceConnection>
-    >();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -336,12 +329,6 @@ export class SocketManager implements ZoneEventListener {
 
     public handleUpdateSpaceMetadata(client: Socket, spaceName: string, metadata: { [key: string]: unknown }): void {
         try {
-            const backId = apiClientRepository.getIndex(spaceName);
-            const spaceStreamToBackPromise = this.spaceStreamsToBack.get(backId);
-            if (!spaceStreamToBackPromise) {
-                throw new Error("Space stream to pusher not found");
-            }
-
             const space = this.spaces.get(spaceName);
             if (!space) {
                 throw new Error("Space not found");
@@ -354,190 +341,17 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public async handleJoinSpace(
-        client: Socket,
-        spaceName: string,
-        localSpaceName: string,
-        filterType: FilterType
-    ): Promise<void> {
+    public handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string, filterType: FilterType): void {
         const socketData = client.getUserData();
 
-        const backId = apiClientRepository.getIndex(spaceName);
-        let spaceStreamToBackPromise = this.spaceStreamsToBack.get(backId);
-        if (!spaceStreamToBackPromise) {
-            spaceStreamToBackPromise = (async () => {
-                const cleanupSpaceStreamToBack = () => {
-                    this.spaceStreamsToBack.delete(backId);
-                    for (const space of this.spaces.values()) {
-                        if (space.backId === backId) {
-                            space.cleanup();
-                            this.spaces.delete(space.name);
-                        }
-                    }
-                };
-
-                const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
-                const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
-                spaceStreamToBack
-                    .on("data", (message: BackToPusherSpaceMessage) => {
-                        if (!message.message) {
-                            console.warn("spaceStreamToBack => Empty message received.", message);
-                            return;
-                        }
-                        try {
-                            switch (message.message.$case) {
-                                case "addSpaceUserMessage": {
-                                    const addSpaceUserMessage = noUndefined(message.message.addSpaceUserMessage);
-                                    const space = this.spaces.get(addSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.addUser(addSpaceUserMessage.user, undefined);
-                                    }
-                                    break;
-                                }
-                                case "updateSpaceUserMessage": {
-                                    const updateSpaceUserMessage = noUndefined(message.message.updateSpaceUserMessage);
-                                    const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.updateUser(
-                                            updateSpaceUserMessage.user,
-                                            updateSpaceUserMessage.updateMask
-                                        );
-                                    }
-                                    break;
-                                }
-                                case "removeSpaceUserMessage": {
-                                    const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
-                                    const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-                                    if (space) {
-                                        space.removeUser(removeSpaceUserMessage.spaceUserId);
-                                    }
-                                    break;
-                                }
-                                case "updateSpaceMetadataMessage": {
-                                    const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
-                                    const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
-
-                                    const isMetadata = z
-                                        .record(z.string(), z.unknown())
-                                        .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
-                                    if (!isMetadata.success) {
-                                        Sentry.captureException(
-                                            `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
-                                        );
-                                        console.error(
-                                            "Invalid metadata received.",
-                                            message.message.updateSpaceMetadataMessage.metadata
-                                        );
-                                        return;
-                                    }
-                                    if (space) {
-                                        space.updateMetadata(isMetadata.data);
-                                    }
-                                    break;
-                                }
-                                case "pingMessage": {
-                                    if (spaceStreamToBack.pingTimeout) {
-                                        clearTimeout(spaceStreamToBack.pingTimeout);
-                                        spaceStreamToBack.pingTimeout = undefined;
-                                    }
-                                    const pusherToBackMessage: PusherToBackSpaceMessage = {
-                                        message: {
-                                            $case: "pongMessage",
-                                            pongMessage: {},
-                                        },
-                                    } as PusherToBackSpaceMessage;
-                                    spaceStreamToBack.write(pusherToBackMessage);
-
-                                    spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                        console.error("Error spaceStreamToBack timed out for back:", backId);
-                                        Sentry.captureException(
-                                            "Error spaceStreamToBack timed out for back: " + backId
-                                        );
-                                        spaceStreamToBack.end();
-                                        cleanupSpaceStreamToBack();
-                                    }, 1000 * 60);
-                                    break;
-                                }
-                                case "kickOffMessage": {
-                                    debug("[space] kickOffSMessage received");
-                                    spaceStreamToBack.write({
-                                        message: {
-                                            $case: "kickOffMessage",
-                                            kickOffMessage: {
-                                                userId: message.message.kickOffMessage.userId,
-                                                spaceName: message.message.kickOffMessage.spaceName,
-                                                filterName: message.message.kickOffMessage.filterName,
-                                            },
-                                        },
-                                    });
-                                    break;
-                                }
-                                case "publicEvent": {
-                                    debug("[space] publicEvent received");
-                                    const publicEvent = message.message.publicEvent;
-                                    const space = this.spaces.get(publicEvent.spaceName);
-                                    if (space) {
-                                        space.sendPublicEvent(noUndefined(publicEvent));
-                                    }
-                                    break;
-                                }
-                                case "privateEvent": {
-                                    debug("[space] privateEvent received");
-                                    const privateEvent = message.message.privateEvent;
-                                    const space = this.spaces.get(privateEvent.spaceName);
-                                    if (space) {
-                                        space.sendPrivateEvent(noUndefined(privateEvent));
-                                    }
-                                    break;
-                                }
-                                default: {
-                                    const _exhaustiveCheck: never = message.message;
-                                }
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            Sentry.captureException(error);
-                        }
-                    })
-                    .on("end", () => {
-                        debug("[space] spaceStreamsToBack ended");
-                        if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-                        cleanupSpaceStreamToBack();
-                    })
-                    .on("error", (err: Error) => {
-                        console.error(
-                            "Error in connection to back server '" +
-                                apiSpaceClient.getChannel().getTarget() +
-                                "' for space '" +
-                                spaceName +
-                                "':",
-                            err
-                        );
-                        Sentry.captureException(err);
-                    });
-                return spaceStreamToBack;
-            })();
-            this.spaceStreamsToBack.set(backId, spaceStreamToBackPromise);
-        }
-
-        const spaceStreamToBack = await spaceStreamToBackPromise;
-
         let space: Space | undefined = this.spaces.get(spaceName);
+
         if (!space) {
-            //TODO : passer le type de filtre directement dans le constructeur ??
-            space = new Space(spaceName, localSpaceName, spaceStreamToBack, backId, eventProcessor, filterType);
+            space = new Space(spaceName, localSpaceName, eventProcessor, filterType);
 
             this.spaces.set(spaceName, space);
 
-            spaceStreamToBack.write({
-                message: {
-                    $case: "joinSpaceMessage",
-                    joinSpaceMessage: {
-                        spaceName,
-                        filterType,
-                    },
-                },
-            });
+            space.initSpace();
         }
 
         if (space.filterType !== filterType) {
@@ -779,16 +593,9 @@ export class SocketManager implements ZoneEventListener {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
-
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
-                const spaceStreamBack = this.spaceStreamsToBack.get(space.backId);
-                if (spaceStreamBack) {
-                    spaceStreamBack
-                        .then((connection) => connection.end())
-                        .catch((e) => console.error("ERROR WHILE CLOSING CONNECTION", e));
-                    this.spaceStreamsToBack.delete(space.backId);
-                    debug("Connection to back %d useless. Ending.", space.backId);
-                }
+                space.closeBackConnection();
+                debug("Connection to back %d useless. Ending.", space.backId);
             }
         }
     }
