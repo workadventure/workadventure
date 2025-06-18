@@ -1,5 +1,5 @@
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:22.8-bullseye-slim AS proto-builder
+FROM --platform=$BUILDPLATFORM node:22.16-bullseye-slim AS proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
