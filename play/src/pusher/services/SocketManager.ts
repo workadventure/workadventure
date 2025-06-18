@@ -52,7 +52,7 @@ import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
-import { Space } from "../models/Space";
+import { Space, SpaceInterface } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -71,7 +71,7 @@ export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
-    private spaces: Map<string, Space> = new Map<string, Space>();
+    private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -333,7 +333,7 @@ export class SocketManager implements ZoneEventListener {
                 throw new Error("Space not found");
             }
 
-            space.forwardUpdateMetadataToBack(metadata);
+            space.forwarder.updateMetadata(metadata);
         } catch (error) {
             Sentry.captureException(error);
             console.error(`An error occurred on "update_space_metadata" event`, error);
@@ -343,7 +343,7 @@ export class SocketManager implements ZoneEventListener {
     public handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string, filterType: FilterType): void {
         const socketData = client.getUserData();
 
-        let space: Space | undefined = this.spaces.get(spaceName);
+        let space: SpaceInterface | undefined = this.spaces.get(spaceName);
 
         if (!space) {
             space = new Space(spaceName, localSpaceName, eventProcessor, filterType);
@@ -357,7 +357,8 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Space filter type mismatch");
         }
 
-        space.registerUserAndForwardMessageToBack(socketData.spaceUser, client);
+        //TODO : voir si c'est le role du forwarder de rgister ou 2 fonctions distinctes ??
+        space.forwarder.registerUser(client);
         if (socketData.spaces.has(spaceName)) {
             console.error(`User ${socketData.name} is trying to join a space he is already in.`);
             Sentry.captureException(new Error(`User ${socketData.name} is trying to join a space he is already in.`));
@@ -480,7 +481,7 @@ export class SocketManager implements ZoneEventListener {
             socketData.spaces.forEach((spaceName) => {
                 const space = this.spaces.get(spaceName);
                 if (space) {
-                    space.forwardToBackUpdateMessage(partialSpaceUser, fieldMask);
+                    space.forwarder.updateUser(partialSpaceUser, fieldMask);
                 } else {
                     console.error(
                         `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
@@ -572,7 +573,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                space.unregisterUserAndForwardToBack(socket);
+                space.forwarder.unregisterUser(socket);
                 this.deleteSpaceIfEmpty(space);
             } else {
                 console.error(
@@ -588,7 +589,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.clear();
     }
 
-    private deleteSpaceIfEmpty(space: Space) {
+    private deleteSpaceIfEmpty(space: SpaceInterface) {
         if (space.isEmpty()) {
             this.spaces.delete(space.name);
             debug("Space %s is empty. Deleting.", space.name);
@@ -972,7 +973,7 @@ export class SocketManager implements ZoneEventListener {
                 `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`
             );
         }
-        space.forwardToBackUpdateMessage(message.user, message.updateMask);
+        space.forwarder.updateUser(message.user, message.updateMask);
     }
 
     async handleRoomTagsQuery(client: Socket, queryMessage: QueryMessage) {
@@ -1072,7 +1073,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
-            space.unregisterUserAndForwardToBack(client);
+            space.forwarder.unregisterUser(client);
             this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
@@ -1236,7 +1237,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-        space.forwardMessageToSpaceBack({
+        space.forwarder.forwardMessageToSpaceBack({
             $case: "publicEvent",
             publicEvent: {
                 ...publicEvent,
@@ -1259,7 +1260,7 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("User id not found");
         }
 
-        space.forwardMessageToSpaceBack({
+        space.forwarder.forwardMessageToSpaceBack({
             $case: "privateEvent",
             privateEvent: {
                 ...privateEvent,
