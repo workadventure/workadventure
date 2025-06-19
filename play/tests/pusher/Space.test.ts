@@ -1,4 +1,4 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
@@ -109,7 +109,7 @@ describe("Space", () => {
         it("should send joinSpaceMessage to back when initSpace is called", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -244,7 +244,7 @@ describe("Space", () => {
         it("should send all users to the new watcher", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -324,7 +324,7 @@ describe("Space", () => {
         it("should not send users to the new watcher if the user is already watching the space", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,

@@ -1,4 +1,4 @@
-import { SpaceUser, PusherToBackSpaceMessage, SubMessage } from "@workadventure/messages";
+import { SpaceUser, SubMessage } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { Space } from "../../src/pusher/models/Space";
@@ -46,7 +46,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back when spaceuserID is found and not already added", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -90,7 +90,7 @@ describe("SpaceToBackForwarder", () => {
         it("should send metadata to client when metadata is not empty", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -143,7 +143,7 @@ describe("SpaceToBackForwarder", () => {
         it("should not send metadata to client when metadata is empty", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -188,7 +188,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back when user is found and not already added", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -231,7 +231,7 @@ describe("SpaceToBackForwarder", () => {
         it("should throw an error when the user is not found in pusher local connected user", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -259,7 +259,7 @@ describe("SpaceToBackForwarder", () => {
         it("should throw an error when the space user id is not found", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -296,7 +296,7 @@ describe("SpaceToBackForwarder", () => {
         it("should throw an error when the space user id is not found", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -330,7 +330,7 @@ describe("SpaceToBackForwarder", () => {
         it("should throw an error when the user is not found in pusher local connected user", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -364,7 +364,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back when user is found and not already added", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -411,7 +411,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -465,7 +465,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -513,7 +513,7 @@ describe("SpaceToBackForwarder", () => {
         it("should throw an error when spaceStreamToBackPromise is undefined", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
@@ -551,7 +551,7 @@ describe("SpaceToBackForwarder", () => {
         it("should forward to back", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-            const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+            const mockWriteFunction = vi.fn();
 
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,

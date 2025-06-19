@@ -16,7 +16,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -58,7 +58,7 @@ describe("SpaceToFrontDispatcher", () => {
             it("should notify all users", () => {
                 const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-                const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockWriteFunction = vi.fn();
 
                 const mockBackSpaceConnection = mock<BackSpaceConnection>({
                     write: mockWriteFunction,
@@ -68,7 +68,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const spaceUser = SpaceUser.fromPartial({
                     spaceUserId: "foo_1",
@@ -115,7 +115,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -158,7 +158,7 @@ describe("SpaceToFrontDispatcher", () => {
             it("should notify all users", () => {
                 const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-                const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockWriteFunction = vi.fn();
 
                 const mockBackSpaceConnection = mock<BackSpaceConnection>({
                     write: mockWriteFunction,
@@ -168,7 +168,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const spaceUser = SpaceUser.fromPartial({
                     spaceUserId: "foo_1",
@@ -228,7 +228,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -270,7 +270,7 @@ describe("SpaceToFrontDispatcher", () => {
             it("should notify all users", () => {
                 const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-                const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockWriteFunction = vi.fn();
 
                 const mockBackSpaceConnection = mock<BackSpaceConnection>({
                     write: mockWriteFunction,
@@ -280,7 +280,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const spaceUser = SpaceUser.fromPartial({
                     spaceUserId: "foo_1",
@@ -328,7 +328,7 @@ describe("SpaceToFrontDispatcher", () => {
             it("should notify all users", () => {
                 const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
-                const mockWriteFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockWriteFunction = vi.fn();
 
                 const mockBackSpaceConnection = mock<BackSpaceConnection>({
                     write: mockWriteFunction,
@@ -678,7 +678,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -687,7 +687,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockForwardToBackFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockForwardToBackFunction = vi.fn();
                 const mockForwarder = mock<SpaceToBackForwarder>({
                     forwardMessageToSpaceBack: mockForwardToBackFunction,
                 });
@@ -727,7 +727,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_1",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -736,7 +736,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockForwardToBackFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockForwardToBackFunction = vi.fn();
                 const mockForwarder = mock<SpaceToBackForwarder>({
                     forwardMessageToSpaceBack: mockForwardToBackFunction,
                 });
@@ -788,7 +788,7 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_2",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -797,7 +797,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockForwardToBackFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockForwardToBackFunction = vi.fn();
                 const mockForwarder = mock<SpaceToBackForwarder>({
                     forwardMessageToSpaceBack: mockForwardToBackFunction,
                 });
@@ -856,10 +856,10 @@ describe("SpaceToFrontDispatcher", () => {
                     spaceUserId: "foo_3",
                 });
 
-                const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
-                const mockEmitInBatch2 = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch = vi.fn();
+                const mockEmitInBatch2 = vi.fn();
 
-                const mockEmitInBatch3 = vi.fn().mockImplementation((message: SubMessage) => {});
+                const mockEmitInBatch3 = vi.fn();
 
                 const mockSocket = mock<Socket>({
                     getUserData: vi.fn().mockReturnValue({
@@ -882,7 +882,7 @@ describe("SpaceToFrontDispatcher", () => {
                     }),
                 });
 
-                const mockForwardToBackFunction = vi.fn().mockImplementation((message: PusherToBackSpaceMessage) => {});
+                const mockForwardToBackFunction = vi.fn();
                 const mockForwarder = mock<SpaceToBackForwarder>({
                     forwardMessageToSpaceBack: mockForwardToBackFunction,
                 });
@@ -958,9 +958,9 @@ describe("SpaceToFrontDispatcher", () => {
                 spaceUserId: "foo_2",
             });
 
-            const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch = vi.fn();
 
-            const mockEmitInBatch2 = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
@@ -1041,9 +1041,9 @@ describe("SpaceToFrontDispatcher", () => {
                 spaceUserId: "foo_2",
             });
 
-            const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch = vi.fn();
 
-            const mockEmitInBatch2 = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
@@ -1106,9 +1106,9 @@ describe("SpaceToFrontDispatcher", () => {
                 spaceUserId: "foo_2",
             });
 
-            const mockEmitInBatch = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch = vi.fn();
 
-            const mockEmitInBatch2 = vi.fn().mockImplementation((message: SubMessage) => {});
+            const mockEmitInBatch2 = vi.fn();
 
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
