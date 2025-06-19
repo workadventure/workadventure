@@ -14,28 +14,13 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
-        console.log(
-            `LivekitCommunicationStrategy.addUser: Adding user ${user.name} (${
-                user.spaceUserId
-            }) with switchInProgress=${switchInProgress}, shouldJoinRoomImmediately=${!switchInProgress}`
-        );
-
         // First ensure the room exists before generating a token
         this.livekitService
             .createRoom(this.space.getSpaceName())
             .then(() => {
-                console.log(
-                    `LivekitCommunicationStrategy.addUser: Ensured room ${this.space.getSpaceName()} exists, generating token for user ${
-                        user.name
-                    }`
-                );
                 return this.livekitService.generateToken(this.space.getSpaceName(), user);
             })
             .then((token) => {
-                console.log(
-                    `LivekitCommunicationStrategy.addUser: Generated token for user ${user.name} (${user.spaceUserId}), token length: ${token.length}`
-                );
-
                 // Check if the user is still in the space before sending the invitation
                 const userStillInSpace = this.space.getAllUsers().some((u) => u.spaceUserId === user.spaceUserId);
                 if (!userStillInSpace) {
@@ -46,7 +31,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 }
 
                 const serverUrl = this.livekitService.getLivekitFrontendUrl();
-                console.log(`LivekitCommunicationStrategy.addUser: Using Livekit frontend URL: ${serverUrl}`);
 
                 this.space.dispatchPrivateEvent({
                     spaceName: this.space.getSpaceName(),
@@ -63,11 +47,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                         },
                     },
                 });
-                console.log(
-                    `LivekitCommunicationStrategy.addUser: Sent invitation to user ${user.name} (${
-                        user.spaceUserId
-                    }) with shouldJoinRoomImmediately=${!switchInProgress}`
-                );
             })
             .catch((error) => {
                 console.error(
@@ -104,14 +83,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     initialize(readyUsers: Set<string>): void {
         const users = this.space.getAllUsers().filter((user) => !readyUsers.has(user.spaceUserId));
-        console.log(
-            `LivekitCommunicationStrategy.initialize: Initializing Livekit with ${users.length} users, excluding ${readyUsers.size} ready users`
-        );
-        if (readyUsers.size > 0) {
-            console.log(`LivekitCommunicationStrategy.initialize: Ready users: ${Array.from(readyUsers).join(", ")}`);
-        }
         users.forEach((user) => {
-            console.log(`LivekitCommunicationStrategy.initialize: Adding user ${user.name} (${user.spaceUserId})`);
             this.addUser(user, false);
         });
     }

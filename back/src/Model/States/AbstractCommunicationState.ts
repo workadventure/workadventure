@@ -106,9 +106,6 @@ export abstract class CommunicationState implements ICommunicationState {
     handleUserAdded(user: SpaceUser): Promise<void> {
         this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
         const switchInProgress = this.isSwitching();
-        console.log(
-            `Adding user ${user.name} (${user.spaceUserId}) to ${this._currentCommunicationType} with switchInProgress=${switchInProgress}`
-        );
         this._currentStrategy.addUser(user, switchInProgress);
         return Promise.resolve();
     }
@@ -139,7 +136,6 @@ export abstract class CommunicationState implements ICommunicationState {
     protected notifyAllUsersToPrepareSwitchToNextState(): void {
         const users = this._space.getAllUsers();
         const usersToNotify = users.filter((user) => !this._readyUsers.has(user.spaceUserId));
-        console.log(">>>> userToNotify length ", usersToNotify.length);
         usersToNotify.forEach((user) => {
             this.dispatchSwitchEvent(user.spaceUserId, "prepareSwitchMessage", {
                 strategy: this._nextCommunicationType,

@@ -16,13 +16,6 @@ export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
 
-    // Utility function to create a delay
-    private delay(ms: number): Promise<void> {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        });
-    }
-
     constructor(private space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
         this.initialize();
     }
@@ -43,10 +36,7 @@ export class LivekitConnection {
                                     console.error("An error occurred in executeSwitchMessage", err);
                                     Sentry.captureException(err);
                                 })
-                                .finally(() => {
-                                    console.log(">>>> joinLivekitRoom");
-                                    console.timeEnd(">>>> joinLivekitRoom");
-                                });
+                                .finally(() => {});
                         } else {
                             this.space.emitPrivateMessage(
                                 {
@@ -79,120 +69,58 @@ export class LivekitConnection {
         );
     }
 
-    async joinRoom(retryCount = 3, retryDelay = 1000): Promise<void> {
+    async joinRoom(): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found, waiting for invitation message");
-
-            // If we're out of retries, throw the error
-            if (retryCount <= 0) {
-                Sentry.captureException(new Error("LivekitRoom not found after retries"));
-                throw new Error("LivekitRoom not found after retries");
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying joinRoom in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.joinRoom(retryCount - 1, retryDelay);
+            console.error("LivekitRoom not found");
+            throw new Error("LivekitRoom not found");
         }
 
         try {
             await this.livekitRoom.joinRoom();
-            console.log("Successfully joined Livekit room");
         } catch (err) {
             console.error("Error joining Livekit room:", err);
-
-            // If we're out of retries, rethrow the error
-            if (retryCount <= 0) {
-                Sentry.captureException(err);
-                throw err;
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying joinRoom in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.joinRoom(retryCount - 1, retryDelay);
+            Sentry.captureException(err);
+            throw err;
         }
     }
 
-    async dispatchSound(url: URL, retryCount = 3, retryDelay = 1000): Promise<void> {
+    async dispatchSound(url: URL): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found for dispatchSound, waiting for invitation message");
-
-            // If we're out of retries, throw the error
-            if (retryCount <= 0) {
-                Sentry.captureException(new Error("LivekitRoom not found for dispatchSound after retries"));
-                throw new Error("LivekitRoom not found for dispatchSound after retries");
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying dispatchSound in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.dispatchSound(url, retryCount - 1, retryDelay);
+            console.error("LivekitRoom not found for dispatchSound");
+            throw new Error("LivekitRoom not found for dispatchSound");
         }
 
         try {
             await this.livekitRoom.dispatchSound(url);
-            console.log("Successfully dispatched sound to Livekit room");
         } catch (err) {
             console.error("Error dispatching sound to Livekit room:", err);
-
-            // If we're out of retries, rethrow the error
-            if (retryCount <= 0) {
-                Sentry.captureException(err);
-                throw err;
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying dispatchSound in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.dispatchSound(url, retryCount - 1, retryDelay);
+            Sentry.captureException(err);
+            throw err;
         }
     }
 
-    async dispatchStream(mediaStream: MediaStream, retryCount = 3, retryDelay = 1000): Promise<void> {
+    async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found for dispatchStream, waiting for invitation message");
-
-            // If we're out of retries, throw the error
-            if (retryCount <= 0) {
-                Sentry.captureException(new Error("LivekitRoom not found for dispatchStream after retries"));
-                throw new Error("LivekitRoom not found for dispatchStream after retries");
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying dispatchStream in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.dispatchStream(mediaStream, retryCount - 1, retryDelay);
+            console.error("LivekitRoom not found for dispatchStream");
+            throw new Error("LivekitRoom not found for dispatchStream");
         }
 
         try {
             await this.livekitRoom.dispatchStream(mediaStream);
-            console.log("Successfully dispatched stream to Livekit room");
         } catch (err) {
             console.error("Error dispatching stream to Livekit room:", err);
-
-            // If we're out of retries, rethrow the error
-            if (retryCount <= 0) {
-                Sentry.captureException(err);
-                throw err;
-            }
-
-            // Wait for a bit and retry
-            console.log(`Retrying dispatchStream in ${retryDelay}ms (${retryCount} retries left)`);
-            await this.delay(retryDelay);
-            return this.dispatchStream(mediaStream, retryCount - 1, retryDelay);
+            Sentry.captureException(err);
+            throw err;
         }
     }
 
     destroy() {
         if (!this.livekitRoom) {
-            console.log("No LivekitRoom to destroy, skipping");
             return;
         }
 
         try {
             this.livekitRoom.destroy();
-            console.log("Successfully destroyed Livekit room");
         } catch (err) {
             console.error("Error destroying Livekit room:", err);
             Sentry.captureException(err);
