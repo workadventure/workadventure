@@ -10,8 +10,8 @@ import {
 import * as Sentry from "@sentry/node";
 import { asError } from "catch-unknown";
 import debug from "debug";
+import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { merge } from "rxjs";
 import { z } from "zod";
 import { Socket } from "../services/SocketManager";
 import { EventProcessor } from "./EventProcessor";
@@ -72,6 +72,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                         kickOffMessage: {
                             userId: message.message.kickOffMessage.userId,
                             spaceName: message.message.kickOffMessage.spaceName,
+                            //TODO : check if we need to keep the filterName  , normally it is not used
                             filterName: message.message.kickOffMessage.filterName,
                         },
                     });
@@ -111,7 +112,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     // This function is called when we received a message from the back
-    public addUser(spaceUser: SpaceUser) {
+    private addUser(spaceUser: SpaceUser) {
         const user: Partial<SpaceUserExtended> = spaceUser;
         user.lowercaseName = spaceUser.name.toLowerCase();
 
@@ -134,12 +135,10 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     // This function is called when we received a message from the back
-    public updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
+    private updateUser(spaceUser: PartialSpaceUser, updateMask: string[]) {
         const user = this._space.users.get(spaceUser.spaceUserId);
         if (!user) {
-            console.error("User not found in this space", spaceUser);
-            Sentry.captureException(new Error(`User not found in this space ${spaceUser.spaceUserId}`));
-            return;
+            throw new Error(`User not found in this space ${spaceUser.spaceUserId}`);
         }
         const updateValues = applyFieldMask(spaceUser, updateMask);
 
@@ -151,7 +150,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName: this._space.name,
+                    spaceName: this._space.localName,
                     user: SpaceUser.fromPartial(spaceUser),
                     updateMask,
                 },
@@ -161,7 +160,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     // This function is called when we received a message from the back
-    public removeUser(spaceUserId: string) {
+    private removeUser(spaceUserId: string) {
         const user = this._space.users.get(spaceUserId);
         if (user) {
             this._space.users.delete(spaceUserId);
@@ -171,19 +170,18 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 message: {
                     $case: "removeSpaceUserMessage",
                     removeSpaceUserMessage: {
-                        spaceName: this._space.name,
+                        spaceName: this._space.localName,
                         spaceUserId,
                     },
                 },
             };
             this.notifyAll(subMessage);
         } else {
-            console.error(`Space => ${this._space.name} : user not found ${spaceUserId}`);
-            Sentry.captureException(`Space => ${this._space.name} : user not found ${spaceUserId}`);
+            throw new Error(`User not found in this space ${spaceUserId}`);
         }
     }
 
-    public updateMetadata(metadata: { [key: string]: unknown }) {
+    private updateMetadata(metadata: { [key: string]: unknown }) {
         // Set all value of metadata in the space
         for (const [key, value] of Object.entries(metadata)) {
             this._space.metadata.set(key, value);
@@ -193,7 +191,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             message: {
                 $case: "updateSpaceMetadataMessage",
                 updateSpaceMetadataMessage: {
-                    spaceName: this._space.name,
+                    spaceName: this._space.localName,
                     metadata: JSON.stringify(metadata),
                 },
             },
@@ -201,7 +199,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         this.notifyAllMetadata(subMessage);
     }
 
-    public notifyAllMetadata(subMessage: SubMessage) {
+    private notifyAllMetadata(subMessage: SubMessage) {
         this._space._localConnectedUser.forEach((watcher) => {
             const socketData = watcher.getUserData();
             if (subMessage.message?.$case === "updateSpaceMetadataMessage") {
@@ -244,7 +242,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         this.notifyMe(watcher, subMessage);
     }
 
-    public sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
+    private sendPublicEvent(message: NonUndefinedFields<PublicEvent>) {
         const spaceEvent = noUndefined(message.spaceEvent);
 
         // FIXME: this should be unnecessary because of the noUndefined call above
@@ -277,7 +275,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         );
     }
 
-    public sendPrivateEvent(message: NonUndefinedFields<PrivateEvent>) {
+    private sendPrivateEvent(message: NonUndefinedFields<PrivateEvent>) {
         // [...this.clientWatchers.values()].forEach((watcher) => {
         //     const socketData = watcher.getUserData();
         //     if (socketData.userId === message.receiverUserId) {
