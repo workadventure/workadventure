@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-// import { mock } from "vitest-mock-extended";
+import { FilterType, PusherToBackSpaceMessage, SpaceUser, SpaceUser } from "@workadventure/messages";
+import { describe, expect, it, vi } from "vitest";
+import { EventProcessor } from "../../src/pusher/models/EventProcessor";
+import { Space } from "../../src/pusher/models/Space";
+import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
+import { Socket } from "../../src/pusher/services/SocketManager";
+import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import { mock } from "vitest-mock-extended";
 // import {
 //     AvailabilityStatus,
 //     FilterType,
@@ -108,4 +114,46 @@ describe("Space", () => {
     // Previously, the test developed by César was expecting "no delta" (because user is already sent, and delta return nothing)
     // But this does not seem logical and was probably testing a bug. Indeed, when adding a new filter, we send all the users matching the filter
     // even if another filter already exists.
+});
+
+describe("Space Integration tests", () => {
+    it("should add a user", async () => {
+
+        const callbackMap = new Map<string, Function>();
+
+        const backSpaceConnection = mock<BackSpaceConnection>({
+            write: vi.fn().mockImplementation((message: PusherToBackSpaceMessage)=>{
+                console.log("write", message);
+            }),
+            on: vi.fn().mockImplementation((event: string, callback: Function)=>{
+                callbackMap.set(event, callback);
+                return backSpaceConnection
+            })
+        });
+
+        const apiClientRepository = mock<ApiClientRepository>({
+            getIndex: vi.fn().mockResolvedValue(1),
+            getSpaceClient: vi.fn().mockResolvedValue({
+                watchSpace: vi.fn().mockReturnValue(backSpaceConnection),
+            }),
+        });
+        
+        const space = new Space("test", "localTest", new EventProcessor(), FilterType.ALL_USERS, apiClientRepository);
+
+        const client = mock<Socket>({
+            getUserData: vi.fn().mockReturnValue({
+                spaceUser: SpaceUser.fromPartial({
+                    spaceUserId: "foo_1",
+                }),
+            }),
+        });
+        
+        space.initSpace();
+        console.log("initSpace done");
+        space.forwarder.registerUser(client);
+
+        console.log(callbackMap);
+
+        //TODO : verifier la liste des localConnectedUser / qu'on recoit bien un message et qu'on l'a dans les users
+    });
 });
