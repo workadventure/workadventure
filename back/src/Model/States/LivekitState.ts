@@ -4,7 +4,7 @@ import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunication
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
-import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST, LIVEKIT_WS_URL } from "../../Enum/EnvironmentVariable";
+import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
 import { LiveKitService } from "../Services/LivekitService";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
@@ -20,15 +20,13 @@ export class LivekitState extends CommunicationState {
             livekitApiKey: LIVEKIT_API_KEY ?? "",
             livekitApiSecret: LIVEKIT_API_SECRET ?? "",
             livekitHost: LIVEKIT_HOST ?? "",
-            livekitWSurl: LIVEKIT_WS_URL ?? "",
         }
     ) {
         //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
         console.log(
             _livekitServerCredentials.livekitHost,
             _livekitServerCredentials.livekitApiKey,
-            _livekitServerCredentials.livekitApiSecret,
-            _livekitServerCredentials.livekitWSurl
+            _livekitServerCredentials.livekitApiSecret
         );
         super(
             _space,
@@ -39,7 +37,7 @@ export class LivekitState extends CommunicationState {
                     _livekitServerCredentials.livekitHost,
                     _livekitServerCredentials.livekitApiKey,
                     _livekitServerCredentials.livekitApiSecret,
-                    _livekitServerCredentials.livekitWSurl
+                    _livekitServerCredentials.livekitHost.replace("http", "ws")
                 )
             )
         );
