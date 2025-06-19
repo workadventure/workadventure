@@ -87,7 +87,6 @@ export class Space implements SpaceInterface {
         this.spaceStreamToBackPromise = (async () => {
             const apiSpaceClient = await this._apiClientRepository.getSpaceClient(this.name);
             const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
-            console.log("initSpace", spaceStreamToBack);
             spaceStreamToBack
                 .on("data", (message: BackToPusherSpaceMessage) => {
                     if (message.message && message.message.$case === "pingMessage") {
