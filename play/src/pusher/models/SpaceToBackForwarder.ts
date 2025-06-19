@@ -49,14 +49,24 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
                         spaceName: this._space.name,
-                        metadata: JSON.stringify(Object.fromEntries(this._space.metadata.entries())),
+                        metadata: JSON.stringify(this._space.metadata),
                     },
                 },
             };
             this._space.dispatcher.notifyMe(client, subMessage);
         }
     }
+
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void {
+        const spaceUserId = spaceUser.spaceUserId;
+        if (!spaceUserId) {
+            throw new Error("spaceUserId not found");
+        }
+        const user = this._space._localConnectedUser.get(spaceUserId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceUserMessage",
             updateSpaceUserMessage: {
@@ -66,12 +76,17 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             },
         });
     }
+
     unregisterUser(socket: Socket): void {
         const userData = socket.getUserData();
 
         const spaceUserId = userData.spaceUser.spaceUserId;
         if (!spaceUserId) {
             throw new Error("spaceUserId not found");
+        }
+
+        if (!this._space._localConnectedUser.has(spaceUserId)) {
+            throw new Error("User not found in pusher local connected user");
         }
 
         this._space._localConnectedUser.delete(spaceUserId);
@@ -103,7 +118,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     }
 
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void {
-        console.log("forwardMessageToSpaceBack");
         if (!this._space.spaceStreamToBackPromise) {
             throw new Error("Space stream to back not found");
         }
