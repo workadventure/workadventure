@@ -12,6 +12,7 @@ export interface SpaceToBackForwarderInterface {
     unregisterUser(socket: Socket): void;
     updateMetadata(metadata: { [key: string]: unknown }): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
+    syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
 }
 
 export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
@@ -117,5 +118,15 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 console.error("Error while forwarding message to space back", error);
                 Sentry.captureException(error);
             });
+    }
+
+    syncLocalUsersWithServer(localUsers: SpaceUser[]): void {
+        this.forwardMessageToSpaceBack({
+            $case: "syncSpaceUsersMessage",
+            syncSpaceUsersMessage: {
+                spaceName: this._space.name,
+                users: localUsers,
+            },
+        });
     }
 }
