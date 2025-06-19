@@ -2,12 +2,13 @@
     import { onMount } from 'svelte';
     import { gameManager } from '../../Phaser/Game/GameManager';
     import { connectionManager } from '../../Connection/ConnectionManager';
-    import { selectCharacterCustomizeSceneVisibleStore } from '../../Stores/SelectCharacterStore';
+    import { selectCharacterCustomizeSceneVisibleStore, selectCharacterSceneVisibleStore } from '../../Stores/SelectCharacterStore';
     import { localUserStore } from '../../Connection/LocalUserStore';
     import { ABSOLUTE_PUSHER_URL } from '../../Enum/ComputedConst';
     import { areCharacterTexturesValid } from '../../Connection/LocalUserUtils';
     import { analyticsClient } from '../../Administration/AnalyticsClient';
     import WokaPreview from './WokaPreview.svelte';
+    import {SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
 
     export let game: any;
 
@@ -118,7 +119,6 @@
     function selectTexture(bodyPart: WokaBodyPart, textureId: string) {
         selectedTextures[bodyPart] = textureId;
         selectedTextures = { ...selectedTextures };
-        console.log(`Selected texture for ${bodyPart}:`, textureId, selectedTextures);
     }
 
     // Randomiser l'apparence
@@ -154,6 +154,9 @@
             // Fermer la scène de customisation
             selectCharacterCustomizeSceneVisibleStore.set(false);
 
+            //resume game
+            gameManager.tryResumingGame(SelectCharacterSceneName)
+
         } catch (err) {
             console.error('Error saving textures:', err);
             error = 'Failed to save character customization';
@@ -163,11 +166,17 @@
     // Retourner à la scène précédente
     function goBack() {
         selectCharacterCustomizeSceneVisibleStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
     }
 
-    // Obtenir les textures disponibles pour une partie du corps
     function getAvailableTextures(bodyPart: WokaBodyPart): WokaTexture[] {
-        return wokaData?.[bodyPart]?.collections?.[0]?.textures || [];
+        const textures = wokaData?.[bodyPart]?.collections?.[0]?.textures || [];
+        // If no body texture is selected, return the first texture by default
+        if (bodyPart === 'body' && !textures.map((texture) => texture.id).includes(selectedTextures[bodyPart])) {
+            selectTexture('body', textures[0].id);
+        }
+
+        return textures
     }
 
     // Obtenir l'URL complète d'une texture
@@ -183,10 +192,11 @@
 
     onMount(() => {
         loadWokaData();
+        selectedBodyPart = bodyPartOrder[0];
     });
 </script>
 
-<div class="bg-contrast/80 backdrop-blur w-screen h-screen absolute flex items-center justify-center">
+<div class="bg-contrast w-screen h-screen absolute flex items-center justify-center">
     <div class="rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
@@ -254,21 +264,29 @@
                         <h3 class="text-lg font-semibold mb-4 capitalize">
                             {selectedBodyPart} Options
                         </h3>
-                        <div class="overflow-x-hidden w-full">
-                            <div class="flex flex-row w-full overflow-x-scroll gap-3">
+                        <div class="overflow-x-hidden w-full scroll-mask flex flex-row">
+                            <div class="flex flex-row w-full overflow-x-scroll no-scrollbar gap-3">
+                                <div class="w-[20px] flex-shrink-0"></div>
                                 {#each getAvailableTextures(selectedBodyPart) as texture}
                                     <button
-                                        class="p-2 rounded border-2 transition-colors {selectedTextures[selectedBodyPart] === texture.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}"
+                                        class="rounded p-0 {selectedTextures[selectedBodyPart] === texture.id ? 'bg-secondary' : 'bg-white/10 hover:bg-white/20'}"
                                         on:click={() => selectTexture(selectedBodyPart, texture.id)}
                                     >
-                                        <div class="p-2 bg-white/10 rounded mb-2 flex items-center justify-center">
-                                            <div
+                                        <div class="p-2 bg-white/10 rounded flex items-center justify-center">
+                                            {#if texture.url.includes('empty.png')}
+                                                <div class="w-[64px] h-[64px] flex items-center justify-center">
+                                                    <svg  xmlns="http://www.w3.org/2000/svg"  width="32"  height="32"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 9l6 6" /></svg>
+                                                </div>
+                                            {:else}
+                                                <div
                                                 class="w-[64px] h-[64px] bg-no-repeat"
                                                 style="background-image: url('{getTextureUrl(texture.url)}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0 0; image-rendering: pixelated;"
-                                            ></div>
+                                                ></div>
+                                            {/if}
                                         </div>
                                     </button>
                                 {/each}
+                                <div class="w-[20px] flex-shrink-0"></div>
                             </div>
                         </div>
                     </div>
@@ -277,3 +295,17 @@
         {/if}
     </div>
 </div>
+
+<style>
+    .scroll-mask {
+        mask-image: linear-gradient(to right, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
+    }
+    .no-scrollbar {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE et Edge */
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+</style>
