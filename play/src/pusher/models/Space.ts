@@ -109,6 +109,7 @@ export class Space implements SpaceInterface {
                             spaceStreamToBack.end();
                             this.spaceStreamToBackPromise = undefined;
                             this.initSpace();
+                            this.sendLocalUsersToBack();
                         }, 1000 * 60);
 
                         return;
@@ -120,10 +121,8 @@ export class Space implements SpaceInterface {
                     if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                     //this.cleanup();
                     this.spaceStreamToBackPromise = undefined;
-                    this.initSpace().catch((err) => {
-                        console.error("Error while initializing space", err);
-                        Sentry.captureException(err);
-                    });
+                    this.initSpace();
+                    this.sendLocalUsersToBack();
                 })
                 .on("error", (err: Error) => {
                     console.error(
@@ -149,6 +148,13 @@ export class Space implements SpaceInterface {
 
             return spaceStreamToBack;
         })();
+    }
+
+    private sendLocalUsersToBack() {
+        const localUsers = Array.from(this._localConnectedUser.values()).map((socket) => {
+            return socket.getUserData().spaceUser;
+        });
+        this.forwarder.syncLocalUsersWithServer(localUsers);
     }
 
     public handleWatch(watcher: Socket) {

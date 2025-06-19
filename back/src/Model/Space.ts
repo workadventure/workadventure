@@ -287,4 +287,8 @@ export class Space implements CustomJsonReplacerInterface {
             }
         }
     }
+
+    public syncUsersFromPusher(watcher: SpacesWatcher, users: SpaceUser[]) {
+        this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
+    }
 }
