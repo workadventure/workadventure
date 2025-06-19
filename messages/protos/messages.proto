@@ -1246,6 +1246,7 @@ message PusherToBackSpaceMessage{
     KickOffMessage kickOffMessage = 8;
     PublicEvent publicEvent = 15;
     PrivateEvent privateEvent = 16;
+    SyncSpaceUsersMessage syncSpaceUsersMessage = 17;
   }
 }
 
@@ -1361,6 +1362,15 @@ message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
 }
+
+/**
+ * Message sent by the pusher to the back to sync the space users with the server after a reconnection
+ */
+message SyncSpaceUsersMessage{
+  string spaceName = 1;
+  repeated SpaceUser users = 2;
+}
+
 /**
  * The space we were listening to has been destroyed for some awful reason (connection to back was lost)
  */

@@ -69,6 +69,10 @@ const spaceManager = {
                         socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
+                    case "syncSpaceUsersMessage": {
+                        socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

@@ -51,6 +51,7 @@ import {
     JoinSpaceMessage,
     ExternalModuleMessage,
     FilterType,
+    SyncSpaceUsersMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1492,6 +1493,17 @@ export class SocketManager {
                 },
             },
         });
+    }
+
+    handleSyncSpaceUsersMessage(pusher: SpacesWatcher, syncSpaceUsersMessage: SyncSpaceUsersMessage) {
+        const { spaceName, users } = syncSpaceUsersMessage;
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            console.error("Could not find space to sync users in SyncSpaceUsersMessage");
+            Sentry.captureException("Could not find space to sync users in SyncSpaceUsersMessage");
+            return;
+        }
+        space.syncUsersFromPusher(pusher, users);
     }
 
     handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
