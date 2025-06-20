@@ -30,6 +30,7 @@ import type { Popup } from "./front/Api/Iframe/Ui/Popup";
 import type { Sound } from "./front/Api/Iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
 import camera from "./front/Api/Iframe/camera";
+import spaces from "./front/Api/Iframe/spaces";
 import mapEditor from "./front/Api/Iframe/mapEditor";
 export type {
     CreateUIWebsiteEvent,
@@ -111,6 +112,7 @@ const wa = {
     player,
     players,
     camera,
+    spaces,
     state: globalState,
     event,
     mapEditor,

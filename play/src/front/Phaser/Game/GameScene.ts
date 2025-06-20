@@ -143,6 +143,7 @@ import {
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
+import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -353,6 +354,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
@@ -1122,6 +1124,7 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
+        this.spaceScriptingBridgeService?.destroy();
         this._spaceRegistry?.destroy();
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
@@ -1605,6 +1608,7 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
+                this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
                 this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS);
                 this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
