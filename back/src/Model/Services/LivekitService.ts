@@ -11,6 +11,9 @@ import {
     EncodedFileType,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
+import Debug from "debug";
+
+const debug = Debug("LivekitService");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
