@@ -53,7 +53,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
                 console.error(message);
-                throw new Error("addSpaceUserMessage is missing a user or a filterName");
+                throw new Error("addSpaceUserMessage is missing a user");
             }
 
             this.spaces
