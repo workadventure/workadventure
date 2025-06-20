@@ -73,7 +73,7 @@
     </div>
 {:else if $selectCharacterCustomizeSceneVisibleStore}
     <div>
-        <WokaCustomizeScene {game} />
+        <WokaCustomizeScene />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>

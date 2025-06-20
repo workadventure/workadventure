@@ -15,39 +15,8 @@
     import HangerIcon from "../Icons/HangerIcon.svelte";
     import HatIcon from "../Icons/HatIcon.svelte";
     import SwordIcon from "../Icons/SwordIcon.svelte";
+    import type { WokaBodyPart, WokaData, WokaTexture } from './WokaTypes';
 
-    export let game: any;
-
-    // Types pour les couches Woka
-    type WokaBodyPart = 'body' | 'eyes' | 'hair' | 'clothes' | 'hat' | 'accessory';
-    
-    interface WokaTexture {
-        id: string;
-        name: string;
-        url: string;
-        position: number;
-    }
-
-    interface WokaCollection {
-        name: string;
-        position: number;
-        textures: WokaTexture[];
-    }
-
-    interface WokaLayer {
-        collections: WokaCollection[];
-    }
-
-    interface WokaData {
-        body: WokaLayer;
-        eyes: WokaLayer;
-        hair: WokaLayer;
-        clothes: WokaLayer;
-        hat: WokaLayer;
-        accessory: WokaLayer;
-    }
-
-    // État du composant
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = 'body';
     let selectedTextures: Record<WokaBodyPart, string> = {
@@ -211,12 +180,12 @@
             case 'accessory':
                 return SwordIcon;
             default:
-                return '';
+                return null;
         }
     }
 
-    onMount(() => {
-        loadWokaData();
+    onMount(async () => {
+        await loadWokaData();
         selectedBodyPart = bodyPartOrder[0];
     });
 </script>
@@ -270,18 +239,15 @@
                     </div>
                 </div>
 
-                <!-- Sélection des parties du corps -->
                 <div class="lg:col-span-2">
-                    <!-- Onglets des parties du corps -->
                     <div class="flex flex-wrap gap-2 mb-4">
-                        {#each bodyPartOrder as bodyPart}
+                        {#each bodyPartOrder as bodyPart (bodyPart)}
                             <button 
                                 class="px-3 py-2 rounded capitalize flex flex-row items-center justify-center gap-2 {selectedBodyPart === bodyPart ? 'bg-secondary text-white' : 'bg-white/10 text-white hover:bg-white/20'}"
                                 on:click={() => selectedBodyPart = bodyPart}
                             >
                                 <svelte:component
                                         this={getBodyPartIcon(bodyPart)}
-                                        class="inline-block"
                                         height="h-5"
                                         width="w-5"
                                         fillColor="fill-white"
@@ -299,7 +265,7 @@
                         <div class="overflow-x-hidden w-full scroll-mask flex flex-row">
                             <div class="flex flex-row w-full overflow-x-scroll no-scrollbar gap-3">
                                 <div class="w-[20px] flex-shrink-0"></div>
-                                {#each getAvailableTextures(selectedBodyPart) as texture}
+                                {#each getAvailableTextures(selectedBodyPart) as texture (texture.id)}
                                     <button
                                         class="rounded p-0 {selectedTextures[selectedBodyPart] === texture.id ? 'bg-secondary' : 'bg-white/10 hover:bg-white/20'}"
                                         on:click={() => selectTexture(selectedBodyPart, texture.id)}
