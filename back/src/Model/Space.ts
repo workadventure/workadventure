@@ -291,4 +291,14 @@ export class Space implements CustomJsonReplacerInterface {
     public syncUsersFromPusher(watcher: SpacesWatcher, users: SpaceUser[]) {
         this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
     }
+
+    /*
+     * This function is used to shutdown the pusher connection of the space. for testing purpose.
+     */
+    public closeAllWatcherConnections() {
+        for (const watcher of this.users.keys()) {
+            watcher.end();
+            this.users.delete(watcher);
+        }
+    }
 }

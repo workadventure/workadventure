@@ -5,7 +5,6 @@ import debug from "debug";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
-
 export class DebugController {
     private debugTimeout: NodeJS.Timeout | undefined;
 
@@ -13,6 +12,7 @@ export class DebugController {
         this.getDump();
         this.enableDebug();
         this.disableDebug();
+        this.closeSpaceConnection();
     }
 
     getDump() {
@@ -105,6 +105,36 @@ export class DebugController {
             }
 
             res.writeStatus("200 OK").end("Debug disabled");
+        });
+    }
+
+    closeSpaceConnection() {
+        this.App.post("/debug/close-space-connection", (res: HttpResponse, req: HttpRequest): void => {
+            const query = parse(req.getQuery());
+
+            if (!ADMIN_API_TOKEN) {
+                res.writeStatus("401 Unauthorized").end("No token configured!");
+                return;
+            }
+
+            if (query.token !== ADMIN_API_TOKEN) {
+                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
+                return;
+            }
+
+            if (!query.spaceName) {
+                res.writeStatus("400 Bad Request").end("Space name is required!");
+                return;
+            }
+
+            try {
+                socketManager.closeSpaceConnection(query.spaceName.toString());
+            } catch {
+                res.writeStatus("500 Internal Server Error").end("Error closing space connection");
+                return;
+            }
+
+            res.writeStatus("200 OK").end("Space connection closed");
         });
     }
 }
