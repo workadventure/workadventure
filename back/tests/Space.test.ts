@@ -1,156 +1,890 @@
-import { describe, expect, it } from "vitest";
-import { BackToPusherSpaceMessage, FilterType, SpaceUser } from "@workadventure/messages";
+import { describe, expect, it, vi } from "vitest";
+import { BackToPusherSpaceMessage, FilterType, PrivateEvent, PublicEvent, SpaceUser } from "@workadventure/messages";
 import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { SpaceSocket } from "../src/SpaceManager";
 
-describe("Space", () => {
-    const space = new Space("test", FilterType.ALL_USERS);
-    let eventsWatcher1: BackToPusherSpaceMessage[] = [];
-    const spaceSocketToPusher1 = mock<SpaceSocket>({
-        write(chunk: BackToPusherSpaceMessage): boolean {
-            eventsWatcher1.push(chunk);
-            return true;
-        },
-    });
-    let eventsWatcher2: BackToPusherSpaceMessage[] = [];
-    const spaceSocketToPusher2 = mock<SpaceSocket>({
-        write(chunk: BackToPusherSpaceMessage): boolean {
-            eventsWatcher2.push(chunk);
-            return true;
-        },
-    });
-    let eventsWatcher3: BackToPusherSpaceMessage[] = [];
-    const spaceSocketToPusher3 = mock<SpaceSocket>({
-        write(chunk: BackToPusherSpaceMessage): boolean {
-            eventsWatcher3.push(chunk);
-            return true;
-        },
-    });
+describe("Space with filter", () => {
+    describe("addWatcher", () => {
+        it("should send all users to the new watcher", () => {
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: () => true,
+            });
 
-    let watcher1: SpacesWatcher;
+            const space = new Space("test", FilterType.ALL_USERS);
 
-    it("should return true because Space is empty", () => {
-        expect(space.canBeDeleted()).toBe(true);
-    });
-    it("should emit event ONLY to other watcher on addUser", () => {
-        eventsWatcher1 = [];
-        const watcher1_ = new SpacesWatcher("uuid-watcher-1", spaceSocketToPusher1);
-        watcher1 = watcher1_;
-        space.addWatcher(watcher1_);
+            const spaceUser1: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+            const spaceUser2: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_2",
+                uuid: "uuid-test2",
+            });
 
-        eventsWatcher2 = [];
-        const watcher2 = new SpacesWatcher("uuid-watcher-2", spaceSocketToPusher2);
-        space.addWatcher(watcher2);
+            const spaceUser3: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_3",
+                uuid: "uuid-test3",
+            });
 
-        const spaceUser: SpaceUser = SpaceUser.fromPartial({
-            spaceUserId: "foo_1",
-            uuid: "uuid-test",
-            name: "test",
-            playUri: "test",
-            color: "#000000",
-            roomName: "test",
-            isLogged: false,
-            availabilityStatus: 0,
-            cameraState: false,
-            microphoneState: false,
-            megaphoneState: false,
-            screenSharingState: false,
+            //TODO : instead of using the private property, we could use dependency injection to set the users
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser1],
+                    ["foo_2", spaceUser2],
+                    ["foo_3", spaceUser3],
+                ])
+            );
+
+            const writeFunctionMock = vi.fn();
+
+            const watcherToAdd = mock<SpacesWatcher>({
+                id: "uuid-watcher-to-add",
+                write: writeFunctionMock,
+            });
+            space.addWatcher(watcherToAdd);
+
+            expect(writeFunctionMock).toHaveBeenCalledTimes(4);
+
+            expect(writeFunctionMock).toHaveBeenNthCalledWith(
+                1,
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: spaceUser1,
+                        },
+                    },
+                })
+            );
+
+            expect(writeFunctionMock).toHaveBeenNthCalledWith(
+                2,
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: spaceUser2,
+                        },
+                    },
+                })
+            );
+
+            expect(writeFunctionMock).toHaveBeenNthCalledWith(
+                3,
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: spaceUser3,
+                        },
+                    },
+                })
+            );
+
+            expect(writeFunctionMock).toHaveBeenNthCalledWith(
+                4,
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({}),
+                        },
+                    },
+                })
+            );
         });
-        // Add user to space from watcher1
-        space.addUser(watcher1, spaceUser);
 
-        // Only watcher2 should have received the event
-        expect(eventsWatcher1.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
-        expect(eventsWatcher2.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
-
-        space.removeWatcher(watcher2);
+        it.skip("should throw error if watcher is already added ???", () => {
+            expect(true).toBeFalsy();
+        });
     });
-    it("should emit addUserEvent to new watcher", () => {
-        eventsWatcher3 = [];
-        const watcher = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
-        space.addWatcher(watcher);
+    describe("addUser", () => {
+        it("should send user to the watcher if result of filter is true", () => {
+            const space = new Space("test", FilterType.ALL_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
 
-        // should have received the addUser event
-        expect(eventsWatcher3.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
 
-        space.removeWatcher(watcher);
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.addUser(watcher, spaceUser);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: spaceUser,
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: spaceUser,
+                        },
+                    },
+                })
+            );
+        });
+        it("should not send user to the watcher if result of filter is false", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.addUser(watcher, spaceUser);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(0);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
+        });
+        it.skip("should send remove user event if a error occurs ???", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn().mockImplementation(() => {
+                throw new Error("test");
+            });
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.addUser(watcher, spaceUser);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
+        });
     });
-    it("should emit updateUserEvent to other watchers", () => {
-        eventsWatcher3 = [];
-        const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
-        space.addWatcher(watcher3);
 
-        const spaceUser: SpaceUser = SpaceUser.fromPartial({
-            spaceUserId: "foo_1",
-            uuid: "uuid-test",
-            name: "test2",
-            playUri: "test2",
-            color: "#FFFFFF",
-            roomName: "test2",
-            isLogged: true,
-            availabilityStatus: 1,
-            cameraState: true,
-            microphoneState: true,
-            megaphoneState: true,
-            screenSharingState: true,
-            visitCardUrl: "test2",
+    describe("updateUser", () => {
+        it("should send add user message when user is updated and the filter result becomes true and the user did not previously match the filter", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateUser(
+                watcher,
+                {
+                    ...spaceUser,
+                    megaphoneState: true,
+                },
+                ["megaphoneState"]
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: {
+                                ...spaceUser,
+                                megaphoneState: true,
+                            },
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: {
+                                ...spaceUser,
+                                megaphoneState: true,
+                            },
+                        },
+                    },
+                })
+            );
+        });
+        it("should send update user message when user is updated and the filter result remains true and the user already matched the filter", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: true,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateUser(
+                watcher,
+                {
+                    ...spaceUser,
+                    megaphoneState: true,
+                    name: "test2",
+                    cameraState: true,
+                },
+                ["megaphoneState", "name", "cameraState"]
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: {
+                            spaceName: "test",
+                            user: {
+                                ...spaceUser,
+                                megaphoneState: true,
+                                name: "test2",
+                                cameraState: true,
+                            },
+                            updateMask: ["megaphoneState", "name", "cameraState"],
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: {
+                            spaceName: "test",
+                            user: {
+                                ...spaceUser,
+                                megaphoneState: true,
+                                name: "test2",
+                                cameraState: true,
+                            },
+                            updateMask: ["megaphoneState", "name", "cameraState"],
+                        },
+                    },
+                })
+            );
+        });
+        it("should send delete user message when user is updated and the filter result becomes false and the user previously matched the filter", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: true,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateUser(
+                watcher,
+                {
+                    ...spaceUser,
+                    megaphoneState: false,
+                },
+                ["megaphoneState"]
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+        });
+        it("should not send anything when user is updated and the filter result remains false and the user did not previously match the filter", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateUser(
+                watcher,
+                {
+                    ...spaceUser,
+                    megaphoneState: false,
+                },
+                ["megaphoneState"]
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(0);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
         });
 
-        space.updateUser(watcher1, spaceUser, [
-            "uuid",
-            "name",
-            "playUri",
-            "color",
-            "roomName",
-            "isLogged",
-            "availabilityStatus",
-            "cameraState",
-            "microphoneState",
-            "megaphoneState",
-            "screenSharingState",
-            "visitCardUrl",
-        ]);
+        it("should not send anything when user is not found on watcher list", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
 
-        // should have received the addUser event
-        expect(eventsWatcher3.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
-        const message = eventsWatcher3.find((message) => message.message?.$case === "updateSpaceUserMessage");
-        expect(message).toBeDefined();
-        const updateSpaceUserMessage = message?.message;
-        expect(updateSpaceUserMessage).toBeDefined();
-        if (message?.message?.$case === "updateSpaceUserMessage") {
-            const user = message.message.updateSpaceUserMessage.user;
-            expect(user?.name).toBe("test2");
-            expect(user?.playUri).toBe("test2");
-            expect(user?.color).toBe("#FFFFFF");
-            expect(user?.roomName).toBe("test2");
-            expect(user?.isLogged).toBe(true);
-            expect(user?.availabilityStatus).toBe(1);
-            expect(user?.cameraState).toBe(true);
-            expect(user?.microphoneState).toBe(true);
-            expect(user?.megaphoneState).toBe(true);
-            expect(user?.screenSharingState).toBe(true);
-            expect(user?.visitCardUrl).toBe("test2");
-        }
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
 
-        space.removeWatcher(watcher3);
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>()
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateUser(
+                watcher,
+                {
+                    ...spaceUser,
+                    megaphoneState: false,
+                },
+                ["megaphoneState"]
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(0);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
+        });
     });
-    it("should emit removeUserEvent to other watchers", () => {
-        eventsWatcher3 = [];
-        const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
-        space.addWatcher(watcher3);
 
-        space.removeUser(watcher1, "foo_1");
+    describe("removeUser", () => {
+        it("should send remove user message to all watchers except the one who removed the user", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
 
-        // should return false because Space is not empty
-        expect(space.canBeDeleted()).toBe(false);
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
 
-        // should have received the removeUser event
-        expect(eventsWatcher3.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
-        space.removeWatcher(watcher3);
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+
+            space.removeUser(watcher, "foo_1");
+
+            // watcher1 should not have received the event because it no longer has any users in its list
+            expect(mockWriteFunction).toHaveBeenCalledTimes(0);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+        });
+
+        it("should send remove user message to all watchers ", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser],
+                    ["foo_2", spaceUser],
+                ])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+
+            space.removeUser(watcher, "foo_1");
+
+            // watcher1 should not have received the event because it no longer has any users in its list
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+        });
     });
-    it("should return true because Space is empty at the end (watcher1, watcher2 and watcher3 as removed)", () => {
-        expect(space.canBeDeleted()).toBe(true);
+
+    describe("updateMetadata", () => {
+        it("should send update metadata message to all watchers", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateMetadata(watcher, {
+                foo: "bar",
+            });
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                foo: "bar",
+                            }),
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                foo: "bar",
+                            }),
+                        },
+                    },
+                })
+            );
+        });
+        it("should send update metadata message to all watchers", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.updateMetadata(watcher, {});
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({}),
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({}),
+                        },
+                    },
+                })
+            );
+        });
+    });
+
+    describe("dispatchPublicEvent", () => {
+        it("should send public event to all watchers", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.dispatchPublicEvent(
+                PublicEvent.fromPartial({
+                    spaceName: "test",
+                })
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "publicEvent",
+                        publicEvent: {
+                            spaceName: "test",
+                        },
+                    },
+                })
+            );
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "publicEvent",
+                        publicEvent: {
+                            spaceName: "test",
+                        },
+                    },
+                })
+            );
+        });
+    });
+
+    describe("dispatchPrivateEvent", () => {
+        it("should send private event to the watcher that contains the user", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>()
+            );
+
+            space.dispatchPrivateEvent(
+                PrivateEvent.fromPartial({
+                    spaceName: "test",
+                    receiverUserId: "foo_1",
+                })
+            );
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
+
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "privateEvent",
+                        privateEvent: {
+                            spaceName: "test",
+                            receiverUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+        });
+    });
+
+    describe("canBeDeleted", () => {
+        it("should return true if the space has no users", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            expect(space.canBeDeleted()).toBe(true);
+        });
+        it("should return false if the space has users", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([])
+            );
+            expect(space.canBeDeleted()).toBe(false);
+        });
     });
 });
