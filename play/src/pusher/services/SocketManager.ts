@@ -358,7 +358,6 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Space filter type mismatch");
         }
 
-        //TODO : voir si c'est le role du forwarder de rgister ou 2 fonctions distinctes ??
         space.forwarder.registerUser(client);
         if (socketData.spaces.has(spaceName)) {
             console.error(`User ${socketData.name} is trying to join a space he is already in.`);
