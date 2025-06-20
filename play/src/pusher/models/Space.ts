@@ -234,11 +234,3 @@ export class Space implements SpaceInterface {
         return this._filterType;
     }
 }
-
-/*
-TODO : 
-    - le space ne gere que la connexion au back 
-    - test unitaire sur les 2 classes 
-    - on peut faire un test unitaire sur l'event "end" en mockant la connexion le on devient juste une map ou on ajoute les callback bien on déclenche le callback + expect 
-    - revoir le coté back et voir si on peut faire un test unitaire sur le back 
-*/
