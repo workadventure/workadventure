@@ -109,15 +109,6 @@ export class Space implements SpaceInterface {
         });
     }
 
-    // TODO: there is no way to cleanup a space filter (this.filters.delete is never called).
-    // This is mildly an issue because it is unlikely we will need to create many filters (we have only 2 so far)
-    /*stopWatching(spaceFilter: SpaceFilterInterface): void {
-        const filterName = spaceFilter.getName();
-        const filter = this.filters.get(filterName);
-        if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
-        this.filters.delete(filterName);
-    }*/
-
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
     }
