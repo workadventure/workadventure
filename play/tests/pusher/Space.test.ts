@@ -11,6 +11,12 @@ import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForward
 
 const flushPromises = () => new Promise(setImmediate);
 
+vi.mock("../../../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        API_URL: "http://localhost:3000",
+    };
+});
+
 //TODO : see if there are not too many repetitions in the tests
 
 describe("Space", () => {
