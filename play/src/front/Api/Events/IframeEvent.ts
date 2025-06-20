@@ -732,7 +732,7 @@ export const iframeQueryMapTypeGuards = {
 };
 
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;
-type UnknownToVoid<T> = undefined extends T ? void : T;
+export type UnknownToVoid<T> = undefined extends T ? void : T;
 
 export type IframeQueryMap = {
     [key in keyof IframeQueryMapTypeGuardsType]: {
