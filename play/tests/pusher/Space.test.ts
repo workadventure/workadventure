@@ -11,7 +11,7 @@ import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForward
 
 const flushPromises = () => new Promise(setImmediate);
 
-vi.mock("../../../../Enum/EnvironmentVariable.ts", () => {
+vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
     return {
         API_URL: "http://localhost:3000",
     };
