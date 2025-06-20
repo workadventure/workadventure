@@ -9,6 +9,12 @@
     import { analyticsClient } from '../../Administration/AnalyticsClient';
     import WokaPreview from './WokaPreview.svelte';
     import {SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
+    import BodyIcon from "../Icons/BodyIcon.svelte";
+    import EyesIcon from "../Icons/EyesIcon.svelte";
+    import HairIcon from "../Icons/HairIcon.svelte";
+    import HangerIcon from "../Icons/HangerIcon.svelte";
+    import HatIcon from "../Icons/HatIcon.svelte";
+    import SwordIcon from "../Icons/SwordIcon.svelte";
 
     export let game: any;
 
@@ -190,6 +196,25 @@
         return `${ABSOLUTE_PUSHER_URL}/${relativeUrl}`;
     }
 
+    function getBodyPartIcon(bodyPart: WokaBodyPart) {
+        switch (bodyPart) {
+            case 'body':
+                return BodyIcon;
+            case 'eyes':
+                return EyesIcon;
+            case 'hair':
+                return HairIcon;
+            case 'clothes':
+                return HangerIcon;
+            case 'hat':
+                return HatIcon;
+            case 'accessory':
+                return SwordIcon;
+            default:
+                return '';
+        }
+    }
+
     onMount(() => {
         loadWokaData();
         selectedBodyPart = bodyPartOrder[0];
@@ -251,9 +276,16 @@
                     <div class="flex flex-wrap gap-2 mb-4">
                         {#each bodyPartOrder as bodyPart}
                             <button 
-                                class="px-3 py-2 rounded capitalize {selectedBodyPart === bodyPart ? 'bg-secondary text-white' : 'bg-white/10 text-white hover:bg-white/20'}"
+                                class="px-3 py-2 rounded capitalize flex flex-row items-center justify-center gap-2 {selectedBodyPart === bodyPart ? 'bg-secondary text-white' : 'bg-white/10 text-white hover:bg-white/20'}"
                                 on:click={() => selectedBodyPart = bodyPart}
                             >
+                                <svelte:component
+                                        this={getBodyPartIcon(bodyPart)}
+                                        class="inline-block"
+                                        height="h-5"
+                                        width="w-5"
+                                        fillColor="fill-white"
+                                />
                                 {bodyPart}
                             </button>
                         {/each}
@@ -300,6 +332,7 @@
     .scroll-mask {
         mask-image: linear-gradient(to right, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
         -webkit-mask-image: linear-gradient(to right, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
+        transform: translateX(calc(-20px - 0.75rem));
     }
     .no-scrollbar {
         scrollbar-width: none; /* Firefox */
