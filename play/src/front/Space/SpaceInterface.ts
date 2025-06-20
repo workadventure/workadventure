@@ -28,6 +28,12 @@ export type PrivateEventsObservables = {
 
 export type SpaceUserUpdate = Omit<Partial<SpaceUser>, "id">;
 
+export interface UpdateSpaceUserEvent {
+    newUser: SpaceUserExtended;
+    changes: Partial<SpaceUser>;
+    updateMask: string[];
+}
+
 export interface SpaceInterface {
     getName(): string;
     setMetadata(metadata: Map<string, unknown>): void;
@@ -56,4 +62,9 @@ export interface SpaceInterface {
      * It can be easier than subscribing to the usersStore and trying to deduce who the gone user is.
      */
     readonly observeUserLeft: Observable<SpaceUserExtended>;
+    /**
+     * Use this observer to get a description of users who have been updated.
+     * It can be easier than subscribing to every single property of every single user.
+     */
+    readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
 }

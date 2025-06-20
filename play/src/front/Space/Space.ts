@@ -12,7 +12,13 @@ import {
     PrivateSpaceEvent,
 } from "@workadventure/messages";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
-import { PrivateEventsObservables, PublicEventsObservables, SpaceInterface, SpaceUserUpdate } from "./SpaceInterface";
+import {
+    PrivateEventsObservables,
+    PublicEventsObservables,
+    SpaceInterface,
+    SpaceUserUpdate,
+    UpdateSpaceUserEvent,
+} from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { ReactiveSpaceUser, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
@@ -28,10 +34,12 @@ export class Space implements SpaceInterface {
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
     private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
+    private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
     private _registerRefCount = 0;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
+    public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -72,6 +80,15 @@ export class Space implements SpaceInterface {
         this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
             this.registerSpaceFilter();
             this._leftUserSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
+            };
+        });
+
+        this.observeUserUpdated = new Observable<UpdateSpaceUserEvent>((subscriber) => {
+            this.registerSpaceFilter();
+            this._updateUserSubscriber = subscriber;
 
             return () => {
                 this.unregisterSpaceFilter();
@@ -263,7 +280,8 @@ export class Space implements SpaceInterface {
 
         if (!userToUpdate) return;
 
-        const maskedNewData = applyFieldMask(newData, updateMask);
+        // For some reason, the WithFieldMask type seems to apply recursively on array. I think it is a bug in our context.
+        const maskedNewData = applyFieldMask(newData, updateMask) as unknown as Partial<SpaceUser>;
 
         merge(userToUpdate, maskedNewData);
 
@@ -282,6 +300,14 @@ export class Space implements SpaceInterface {
                     (store as Writable<unknown>).set(newData[castKey]);
                 }
             }
+        }
+
+        if (this._updateUserSubscriber) {
+            this._updateUserSubscriber.next({
+                newUser: userToUpdate,
+                changes: maskedNewData,
+                updateMask: updateMask,
+            });
         }
 
         /*if (this._setUsers) {

@@ -1,4 +1,6 @@
-import type { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
+import { IframeEvent, IframeQuery, IframeQueryMap, IframeQueryWrapper } from "../Events/IframeEvent";
+import { IframeMessagePortData, IframeMessagePortMap } from "../Events/MessagePortEvents";
+import { CheckedIframeMessagePort } from "./CheckedIframeMessagePort";
 
 export function sendToWorkadventure(content: IframeEvent, transfer?: Transferable[]) {
     window.parent.postMessage(content, "*", transfer);
@@ -42,6 +44,23 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
 
         queryNumber++;
     });
+}
+
+export function openMessagePort<K extends keyof IframeMessagePortMap>(
+    type: K,
+    data: IframeMessagePortData<K>["data"]
+): CheckedIframeMessagePort<K> {
+    const port = new MessageChannel();
+    window.parent.postMessage(
+        {
+            messagePort: true,
+            type,
+            data,
+        },
+        "*",
+        [port.port1]
+    );
+    return new CheckedIframeMessagePort<K>(port.port2, type);
 }
 
 /**
