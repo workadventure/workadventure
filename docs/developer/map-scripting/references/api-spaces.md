@@ -87,7 +87,7 @@ interface SpaceUser {
     uuid: string; // Unique identifier for the user (UUID)
     chatID?: string; // Optional chat ID for the user, if available (e.g., for Matrix identifier)
 
-    reactiveUser: { [key: string]: Oberservable<...> }; // Reactive properties of the user
+    reactiveUser: { [key: string]: Observable<...> }; // Reactive properties of the user
 }
 ```
 
