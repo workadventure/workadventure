@@ -43,7 +43,6 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
@@ -71,6 +70,7 @@ import {
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
+    FilterType,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1377,15 +1377,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-        this.send({
-            message: {
-                $case: "updateSpaceFilterMessage",
-                updateSpaceFilterMessage: filter,
-            },
-        });
-    }
-
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
         this.send({
             message: {
@@ -1474,12 +1465,13 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinSpace(spaceName: string): void {
+    public emitJoinSpace(spaceName: string, filterType: FilterType): void {
         this.send({
             message: {
                 $case: "joinSpaceMessage",
                 joinSpaceMessage: {
                     spaceName,
+                    filterType,
                 },
             },
         });

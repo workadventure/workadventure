@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
@@ -55,6 +55,8 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
+import { IframeMessagePortMap, isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
+import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -222,6 +224,9 @@ class IframeListener {
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
 
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
+    private readonly _openMessagePortStreams: { [K in keyof IframeMessagePortMap]?: Subject<unknown> } = {};
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -280,7 +285,28 @@ class IframeListener {
                     return;
                 }
 
-                if (isIframeQueryWrapper(payload)) {
+                if (isIframeMessagePortWrapper(payload)) {
+                    const port = message.ports[0];
+                    if (!port) {
+                        console.error("Received a message with messagePort=true but no port was provided.");
+                        return;
+                    }
+
+                    const messagePort = new CheckedWorkAdventureMessagePort(port, payload.type);
+
+                    if (!message.source) {
+                        throw new Error("Message is missing a source");
+                    }
+                    // If the calling iframe is closed, we need to close the message port
+                    this.onIframeCloseEvent(message.source, () => {
+                        messagePort.onCloseIframe();
+                    });
+
+                    this.getOpenMessagePortSubject(payload.type)?.next({
+                        port: messagePort,
+                        data: payload.data,
+                    });
+                } else if (isIframeQueryWrapper(payload)) {
                     const queryId = payload.id;
                     const query = payload.query;
 
@@ -1063,6 +1089,25 @@ class IframeListener {
             source ?? undefined
         );
     }*/
+
+    //private getOpenMessagePortSubject<K extends keyof IframeMessagePortMap>(type: K): Subject<{ data: IframeMessagePortMap[K]["data"], port: MessagePort }> {
+    private getOpenMessagePortSubject<K extends keyof IframeMessagePortMap>(
+        type: K
+    ): Subject<{ data: IframeMessagePortMap[K]["data"]; port: CheckedWorkAdventureMessagePort<K> }> {
+        if (this._openMessagePortStreams[type] === undefined) {
+            this._openMessagePortStreams[type] = new Subject<unknown>();
+        }
+        return this._openMessagePortStreams[type] as Subject<{
+            data: IframeMessagePortMap[K]["data"];
+            port: CheckedWorkAdventureMessagePort<K>;
+        }>;
+    }
+
+    public getOpenMessagePortObservable<K extends keyof IframeMessagePortMap>(
+        type: K
+    ): Observable<{ data: IframeMessagePortMap[K]["data"]; port: CheckedWorkAdventureMessagePort<K> }> {
+        return this.getOpenMessagePortSubject(type).asObservable();
+    }
 }
 
 export const iframeListener = new IframeListener();

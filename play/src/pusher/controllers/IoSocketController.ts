@@ -8,7 +8,6 @@ import {
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SpaceFilterMessage,
     SpaceUser,
     SubMessage,
     WokaDetail,
@@ -17,6 +16,7 @@ import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
+import { asError } from "catch-unknown";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -28,7 +28,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { SocketData } from "../models/Websocket/SocketData";
+import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
@@ -501,8 +501,7 @@ export class IoSocketController {
                             backConnection: undefined,
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
-                            spaces: new Set<string>(),
-                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                            spaces: new Set<SpaceName>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -687,8 +686,8 @@ export class IoSocketController {
                 });
             },
             message: (ws, arrayBuffer): void => {
+                const socket = ws as Socket;
                 (async () => {
-                    const socket = ws as Socket;
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
 
                     if (!message.message) {
@@ -724,17 +723,6 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "updateSpaceFilterMessage": {
-                            if (message.message.updateSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleUpdateSpaceFilterMessage(
-                                socket,
-                                noUndefined(message.message.updateSpaceFilterMessage)
-                            );
-                            break;
-                        }
                         case "removeSpaceFilterMessage": {
                             if (message.message.removeSpaceFilterMessage.spaceFilterMessage !== undefined)
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
@@ -756,10 +744,11 @@ export class IoSocketController {
                                 message.message.joinSpaceMessage.spaceName
                             }`;
 
-                            await socketManager.handleJoinSpace(
+                            socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
-                                localSpaceName
+                                localSpaceName,
+                                message.message.joinSpaceMessage.filterType
                             );
                             break;
                         }
@@ -781,7 +770,8 @@ export class IoSocketController {
                             message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.updateSpaceMetadataMessage.spaceName
                             }`;
-                            await socketManager.handleUpdateSpaceMetadata(
+
+                            socketManager.handleUpdateSpaceMetadata(
                                 socket,
                                 message.message.updateSpaceMetadataMessage.spaceName,
                                 isMetadata.data
@@ -1050,6 +1040,22 @@ export class IoSocketController {
                 })().catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
+
+                    try {
+                        socket.send(
+                            ServerToClientMessage.encode({
+                                message: {
+                                    $case: "errorMessage",
+                                    errorMessage: {
+                                        message: "An error occurred in pusher: " + asError(e).message,
+                                    },
+                                },
+                            }).finish()
+                        );
+                    } catch (error) {
+                        Sentry.captureException(error);
+                        console.error(error);
+                    }
                 });
             },
             drain: (ws) => {

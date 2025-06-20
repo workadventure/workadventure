@@ -24,9 +24,3 @@ export class SpaceNameIsEmptyError extends Error {
         super(`Space should not be empty`);
     }
 }
-
-export class SpaceFilterDoesNotExistError extends Error {
-    constructor(spaceName: string, filterName: string) {
-        super(`filter ${filterName} does not exist in space ${spaceName} `);
-    }
-}
