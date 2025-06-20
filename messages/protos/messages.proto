@@ -1380,7 +1380,6 @@ message SpaceDestroyedMessage {
 message KickOffMessage{
   string spaceName = 1;
   string userId = 2;
-  google.protobuf.StringValue filterName = 3;
 }
 
 /** Filter **/

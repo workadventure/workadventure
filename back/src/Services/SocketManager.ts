@@ -1489,7 +1489,6 @@ export class SocketManager {
                 kickOffMessage: {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
-                    filterName: kickUserMessage.filterName,
                 },
             },
         });

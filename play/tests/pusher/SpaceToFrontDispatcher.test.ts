@@ -466,7 +466,6 @@ describe("SpaceToFrontDispatcher", () => {
                         kickOffMessage: {
                             spaceName: "test",
                             userId: "foo_1",
-                            filterName: "test",
                         },
                     },
                 });
@@ -476,7 +475,6 @@ describe("SpaceToFrontDispatcher", () => {
                     kickOffMessage: {
                         spaceName: "test",
                         userId: "foo_1",
-                        filterName: "test",
                     },
                 });
             });

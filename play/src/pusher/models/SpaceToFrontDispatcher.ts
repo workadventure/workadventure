@@ -72,8 +72,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                         kickOffMessage: {
                             userId: message.message.kickOffMessage.userId,
                             spaceName: message.message.kickOffMessage.spaceName,
-                            //TODO : check if we need to keep the filterName  , normally it is not used
-                            filterName: message.message.kickOffMessage.filterName,
                         },
                     });
                     break;
