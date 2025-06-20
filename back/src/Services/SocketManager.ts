@@ -1643,6 +1643,18 @@ export class SocketManager {
             });
         }
     }
+
+    /*
+     * This function is used to close the connection of the space. for testing purpose.
+     */
+    closeSpaceConnection(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Space ${spaceName} not found`);
+        }
+        space.closeAllWatcherConnections();
+        this.spaces.delete(spaceName);
+    }
 }
 
 export const socketManager = new SocketManager();
