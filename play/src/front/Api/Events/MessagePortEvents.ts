@@ -86,10 +86,10 @@ export interface IframeMessagePortWrapper<T extends keyof IframeMessagePortMap> 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isIframeMessagePortWrapper = (event: any): event is IframeMessagePortWrapper<keyof IframeMessagePortMap> =>
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     typeof event === "object" &&
     event.messagePort === true &&
     typeof event.type === "string" &&
     isIframeMessagePortType(event.type) &&
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     iframeMessagePortTypeGuards[event.type].data.safeParse(event.data).success;
