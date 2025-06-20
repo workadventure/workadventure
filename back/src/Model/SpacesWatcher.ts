@@ -10,11 +10,11 @@ const debug = Debug("space");
  * watched space, updates its data.
  */
 export class SpacesWatcher {
-    private _spacesWatched: string[];
+    private _spacesWatched: Set<string>;
     private pingInterval: NodeJS.Timeout | undefined;
     private pongTimeout: NodeJS.Timeout | undefined;
     public constructor(public readonly id: string, private readonly socket: SpaceSocket, private timeout = 30) {
-        this._spacesWatched = [];
+        this._spacesWatched = new Set<string>();
         // Send first ping and then send the second one
         this.sendPing();
         this.pingInterval = setInterval(() => this.sendPing(), 1000 * timeout);
@@ -45,16 +45,16 @@ export class SpacesWatcher {
     }
 
     public watchSpace(spaceName: string) {
-        this._spacesWatched.push(spaceName);
+        this._spacesWatched.add(spaceName);
         debug(`SpacesWatcher ${this.id} => watch ${spaceName}`);
     }
 
     public unwatchSpace(spaceName: string) {
-        this._spacesWatched = this._spacesWatched.filter((space) => space !== spaceName);
+        this._spacesWatched.delete(spaceName);
         debug(`SpacesWatcher ${this.id} => unwatch ${spaceName}`);
     }
 
-    get spacesWatched(): string[] {
+    get spacesWatched(): Set<string> {
         return this._spacesWatched;
     }
 
