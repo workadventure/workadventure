@@ -1,9 +1,10 @@
 import {
-    PusherToBackSpaceMessage,
     SpaceUser,
     SubMessage,
     FilterType,
     BackToPusherSpaceMessage,
+    SpaceAnswerMessage,
+    SpaceQueryMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
@@ -46,6 +47,69 @@ export interface SpaceInterface {
     backId: number;
     filterType: FilterType;
 }
+
+export class Query {
+    private readonly _queries = new Map<
+        number,
+        {
+            answerType: string;
+            resolve: (message: Required<SpaceAnswerMessage>["answer"]) => void;
+            reject: (e: unknown) => void;
+        }
+    >();
+    private _lastQueryId = 0;
+
+    constructor(private readonly _space: Space) {}
+
+    public send<T extends Required<SpaceQueryMessage>["query"]>(
+        message: T
+    ): Promise<Required<SpaceAnswerMessage>["answer"]> {
+        return new Promise((resolve, reject) => {
+            if (!message.$case.endsWith("Query")) {
+                throw new Error("Query types are supposed to be suffixed with Query");
+            }
+            const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
+
+            this._queries.set(this._lastQueryId, {
+                answerType,
+                resolve,
+                reject,
+            });
+
+            this._space.forwarder.forwardMessageToSpaceBack({
+                $case: "spaceQueryMessage",
+                spaceQueryMessage: {
+                    id: this._lastQueryId,
+                    spaceName: this._space.name,
+                    query: message,
+                },
+            });
+
+            this._lastQueryId++;
+        });
+    }
+
+    public receiveAnswer(queryId: number, answer: Required<SpaceAnswerMessage>["answer"]) {
+        if (answer === undefined) {
+            throw new Error("Invalid message received. Answer missing.");
+        }
+
+        const query = this._queries.get(queryId);
+        if (query === undefined) {
+            throw new Error("Got an answer to a query we have no track of: " + queryId.toString());
+        }
+
+        if (answer.$case === "error") {
+            query.reject(new Error("Error received from the back: " + answer.error.message));
+            return;
+        }
+
+        query.resolve(answer);
+
+        this._queries.delete(queryId);
+    }
+}
+
 export class Space implements SpaceInterface {
     public readonly users: Map<string, SpaceUserExtended>;
 
@@ -58,6 +122,7 @@ export class Space implements SpaceInterface {
     public readonly backId: number;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
+    public readonly query: Query;
 
     constructor(
         public readonly name: string,
@@ -80,6 +145,7 @@ export class Space implements SpaceInterface {
         this.backId = this._apiClientRepository.getIndex(this.name);
         this.forwarder = this.SpaceToBackForwarderFactory(this);
         this.dispatcher = this.SpaceToFrontDispatcherFactory(this, eventProcessor);
+        this.query = new Query(this);
         debug(`created : ${name}`);
     }
 
@@ -89,31 +155,53 @@ export class Space implements SpaceInterface {
             const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
             spaceStreamToBack
                 .on("data", (message: BackToPusherSpaceMessage) => {
-                    if (message.message && message.message.$case === "pingMessage") {
-                        if (spaceStreamToBack.pingTimeout) {
-                            clearTimeout(spaceStreamToBack.pingTimeout);
-                            spaceStreamToBack.pingTimeout = undefined;
+                    if (message.message) {
+                        switch (message.message.$case) {
+                            case "pingMessage":
+                                if (spaceStreamToBack.pingTimeout) {
+                                    clearTimeout(spaceStreamToBack.pingTimeout);
+                                    spaceStreamToBack.pingTimeout = undefined;
+                                }
+
+                                spaceStreamToBack.write({
+                                    message: {
+                                        $case: "pongMessage",
+                                        pongMessage: {},
+                                    },
+                                });
+
+                                spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                    console.error("Error spaceStreamToBack timed out for back:", this.backId);
+                                    Sentry.captureException(
+                                        "Error spaceStreamToBack timed out for back: " + this.backId
+                                    );
+                                    spaceStreamToBack.end();
+                                    this.spaceStreamToBackPromise = undefined;
+                                    this.initSpace();
+                                    this.sendLocalUsersToBack();
+                                }, 1000 * 60);
+
+                                return;
+                            case "answerMessage":
+                                if (message.message.answerMessage.answer === undefined) {
+                                    console.error(
+                                        "Invalid message received. Answer missing.",
+                                        message.message.answerMessage
+                                    );
+                                    throw new Error("Invalid message received. Answer missing.");
+                                }
+                                this.query.receiveAnswer(
+                                    message.message.answerMessage.id,
+                                    message.message.answerMessage.answer
+                                );
+                                break;
+                            default:
+                                this.dispatcher.handleMessage(message);
+                                break;
                         }
-                        const pusherToBackMessage: PusherToBackSpaceMessage = {
-                            message: {
-                                $case: "pongMessage",
-                                pongMessage: {},
-                            },
-                        } as PusherToBackSpaceMessage;
-                        spaceStreamToBack.write(pusherToBackMessage);
-
-                        spaceStreamToBack.pingTimeout = setTimeout(() => {
-                            console.error("Error spaceStreamToBack timed out for back:", this.backId);
-                            Sentry.captureException("Error spaceStreamToBack timed out for back: " + this.backId);
-                            spaceStreamToBack.end();
-                            this.spaceStreamToBackPromise = undefined;
-                            this.initSpace();
-                            this.sendLocalUsersToBack();
-                        }, 1000 * 60);
-
-                        return;
+                    } else {
+                        this.dispatcher.handleMessage(message);
                     }
-                    this.dispatcher.handleMessage(message);
                 })
                 .on("end", () => {
                     debug("[space] spaceStreamsToBack ended");

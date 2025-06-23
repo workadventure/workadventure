@@ -52,6 +52,7 @@ import {
     ExternalModuleMessage,
     FilterType,
     SyncSpaceUsersMessage,
+    SpaceQueryMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1396,6 +1397,11 @@ export class SocketManager {
             space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
+
+        if (space.filterType !== joinSpaceMessage.filterType) {
+            throw new Error("Filter type mismatch when joining space");
+        }
+
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
     }
@@ -1431,6 +1437,13 @@ export class SocketManager {
 
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
         const space = this.spaces.get(addSpaceUserMessage.spaceName);
+
+        if (space && space.filterType !== addSpaceUserMessage.filterType) {
+            console.error("Filter type mismatch when adding user to space");
+            Sentry.captureException("Filter type mismatch when adding user to space");
+            throw new Error("Filter type mismatch when adding user to space");
+        }
+
         if (space && addSpaceUserMessage.user) {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
@@ -1654,6 +1667,38 @@ export class SocketManager {
         }
         space.closeAllWatcherConnections();
         this.spaces.delete(spaceName);
+    }
+
+    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+        const space = this.spaces.get(spaceQueryMessage.spaceName);
+
+        if (!space) {
+            throw new Error(`Could not find space ${spaceQueryMessage.spaceName} to handle query`);
+        }
+
+        if (!spaceQueryMessage.query) {
+            console.error("SpaceQueryMessage has no query");
+            Sentry.captureException("SpaceQueryMessage has no query");
+            //TODO : renvoyer un message d'erreur au client ?? et avec l'id de la query ?
+            return;
+        }
+
+        try {
+            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            pusher.write({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: spaceQueryMessage.id,
+                        answer: answer.answer,
+                    },
+                },
+            });
+        } catch (e) {
+            console.error("Error while handling space query", e);
+            Sentry.captureException("Error while handling space query");
+            return;
+        }
     }
 }
 

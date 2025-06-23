@@ -87,6 +87,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     this.sendPrivateEvent(noUndefined(privateEvent));
                     break;
                 }
+                case "mismatchFilterTypeMessage": {
+                    debug("[space] mismatchFilterTypeMessage received");
+                    this.handleMismatchFilterTypeMessage(message.message.mismatchFilterTypeMessage);
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = message.message;
                 }
@@ -339,5 +344,15 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 userData.emitInBatch(subMessage);
             }
         }
+    }
+
+    private handleMismatchFilterTypeMessage(mismatchFilterTypeMessage: MismatchFilterTypeMessage) {
+        if (!this._space._localWatchers.has(mismatchFilterTypeMessage.userId)) {
+            console.error(`Watcher ${mismatchFilterTypeMessage.userId} not found`);
+            Sentry.captureException(`Watcher ${mismatchFilterTypeMessage.userId} not found`);
+            return;
+        }
+
+        this._space._localWatchers.delete(mismatchFilterTypeMessage.userId);
     }
 }

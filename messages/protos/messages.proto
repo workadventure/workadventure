@@ -615,8 +615,47 @@ message SearchTagsAnswer{
   repeated string tags = 1;
 }
 
+/*********** PUSHER TO BACK QUERYMESSAGES *************/
 
+message SpaceQueryMessage {
+  int32 id = 1;
+  string spaceName = 2;
+  oneof query {
+    AddSpaceUserQuery addSpaceUserQuery = 3;
+    RemoveSpaceUserQuery removeSpaceUserQuery = 4;
+  }
+}
 
+message AddSpaceUserQuery {
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+
+message RemoveSpaceUserQuery { 
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
+
+/*********** PUSHER TO BACK ANSWER MESSAGES *************/
+
+message SpaceAnswerMessage {
+  int32 id = 1;
+  oneof answer {
+    ErrorMessage error = 2;
+    AddSpaceUserAnswer addSpaceUserAnswer = 3;
+    RemoveSpaceUserAnswer removeSpaceUserAnswer = 4;
+  }
+}
+
+message AddSpaceUserAnswer {
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
+
+message RemoveSpaceUserAnswer {
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -1237,9 +1276,7 @@ message PusherToBackSpaceMessage{
   oneof message {
     JoinSpaceMessage joinSpaceMessage = 1;
     LeaveSpaceMessage leaveSpaceMessage = 2;
-    AddSpaceUserMessage addSpaceUserMessage = 3;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
-    RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
@@ -1247,6 +1284,7 @@ message PusherToBackSpaceMessage{
     PublicEvent publicEvent = 15;
     PrivateEvent privateEvent = 16;
     SyncSpaceUsersMessage syncSpaceUsersMessage = 17;
+    SpaceQueryMessage spaceQueryMessage = 18;
   }
 }
 
@@ -1261,6 +1299,7 @@ message BackToPusherSpaceMessage{
     KickOffMessage kickOffMessage = 6;
     PublicEvent publicEvent = 13;
     PrivateEvent privateEvent = 14;
+    SpaceAnswerMessage answerMessage = 16;
   }
 }
 
@@ -1327,6 +1366,7 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  FilterType filterType = 3;
 }
 message AddSpaceUserPusherToFrontMessage{
   string spaceName = 1;

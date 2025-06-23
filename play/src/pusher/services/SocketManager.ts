@@ -341,7 +341,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public handleJoinSpace(client: Socket, spaceName: string, localSpaceName: string, filterType: FilterType): void {
+    public async handleJoinSpace(
+        client: Socket,
+        spaceName: string,
+        localSpaceName: string,
+        filterType: FilterType
+    ): Promise<void> {
         const socketData = client.getUserData();
 
         let space: SpaceInterface | undefined = this.spaces.get(spaceName);
@@ -358,7 +363,8 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Space filter type mismatch");
         }
 
-        space.forwarder.registerUser(client);
+        await space.forwarder.registerUser(client, filterType);
+
         if (socketData.spaces.has(spaceName)) {
             console.error(`User ${socketData.name} is trying to join a space he is already in.`);
             Sentry.captureException(new Error(`User ${socketData.name} is trying to join a space he is already in.`));
@@ -568,13 +574,17 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    leaveSpaces(socket: Socket) {
+    async leaveSpaces(socket: Socket) {
         const socketData = socket.getUserData();
+        const promises: Promise<void>[] = [];
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                space.forwarder.unregisterUser(socket);
-                this.deleteSpaceIfEmpty(space);
+                promises.push(
+                    space.forwarder.unregisterUser(socket).then(() => {
+                        this.deleteSpaceIfEmpty(space);
+                    })
+                );
             } else {
                 console.error(
                     `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
@@ -586,6 +596,8 @@ export class SocketManager implements ZoneEventListener {
                 );
             }
         });
+
+        await Promise.all(promises);
         socketData.spaces.clear();
     }
 
@@ -1069,11 +1081,11 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleLeaveSpace(client: Socket, spaceName: string) {
+    async handleLeaveSpace(client: Socket, spaceName: string) {
         const socketData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
-            space.forwarder.unregisterUser(client);
+            await space.forwarder.unregisterUser(client);
             this.deleteSpaceIfEmpty(space);
             const success = socketData.spaces.delete(space.name);
             if (!success) {

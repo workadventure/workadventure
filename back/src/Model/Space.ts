@@ -8,6 +8,8 @@ import {
     PrivateEvent,
     PublicEvent,
     RemoveSpaceUserMessage,
+    SpaceAnswerMessage,
+    SpaceQueryMessage,
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
@@ -24,7 +26,7 @@ export class Space implements CustomJsonReplacerInterface {
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
 
-    constructor(name: string, private filterType: Filter) {
+    constructor(name: string, private _filterType: Filter) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
@@ -49,6 +51,7 @@ export class Space implements CustomJsonReplacerInterface {
                     }),
                 },
             });
+
             debug(`${this.name} : user => added ${spaceUser.spaceUserId}`);
         } catch (e) {
             console.error("Error while adding user", e);
@@ -56,17 +59,20 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.notifyWatchers({
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        spaceUserId: spaceUser.spaceUserId,
-                    }),
-                },
-            });
+            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            throw e;
+            // this.notifyWatchers({
+            //     message: {
+            //         $case: "removeSpaceUserMessage",
+            //         removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+            //             spaceName: this.name,
+            //             spaceUserId: spaceUser.spaceUserId,
+            //         }),
+            //     },
+            // });
         }
     }
+
     public updateUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser, updateMask: string[]) {
         try {
             const usersList = this.usersList(sourceWatcher);
@@ -124,15 +130,16 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while updating user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.notifyWatchers({
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        spaceUserId: spaceUser.spaceUserId,
-                    }),
-                },
-            });
+            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            // this.notifyWatchers({
+            //     message: {
+            //         $case: "removeSpaceUserMessage",
+            //         removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+            //             spaceName: this.name,
+            //             spaceUserId: spaceUser.spaceUserId,
+            //         }),
+            //     },
+            // });
         }
     }
 
@@ -181,7 +188,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private filterOneUser(user: SpaceUser): boolean {
-        switch (this.filterType) {
+        switch (this._filterType) {
             case FilterType.ALL_USERS: {
                 return true;
             }
@@ -189,7 +196,7 @@ export class Space implements CustomJsonReplacerInterface {
                 return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
             }
             default: {
-                const _exhaustiveCheck: never = this.filterType;
+                const _exhaustiveCheck: never = this._filterType;
             }
         }
         return false;
@@ -206,6 +213,7 @@ export class Space implements CustomJsonReplacerInterface {
                         addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                             spaceName: this.name,
                             user: spaceUser,
+                            filterType: this._filterType,
                         }),
                     },
                 });
@@ -290,6 +298,70 @@ export class Space implements CustomJsonReplacerInterface {
 
     public syncUsersFromPusher(watcher: SpacesWatcher, users: SpaceUser[]) {
         this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
+    }
+
+    public handleQuery(
+        watcher: SpacesWatcher,
+        spaceQueryMessage: SpaceQueryMessage
+    ): Pick<SpaceAnswerMessage, "answer"> {
+        try {
+            if (!spaceQueryMessage.query) {
+                throw new Error("SpaceQueryMessage has no query");
+            }
+
+            const queryCase = spaceQueryMessage.query.$case;
+
+            switch (queryCase) {
+                case "addSpaceUserQuery": {
+                    if (!spaceQueryMessage.query.addSpaceUserQuery.user) {
+                        throw new Error("SpaceQueryMessage has no user");
+                    }
+
+                    this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
+                    return {
+                        answer: {
+                            $case: "addSpaceUserAnswer",
+                            addSpaceUserAnswer: {
+                                spaceName: this.name,
+                                spaceUserId: spaceQueryMessage.query.addSpaceUserQuery.user.spaceUserId,
+                            },
+                        },
+                    };
+                }
+                case "removeSpaceUserQuery": {
+                    this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
+                    return {
+                        answer: {
+                            $case: "removeSpaceUserAnswer",
+                            removeSpaceUserAnswer: {
+                                spaceName: this.name,
+                                spaceUserId: spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId,
+                            },
+                        },
+                    };
+                }
+
+                default: {
+                    const _exhaustiveCheck: never = queryCase;
+                    throw new Error("Unknown query");
+                }
+            }
+        } catch (e) {
+            console.error("Error while handling query", e);
+            Sentry.captureException(e);
+            return {
+                answer: {
+                    $case: "error",
+                    error: {
+                        message: "Error while handling query",
+                    },
+                },
+            };
+        }
+    }
+
+    public get filterType(): Filter {
+        return this._filterType;
     }
 
     /*

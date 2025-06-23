@@ -744,7 +744,7 @@ export class IoSocketController {
                                 message.message.joinSpaceMessage.spaceName
                             }`;
 
-                            socketManager.handleJoinSpace(
+                            await socketManager.handleJoinSpace(
                                 socket,
                                 message.message.joinSpaceMessage.spaceName,
                                 localSpaceName,
@@ -782,7 +782,7 @@ export class IoSocketController {
                             message.message.leaveSpaceMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.leaveSpaceMessage.spaceName
                             }`;
-                            socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
+                            await socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
                             break;
                         }
                         case "updateSpaceUserMessage": {
@@ -1083,7 +1083,10 @@ export class IoSocketController {
                 try {
                     socketData.disconnecting = true;
                     socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket);
+                    socketManager.leaveSpaces(socket).catch((error) => {
+                        console.error(error);
+                        Sentry.captureException(error);
+                    });
                     socketManager.leaveChatRoomArea(socket).catch((error) => {
                         console.error(error);
                         Sentry.captureException(error);
