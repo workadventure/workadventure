@@ -62,8 +62,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     this.updateMetadata(isMetadata.data);
                     break;
                 }
-                case "pingMessage": {
-                    throw new Error("pingMessage should not be received by the dispatcher");
+                case "pingMessage":
+                case "answerMessage": {
+                    throw new Error(`${message.message.$case} should not be received by the dispatcher`);
                 }
                 case "kickOffMessage": {
                     debug("[space] kickOffSMessage received");
@@ -85,11 +86,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     debug("[space] privateEvent received");
                     const privateEvent = message.message.privateEvent;
                     this.sendPrivateEvent(noUndefined(privateEvent));
-                    break;
-                }
-                case "mismatchFilterTypeMessage": {
-                    debug("[space] mismatchFilterTypeMessage received");
-                    this.handleMismatchFilterTypeMessage(message.message.mismatchFilterTypeMessage);
                     break;
                 }
                 default: {
@@ -344,15 +340,5 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 userData.emitInBatch(subMessage);
             }
         }
-    }
-
-    private handleMismatchFilterTypeMessage(mismatchFilterTypeMessage: MismatchFilterTypeMessage) {
-        if (!this._space._localWatchers.has(mismatchFilterTypeMessage.userId)) {
-            console.error(`Watcher ${mismatchFilterTypeMessage.userId} not found`);
-            Sentry.captureException(`Watcher ${mismatchFilterTypeMessage.userId} not found`);
-            return;
-        }
-
-        this._space._localWatchers.delete(mismatchFilterTypeMessage.userId);
     }
 }
