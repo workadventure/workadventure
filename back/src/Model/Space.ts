@@ -238,7 +238,28 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public removeWatcher(watcher: SpacesWatcher) {
+        const spaceUsers = this.users.get(watcher);
+
         this.users.delete(watcher);
+
+        // In case was not empty when it was removed, we need to notify the other watchers
+        for (const spaceUser of spaceUsers?.values() || []) {
+            if (this.filterOneUser(spaceUser)) {
+                debug(
+                    `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
+                );
+                this.notifyWatchers({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUser.spaceUserId,
+                        }),
+                    },
+                });
+            }
+        }
+
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
