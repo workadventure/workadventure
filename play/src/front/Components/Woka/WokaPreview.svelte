@@ -1,11 +1,11 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import {WokaData, WokaTexture} from './WokaTypes';
+    import { WokaData, WokaTexture } from "./WokaTypes";
     export let selectedTextures: Record<string, string>;
-    export let wokaData: WokaData;
+    export let wokaData: WokaData | null = null;
     export let getTextureUrl: (url: string) => string = (url) => url;
 
-    const bodyPartOrder = ['body', 'eyes', 'hair', 'clothes', 'hat', 'accessory'];
+    const bodyPartOrder = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
@@ -21,7 +21,7 @@
         const textureId = selectedTextures?.[bodyPart];
         if (!textureId || !wokaData?.[bodyPart]?.collections) return null;
         for (const collection of wokaData[bodyPart].collections) {
-            const texture = collection.textures.find((t: WokaTexture ) => t.id === textureId);
+            const texture = collection.textures.find((t: WokaTexture) => t.id === textureId);
             if (texture) return getTextureUrl(texture.url);
         }
         return null;
@@ -45,11 +45,7 @@
             const img = images[part];
             ctx.imageSmoothingEnabled = false;
             if (img && img.complete) {
-                ctx.drawImage(
-                    img,
-                    frame * 32, direction * 32, 32, 32,
-                    0, 0, canvaSize, canvaSize
-                );
+                ctx.drawImage(img, frame * 32, direction * 32, 32, 32, 0, 0, canvaSize, canvaSize);
             }
         }
     }
@@ -81,27 +77,35 @@
 </script>
 
 <div class="woka-preview flex items-center justify-center relative">
-    <!--{#each bodyPartOrder as bodyPart (bodyPart + selectedTextures[bodyPart])}-->
-    <!--    {@const textureUrl = findTextureUrl(bodyPart)}-->
-    <!--    {#if textureUrl}-->
-    <!--        <div-->
-    <!--            class="absolute top-0 left-0 object-contain select-none pointer-events-none w-[100px] h-[100px] opacity-20"-->
-    <!--            draggable="false"-->
-    <!--            style="background-image: url('{textureUrl}') ;background-size: calc(3 * 100px) calc(4 * 100px); background-position: 0 0; image-rendering: pixelated;"-->
-    <!--        ></div>-->
-    <!--    {/if}-->
-    <!--{/each}-->
-
     <div class="p-6 relative flex items-center justify-center w-fit bg-white/10 rounded-lg">
-        <button class="bg-white/10 hover:bg-white/20 rounded-md absolute bottom-2 right-2 aspect-square p-2 flex items-center justify-center" on:click={() => {direction = (direction + 1) % 4;}}>
-            <svg  xmlns="http://www.w3.org/2000/svg"  width="14"  height="14"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-reload"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" /><path d="M20 4v5h-5" /></svg>    </button>
-        <canvas
-                bind:this={canvas}
-                width={canvaSize}
-                height={canvaSize}
-                style="image-rendering: pixelated;"
-                class="z-500"
+        <button
+            class="bg-white/10 hover:bg-white/20 rounded-md absolute bottom-2 right-2 aspect-square p-2 flex items-center justify-center"
+            on:click={() => {
+                direction = (direction + 1) % 4;
+            }}
         >
-        </canvas>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon icon-tabler icons-tabler-outline icon-tabler-reload"
+                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
+                    d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747"
+                /><path d="M20 4v5h-5" /></svg
+            >
+        </button>
+        <canvas
+            bind:this={canvas}
+            width={canvaSize}
+            height={canvaSize}
+            style="image-rendering: pixelated;"
+            class="z-500"
+        />
     </div>
 </div>

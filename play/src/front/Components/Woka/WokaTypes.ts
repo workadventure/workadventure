@@ -1,4 +1,4 @@
-export type WokaBodyPart = 'body' | 'eyes' | 'hair' | 'clothes' | 'hat' | 'accessory';
+export type WokaBodyPart = "body" | "eyes" | "hair" | "clothes" | "hat" | "accessory";
 
 export interface WokaTexture {
     id: string;
@@ -24,4 +24,5 @@ export interface WokaData {
     clothes: WokaLayer;
     hat: WokaLayer;
     accessory: WokaLayer;
+    [key: string]: WokaLayer;
 }
