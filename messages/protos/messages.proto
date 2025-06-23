@@ -441,7 +441,8 @@ message QueryMessage {
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
     EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
-    MapStorageJwtQuery mapStorageJwtQuery = 14;
+    JoinSpaceQuery joinSpaceQuery = 14;
+    MapStorageJwtQuery mapStorageJwtQuery = 15;
   }
 }
 
@@ -503,6 +504,10 @@ message EnterChatRoomAreaQuery{
   string roomID = 1;
 }
 
+message JoinSpaceQuery{
+  string spaceName = 1;
+  FilterType filterType = 2;
+}
 
 message AnswerMessage {
   int32 id = 1;
@@ -521,7 +526,8 @@ message AnswerMessage {
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
     EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
-    MapStorageJwtAnswer mapStorageJwtAnswer = 16;
+    JoinSpaceAnswer joinSpaceAnswer = 16;
+    MapStorageJwtAnswer mapStorageJwtAnswer = 17;
   }
 }
 
@@ -588,7 +594,8 @@ message OauthRefreshTokenAnswer {
 message EnterChatRoomAreaAnswer{
 }
 
-
+message JoinSpaceAnswer{
+}
 
 message Member {
   string id = 1;

@@ -370,8 +370,8 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public joinSpace(spaceName: string): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+    public async joinSpace(spaceName: string): Promise<void> {
+        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         bindMuteEventsToSpace(this._space);
         this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {

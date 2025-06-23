@@ -132,17 +132,17 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            this.reconnect(connection);
+            this.reconnect(connection).catch((e) => console.error(e));
         });
     }
 
-    joinSpace(
+    async joinSpace(
         spaceName: string,
         filterType: FilterType,
         metadata: Map<string, unknown> = new Map<string, unknown>()
-    ): SpaceInterface {
+    ): Promise<SpaceInterface> {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection, filterType);
+        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
@@ -169,13 +169,21 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    reconnect(connection: RoomConnectionForSpacesInterface) {
+    async reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
-        this.spaces.forEach((space) => {
-            this.leaveSpace(space);
-            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection, space.filterType);
-            this.spaces.set(newSpace.getName(), newSpace);
-        });
+        const spacesArray = Array.from(this.spaces.values());
+        await Promise.all(
+            spacesArray.map(async (space) => {
+                this.leaveSpace(space);
+                const newSpace = await Space.create(
+                    space.getName(),
+                    space.filterType,
+                    this.roomConnection,
+                    space.getMetadata()
+                );
+                this.spaces.set(newSpace.getName(), newSpace);
+            })
+        );
     }
 
     destroy() {

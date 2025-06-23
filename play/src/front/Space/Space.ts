@@ -45,7 +45,7 @@ export class Space implements SpaceInterface {
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
      */
-    constructor(
+    private constructor(
         name: string,
         private metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
@@ -55,8 +55,6 @@ export class Space implements SpaceInterface {
             throw new SpaceNameIsEmptyError();
         }
         this.name = name;
-
-        this.userJoinSpace();
 
         this.usersStore = readable(new Map<string, SpaceUserExtended>(), (set) => {
             this.registerSpaceFilter();
@@ -97,6 +95,22 @@ export class Space implements SpaceInterface {
 
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
+
+    /**
+     * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
+     * Do not call this method directly.
+     */
+    static async create(
+        name: string,
+        filterType: FilterType,
+        connection: RoomConnectionForSpacesInterface,
+        metadata = new Map<string, unknown>()
+    ): Promise<Space> {
+        await connection.emitJoinSpace(name, filterType);
+        const space = new Space(name, metadata, connection, filterType);
+        return space;
+    }
+
     getName(): string {
         return this.name;
     }
@@ -111,10 +125,6 @@ export class Space implements SpaceInterface {
 
     private userLeaveSpace() {
         this._connection.emitLeaveSpace(this.name);
-    }
-
-    private userJoinSpace() {
-        this._connection.emitJoinSpace(this.name, this.filterType);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {

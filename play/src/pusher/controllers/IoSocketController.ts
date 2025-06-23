@@ -905,6 +905,27 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "joinSpaceQuery": {
+                                        const localSpaceName =
+                                            message.message.queryMessage.query.joinSpaceQuery.spaceName;
+                                        message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
+                                            socket.getUserData().world
+                                        }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
+
+                                        await socketManager.handleJoinSpace(
+                                            socket,
+                                            message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                            localSpaceName,
+                                            message.message.queryMessage.query.joinSpaceQuery.filterType
+                                        );
+
+                                        answerMessage.answer = {
+                                            $case: "joinSpaceAnswer",
+                                            joinSpaceAnswer: {},
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     case "mapStorageJwtQuery": {
                                         answerMessage.answer = {
                                             $case: "mapStorageJwtAnswer",

@@ -1498,16 +1498,20 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinSpace(spaceName: string, filterType: FilterType): void {
-        this.send({
-            message: {
-                $case: "joinSpaceMessage",
-                joinSpaceMessage: {
-                    spaceName,
-                    filterType,
-                },
+    public async emitJoinSpace(spaceName: string, filterType: FilterType): Promise<void> {
+        const answer = await this.query({
+            $case: "joinSpaceQuery",
+            joinSpaceQuery: {
+                spaceName,
+                filterType,
             },
         });
+
+        if (answer.$case !== "joinSpaceAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return;
     }
 
     public emitLeaveSpace(spaceName: string): void {

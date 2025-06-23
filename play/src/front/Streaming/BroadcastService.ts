@@ -1,7 +1,10 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
+import { FilterType } from "@workadventure/messages";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import { RoomConnection } from "../Connection/RoomConnection";
+import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -10,7 +13,7 @@ const broadcastServiceLogger = debug("BroadcastService");
 
 export type BroadcastSpaceFactory = (
     connection: RoomConnection,
-    spaceName: string,
+    space: SpaceInterface,
     broadcastService: BroadcastService,
     playSound: boolean
 ) => BroadcastSpace;
@@ -20,7 +23,11 @@ export class BroadcastService {
     private broadcastSpaces: BroadcastSpace[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
 
-    constructor(private roomConnection: RoomConnection, private defaultBroadcastSpaceFactory: BroadcastSpaceFactory) {}
+    constructor(
+        private roomConnection: RoomConnection,
+        private defaultBroadcastSpaceFactory: BroadcastSpaceFactory,
+        private spaceRegistry: SpaceRegistryInterface
+    ) {}
 
     /**
      * Join a broadcast space
@@ -29,16 +36,18 @@ export class BroadcastService {
      * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
      * @returns The broadcast space
      */
-    public joinSpace(
+    public async joinSpace(
         spaceName: string,
         playSound = true,
         broadcastSpaceFactory?: BroadcastSpaceFactory
-    ): BroadcastSpace {
+    ): Promise<BroadcastSpace> {
         const spaceNameSlugify = slugify(spaceName);
 
+        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+
         const broadcastSpace = broadcastSpaceFactory
-            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound)
-            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound);
+            ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
+            : this.defaultBroadcastSpaceFactory(this.roomConnection, space, this, playSound);
 
         this.broadcastSpaces.push(broadcastSpace);
 
