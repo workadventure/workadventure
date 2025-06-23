@@ -103,7 +103,7 @@ export class DebugController {
             }
 
             try {
-                socketManager.closeSpaceConnection(query.spaceName.toString());
+                socketManager.closeSpaceConnection(query.spaceName as string);
             } catch {
                 res.status(500).send("Error closing space connection");
                 return;
@@ -111,8 +111,5 @@ export class DebugController {
 
             res.status(200).send("Space connection closed");
         });
-    }
-
-  
     }
 }
