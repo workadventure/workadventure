@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { AreaData, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
@@ -513,8 +514,14 @@ export class GameMapPropertiesListener {
         places.forEach((place) => {
             this.handleOpenWebsitePropertiesOnEnter(place);
             this.handleFocusablePropertiesOnEnter(place);
-            this.handleSpeakerMegaphonePropertiesOnEnter(place);
-            this.handleListenerMegaphonePropertiesOnEnter(place);
+            this.handleSpeakerMegaphonePropertiesOnEnter(place).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            this.handleListenerMegaphonePropertiesOnEnter(place).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
         });
     }
 
@@ -727,7 +734,7 @@ export class GameMapPropertiesListener {
         }
     }
 
-    private handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+    private async handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -739,7 +746,7 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZone.value, false);
+            const broadcastSpace = await this.scene.broadcastService.joinSpace(speakerZone.value, false);
             currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
@@ -759,7 +766,7 @@ export class GameMapPropertiesListener {
         }
     }
 
-    private handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+    private async handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -777,7 +784,7 @@ export class GameMapPropertiesListener {
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const broadcastSpace = await this.scene.broadcastService.joinSpace(speakerZoneName, false);
                 currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             }
         }

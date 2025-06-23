@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/svelte";
 import { derived, get, Readable, Unsubscriber } from "svelte/store";
 import type JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { FilterType } from "@workadventure/messages";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
@@ -38,7 +37,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private conference: JitsiConferenceWrapper | undefined;
     private unsubscribes: Unsubscriber[] = [];
     private jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
-    readonly space: SpaceInterface;
     readonly provider = "jitsi";
     private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
 
@@ -46,15 +44,13 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
 
     constructor(
         private roomConnection: RoomConnection,
-        spaceName: string,
+        public space: SpaceInterface,
         private broadcastService: BroadcastService,
         private playSound: boolean,
         private spaceRegistry: SpaceRegistryInterface
     ) {
         super();
         JitsiBroadcastSpace.numInstances++;
-
-        this.space = this.spaceRegistry.joinSpace(spaceName, FilterType.LIVE_STREAMING_USERS);
 
         this.unsubscribes.push(
             requestedCameraState.subscribe((state) => {
@@ -120,7 +116,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
                             // on speaker zones)
                             notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
-                            this.conference = await this.joinJitsiConference(spaceName);
+                            this.conference = await this.joinJitsiConference(this.space.getName());
                             this.space.emitUpdateUser({
                                 jitsiParticipantId: this.conference.participantId,
                             });

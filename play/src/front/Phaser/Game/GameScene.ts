@@ -1594,7 +1594,7 @@ export class GameScene extends DirtyScene {
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
-            .then(async (onConnect: OnConnectInterface) => {
+            .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
@@ -1609,11 +1609,15 @@ export class GameScene extends DirtyScene {
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS);
-                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
 
-                gameManager
-                    .getChatConnection()
+                this._spaceRegistry
+                    .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS)
+                    .then((space) => {
+                        this.allUserSpace = space;
+                        this.worldUserProvider = new WorldUserProvider(space);
+
+                        return gameManager.getChatConnection();
+                    })
                     .then((chatConnection) => {
                         this._chatConnection = chatConnection;
                         const connection = this.connection;
@@ -1899,18 +1903,19 @@ export class GameScene extends DirtyScene {
                     this.connection,
                     (
                         connection: RoomConnection,
-                        spaceName: string,
+                        space: SpaceInterface,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
                         return new JitsiBroadcastSpace(
                             connection,
-                            spaceName,
+                            space,
                             broadcastService,
                             playSound,
                             this.spaceRegistry
                         );
-                    }
+                    },
+                    this._spaceRegistry
                 );
                 this._broadcastService = broadcastService;
 
@@ -1933,8 +1938,15 @@ export class GameScene extends DirtyScene {
                                 this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
                             }
 
-                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneSpaceStore.set(broadcastStore.space);
+                            broadcastService
+                                .joinSpace(megaphoneSettingsMessage.url)
+                                .then((broadcastStore) => {
+                                    megaphoneSpaceStore.set(broadcastStore.space);
+                                })
+                                .catch((e) => {
+                                    console.error(e);
+                                    Sentry.captureException(e);
+                                });
                         }
                     }
                 });

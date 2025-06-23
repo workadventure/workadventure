@@ -592,6 +592,7 @@ export class SocketManager implements ZoneEventListener {
                 promises.push(
                     space.forwarder.unregisterUser(socket).then(() => {
                         this.deleteSpaceIfEmpty(space);
+                        socketData.joinSpacesPromise.delete(spaceName);
                     })
                 );
             } else {
@@ -1105,6 +1106,7 @@ export class SocketManager implements ZoneEventListener {
         if (space) {
             await space.forwarder.unregisterUser(client);
             this.deleteSpaceIfEmpty(space);
+            socketData.joinSpacesPromise.delete(space.name);
             const success = socketData.spaces.delete(space.name);
             if (!success) {
                 console.error("Could not find space", spaceName, "to leave");

@@ -425,6 +425,7 @@ message QueryMessage {
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
     EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
+    JoinSpaceQuery joinSpaceQuery = 14;
   }
 }
 
@@ -483,6 +484,10 @@ message EnterChatRoomAreaQuery{
   string roomID = 1;
 }
 
+message JoinSpaceQuery{
+  string spaceName = 1;
+  FilterType filterType = 2;
+}
 
 message AnswerMessage {
   int32 id = 1;
@@ -501,6 +506,7 @@ message AnswerMessage {
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
     EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
+    JoinSpaceAnswer joinSpaceAnswer = 16;
   }
 }
 
@@ -563,7 +569,8 @@ message OauthRefreshTokenAnswer {
 message EnterChatRoomAreaAnswer{
 }
 
-
+message JoinSpaceAnswer{
+}
 
 message Member {
   string id = 1;

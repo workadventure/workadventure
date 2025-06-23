@@ -10,13 +10,13 @@ export class SpaceScriptingBridgeService {
     private spaceScriptingBridges: Set<SpaceScriptingBridge> = new Set<SpaceScriptingBridge>();
 
     constructor(spaceRegistry: SpaceRegistryInterface) {
-        iframeListener.registerOpenMessagePortAnswerer("joinSpace", (data, port) => {
+        iframeListener.registerOpenMessagePortAnswerer("joinSpace", async (data, port) => {
             let space: SpaceInterface;
             if (spaceRegistry.exist(data.spaceName)) {
                 space = spaceRegistry.get(data.spaceName);
                 this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
             } else {
-                space = spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
+                space = await spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
                 this.spaceJoinedCounter.set(data.spaceName, 1);
             }
 
