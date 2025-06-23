@@ -67,6 +67,7 @@
                     disabled={infinity}
                     bind:value={property.duration}
                     on:change={onValueChange}
+                    onInput={onValueChange}
                 />
             </div>
         {/if}

@@ -74,7 +74,6 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
-    ViewportInterface,
 } from "../../Connection/ConnexionModels";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -359,6 +358,8 @@ export class GameScene extends DirtyScene {
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+    // Listeners for when the player finishes moving
+    private onPlayerMovementEndedCallbacks: Array<(event: HasPlayerMovedInterface) => void> = [];
 
     public _chatConnection: ChatConnectionInterface | undefined;
 
@@ -911,19 +912,27 @@ export class GameScene extends DirtyScene {
                 gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
-
-                const chatId = localUserStore.getChatId();
-                const email: string | null = localUserStore.getLocalUser()?.email || null;
-                const connection = this.connection;
-                if (email && chatId && connection) {
-                    connection.emitUpdateChatId(email, chatId);
-                    connection.emitPlayerChatID(chatId);
-                }
             })
             .catch((e: unknown) => {
                 console.error("Initialization failed", e);
                 Sentry.captureException(e);
                 errorScreenStore.setException(e);
+            });
+
+        gameManager
+            .getChatConnection()
+            .then(() => {
+                const connection = this.connection;
+                const chatId = localUserStore.getChatId();
+                const email: string | null = localUserStore.getLocalUser()?.email || null;
+                if (email && chatId && connection) {
+                    connection.emitUpdateChatId(email, chatId);
+                    connection.emitPlayerChatID(chatId);
+                }
+            })
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
             });
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
@@ -1310,14 +1319,12 @@ export class GameScene extends DirtyScene {
         if (!camera) {
             return;
         }
-        this.connection?.setViewport(
-            this.validateViewport({
-                left: Math.max(0, camera.scrollX - margin),
-                top: Math.max(0, camera.scrollY - margin),
-                right: camera.scrollX + camera.width + margin,
-                bottom: camera.scrollY + camera.height + margin,
-            })
-        );
+        this.connection?.setViewport({
+            left: Math.max(0, camera.scrollX - margin),
+            top: Math.max(0, camera.scrollY - margin),
+            right: camera.scrollX + camera.width + margin,
+            bottom: camera.scrollY + camera.height + margin,
+        });
     }
 
     public reposition(instant = false): void {
@@ -2065,6 +2072,7 @@ export class GameScene extends DirtyScene {
                             errorScreenStore.setException(error);
                             gameManager.closeGameScene();
                         },
+                        onPlayerMovementEnded: this.onPlayerMovementEnded.bind(this),
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
@@ -3455,6 +3463,11 @@ ${escapedMessage}
             ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+
+        // Call movement ended callbacks if movement just ended
+        for (const cb of this.onPlayerMovementEndedCallbacks) {
+            cb(event);
+        }
     }
 
     private createCollisionWithPlayer() {
@@ -3550,25 +3563,6 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    // We need to store the last valid viewport because in rare circumstances, Phaser can return an invalid camera.
-    private lastValidViewport: ViewportInterface = {
-        left: 0,
-        top: 0,
-        right: 100,
-        bottom: 100,
-    };
-    private validateViewport(viewport: ViewportInterface): ViewportInterface {
-        if (isNaN(viewport.left) || isNaN(viewport.top) || isNaN(viewport.right) || isNaN(viewport.bottom)) {
-            // If the viewport is invalid, we need to use the last valid one.
-            // This can happen when the camera is not yet initialized.
-            return this.lastValidViewport;
-        } else {
-            // If the viewport is valid, we need to store it for later use.
-            this.lastValidViewport = viewport;
-        }
-        return viewport;
-    }
-
     private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -3579,7 +3573,6 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         };
-        viewport = this.validateViewport(viewport);
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.
             // We need to adjust it manually. We set it to something very large to make sure the Woka sees
@@ -3985,5 +3978,10 @@ ${escapedMessage}
             throw new Error("_sayManager not yet initialized");
         }
         return this._sayManager;
+    }
+
+    // Register a callback that will be called when the player movement ends
+    public onPlayerMovementEnded(callback: (event: HasPlayerMovedInterface) => void): void {
+        this.onPlayerMovementEndedCallbacks.push(callback);
     }
 }

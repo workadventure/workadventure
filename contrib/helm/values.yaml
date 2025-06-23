@@ -591,13 +591,13 @@ ingress:
   tls: false
   secretName: ""
   pathType: ImplementationSpecific
+  # Annotations used in multi-domain mode for all routes (and in single-domain mode for "/ws" and "/" route).
+  annotationsRoot:
+    {}
+  # Annotations used only in single-domain mode for "/api", "/uploader", "/icon" and "/map-storage" paths (that are using the rewritePathSuffix).
   annotationsPath:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-  annotationsMapstoragePath:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-
   rewritePathSuffix: "(/|$)(.*)"
 
 redis:

@@ -22,7 +22,7 @@ const actionbar: BaseTranslation = {
     //megaphone: "Use megaphone",
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
-    otherSettings: "Other settings",
+    allSettings: "All settings",
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",

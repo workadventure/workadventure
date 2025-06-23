@@ -8,6 +8,7 @@ import { z } from "zod";
 import { OpenCoWebsiteObject } from "../Chat/Utils";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 import { ExternalComponentZones } from "../Stores/Utils/externalSvelteComponentService";
+import { HasPlayerMovedInterface } from "../Api/Events/HasPlayerMovedInterface";
 
 export interface ExternalSvelteComponentServiceInterface {
     addComponentToZone<Component extends SvelteComponentTyped>(
@@ -37,6 +38,7 @@ export interface ExtensionModuleOptions {
     openErrorScreen?(error: Error): void;
     logoutCallback?(): void;
     showComponentInChat(component: ComponentType, props?: Record<string, unknown>): void;
+    onPlayerMovementEnded?: (callback: (event: HasPlayerMovedInterface) => void) => void;
 }
 
 export interface ExtensionModuleAreaProperty {
