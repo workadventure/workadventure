@@ -46,6 +46,7 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { AxiosResponse, isAxiosError } from "axios";
 import { WebSocket } from "uWebSockets.js";
+import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../models/PusherRoom";
 import type { SocketData } from "../models/Websocket/SocketData";
 
@@ -363,14 +364,23 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("Space filter type mismatch");
         }
 
-        await space.forwarder.registerUser(client, filterType);
+        const deferred = new Deferred<void>();
+        socketData.joinSpacesPromise.set(spaceName, deferred);
+        try {
+            await space.forwarder.registerUser(client, filterType);
+            if (socketData.spaces.has(spaceName)) {
+                console.error(`User ${socketData.name} is trying to join a space he is already in.`);
+                Sentry.captureException(
+                    new Error(`User ${socketData.name} is trying to join a space he is already in.`)
+                );
+            }
 
-        if (socketData.spaces.has(spaceName)) {
-            console.error(`User ${socketData.name} is trying to join a space he is already in.`);
-            Sentry.captureException(new Error(`User ${socketData.name} is trying to join a space he is already in.`));
+            socketData.spaces.add(space.name);
+            deferred.resolve();
+        } catch (e) {
+            deferred.reject(e);
+            throw e;
         }
-
-        socketData.spaces.add(space.name);
     }
 
     private closeWebsocketConnection(client: Socket | AdminSocket, code: number, reason: string): void {
@@ -929,17 +939,26 @@ export class SocketManager implements ZoneEventListener {
         this.forwardMessageToBack(client, message);
     }
 
-    private checkClientIsPartOfSpace(client: Socket, spaceName: string): void {
+    private async checkClientIsPartOfSpace(client: Socket, spaceName: string): Promise<void> {
+        const joinSpacesPromise = client.getUserData().joinSpacesPromise;
+        const joinSpaceDeferred = joinSpacesPromise.get(spaceName);
+        if (joinSpaceDeferred) {
+            await joinSpaceDeferred.promise;
+        }
+
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
             throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of`);
         }
     }
 
-    handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>) {
+    async handleAddSpaceFilterMessage(
+        client: Socket,
+        addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>
+    ) {
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
 
-        this.checkClientIsPartOfSpace(client, newFilter.spaceName);
+        await this.checkClientIsPartOfSpace(client, newFilter.spaceName);
 
         const space = this.spaces.get(newFilter.spaceName);
         if (space) {
@@ -952,12 +971,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleRemoveSpaceFilterMessage(
+    async handleRemoveSpaceFilterMessage(
         client: Socket,
         removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
+        await this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleUnwatch(client);
@@ -973,12 +992,12 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
+    async handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const message = noUndefined(updateSpaceUserMessage);
         //const socketData = client.getUserData();
         //const toUpdateValues = applyFieldMask(message.user, message.updateMask);
         //merge(socketData.spaceUser, toUpdateValues);
-        this.checkClientIsPartOfSpace(client, message.spaceName);
+        await this.checkClientIsPartOfSpace(client, message.spaceName);
         const space = this.spaces.get(message.spaceName);
         if (!space) {
             throw new Error(
@@ -1236,10 +1255,10 @@ export class SocketManager implements ZoneEventListener {
     }
 
     // handle the public event for proximity message
-    handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
+    async handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
         const socketData = client.getUserData();
 
-        this.checkClientIsPartOfSpace(client, publicEvent.spaceName);
+        await this.checkClientIsPartOfSpace(client, publicEvent.spaceName);
         const space = this.spaces.get(publicEvent.spaceName);
         if (!space) {
             throw new Error(
@@ -1258,10 +1277,10 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
+    async handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
         const socketData = client.getUserData();
 
-        this.checkClientIsPartOfSpace(client, privateEvent.spaceName);
+        await this.checkClientIsPartOfSpace(client, privateEvent.spaceName);
         const space = this.spaces.get(privateEvent.spaceName);
         if (!space) {
             throw new Error(

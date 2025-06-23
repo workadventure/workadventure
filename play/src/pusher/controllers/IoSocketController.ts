@@ -17,6 +17,7 @@ import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
+import { Deferred } from "ts-deferred";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -502,6 +503,7 @@ export class IoSocketController {
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
                             spaces: new Set<SpaceName>(),
+                            joinSpacesPromise: new Map<SpaceName, Deferred<void>>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -717,7 +719,7 @@ export class IoSocketController {
                                 message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleAddSpaceFilterMessage(
+                            await socketManager.handleAddSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.addSpaceFilterMessage)
                             );
@@ -728,7 +730,7 @@ export class IoSocketController {
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleRemoveSpaceFilterMessage(
+                            await socketManager.handleRemoveSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.removeSpaceFilterMessage)
                             );
@@ -790,7 +792,7 @@ export class IoSocketController {
                                 message.message.updateSpaceUserMessage.spaceName
                             }`;
 
-                            socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
+                            await socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
                             break;
                         }
                         case "updateChatIdMessage": {
@@ -1029,7 +1031,7 @@ export class IoSocketController {
                                 message.message.publicEvent.spaceName
                             }`;
 
-                            socketManager.handlePublicEvent(socket, message.message.publicEvent);
+                            await socketManager.handlePublicEvent(socket, message.message.publicEvent);
                             break;
                         }
                         case "privateEvent": {
@@ -1037,7 +1039,7 @@ export class IoSocketController {
                                 message.message.privateEvent.spaceName
                             }`;
 
-                            socketManager.handlePrivateEvent(socket, message.message.privateEvent);
+                            await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                             break;
                         }
                         default: {
