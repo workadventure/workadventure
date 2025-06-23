@@ -33,10 +33,6 @@ const spaceManager = {
                         socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
                         break;
                     }
-                    case "addSpaceUserMessage": {
-                        socketManager.handleAddSpaceUserMessage(pusher, message.message.addSpaceUserMessage);
-                        break;
-                    }
                     case "updateSpaceUserMessage": {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
@@ -46,10 +42,6 @@ const spaceManager = {
                             pusher,
                             message.message.updateSpaceMetadataMessage
                         );
-                        break;
-                    }
-                    case "removeSpaceUserMessage": {
-                        socketManager.handleRemoveSpaceUserMessage(pusher, message.message.removeSpaceUserMessage);
                         break;
                     }
                     case "pongMessage": {
@@ -71,6 +63,10 @@ const spaceManager = {
                     }
                     case "syncSpaceUsersMessage": {
                         socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
+                        break;
+                    }
+                    case "spaceQueryMessage": {
+                        socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
                         break;
                     }
                     default: {
