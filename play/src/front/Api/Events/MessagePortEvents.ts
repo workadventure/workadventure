@@ -25,6 +25,14 @@ export const iframeMessagePortTypeGuards = {
                 type: z.literal("leave"),
                 data: z.undefined(),
             }),
+            z.object({
+                type: z.literal("startStreaming"),
+                data: z.undefined(),
+            }),
+            z.object({
+                type: z.literal("stopStreaming"),
+                data: z.undefined(),
+            }),
         ]),
         workAdventureEvents: z.union([
             z.object({
