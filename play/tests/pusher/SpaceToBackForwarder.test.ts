@@ -1,7 +1,8 @@
 import { FilterType, SpaceUser, SubMessage } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
-import { Query, Space } from "../../src/pusher/models/Space";
+import { Space } from "../../src/pusher/models/Space";
+import { Query } from "../../src/pusher/models/SpaceQuery";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";

@@ -12,6 +12,7 @@ import type {
     BatchMessage,
     SubMessage,
 } from "@workadventure/messages";
+import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../PusherRoom";
 import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
@@ -57,6 +58,7 @@ export type SocketData = {
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
     spaces: Set<SpaceName>;
+    joinSpacesPromise: Map<SpaceName, Deferred<void>>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
