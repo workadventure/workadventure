@@ -1,4 +1,4 @@
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import { BanEvent, ChatEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
@@ -55,13 +55,24 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
-import { IframeMessagePortMap, isIframeMessagePortWrapper } from "./Events/MessagePortEvents";
+import {
+    IframeErrorMessagePortEvent,
+    IframeMessagePortMap,
+    IframeSuccessMessagePortEvent,
+    isIframeMessagePortWrapper,
+} from "./Events/MessagePortEvents";
 import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
     source: MessageEventSource | null
 ) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
+
+type OpenMessagePortAnswererCallback<T extends keyof IframeMessagePortMap> = (
+    data: IframeMessagePortMap[T]["data"],
+    port: CheckedWorkAdventureMessagePort<T>,
+    source: MessageEventSource | null
+) => void | PromiseLike<void>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -224,9 +235,6 @@ class IframeListener {
     private readonly _stopListeningToStreamInBubbleStream: Subject<void> = new Subject();
     public readonly stopListeningToStreamInBubbleStream = this._stopListeningToStreamInBubbleStream.asObservable();
 
-    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
-    private readonly _openMessagePortStreams: { [K in keyof IframeMessagePortMap]?: Subject<unknown> } = {};
-
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -237,6 +245,9 @@ class IframeListener {
     private answerers: {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
+
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
+    private readonly openMessagePortAnswerers: { [K in keyof IframeMessagePortMap]?: unknown } = {};
 
     public getUIWebsiteIframeIdFromSource(source: MessageEventSource): string | undefined {
         for (const [iframe, id] of this.iframes.entries()) {
@@ -286,6 +297,7 @@ class IframeListener {
                 }
 
                 if (isIframeMessagePortWrapper(payload)) {
+                    const queryId = payload.id;
                     const port = message.ports[0];
                     if (!port) {
                         console.error("Received a message with messagePort=true but no port was provided.");
@@ -302,10 +314,59 @@ class IframeListener {
                         messagePort.onCloseIframe();
                     });
 
-                    this.getOpenMessagePortSubject(payload.type)?.next({
-                        port: messagePort,
-                        data: payload.data,
-                    });
+                    const answerer = this.openMessagePortAnswerers[payload.type] as
+                        | OpenMessagePortAnswererCallback<keyof IframeMessagePortMap>
+                        | undefined;
+                    if (answerer === undefined) {
+                        const errorMsg =
+                            'The iFrame sent an open port message of type "' +
+                            payload.type +
+                            '" but there is no service configured to answer these messages.';
+                        console.error(errorMsg);
+                        iframe.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: payload.type,
+                                error: errorMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
+                        return;
+                    }
+
+                    const errorHandler = (reason: unknown) => {
+                        console.error(
+                            "An error occurred while responding to an iFrame open port message query.",
+                            reason
+                        );
+                        const error = asError(reason);
+                        const reasonMsg = error.message;
+
+                        iframe?.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                messagePort: true,
+                                error: reasonMsg,
+                            } as IframeErrorMessagePortEvent,
+                            "*"
+                        );
+                    };
+
+                    try {
+                        Promise.resolve(answerer(payload.data, messagePort, message.source))
+                            .then((value) => {
+                                iframe?.contentWindow?.postMessage(
+                                    {
+                                        id: queryId,
+                                        messagePort: true,
+                                    } satisfies IframeSuccessMessagePortEvent,
+                                    "*"
+                                );
+                            })
+                            .catch(errorHandler);
+                    } catch (reason) {
+                        errorHandler(reason);
+                    }
                 } else if (isIframeQueryWrapper(payload)) {
                     const queryId = payload.id;
                     const query = payload.query;
@@ -1090,23 +1151,23 @@ class IframeListener {
         );
     }*/
 
-    //private getOpenMessagePortSubject<K extends keyof IframeMessagePortMap>(type: K): Subject<{ data: IframeMessagePortMap[K]["data"], port: MessagePort }> {
-    private getOpenMessagePortSubject<K extends keyof IframeMessagePortMap>(
-        type: K
-    ): Subject<{ data: IframeMessagePortMap[K]["data"]; port: CheckedWorkAdventureMessagePort<K> }> {
-        if (this._openMessagePortStreams[type] === undefined) {
-            this._openMessagePortStreams[type] = new Subject<unknown>();
-        }
-        return this._openMessagePortStreams[type] as Subject<{
-            data: IframeMessagePortMap[K]["data"];
-            port: CheckedWorkAdventureMessagePort<K>;
-        }>;
+    /**
+     * Registers a callback that can be used to respond to some query (as defined in the IframeQueryMap type).
+     *
+     * Important! There can be only one "answerer" so registering a new one will unregister the old one.
+     *
+     * @param key The "type" of the query we are answering
+     * @param callback
+     */
+    public registerOpenMessagePortAnswerer<T extends keyof IframeMessagePortMap>(
+        key: T,
+        callback: OpenMessagePortAnswererCallback<T>
+    ): void {
+        this.openMessagePortAnswerers[key] = callback;
     }
 
-    public getOpenMessagePortObservable<K extends keyof IframeMessagePortMap>(
-        type: K
-    ): Observable<{ data: IframeMessagePortMap[K]["data"]; port: CheckedWorkAdventureMessagePort<K> }> {
-        return this.getOpenMessagePortSubject(type).asObservable();
+    public unregisterOpenMessagePortAnswerer(key: keyof IframeMessagePortMap): void {
+        delete this.openMessagePortAnswerers[key];
     }
 }
 
