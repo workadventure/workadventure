@@ -94,6 +94,18 @@ export class SpaceScriptingBridge {
                     this.onSpaceLeft();
                     break;
                 }
+                case "startStreaming": {
+                    this.space.emitUpdateUser({
+                        megaphoneState: true,
+                    });
+                    break;
+                }
+                case "stopStreaming": {
+                    this.space.emitUpdateUser({
+                        megaphoneState: false,
+                    });
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = event.data;
                 }

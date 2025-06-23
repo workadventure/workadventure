@@ -17,19 +17,9 @@ export class SpaceScriptingBridgeService {
             if (spaceRegistry.exist(data.spaceName)) {
                 space = spaceRegistry.get(data.spaceName);
                 this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
-                console.log(
-                    `>>> SpaceScriptingBridgeService.ts >>> Space ${
-                        data.spaceName
-                    } already exists, joining again. Current count: ${this.spaceJoinedCounter.get(data.spaceName)}`
-                );
             } else {
                 space = spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
                 this.spaceJoinedCounter.set(data.spaceName, 1);
-                console.log(
-                    `>>> SpaceScriptingBridgeService.ts >>> Space ${
-                        data.spaceName
-                    } does not exist, creating it. Current count: ${this.spaceJoinedCounter.get(data.spaceName)}`
-                );
             }
 
             const spaceScriptingBridge = new SpaceScriptingBridge(space, port, () => {
@@ -44,11 +34,6 @@ export class SpaceScriptingBridgeService {
                     spaceRegistry.leaveSpace(space);
                     this.spaceJoinedCounter.delete(data.spaceName);
                 }
-                console.log(
-                    `>>> SpaceScriptingBridgeService.ts >>> Space ${
-                        data.spaceName
-                    } left. Current count: ${this.spaceJoinedCounter.get(data.spaceName)}`
-                );
             });
             this.spaceScriptingBridges.add(spaceScriptingBridge);
         });

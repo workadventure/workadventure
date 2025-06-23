@@ -151,4 +151,16 @@ export class Space {
         this.messagesSubscription.unsubscribe();
         this.port.close();
     }
+
+    public startStreaming(): void {
+        this.port.postMessage({
+            type: "startStreaming",
+        });
+    }
+
+    public stopStreaming(): void {
+        this.port.postMessage({
+            type: "stopStreaming",
+        });
+    }
 }

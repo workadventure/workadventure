@@ -126,5 +126,65 @@ test.describe('Scripting space-related functions', () => {
         await expect.poll(() => evaluateScript(page, async () => {
             return window.lastRemoteAvailabilityStatus;
         })).toBe(9);
+
+        // Bobs leaves the space
+        await evaluateScript(bob, async () => {
+            window.mySpace.leave();
+        });
+
+        // Alice leaves the space
+        await evaluateScript(page, async () => {
+            window.mySpace.leave();
+        });
+
+        /**
+         * Test part 3: Let's do the same test with a livestream space
+         */
+
+        await evaluateScript(page, async () => {
+            //await WA.player.teleport(1, 1);
+            window.userCount = 0;
+            window.mySpace = WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace.userJoinedObservable.subscribe((user) => {
+                window.userCount++;
+                window.lastJoinedUser = user;
+            });
+            window.mySpace.userLeftObservable.subscribe((user) => window.userCount--);
+        });
+
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+        // Bob joins the same space
+        await evaluateScript(bob, async () => {
+            window.mySpace = WA.spaces.joinSpace("some-test-space", "streaming");
+        });
+
+        // Bob does not stream, still no one in the space
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+        await bob.pause();
+
+        // Bob starts streaming
+        await evaluateScript(bob, async () => {
+            window.mySpace.startStreaming();
+        });
+
+        // User count in the space should now be 1
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(1);
+
+
     });
+
+    // TODO: write a test to test the "joinSpace" function with a "livestream" space type
+    // bob joins a livestream space, then starts streaming
+    // alice sees bob user when it starts streaming
+    // bob stops streaming
+    // alice does not see bob anymore
+    // TODO: add a function to start / stop streaming in the scripting API
 });
