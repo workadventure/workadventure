@@ -88,6 +88,7 @@ export const isIframeMessagePortType = (type: string): type is keyof IframeMessa
 
 export interface IframeMessagePortWrapper<T extends keyof IframeMessagePortMap> {
     messagePort: true;
+    id: number;
     type: T;
     data: IframeMessagePortMap[T]["data"];
 }
@@ -97,7 +98,29 @@ export const isIframeMessagePortWrapper = (event: any): event is IframeMessagePo
     typeof event === "object" &&
     event.messagePort === true &&
     typeof event.type === "string" &&
+    z.number().safeParse(event.id).success &&
     isIframeMessagePortType(event.type) &&
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     iframeMessagePortTypeGuards[event.type].data.safeParse(event.data).success;
+
+export const isIframeErrorMessagePortEvent = z.object({
+    id: z.number(),
+    error: z.string(),
+    messagePort: z.literal(true),
+});
+
+/**
+ * A message sent from the game to the iFrame when an error occurs while processing a message port opening.
+ */
+export type IframeErrorMessagePortEvent = z.infer<typeof isIframeErrorMessagePortEvent>;
+
+export const isIframeSuccessMessagePortEvent = z.object({
+    id: z.number(),
+    messagePort: z.literal(true),
+});
+
+/**
+ * A message sent from the game to the iFrame when an error occurs while processing a message port opening.
+ */
+export type IframeSuccessMessagePortEvent = z.infer<typeof isIframeSuccessMessagePortEvent>;

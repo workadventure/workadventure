@@ -7,6 +7,7 @@ export function sendToWorkadventure(content: IframeEvent, transfer?: Transferabl
 }
 
 let queryNumber = 0;
+let queryNumberMessagePort = 0;
 
 export const answerPromises = new Map<
     number,
@@ -16,6 +17,15 @@ export const answerPromises = new Map<
                 | IframeQueryMap[keyof IframeQueryMap]["answer"]
                 | PromiseLike<IframeQueryMap[keyof IframeQueryMap]["answer"]>
         ) => void;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        reject: (reason?: any) => void;
+    }
+>();
+
+export const answerPromisesMessagePort = new Map<
+    number,
+    {
+        resolve: () => void;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         reject: (reason?: any) => void;
     }
@@ -46,21 +56,30 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
     });
 }
 
-export function openMessagePort<K extends keyof IframeMessagePortMap>(
+export async function openMessagePort<K extends keyof IframeMessagePortMap>(
     type: K,
     data: IframeMessagePortData<K>["data"]
-): CheckedIframeMessagePort<K> {
-    const port = new MessageChannel();
-    window.parent.postMessage(
-        {
-            messagePort: true,
-            type,
-            data,
-        },
-        "*",
-        [port.port1]
-    );
-    return new CheckedIframeMessagePort<K>(port.port2, type);
+): Promise<CheckedIframeMessagePort<K>> {
+    return new Promise<CheckedIframeMessagePort<K>>((resolve, reject) => {
+        const port = new MessageChannel();
+        window.parent.postMessage(
+            {
+                messagePort: true,
+                id: queryNumberMessagePort,
+                type,
+                data,
+            },
+            "*",
+            [port.port1]
+        );
+
+        answerPromisesMessagePort.set(queryNumberMessagePort, {
+            resolve: () => resolve(new CheckedIframeMessagePort<K>(port.port2, type)),
+            reject,
+        });
+
+        queryNumberMessagePort++;
+    });
 }
 
 /**

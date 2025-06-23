@@ -1,4 +1,3 @@
-import { Subscription } from "rxjs";
 import { FilterType } from "@workadventure/messages";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
@@ -6,13 +5,12 @@ import { iframeListener } from "../../Api/IframeListener";
 import { SpaceScriptingBridge } from "./SpaceScriptingBridge";
 
 export class SpaceScriptingBridgeService {
-    private subscription: Subscription;
     // Number of times a space is being joined from (different) iframes
     private spaceJoinedCounter = new Map<string, number>();
     private spaceScriptingBridges: Set<SpaceScriptingBridge> = new Set<SpaceScriptingBridge>();
 
     constructor(spaceRegistry: SpaceRegistryInterface) {
-        this.subscription = iframeListener.getOpenMessagePortObservable("joinSpace").subscribe(({ data, port }) => {
+        iframeListener.registerOpenMessagePortAnswerer("joinSpace", (data, port) => {
             let space: SpaceInterface;
             if (spaceRegistry.exist(data.spaceName)) {
                 space = spaceRegistry.get(data.spaceName);
@@ -49,7 +47,7 @@ export class SpaceScriptingBridgeService {
     }
 
     public destroy(): void {
-        this.subscription.unsubscribe();
+        iframeListener.unregisterOpenMessagePortAnswerer("joinSpace");
         for (const spaceScriptingBridge of this.spaceScriptingBridges.values()) {
             spaceScriptingBridge.leave();
         }

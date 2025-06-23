@@ -18,8 +18,8 @@ export class WorkAdventureSpacesCommands extends IframeApiContribution<WorkAdven
      * @param {string} spaceName Name of the space to join
      * @param {("everyone"|"streaming")} filterType Type of filter to apply when joining the space. THis must match the filter decided by the first person joining the space.
      */
-    public joinSpace(spaceName: string, filterType: "everyone" | "streaming"): Space {
-        const port = openMessagePort("joinSpace", { spaceName, filterType });
+    public async joinSpace(spaceName: string, filterType: "everyone" | "streaming"): Promise<Space> {
+        const port = await openMessagePort("joinSpace", { spaceName, filterType });
 
         return new Space(port);
     }

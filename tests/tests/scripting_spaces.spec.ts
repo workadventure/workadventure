@@ -11,7 +11,7 @@ test.describe('Scripting space-related functions', () => {
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
             window.userCount = 0;
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -27,7 +27,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob joins the same space
         await evaluateScript(bob, async () => {
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
         });
 
         // User count in the space should now be 2
@@ -52,7 +52,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob joins the first time
         await evaluateScript(bob, async () => {
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
         });
 
         // User count in the space should now be 2
@@ -62,7 +62,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob joins the same space again
         await evaluateScript(bob, async () => {
-            window.mySpace2 = WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace2 = await WA.spaces.joinSpace("some-test-space", "everyone");
         });
 
         // User count in the space should still be 2, as Bob is already in the space
@@ -96,7 +96,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob joins again
         await evaluateScript(bob, async () => {
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
         });
 
         // User count in the space should still be 2, as Bob is already in the space
@@ -144,7 +144,7 @@ test.describe('Scripting space-related functions', () => {
         await evaluateScript(page, async () => {
             //await WA.player.teleport(1, 1);
             window.userCount = 0;
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -158,7 +158,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob joins the same space
         await evaluateScript(bob, async () => {
-            window.mySpace = WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
         });
 
         // Bob does not stream, still no one in the space
@@ -181,7 +181,18 @@ test.describe('Scripting space-related functions', () => {
 
     });
 
-    // TODO: write a test to test the "joinSpace" function with a "livestream" space type
+    test('cannot join a space with a difference filter', async ({ browser}, { project }) => {
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+
+        await expect(async () => {
+            await evaluateScript(page, async () => {
+                await WA.spaces.joinSpace("some-test-space", "everyone");
+                await WA.spaces.joinSpace("some-test-space", "streaming");
+            });
+        }).toThrowError("You cannot join a space with a different filter type than the one you already joined. You have already joined the space with filter type 'everyone', but you are trying to join it with filter type 'streaming'.");
+    });
+
+        // TODO: write a test to test the "joinSpace" function with a "livestream" space type
     // bob joins a livestream space, then starts streaming
     // alice sees bob user when it starts streaming
     // bob stops streaming
