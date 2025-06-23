@@ -1,4 +1,4 @@
-import { SpaceUser, SubMessage, PusherToBackSpaceMessage } from "@workadventure/messages";
+import { SpaceUser, SubMessage, PusherToBackSpaceMessage, FilterType } from "@workadventure/messages";
 import { describe, it, vi, expect } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
@@ -40,6 +40,7 @@ describe("SpaceToFrontDispatcher", () => {
                         addSpaceUserMessage: {
                             spaceName: "test",
                             user: spaceUser,
+                            filterType: FilterType.ALL_USERS,
                         },
                     },
                 });
@@ -97,6 +98,7 @@ describe("SpaceToFrontDispatcher", () => {
                         addSpaceUserMessage: {
                             spaceName: "test",
                             user: spaceUser,
+                            filterType: FilterType.ALL_USERS,
                         },
                     },
                 });
