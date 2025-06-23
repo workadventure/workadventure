@@ -22,7 +22,11 @@ export class ApiClientRepository {
         if (client === undefined) {
             this.roomManagerClients[index] = client = new RoomManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure()
+                grpc.credentials.createInsecure(),
+                {
+                    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
+                    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+                }
             );
         }
         debug("Mapping room %s to API server %s", roomId, this.apiUrls[index]);
@@ -33,7 +37,10 @@ export class ApiClientRepository {
     public getAllClients(): Promise<RoomManagerClient[]> {
         for (let i = 0; i < this.apiUrls.length; i++) {
             if (this.roomManagerClients[i] === undefined) {
-                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpc.credentials.createInsecure());
+                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpc.credentials.createInsecure(), {
+                    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
+                    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+                });
             }
         }
         return Promise.resolve(this.roomManagerClients);
@@ -46,7 +53,11 @@ export class ApiClientRepository {
         if (client === undefined) {
             this.spaceManagerClients[index] = client = new SpaceManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure()
+                grpc.credentials.createInsecure(),
+                {
+                    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
+                    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+                }
             );
         }
         debug("Mapping room %s to API server %s", spaceName, this.apiUrls[index]);

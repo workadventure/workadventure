@@ -9,7 +9,10 @@ export function getMapStorageClient(): MapStorageClient {
         if (!MAP_STORAGE_URL) {
             throw new Error("MAP_STORAGE_URL is not configured");
         }
-        mapStorageClient = new MapStorageClient(MAP_STORAGE_URL, grpc.credentials.createInsecure());
+        mapStorageClient = new MapStorageClient(MAP_STORAGE_URL, grpc.credentials.createInsecure(), {
+            "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
+            "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+        });
     }
     return mapStorageClient;
 }

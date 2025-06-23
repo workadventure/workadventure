@@ -1090,6 +1090,7 @@ export class GameRoom implements BrothersFinder {
             emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
             return;
         }
+
         getMapStorageClient().handleEditMapCommandWithKeyMessage(
             {
                 mapKey: this._wamUrl,
@@ -1100,13 +1101,13 @@ export class GameRoom implements BrothersFinder {
             },
             (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                 if (err) {
-                    let message = "Unknown error";
+                    let messages = "Unknown error";
                     if (err instanceof Error) {
-                        message = err.message;
+                        messages = err.message;
                     } else if (typeof err === "string") {
-                        message = err;
+                        messages = err;
                     }
-                    emitError(user.socket, message);
+                    emitError(user.socket, messages);
                     return;
                 }
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {

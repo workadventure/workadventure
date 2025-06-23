@@ -59,7 +59,10 @@ resourceUrlModule.init(hookManager);
 const fileModule = new FileModule();
 fileModule.init(hookManager);
 
-const server = new grpc.Server();
+const server = new grpc.Server({
+    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
+    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+});
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 server.addService(MapStorageService, mapStorageServer);

@@ -332,8 +332,8 @@ export class SocketManager implements ZoneEventListener {
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.join(client);
         } catch (e) {
-            Sentry.captureException(`An error occurred on "join_room" event ${e}`);
-            console.error(`An error occurred on "join_room" event ${e}`);
+            Sentry.captureException(e);
+            console.error(`An error occurred on "join_room" event`, e);
         }
     }
 
