@@ -87,52 +87,44 @@ export class Space implements SpaceInterface {
             const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
             spaceStreamToBack
                 .on("data", (message: BackToPusherSpaceMessage) => {
-                    if (message.message) {
-                        switch (message.message.$case) {
-                            case "pingMessage":
-                                if (spaceStreamToBack.pingTimeout) {
-                                    clearTimeout(spaceStreamToBack.pingTimeout);
-                                    spaceStreamToBack.pingTimeout = undefined;
-                                }
+                    try {
+                        if (message.message) {
+                            switch (message.message.$case) {
+                                case "pingMessage":
+                                    if (spaceStreamToBack.pingTimeout) {
+                                        clearTimeout(spaceStreamToBack.pingTimeout);
+                                        spaceStreamToBack.pingTimeout = undefined;
+                                    }
 
-                                spaceStreamToBack.write({
-                                    message: {
-                                        $case: "pongMessage",
-                                        pongMessage: {},
-                                    },
-                                });
+                                    spaceStreamToBack.write({
+                                        message: {
+                                            $case: "pongMessage",
+                                            pongMessage: {},
+                                        },
+                                    });
 
-                                spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                    console.error("Error spaceStreamToBack timed out for back:", this.backId);
-                                    Sentry.captureException(
-                                        "Error spaceStreamToBack timed out for back: " + this.backId
-                                    );
-                                    spaceStreamToBack.end();
-                                    this.spaceStreamToBackPromise = undefined;
-                                    this.initSpace();
-                                    this.sendLocalUsersToBack();
-                                }, 1000 * 60);
+                                    spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                        console.error("Error spaceStreamToBack timed out for back:", this.backId);
+                                        Sentry.captureException(
+                                            "Error spaceStreamToBack timed out for back: " + this.backId
+                                        );
+                                        spaceStreamToBack.end();
+                                        this.spaceStreamToBackPromise = undefined;
+                                        this.initSpace();
+                                        this.sendLocalUsersToBack();
+                                    }, 1000 * 60);
 
-                                return;
-                            case "answerMessage":
-                                if (message.message.answerMessage.answer === undefined) {
-                                    console.error(
-                                        "Invalid message received. Answer missing.",
-                                        message.message.answerMessage
-                                    );
-                                    throw new Error("Invalid message received. Answer missing.");
-                                }
-                                this.query.receiveAnswer(
-                                    message.message.answerMessage.id,
-                                    message.message.answerMessage.answer
-                                );
-                                break;
-                            default:
-                                this.dispatcher.handleMessage(message);
-                                break;
+                                    return;
+                                default:
+                                    this.dispatcher.handleMessage(message);
+                                    break;
+                            }
+                        } else {
+                            this.dispatcher.handleMessage(message);
                         }
-                    } else {
-                        this.dispatcher.handleMessage(message);
+                    } catch (e) {
+                        console.error("Error while handling message", e);
+                        Sentry.captureException(e);
                     }
                 })
                 .on("end", () => {
@@ -140,10 +132,18 @@ export class Space implements SpaceInterface {
                     if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                     //this.cleanup();
                     this.spaceStreamToBackPromise = undefined;
+                    // Lorsqu'une connexion au back se termine (end ou error), on réinitialise la connexion et on renvoie les utilisateurs locaux.
                     this.initSpace();
                     this.sendLocalUsersToBack();
                 })
+                .on("status", (status) => {
+                    console.log("status : ", status);
+                    //voir si on peut gerer la fin de la connexion ici
+                })
                 .on("error", (err: Error) => {
+                    // On gère l'erreur comme un 'end' car la connexion au back est fermée.
+                    this.initSpace();
+                    this.sendLocalUsersToBack();
                     console.error(
                         "Error in connection to back server '" +
                             apiSpaceClient.getChannel().getTarget() +

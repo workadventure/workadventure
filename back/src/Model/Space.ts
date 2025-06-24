@@ -14,6 +14,7 @@ import {
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import { asError } from "catch-unknown";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
 
@@ -338,6 +339,12 @@ export class Space implements CustomJsonReplacerInterface {
                         throw new Error("SpaceQueryMessage has no user");
                     }
 
+                    if (this.filterType !== spaceQueryMessage.query.addSpaceUserQuery.filterType) {
+                        console.error("Filter type mismatch when adding user to space");
+                        Sentry.captureException("Filter type mismatch when adding user to space");
+                        throw new Error("Filter type mismatch when adding user to space");
+                    }
+
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
                     return {
                         answer: {
@@ -368,13 +375,14 @@ export class Space implements CustomJsonReplacerInterface {
                 }
             }
         } catch (e) {
-            console.error("Error while handling query", e);
-            Sentry.captureException(e);
+            const error = asError(e);
+            console.error("Error while handling query", error);
+            Sentry.captureException(error);
             return {
                 answer: {
                     $case: "error",
                     error: {
-                        message: "Error while handling query",
+                        message: `Error while handling query : ${error.message}}`,
                     },
                 },
             };

@@ -56,9 +56,9 @@ export class Query {
         if (answer.$case === "error") {
             query.reject(new Error("Error received from the back: " + answer.error.message));
             return;
+        } else {
+            query.resolve(answer);
         }
-
-        query.resolve(answer);
 
         this._queries.delete(queryId);
     }

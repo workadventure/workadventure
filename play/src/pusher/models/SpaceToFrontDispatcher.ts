@@ -62,8 +62,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     this.updateMetadata(isMetadata.data);
                     break;
                 }
-                case "pingMessage":
-                case "answerMessage": {
+                case "pingMessage": {
                     throw new Error(`${message.message.$case} should not be received by the dispatcher`);
                 }
                 case "kickOffMessage": {
@@ -86,6 +85,17 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     debug("[space] privateEvent received");
                     const privateEvent = message.message.privateEvent;
                     this.sendPrivateEvent(noUndefined(privateEvent));
+                    break;
+                }
+                case "answerMessage": {
+                    if (message.message.answerMessage.answer === undefined) {
+                        console.error("Invalid message received. Answer missing.", message.message.answerMessage);
+                        throw new Error("Invalid message received. Answer missing.");
+                    }
+                    this._space.query.receiveAnswer(
+                        message.message.answerMessage.id,
+                        message.message.answerMessage.answer
+                    );
                     break;
                 }
                 default: {
