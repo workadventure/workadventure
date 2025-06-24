@@ -43,36 +43,36 @@ describe("Space test", () => {
         vi.restoreAllMocks();
     });
 
-    it("should return a error when pass a empty string as spaceName", () => {
+    it("should return a error when pass a empty string as spaceName", async () => {
         const spaceName = "";
         const metadata = new Map<string, unknown>();
 
-        expect(() => {
-            new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
-        }).toThrow(SpaceNameIsEmptyError);
+        await expect(
+            Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata)
+        ).rejects.toThrow(SpaceNameIsEmptyError);
     });
-    it("should not return a error when pass a string as spaceName", () => {
+    it("should not return a error when pass a string as spaceName", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
+        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
         expect(space.getName()).toBe(spaceName);
     });
-    it("should emit joinSpace event when you create the space", () => {
+    it("should emit joinSpace event when you create the space", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
         const mockRoomConnection = {
             emitJoinSpace: vi.fn(),
         };
 
-        new Space(spaceName, metadata, mockRoomConnection as unknown as RoomConnection, FilterType.ALL_USERS);
+        await Space.create(spaceName, FilterType.ALL_USERS, mockRoomConnection as unknown as RoomConnection, metadata);
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, FilterType.ALL_USERS);
     });
 
-    it("should emit leaveSpace event when you call destroy", () => {
+    it("should emit leaveSpace event when you call destroy", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
@@ -81,11 +81,11 @@ describe("Space test", () => {
             emitLeaveSpace: vi.fn(),
         };
 
-        const space = new Space(
+        const space = await Space.create(
             spaceName,
-            metadata,
+            FilterType.ALL_USERS,
             mockRoomConnection as unknown as RoomConnection,
-            FilterType.ALL_USERS
+            metadata
         );
 
         space.destroy();
@@ -94,11 +94,11 @@ describe("Space test", () => {
 
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenLastCalledWith(spaceName);
     });
-    it("should add metadata when key is not in metadata map", () => {
+    it("should add metadata when key is not in metadata map", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
+        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -112,11 +112,11 @@ describe("Space test", () => {
 
         expect(result).toStrictEqual(newMetadata);
     });
-    it("should update metadata when key is already in metadata map ", () => {
+    it("should update metadata when key is already in metadata map ", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
+        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -126,12 +126,12 @@ describe("Space test", () => {
 
         expect(result).toStrictEqual(newMetadata);
     });
-    it("should not delete metadata who is in space data but not in newMetadata map ", () => {
+    it("should not delete metadata who is in space data but not in newMetadata map ", async () => {
         const spaceName = "space-name";
 
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = new Space(spaceName, metadata, defaultRoomConnectionMock, FilterType.ALL_USERS);
+        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],
