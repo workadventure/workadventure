@@ -27,7 +27,7 @@ vi.mock("../../Connection/ConnectionManager", () => {
 });
 
 describe("SpaceRegistry", () => {
-    it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", () => {
+    it("should call updateSpaceMetadata when stream updateSpaceMetadata receive a new message", async () => {
         const roomConnection = new MockRoomConnectionForSpaces();
 
         const updateSpaceMetadataMessage: UpdateSpaceMetadataMessage = {
@@ -38,7 +38,7 @@ describe("SpaceRegistry", () => {
         };
 
         const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
-        const space = spaceRegistry.joinSpace("space-name", FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace("space-name", FilterType.ALL_USERS);
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);
 

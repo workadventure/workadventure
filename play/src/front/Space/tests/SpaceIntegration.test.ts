@@ -92,13 +92,13 @@ vi.mock("../../Connection/ConnectionManager", () => {
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
-    it("should emit event when you create space and spaceFilter", () => {
+    it("should emit event when you create space and spaceFilter", async () => {
         const roomConnection = new MockRoomConnection();
         const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
@@ -123,7 +123,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -173,7 +173,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -218,7 +218,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -284,7 +284,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const subscriber = vi.fn();
 
@@ -324,7 +324,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
         const subscriber = vi.fn();
 
