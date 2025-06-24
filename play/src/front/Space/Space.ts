@@ -50,7 +50,7 @@ export class Space implements SpaceInterface {
         name: string,
         private metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
-        public filterType: FilterType
+        public readonly filterType: FilterType
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();

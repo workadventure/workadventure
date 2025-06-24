@@ -14,6 +14,11 @@ export class SpaceScriptingBridgeService {
             let space: SpaceInterface;
             if (spaceRegistry.exist(data.spaceName)) {
                 space = spaceRegistry.get(data.spaceName);
+                if (space.filterType !== this.getFilterType(data.filterType)) {
+                    throw new Error(
+                        `Cannot join space ${data.spaceName} with filter type ${data.filterType}, expected ${space.filterType}`
+                    );
+                }
                 this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
             } else {
                 space = await spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
