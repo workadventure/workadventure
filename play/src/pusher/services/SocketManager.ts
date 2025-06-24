@@ -58,7 +58,7 @@ import type { BackSpaceConnection, SocketData } from "../models/Websocket/Socket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
-import { EMBEDDED_DOMAINS_WHITELIST, SECRET_KEY } from "../enums/EnvironmentVariable";
+import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
@@ -94,7 +94,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleAdminRoom(client: AdminSocket, roomId: string): Promise<void> {
-        const apiClient = await apiClientRepository.getClient(roomId);
+        const apiClient = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
         const socketData = client.getUserData();
         const adminRoomStream = apiClient.adminRoom();
         if (!socketData.adminConnections) {
@@ -248,7 +248,7 @@ export class SocketManager implements ZoneEventListener {
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");
-            const apiClient = await apiClientRepository.getClient(socketData.roomId);
+            const apiClient = await apiClientRepository.getClient(socketData.roomId, GRPC_MAX_MESSAGE_SIZE);
             const streamToBack = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
 
@@ -389,7 +389,7 @@ export class SocketManager implements ZoneEventListener {
                         }
                     };
 
-                    const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
+                    const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName, GRPC_MAX_MESSAGE_SIZE);
                     const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
                     spaceStreamToBack
                         .on("data", (message: BackToPusherSpaceMessage) => {
@@ -871,7 +871,7 @@ export class SocketManager implements ZoneEventListener {
             return;
         }*/
 
-        const backConnection = await apiClientRepository.getClient(roomId);
+        const backConnection = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
         const backAdminMessage: AdminMessage = {
             message,
             roomId,
@@ -887,7 +887,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {
-        const backConnection = await apiClientRepository.getClient(roomId);
+        const backConnection = await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE);
         const banMessage: BanMessage = {
             message,
             roomId,
@@ -1100,7 +1100,7 @@ export class SocketManager implements ZoneEventListener {
 
         for (const roomUrl of tabUrlRooms) {
             //eslint-disable-next-line no-await-in-loop
-            const apiRoom = await apiClientRepository.getClient(roomUrl);
+            const apiRoom = await apiClientRepository.getClient(roomUrl, GRPC_MAX_MESSAGE_SIZE);
             const roomMessage: AdminRoomMessage = {
                 message: playGlobalMessageEvent.content,
                 type: playGlobalMessageEvent.type,

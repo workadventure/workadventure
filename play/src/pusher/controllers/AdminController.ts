@@ -5,6 +5,7 @@ import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery } from "../services/QueryValidator";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AdminController extends BaseHttpController {
@@ -49,7 +50,7 @@ export class AdminController extends BaseHttpController {
             }
             const roomId: string = body.roomId;
 
-            await apiClientRepository.getClient(roomId).then((roomClient) => {
+            await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                 return new Promise<void>((res, rej) => {
                     roomClient.sendRefreshRoomPrompt(
                         {
@@ -127,7 +128,7 @@ export class AdminController extends BaseHttpController {
 
             await Promise.all(
                 targets.map((roomId) => {
-                    return apiClientRepository.getClient(roomId).then((roomClient) => {
+                    return apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                         return new Promise<void>((res, rej) => {
                             if (type === "message") {
                                 roomClient.sendAdminMessageToRoom(
@@ -193,7 +194,7 @@ export class AdminController extends BaseHttpController {
      */
     getRoomsList(): void {
         this.app.get("/rooms", [adminToken], async (req: Request, res: Response) => {
-            const roomClients = await apiClientRepository.getAllClients();
+            const roomClients = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<RoomsList>[] = [];
             for (const roomClient of roomClients) {
@@ -291,7 +292,7 @@ export class AdminController extends BaseHttpController {
                 return;
             }
 
-            const roomClients = await apiClientRepository.getAllClients();
+            const roomClients = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<void>[] = [];
             for (const roomClient of roomClients) {
@@ -386,7 +387,7 @@ export class AdminController extends BaseHttpController {
                     throw new Error("Incorrect type parameter value");
                 }
 
-                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
                             if (err) {
@@ -428,7 +429,7 @@ export class AdminController extends BaseHttpController {
                 const recipientUuid: string = body.data.recipientUuid;
                 const message: unknown = body.data.message;
 
-                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                await apiClientRepository.getClient(roomId, GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.dispatchExternalModuleMessage(
                             {

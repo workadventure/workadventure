@@ -21,6 +21,7 @@ import {
     WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
@@ -60,8 +61,8 @@ const fileModule = new FileModule();
 fileModule.init(hookManager);
 
 const server = new grpc.Server({
-    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
-    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
 });
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore

@@ -23,6 +23,7 @@ import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { Socket } from "../services/SocketManager";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 
 const debug = Debug("zone");
 
@@ -204,7 +205,10 @@ export class Zone {
         (async () => {
             debug("Opening connection to zone %d, %d on back server", this.x, this.y);
             try {
-                const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
+                const apiClient = await apiClientRepository.getClient(
+                    this.positionDispatcher.roomId,
+                    GRPC_MAX_MESSAGE_SIZE
+                );
                 const zoneMessage: ZoneMessage = {
                     roomId: this.positionDispatcher.roomId,
                     x: this.x,

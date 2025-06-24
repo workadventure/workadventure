@@ -157,6 +157,11 @@ export const EnvironmentVariables = z.object({
         .describe(
             "The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files."
         ),
+    GRPC_MAX_MESSAGE_SIZE: z
+        .number()
+        .optional()
+        .default(20 * 1024 * 1024) // Default to 20 MB
+        .describe("The maximum size of a gRPC message. Defaults to 20 MB"),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

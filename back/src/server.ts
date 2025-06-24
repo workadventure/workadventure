@@ -11,6 +11,7 @@ import {
     SENTRY_RELEASE,
     SENTRY_ENVIRONMENT,
     SENTRY_TRACES_SAMPLE_RATE,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
 import { spaceManager } from "./SpaceManager";
@@ -38,8 +39,8 @@ if (SENTRY_DSN != undefined) {
 }
 
 const server = new grpc.Server({
-    "grpc.max_receive_message_length": 20 * 1024 * 1024, // 20 MB
-    "grpc.max_send_message_length": 20 * 1024 * 1024, // 20 MB
+    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
 });
 server.addService(RoomManagerService, roomManager);
 server.addService(SpaceManagerService, spaceManager);
