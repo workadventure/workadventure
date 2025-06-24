@@ -204,7 +204,7 @@ export class S3FileSystem implements FileSystemInterface {
                     Body: await zipEntry.buffer(),
                     // TODO: the stream() + contentLength would be optimal, but it seems to fail with MinIO or other S3-compatible providers
                     //Body: zipEntry.stream(),
-                    //ContentType: mime.getType(targetFilePath) ?? undefined,
+                    ContentType: mime.getType(targetFilePath) ?? undefined,
                     //ContentLength: zipEntry.uncompressedSize,
                 })
             );
