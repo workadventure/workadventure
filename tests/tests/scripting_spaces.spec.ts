@@ -138,7 +138,7 @@ test.describe('Scripting space-related functions', () => {
         });
 
         /**
-         * Test part 3: Let's do the same test with a livestream space
+         * Test part 4: Let's do the same test with a livestream space
          */
 
         await evaluateScript(page, async () => {
@@ -166,7 +166,7 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(0);
 
-        await bob.pause();
+        //await bob.pause();
 
         // Bob starts streaming
         await evaluateScript(bob, async () => {
