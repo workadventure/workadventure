@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
@@ -14,6 +15,11 @@ export class SpaceScriptingBridgeService {
             let space: SpaceInterface;
             if (spaceRegistry.exist(data.spaceName)) {
                 space = spaceRegistry.get(data.spaceName);
+                if (space.filterType !== this.getFilterType(data.filterType)) {
+                    throw new Error(
+                        `Cannot join space ${data.spaceName} with filter type ${data.filterType}, expected ${space.filterType}`
+                    );
+                }
                 this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
             } else {
                 space = await spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
@@ -29,7 +35,10 @@ export class SpaceScriptingBridgeService {
                 count -= 1;
                 this.spaceJoinedCounter.set(data.spaceName, count);
                 if (count === 0) {
-                    spaceRegistry.leaveSpace(space);
+                    spaceRegistry.leaveSpace(space).catch((e) => {
+                        console.error("Error while leaving space", e);
+                        Sentry.captureException(e);
+                    });
                     this.spaceJoinedCounter.delete(data.spaceName);
                 }
             });
