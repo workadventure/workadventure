@@ -84,13 +84,21 @@ const spaceManager = {
                         message.message.$case +
                         JSON.stringify(e)
                 );
-                call.end();
+                // Note: We do not close the back connection on every error to avoid excessive reconnections.
+                // When 'end' is triggered, the callback below will handle cleanup.
+                // 'error' and 'end' events may not always be triggered together; handle both cases.
+                // Consider revising the reconnection logic in pusher to avoid reconnecting to the same back repeatedly.
+                //call.end();
             }
         })
             .on("error", (e) => {
                 console.error("Error on watchSpace", e);
                 Sentry.captureException(`Error on watchSpace ${JSON.stringify(e)}`);
                 socketManager.handleUnwatchAllSpaces(pusher);
+            })
+            .on("status", (status) => {
+                // Le status est toujours appelé ; on pourrait peut-être gérer la fin de la connexion ici si besoin.
+                console.log("status : ", status);
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);

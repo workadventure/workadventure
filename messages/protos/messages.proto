@@ -643,6 +643,7 @@ message SpaceQueryMessage {
 message AddSpaceUserQuery {
   string spaceName = 1;
   SpaceUser user = 2;
+  FilterType filterType = 3;
 }
 
 message RemoveSpaceUserQuery { 
