@@ -1,4 +1,5 @@
 import { get, readable, Readable, Writable, writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Observable, Subject, Subscriber } from "rxjs";
 import { merge } from "lodash";
@@ -123,8 +124,8 @@ export class Space implements SpaceInterface {
         });
     }
 
-    private userLeaveSpace() {
-        this._connection.emitLeaveSpace(this.name);
+    private async userLeaveSpace() {
+        await this._connection.emitLeaveSpace(this.name);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
@@ -220,8 +221,13 @@ export class Space implements SpaceInterface {
      * IMPORTANT: The only valid way to destroy a space is to use the SpaceRegistry.
      * Do not call this method directly.
      */
-    destroy() {
-        this.userLeaveSpace();
+    async destroy() {
+        try {
+            await this.userLeaveSpace();
+        } catch (e) {
+            console.error("Error while leaving space", e);
+            Sentry.captureException(e);
+        }
 
         for (const subscription of Object.values(this.publicEventsObservables)) {
             subscription.complete();

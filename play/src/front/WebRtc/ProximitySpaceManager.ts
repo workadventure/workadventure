@@ -17,7 +17,10 @@ export class ProximitySpaceManager {
 
         this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(
             ({ spaceName }) => {
-                this.proximityChatRoom.leaveSpace(spaceName);
+                this.proximityChatRoom.leaveSpace(spaceName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
             }
         );
     }

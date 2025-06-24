@@ -111,11 +111,11 @@ describe("SpaceProviderInterface implementation", () => {
                 await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS);
                 const spaceToDelete = await spaceRegistry.joinSpace("space-to-delete", FilterType.ALL_USERS);
 
-                spaceRegistry.leaveSpace(spaceToDelete);
+                await spaceRegistry.leaveSpace(spaceToDelete);
                 expect(spaceRegistry.getAll().find((space) => space.getName() === "space-to-delete")).toBeUndefined();
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
             });
-            it("should return a error when you try to delete a space who is not in the space ", () => {
+            it("should return a error when you try to delete a space who is not in the space ", async () => {
                 const newSpace: SpaceInterface = {
                     getName(): string {
                         return "space-test";
@@ -126,9 +126,7 @@ describe("SpaceProviderInterface implementation", () => {
                     new Subject()
                 );
 
-                expect(() => {
-                    spaceRegistry.leaveSpace(newSpace);
-                }).toThrow(SpaceDoesNotExistError);
+                await expect(spaceRegistry.leaveSpace(newSpace)).rejects.toThrow(SpaceDoesNotExistError);
             });
         });
         describe("SpaceRegistry destroy", () => {
@@ -140,7 +138,7 @@ describe("SpaceProviderInterface implementation", () => {
                 await spaceRegistry.joinSpace("space-test2", FilterType.ALL_USERS);
                 await spaceRegistry.joinSpace("space-test3", FilterType.ALL_USERS);
 
-                spaceRegistry.destroy();
+                await spaceRegistry.destroy();
                 expect(spaceRegistry.getAll()).toHaveLength(0);
 
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);

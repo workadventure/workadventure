@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { Subscription } from "rxjs";
 import { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
@@ -98,7 +99,10 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         isSpeakerStore.set(false);
         currentLiveStreamingSpaceStore.set(undefined);
         const scene = gameManager.getCurrentGameScene();
-        scene.broadcastService.leaveSpace(event.spaceName);
+        scene.broadcastService.leaveSpace(event.spaceName).catch((e) => {
+            console.error("Error while leaving space", e);
+            Sentry.captureException(e);
+        });
         chatZoneLiveStore.set(false);
         // Close all connection simple peer
         scene.getSimplePeer().closeAllConnections();

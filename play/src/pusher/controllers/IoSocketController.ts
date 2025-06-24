@@ -740,20 +740,7 @@ export class IoSocketController {
                             socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
-                        case "joinSpaceMessage": {
-                            const localSpaceName = message.message.joinSpaceMessage.spaceName;
-                            message.message.joinSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.joinSpaceMessage.spaceName
-                            }`;
 
-                            await socketManager.handleJoinSpace(
-                                socket,
-                                message.message.joinSpaceMessage.spaceName,
-                                localSpaceName,
-                                message.message.joinSpaceMessage.filterType
-                            );
-                            break;
-                        }
                         case "updateSpaceMetadataMessage": {
                             const isMetadata = z
                                 .record(z.string(), z.unknown())
@@ -778,13 +765,6 @@ export class IoSocketController {
                                 message.message.updateSpaceMetadataMessage.spaceName,
                                 isMetadata.data
                             );
-                            break;
-                        }
-                        case "leaveSpaceMessage": {
-                            message.message.leaveSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.leaveSpaceMessage.spaceName
-                            }`;
-                            await socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
                             break;
                         }
                         case "updateSpaceUserMessage": {
@@ -922,6 +902,22 @@ export class IoSocketController {
                                         answerMessage.answer = {
                                             $case: "joinSpaceAnswer",
                                             joinSpaceAnswer: {},
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "leaveSpaceQuery": {
+                                        message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
+                                            socket.getUserData().world
+                                        }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
+
+                                        await socketManager.handleLeaveSpace(
+                                            socket,
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "leaveSpaceAnswer",
+                                            leaveSpaceAnswer: {},
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;

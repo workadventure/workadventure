@@ -61,11 +61,11 @@ export class BroadcastService {
      * Leave a broadcast space
      * @param spaceName The name of the space to leave
      */
-    public leaveSpace(spaceName: string) {
+    public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
         if (space) {
-            space.destroy();
+            await space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
@@ -117,10 +117,8 @@ export class BroadcastService {
     /**
      * Destroy the broadcast service
      */
-    public destroy(): void {
-        this.broadcastSpaces.forEach((space) => {
-            space.destroy();
-        });
+    public async destroy(): Promise<void> {
+        await Promise.all(this.broadcastSpaces.map((space) => space.destroy()));
     }
 
     /**

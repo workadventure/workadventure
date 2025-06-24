@@ -1060,7 +1060,10 @@ export class GameScene extends DirtyScene {
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {
-            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+            this.spaceRegistry?.leaveSpace(this.allUserSpace).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
         }
 
         this.connection?.closeConnection();
@@ -1072,7 +1075,10 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
-        this._broadcastService?.destroy();
+        this._broadcastService?.destroy().catch((e) => {
+            console.error("Error while destroying broadcast service", e);
+            Sentry.captureException(e);
+        });
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.peerStoreUnsubscriber?.();
@@ -1125,7 +1131,10 @@ export class GameScene extends DirtyScene {
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
         this.spaceScriptingBridgeService?.destroy();
-        this._spaceRegistry?.destroy();
+        this._spaceRegistry?.destroy().catch((e) => {
+            console.error("Error while destroying space registry", e);
+            Sentry.captureException(e);
+        });
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1935,7 +1944,10 @@ export class GameScene extends DirtyScene {
                                 oldMegaphoneSpace &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
+                                    console.error("Error while leaving space", e);
+                                    Sentry.captureException(e);
+                                });
                             }
 
                             broadcastService

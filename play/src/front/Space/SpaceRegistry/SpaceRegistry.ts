@@ -149,13 +149,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     exist(spaceName: string): boolean {
         return this.spaces.has(spaceName);
     }
-    leaveSpace(space: SpaceInterface): void {
+    async leaveSpace(space: SpaceInterface): Promise<void> {
         const spaceName = space.getName();
         const spaceInRegistry = this.spaces.get(spaceName);
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        spaceInRegistry.destroy();
+        await spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
@@ -174,7 +174,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         const spacesArray = Array.from(this.spaces.values());
         await Promise.all(
             spacesArray.map(async (space) => {
-                this.leaveSpace(space);
+                await this.leaveSpace(space);
                 const newSpace = await Space.create(
                     space.getName(),
                     space.filterType,
@@ -186,7 +186,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         );
     }
 
-    destroy() {
+    async destroy() {
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
@@ -198,11 +198,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         // Technically, all spaces should have been destroyed by now.
         // If a space is not destroyed, it means that there is a bug in the code.
-        for (const space of this.spaces.values()) {
-            space.destroy();
-            console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-            Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
-        }
+        await Promise.all(
+            Array.from(this.spaces.values()).map(async (space) => {
+                await space.destroy();
+                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+            })
+        );
+
         this.spaces.clear();
     }
 }

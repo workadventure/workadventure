@@ -437,7 +437,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    public leaveSpace(spaceName: string): void {
+    public async leaveSpace(spaceName: string): Promise<void> {
         if (!this._space) {
             console.error("Trying to leave a space that is not joined");
             Sentry.captureMessage("Trying to leave a space that is not joined");
@@ -472,7 +472,9 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this.spaceRegistry.leaveSpace(this._space);
+
+        await this.spaceRegistry.leaveSpace(this._space);
+
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
