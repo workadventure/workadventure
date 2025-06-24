@@ -1594,7 +1594,7 @@ export class GameScene extends DirtyScene {
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
-            .then((onConnect: OnConnectInterface) => {
+            .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
@@ -1638,10 +1638,10 @@ export class GameScene extends DirtyScene {
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
                     })
-                    .catch(() => {
-                        const errorMessage = "Failed to get chatConnection from gameManager";
+                    .catch((e) => {
+                        const errorMessage = "Failed to get chatConnection from gameManager : " + e;
                         console.error(errorMessage);
-                        Sentry.captureMessage(errorMessage);
+                        Sentry.captureMessage(e);
                     });
 
                 this.initExtensionModule();
