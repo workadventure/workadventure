@@ -181,18 +181,44 @@ test.describe('Scripting space-related functions', () => {
 
     });
 
-    test('cannot join a space with a difference filter', async ({ browser}, { project }) => {
+    test('cannot join a space with a different filter on the same browser', async ({ browser}, { project }) => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
-        await expect(async () => {
+        expect(
             await evaluateScript(page, async () => {
                 await WA.spaces.joinSpace("some-test-space", "everyone");
-                await WA.spaces.joinSpace("some-test-space", "streaming");
-            });
-        }).toThrowError("You cannot join a space with a different filter type than the one you already joined. You have already joined the space with filter type 'everyone', but you are trying to join it with filter type 'streaming'.");
+                try {
+                    await WA.spaces.joinSpace("some-test-space", "streaming");
+                } catch (e) {
+                    return e.message;
+                }
+                return null;
+            })
+        ).toContain("Cannot join space some-test-space");
     });
 
-        // TODO: write a test to test the "joinSpace" function with a "livestream" space type
+    test('cannot join a space with a different filter in 2 browsers', async ({ browser}, { project }) => {
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+
+        await evaluateScript(page, async () => {
+            await WA.spaces.joinSpace("some-test-space", "everyone");
+        });
+
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+
+        expect(
+            await evaluateScript(bob, async () => {
+                try {
+                    await WA.spaces.joinSpace("some-test-space", "streaming");
+                } catch (e) {
+                    return e.message;
+                }
+                return null;
+            })
+        ).toContain("Error: Space filter type mismatch");
+    });
+
+    // TODO: write a test to test the "joinSpace" function with a "livestream" space type
     // bob joins a livestream space, then starts streaming
     // alice sees bob user when it starts streaming
     // bob stops streaming

@@ -1,6 +1,12 @@
 import { Observable, Subject } from "rxjs";
 import { Readable } from "svelte/store";
-import { PrivateSpaceEvent, SpaceEvent, SpaceUser, UpdateSpaceMetadataMessage } from "@workadventure/messages";
+import {
+    FilterType,
+    PrivateSpaceEvent,
+    SpaceEvent,
+    SpaceUser,
+    UpdateSpaceMetadataMessage,
+} from "@workadventure/messages";
 import { SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
@@ -67,4 +73,5 @@ export interface SpaceInterface {
      * It can be easier than subscribing to every single property of every single user.
      */
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
+    readonly filterType: FilterType;
 }
