@@ -140,10 +140,18 @@ export class Space implements SpaceInterface {
                     if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                     //this.cleanup();
                     this.spaceStreamToBackPromise = undefined;
+                    // Lorsqu'une connexion au back se termine (end ou error), on réinitialise la connexion et on renvoie les utilisateurs locaux.
                     this.initSpace();
                     this.sendLocalUsersToBack();
                 })
+                .on("status", (status) => {
+                    console.log("status : ", status);
+                    //voir si on peut gerer la fin de la connexion ici
+                })
                 .on("error", (err: Error) => {
+                    // On gère l'erreur comme un 'end' car la connexion au back est fermée.
+                    this.initSpace();
+                    this.sendLocalUsersToBack();
                     console.error(
                         "Error in connection to back server '" +
                             apiSpaceClient.getChannel().getTarget() +
