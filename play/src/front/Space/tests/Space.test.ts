@@ -88,7 +88,7 @@ describe("Space test", () => {
             metadata
         );
 
-        space.destroy();
+        await space.destroy();
 
         expect(mockRoomConnection.emitLeaveSpace).toHaveBeenCalledOnce();
 

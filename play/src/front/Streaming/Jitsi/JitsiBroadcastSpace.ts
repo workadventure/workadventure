@@ -224,7 +224,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         return this.jitsiTracks;
     }
 
-    destroy() {
+    async destroy() {
         limit(() => this.conference?.leave("I want to leave this space ..."))
             .then(() => {
                 this.conference = undefined;
@@ -238,7 +238,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         jitsiConferencesStore.delete(this.space.getName());
         //this.space.stopWatching(this.spaceFilter);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
-        this.spaceRegistry.leaveSpace(this.space);
+        await this.spaceRegistry.leaveSpace(this.space);
         console.warn("JitsiBroadcastSpace => Unsubscribing from this.spaceFilter.usersStore");
     }
 }

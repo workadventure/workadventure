@@ -1018,7 +1018,10 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(uniqRoomName);
+            this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
             }
@@ -1051,7 +1054,10 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(uniqRoomName);
+                this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(uniqRoomName);
                 }

@@ -1,5 +1,6 @@
 import axios from "axios";
 import Debug from "debug";
+import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
@@ -451,7 +452,10 @@ export class RoomConnection implements RoomConnection {
                                 isSpeakerStore.set(false);
                                 currentLiveStreamingSpaceStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
-                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
+                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName).catch((e) => {
+                                    console.error("Error while leaving space", e);
+                                    Sentry.captureException(e);
+                                });
 
                                 void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
@@ -1514,15 +1518,17 @@ export class RoomConnection implements RoomConnection {
         return;
     }
 
-    public emitLeaveSpace(spaceName: string): void {
-        this.send({
-            message: {
-                $case: "leaveSpaceMessage",
-                leaveSpaceMessage: {
-                    spaceName,
-                },
+    public async emitLeaveSpace(spaceName: string): Promise<void> {
+        const answer = await this.query({
+            $case: "leaveSpaceQuery",
+            leaveSpaceQuery: {
+                spaceName,
             },
         });
+        if (answer.$case !== "leaveSpaceAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return;
     }
 
     public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {

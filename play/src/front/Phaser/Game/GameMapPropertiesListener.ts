@@ -762,7 +762,10 @@ export class GameMapPropertiesListener {
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             isSpeakerStore.set(false);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(speakerZone.value);
+            this.scene.broadcastService.leaveSpace(speakerZone.value).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
         }
     }
 
@@ -804,7 +807,10 @@ export class GameMapPropertiesListener {
             );
             if (speakerZoneName) {
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(speakerZoneName);
+                this.scene.broadcastService.leaveSpace(speakerZoneName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
             }
         }
     }

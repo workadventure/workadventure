@@ -347,8 +347,6 @@ message ClientToServerMessage {
     EditMapCommandMessage editMapCommandMessage = 24;
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
-    JoinSpaceMessage joinSpaceMessage = 28;
-    LeaveSpaceMessage leaveSpaceMessage = 29;
     UpdateSpaceUserMessage updateSpaceUserMessage = 30;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     BanPlayerMessage banPlayerMessage = 41;
@@ -442,7 +440,8 @@ message QueryMessage {
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
     EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
     JoinSpaceQuery joinSpaceQuery = 14;
-    MapStorageJwtQuery mapStorageJwtQuery = 15;
+    LeaveSpaceQuery leaveSpaceQuery = 15;
+    MapStorageJwtQuery mapStorageJwtQuery = 16;
   }
 }
 
@@ -509,6 +508,10 @@ message JoinSpaceQuery{
   FilterType filterType = 2;
 }
 
+message LeaveSpaceQuery{
+  string spaceName = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -527,7 +530,8 @@ message AnswerMessage {
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
     EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
     JoinSpaceAnswer joinSpaceAnswer = 16;
-    MapStorageJwtAnswer mapStorageJwtAnswer = 17;
+    LeaveSpaceAnswer leaveSpaceAnswer = 17;
+    MapStorageJwtAnswer mapStorageJwtAnswer = 18;
   }
 }
 
@@ -595,6 +599,9 @@ message EnterChatRoomAreaAnswer{
 }
 
 message JoinSpaceAnswer{
+}
+
+message LeaveSpaceAnswer{
 }
 
 message Member {
