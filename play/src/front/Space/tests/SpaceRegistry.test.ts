@@ -115,7 +115,7 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(spaceRegistry.getAll().find((space) => space.getName() === "space-to-delete")).toBeUndefined();
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
             });
-            it("should return a error when you try to delete a space who is not in the space ", async () => {
+            it("should return a error when you try to delete a space who is not in the space ", () => {
                 const newSpace: SpaceInterface = {
                     getName(): string {
                         return "space-test";
@@ -126,7 +126,9 @@ describe("SpaceProviderInterface implementation", () => {
                     new Subject()
                 );
 
-                await expect(spaceRegistry.leaveSpace(newSpace)).rejects.toThrow(SpaceDoesNotExistError);
+                expect(() => {
+                    spaceRegistry.leaveSpace(newSpace);
+                }).toThrow(SpaceDoesNotExistError);
             });
         });
         describe("SpaceRegistry destroy", () => {

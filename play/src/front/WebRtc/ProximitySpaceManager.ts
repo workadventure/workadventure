@@ -1,4 +1,5 @@
 import { Subscription } from "rxjs";
+import * as Sentry from "@sentry/svelte";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { ProximityChatRoom } from "../Chat/Connection/Proximity/ProximityChatRoom";
 
@@ -8,7 +9,10 @@ export class ProximitySpaceManager {
 
     public constructor(roomConnection: RoomConnection, private proximityChatRoom: ProximityChatRoom) {
         this.joinSpaceRequestMessageSubscription = roomConnection.joinSpaceRequestMessage.subscribe(({ spaceName }) => {
-            this.proximityChatRoom.joinSpace(spaceName);
+            this.proximityChatRoom.joinSpace(spaceName).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
         });
 
         this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(
