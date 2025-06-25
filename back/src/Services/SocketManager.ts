@@ -1696,12 +1696,10 @@ export class SocketManager {
                 },
             });
 
-            if (answer.answer && answer.answer.$case === "removeSpaceUserAnswer") {
-                if (space.canBeDeleted()) {
-                    debug("[space] Space %s => deleted", space.name);
-                    this.spaces.delete(space.name);
-                    pusher.unwatchSpace(space.name);
-                }
+            if (space.canBeDeleted()) {
+                debug("[space] Space %s => deleted", space.name);
+                this.spaces.delete(space.name);
+                pusher.unwatchSpace(space.name);
             }
         } catch (e) {
             console.error("Error while handling space query", e);
