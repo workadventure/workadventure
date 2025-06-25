@@ -464,7 +464,7 @@ export class SocketManager implements ZoneEventListener {
             setPlayerDetailsMessage: playerDetailsMessage,
         };
 
-        socketManager.forwardMessageToBack(client, pusherToBackMessage);
+        this.forwardMessageToBack(client, pusherToBackMessage);
 
         const fieldMask: string[] = [];
         const oldStatus = socketData.spaceUser.availabilityStatus;
@@ -586,16 +586,21 @@ export class SocketManager implements ZoneEventListener {
 
     async leaveSpaces(socket: Socket) {
         const socketData = socket.getUserData();
-        const promises: Promise<void>[] = [];
-        socketData.spaces.forEach((spaceName) => {
+
+        // Create an array of operations to perform
+        const leaveSpacePromises = Array.from(socketData.spaces).map(async (spaceName) => {
             const space = this.spaces.get(spaceName);
+
             if (space) {
-                promises.push(
-                    space.forwarder.unregisterUser(socket).then(() => {
-                        this.deleteSpaceIfEmpty(space);
-                        socketData.joinSpacesPromise.delete(spaceName);
-                    })
-                );
+                try {
+                    await space.forwarder.unregisterUser(socket);
+                    socketData.joinSpacesPromise.delete(spaceName);
+                    return { space, spaceName, success: true };
+                } catch (error) {
+                    console.error(`Error unregistering user from space ${spaceName}:`, error);
+                    Sentry.captureException(error);
+                    return { space, spaceName, success: false };
+                }
             } else {
                 console.error(
                     `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
@@ -605,10 +610,18 @@ export class SocketManager implements ZoneEventListener {
                         `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
                     )
                 );
+                return { space: null, spaceName, success: false };
             }
         });
 
-        await Promise.all(promises);
+        // Wait for all unregisterUser operations to complete
+        const results = await Promise.all(leaveSpacePromises);
+        results.forEach(({ space, spaceName, success }) => {
+            if (space && success) {
+                this.deleteSpaceIfEmpty(space);
+            }
+        });
+
         socketData.spaces.clear();
     }
 

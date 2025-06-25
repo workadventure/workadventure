@@ -60,8 +60,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             }
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
-            console.error("Error while registering user", e);
-            Sentry.captureException(e);
             throw e;
         }
     }
@@ -117,8 +115,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             debug(`${this._space.name} : user remove sent ${spaceUserId}`);
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUserId);
-            console.error("Error while unregistering user", e);
-            Sentry.captureException(e);
             throw e;
         }
     }

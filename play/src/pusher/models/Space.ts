@@ -110,8 +110,8 @@ export class Space implements SpaceInterface {
                                         );
                                         spaceStreamToBack.end();
                                         this.spaceStreamToBackPromise = undefined;
-                                        this.initSpace();
-                                        this.sendLocalUsersToBack();
+                                        //this.initSpace();
+                                        //this.sendLocalUsersToBack();
                                     }, 1000 * 60);
 
                                     return;
@@ -131,10 +131,11 @@ export class Space implements SpaceInterface {
                     debug("[space] spaceStreamsToBack ended");
                     if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                     //this.cleanup();
+                    //TODO : check if socket still have this space in its list of spaces
                     this.spaceStreamToBackPromise = undefined;
                     // Lorsqu'une connexion au back se termine (end ou error), on réinitialise la connexion et on renvoie les utilisateurs locaux.
-                    this.initSpace();
-                    this.sendLocalUsersToBack();
+                    //this.initSpace();
+                    //this.sendLocalUsersToBack();
                 })
                 .on("status", (status) => {
                     console.log("status : ", status);
@@ -142,8 +143,8 @@ export class Space implements SpaceInterface {
                 })
                 .on("error", (err: Error) => {
                     // On gère l'erreur comme un 'end' car la connexion au back est fermée.
-                    this.initSpace();
-                    this.sendLocalUsersToBack();
+                    //this.initSpace();
+                    //this.sendLocalUsersToBack();
                     console.error(
                         "Error in connection to back server '" +
                             apiSpaceClient.getChannel().getTarget() +
@@ -242,7 +243,11 @@ export class Space implements SpaceInterface {
     public closeBackConnection(): void {
         if (this.spaceStreamToBackPromise) {
             this.spaceStreamToBackPromise
-                .then((spaceStreamToBack) => spaceStreamToBack.end())
+                .then((spaceStreamToBack) => {
+                    debug("closeBackConnection spaceStreamToBack", this.name);
+                    spaceStreamToBack.end();
+                    this.spaceStreamToBackPromise = undefined;
+                })
                 .catch((error) => {
                     console.error("Error while closing space back connection", error);
                     Sentry.captureException(error);
