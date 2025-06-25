@@ -12,9 +12,9 @@ Imagine **all types of immersive experiences** (recruitments, onboarding, traini
 
 _The little plus? The platform is **GDPR** and **open source**!_
 
-**See more features for your [virtual office](https://workadventu.re/solutions/virtual-working-space/?utm_source=github)!**
+**See more features for your [virtual office](https://workadventu.re/virtual-offices/virtual-meetings/?utm_source=github)!**
 
-**Pricing for our SaaS version [virtual office](https://workadventu.re/virtual-office/?utm_source=github)!**
+**Pricing for our [SaaS version](https://workadventu.re/pricing/?utm_source=github)!**
 
 
 [![Workadventure live demo example](https://workadventu.re/wp-content/uploads/2024/02/Button-Live-Demo.png)](https://play.staging.workadventu.re/@/tcm/workadventure/wa-village/?utm_source=github)
