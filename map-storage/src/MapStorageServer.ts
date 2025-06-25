@@ -120,7 +120,6 @@ const mapStorageServer: MapStorageServer = {
                 const commandId = editMapCommandMessage.id;
                 switch (editMapMessage.$case) {
                     case "modifyAreaMessage": {
-                        console.log("et la?");
                         const message = editMapMessage.modifyAreaMessage;
                         // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                         //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
@@ -348,7 +347,6 @@ const mapStorageServer: MapStorageServer = {
                     }
                     case "uploadFileMessage": {
                         const uploadFileMessage = editMapMessage.uploadFileMessage;
-                        console.log("test uploadEntityMessage", uploadFileMessage.file.length);
                         await entitiesManager.executeCommand(
                             new UploadFileMapStorageCommand(uploadFileMessage, mapUrl.hostname)
                         );
@@ -362,7 +360,6 @@ const mapStorageServer: MapStorageServer = {
                 // send edit map message back as a valid one
                 mapsManager.addCommandToQueue(mapKey, editMapCommandMessage);
                 callback(null, editMapCommandMessage);
-                console.log("on arrive la?");
             });
         })().catch((e: unknown) => {
             console.error(e);

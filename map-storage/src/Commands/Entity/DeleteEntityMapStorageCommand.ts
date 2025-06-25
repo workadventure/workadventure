@@ -17,7 +17,6 @@ export class DeleteEntityMapStorageCommand extends DeleteEntityCommand {
     }
     public async execute(): Promise<void> {
         await super.execute();
-        console.log(this.entityConfig);
         const promises =
             this.entityConfig?.properties?.reduce((acc: Promise<void>[], property) => {
                 acc.push(

@@ -117,7 +117,6 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
                     resolve(area);
                 } else if (entity) {
                     clearInterval(interval);
-                    console.log("Found entity with PDF link matching:", url, entity);
                     resolve("entity");
                 } else if (Date.now() >= deadline) {
                     clearInterval(interval);
