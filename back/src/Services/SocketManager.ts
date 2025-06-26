@@ -1417,6 +1417,7 @@ export class SocketManager {
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
         pusher.spacesWatched.forEach((spaceName) => {
+            console.log(">>>>>>> handleUnwatchAllSpaces spaceName", spaceName);
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error("Cant unwatch space, space not found");
@@ -1697,6 +1698,7 @@ export class SocketManager {
             });
 
             if (space.canBeDeleted()) {
+                console.log("handleSpaceQueryMessage space can be deleted", space.name);
                 debug("[space] Space %s => deleted", space.name);
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);
