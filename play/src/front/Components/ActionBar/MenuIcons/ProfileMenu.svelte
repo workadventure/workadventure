@@ -134,28 +134,7 @@
             class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3 "
         >
             <div class="overflow-hidden p-2 flex items-center justify-center rounded h-full aspect-square relative">
-                <div class="transition-all duration-500 ease-in-out group-hover:translate-x-[120%]">
-                    <Woka userId={-1} placeholderSrc="" customWidth="30px" />
-                </div>
-
-                <div
-                    class="-translate-x-[110%]  duration-[.6s] p-[6px] group-hover:translate-x-0 absolute top-0 left-0 w-full h-full flex items-center justify-center transition-all"
-                >
-                    <div
-                        class="hover:bg-white/10 w-full h-full rounded-[7px] flex items-center justify-center"
-                        on:click|stopPropagation={() => {
-                            showMenuItem(SubMenusInterface.profile);
-                            analyticsClient.openedMenu();
-                            openedMenuStore.close("profileMenu");
-                        }}
-                    >
-                        <div
-                            class="-rotate-90 group-hover:rotate-0 delay-200 duration-[.8s] ease-in-out flex items-center justify-center w-fit h-fit"
-                        >
-                            <SettingsIcon />
-                        </div>
-                    </div>
-                </div>
+                <Woka userId={-1} placeholderSrc="" customWidth="30px" />
             </div>
             <div class="grow flex flex-row @xl/actions:flex-col justify-start text-start pr-2">
                 <div
