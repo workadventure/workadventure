@@ -937,20 +937,29 @@ export class IoSocketController {
                                     }
                                 }
                             } catch (error) {
-                                const err = asError(error);
-                                console.log(">>>>>>> err from first catch", err);
-                                console.error("An error happened while answering a query:", err);
-                                Sentry.captureException(err);
-                                const answerMessage: AnswerMessage = {
-                                    id: message.message.queryMessage.id,
-                                };
-                                answerMessage.answer = {
-                                    $case: "error",
-                                    error: {
-                                        message: err.message,
-                                    },
-                                };
-                                this.sendAnswerMessage(socket, answerMessage);
+                                try {
+                                    const err = asError(error);
+                                    console.log(">>>>>>> err from first catch", err);
+                                    console.error("An error happened while answering a query:", err);
+                                    Sentry.captureException(err);
+                                    console.log(">>>>>>> err from second catch", err);
+                                    const answerMessage: AnswerMessage = {
+                                        id: message.message.queryMessage.id,
+                                    };
+                                    answerMessage.answer = {
+                                        $case: "error",
+                                        error: {
+                                            message: err.message,
+                                        },
+                                    };
+                                    console.log(">>>>>>> answerMessage", answerMessage);
+                                    this.sendAnswerMessage(socket, answerMessage);
+                                    console.log(">>>>>>> answerMessage sent");
+                                } catch (innerError) {
+                                    //TODO : delete this catch
+                                    console.error("Error in query error handler:", innerError);
+                                    Sentry.captureException(innerError);
+                                }
                             }
                             break;
                         }
