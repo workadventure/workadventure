@@ -181,6 +181,15 @@ test.describe("Map editor interacting with object @oidc", () => {
 
     await Menu.closeMapEditor(page);
 
+    // Now let's check Entity PDF file deletion
+    await page.keyboard.press("e");
+    await EntityEditor.moveAndClick(page, 16, 600);
+    await page.keyboard.press("Delete");
+
+    // Check if the PDF files from entity iframe are accessible
+    const uploadFileE2 = request.post(iframeSrcE);
+    expect((await uploadFileE2).ok()).toBeFalsy();
+
     await page.close();
     await page.context().close();
   });
