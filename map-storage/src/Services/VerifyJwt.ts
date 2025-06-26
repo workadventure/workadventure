@@ -15,8 +15,6 @@ const AuthTokenData = z.object({
 type AuthTokenData = z.infer<typeof AuthTokenData>;
 
 export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
-    if (!req.url.includes("/file/")) return next();
-
     let token: string | null = null;
 
     if (typeof req.query.token === "string") {

@@ -131,11 +131,13 @@ new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
 
-app.use((req, res, next) => {
-    Promise.resolve(verifyJWT(req, res, next)).catch(next);
-});
-
-app.use(proxyFiles(fileSystem));
+app.get(
+    "/private/files/*",
+    (req, res, next) => {
+        Promise.resolve(verifyJWT(req, res, next)).catch(next);
+    },
+    proxyFiles(fileSystem)
+);
 
 // Check that the dist-ui directory exists
 if (fs.existsSync("dist-ui")) {

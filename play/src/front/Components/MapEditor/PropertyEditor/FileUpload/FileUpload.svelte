@@ -63,7 +63,7 @@
         const fileName = selectedFile.name.split(".")[0];
         const fileExt = selectedFile.name.split(".")[1];
 
-        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}file/${fileName}-${
+        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
             property.id
         }.${fileExt}`;
 
