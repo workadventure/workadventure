@@ -91,6 +91,14 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.play.resources | nindent 12 }}
+          {{- with .Values.play.extraVolumeMounts }}
+          volumeMounts:
+            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+          {{- end }}
+      {{- with .Values.play.extraVolumes }}
+      volumes:
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+      {{- end }}
       {{- with .Values.play.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

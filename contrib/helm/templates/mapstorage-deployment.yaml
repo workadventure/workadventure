@@ -48,6 +48,9 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- with .Values.mapstorage.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
       initContainers:
         - name: mapstorage-init
           image: busybox
@@ -104,6 +107,9 @@ spec:
           volumeMounts:
             - name: mapstorage
               mountPath: /maps
+            {{- with .Values.mapstorage.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- end }}
           resources:
             {{- toYaml .Values.mapstorage.resources | nindent 12 }}
           # lifecycle:
