@@ -7,8 +7,11 @@
     }
 </script>
 
-<div class="limit-map" transition:fly={{ y: -900, duration: 500 }}>
-    <section>
+<div
+    class="limit-map absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-contrast/80 backdrop-blur rounded-lg"
+    transition:fly={{ y: -900, duration: 500 }}
+>
+    <section class="p-4">
         <h2>Limit of your room</h2>
         <p>Register your account!</p>
         <p>
@@ -16,33 +19,19 @@
             back office.
         </p>
     </section>
-    <section>
-        <button class="btn" on:click|preventDefault={register}>Register</button>
+
+    <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
+        <button class="btn btn-secondary grow" on:click|preventDefault={register}>Register</button>
     </section>
 </div>
 
 <style lang="scss">
     .limit-map {
         pointer-events: auto;
-        background: #eceeee;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 10vh;
         max-height: 80vh;
         max-width: 80vw;
         overflow: auto;
         text-align: center;
         z-index: 500;
-
-        h2 {
-            font-family: "Press Start 2P";
-        }
-
-        section {
-            p {
-                margin: 15px;
-                font-family: "Press Start 2P";
-            }
-        }
     }
 </style>

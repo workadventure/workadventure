@@ -49,7 +49,7 @@
     <section class="mb-0 p-4">
         {#if $helpWebRtcSettingsVisibleStore === "error"}
             <h2 class="mb-2">{$LL.camera.webrtc.title()}</h2>
-        {:else }
+        {:else}
             <h2 class="mb-2">
                 <div class="text-left">
                     <div role="status" class="flex flex-row w-full gap-3 ">
@@ -77,10 +77,13 @@
             onChange={onChangesAskAgain}
             label={$LL.camera.webrtc.solutionVpnNotAskAgain()}
         />
-        {notAskAgain}
     </section>
     <section class="justify-center bottom-0 w-full bg-contrast p-4 flex flex-row space-x-4 mt-4 rounded-b-lg">
-        <button class="btn bg-white/10 hover:bg-white/20 grow" on:click|preventDefault={refresh}>{$LL.camera.webrtc.refresh()}</button>
-        <button type="submit" class="btn btn-secondary grow" on:click|preventDefault={close}>{$LL.camera.webrtc.continue()}</button>
+        <button class="btn bg-white/10 hover:bg-white/20 grow" on:click|preventDefault={refresh}
+            >{$LL.camera.webrtc.refresh()}</button
+        >
+        <button type="submit" class="btn btn-secondary grow" on:click|preventDefault={close}
+            >{$LL.camera.webrtc.continue()}</button
+        >
     </section>
 </form>
