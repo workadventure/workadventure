@@ -937,23 +937,17 @@ export class IoSocketController {
                                     }
                                 }
                             } catch (error) {
-                                console.error("An error happened while answering a query:", error);
-                                Sentry.captureException(
-                                    `An error happened while answering a query: ${JSON.stringify(error)}`
-                                );
+                                const err = asError(error);
+                                console.log(">>>>>>> err from first catch", err);
+                                console.error("An error happened while answering a query:", err);
+                                Sentry.captureException(err);
                                 const answerMessage: AnswerMessage = {
                                     id: message.message.queryMessage.id,
                                 };
                                 answerMessage.answer = {
                                     $case: "error",
                                     error: {
-                                        message:
-                                            error !== null && typeof error === "object"
-                                                ? // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                                                  error.toString()
-                                                : typeof error === "string"
-                                                ? error
-                                                : "Unknown error",
+                                        message: err.message,
                                     },
                                 };
                                 this.sendAnswerMessage(socket, answerMessage);
