@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { writable } from "svelte/store";
+    import { onMount } from "svelte";
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
     import todoListPng from "../images/applications/todolist.png";
@@ -31,6 +32,12 @@
         analyticsClient.login();
         window.location.href = "/login";
     }
+
+    onMount(() => {
+        if ($todoListsStore.size === 1) {
+            openTodoList([...$todoListsStore.values()].at(0)!.id);
+        }
+    });
 </script>
 
 <div class="totolist p-1 @md/actions:p-2 select-text max-h-screen flex">
@@ -87,24 +94,17 @@
                             />
                         </div>
                         <div class="flex flex-col gap-0.5 p-2" class:hidden={!$totoListOpenedId.has(todoList.id)}>
-                            <div>
-                                {#each todoList.tasks.filter((task) => task.status === "notStarted") as item (item.id)}
+                            {#each todoList.tasks.filter((task) => task.status === "notStarted") as item (item.id)}
+                                <TodoTask task={item} />
+                            {/each}
+                            {#each todoList.tasks.filter((task) => task.status === "inProgress") as item (item.id)}
+                                <TodoTask task={item} />
+                            {/each}
+                            {#if todoTaskCompletedOpened}
+                                {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}
                                     <TodoTask task={item} />
                                 {/each}
-                                {#each todoList.tasks.filter((task) => task.status === "inProgress") as item (item.id)}
-                                    <TodoTask task={item} />
-                                {/each}
-                                {#if todoTaskCompletedOpened}
-                                    {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}
-                                        <TodoTask task={item} />
-                                    {/each}
-                                {/if}
-                                <!--                                    <div class="flex flex-col gap-4" class:hidden={!todoTaskCompletedOpened}>-->
-                                <!--                                        {#each todoList.tasks.filter((task) => task.status === "completed") as item (item.id)}-->
-                                <!--                                            <TodoTask task={item} />-->
-                                <!--                                        {/each}-->
-                                <!--                                    </div>-->
-                            </div>
+                            {/if}
                             {#if todoList.tasks.filter((task) => task.status === "completed").length > 0}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 {#if todoTaskCompletedOpened === false}

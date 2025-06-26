@@ -24,9 +24,11 @@
 
     function openMeeting(event: CalendarEventInterface) {
         const gameScene = gameManager.getCurrentGameScene();
-        if (!gameScene) return;
+        if (!gameScene) return false;
 
+        let returnValue = false;
         [...$extensionModuleStore.values()].forEach((extensionModule) => {
+            if (!extensionModule?.openPopupMeeting) returnValue = returnValue || false;
             if (extensionModule?.openPopupMeeting && event.resource?.onlineMeeting?.joinUrl) {
                 extensionModule.openPopupMeeting(
                     event.title,
@@ -36,8 +38,10 @@
                     event.end,
                     event.resource?.onlineMeeting?.passcode
                 );
+                returnValue = true;
             }
         });
+        return returnValue;
     }
 
     function goToLoginPage() {
@@ -103,7 +107,12 @@
                                     {#if event.resource && event.resource.onlineMeeting?.joinUrl != undefined}
                                         <a
                                             href={event.resource.onlineMeeting.joinUrl}
-                                            on:click|preventDefault|stopPropagation={() => openMeeting(event)}
+                                            on:click={(event_) => {
+                                                if (openMeeting(event)) {
+                                                    event_.preventDefault();
+                                                    event_.stopPropagation();
+                                                }
+                                            }}
                                             class="text-xs text-right text-secondary-500"
                                             target="_blank">Click here to join the meeting</a
                                         >
