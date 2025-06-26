@@ -187,9 +187,9 @@
                 <HelpNotificationSettingsPopup />
             {/if}
 
-            {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
+            <!--{#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}-->
                 <HelpWebRtcSettingsPopup />
-            {/if}
+            <!--{/if}-->
 
             {#if $helpSettingsPopupBlockedStore}
                 <HelpPopUpBlocked />
