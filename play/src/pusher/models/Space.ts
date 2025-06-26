@@ -62,6 +62,7 @@ export class Space implements SpaceInterface {
         public readonly localName: string,
         eventProcessor: EventProcessor,
         private _filterType: FilterType,
+        private _onBackEndDisconnect: (space: SpaceInterface) => void,
         private _apiClientRepository = apiClientRepository,
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
@@ -109,6 +110,7 @@ export class Space implements SpaceInterface {
                                             "Error spaceStreamToBack timed out for back: " + this.backId
                                         );
                                         spaceStreamToBack.end();
+                                        this._onBackEndDisconnect(this);
                                         this.spaceStreamToBackPromise = undefined;
                                         //this.initSpace();
                                         //this.sendLocalUsersToBack();
@@ -133,6 +135,10 @@ export class Space implements SpaceInterface {
                     //this.cleanup();
                     //TODO : check if socket still have this space in its list of spaces
                     this.spaceStreamToBackPromise = undefined;
+                    this._onBackEndDisconnect(this);
+                    this._localConnectedUser.clear();
+                    //this.cleanup()
+                    //Passer une fonction pour gerer la fin de connexion coté socketManager
                     // Lorsqu'une connexion au back se termine (end ou error), on réinitialise la connexion et on renvoie les utilisateurs locaux.
                     //this.initSpace();
                     //this.sendLocalUsersToBack();
@@ -145,6 +151,7 @@ export class Space implements SpaceInterface {
                     // On gère l'erreur comme un 'end' car la connexion au back est fermée.
                     //this.initSpace();
                     //this.sendLocalUsersToBack();
+
                     console.error(
                         "Error in connection to back server '" +
                             apiSpaceClient.getChannel().getTarget() +
@@ -154,6 +161,8 @@ export class Space implements SpaceInterface {
                         err
                     );
                     Sentry.captureException(err);
+
+                    this._onBackEndDisconnect(this);
                 });
 
             spaceStreamToBack.write({
@@ -237,6 +246,7 @@ export class Space implements SpaceInterface {
                 Sentry.captureException(new Error(`Impossible to remove space ${this.name} from the user's spaces.`));
             }
         }
+
         // Finally, let's send a message to the front to warn that the space is deleted
     }
 

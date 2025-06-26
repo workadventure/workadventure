@@ -69,11 +69,14 @@ describe("Space", () => {
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
                 ({} as SpaceToFrontDispatcher);
 
+            const mockOnBackEndDisconnect = vi.fn();
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
                 mockApiClientRepository,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -145,11 +148,14 @@ describe("Space", () => {
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
                 ({} as SpaceToFrontDispatcher);
 
+            const mockOnBackEndDisconnect = vi.fn();
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
                 mockApiClientRepository,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -212,11 +218,14 @@ describe("Space", () => {
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
                 ({} as SpaceToFrontDispatcher);
 
+            const mockOnBackEndDisconnect = vi.fn();
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
                 mockApiClientRepository,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -295,11 +304,14 @@ describe("Space", () => {
                     notifyMeAddUser: mockNotifyMeAddUser,
                 } as unknown as SpaceToFrontDispatcher);
 
+            const mockOnBackEndDisconnect = vi.fn();
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
                 mockApiClientRepository,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -375,11 +387,14 @@ describe("Space", () => {
                     notifyMeAddUser: mockNotifyMeAddUser,
                 } as unknown as SpaceToFrontDispatcher);
 
+            const mockOnBackEndDisconnect = vi.fn();
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
                 mockApiClientRepository,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
