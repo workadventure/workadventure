@@ -360,7 +360,7 @@ export class SocketManager implements ZoneEventListener {
         }
 
         if (space.filterType !== filterType) {
-            throw new Error("Space filter type mismatch");
+            throw new Error("Error: Space filter type mismatch");
         }
 
         const deferred = new Deferred<void>();
