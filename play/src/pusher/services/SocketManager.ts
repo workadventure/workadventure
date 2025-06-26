@@ -353,7 +353,10 @@ export class SocketManager implements ZoneEventListener {
         let space: SpaceInterface | undefined = this.spaces.get(spaceName);
 
         if (!space) {
-            space = new Space(spaceName, localSpaceName, eventProcessor, filterType);
+            const onBackEndDisconnect = (space: SpaceInterface) => {
+                this.spaces.delete(space.name);
+            };
+            space = new Space(spaceName, localSpaceName, eventProcessor, filterType, onBackEndDisconnect);
 
             this.spaces.set(spaceName, space);
 
