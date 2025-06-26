@@ -55,6 +55,12 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     constructor(private readonly app: TemplatedApp) {
+        // Gestionnaire global pour les Promises non gérées
+        process.on("unhandledRejection", (reason, promise) => {
+            console.error("Unhandled Rejection at:", promise, "reason:", reason);
+            Sentry.captureException(reason);
+        });
+
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();
@@ -937,29 +943,18 @@ export class IoSocketController {
                                     }
                                 }
                             } catch (error) {
-                                try {
-                                    const err = asError(error);
-                                    console.log(">>>>>>> err from first catch", err);
-                                    console.error("An error happened while answering a query:", err);
-                                    Sentry.captureException(err);
-                                    console.log(">>>>>>> err from second catch", err);
-                                    const answerMessage: AnswerMessage = {
-                                        id: message.message.queryMessage.id,
-                                    };
-                                    answerMessage.answer = {
-                                        $case: "error",
-                                        error: {
-                                            message: err.message,
-                                        },
-                                    };
-                                    console.log(">>>>>>> answerMessage", answerMessage);
-                                    this.sendAnswerMessage(socket, answerMessage);
-                                    console.log(">>>>>>> answerMessage sent");
-                                } catch (innerError) {
-                                    //TODO : delete this catch
-                                    console.error("Error in query error handler:", innerError);
-                                    Sentry.captureException(innerError);
-                                }
+                                const err = asError(error);
+                                Sentry.captureException(err);
+                                const answerMessage: AnswerMessage = {
+                                    id: message.message.queryMessage.id,
+                                };
+                                answerMessage.answer = {
+                                    $case: "error",
+                                    error: {
+                                        message: err.message,
+                                    },
+                                };
+                                this.sendAnswerMessage(socket, answerMessage);
                             }
                             break;
                         }
@@ -1050,7 +1045,7 @@ export class IoSocketController {
                             message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.publicEvent.spaceName
                             }`;
-
+                            //TODO : handle error
                             await socketManager.handlePublicEvent(socket, message.message.publicEvent);
                             break;
                         }
@@ -1058,7 +1053,7 @@ export class IoSocketController {
                             message.message.privateEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.privateEvent.spaceName
                             }`;
-
+                            //TODO : handle error
                             await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                             break;
                         }
