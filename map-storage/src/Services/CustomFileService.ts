@@ -31,7 +31,7 @@ export class CustomFileService {
     }
 
     public async deleteFile(property: AreaDataProperty) {
-        if (property.type !== "openPdf") {
+        if (property.type !== "openFile") {
             throw new Error("Property is not a file");
         }
 

@@ -93,7 +93,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
 });
 
 export const OpenPdfPropertyData = PropertyBase.extend({
-    type: z.literal("openPdf"),
+    type: z.literal("openFile"),
     link: z.string().nullable().default("https://workadventu.re"),
     name: z.string().nullable(),
     newTab: z.boolean().optional().default(false),
@@ -371,7 +371,7 @@ export type EntityDimensions = z.infer<typeof EntityDimensions>;
 export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openPdf";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openFile";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;

@@ -103,11 +103,11 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
                 const wam = WAMFileFormat.parse(JSON.parse(wamString));
 
                 const area = wam.areas.find((a) =>
-                    a.properties.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                    a.properties.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
                 );
 
                 const entity = Object.values(wam.entities).find((e) =>
-                    e.properties?.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                    e.properties?.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
                 );
 
                 if (area) {

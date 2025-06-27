@@ -412,7 +412,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                     });
                     break;
                 }
-                case "openPdf": {
+                case "openFile": {
                     if (!property.link) break;
                     const newTab = property.newTab;
                     actions.push({

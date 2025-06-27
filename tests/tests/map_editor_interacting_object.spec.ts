@@ -119,7 +119,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
     await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
     await EntityEditor.setEntityName(page, "My Open Link");
-    await EntityEditor.addProperty(page, "openPdf");
+    await EntityEditor.addProperty(page, "openFile");
     await EntityEditor.setOpenPdfProperty(page);
     await Menu.closeMapEditor(page);
 
@@ -156,7 +156,7 @@ test.describe("Map editor interacting with object @oidc", () => {
       { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 }
     );
     await AreaEditor.setAreaName(page, "MyLinkZone");
-    await AreaEditor.addProperty(page, "openPdf");
+    await AreaEditor.addProperty(page, "openFile");
     await AreaEditor.setOpenPdfProperty(
       page,
       "Show immediately on enter"

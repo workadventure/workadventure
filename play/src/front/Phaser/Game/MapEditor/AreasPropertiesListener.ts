@@ -238,7 +238,7 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(property);
                 break;
             }
-            case "openPdf": {
+            case "openFile": {
                 this.handleOpenPdfOnEnter(property).catch((error) => console.error("Error opening PDF:", error));
                 break;
             }
@@ -316,7 +316,7 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
-            case "openPdf": {
+            case "openFile": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleOpenPdfOnLeave(oldProperty);
                 this.handleOpenPdfOnEnter(newProperty).catch((error) => console.error("Error opening PDF:", error));
@@ -375,7 +375,7 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnLeave(property);
                 break;
             }
-            case "openPdf": {
+            case "openFile": {
                 this.handleOpenPdfOnLeave(property);
                 break;
             }

@@ -240,10 +240,10 @@
                 }}
             />
             <AddPropertyButtonWrapper
-                property="openPdf"
-                isActive={$selectFilters.includes("openPdf")}
+                property="openFile"
+                isActive={$selectFilters.includes("openFile")}
                 on:click={() => {
-                    addFilter("openPdf");
+                    addFilter("openFile");
                 }}
             />
 

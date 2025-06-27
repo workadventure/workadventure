@@ -242,7 +242,7 @@
                     content: "",
                     duration: 2,
                 };
-            case "openPdf":
+            case "openFile":
                 return {
                     id,
                     type,
@@ -521,9 +521,9 @@
                 />
             {/if}
             <AddPropertyButtonWrapper
-                property="openPdf"
+                property="openFile"
                 on:click={() => {
-                    onAddProperty("openPdf");
+                    onAddProperty("openFile");
                 }}
             />
         </div>
@@ -779,7 +779,7 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
-                    {:else if property.type === "openPdf"}
+                    {:else if property.type === "openFile"}
                         <OpenPdfPropertyEditor
                             {property}
                             isArea={true}

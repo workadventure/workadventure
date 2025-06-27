@@ -140,7 +140,7 @@
                     roomName: "JITSI ROOM",
                     buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
-            case "openPdf":
+            case "openFile":
                 return {
                     id,
                     type,
@@ -296,9 +296,9 @@
                 }}
             />
             <AddPropertyButtonWrapper
-                property="openPdf"
+                property="openFile"
                 on:click={() => {
-                    onAddProperty("openPdf");
+                    onAddProperty("openFile");
                 }}
             />
         </div>
@@ -441,7 +441,7 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
-                    {:else if property.type === "openPdf"}
+                    {:else if property.type === "openFile"}
                         <OpenPdfPropertyEditor
                             {property}
                             on:close={() => {

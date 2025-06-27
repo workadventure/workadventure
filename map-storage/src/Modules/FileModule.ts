@@ -9,7 +9,7 @@ export class FileModule implements MapStorageModuleInterface {
                 return oldProperty;
             }
 
-            if (newProperty.type !== "openPdf") {
+            if (newProperty.type !== "openFile") {
                 return newProperty;
             }
 
@@ -18,7 +18,7 @@ export class FileModule implements MapStorageModuleInterface {
             // If the newProperty link and name are empty, it means the property is not connected to a file
             // and we need to delete the file if it exists
             if (
-                oldProperty.type == "openPdf" &&
+                oldProperty.type == "openFile" &&
                 oldProperty.name &&
                 oldProperty.link &&
                 !newProperty.name &&
@@ -31,7 +31,7 @@ export class FileModule implements MapStorageModuleInterface {
         });
 
         hookManager.subscribeAreaPropertyDelete(async (area, oldProperty, hostname) => {
-            if (oldProperty.type !== "openPdf") {
+            if (oldProperty.type !== "openFile") {
                 return oldProperty;
             }
 
@@ -51,7 +51,7 @@ export class FileModule implements MapStorageModuleInterface {
                 return oldProperty;
             }
 
-            if (newProperty.type !== "openPdf") {
+            if (newProperty.type !== "openFile") {
                 return newProperty;
             }
 
@@ -60,7 +60,7 @@ export class FileModule implements MapStorageModuleInterface {
             // If the newProperty link and name are empty, it means the property is not connected to a file
             // and we need to delete the file if it exists
             if (
-                oldProperty.type == "openPdf" &&
+                oldProperty.type == "openFile" &&
                 oldProperty.name &&
                 oldProperty.link &&
                 !newProperty.name &&
@@ -73,7 +73,7 @@ export class FileModule implements MapStorageModuleInterface {
         });
 
         hookManager.subscribeEntityPropertyDelete(async (entity, oldProperty, hostname) => {
-            if (oldProperty.type !== "openPdf") {
+            if (oldProperty.type !== "openFile") {
                 return oldProperty;
             }
 

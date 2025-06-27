@@ -392,13 +392,13 @@
         testId="addTooltipProperty"
     />
 {/if}
-{#if property === "openPdf"}
+{#if property === "openFile"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.openPdfProperties.label()}
         descriptionText={$LL.mapEditor.properties.openPdfProperties.description()}
         img="resources/icons/icon_pdf.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
-        testId="openPdf"
+        testId="openFile"
         on:click={(event) => {
             dispatch("click", event);
         }}
