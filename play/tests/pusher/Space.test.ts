@@ -41,6 +41,9 @@ describe("Space", () => {
 
             const mockGetSpaceClient = vi.fn().mockResolvedValue({
                 watchSpace: mockWatchSpace,
+                getChannel: vi.fn().mockReturnValue({
+                    getTarget: vi.fn().mockReturnValue("test"),
+                }),
             });
 
             const mockApiClientRepository = mock<ApiClientRepository>({
@@ -105,7 +108,7 @@ describe("Space", () => {
             expect(mockWatchSpace).toHaveBeenCalledOnce();
 
             //Simuler une erreur de connection
-            callbackMap.get("end")?.();
+            callbackMap.get("error")?.();
 
             await flushPromises();
 
