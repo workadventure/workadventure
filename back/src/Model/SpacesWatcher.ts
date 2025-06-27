@@ -65,5 +65,17 @@ export class SpacesWatcher {
     public end() {
         clearInterval(this.pingInterval);
         this.clearPongTimeout();
+        //this.socket.end();
+    }
+
+    /**
+     * This function is used to close the connection of the watcher with an error. for testing purpose.
+     */
+    public error(message: string) {
+        debug("SpacesWatcher %s => error: %s", this.id, message);
+        this.socket.emit("error", {
+            code: 10,
+            message: message,
+        });
     }
 }
