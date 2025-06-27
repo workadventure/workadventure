@@ -19,7 +19,7 @@
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
-    import OpenPdfPropertyEditor from "../PropertyEditor/OpenPdfPropertyEditor.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -148,7 +148,7 @@
                     name: "",
                     closable: true,
                     newTab: false,
-                    buttonLabel: $LL.mapEditor.properties.openPdfProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
                     policy,
                     width: 50,
                 };
@@ -442,7 +442,7 @@
                             on:change={() => onUpdateProperty(property)}
                         />
                     {:else if property.type === "openFile"}
-                        <OpenPdfPropertyEditor
+                        <OpenFilePropertyEditor
                             {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);

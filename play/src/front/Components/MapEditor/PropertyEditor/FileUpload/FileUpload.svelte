@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenPdfPropertyData } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
     import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import ButtonClose from "../../../Input/ButtonClose.svelte";
@@ -11,7 +11,7 @@
     import { gameSceneStore } from "../../../../Stores/GameSceneStore";
     import { IconCloudUpload } from "@wa-icons";
 
-    export let property: OpenPdfPropertyData;
+    export let property: OpenFilePropertyData;
 
     let selectedFile: File | undefined = undefined;
     let files: FileList | undefined = undefined;
@@ -36,7 +36,7 @@
                 void handleFileChange();
             } else {
                 console.error("File format not supported");
-                errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
+                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
             }
         }
     }
@@ -81,13 +81,13 @@
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
-                errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileNumber();
+                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileNumber();
             } else {
                 if (isASupportedFormat(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
-                    errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
+                    errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
                 }
             }
         }
@@ -98,8 +98,8 @@
 
 <div class="no-padding">
     {#if !property.link}
-        <p class="m-0">{$LL.mapEditor.properties.openPdfProperties.uploadFile.title()}</p>
-        <p class="opacity-50">{$LL.mapEditor.properties.openPdfProperties.uploadFile.description()}</p>
+        <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
+        <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
             on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
@@ -113,9 +113,9 @@
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">
-                        {$LL.mapEditor.properties.openPdfProperties.uploadFile.dragDrop()}
+                        {$LL.mapEditor.properties.openFileProperties.uploadFile.dragDrop()}
                         <span class="hover:cursor-pointer underline text-contrast-300" id="chooseUpload"
-                            >{$LL.mapEditor.properties.openPdfProperties.uploadFile.chooseFile()}</span
+                            >{$LL.mapEditor.properties.openFileProperties.uploadFile.chooseFile()}</span
                         >
                     </span>
                     <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>

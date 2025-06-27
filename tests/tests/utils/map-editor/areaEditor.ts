@@ -101,7 +101,7 @@ class AreaEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link,{timeout : 20_000});
   }
 
-  async setOpenPdfProperty(page: Page, option = "Show immediately on enter") {
+  async setOpenFileProperty(page: Page, option = "Show immediately on enter") {
     await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
@@ -109,7 +109,7 @@ class AreaEditor {
     await fileChooser.setFiles(path.join(__dirname, `../../assets/lorem-ipsum.pdf`));
   }
 
-  async deletePdfFile(page: Page) {
+  async deleteFile(page: Page) {
     await page.getByTestId("closeFileUpload").click();
   }
 

@@ -431,7 +431,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                             } else {
                                 const coWebsite = new SimpleCoWebsite(
                                     new URL(link),
-                                    false, // No need for API in PDF
+                                    false, // No need for API in file viewer
                                     property.policy,
                                     property.width,
                                     property.closable

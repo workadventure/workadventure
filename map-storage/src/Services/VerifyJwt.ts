@@ -118,7 +118,7 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
                     resolve("entity");
                 } else if (Date.now() >= deadline) {
                     clearInterval(interval);
-                    reject(new Error(`No area or entity found with a PDF link matching: ${url}`));
+                    reject(new Error(`No area or entity found with a matching file: ${url}`));
                 }
             } catch (err) {
                 clearInterval(interval);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { OpenPdfPropertyData } from "@workadventure/map-editor";
+    import { OpenFilePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import {
@@ -17,7 +17,7 @@
     import FileUpload from "./FileUpload/FileUpload.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    export let property: OpenPdfPropertyData;
+    export let property: OpenFilePropertyData;
     export let isArea = false;
     export let triggerOptionActivated = true;
     export let triggerOnActionChoosen: boolean = property.trigger === ON_ACTION_TRIGGER_BUTTON;
@@ -128,7 +128,7 @@
             src="resources/icons/icon_start.png"
             alt={$LL.mapEditor.properties.startProperties.description()}
         />
-        {$LL.mapEditor.properties.openPdfProperties.label()}
+        {$LL.mapEditor.properties.openFileProperties.label()}
     </span>
 
     <span slot="content">

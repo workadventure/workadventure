@@ -225,11 +225,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             duration: "Duration (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
         },
-        openPdfProperties: {
-            label: "Ouvrir un PDF",
-            description: "Ouvrir un PDF dans l'application.",
-            error: "Veuillez entrer une URL PDF valide",
-            disabled: "L'intégration PDF est désactivée.",
+        openFileProperties: {
+            label: "Ouvrir un fichier",
+            description: "Ouvrir un fichier dans l'application.",
+            error: "Veuillez entrer fichier valide",
+            disabled: "L'intégration de fichier est désactivée.",
             uploadFile: {
                 title: "Ajouter votre fichier",
                 description: "Glissez-déposer ou choisissez votre fichier afin de l'ajouter sur la carte",

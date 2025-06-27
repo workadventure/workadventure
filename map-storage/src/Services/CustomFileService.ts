@@ -15,7 +15,7 @@ export class CustomFileService {
         const { file } = uploadFileMessage;
         const { name: filename, ext: fileExtension } = path.parse(uploadFileMessage.name);
 
-        const errorm = "File extension is not a supported format pdf :" + fileExtension + uploadFileMessage.name;
+        const errorm = "File extension is not a supported format :" + fileExtension + uploadFileMessage.name;
 
         if (!fileExtension.match(fileUploadSupportedFormatForMapStorage)) {
             throw new Error(errorm);

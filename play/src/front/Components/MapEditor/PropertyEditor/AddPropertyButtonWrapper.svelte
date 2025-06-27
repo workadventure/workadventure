@@ -394,9 +394,9 @@
 {/if}
 {#if property === "openFile"}
     <AddPropertyButton
-        headerText={$LL.mapEditor.properties.openPdfProperties.label()}
-        descriptionText={$LL.mapEditor.properties.openPdfProperties.description()}
-        img="resources/icons/icon_pdf.png"
+        headerText={$LL.mapEditor.properties.openFileProperties.label()}
+        descriptionText={$LL.mapEditor.properties.openFileProperties.description()}
+        img="resources/icons/icon_file.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
         testId="openFile"
         on:click={(event) => {

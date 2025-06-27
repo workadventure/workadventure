@@ -8,7 +8,7 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
-    OpenPdfPropertyData,
+    OpenFilePropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
@@ -239,7 +239,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openFile": {
-                this.handleOpenPdfOnEnter(property).catch((error) => console.error("Error opening PDF:", error));
+                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
                 break;
             }
 
@@ -318,8 +318,8 @@ export class AreasPropertiesListener {
             }
             case "openFile": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleOpenPdfOnLeave(oldProperty);
-                this.handleOpenPdfOnEnter(newProperty).catch((error) => console.error("Error opening PDF:", error));
+                this.handleOpenFileOnLeave(oldProperty);
+                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
                 break;
             }
             case "silent":
@@ -376,7 +376,7 @@ export class AreasPropertiesListener {
                 break;
             }
             case "openFile": {
-                this.handleOpenPdfOnLeave(property);
+                this.handleOpenFileOnLeave(property);
                 break;
             }
             default: {
@@ -934,7 +934,7 @@ export class AreasPropertiesListener {
     }
 
     private openCoWebsiteFunction(
-        property: OpenWebsitePropertyData | OpenPdfPropertyData,
+        property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
@@ -1081,13 +1081,13 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(property.id);
     }
 
-    private async handleOpenPdfOnEnter(property: OpenPdfPropertyData): Promise<void> {
+    private async handleOpenFileOnEnter(property: OpenFilePropertyData): Promise<void> {
         if (!property.link) {
             return;
         }
 
         if (!this.scene.connection) {
-            console.info("Cannot open Pdf. No connection to Pusher server.");
+            console.info("Cannot open file. No connection to Pusher server.");
             return;
         }
 
@@ -1185,7 +1185,7 @@ export class AreasPropertiesListener {
         property.link = url.split("?")[0];
     }
 
-    private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
+    private handleOpenFileOnLeave(property: OpenFilePropertyData): void {
         const openWebsiteProperty: string | null = property.link;
 
         if (!openWebsiteProperty) {

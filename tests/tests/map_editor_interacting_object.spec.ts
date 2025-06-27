@@ -98,7 +98,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.context().close();
   });
 
-  test("Success to interact with openPdf area and entity", async ({ browser, request, browserName }) => {
+  test("Success to interact with openFile area and entity", async ({ browser, request, browserName }) => {
     // Skip the test on Webkit because the click up doesn't work
     if (browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -120,7 +120,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
     await EntityEditor.setEntityName(page, "My Open Link");
     await EntityEditor.addProperty(page, "openFile");
-    await EntityEditor.setOpenPdfProperty(page);
+    await EntityEditor.setOpenFileProperty(page);
     await Menu.closeMapEditor(page);
 
     // // Refresh the page to see the entity
@@ -132,8 +132,8 @@ test.describe("Map editor interacting with object @oidc", () => {
     await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
 
     await page.keyboard.press("Space");
-    await expect(page.getByText('Open PDF')).toBeVisible();
-    await page.getByText('Open PDF').click();
+    await expect(page.getByText('Open file')).toBeVisible();
+    await page.getByText('Open file').click();
 
     // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
     const iframeE = await page.waitForSelector('iframe[src*="ipsum-lorem"]');
@@ -157,7 +157,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     );
     await AreaEditor.setAreaName(page, "MyLinkZone");
     await AreaEditor.addProperty(page, "openFile");
-    await AreaEditor.setOpenPdfProperty(
+    await AreaEditor.setOpenFileProperty(
       page,
       "Show immediately on enter"
     );
@@ -180,7 +180,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     const uploadFileA1 = request.post(iframeSrcA);
     expect((await uploadFileA1).ok()).toBeTruthy();
 
-    await AreaEditor.deletePdfFile(page);
+    await AreaEditor.deleteFile(page);
 
     // Check if the PDF files from area iframe are still accessible
     const uploadedFileA2 = request.post(iframeSrcA);

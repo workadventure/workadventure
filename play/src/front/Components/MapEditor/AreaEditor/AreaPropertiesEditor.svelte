@@ -19,7 +19,7 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import OpenPdfPropertyEditor from "../PropertyEditor/OpenPdfPropertyEditor.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
     import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
     import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
@@ -780,7 +780,7 @@
                             on:change={() => onUpdateProperty(property)}
                         />
                     {:else if property.type === "openFile"}
-                        <OpenPdfPropertyEditor
+                        <OpenFilePropertyEditor
                             {property}
                             isArea={true}
                             on:close={() => {

@@ -227,12 +227,12 @@ const mapEditor: BaseTranslation = {
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
         },
-        openPdfProperties: {
-            label: "Open PDF",
-            description: "Open PDF within WorkAdventure.",
-            error: "Please enter a valid PDF URL",
-            disabled: "PDF integration is disabled.",
-            pdfUrlLabel: "PDF URL",
+        openFileProperties: {
+            label: "Open file",
+            description: "Open file within WorkAdventure.",
+            error: "Please enter a valid file",
+            disabled: "File integration is disabled.",
+            fileUrlLabel: "File URL",
             uploadFile: {
                 title: "Add your file",
                 description: "Drag and drop or choose your file",

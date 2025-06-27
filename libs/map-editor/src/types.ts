@@ -92,7 +92,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     forceNewTab: z.boolean().optional().default(false),
 });
 
-export const OpenPdfPropertyData = PropertyBase.extend({
+export const OpenFilePropertyData = PropertyBase.extend({
     type: z.literal("openFile"),
     link: z.string().nullable().default("https://workadventu.re"),
     name: z.string().nullable(),
@@ -178,7 +178,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
-    OpenPdfPropertyData,
+    OpenFilePropertyData,
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
@@ -213,7 +213,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
-    OpenPdfPropertyData,
+    OpenFilePropertyData,
     EntityDescriptionPropertyData,
 ]);
 
@@ -386,7 +386,7 @@ export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
-export type OpenPdfPropertyData = z.infer<typeof OpenPdfPropertyData>;
+export type OpenFilePropertyData = z.infer<typeof OpenFilePropertyData>;
 export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
