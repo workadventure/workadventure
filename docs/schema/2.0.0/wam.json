@@ -257,7 +257,7 @@
                         },
                         "type": {
                           "type": "string",
-                          "const": "openPdf"
+                          "const": "openFile"
                         },
                         "link": {
                           "type": [
