@@ -13,7 +13,12 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
+    import {
+        FEATURE_FLAG_BROADCAST_AREAS,
+        MATRIX_PUBLIC_URI,
+        PUSHER_URL,
+        ADMIN_URL,
+    } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -404,7 +409,7 @@
 {:else}
     <div class="overflow-x-hidden space-y-3">
         <div class="properties-buttons flex flex-row flex-wrap">
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty && ADMIN_URL}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
                     on:click={() => onAddProperty("personalAreaPropertyData")}
