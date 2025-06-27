@@ -27,6 +27,7 @@ export class DebugController {
         this.getDump();
         this.enableDebug();
         this.disableDebug();
+        this.closeSpaceConnection();
     }
 
     private getDump() {
@@ -89,6 +90,27 @@ export class DebugController {
             }
 
             res.status(200).send("Debug disabled");
+        });
+    }
+
+    private closeSpaceConnection() {
+        this.app.post("/debug/close-space-connection", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const query = req.query;
+
+            if (!query.spaceName) {
+                res.status(400).send("Space name is required!");
+                return;
+            }
+
+            try {
+                socketManager.closeSpaceConnection(query.spaceName as string);
+            } catch (e) {
+                console.error("Error closing space connection", e);
+                res.status(500).send("Error closing space connection");
+                return;
+            }
+
+            res.status(200).send("Space connection closed");
         });
     }
 }

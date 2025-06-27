@@ -10,9 +10,9 @@ import type {
     CharacterTextureMessage,
     CompanionTextureMessage,
     BatchMessage,
-    SpaceFilterMessage,
     SubMessage,
 } from "@workadventure/messages";
+import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../PusherRoom";
 import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
@@ -24,6 +24,8 @@ export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, 
 export interface BackSpaceConnection extends BackSpaceConnection_ {
     pingTimeout: NodeJS.Timeout | undefined;
 }
+
+export type SpaceName = string;
 
 export type SocketData = {
     rejected: false;
@@ -55,8 +57,8 @@ export type SocketData = {
     backConnection?: BackConnection;
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
-    spaces: Set<string>;
-    spacesFilters: Map<string, SpaceFilterMessage[]>;
+    spaces: Set<SpaceName>;
+    joinSpacesPromise: Map<SpaceName, Deferred<void>>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];

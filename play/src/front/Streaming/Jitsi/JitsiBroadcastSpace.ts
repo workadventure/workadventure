@@ -12,7 +12,6 @@ import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { SpaceInterface } from "../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
-import { SpaceFilterInterface } from "../../Space/SpaceFilter/SpaceFilter";
 import { bindMuteEventsToSpace } from "../../Space/Utils/BindMuteEvents";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -38,24 +37,20 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private conference: JitsiConferenceWrapper | undefined;
     private unsubscribes: Unsubscriber[] = [];
     private jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
-    readonly space: SpaceInterface;
     readonly provider = "jitsi";
     private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
-    private spaceFilter: SpaceFilterInterface;
 
     private static numInstances = 0;
 
     constructor(
         private roomConnection: RoomConnection,
-        spaceName: string,
+        public space: SpaceInterface,
         private broadcastService: BroadcastService,
         private playSound: boolean,
         private spaceRegistry: SpaceRegistryInterface
     ) {
         super();
         JitsiBroadcastSpace.numInstances++;
-
-        this.space = this.spaceRegistry.joinSpace(spaceName);
 
         this.unsubscribes.push(
             requestedCameraState.subscribe((state) => {
@@ -90,8 +85,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             })
         );
 
-        this.spaceFilter = this.space.watchLiveStreamingUsers();
-        bindMuteEventsToSpace(this.space, this.spaceFilter);
+        bindMuteEventsToSpace(this.space);
 
         this.space.setMetadata(new Map([["test", "test"]]));
 
@@ -100,7 +94,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         // When the user leaves the space, we leave the Jitsi conference
         console.warn("JitsiBroadcastSpace => Subscribing to this.spaceFilter.usersStore");
         this.unsubscribes.push(
-            this.spaceFilter.usersStore.subscribe((users) => {
+            this.space.usersStore.subscribe((users) => {
                 console.log("JitsiBroadcastSpace => Spacefilter usersStore", JitsiBroadcastSpace.numInstances, users);
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
@@ -122,7 +116,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
                             // on speaker zones)
                             notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
-                            this.conference = await this.joinJitsiConference(spaceName);
+                            this.conference = await this.joinJitsiConference(this.space.getName());
                             this.space.emitUpdateUser({
                                 jitsiParticipantId: this.conference.participantId,
                             });
@@ -186,7 +180,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         if (this.associatedStreamStoreTimeOut) clearTimeout(this.associatedStreamStoreTimeOut);
         this.associatedStreamStoreTimeOut = setTimeout(() => {
             const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
-                [jitsiConference.streamStore, this.spaceFilter.usersStore],
+                [jitsiConference.streamStore, this.space.usersStore],
                 ([$streamStore, $users]) => {
                     const filtered = new Map<string, JitsiTrackWrapper>();
                     for (const [participantId, stream] of $streamStore) {
@@ -230,7 +224,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         return this.jitsiTracks;
     }
 
-    destroy() {
+    async destroy() {
         limit(() => this.conference?.leave("I want to leave this space ..."))
             .then(() => {
                 this.conference = undefined;
@@ -244,7 +238,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         jitsiConferencesStore.delete(this.space.getName());
         //this.space.stopWatching(this.spaceFilter);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
-        this.spaceRegistry.leaveSpace(this.space);
+        await this.spaceRegistry.leaveSpace(this.space);
         console.warn("JitsiBroadcastSpace => Unsubscribing from this.spaceFilter.usersStore");
     }
 }

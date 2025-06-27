@@ -732,7 +732,7 @@ export const iframeQueryMapTypeGuards = {
 };
 
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;
-type UnknownToVoid<T> = undefined extends T ? void : T;
+export type UnknownToVoid<T> = undefined extends T ? void : T;
 
 export type IframeQueryMap = {
     [key in keyof IframeQueryMapTypeGuardsType]: {
@@ -813,6 +813,6 @@ export const isIframeErrorAnswerEvent = z.object({
 });
 
 /**
- * A message sent from the game to the iFrame when a user enters or leaves a zone.
+ * A message sent from the game to the iFrame when an error occurs while processing a query.
  */
 export type IframeErrorAnswerEvent = z.infer<typeof isIframeErrorAnswerEvent>;

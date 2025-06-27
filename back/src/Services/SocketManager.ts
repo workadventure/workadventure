@@ -50,6 +50,9 @@ import {
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
+    FilterType,
+    SyncSpaceUsersMessage,
+    SpaceQueryMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -801,6 +804,8 @@ export class SocketManager {
                 case "searchTagsQuery":
                 case "chatMembersQuery":
                 case "oauthRefreshTokenQuery":
+                case "joinSpaceQuery":
+                case "leaveSpaceQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -1387,9 +1392,17 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            if (joinSpaceMessage.filterType === FilterType.UNRECOGNIZED) {
+                throw new Error("Unrecognized filter type when joining space");
+            }
+            space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
+
+        if (space.filterType !== joinSpaceMessage.filterType) {
+            throw new Error("Filter type mismatch when joining space");
+        }
+
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
     }
@@ -1404,6 +1417,7 @@ export class SocketManager {
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
         pusher.spacesWatched.forEach((spaceName) => {
+            console.log(">>>>>>> handleUnwatchAllSpaces spaceName", spaceName);
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error("Cant unwatch space, space not found");
@@ -1425,6 +1439,13 @@ export class SocketManager {
 
     handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
         const space = this.spaces.get(addSpaceUserMessage.spaceName);
+
+        if (space && space.filterType !== addSpaceUserMessage.filterType) {
+            console.error("Filter type mismatch when adding user to space");
+            Sentry.captureException("Filter type mismatch when adding user to space");
+            throw new Error("Filter type mismatch when adding user to space");
+        }
+
         if (space && addSpaceUserMessage.user) {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
@@ -1483,10 +1504,20 @@ export class SocketManager {
                 kickOffMessage: {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
-                    filterName: kickUserMessage.filterName,
                 },
             },
         });
+    }
+
+    handleSyncSpaceUsersMessage(pusher: SpacesWatcher, syncSpaceUsersMessage: SyncSpaceUsersMessage) {
+        const { spaceName, users } = syncSpaceUsersMessage;
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            console.error("Could not find space to sync users in SyncSpaceUsersMessage");
+            Sentry.captureException("Could not find space to sync users in SyncSpaceUsersMessage");
+            return;
+        }
+        space.syncUsersFromPusher(pusher, users);
     }
 
     handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
@@ -1625,6 +1656,57 @@ export class SocketManager {
                     externalModuleMessage: externalModuleMessage,
                 },
             });
+        }
+    }
+
+    /*
+     * This function is used to close the connection of the space. for testing purpose.
+     */
+    closeSpaceConnection(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Space ${spaceName} not found`);
+        }
+        space.closeAllWatcherConnections();
+        this.spaces.delete(spaceName);
+    }
+
+    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+        const space = this.spaces.get(spaceQueryMessage.spaceName);
+
+        if (!space) {
+            throw new Error(`Could not find space ${spaceQueryMessage.spaceName} to handle query`);
+        }
+
+        if (!spaceQueryMessage.query) {
+            console.error("SpaceQueryMessage has no query");
+            Sentry.captureException("SpaceQueryMessage has no query");
+            //TODO : renvoyer un message d'erreur au client ?? et avec l'id de la query ?
+            return;
+        }
+
+        try {
+            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            pusher.write({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: spaceQueryMessage.id,
+                        answer: answer.answer,
+                    },
+                },
+            });
+
+            if (space.canBeDeleted()) {
+                console.log("handleSpaceQueryMessage space can be deleted", space.name);
+                debug("[space] Space %s => deleted", space.name);
+                this.spaces.delete(space.name);
+                pusher.unwatchSpace(space.name);
+            }
+        } catch (e) {
+            console.error("Error while handling space query", e);
+            Sentry.captureException("Error while handling space query");
+            return;
         }
     }
 }
