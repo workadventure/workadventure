@@ -139,6 +139,8 @@ app.get(
     proxyFiles(fileSystem)
 );
 
+app.use(proxyFiles(fileSystem));
+
 // Check that the dist-ui directory exists
 if (fs.existsSync("dist-ui")) {
     app.use("/ui", express.static("dist-ui"));
