@@ -24,3 +24,8 @@ While editing an area, click the "file" icon.
 3. Those settings are related to the way the action is triggered. You can choose to open the pdf in a new tab, or in a cowebsite, the size of the cowebsite, if it can be closed, etc ...
 
 ![open_pdf](../../images/editor/open_pdf.png)
+
+## A note about security
+
+The files you upload are stored in a special secured section of our map-storage servers. By default, only the users that have access to your map can download your files.
+You can restrict access to your files further by adding a "Restricted area" property in addition to your "file" property. If you do so, users will need to have the tags specified in the "Restricted area" property in order to download your file.
