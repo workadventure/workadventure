@@ -178,7 +178,10 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(1);
 
-
+         await bob.close();
+         await bob.context().close();
+         await page.close();
+         await page.context().close();
     });
 
     test('cannot join a space with a different filter on the same browser', async ({ browser}, { project }) => {
@@ -195,6 +198,9 @@ test.describe('Scripting space-related functions', () => {
                 return null;
             })
         ).toContain("Cannot join space some-test-space");
+        
+        await page.close();
+        await page.context().close();
     });
 
     test('cannot join a space with a different filter in 2 browsers', async ({ browser}, { project }) => {
@@ -216,6 +222,11 @@ test.describe('Scripting space-related functions', () => {
                 return null;
             })
         ).toContain("Error: Space filter type mismatch");
+        
+        await bob.close();
+        await bob.context().close();
+        await page.close();
+        await page.context().close();
     });
 
     // TODO: write a test to test the "joinSpace" function with a "livestream" space type
