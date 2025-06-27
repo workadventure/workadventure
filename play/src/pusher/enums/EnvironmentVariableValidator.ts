@@ -169,6 +169,10 @@ export const EnvironmentVariables = z.object({
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
     MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
+    GRPC_MAX_MESSAGE_SIZE: z
+        .number()
+        .optional()
+        .default(20 * 1024 * 1024),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
