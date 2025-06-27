@@ -345,8 +345,6 @@ export class Space implements CustomJsonReplacerInterface {
                     }
 
                     if (this.filterType !== spaceQueryMessage.query.addSpaceUserQuery.filterType) {
-                        console.error("Filter type mismatch when adding user to space");
-                        Sentry.captureException("Filter type mismatch when adding user to space");
                         throw new Error("Filter type mismatch when adding user to space");
                     }
 
@@ -403,7 +401,7 @@ export class Space implements CustomJsonReplacerInterface {
      */
     public closeAllWatcherConnections() {
         for (const watcher of this.users.keys()) {
-            watcher.end();
+            watcher.error("Space closed by back");
             this.users.delete(watcher);
         }
     }

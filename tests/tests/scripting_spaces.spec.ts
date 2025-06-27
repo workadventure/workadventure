@@ -289,5 +289,15 @@ test.describe('Scripting space-related functions', () => {
          await bob.context().close();
          await page.close();
          await page.context().close();
-     });
+
+    });
+
+    test.skip('shoud reconnect to a space when back restarted ',()=>{
+        //TODO : create a space 
+        //TODO : join the space with user 1 and user 2
+        //TODO : watch with user 1
+        //TODO : restart the back
+        //TODO : check that user 1 is still in the space and can see user 2 after few seconds
+
+    })
 });

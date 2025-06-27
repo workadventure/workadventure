@@ -104,7 +104,8 @@ export class DebugController {
 
             try {
                 socketManager.closeSpaceConnection(query.spaceName as string);
-            } catch {
+            } catch (e) {
+                console.error("Error closing space connection", e);
                 res.status(500).send("Error closing space connection");
                 return;
             }

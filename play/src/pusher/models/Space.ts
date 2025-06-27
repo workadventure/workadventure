@@ -110,10 +110,11 @@ export class Space implements SpaceInterface {
                                             "Error spaceStreamToBack timed out for back: " + this.backId
                                         );
                                         spaceStreamToBack.end();
-                                        this._onBackEndDisconnect(this);
+
                                         this.spaceStreamToBackPromise = undefined;
+                                        //TODO : implement retry logic to wait for the back to be available again
                                         this.initSpace();
-                                        //this.sendLocalUsersToBack();
+                                        this.sendLocalUsersToBack();
                                     }, 1000 * 60);
 
                                     return;
@@ -132,16 +133,10 @@ export class Space implements SpaceInterface {
                 .on("end", () => {
                     debug("[space] spaceStreamsToBack ended");
                     if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-                    //this.cleanup();
-                    //TODO : check if socket still have this space in its list of spaces
+
                     this.spaceStreamToBackPromise = undefined;
                     this._onBackEndDisconnect(this);
                     this._localConnectedUser.clear();
-                    //this.cleanup()
-                    //Passer une fonction pour gerer la fin de connexion coté socketManager
-                    // Lorsqu'une connexion au back se termine (end ou error), on réinitialise la connexion et on renvoie les utilisateurs locaux.
-                    //this.initSpace();
-                    //this.sendLocalUsersToBack();
                 })
                 .on("status", (status) => {
                     console.log("status : ", status);
@@ -149,8 +144,6 @@ export class Space implements SpaceInterface {
                 })
                 .on("error", (err: Error) => {
                     // On gère l'erreur comme un 'end' car la connexion au back est fermée.
-                    //this.initSpace();
-                    //this.sendLocalUsersToBack();
 
                     console.error(
                         "Error in connection to back server '" +
@@ -162,8 +155,8 @@ export class Space implements SpaceInterface {
                     );
                     Sentry.captureException(err);
 
-                    this._onBackEndDisconnect(this);
                     this.initSpace();
+                    this.sendLocalUsersToBack();
                 });
 
             spaceStreamToBack.write({
