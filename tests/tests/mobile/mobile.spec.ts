@@ -85,6 +85,7 @@ test.describe('Mobile', () => {
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile'));
 
         // Move to open a cowebsite
+        await page.locator('#body').press('ArrowDown', { delay: 200 });
         await page.locator('#body').press('ArrowRight', { delay: 10000 });
         // Now, let's move player 2 to the speaker zone
         
