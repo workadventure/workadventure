@@ -12,7 +12,7 @@ import { GuardError } from "../../src/room-api/types/GuardError";
 let readableCall = new PassThrough();
 let readableResponse = new PassThrough();
 
-vi.mock("./../pusher/enums/EnvironmentVariable.ts", () => {
+vi.mock("./../pusher/enums/EnvironmentVariable", () => {
     return {
         GRPC_MAX_MESSAGE_SIZE: 20 * 1024 * 1024,
     };
