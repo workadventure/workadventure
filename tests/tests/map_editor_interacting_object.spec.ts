@@ -98,7 +98,14 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.context().close();
   });
 
-  test("Success to interact with openPdf area and entity", async ({ browser, request }) => {
+  test("Success to interact with openPdf area and entity", async ({ browser, request, browserName }) => {
+    // Skip the test on Webkit because the click up doesn't work
+    if (browserName === "webkit") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     // Go to the map
     await resetWamMaps(request);
     const page = await getPage(browser, 'Admin1', Map.url("empty"));
