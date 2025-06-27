@@ -12,6 +12,9 @@ import {
 } from "../Stores/MyMediaStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localeDetector } from "../Utils/locales";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import { LL } from "../../i18n/i18n-svelte";
+import infoIcon from "../Components/images/info.svg";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
@@ -46,7 +49,8 @@ export class MediaManager {
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
-                        showHelpCameraSettings();
+                        // showHelpCameraSettings();
+                        notificationPlayingStore.playNotification(get(LL).notification.screenSharingError(), infoIcon);
                         //remove it after 10 sec
                         /*setTimeout(() => {
                             popupStore.removePopup("screenSharingAccessDenied");
