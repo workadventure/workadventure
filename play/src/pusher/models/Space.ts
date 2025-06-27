@@ -112,7 +112,7 @@ export class Space implements SpaceInterface {
                                         spaceStreamToBack.end();
                                         this._onBackEndDisconnect(this);
                                         this.spaceStreamToBackPromise = undefined;
-                                        //this.initSpace();
+                                        this.initSpace();
                                         //this.sendLocalUsersToBack();
                                     }, 1000 * 60);
 
@@ -163,6 +163,7 @@ export class Space implements SpaceInterface {
                     Sentry.captureException(err);
 
                     this._onBackEndDisconnect(this);
+                    this.initSpace();
                 });
 
             spaceStreamToBack.write({
