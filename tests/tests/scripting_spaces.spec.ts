@@ -235,4 +235,59 @@ test.describe('Scripting space-related functions', () => {
     // bob stops streaming
     // alice does not see bob anymore
     // TODO: add a function to start / stop streaming in the scripting API
+
+    test('can join a livestream space and see the user when it starts streaming', async ({ browser}, { project }) => {
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+
+        await evaluateScript(page, async () => {
+            window.userCount = 0;
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace.userJoinedObservable.subscribe((user) => {
+                window.userCount++;
+                window.lastJoinedUser = user;
+            });
+            window.mySpace.userLeftObservable.subscribe((user) => window.userCount--);
+        });
+
+        // Bob joins the same space
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await evaluateScript(bob, async () => {
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+        });
+
+        // User count in the space should now be 1
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+        // Bob starts streaming
+        await evaluateScript(bob, async () => {
+            window.mySpace.startStreaming();
+        });
+
+        // User count in the space should now be 2
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(1);
+
+        // Alice should see Bob's user
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.lastJoinedUser.name;
+        })).toBe("Bob");
+
+        // Bob stops streaming
+        await evaluateScript(bob, async () => {
+            window.mySpace.stopStreaming();
+        });
+
+        // User count in the space should go back to 1
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+         await bob.close();
+         await bob.context().close();
+         await page.close();
+         await page.context().close();
+     });
 });
