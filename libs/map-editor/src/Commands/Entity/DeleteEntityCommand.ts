@@ -1,7 +1,10 @@
 import type { GameMap } from "../../GameMap/GameMap";
+import { WAMEntityData } from "../../types";
 import { Command } from "../Command";
 
 export class DeleteEntityCommand extends Command {
+    protected entityConfig: WAMEntityData | undefined;
+
     protected gameMap: GameMap;
 
     constructor(gameMap: GameMap, protected entityId: string, commandId?: string) {
@@ -10,8 +13,12 @@ export class DeleteEntityCommand extends Command {
     }
 
     public execute(): Promise<void> {
-        if (!this.gameMap.getGameMapEntities()?.deleteEntity(this.entityId)) {
-            throw new Error(`MapEditorError: Could not execute DeleteEntity Command. Entity ID: ${this.entityId}`);
+        const entityConfig = this.gameMap.getGameMapEntities()?.getEntity(this.entityId);
+        if (entityConfig) {
+            this.entityConfig = structuredClone(entityConfig);
+            if (!this.gameMap.getGameMapEntities()?.deleteEntity(this.entityId)) {
+                throw new Error(`MapEditorError: Could not execute DeleteEntity Command. Entity ID: ${this.entityId}`);
+            }
         }
         return Promise.resolve();
     }

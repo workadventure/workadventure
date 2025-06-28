@@ -227,6 +227,21 @@ const mapEditor: BaseTranslation = {
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
         },
+        openFileProperties: {
+            label: "Open file",
+            description: "Open file within WorkAdventure.",
+            error: "Please enter a valid file",
+            disabled: "File integration is disabled.",
+            fileUrlLabel: "File URL",
+            uploadFile: {
+                title: "Add your file",
+                description: "Drag and drop or choose your file",
+                dragDrop: "Drag and Drop or",
+                chooseFile: "Choose file",
+                errorOnFileFormat: "File format not supported",
+                errorOnFileNumber: "Multiple file drop is not supported",
+            },
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

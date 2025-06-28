@@ -1,6 +1,7 @@
 import { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import { apiClientRepository } from "../services/ApiClientRepository";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class PingController extends BaseHttpController {
@@ -53,7 +54,7 @@ export class PingController extends BaseHttpController {
          *
          */
         this.app.get("/ping-backs", async (req, res) => {
-            const clients = await apiClientRepository.getAllClients();
+            const clients = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<PingMessage>[] = [];
             for (const client of clients) {

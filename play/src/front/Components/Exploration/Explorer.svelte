@@ -239,6 +239,13 @@
                     addFilter("matrixRoomPropertyData");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openFile"
+                isActive={$selectFilters.includes("openFile")}
+                on:click={() => {
+                    addFilter("openFile");
+                }}
+            />
 
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper

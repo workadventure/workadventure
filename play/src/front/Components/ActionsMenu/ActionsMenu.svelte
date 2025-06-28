@@ -109,8 +109,8 @@
                             ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
-                        on:click|preventDefault={() => {
-                            action.callback();
+                        on:click|preventDefault={async () => {
+                            await action.callback();
                         }}
                     >
                         <span class="flex flex-row gap-2 items-center justify-center text-wrap">

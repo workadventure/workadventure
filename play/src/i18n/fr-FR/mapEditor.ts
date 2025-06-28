@@ -225,6 +225,20 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             duration: "Duration (en secondes) ⏱️",
             infinityDuration: "Infini ⏱️",
         },
+        openFileProperties: {
+            label: "Ouvrir un fichier",
+            description: "Ouvrir un fichier dans l'application.",
+            error: "Veuillez entrer fichier valide",
+            disabled: "L'intégration de fichier est désactivée.",
+            uploadFile: {
+                title: "Ajouter votre fichier",
+                description: "Glissez-déposer ou choisissez votre fichier afin de l'ajouter sur la carte",
+                dragDrop: "Glissez-déposer ou",
+                chooseFile: "Choisir ",
+                errorOnFileFormat: "Format du fichier non supporté",
+                errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            },
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

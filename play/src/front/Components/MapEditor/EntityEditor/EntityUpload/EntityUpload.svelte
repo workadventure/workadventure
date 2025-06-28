@@ -63,6 +63,7 @@
             const generatedId = uuidv4();
             tagUploadInProcess =
                 customEditedEntity.tags && customEditedEntity.tags.length > 0 ? customEditedEntity.tags[0] : BASIC_TYPE;
+
             mapEditorEntityUploadEventStore.set({
                 id: generatedId,
                 file: fileAsUint8Array,

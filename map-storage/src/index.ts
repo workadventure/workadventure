@@ -21,6 +21,7 @@ import {
     WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
@@ -48,8 +49,21 @@ if (SENTRY_DSN != undefined) {
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
 import { PingController } from "./Upload/PingController";
+import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
+import { hookManager } from "./Modules/HookManager";
+import { FileModule } from "./Modules/FileModule";
+import { verifyJWT } from "./Services/VerifyJwt";
 
-const server = new grpc.Server();
+const resourceUrlModule = new ResourceUrlModule();
+resourceUrlModule.init(hookManager);
+
+const fileModule = new FileModule();
+fileModule.init(hookManager);
+
+const server = new grpc.Server({
+    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+});
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 server.addService(MapStorageService, mapStorageServer);
@@ -116,6 +130,14 @@ const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOO
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
+
+app.get(
+    "/private/files/*",
+    (req, res, next) => {
+        Promise.resolve(verifyJWT(req, res, next)).catch(next);
+    },
+    proxyFiles(fileSystem)
+);
 
 app.use(proxyFiles(fileSystem));
 
