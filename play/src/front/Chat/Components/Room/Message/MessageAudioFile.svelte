@@ -20,7 +20,7 @@
     audio::-webkit-media-controls-current-time-display,
     audio::-webkit-media-controls-time-remaining-display,
     audio::-webkit-media-controls-timeline {
-        color: #1b2a41;
+        color: #6e1946;
         -moz-border-radius: 1px !important;
         -webkit-border-radius: 1px !important;
         border-radius: 1px !important;
