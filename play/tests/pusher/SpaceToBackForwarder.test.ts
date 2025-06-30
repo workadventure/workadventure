@@ -432,6 +432,7 @@ describe("SpaceToBackForwarder", () => {
                 query: mock<Query>({
                     send: mockSendQuery,
                 }),
+                cleanup: vi.fn(),
             } as unknown as Space;
 
             const spaceForwarder = new SpaceToBackForwarder(mockSpace);
@@ -444,6 +445,106 @@ describe("SpaceToBackForwarder", () => {
                 removeSpaceUserQuery: { spaceName: "test", spaceUserId: "foo_1" },
             });
             expect(mockSendQuery).toHaveBeenCalledOnce();
+        });
+        it("should call cleanup when there are no more local connected users", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockSocket = mock<Socket>({
+                getUserData: vi.fn().mockReturnValue({
+                    spaceUser: SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                }),
+            });
+            const cleanupMock = vi.fn();
+            const mockSendQuery = vi.fn().mockResolvedValue({
+                $case: "removeSpaceUserAnswer",
+                removeSpaceUserAnswer: { spaceName: "test", spaceUserId: "foo_1" },
+            });
+            const mockSpace = {
+                name: "test",
+                _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
+                _localWatchers: new Map<string, Socket>(),
+                spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
+                metadata: new Map(),
+                cleanup: cleanupMock,
+                query: mock<Query>({
+                    send: mockSendQuery,
+                }),
+            } as unknown as Space;
+
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+
+            await spaceForwarder.unregisterUser(mockSocket);
+            await flushPromises();
+
+            expect(cleanupMock).toHaveBeenCalledOnce();
+            expect(mockSendQuery).toHaveBeenCalledOnce();
+            expect(mockSendQuery).toHaveBeenCalledWith({
+                $case: "removeSpaceUserQuery",
+                removeSpaceUserQuery: { spaceName: "test", spaceUserId: "foo_1" },
+            });
+        });
+
+        it("shouldn't call cleanup when there are still local connected users", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockSocket = mock<Socket>({
+                getUserData: vi.fn().mockReturnValue({
+                    spaceUser: SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                }),
+            });
+            const cleanupMock = vi.fn();
+            const mockSendQuery = vi.fn().mockResolvedValue({
+                $case: "removeSpaceUserAnswer",
+                removeSpaceUserAnswer: { spaceName: "test", spaceUserId: "foo_1" },
+            });
+            const mockSpace = {
+                name: "test",
+                _localConnectedUser: new Map<string, Socket>([
+                    ["foo_1", mockSocket],
+                    ["foo_2", mockSocket],
+                ]),
+                _localWatchers: new Map<string, Socket>(),
+                spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
+                metadata: new Map(),
+                cleanup: cleanupMock,
+                query: mock<Query>({
+                    send: mockSendQuery,
+                }),
+            } as unknown as Space;
+
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+
+            await spaceForwarder.unregisterUser(mockSocket);
+            await flushPromises();
+
+            expect(cleanupMock).not.toHaveBeenCalled();
+            expect(mockSendQuery).toHaveBeenCalledOnce();
+            expect(mockSendQuery).toHaveBeenCalledWith({
+                $case: "removeSpaceUserQuery",
+                removeSpaceUserQuery: { spaceName: "test", spaceUserId: "foo_1" },
+            });
         });
     });
 

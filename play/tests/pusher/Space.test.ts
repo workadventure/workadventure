@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-import { Space, SpaceUserExtended } from "../../src/pusher/models/Space";
+import { Space, SpaceForSpaceConnectionInterface, SpaceUserExtended } from "../../src/pusher/models/Space";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
+import { SpaceConnection, SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -20,109 +21,12 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
 //TODO : see if there are not too many repetitions in the tests
 
 describe("Space", () => {
-    /* 
-     Test unwatch and isEmpty ??
-     */
-
-    describe("initSpace", () => {
+    describe("sendLocalUsersToBack", () => {
         //TODO : do the same test for pingTimeout ?
-        it("should try to reconnect to back if the connection is lost and send local users to back", async () => {
-            const callbackMap = new Map<string, (...args: unknown[]) => void>();
-
-            const mockBackSpaceConnection = mock<BackSpaceConnection>({
-                write: vi.fn(),
-                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
-                    callbackMap.set(event, callback);
-                    return mockBackSpaceConnection;
-                }),
-            });
-
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-                getChannel: vi.fn().mockReturnValue({
-                    getTarget: vi.fn().mockReturnValue("test"),
-                }),
-            });
-
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
-            });
-
-            const mockUsers = [
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_1",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_2",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_3",
-                }),
-            ];
-
-            const mockSyncLocalUsersWithServer = vi.fn();
-
-            const mockSpaceToBackForwarderFactory = (space: Space) =>
-                ({
-                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
-                } as unknown as SpaceToBackForwarder);
-
-            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
-                ({} as SpaceToFrontDispatcher);
-
-            const mockOnBackEndDisconnect = vi.fn();
-
-            const space = new Space(
-                "test",
-                "test",
-                new EventProcessor(),
-                FilterType.ALL_USERS,
-                mockOnBackEndDisconnect,
-                mockApiClientRepository,
-                mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
-            );
-
-            space.initSpace();
-            space._localConnectedUser.set("foo_1", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[0],
-                }),
-            } as unknown as Socket);
-            space._localConnectedUser.set("foo_2", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[1],
-                }),
-            } as unknown as Socket);
-            space._localConnectedUser.set("foo_3", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[2],
-                }),
-            } as unknown as Socket);
-
-            await flushPromises();
-
-            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
-            expect(mockWatchSpace).toHaveBeenCalledOnce();
-
-            //Simuler une erreur de connection
-            callbackMap.get("error")?.();
-
-            await flushPromises();
-
-            expect(mockGetSpaceClient).toHaveBeenCalledTimes(2);
-            expect(mockWatchSpace).toHaveBeenCalledTimes(2);
-            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledOnce();
-            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledWith(mockUsers);
-        });
-
-        it("should send joinSpaceMessage to back when initSpace is called", async () => {
+        it("should try to reconnect to back if the connection is lost and send local users to back", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 
             const mockWriteFunction = vi.fn();
-
             const mockBackSpaceConnection = mock<BackSpaceConnection>({
                 write: mockWriteFunction,
                 on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
@@ -131,74 +35,6 @@ describe("Space", () => {
                 }),
             });
 
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-            });
-
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
-            });
-
-            const mockSyncLocalUsersWithServer = vi.fn();
-
-            const mockSpaceToBackForwarderFactory = (space: Space) =>
-                ({
-                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
-                } as unknown as SpaceToBackForwarder);
-
-            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
-                ({} as SpaceToFrontDispatcher);
-
-            const mockOnBackEndDisconnect = vi.fn();
-
-            const space = new Space(
-                "test",
-                "test",
-                new EventProcessor(),
-                FilterType.ALL_USERS,
-                mockOnBackEndDisconnect,
-                mockApiClientRepository,
-                mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
-            );
-
-            space.initSpace();
-            await flushPromises();
-
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "joinSpaceMessage",
-                    joinSpaceMessage: { spaceName: "test", filterType: FilterType.ALL_USERS },
-                },
-            });
-            expect(mockWriteFunction).toHaveBeenCalledOnce();
-        });
-    });
-    describe("closeBackConnection", () => {
-        it("should close the back connection", async () => {
-            const callbackMap = new Map<string, (...args: unknown[]) => void>();
-            const mockEndFunction = vi.fn();
-            const mockBackSpaceConnection = mock<BackSpaceConnection>({
-                write: vi.fn(),
-                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
-                    callbackMap.set(event, callback);
-                    return mockBackSpaceConnection;
-                }),
-                end: mockEndFunction,
-            });
-
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-            });
-
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
-            });
-
             const mockUsers = [
                 SpaceUser.fromPartial({
                     spaceUserId: "foo_1",
@@ -223,18 +59,22 @@ describe("Space", () => {
 
             const mockOnBackEndDisconnect = vi.fn();
 
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
-                mockApiClientRepository,
+                mockSpaceConnection,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
 
-            space.initSpace();
             space._localConnectedUser.set("foo_1", {
                 getUserData: vi.fn().mockReturnValue({
                     spaceUser: mockUsers[0],
@@ -251,13 +91,12 @@ describe("Space", () => {
                 }),
             } as unknown as Socket);
 
-            space.closeBackConnection();
-            await flushPromises();
+            space.sendLocalUsersToBack();
 
-            expect(mockEndFunction).toHaveBeenCalledOnce();
+            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledOnce();
+            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledWith(mockUsers);
         });
     });
-
     describe("handleWatch", () => {
         it("should send all users to the new watcher", async () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
@@ -270,16 +109,6 @@ describe("Space", () => {
                     callbackMap.set(event, callback);
                     return mockBackSpaceConnection;
                 }),
-            });
-
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-            });
-
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
             });
 
             const mockUsers = [
@@ -309,13 +138,18 @@ describe("Space", () => {
 
             const mockOnBackEndDisconnect = vi.fn();
 
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
-                mockApiClientRepository,
+                mockSpaceConnection,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
@@ -355,16 +189,6 @@ describe("Space", () => {
                 }),
             });
 
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-            });
-
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
-            });
-
             const mockUsers = [
                 SpaceUser.fromPartial({
                     spaceUserId: "foo_1",
@@ -392,13 +216,18 @@ describe("Space", () => {
 
             const mockOnBackEndDisconnect = vi.fn();
 
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
             const space = new Space(
                 "test",
                 "test",
                 new EventProcessor(),
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
-                mockApiClientRepository,
+                mockSpaceConnection,
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
@@ -422,5 +251,247 @@ describe("Space", () => {
 
             expect(mockNotifyMeAddUser).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe("SpaceConnection", () => {
+    describe("getSpaceStreamToBackPromise", () => {
+        it("should create a new spaceStreamToBack if there is no spaceStreamToBack for the backId", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: vi.fn(),
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+            });
+
+            const BackSpaceConnectionPromise = spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            await flushPromises();
+
+            expect(BackSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledOnce();
+            expect(mockGetIndex).toHaveBeenCalledWith(mockSpace.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledWith(mockSpace.name, mock_GRPC_MAX_MESSAGE_SIZE);
+        });
+
+        it("should create a new spaceStreamToBack if there is no spaceStreamToBack for the backId", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: vi.fn(),
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+            });
+
+            const mockSpace2 = mock<SpaceForSpaceConnectionInterface>({
+                name: "test2",
+            });
+
+            const backSpaceConnectionPromise = spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            await flushPromises();
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            expect(backSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledOnce();
+            expect(mockGetIndex).toHaveBeenCalledWith(mockSpace.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledWith(mockSpace.name, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const backSpaceConnectionPromise2 = spaceConnection.getSpaceStreamToBackPromise(mockSpace2);
+            await flushPromises();
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            expect(backSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledTimes(2);
+            expect(mockGetIndex).toHaveBeenNthCalledWith(2, mockSpace2.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(backSpaceConnectionPromise2).toStrictEqual(backSpaceConnectionPromise);
+        });
+        it("should send the joinSpaceMessage to the back when the spaceStreamToBack is created", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            expect(mockWriteFunction).toHaveBeenCalledOnce();
+            expect(mockWriteFunction).toHaveBeenCalledWith({
+                message: {
+                    $case: "joinSpaceMessage",
+                    joinSpaceMessage: {
+                        spaceName: mockSpace.name,
+                        filterType: FilterType.ALL_USERS,
+                    },
+                },
+            });
+        });
+
+        it("shouldn't send the joinSpaceMessage to the back  if the space is already joined", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mockSpace2 = mock<SpaceForSpaceConnectionInterface>({
+                name: "test2",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace2);
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+        });
+
+        it("should try to reconnect to back if the connection is lost and send local users to back", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+                getChannel: vi.fn().mockReturnValue({
+                    getTarget: vi.fn().mockReturnValue("test"),
+                }),
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const mockSendLocalUsersToBack = vi.fn();
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+                sendLocalUsersToBack: mockSendLocalUsersToBack,
+            });
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            //Simuler une erreur de connection
+            callbackMap.get("error")?.();
+
+            await flushPromises();
+
+            expect(mockGetSpaceClient).toHaveBeenCalledTimes(2);
+            expect(mockWatchSpace).toHaveBeenCalledTimes(2);
+            expect(mockSendLocalUsersToBack).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("removeSpace", () => {
+        it.skip("should remove the space from the spaceConnection", () => {});
     });
 });
