@@ -109,7 +109,7 @@ export class SpaceConnection {
                                     console.error("Error spaceStreamToBack timed out for back:", backId);
                                     Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
                                     spaceStreamToBack.end();
-                                    void this.retryConnection(backId);
+                                    this.retryConnection(backId);
                                 }, 1000 * 60);
                                 break;
                             }
@@ -128,21 +128,16 @@ export class SpaceConnection {
             .on("end", () => {
                 debug("[space] spaceStreamsToBack ended");
                 if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-
-                this.retryConnection(backId);
             })
             .on("status", (status) => {
                 console.log("status : ", status);
                 //voir si on peut gerer la fin de la connexion ici
             })
             .on("error", (err: Error) => {
+                if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                 console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
                 Sentry.captureException(err);
-
-                // this.retryConnection(backId).catch((e) => {
-                //     console.error("Error while retrying connection", e);
-                //     Sentry.captureException(e);
-                // });
+                this.retryConnection(backId);
             });
     }
 
