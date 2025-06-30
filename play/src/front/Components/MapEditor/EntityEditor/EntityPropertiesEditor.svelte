@@ -19,6 +19,7 @@
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -138,6 +139,18 @@
                     closable: true,
                     roomName: "JITSI ROOM",
                     buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
+                };
+            case "openFile":
+                return {
+                    id,
+                    type,
+                    link: "",
+                    name: "",
+                    closable: true,
+                    newTab: false,
+                    buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
+                    policy,
+                    width: 50,
                 };
             case "openWebsite":
                 switch (subtype) {
@@ -282,6 +295,12 @@
                     onAddProperty("openWebsite");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openFile"
+                on:click={() => {
+                    onAddProperty("openFile");
+                }}
+            />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
@@ -417,6 +436,14 @@
                         <OpenWebsitePropertyEditor
                             {property}
                             triggerOptionActivated={false}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "openFile"}
+                        <OpenFilePropertyEditor
+                            {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

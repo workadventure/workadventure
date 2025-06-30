@@ -3,6 +3,7 @@ import Debug from "debug";
 import type { ClientReadableStream } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { Socket } from "../services/SocketManager";
 import { PositionDispatcher } from "./PositionDispatcher";
@@ -60,7 +61,7 @@ export class PusherRoom {
      */
     public async init(): Promise<void> {
         debug("Opening connection to room %s on back server", this.roomUrl);
-        const apiClient = await apiClientRepository.getClient(this.roomUrl);
+        const apiClient = await apiClientRepository.getClient(this.roomUrl, GRPC_MAX_MESSAGE_SIZE);
         this.backConnection = apiClient.listenRoom({
             roomId: this.roomUrl,
         });
