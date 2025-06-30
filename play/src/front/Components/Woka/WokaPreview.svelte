@@ -1,11 +1,18 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { WokaData, WokaTexture } from "./WokaTypes";
+    import { createEventDispatcher } from "svelte";
+
+    const dispatch = createEventDispatcher<{ rotate: { direction: number } }>();
+
     export let selectedTextures: Record<string, string>;
     export let wokaData: WokaData | null = null;
     export let getTextureUrl: (url: string) => string = (url) => url;
 
     const bodyPartOrder = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
+
+    // Directions correspond to the order of images in the sprite sheet:
+    const directionsCoresp = [0, 1, 3, 2];
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
@@ -15,7 +22,7 @@
     let raf: number;
     let frameCount: number = 0;
     const framesPerStep = 15;
-    const canvaSize = 100;
+    const canvaSize = 130;
 
     function findTextureUrl(bodyPart: string): string | null {
         const textureId = selectedTextures?.[bodyPart];
@@ -45,7 +52,7 @@
             const img = images[part];
             ctx.imageSmoothingEnabled = false;
             if (img && img.complete) {
-                ctx.drawImage(img, frame * 32, direction * 32, 32, 32, 0, 0, canvaSize, canvaSize);
+                ctx.drawImage(img, frame * 32, directionsCoresp[direction] * 32, 32, 32, 0, 0, canvaSize, canvaSize);
             }
         }
     }
@@ -82,6 +89,7 @@
             class="bg-white/10 hover:bg-white/20 rounded-md absolute bottom-2 right-2 aspect-square p-2 flex items-center justify-center"
             on:click={() => {
                 direction = (direction + 1) % 4;
+                dispatch("rotate", { direction: directionsCoresp[direction] });
             }}
         >
             <svg
