@@ -150,7 +150,7 @@
                             </div>
                         </div>
                         <button
-                            class="flex items-center justify-center text-red-500 p-2 bg-red-500/10 hover:bg-red-500/20 rounded mt-2"
+                            class="flex items-center justify-center text-white p-2 bg-red-500/80 hover:bg-red-500 rounded mt-2"
                             data-testid="revokeAccessButton"
                             on:click={revokeOwner}
                         >
