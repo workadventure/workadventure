@@ -127,8 +127,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             },
             excalidraw: {
                 title: "Excalidraw",
-                description:
-                    "أرسل لوحة بيضاء افتراضية بأسلوب مرسوم يدويًا. تعاونية ومشفرة من طرف إلى طرف.",
+                description: "أرسل لوحة بيضاء افتراضية بأسلوب مرسوم يدويًا. تعاونية ومشفرة من طرف إلى طرف.",
             },
             cards: {
                 title: "البطاقات",

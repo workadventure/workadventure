@@ -2,12 +2,12 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
-editCam: "تحرير الكاميرا",
-editMic: "تحرير الميكروفون",   
- editSpeaker:"تحرير إخراج الصوت",
+    editCam: "تحرير الكاميرا",
+    editMic: "تحرير الميكروفون",
+    editSpeaker: "تحرير إخراج الصوت",
     active: "نشط",
     disabled: "معطل",
-   notRecommended: "غير موصى به",
+    notRecommended: "غير موصى به",
     enable: {
         title: "يرجى تشغيل الكاميرا والميكروفون.", // Please turn on your camera and microphone.
         start: "لنبدأ!", // Let's start!
@@ -36,16 +36,15 @@ editMic: "تحرير الميكروفون",
         preparingYouNetworkGuide: 'دليل "إعداد شبكتك"', // "Preparing your network" guide
         refresh: "تحديث", // Refresh
         continue: "استمرار", // Continue
-                solutionVpnNotAskAgain: "فهمت. لا تحذرني مرة أخرى 🫡",
-                        newDeviceDetected: "تم اكتشاف جهاز جديد {device} 🎉 التبديل؟ [مسافة]",
-
-
+        solutionVpnNotAskAgain: "فهمت. لا تحذرني مرة أخرى 🫡",
+        newDeviceDetected: "تم اكتشاف جهاز جديد {device} 🎉 التبديل؟ [مسافة]",
     },
     my: {
         silentZone: "منطقة صامتة", // Silent zone
         nameTag: "أنت", // You
-        silentZoneDesc:   "أنت في منطقة صامتة. لا يمكنك سوى رؤية وسماع الأشخاص الذين معك. لا يمكنك رؤية أو سماع الأشخاص الآخرين في الغرفة.",
-        loading: "جارٍ تحميل الكاميرا...", // Loading your camera... 
+        silentZoneDesc:
+            "أنت في منطقة صامتة. لا يمكنك سوى رؤية وسماع الأشخاص الذين معك. لا يمكنك رؤية أو سماع الأشخاص الآخرين في الغرفة.",
+        loading: "جارٍ تحميل الكاميرا...", // Loading your camera...
     },
     disable: "إيقاف الكاميرا", // Disable camera
     menu: {

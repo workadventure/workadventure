@@ -8,5 +8,4 @@ const cowebsite: DeepPartial<Translation["cowebsite"]> = {
     jitsi: "Jitsi",
 };
 
-
 export default cowebsite;
