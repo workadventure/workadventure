@@ -2,10 +2,12 @@ import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { BackToPusherSpaceMessage } from "@workadventure/messages";
 import { SpaceManagerClient } from "@workadventure/messages/src/ts-proto-generated/services";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { SpaceForSpaceConnectionInterface, SpaceInterface } from "./Space";
 import { BackSpaceConnection } from "./Websocket/SocketData";
 const debug = Debug("spaceConnection");
+
 /**
  * The SpaceConnection class is responsible for managing the connection to the back server.
  * It is used to create a new connection to the back server if there is no connection for this backId for a space and to join the space to the back server.
@@ -28,7 +30,10 @@ export class SpaceConnection {
         Map<string, SpaceForSpaceConnectionInterface>
     >();
 
-    constructor(private _apiClientRepository = apiClientRepository) {}
+    constructor(
+        private _apiClientRepository = apiClientRepository,
+        private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
+    ) {}
 
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
@@ -52,7 +57,7 @@ export class SpaceConnection {
     }
 
     private async createBackConnection(space: SpaceForSpaceConnectionInterface, backId: number) {
-        const apiSpaceClient = await this._apiClientRepository.getSpaceClient(space.name);
+        const apiSpaceClient = await this._apiClientRepository.getSpaceClient(space.name, this._GRPC_MAX_MESSAGE_SIZE);
         const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
         this.registerEventsOnConnection(spaceStreamToBack, backId, apiSpaceClient);
         return spaceStreamToBack;
