@@ -1,11 +1,7 @@
 // lib/server.ts
-import * as grpc from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import App from "./App";
-import { roomManager } from "./RoomManager";
 import {
-    GRPC_PORT,
     ENABLE_TELEMETRY,
     SENTRY_DSN,
     SENTRY_RELEASE,
@@ -13,15 +9,10 @@ import {
     SENTRY_TRACES_SAMPLE_RATE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
-import { spaceManager } from "./SpaceManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
 }
-
-// await App.inti();
-
-App.listen();
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -40,16 +31,11 @@ if (SENTRY_DSN != undefined) {
     }
 }
 
-// dans App.grpcListen() a creer
-const server = new grpc.Server();
-server.addService(RoomManagerService, roomManager);
-server.addService(SpaceManagerService, spaceManager);
-
-server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err, port) => {
-    if (err) {
-        throw err;
-    }
-    console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
-    server.start();
+(async () => {
+    await App.init();
+    App.listen();
+    App.grpcListen();
+})().catch((e) => {
+    console.error(e);
+    Sentry.captureException(e);
 });
-//

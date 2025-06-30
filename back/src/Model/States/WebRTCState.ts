@@ -4,8 +4,8 @@ import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { WebRTCCommunicationStrategy } from "../Strategies/WebRTCCommunicationStrategy";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { ADMIN_API_URL } from "../../Enum/EnvironmentVariable";
 import { adminApi } from "../../Services/AdminApi";
+import { getCapability } from "../../Services/Capabilities";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { LivekitState } from "./LivekitState";
 
@@ -62,7 +62,7 @@ export class WebRTCState extends CommunicationState {
     private switchToNextState(user: SpaceUser): void {
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;
-            if (ADMIN_API_URL) {
+            if (getCapability("api/livekit/credentials")) {
                 const res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
                 nextState = new LivekitState(this._space, this._communicationManager, res);
             } else {
