@@ -3,7 +3,6 @@ import HelpCameraSettingsPopup from "../Components/HelpSettings/HelpCameraSettin
 import { popupStore } from "./PopupStore";
 
 export function showHelpCameraSettings() {
-    console.trace("showHelpCameraSettings");
     popupStore.addPopup(HelpCameraSettingsPopup, {}, "cameraAccessDenied");
 }
 
