@@ -13,6 +13,7 @@ export interface SpaceToBackForwarderInterface {
     updateMetadata(metadata: { [key: string]: unknown }): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
+    leaveSpace(): void;
 }
 
 export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
@@ -153,6 +154,14 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             syncSpaceUsersMessage: {
                 spaceName: this._space.name,
                 users: localUsers,
+            },
+        });
+    }
+    leaveSpace(): void {
+        this.forwardMessageToSpaceBack({
+            $case: "leaveSpaceMessage",
+            leaveSpaceMessage: {
+                spaceName: this._space.name,
             },
         });
     }

@@ -133,6 +133,7 @@ export class Space implements SpaceInterface {
      * Cleans up the space when the space is deleted (only useful when the space is empty)
      */
     public cleanup(): void {
+        this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
         this._onSpaceEmpty(this);
     }
