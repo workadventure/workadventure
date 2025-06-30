@@ -149,7 +149,7 @@ class AdminApi implements AdminInterface {
             } catch (ex) {
                 // ignore errors when querying capabilities
                 if (isAxiosError(ex) && ex.response?.status === 404) {
-                    // 404 probably means and older api version
+                    // 404 probably means an older api version
 
                     this.capabilities = {
                         "api/woka/list": "v1",

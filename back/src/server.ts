@@ -18,6 +18,9 @@ import { spaceManager } from "./SpaceManager";
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
 }
+
+// await App.inti();
+
 App.listen();
 
 // Sentry integration
@@ -37,6 +40,7 @@ if (SENTRY_DSN != undefined) {
     }
 }
 
+// dans App.grpcListen() a creer
 const server = new grpc.Server();
 server.addService(RoomManagerService, roomManager);
 server.addService(SpaceManagerService, spaceManager);
@@ -48,3 +52,4 @@ server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure()
     console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
     server.start();
 });
+//
