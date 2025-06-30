@@ -1,4 +1,5 @@
 import { FilterType } from "@workadventure/messages";
+import * as Sentry from "@sentry/svelte";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceRegistryInterface } from "../SpaceRegistry/SpaceRegistryInterface";
 import { iframeListener } from "../../Api/IframeListener";
@@ -34,7 +35,10 @@ export class SpaceScriptingBridgeService {
                 count -= 1;
                 this.spaceJoinedCounter.set(data.spaceName, count);
                 if (count === 0) {
-                    spaceRegistry.leaveSpace(space);
+                    spaceRegistry.leaveSpace(space).catch((e) => {
+                        console.error("Error while leaving space", e);
+                        Sentry.captureException(e);
+                    });
                     this.spaceJoinedCounter.delete(data.spaceName);
                 }
             });

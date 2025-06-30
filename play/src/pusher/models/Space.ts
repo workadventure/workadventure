@@ -1,6 +1,5 @@
 import { SpaceUser, FilterType } from "@workadventure/messages";
 import Debug from "debug";
-import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
 import { BackSpaceConnection } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
@@ -33,7 +32,6 @@ export interface SpaceInterface {
     forwarder: SpaceToBackForwarderInterface;
     dispatcher: SpaceToFrontDispatcherInterface;
     initSpace(): void;
-    closeBackConnection(): void;
     name: string;
     handleWatch(watcher: Socket): void;
     handleUnwatch(watcher: Socket): void;
@@ -136,21 +134,6 @@ export class Space implements SpaceInterface {
         this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
         this._onSpaceEmpty(this);
-    }
-
-    public closeBackConnection(): void {
-        if (this.spaceStreamToBackPromise) {
-            this.spaceStreamToBackPromise
-                .then((spaceStreamToBack) => {
-                    debug("closeBackConnection spaceStreamToBack", this.name);
-                    spaceStreamToBack.end();
-                    this.spaceStreamToBackPromise = undefined;
-                })
-                .catch((error) => {
-                    console.error("Error while closing space back connection", error);
-                    Sentry.captureException(error);
-                });
-        }
     }
 
     public setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>) {
