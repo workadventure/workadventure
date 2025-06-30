@@ -12,7 +12,7 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "scripts": {
-    "start": "if [ -n \"$STARTUP_COMMAND\" ]; then sh -c \"$STARTUP_COMMAND\"; fi; TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx ./src/server.ts",
+    "start": "if [ -n \"$STARTUP_COMMAND\" ]; then sh -c \"$STARTUP_COMMAND\"; fi && TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx ./src/server.ts",
     "old_start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "dev": "cross-env concurrently --kill-others-on-fail \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
