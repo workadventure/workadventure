@@ -110,6 +110,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 },
             });
 
+            if (this._space._localConnectedUser.size === 0) {
+                this._space.cleanup();
+                return;
+            }
+
             debug(
                 `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
             );
@@ -117,6 +122,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             debug(`${this._space.name} : user remove sent ${spaceUserId}`);
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUserId);
+            if (this._space._localConnectedUser.size === 0) {
+                this._space.cleanup();
+                return;
+            }
             throw e;
         }
     }
