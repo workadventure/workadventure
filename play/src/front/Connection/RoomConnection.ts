@@ -121,7 +121,7 @@ import { localUserStore } from "./LocalUserStore";
 const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
@@ -270,9 +270,6 @@ export class RoomConnection implements RoomConnection {
 
         const params = urlObj.searchParams;
         params.set("roomId", roomUrl);
-        if (token) {
-            params.set("token", token);
-        }
         params.set("name", name);
         for (const textureId of characterTextureIds) {
             params.append("characterTextureIds", textureId);
@@ -295,10 +292,16 @@ export class RoomConnection implements RoomConnection {
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
 
         const url = urlObj.toString();
+        let subProtocols: string[] | undefined = undefined;
+        if (token) {
+            // We abuse the subprotocols to pass the token to the server
+            subProtocols = [token];
+        }
+
         if (RoomConnection.websocketFactory) {
-            this.socket = RoomConnection.websocketFactory(url);
+            this.socket = RoomConnection.websocketFactory(url, subProtocols);
         } else {
-            this.socket = new WebSocket(url);
+            this.socket = new WebSocket(url, subProtocols);
         }
 
         this.socket.binaryType = "arraybuffer";
