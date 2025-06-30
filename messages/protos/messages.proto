@@ -535,6 +535,8 @@ message AnswerMessage {
   }
 }
 
+
+
 message JitsiJwtAnswer {
   string jwt = 1;
   string url = 2;
@@ -635,8 +637,10 @@ message SpaceQueryMessage {
   int32 id = 1;
   string spaceName = 2;
   oneof query {
-    AddSpaceUserQuery addSpaceUserQuery = 3;
-    RemoveSpaceUserQuery removeSpaceUserQuery = 4;
+    JoinSpaceQuery joinSpaceQuery = 3;
+    LeaveSpaceQuery leaveSpaceQuery = 4;
+    AddSpaceUserQuery addSpaceUserQuery = 5;
+    RemoveSpaceUserQuery removeSpaceUserQuery = 6;
   }
 }
 
@@ -655,10 +659,13 @@ message RemoveSpaceUserQuery {
 
 message SpaceAnswerMessage {
   int32 id = 1;
+  string spaceName = 2;
   oneof answer {
-    ErrorMessage error = 2;
-    AddSpaceUserAnswer addSpaceUserAnswer = 3;
-    RemoveSpaceUserAnswer removeSpaceUserAnswer = 4;
+    ErrorMessage error = 3;
+    AddSpaceUserAnswer addSpaceUserAnswer = 4;
+    RemoveSpaceUserAnswer removeSpaceUserAnswer = 5;
+    JoinSpaceAnswer joinSpaceAnswer = 6;
+    LeaveSpaceAnswer leaveSpaceAnswer = 7;
   }
 }
 
@@ -1314,7 +1321,7 @@ message BackToPusherSpaceMessage{
     KickOffMessage kickOffMessage = 6;
     PublicEvent publicEvent = 13;
     PrivateEvent privateEvent = 14;
-    SpaceAnswerMessage answerMessage = 16;
+    SpaceAnswerMessage spaceAnswerMessage = 15;
   }
 }
 

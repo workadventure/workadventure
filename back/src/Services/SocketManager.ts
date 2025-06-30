@@ -1689,10 +1689,11 @@ export class SocketManager {
             const answer = space.handleQuery(pusher, spaceQueryMessage);
             pusher.write({
                 message: {
-                    $case: "answerMessage",
-                    answerMessage: {
+                    $case: "spaceAnswerMessage",
+                    spaceAnswerMessage: {
                         id: spaceQueryMessage.id,
                         answer: answer.answer,
+                        spaceName: spaceQueryMessage.spaceName,
                     },
                 },
             });

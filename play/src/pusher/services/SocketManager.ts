@@ -55,6 +55,7 @@ import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../mode
 import type { AdminConnection, AdminSocketData } from "../models/Websocket/AdminSocketData";
 import { EMBEDDED_DOMAINS_WHITELIST, GRPC_MAX_MESSAGE_SIZE, SECRET_KEY } from "../enums/EnvironmentVariable";
 import { Space, SpaceInterface } from "../models/Space";
+import { SpaceConnection } from "../models/SpaceConnection";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 import { eventProcessor } from "../models/eventProcessorInit";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -75,7 +76,7 @@ export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, SpaceInterface> = new Map<string, SpaceInterface>();
 
-    constructor() {
+    constructor(private _spaceConnection = new SpaceConnection()) {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });
@@ -353,10 +354,18 @@ export class SocketManager implements ZoneEventListener {
         let space: SpaceInterface | undefined = this.spaces.get(spaceName);
 
         if (!space) {
-            const onBackEndDisconnect = (space: SpaceInterface) => {
+            const onSpaceEmpty = (space: SpaceInterface) => {
                 this.spaces.delete(space.name);
             };
-            space = new Space(spaceName, localSpaceName, eventProcessor, filterType, onBackEndDisconnect);
+
+            space = new Space(
+                spaceName,
+                localSpaceName,
+                eventProcessor,
+                filterType,
+                onSpaceEmpty,
+                this._spaceConnection
+            );
 
             this.spaces.set(spaceName, space);
 
@@ -502,6 +511,7 @@ export class SocketManager implements ZoneEventListener {
                 if (space) {
                     space.forwarder.updateUser(partialSpaceUser, fieldMask);
                 } else {
+                    console.log("space not found", socketData.spaces);
                     console.error(
                         `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
                     );
@@ -597,6 +607,7 @@ export class SocketManager implements ZoneEventListener {
             if (space) {
                 try {
                     await space.forwarder.unregisterUser(socket);
+                    console.log("delete space from unregisterUser", spaceName);
                     socketData.joinSpacesPromise.delete(spaceName);
                     return { space, spaceName, success: true };
                 } catch (error) {
@@ -605,6 +616,7 @@ export class SocketManager implements ZoneEventListener {
                     return { space, spaceName, success: false };
                 }
             } else {
+                console.log("space not found", socketData.spaces);
                 console.error(
                     `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
                 );
@@ -617,26 +629,9 @@ export class SocketManager implements ZoneEventListener {
             }
         });
 
-        // Wait for all unregisterUser operations to complete
-        const results = await Promise.all(leaveSpacePromises);
-        results.forEach(({ space, spaceName, success }) => {
-            if (space && success) {
-                this.deleteSpaceIfEmpty(space);
-            }
-        });
+        await Promise.all(leaveSpacePromises);
 
         socketData.spaces.clear();
-    }
-
-    private deleteSpaceIfEmpty(space: SpaceInterface) {
-        if (space.isEmpty()) {
-            this.spaces.delete(space.name);
-            debug("Space %s is empty. Deleting.", space.name);
-            if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
-                space.closeBackConnection();
-                debug("Connection to back %d useless. Ending.", space.backId);
-            }
-        }
     }
 
     private deleteRoomIfEmpty(room: PusherRoom): void {
@@ -997,7 +992,6 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleUnwatch(client);
-            this.deleteSpaceIfEmpty(space);
         } else {
             // This function is called when the userStore of a space in front is unsubscribed.
             // This could happen after we leave the space. Therefore, we don't display an error here.
@@ -1122,7 +1116,6 @@ export class SocketManager implements ZoneEventListener {
         const space = this.spaces.get(spaceName);
         if (space) {
             await space.forwarder.unregisterUser(client);
-            this.deleteSpaceIfEmpty(space);
             socketData.joinSpacesPromise.delete(space.name);
             const success = socketData.spaces.delete(space.name);
             if (!success) {

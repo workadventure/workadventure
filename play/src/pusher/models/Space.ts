@@ -1,13 +1,13 @@
-import { SpaceUser, SubMessage, FilterType, BackToPusherSpaceMessage } from "@workadventure/messages";
+import { SpaceUser, FilterType } from "@workadventure/messages";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
-import { apiClientRepository } from "../services/ApiClientRepository";
 import { BackSpaceConnection } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
 import { SpaceToBackForwarder, SpaceToBackForwarderInterface } from "./SpaceToBackForwarder";
 import { SpaceToFrontDispatcher, SpaceToFrontDispatcherInterface } from "./SpaceToFrontDispatcher";
 import { Query } from "./SpaceQuery";
+import { SpaceConnectionInterface } from "./SpaceConnection";
 
 export type SpaceUserExtended = {
     lowercaseName: string;
@@ -38,8 +38,12 @@ export interface SpaceInterface {
     handleWatch(watcher: Socket): void;
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
-    backId: number;
     filterType: FilterType;
+}
+
+export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
+    sendLocalUsersToBack(): void;
+    setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
 }
 
 export class Space implements SpaceInterface {
@@ -51,7 +55,6 @@ export class Space implements SpaceInterface {
     public readonly _localConnectedUser: Map<string, Socket>;
     public readonly _localWatchers: Set<string> = new Set<string>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
-    public readonly backId: number;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
     public readonly query: Query;
@@ -62,8 +65,8 @@ export class Space implements SpaceInterface {
         public readonly localName: string,
         eventProcessor: EventProcessor,
         private _filterType: FilterType,
-        private _onBackEndDisconnect: (space: SpaceInterface) => void,
-        private _apiClientRepository = apiClientRepository,
+        private _onSpaceEmpty: (space: SpaceInterface) => void,
+        private spaceConnection: SpaceConnectionInterface,
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
         private SpaceToFrontDispatcherFactory: (
@@ -75,7 +78,6 @@ export class Space implements SpaceInterface {
         this.users = new Map<string, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
         this._localConnectedUser = new Map<string, Socket>();
-        this.backId = this._apiClientRepository.getIndex(this.name);
         this.forwarder = this.SpaceToBackForwarderFactory(this);
         this.dispatcher = this.SpaceToFrontDispatcherFactory(this, eventProcessor);
         this.query = new Query(this);
@@ -83,97 +85,10 @@ export class Space implements SpaceInterface {
     }
 
     public initSpace() {
-        this.spaceStreamToBackPromise = (async () => {
-            const apiSpaceClient = await this._apiClientRepository.getSpaceClient(this.name);
-            const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
-            spaceStreamToBack
-                .on("data", (message: BackToPusherSpaceMessage) => {
-                    try {
-                        if (message.message) {
-                            switch (message.message.$case) {
-                                case "pingMessage":
-                                    if (spaceStreamToBack.pingTimeout) {
-                                        clearTimeout(spaceStreamToBack.pingTimeout);
-                                        spaceStreamToBack.pingTimeout = undefined;
-                                    }
-
-                                    spaceStreamToBack.write({
-                                        message: {
-                                            $case: "pongMessage",
-                                            pongMessage: {},
-                                        },
-                                    });
-
-                                    spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                        console.error("Error spaceStreamToBack timed out for back:", this.backId);
-                                        Sentry.captureException(
-                                            "Error spaceStreamToBack timed out for back: " + this.backId
-                                        );
-                                        spaceStreamToBack.end();
-
-                                        this.spaceStreamToBackPromise = undefined;
-                                        //TODO : implement retry logic to wait for the back to be available again
-                                        this.initSpace();
-                                        this.sendLocalUsersToBack();
-                                    }, 1000 * 60);
-
-                                    return;
-                                default:
-                                    this.dispatcher.handleMessage(message);
-                                    break;
-                            }
-                        } else {
-                            this.dispatcher.handleMessage(message);
-                        }
-                    } catch (e) {
-                        console.error("Error while handling message", e);
-                        Sentry.captureException(e);
-                    }
-                })
-                .on("end", () => {
-                    debug("[space] spaceStreamsToBack ended");
-                    if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-
-                    this.spaceStreamToBackPromise = undefined;
-                    this._onBackEndDisconnect(this);
-                    this._localConnectedUser.clear();
-                })
-                .on("status", (status) => {
-                    console.log("status : ", status);
-                    //voir si on peut gerer la fin de la connexion ici
-                })
-                .on("error", (err: Error) => {
-                    // On gère l'erreur comme un 'end' car la connexion au back est fermée.
-
-                    console.error(
-                        "Error in connection to back server '" +
-                            apiSpaceClient.getChannel().getTarget() +
-                            "' for space '" +
-                            this.name +
-                            "':",
-                        err
-                    );
-                    Sentry.captureException(err);
-
-                    this.initSpace();
-                    this.sendLocalUsersToBack();
-                });
-
-            spaceStreamToBack.write({
-                message: {
-                    $case: "joinSpaceMessage",
-                    joinSpaceMessage: {
-                        spaceName: this.name,
-                        filterType: this.filterType,
-                    },
-                },
-            });
-
-            return spaceStreamToBack;
-        })();
+        this.spaceStreamToBackPromise = this.spaceConnection.getSpaceStreamToBackPromise(this);
     }
 
-    private sendLocalUsersToBack() {
+    sendLocalUsersToBack() {
         const localUsers = Array.from(this._localConnectedUser.values()).map((socket) => {
             return socket.getUserData().spaceUser;
         });
@@ -215,33 +130,11 @@ export class Space implements SpaceInterface {
     }
 
     /**
-     * Cleans up the space when the space is deleted (only useful when the connection to the back is closed or in timeout)
+     * Cleans up the space when the space is deleted (only useful when the space is empty)
      */
     public cleanup(): void {
-        // Send a message to all
-        for (const [spaceUserId] of this.users.entries()) {
-            const subMessage: SubMessage = {
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: {
-                        spaceName: this.name,
-                        spaceUserId,
-                    },
-                },
-            };
-            this.dispatcher.notifyAll(subMessage);
-        }
-        // Let's remove any reference to the space in the watchers
-        for (const watcher of this._localConnectedUser.values()) {
-            const socketData = watcher.getUserData();
-            const success = socketData.spaces.delete(this.name);
-            if (!success) {
-                console.error(`Impossible to remove space ${this.name} from the user's spaces. Space not found.`);
-                Sentry.captureException(new Error(`Impossible to remove space ${this.name} from the user's spaces.`));
-            }
-        }
-
-        // Finally, let's send a message to the front to warn that the space is deleted
+        this.spaceConnection.removeSpace(this);
+        this._onSpaceEmpty(this);
     }
 
     public closeBackConnection(): void {
@@ -257,6 +150,10 @@ export class Space implements SpaceInterface {
                     Sentry.captureException(error);
                 });
         }
+    }
+
+    public setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>) {
+        this.spaceStreamToBackPromise = spaceStreamToBack;
     }
 
     get filterType(): FilterType {

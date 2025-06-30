@@ -87,14 +87,14 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     this.sendPrivateEvent(noUndefined(privateEvent));
                     break;
                 }
-                case "answerMessage": {
-                    if (message.message.answerMessage.answer === undefined) {
-                        console.error("Invalid message received. Answer missing.", message.message.answerMessage);
+                case "spaceAnswerMessage": {
+                    if (message.message.spaceAnswerMessage.answer === undefined) {
+                        console.error("Invalid message received. Answer missing.", message.message.spaceAnswerMessage);
                         throw new Error("Invalid message received. Answer missing.");
                     }
                     this._space.query.receiveAnswer(
-                        message.message.answerMessage.id,
-                        message.message.answerMessage.answer
+                        message.message.spaceAnswerMessage.id,
+                        message.message.spaceAnswerMessage.answer
                     );
                     break;
                 }
@@ -175,6 +175,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             this._space.users.delete(spaceUserId);
             debug(`${this._space.name} : user removed ${spaceUserId}. User count ${this._space.users.size}`);
 
+            if (this._space.users.size === 0) {
+                this._space.cleanup();
+                return;
+            }
+
             const subMessage: SubMessage = {
                 message: {
                     $case: "removeSpaceUserMessage",
@@ -184,6 +189,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     },
                 },
             };
+
             this.notifyAll(subMessage);
         } else {
             throw new Error(`User not found in this space ${spaceUserId}`);
