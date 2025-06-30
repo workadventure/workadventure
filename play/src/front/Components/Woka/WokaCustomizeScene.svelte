@@ -19,7 +19,6 @@
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
-    import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
 
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = "body";
@@ -204,39 +203,52 @@
                 </button>
             </div>
         {:else}
-            <!-- Header -->
-            <div class="flex justify-between items-center p-6">
-                <button class="px-4 py-2 text-white rounded hover:bg-white/10 flex flex-row gap-2 items-center justify-center" on:click={goBack}>
-                    <ChevronLeftIcon height="h-4" width="w-4"/>
-                    Back
-                </button>
-            </div>
+            <div class="flex-1 flex flex-col lg:flex-row items-start gap-6 min-h-0 p-6">
+                <div class="flex flex-row gap-4 w-full">
+                    <div class="flex flex-col gap-2">
+                        <WokaPreview {selectedTextures} {wokaData} {getTextureUrl} on:rotate={(e) => {
+                            assetsDirection = e.detail.direction;
+                        }} />
 
-            <div class="flex-1 flex flex-row items-start gap-6 min-h-0 p-6">
-                <!-- Prévisualisation -->
-                <div class="lg:col-span-1">
-                    <WokaPreview {selectedTextures} {wokaData} {getTextureUrl} on:rotate={(e) => {
-                        assetsDirection = e.detail.direction;
-                    }} />
-
-                    <!-- Boutons d'action -->
-                    <div class="mt-4 space-y-2">
-                        <button
-                            class="w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10"
-                            on:click={randomizeOutfit}
-                        >
-                            🎲 Randomize
-                        </button>
+                        <div class="mt-4 space-y-2">
+                            <button
+                                class="w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10"
+                                on:click={randomizeOutfit}
+                            >
+                                🎲 Randomize
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:hidden flex flex-col gap-0 mb-4 w-full">
+                        {#each bodyPartOrder as bodyPart (bodyPart)}
+                            <button
+                                    class="flex-1 px-4 py-2 flex-grow capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
+                                bodyPart
+                                    ? 'text-white border-white'
+                                    : 'text-white/50 border-white/10'}"
+                                    on:click={() => (selectedBodyPart = bodyPart)}
+                                    style="border-bottom-style: solid;"
+                            >
+                                <svelte:component
+                                        this={getBodyPartIcon(bodyPart)}
+                                        height="h-5"
+                                        width="w-5"
+                                        strokeColor="{selectedBodyPart === bodyPart ? 'stroke-white ' : 'stroke-white/50'}"
+                                        fillColor="{selectedBodyPart === bodyPart ? 'fill-white ' : 'fill-white/50'}"
+                                />
+                                {bodyPart}
+                            </button>
+                        {/each}
                     </div>
                 </div>
 
-                <div class="flex flex-col h-full">
-                    <div class="flex flex-wrap gap-0 mb-4">
+                <div class="flex flex-col flex-1 h-full min-h-0 min-w-0">
+                    <div class="flex-wrap gap-0 mb-4 w-full hidden lg:flex">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
                             <button
-                                class="px-4 py-2 capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
+                                class="flex-1 px-4 py-2 capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
                                 bodyPart
-                                    ? 'text-secondary border-secondary'
+                                    ? 'text-white border-white'
                                     : 'text-white/50 border-white/10'}"
                                 on:click={() => (selectedBodyPart = bodyPart)}
                                 style="border-bottom-style: solid;"
@@ -245,32 +257,31 @@
                                     this={getBodyPartIcon(bodyPart)}
                                     height="h-5"
                                     width="w-5"
-                                    strokeColor="{selectedBodyPart === bodyPart ? 'stroke-secondary ' : 'stroke-white/50'}"
-                                    fillColor="{selectedBodyPart === bodyPart ? 'fill-secondary ' : 'fill-white/50'}"
+                                    strokeColor="{selectedBodyPart === bodyPart ? 'stroke-white ' : 'stroke-white/50'}"
+                                    fillColor="{selectedBodyPart === bodyPart ? 'fill-white ' : 'fill-white/50'}"
                                 />
                                 {bodyPart}
                             </button>
                         {/each}
                     </div>
 
-                    <div class="rounded-lg flex flex-col flex-1 min-h-0">
+                    <div class="rounded-lg flex flex-col flex-1 min-h-0 min-w-0">
                         <h3 class="text-lg font-semibold capitalize">
                             {selectedBodyPart} Options
                         </h3>
-<!--                            <div class="overflow-y-scroll w-full h-full scroll-mask grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">-->
-                        <div class="flex-1 flex flex-col items-start gap-0 min-h-0">
-                            <div class="overflow-y-scroll w-full max-h-full scroll-mask flex flex-row flex-wrap items-start justify-start gap-3 py-[40px]">
-                            {#each getAvailableTextures(selectedBodyPart) as texture (texture.id)}
-                                <button
+                        <div class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full">
+                            <div class="overflow-y-scroll overflow-x-auto w-full scroll-mask flex flex-row flex-wrap items-start justify-start gap-3 py-[40px]">
+                                {#each getAvailableTextures(selectedBodyPart) as texture (texture.id)}
+                                    <button
                                         class="rounded border border-solid box-border p-0 h-fit {selectedTextures[selectedBodyPart] === texture.id
-                ? 'bg-white/50 border-white'
-                : 'bg-white/10 hover:bg-white/20 border-transparent'}"
+                                            ? 'bg-white/50 border-white'
+                                            : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                         on:click={() => selectTexture(selectedBodyPart, texture.id)}
-                                >
-                                    <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                        {#if texture.url.includes("empty.png")}
-                                            <div class="w-[64px] h-[64px] flex items-center justify-center">
-                                                <svg
+                                    >
+                                        <div class="p-2 bg-white/10 rounded flex items-center justify-center">
+                                            {#if texture.url.includes("empty.png")}
+                                                <div class="w-[64px] h-[64px] flex items-center justify-center">
+                                                    <svg
                                                         xmlns="http://www.w3.org/2000/svg"
                                                         width="32"
                                                         height="32"
@@ -281,28 +292,35 @@
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
-                                                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                                                        d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
-                                                /><path d="M9 9l6 6" /></svg
-                                                >
-                                            </div>
-                                        {:else}
-                                            <div
+                                                    ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
+                                                            d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
+                                                    /><path d="M9 9l6 6" /></svg>
+                                                </div>
+                                            {:else}
+                                                <div
                                                     class="w-[64px] h-[64px] bg-no-repeat"
                                                     style="background-image: url('{getTextureUrl(
-                            texture.url
-                        )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                            />
-                                        {/if}
-                                    </div>
-                                </button>
-                            {/each}
-                        </div>
+                                                        texture.url
+                                                    )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
+                                                />
+                                            {/if}
+                                        </div>
+                                    </button>
+                                {/each}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="w-full p-2">
+            <div class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
+                style="border-top-style: solid;"
+            >
+                <button
+                        class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
+                        on:click={goBack}
+                >
+                    Cancel
+                </button>
                 <button
                         class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
                         on:click={saveAndContinue}
