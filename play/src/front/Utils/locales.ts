@@ -1,4 +1,4 @@
-import { detectLocale, initLocalStorageDetector, navigatorDetector } from "typesafe-i18n/detectors";
+import { detectLocale, initLocalStorageDetector } from "typesafe-i18n/detectors";
 import type { Locales } from "../../i18n/i18n-types";
 import { baseLocale, isLocale, locales } from "../../i18n/i18n-util";
 import { loadLocaleAsync } from "../../i18n/i18n-util.async";
@@ -7,6 +7,37 @@ import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
 
 let fallbackLocale: Locales = baseLocale;
 const localStorageProperty = "language";
+
+/**
+ * Custom locale detector that first tries to find exact matches,
+ * then falls back to the first available variant for the language code
+ * @internal - exported for testing purposes
+ */
+export function createCustomNavigatorDetector() {
+    const customDetector = (): Locales[] => {
+        const navigatorLanguages = navigator.languages || [navigator.language];
+        const detectedLocales: Locales[] = [];
+
+        for (const lang of navigatorLanguages) {
+            // First try exact match
+            if (isLocale(lang)) {
+                detectedLocales.push(lang);
+                continue;
+            }
+
+            // Then try to find the first available variant for this language
+            const genericLang = lang.split("-")[0];
+            const availableVariant = locales.find((locale) => locale.startsWith(genericLang + "-"));
+            if (availableVariant) {
+                detectedLocales.push(availableVariant);
+            }
+        }
+
+        return detectedLocales;
+    };
+
+    return customDetector;
+}
 
 function getFallbackLocale(): Locales {
     const envFallbackLocale = FALLBACK_LOCALE ?? "";
@@ -30,7 +61,8 @@ export const localeDetector = async () => {
                 const localStorageDetector = initLocalStorageDetector(localStorageProperty);
                 detectedLocale = detectLocale(fallbackLocale, locales, localStorageDetector);
             } else {
-                detectedLocale = detectLocale(fallbackLocale, locales, navigatorDetector);
+                const customNavigatorDetector = createCustomNavigatorDetector();
+                detectedLocale = detectLocale(fallbackLocale, locales, customNavigatorDetector);
             }
 
             await setCurrentLocale(detectedLocale);

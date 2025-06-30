@@ -461,7 +461,7 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:v1.115.0
+    image: matrixdotorg/synapse:v1.132.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"
