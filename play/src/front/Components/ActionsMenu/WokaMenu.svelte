@@ -35,12 +35,7 @@
 
     let buttonsLayout: "row" | "column" = "row";
 
-    async function openChat() {
-        const currentData = get(wokaMenuStore);
-        if (!currentData?.userId) {
-            return;
-        }
-
+    async function openChat(chatID: string) {
         if (!get(userIsConnected)) {
             openModal(RequiresLoginForChatModal);
             return;
@@ -49,16 +44,7 @@
         try {
             closeActionsMenu();
 
-            remotePlayer = gameManager
-                .getCurrentGameScene()
-                .getRemotePlayersRepository()
-                .getPlayers()
-                .get(currentData.userId);
-            if (!remotePlayer?.chatID) {
-                return;
-            }
-
-            await openDirectChatRoom(remotePlayer.chatID);
+            await openDirectChatRoom(chatID);
             analyticsClient.openedChat();
         } catch (error) {
             console.error(error);
@@ -181,7 +167,7 @@
                         type="button"
                         class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                         data-testid="sendMessagefromVisitCardButton"
-                        on:click={openChat}
+                        on:click={() => openChat(remotePlayer?.chatID ?? "")}
                     >
                         <img src={chat} alt="chat" class="w-6 h-6" />
                         <span class="flex flex-row gap-2 items-center justify-center">
