@@ -344,11 +344,4 @@
         );
         /*transform: translateY(calc(-20px - 0.75rem));*/
     }
-    .no-scrollbar {
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE et Edge */
-    }
-    .no-scrollbar::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
-    }
 </style>
