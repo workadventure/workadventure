@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import {
-    AddSpaceUserMessage,
     AnswerMessage,
     AskPositionMessage,
     BanUserMessage,
@@ -1435,20 +1434,6 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
-        }
-    }
-
-    handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
-        const space = this.spaces.get(addSpaceUserMessage.spaceName);
-
-        if (space && space.filterType !== addSpaceUserMessage.filterType) {
-            console.error("Filter type mismatch when adding user to space");
-            Sentry.captureException("Filter type mismatch when adding user to space");
-            throw new Error("Filter type mismatch when adding user to space");
-        }
-
-        if (space && addSpaceUserMessage.user) {
-            space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
 
