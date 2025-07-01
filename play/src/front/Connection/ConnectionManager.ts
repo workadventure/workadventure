@@ -96,6 +96,8 @@ class ConnectionManager {
     }
 
     constructor() {
+        // The listener never needs to be removed, because we are in a singleton that is never destroyed.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         window.addEventListener("beforeunload", () => {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);

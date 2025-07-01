@@ -311,20 +311,7 @@ export class RoomConnection implements RoomConnection {
             this.resetPingTimeout();
         };
 
-        this.socket.addEventListener("close", (event) => {
-            console.info("Socket has been closed", this.userId, this.closed, event);
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-            }
-
-            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(event);
-                return;
-            }
-
-            this.cleanupConnection(event.code === 1000);
-        });
+        this.socket.addEventListener("close", this.handleSocketClose);
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
@@ -731,6 +718,22 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
+    // Event handlers as named functions for proper cleanup
+    private handleSocketClose = (event: CloseEvent) => {
+        console.info("Socket has been closed", this.userId, this.closed, event);
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+
+        // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+        if (this.userId === null && !this.closed) {
+            this._connectionErrorStream.next(event);
+            return;
+        }
+
+        this.cleanupConnection(event.code === 1000);
+    };
+
     private cleanupConnection(isNormalClosure: boolean) {
         // Cleanup queries:
         const error = new Error("Socket closed");
@@ -858,6 +861,7 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.socket?.removeEventListener("close", this.handleSocketClose);
         this.closed = true;
     }
 
