@@ -175,7 +175,7 @@
 </script>
 
 <div class="bg-contrast w-screen h-screen absolute flex items-center justify-center">
-    <div class="rounded-lg flex flex-col max-w-4xl w-full mx-4 h-[70vh] relative bg-white/10 backdrop-blur-md">
+    <div class="rounded-lg flex flex-col max-w-4xl w-full mx-4 sm:h-[70vh] h-[80vh] relative bg-white/10 backdrop-blur-md">
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -189,7 +189,7 @@
             </div>
         {:else}
             <div class="flex-1 flex flex-col lg:flex-row items-start gap-6 min-h-0 p-6">
-                <div class="flex flex-row gap-4 w-full">
+                <div class="flex flex-row gap-4 w-full lg:w-fit">
                     <div class="flex flex-col gap-2">
                         <WokaPreview {selectedTextures} {wokaData} {getTextureUrl} on:rotate={(e) => {
                             assetsDirection = e.detail.direction;
@@ -204,7 +204,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="lg:hidden flex flex-col gap-0 mb-4 w-full">
+                    <div class="flex flex-col gap-0 mb-4 w-full lg:w-fit sm:hidden">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
                             <button
                                     class="flex-1 px-4 py-2 flex-grow capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
@@ -228,7 +228,7 @@
                 </div>
 
                 <div class="flex flex-col flex-1 h-full min-h-0 min-w-0">
-                    <div class="flex-wrap gap-0 mb-4 w-full hidden lg:flex">
+                    <div class="flex-wrap gap-0 mb-4 w-full sm:flex hidden">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
                             <button
                                 class="flex-1 px-4 py-2 capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
