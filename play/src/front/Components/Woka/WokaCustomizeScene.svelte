@@ -34,10 +34,8 @@
     let error = "";
     let assetsDirection: number = 0;
 
-    // Ordre des couches pour l'assemblage
     const bodyPartOrder: WokaBodyPart[] = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
 
-    // Charger les données Woka
     async function loadWokaData() {
         try {
             isLoading = true;
@@ -56,7 +54,6 @@
             const data = await response.json();
             wokaData = data;
 
-            // Charger les textures sauvegardées
             loadSavedTextures();
         } catch (err) {
             console.error("Error loading Woka data:", err);
@@ -66,7 +63,6 @@
         }
     }
 
-    // Charger les textures sauvegardées
     function loadSavedTextures() {
         try {
             const savedTextureIds = gameManager.getCharacterTextureIds();
@@ -90,13 +86,11 @@
         }
     }
 
-    // Changer une texture
     function selectTexture(bodyPart: WokaBodyPart, textureId: string) {
         selectedTextures[bodyPart] = textureId;
         selectedTextures = { ...selectedTextures };
     }
 
-    // Randomiser l'apparence
     function randomizeOutfit() {
         bodyPartOrder.forEach((bodyPart) => {
             if (wokaData?.[bodyPart]?.collections?.[0]?.textures) {
@@ -108,7 +102,6 @@
         selectedTextures = { ...selectedTextures }; // Trigger reactivity
     }
 
-    // Sauvegarder et continuer
     async function saveAndContinue() {
         try {
             const textureIds = bodyPartOrder.map((bodyPart) => selectedTextures[bodyPart]).filter(Boolean);
@@ -120,16 +113,12 @@
 
             analyticsClient.validationWoka("CustomizeWoka");
 
-            // Sauvegarder localement
             gameManager.setCharacterTextureIds(textureIds);
 
-            // Sauvegarder sur le serveur
             await connectionManager.saveTextures(textureIds);
 
-            // Fermer la scène de customisation
             selectCharacterCustomizeSceneVisibleStore.set(false);
 
-            //resume game
             gameManager.tryResumingGame(SelectCharacterSceneName);
         } catch (err) {
             console.error("Error saving textures:", err);
@@ -137,7 +126,6 @@
         }
     }
 
-    // Retourner à la scène précédente
     function goBack() {
         selectCharacterCustomizeSceneVisibleStore.set(false);
         selectCharacterSceneVisibleStore.set(true);
@@ -153,14 +141,11 @@
         return textures;
     }
 
-    // Obtenir l'URL complète d'une texture
     function getTextureUrl(relativeUrl: string): string {
-        // Si l'URL commence déjà par http/https, c'est une URL absolue
         if (relativeUrl.startsWith("http://") || relativeUrl.startsWith("https://")) {
             return relativeUrl;
         }
 
-        // Sinon, c'est une URL relative, on ajoute le préfixe
         return `${ABSOLUTE_PUSHER_URL}/${relativeUrl}`;
     }
 
@@ -342,6 +327,5 @@
                 black calc(100% - 40px),
                 transparent 100%
         );
-        /*transform: translateY(calc(-20px - 0.75rem));*/
     }
 </style>

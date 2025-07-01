@@ -10,8 +10,7 @@ import { PlayerTextures } from "../Entity/PlayerTextures";
 import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
-import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+import { selectCharacterCustomizeSceneVisibleStore, selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import {
@@ -26,7 +25,6 @@ import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { batchGetUserMediaStore } from "../../Stores/MediaStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
-import { CustomizeSceneName } from "./CustomizeScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 
 //todo: put this constants in a dedicated file

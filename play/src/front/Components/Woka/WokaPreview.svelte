@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, createEventDispatcher } from "svelte";
     import { WokaData, WokaTexture } from "./WokaTypes";
-    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher<{ rotate: { direction: number } }>();
 
