@@ -1,10 +1,12 @@
 import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
+import { applyFieldMask } from "protobuf-fieldmask";
+import { merge } from "lodash";
 import { Socket } from "../services/SocketManager";
 import { PartialSpaceUser, Space } from "./Space";
 
-const debug = Debug("space");
+const debug = Debug("space-to-back-forwarder");
 
 export interface SpaceToBackForwarderInterface {
     registerUser(client: Socket, filterType: FilterType): Promise<void>;
@@ -71,9 +73,19 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!spaceUserId) {
             throw new Error("spaceUserId not found");
         }
-        const user = this._space._localConnectedUser.get(spaceUserId);
-        if (!user) {
+        const userSocket = this._space._localConnectedUser.get(spaceUserId);
+
+        if (!userSocket) {
             throw new Error("User not found");
+        }
+
+        //TODO : voir si c'est la bonne méthode car on met a jour directment la socket qui peut etre utilisé par d'autres spaces
+        if (userSocket) {
+            const userData = userSocket.getUserData();
+            const actualUser = userData.spaceUser;
+
+            const updateValues = applyFieldMask(spaceUser, updateMask);
+            merge(actualUser, updateValues);
         }
 
         this.forwardMessageToSpaceBack({
