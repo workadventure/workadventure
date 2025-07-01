@@ -71,6 +71,8 @@ import {
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
+    UploadFileMessage,
+    MapStorageJwtAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -119,7 +121,7 @@ import { localUserStore } from "./LocalUserStore";
 const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
@@ -263,41 +265,43 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = ABSOLUTE_PUSHER_URL;
-        url = url.replace("http://", "ws://").replace("https://", "wss://");
-        if (!url.endsWith("/")) {
-            url += "/";
-        }
-        url += "ws/room";
-        url += "?roomId=" + encodeURIComponent(roomUrl);
-        if (token) {
-            url += "&token=" + encodeURIComponent(token);
-        }
-        url += "&name=" + encodeURIComponent(name);
+        const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
+        urlObj.protocol = urlObj.protocol.replace("http", "ws");
+
+        const params = urlObj.searchParams;
+        params.set("roomId", roomUrl);
+        params.set("name", name);
         for (const textureId of characterTextureIds) {
-            url += "&characterTextureIds=" + encodeURIComponent(textureId);
+            params.append("characterTextureIds", textureId);
         }
-        url += "&x=" + Math.floor(position.x);
-        url += "&y=" + Math.floor(position.y);
-        url += "&top=" + Math.floor(viewport.top);
-        url += "&bottom=" + Math.floor(viewport.bottom);
-        url += "&left=" + Math.floor(viewport.left);
-        url += "&right=" + Math.floor(viewport.right);
+        params.set("x", Math.floor(position.x).toString());
+        params.set("y", Math.floor(position.y).toString());
+        params.set("top", Math.floor(viewport.top).toString());
+        params.set("bottom", Math.floor(viewport.bottom).toString());
+        params.set("left", Math.floor(viewport.left).toString());
+        params.set("right", Math.floor(viewport.right).toString());
         if (companionTextureId) {
-            url += "&companionTextureId=" + encodeURIComponent(companionTextureId);
+            params.set("companionTextureId", companionTextureId);
         }
-        url += "&availabilityStatus=" + availabilityStatus;
+        params.set("availabilityStatus", availabilityStatus.toString());
         if (lastCommandId) {
-            url += "&lastCommandId=" + lastCommandId;
+            params.set("lastCommandId", lastCommandId);
         }
-        url += "&version=" + apiVersionHash;
-        url += "&chatID=" + (localUserStore.getChatId() ?? "");
-        url += "&roomName=" + (gameManager.currentStartedRoom.roomName ?? "");
+        params.set("version", apiVersionHash);
+        params.set("chatID", localUserStore.getChatId() ?? "");
+        params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
+
+        const url = urlObj.toString();
+        let subProtocols: string[] | undefined = undefined;
+        if (token) {
+            // We abuse the subprotocols to pass the token to the server
+            subProtocols = [token];
+        }
 
         if (RoomConnection.websocketFactory) {
-            this.socket = RoomConnection.websocketFactory(url);
+            this.socket = RoomConnection.websocketFactory(url, subProtocols);
         } else {
-            this.socket = new WebSocket(url);
+            this.socket = new WebSocket(url, subProtocols);
         }
 
         this.socket.binaryType = "arraybuffer";
@@ -1293,6 +1297,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorUploadFile(commandId: string, uploadFileMessage: UploadFileMessage): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "uploadFileMessage",
+                            uploadFileMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitModifiyWAMMetadataMessage(
         commandId: string,
         modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
@@ -1407,6 +1428,17 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.jitsiJwtAnswer;
+    }
+
+    public async queryMapStorageJwtToken(): Promise<MapStorageJwtAnswer> {
+        const answer = await this.query({
+            $case: "mapStorageJwtQuery",
+            mapStorageJwtQuery: {},
+        });
+        if (answer.$case !== "mapStorageJwtAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.mapStorageJwtAnswer;
     }
 
     public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {

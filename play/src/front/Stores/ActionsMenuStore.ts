@@ -4,7 +4,7 @@ import { v4 } from "uuid";
 export type ActionsMenuAction = {
     uuid?: string;
     actionName: string;
-    callback: () => void;
+    callback: () => void | Promise<void>;
     protected?: boolean;
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary" | string;

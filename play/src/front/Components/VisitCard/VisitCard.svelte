@@ -8,6 +8,7 @@
     import chat from "../images/chat.png";
 
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Spinner from "../Icons/Spinner.svelte";
     import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
@@ -56,7 +57,7 @@
         {/if}
         {#if hidden}
             <div class="w-full flex justify-center items-center p-4">
-                <span class="loader border-4 border-solid der-white border-b-secondary" />
+                <Spinner size="lg" />
             </div>
         {/if}
         <div class={isEmbedded ? "" : "p-2"}>
@@ -99,24 +100,6 @@
 <svelte:window on:message={handleIframeMessage} />
 
 <style lang="scss">
-    .loader {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: inline-block;
-        box-sizing: border-box;
-        animation: rotation 1s linear infinite;
-    }
-
-    @keyframes rotation {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
     .visitCard {
         pointer-events: all;
         z-index: 350;

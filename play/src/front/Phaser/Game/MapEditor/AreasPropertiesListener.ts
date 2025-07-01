@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
     AreaData,
     AreaDataProperties,
@@ -7,6 +8,7 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
+    OpenFilePropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
@@ -236,6 +238,11 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(property);
                 break;
             }
+            case "openFile": {
+                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
+                break;
+            }
+
             default: {
                 break;
             }
@@ -309,6 +316,12 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
+            case "openFile": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleOpenFileOnLeave(oldProperty);
+                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -362,6 +375,10 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnLeave(property);
                 break;
             }
+            case "openFile": {
+                this.handleOpenFileOnLeave(property);
+                break;
+            }
             default: {
                 break;
             }
@@ -379,7 +396,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+        const actionId = "openWebsite-" + uuidv4();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
@@ -550,27 +567,21 @@ export class AreasPropertiesListener {
                 jitsiUrl = answer.url;
             }
 
-            let domain = jitsiUrl || JITSI_URL;
-            if (domain === undefined) {
+            jitsiUrl = jitsiUrl || JITSI_URL;
+            if (jitsiUrl === undefined) {
                 throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
 
-            let domainWithoutProtocol = domain;
-            if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                domainWithoutProtocol = domain;
-                domain = `${location.protocol}//${domain}`;
-            } else {
-                if (domain.startsWith("http://")) {
-                    domainWithoutProtocol = domain.substring(7);
-                } else {
-                    domainWithoutProtocol = domain.substring(8);
-                }
+            if (!jitsiUrl.startsWith("http://") && !jitsiUrl.startsWith("https://")) {
+                jitsiUrl = `https://${jitsiUrl}`;
             }
+
+            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(domain),
+                new URL(jitsiUrl),
                 property.width,
                 property.closable,
                 roomName,
@@ -578,7 +589,6 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                domainWithoutProtocol,
                 property.jitsiRoomAdminTag ?? null
             );
 
@@ -920,7 +930,7 @@ export class AreasPropertiesListener {
     }
 
     private openCoWebsiteFunction(
-        property: OpenWebsitePropertyData,
+        property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
@@ -934,13 +944,7 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(
-            url,
-            property.allowAPI,
-            property.policy,
-            property.width,
-            property.closable
-        );
+        const coWebsite = new SimpleCoWebsite(url, false, property.policy, property.width, property.closable);
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -1071,5 +1075,172 @@ export class AreasPropertiesListener {
     private handleTooltipPropertyOnLeave(property: TooltipPropertyData): void {
         // Implement the logic to hide the info bulle
         this.scene.CurrentPlayer.destroyText(property.id);
+    }
+
+    private async handleOpenFileOnEnter(property: OpenFilePropertyData): Promise<void> {
+        if (!property.link) {
+            return;
+        }
+
+        if (!this.scene.connection) {
+            console.info("Cannot open file. No connection to Pusher server.");
+            return;
+        }
+
+        const answer = await this.scene.connection?.queryMapStorageJwtToken();
+
+        const url = `${property.link}?token=${answer.jwt}`;
+
+        property.link = url;
+
+        const actionId = "openWebsite-" + uuidv4();
+
+        if (property.newTab) {
+            const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+            if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+                this.coWebsitesActionTriggers.set(property.id, actionId);
+                let message = property.triggerMessage;
+                if (message === undefined) {
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                }
+
+                popupStore.addPopup(
+                    PopUpTab,
+                    {
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(url);
+                        },
+                        userInputManager: this.scene.userInputManager,
+                    },
+                    actionId
+                );
+            } else {
+                scriptUtils.openTab(url);
+            }
+            property.link = url.split("?")[0];
+            return;
+        }
+
+        if (this.openedCoWebsites.has(property.id)) {
+            property.link = url.split("?")[0];
+            return;
+        }
+
+        const coWebsiteOpen: OpenCoWebsite = {
+            actionId: actionId,
+        };
+
+        this.openedCoWebsites.set(property.id, coWebsiteOpen);
+
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            let message = property.triggerMessage;
+            if (!message) {
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+            }
+
+            this.coWebsitesActionTriggers.set(property.id, actionId);
+
+            popupStore.addPopup(
+                PopupCowebsite,
+                {
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId
+            );
+        } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+            let cowebsiteUrl = url ?? "";
+            try {
+                cowebsiteUrl = scriptUtils.getWebsiteUrl(url ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
+            const coWebsite = new SimpleCoWebsite(
+                new URL(cowebsiteUrl, this.scene.mapUrlFile),
+                false,
+                property.policy,
+                property.width,
+                property.closable
+            );
+
+            coWebsiteOpen.coWebsite = coWebsite;
+
+            coWebsites.add(coWebsite);
+
+            //user in zone to open cowesite with only icon
+            inOpenWebsite.set(true);
+        }
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+        }
+        property.link = url.split("?")[0];
+    }
+
+    private handleOpenFileOnLeave(property: OpenFilePropertyData): void {
+        const openWebsiteProperty: string | null = property.link;
+
+        if (!openWebsiteProperty) {
+            return;
+        }
+
+        const coWebsiteOpen = this.openedCoWebsites.get(property.id);
+
+        if (coWebsiteOpen) {
+            const coWebsite = coWebsiteOpen.coWebsite;
+
+            if (coWebsite) {
+                coWebsites.remove(coWebsite);
+            }
+        }
+
+        this.openedCoWebsites.delete(property.id);
+
+        inOpenWebsite.set(false);
+
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            return;
+        }
+
+        const actionStore = get(popupStore);
+        const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
+        if (!actionTriggerUuid) {
+            return;
+        }
+
+        const action =
+            actionStore && actionStore.length > 0
+                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                : undefined;
+
+        if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+        }
+
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         const actionStore = get(layoutManagerActionStore);
+         const action =
+         actionStore && actionStore.length > 0
+         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+         : undefined;
+
+         if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+         }
+         */
+
+        this.coWebsitesActionTriggers.delete(property.id);
     }
 }

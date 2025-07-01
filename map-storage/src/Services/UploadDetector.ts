@@ -1,6 +1,6 @@
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
 import * as Sentry from "@sentry/node";
-import { API_URL } from "../Enum/EnvironmentVariable";
+import { API_URL, GRPC_MAX_MESSAGE_SIZE } from "../Enum/EnvironmentVariable";
 
 class UploadDetector {
     private apiClientRepository: ApiClientRepository;
@@ -11,7 +11,7 @@ class UploadDetector {
 
     public async refresh(wamUrl: string): Promise<void> {
         // send only where mapUrl is matching with the one from GameRoom
-        const clients = await this.apiClientRepository.getAllClients();
+        const clients = await this.apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
         for (const client of clients) {
             client.handleMapStorageUploadMapDetected(
                 {
