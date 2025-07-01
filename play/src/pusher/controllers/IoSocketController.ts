@@ -17,7 +17,7 @@ import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
-import type { FetchMemberDataByUuidResponse } from "@workadventure/shared-utils/src/AdminApi";
+import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";

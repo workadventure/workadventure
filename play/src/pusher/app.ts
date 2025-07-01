@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";
 import uWebsockets from "uWebSockets.js";
-import { adminApi } from "../../../libs/shared-utils/src/AdminApi";
+import { adminApi } from "./services/AdminApi";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";

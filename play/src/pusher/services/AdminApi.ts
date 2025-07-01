@@ -29,12 +29,12 @@ import {
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
     ADMIN_URL,
-} from "workadventure-play/src/pusher/enums/EnvironmentVariable";
-import type { AdminInterface } from "workadventure-play/src/pusher/services/AdminInterface";
-import type { AuthTokenData } from "workadventure-play/src/pusher/services/JWTTokenManager";
-import { jwtTokenManager } from "workadventure-play/src/pusher/services/JWTTokenManager";
-import { ShortMapDescriptionList } from "workadventure-play/src/pusher/services/ShortMapDescription";
-import { WorldChatMembersData } from "workadventure-play/src/pusher/services/WorldChatMembersData";
+} from "../enums/EnvironmentVariable";
+import type { AdminInterface } from "./AdminInterface";
+import type { AuthTokenData } from "./JWTTokenManager";
+import { jwtTokenManager } from "./JWTTokenManager";
+import { ShortMapDescriptionList } from "./ShortMapDescription";
+import { WorldChatMembersData } from "./WorldChatMembersData";
 
 export const AdminBannedData = z.object({
     is_banned: z.boolean(),

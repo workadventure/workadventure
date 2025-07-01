@@ -1,4 +1,4 @@
-import { adminApi } from "@workadventure/shared-utils/src/AdminApi";
+import { adminApi } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { localAdmin } from "./LocalAdmin";
 
