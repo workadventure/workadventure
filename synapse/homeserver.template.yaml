@@ -84,6 +84,10 @@ enable_registration_without_verification: true
 turn_allow_guests: true
 allow_guest_access: true
 
+# Development server only: we allow creating publicly visible rooms to anyone.
+room_list_publication_rules:
+  - "action": "allow"
+
 auto_join_rooms:
   - "#exampleroom:example.com"
   - "#anotherexampleroom:example.com"

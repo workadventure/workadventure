@@ -25,19 +25,21 @@
 </script>
 
 <form
-    class="helpNotificationSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute bottom-4 left-0 right-0 m-auto overflow-hidden"
+    class="helpNotificationSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute top-10 left-0 right-0 overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
-        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
-            {$LL.notification.help.title()}
-        </div>
-        <div class="px-4 mt-4">
-            <Alert>
-                {$LL.notification.help.permissionDenied()}
-            </Alert>
+        <div class="flex flex-row items-start justify-between">
+            <div class="mb-0 text-xl bold border border-solid border-transparent px-4 py-3">
+                {$LL.notification.help.title()}
+            </div>
+            <div class="px-4 mt-4">
+                <Alert>
+                    {$LL.notification.help.permissionDenied()}
+                </Alert>
+            </div>
         </div>
         <div class="p-4 italic opacity-50 text-sm leading-4">
             {$LL.notification.help.content()}
@@ -54,10 +56,10 @@
         </div>
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}
+        <button class="btn bg-white/10 hover:bg-white/20 mr-2 w-full justify-center" on:click|preventDefault={refresh}
             >{$LL.notification.help.refresh()}</button
         >
-        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
+        <button type="submit" class="btn btn-danger w-full justify-center" on:click|preventDefault={close}
             >{$LL.notification.help.continue()}</button
         >
     </section>

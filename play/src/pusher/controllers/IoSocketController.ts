@@ -233,7 +233,6 @@ export class IoSocketController {
                         context,
                         z.object({
                             roomId: z.string(),
-                            token: z.string().optional(),
                             name: z.string(),
                             characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
                             x: z.coerce.number(),
@@ -257,13 +256,14 @@ export class IoSocketController {
 
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
+                    // We abuse the protocol header to pass the JWT token (to avoid sending it in the query string)
+                    const token = websocketProtocol;
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const ipAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
                     const {
                         roomId,
-                        token,
                         x,
                         y,
                         top,
@@ -909,6 +909,16 @@ export class IoSocketController {
                                             oauthRefreshTokenAnswer: await socketManager.handleOauthRefreshTokenQuery(
                                                 message.message.queryMessage.query.oauthRefreshTokenQuery
                                             ),
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "mapStorageJwtQuery": {
+                                        answerMessage.answer = {
+                                            $case: "mapStorageJwtAnswer",
+                                            mapStorageJwtAnswer: {
+                                                jwt: await socketManager.handleMapStorageJwtQuery(socket),
+                                            },
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
