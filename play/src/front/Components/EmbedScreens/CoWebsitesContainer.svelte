@@ -119,7 +119,10 @@
         activeCowebsite = coWebsite;
     };
 
-    function toggleFullScreen() {
+    function toggleFullScreen(event: MouseEvent) {
+        event.preventDefault();
+        event.stopPropagation();
+
         if ($fullScreenCowebsite) {
             fullScreenCowebsite.set(false);
         } else {
@@ -195,7 +198,13 @@
     }
 </script>
 
-<div id="cowebsites-container" class="w-full h-full bg-contrast/50 backdrop-blur">
+<div
+    id="cowebsites-container"
+    class="w-full h-full bg-contrast/50 backdrop-blur relative {!$fullScreenCowebsite
+        ? 'cowebsite-normal'
+        : 'cowebsite-fullscreen'}"
+    style="transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;"
+>
     <div class="h-full w-full flex flex-col">
         <div class="flex py-2 ms-3 items-center height-tab overflow-hidden flex-none">
             {#if tabsOverflowing && tabsScrollX > 0}
@@ -317,3 +326,19 @@
         on:touchend={removeDivForResize}
     />
 </div>
+
+<style>
+    .cowebsite-normal {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cowebsite-fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+    }
+</style>
