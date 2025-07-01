@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, request, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
@@ -240,18 +240,12 @@ test.describe('Scripting space-related functions', () => {
         await page.context().close();
     });
 
-    // TODO: write a test to test the "joinSpace" function with a "livestream" space type
-    // bob joins a livestream space, then starts streaming
-    // alice sees bob user when it starts streaming
-    // bob stops streaming
-    // alice does not see bob anymore
-    // TODO: add a function to start / stop streaming in the scripting API
-
     test('can join a livestream space and see the user when it starts streaming', async ({ browser, context}, { project }) => {
-            // Récupère toutes les pages ouvertes dans le contexte
+
     const pages = context.pages();
 
     await expect.poll(() => pages.length).toBe(0);
+
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
@@ -307,12 +301,75 @@ test.describe('Scripting space-related functions', () => {
 
     });
 
-    test.skip('shoud reconnect to a space when back restarted ',()=>{
-        //TODO : create a space 
-        //TODO : join the space with user 1 and user 2
-        //TODO : watch with user 1
-        //TODO : restart the back
-        //TODO : check that user 1 is still in the space and can see user 2 after few seconds
+    test('shoud reconnect to a space when back restarted ',async ({ browser, context}, { project })=>{
+
+ const pages = context.pages();
+
+    await expect.poll(() => pages.length).toBe(0);
+
+        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+
+        await evaluateScript(page, async () => {
+            window.userCount = 0;
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace.userJoinedObservable.subscribe((user) => {
+                window.userCount++;
+                window.lastJoinedUser = user;
+            });
+            window.mySpace.userLeftObservable.subscribe((user) => window.userCount--);
+        });
+
+        // Bob joins the same space
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await evaluateScript(bob, async () => {
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+        });
+
+        // User count in the space should now be 1
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+        // Bob starts streaming
+        await evaluateScript(bob, async () => {
+            window.mySpace.startStreaming();
+        });
+
+        // User count in the space should now be 2
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(1);
+
+
+        // Delete spce connection in the back
+        // This simulates a back restart, as the space connection will be closed
+        const apiContext = await request.newContext();
+        await apiContext.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space&token=123');
+
+        await page.waitForTimeout(5000);
+
+
+        // Alice should see Bob's user
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.lastJoinedUser.name;
+        })).toBe("Bob");
+
+        // Bob stops streaming
+        await evaluateScript(bob, async () => {
+            window.mySpace.stopStreaming();
+        });
+
+        // User count in the space should go back to 1
+        await expect.poll(() => evaluateScript(page, async () => {
+            return window.userCount;
+        })).toBe(0);
+
+         await bob.close();
+         await bob.context().close();
+         await page.close();
+         await page.context().close();
+
+
 
     })
 });
