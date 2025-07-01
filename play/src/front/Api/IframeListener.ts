@@ -243,6 +243,8 @@ class IframeListener {
     }
 
     init() {
+        // The listener is part of a singleton and will never be unregistered.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         window.addEventListener(
             "message",
             (message: MessageEvent) => {
@@ -604,6 +606,8 @@ class IframeListener {
 </html>
 `;
 
+                // The listener never needs to be removed, so we can use an inline function here.
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
                 iframe.addEventListener("load", () => {
                     resolve();
                 });

@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -98,8 +99,15 @@
         }
     };
 
-    document.addEventListener("focusin", handleFocusInEvent);
-    document.addEventListener("focusout", handleFocusOutEvent);
+    onMount(() => {
+        document.addEventListener("focusin", handleFocusInEvent);
+        document.addEventListener("focusout", handleFocusOutEvent);
+    });
+
+    onDestroy(() => {
+        document.removeEventListener("focusin", handleFocusInEvent);
+        document.removeEventListener("focusout", handleFocusOutEvent);
+    });
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
     $: marginRight =
