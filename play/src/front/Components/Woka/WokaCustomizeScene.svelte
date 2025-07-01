@@ -19,6 +19,7 @@
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
+    import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
 
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = "body";
@@ -197,10 +198,13 @@
 
                         <div class="mt-4 space-y-2">
                             <button
-                                class="w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10"
+                                class="btn btn-sm btn-light btn-border w-full px-4 py-2 bg-white/10 text-white rounded hover:bg-white/10 flex flex-row items-center justify-center gap-2"
                                 on:click={randomizeOutfit}
                             >
-                                🎲 Randomize
+                                <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
+                                <span>
+                                    Randomize
+                                </span>
                             </button>
                         </div>
                     </div>
