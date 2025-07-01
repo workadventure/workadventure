@@ -94,22 +94,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!spaceUserId) {
             throw new Error("spaceUserId not found");
         }
-        // const userSocket = this._space._localConnectedUser.get(spaceUserId);
-
-        // if (!userSocket) {
-        //     throw new Error("User not found");
-        // }
-        // //TODO : faire la comparaison avec le socketData.spaceUser pour voir si on doit mettre a jour le spaceUser
-
-        // if (userSocket) {
-        //     const actualUser = this._space._localConnectedUserWithSpaceUser.get(userSocket);
-        //     if (!actualUser) {
-        //         throw new Error("actualUser not found");
-        //     }
-
-        //     const updateValues = applyFieldMask(spaceUser, updateMask);
-        //     merge(actualUser, updateValues);
-        // }
 
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceUserMessage",

@@ -1,4 +1,10 @@
-import { SpaceUser, FilterType, AvailabilityStatus } from "@workadventure/messages";
+import {
+    SpaceUser,
+    FilterType,
+    AvailabilityStatus,
+    UpdateSpaceUserMessage,
+    SetPlayerDetailsMessage,
+} from "@workadventure/messages";
 import Debug from "debug";
 import { Socket } from "../services/SocketManager";
 import { BackSpaceConnection } from "./Websocket/SocketData";
@@ -37,13 +43,17 @@ export interface SpaceInterface {
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
-    getUpdatedFieldsForUser(
+    //TODO : see if we can merge these two methods , more generic
+    getUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
-        playerDetailsMessage: {
-            availabilityStatus: AvailabilityStatus;
-            chatID: string;
-            showVoiceIndicator: boolean;
-        }
+        playerDetailsMessage: SetPlayerDetailsMessage
+    ): {
+        changedFields: string[];
+        partialSpaceUser: PartialSpaceUser;
+    } | null;
+    getUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+        client: Socket,
+        updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
@@ -159,13 +169,9 @@ export class Space implements SpaceForSpaceConnectionInterface {
         return this._filterType;
     }
 
-    public getUpdatedFieldsForUser(
+    public getUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
-        playerDetails: {
-            availabilityStatus: AvailabilityStatus;
-            chatID: string;
-            showVoiceIndicator: boolean;
-        }
+        playerDetails: SetPlayerDetailsMessage
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
@@ -211,5 +217,22 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         return null;
+    }
+
+    public getUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+        client: Socket,
+        updateSpaceUserMessage: UpdateSpaceUserMessage
+    ): {
+        changedFields: string[];
+        partialSpaceUser: PartialSpaceUser;
+    } | null {
+        if (!updateSpaceUserMessage.updateMask || !updateSpaceUserMessage.user) {
+            return null;
+        }
+
+        return {
+            changedFields: updateSpaceUserMessage.updateMask,
+            partialSpaceUser: updateSpaceUserMessage.user,
+        };
     }
 }

@@ -480,7 +480,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                const changedFields = space.getUpdatedFieldsForUser(client, playerDetailsMessage);
+                const changedFields = space.getUpdatedFieldsForUserFromSetPlayerDetails(client, playerDetailsMessage);
                 if (changedFields) {
                     space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
                 }
@@ -987,13 +987,7 @@ export class SocketManager implements ZoneEventListener {
             );
         }
 
-        const userDetails = {
-            availabilityStatus: message.user.availabilityStatus,
-            chatID: message.user.chatID ?? "",
-            showVoiceIndicator: message.user.showVoiceIndicator ?? false,
-        };
-
-        const updatedSpaceUser = space.getUpdatedFieldsForUser(client, userDetails);
+        const updatedSpaceUser = space.getUpdatedFieldsForUserFromUpdateSpaceUserMessage(client, message);
         if (updatedSpaceUser) {
             space.forwarder.updateUser(updatedSpaceUser.partialSpaceUser, updatedSpaceUser.changedFields);
         }
