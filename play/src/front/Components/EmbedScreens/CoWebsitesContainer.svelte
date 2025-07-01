@@ -349,4 +349,5 @@
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
     }
+ 
 </style>
