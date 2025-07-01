@@ -480,7 +480,6 @@ describe("SpaceConnection", () => {
             expect(mockGetSpaceClient).toHaveBeenCalledOnce();
             expect(mockWatchSpace).toHaveBeenCalledOnce();
 
-            //Simuler une erreur de connection
             callbackMap.get("error")?.();
 
             await flushPromises();
@@ -492,6 +491,113 @@ describe("SpaceConnection", () => {
     });
 
     describe("removeSpace", () => {
-        it.skip("should remove the space from the spaceConnection", () => {});
+        it("should throw an error if list of space for back id is not found", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
+        it("should throw an error if space is not found in the list of space for back id", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>());
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
+        it("should end the connection if the list of space for back id is empty", async () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+            const mockEndFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                end: mockEndFunction,
+            });
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]]));
+            (
+                spaceConnection as unknown as { spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>> }
+            ).spaceStreamToBackPromises.set(0, Promise.resolve(mockBackSpaceConnection));
+            spaceConnection.removeSpace(mockSpace);
+
+            await flushPromises();
+
+            expect(mockEndFunction).toHaveBeenCalledOnce();
+            expect(
+                (
+                    spaceConnection as unknown as {
+                        spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                    }
+                ).spacePerBackId.get(0)
+            ).toBeUndefined();
+            expect(
+                (
+                    spaceConnection as unknown as {
+                        spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>>;
+                    }
+                ).spaceStreamToBackPromises.get(0)
+            ).toBeUndefined();
+        });
+        it("should throw an error if back connection is not found", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            spaceConnection.spacePerBackId.set(
+                0,
+                new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]])
+            );
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
     });
 });
