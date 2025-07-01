@@ -69,4 +69,23 @@ export class ApiClientRepository {
         const array = new Uint32Array(crypto.createHash("md5").update(name).digest());
         return array[0] % this.apiUrls.length;
     }
+
+    public waitForClientReady(
+        client: RoomManagerClient | SpaceManagerClient,
+        timeoutMs: number = 60_000 * 5
+    ): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const address = client.getChannel().getTarget ? client.getChannel().getTarget() : "unknown";
+
+            client.waitForReady(Date.now() + timeoutMs, (err: Error | undefined) => {
+                if (err) {
+                    debug(`gRPC client not ready for ${address}: ${err.message}`);
+                    reject(err);
+                } else {
+                    debug(`gRPC client is ready for ${address}`);
+                    resolve();
+                }
+            });
+        });
+    }
 }

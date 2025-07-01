@@ -58,6 +58,7 @@ export class SpaceConnection {
 
     private async createBackConnection(space: SpaceForSpaceConnectionInterface, backId: number) {
         const apiSpaceClient = await this._apiClientRepository.getSpaceClient(space.name, this._GRPC_MAX_MESSAGE_SIZE);
+        await this._apiClientRepository.waitForClientReady(apiSpaceClient);
         const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
         this.registerEventsOnConnection(spaceStreamToBack, backId, apiSpaceClient);
         return spaceStreamToBack;
