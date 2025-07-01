@@ -14,9 +14,10 @@
 
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
-    $: ({ name, folders, invitations, rooms, id, suggestedRooms } = folder);
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(folder.id) ?? false;
     let suggestedRoomsOpen = false;
+    let joinableRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
 
     $: filteredRoom = $rooms
@@ -29,6 +30,10 @@
         }
     });
 
+    $: filteredJoinableRooms = $joinableRooms.filter(
+        (joinable) => !$suggestedRooms.some((suggested) => suggested.id === joinable.id)
+    );
+
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -40,6 +45,10 @@
 
     function toggleSuggestedRooms() {
         suggestedRoomsOpen = !suggestedRoomsOpen;
+    }
+
+    function toggleJoinableRooms() {
+        joinableRoomsOpen = !joinableRoomsOpen;
     }
 
     onMount(() => {});
@@ -80,7 +89,7 @@
                 {#if $suggestedRooms.length > 0}
                     <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
                         <div
-                            class="group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
+                            class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
                             class:mb-2={suggestedRoomsOpen}
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">
@@ -107,6 +116,41 @@
                         {#if suggestedRoomsOpen}
                             <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                                 <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id" let:item={room}>
+                                    <RoomSuggested roomInformation={room} />
+                                </ShowMore>
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
+                {#if filteredJoinableRooms.length > 0}
+                    <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
+                        <div
+                            class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
+                            class:mb-2={joinableRoomsOpen}
+                        >
+                            <div class="flex items-center space-x-2 grow m-0 p-0">
+                                <button
+                                    class="flex items-center space-x-2 grow m-0 p-0"
+                                    data-testid="openJoinableRooms"
+                                    on:click={toggleJoinableRooms}
+                                >
+                                    <div class="text-sm font-bold tracking-widest uppercase grow text-start">
+                                        {$LL.chat.joinableRooms()}
+                                    </div>
+                                </button>
+                            </div>
+                            <button
+                                class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+                                on:click={toggleJoinableRooms}
+                            >
+                                <IconChevronUp
+                                    class={`transform transition ${!joinableRoomsOpen ? "" : "rotate-180"}`}
+                                />
+                            </button>
+                        </div>
+                        {#if joinableRoomsOpen}
+                            <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
+                                <ShowMore items={filteredJoinableRooms} maxNumber={8} idKey="id" let:item={room}>
                                     <RoomSuggested roomInformation={room} />
                                 </ShowMore>
                             </div>

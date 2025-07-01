@@ -127,6 +127,7 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     folders: Readable<RoomFolder[]>;
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 }
 
 export interface CreateRoomOptions {

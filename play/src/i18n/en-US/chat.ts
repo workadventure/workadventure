@@ -46,6 +46,7 @@ const chat: BaseTranslation = {
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
+    joinableRooms: "Salons rejoignables",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
