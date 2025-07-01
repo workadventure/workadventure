@@ -184,7 +184,14 @@ test.describe('Scripting space-related functions', () => {
          await page.context().close();
     });
 
-    test('cannot join a space with a different filter on the same browser', async ({ browser}, { project }) => {
+    test('cannot join a space with a different filter on the same browser', async ({ browser ,context}, { project }) => {
+
+
+    // Récupère toutes les pages ouvertes dans le contexte
+    const pages = context.pages();
+
+    await expect.poll(() => pages.length).toBe(0);
+
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         expect(
@@ -203,7 +210,11 @@ test.describe('Scripting space-related functions', () => {
         await page.context().close();
     });
 
-    test('cannot join a space with a different filter in 2 browsers', async ({ browser}, { project }) => {
+    test('cannot join a space with a different filter in 2 browsers', async ({ browser ,context}, { project }) => {
+            // Récupère toutes les pages ouvertes dans le contexte
+    const pages = context.pages();
+
+    await expect.poll(() => pages.length).toBe(0);
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
@@ -236,7 +247,11 @@ test.describe('Scripting space-related functions', () => {
     // alice does not see bob anymore
     // TODO: add a function to start / stop streaming in the scripting API
 
-    test('can join a livestream space and see the user when it starts streaming', async ({ browser}, { project }) => {
+    test('can join a livestream space and see the user when it starts streaming', async ({ browser, context}, { project }) => {
+            // Récupère toutes les pages ouvertes dans le contexte
+    const pages = context.pages();
+
+    await expect.poll(() => pages.length).toBe(0);
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
