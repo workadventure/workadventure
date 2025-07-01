@@ -593,10 +593,11 @@ describe("SpaceConnection", () => {
 
             const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
 
-            spaceConnection.spacePerBackId.set(
-                0,
-                new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]])
-            );
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]]));
             expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
         });
     });
