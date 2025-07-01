@@ -7,7 +7,7 @@ import type {
     RoomRedirect,
 } from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
-import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { AdminBannedData, FetchMemberDataByUuidResponse } from "@workadventure/shared-utils/src/AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
 import { WorldChatMembersData } from "./WorldChatMembersData";
 
@@ -87,6 +87,8 @@ export interface AdminInterface {
     /**
      * @param locale
      * @param roomUrl
+     * @param tags
+     * @param bypassTagFilter
      * @return string[]
      */
     getUrlRoomsFromSameWorld(

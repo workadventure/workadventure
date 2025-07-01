@@ -29,17 +29,19 @@ import {
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
     ADMIN_URL,
-} from "../enums/EnvironmentVariable";
-import type { AdminInterface } from "./AdminInterface";
-import type { AuthTokenData } from "./JWTTokenManager";
-import { jwtTokenManager } from "./JWTTokenManager";
-import { ShortMapDescriptionList } from "./ShortMapDescription";
-import { WorldChatMembersData } from "./WorldChatMembersData";
+} from "workadventure-play/src/pusher/enums/EnvironmentVariable";
+import type { AdminInterface } from "workadventure-play/src/pusher/services/AdminInterface";
+import type { AuthTokenData } from "workadventure-play/src/pusher/services/JWTTokenManager";
+import { jwtTokenManager } from "workadventure-play/src/pusher/services/JWTTokenManager";
+import { ShortMapDescriptionList } from "workadventure-play/src/pusher/services/ShortMapDescription";
+import { WorldChatMembersData } from "workadventure-play/src/pusher/services/WorldChatMembersData";
 
-export interface AdminBannedData {
-    is_banned: boolean;
-    message: string;
-}
+export const AdminBannedData = z.object({
+    is_banned: z.boolean(),
+    message: z.string(),
+});
+
+export type AdminBannedData = z.infer<typeof AdminBannedData>;
 
 export const isFetchMemberDataByUuidSuccessResponse = z.object({
     status: extendApi(z.literal("ok"), {
@@ -454,7 +456,7 @@ class AdminApi implements AdminInterface {
                     err
                 );
             } else {
-                Sentry.captureException(`An error occurred during call to /room/access endpoint. ${err}`);
+                Sentry.captureException(err);
                 console.error(`An error occurred during call to /room/access endpoint.`, err);
             }
             if (err instanceof Error) {
@@ -528,10 +530,7 @@ class AdminApi implements AdminInterface {
         console.error(adminApiData.error.issues);
         Sentry.captureException(adminApiData.error.issues);
         console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
-        Sentry.captureException(
-            "Message received from /api/login-url is not in the expected format. Message: ",
-            res.data
-        );
+
         throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
@@ -540,7 +539,7 @@ class AdminApi implements AdminInterface {
             params: { host },
         });
 
-        return res.data;
+        return z.string().parse(res.data);
     }
 
     reportPlayer(
@@ -666,7 +665,7 @@ class AdminApi implements AdminInterface {
                 { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
             )
             .then((data) => {
-                return data.data;
+                return AdminBannedData.parse(data.data);
             });
     }
 
@@ -768,7 +767,7 @@ class AdminApi implements AdminInterface {
         return this.capabilitiesDeferred.promise;
     }
 
-    async getTagsList(roomUrl: string) {
+    async getTagsList(roomUrl: string): Promise<string[]> {
         /**
          * @openapi
          * /api/room/tags:
@@ -797,7 +796,10 @@ class AdminApi implements AdminInterface {
         const response = await axios.get(ADMIN_API_URL + "/api/room/tags" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
-        return response.data ? response.data : [];
+        return z
+            .string()
+            .array()
+            .parse(response.data ? response.data : []);
     }
 
     async saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void> {

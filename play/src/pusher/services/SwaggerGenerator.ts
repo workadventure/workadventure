@@ -15,7 +15,7 @@ import {
     isCapabilities,
 } from "@workadventure/messages";
 import type { SchemaObject } from "openapi3-ts";
-import { isFetchMemberDataByUuidResponse } from "./AdminApi";
+import { isFetchMemberDataByUuidResponse } from "@workadventure/shared-utils/src/AdminApi";
 import { WorldChatMembersData } from "./WorldChatMembersData";
 
 class SwaggerGenerator {

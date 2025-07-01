@@ -11,6 +11,7 @@ import type {
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "@workadventure/shared-utils/src/AdminApi";
 import {
     CARDS_ENABLED,
     DISABLE_ANONYMOUS,
@@ -41,7 +42,6 @@ import {
     MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
