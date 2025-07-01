@@ -4,7 +4,6 @@ import type {
     ServerToClientMessage,
     BackToPusherSpaceMessage,
     PusherToBackSpaceMessage,
-    SpaceUser,
     ApplicationDefinitionInterface,
     AvailabilityStatus,
     CharacterTextureMessage,
@@ -50,7 +49,7 @@ export type SocketData = {
     activatedInviteUser: boolean | undefined;
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
-    spaceUser: SpaceUser;
+    spaceUserId: string;
     emitInBatch: (payload: SubMessage) => void;
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout | null;
@@ -62,4 +61,5 @@ export type SocketData = {
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
+    roomName: string;
 };

@@ -1,4 +1,4 @@
-import { SpaceUser, FilterType } from "@workadventure/messages";
+import { SpaceUser, FilterType, AvailabilityStatus } from "@workadventure/messages";
 import Debug from "debug";
 import { Socket } from "../services/SocketManager";
 import { BackSpaceConnection } from "./Websocket/SocketData";
@@ -37,6 +37,17 @@ export interface SpaceInterface {
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
+    getUpdatedFieldsForUser(
+        client: Socket,
+        playerDetailsMessage: {
+            availabilityStatus: AvailabilityStatus;
+            chatID: string;
+            showVoiceIndicator: boolean;
+        }
+    ): {
+        changedFields: string[];
+        partialSpaceUser: PartialSpaceUser;
+    } | null;
 }
 
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
@@ -52,6 +63,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     // The list of users connected to THIS pusher specifically
     public readonly _localConnectedUser: Map<string, Socket>;
     public readonly _localWatchers: Set<string> = new Set<string>();
+    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUser>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
@@ -87,8 +99,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
     }
 
     sendLocalUsersToBack() {
-        const localUsers = Array.from(this._localConnectedUser.values()).map((socket) => {
-            return socket.getUserData().spaceUser;
+        const localUsers = Array.from(this._localConnectedUserWithSpaceUser.values()).map((spaceUser) => {
+            return spaceUser;
         });
         this.forwarder.syncLocalUsersWithServer(localUsers);
     }
@@ -96,16 +108,20 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public handleWatch(watcher: Socket) {
         debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
 
-        const userData = watcher.getUserData();
-        const spaceUserId = userData.spaceUser.spaceUserId;
-        const userAlreadyWatchesThisSpace = this._localWatchers.has(spaceUserId);
+        const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
+
+        if (!spaceUser) {
+            throw new Error("spaceUser not found");
+        }
+
+        const userAlreadyWatchesThisSpace = this._localWatchers.has(spaceUser.spaceUserId);
 
         if (userAlreadyWatchesThisSpace) {
             console.warn(`${this.name} : filter already exists for ${watcher.getUserData().userId}`);
             return;
         }
 
-        this._localWatchers.add(spaceUserId);
+        this._localWatchers.add(spaceUser.spaceUserId);
 
         this.users.forEach((user) => {
             this.dispatcher.notifyMeAddUser(watcher, user);
@@ -113,18 +129,17 @@ export class Space implements SpaceForSpaceConnectionInterface {
     }
 
     public handleUnwatch(watcher: Socket) {
-        const socketData = watcher.getUserData();
-        const spaceUserId = socketData.spaceUser.spaceUserId;
-        if (!spaceUserId) {
-            throw new Error("spaceUserId not found");
+        const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
+        if (!spaceUser) {
+            throw new Error("spaceUser not found");
         }
-        this._localWatchers.delete(spaceUserId);
+        this._localWatchers.delete(spaceUser.spaceUserId);
 
         debug(`${this.name} : filter removed for ${watcher.getUserData().userId}`);
     }
 
     public isEmpty() {
-        return this._localConnectedUser.size === 0;
+        return this._localConnectedUserWithSpaceUser.size === 0;
     }
 
     /**
@@ -142,5 +157,59 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     get filterType(): FilterType {
         return this._filterType;
+    }
+
+    public getUpdatedFieldsForUser(
+        client: Socket,
+        playerDetails: {
+            availabilityStatus: AvailabilityStatus;
+            chatID: string;
+            showVoiceIndicator: boolean;
+        }
+    ): {
+        changedFields: string[];
+        partialSpaceUser: PartialSpaceUser;
+    } | null {
+        const spaceUser = this._localConnectedUserWithSpaceUser.get(client);
+        if (!spaceUser) {
+            throw new Error("spaceUser not found");
+        }
+
+        const fieldMask: string[] = [];
+
+        const oldStatus = spaceUser.availabilityStatus;
+        const newStatus = playerDetails.availabilityStatus;
+
+        if (newStatus !== oldStatus && newStatus !== AvailabilityStatus.UNCHANGED) {
+            fieldMask.push("availabilityStatus");
+            spaceUser.availabilityStatus = newStatus;
+        }
+
+        if (playerDetails.chatID !== spaceUser.chatID && playerDetails.chatID !== "") {
+            fieldMask.push("chatID");
+            spaceUser.chatID = playerDetails.chatID;
+        }
+        if (
+            playerDetails.showVoiceIndicator !== undefined &&
+            spaceUser.showVoiceIndicator !== playerDetails.showVoiceIndicator
+        ) {
+            fieldMask.push("showVoiceIndicator");
+            spaceUser.showVoiceIndicator = playerDetails.showVoiceIndicator;
+        }
+        if (fieldMask.length > 0) {
+            const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
+                availabilityStatus: playerDetails.availabilityStatus,
+                spaceUserId: spaceUser.spaceUserId,
+                chatID: playerDetails.chatID,
+                showVoiceIndicator: playerDetails.showVoiceIndicator,
+            });
+
+            return {
+                changedFields: fieldMask,
+                partialSpaceUser: partialSpaceUser,
+            };
+        }
+
+        return null;
     }
 }

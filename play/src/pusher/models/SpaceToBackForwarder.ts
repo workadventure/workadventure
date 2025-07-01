@@ -1,8 +1,8 @@
 import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
-import { applyFieldMask } from "protobuf-fieldmask";
-import { merge } from "lodash";
+import { Color } from "@workadventure/shared-utils";
+
 import { Socket } from "../services/SocketManager";
 import { PartialSpaceUser, Space } from "./Space";
 
@@ -22,21 +22,41 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     constructor(private readonly _space: Space) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
-        const spaceUser = socketData.spaceUser;
+        const spaceUserId = socketData.spaceUserId;
 
-        if (!socketData.spaceUser.spaceUserId) {
+        if (!spaceUserId) {
             throw new Error("Space user id not found");
         }
         //TODO : voir pourquoi on a des doublons
-        if (this._space._localConnectedUser.has(spaceUser.spaceUserId)) {
-            throw new Error("Watcher already added for user " + spaceUser.spaceUserId);
+        if (this._space._localConnectedUser.has(spaceUserId)) {
+            throw new Error("Watcher already added for user " + spaceUserId);
         }
 
         debug(
             `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
         );
 
-        this._space._localConnectedUser.set(spaceUser.spaceUserId, client);
+        const spaceUser: SpaceUser = SpaceUser.fromPartial({
+            spaceUserId,
+            uuid: socketData.userUuid,
+            name: socketData.name,
+            playUri: socketData.roomId,
+            roomName: socketData.roomId === "" ? undefined : socketData.roomId,
+            availabilityStatus: socketData.availabilityStatus,
+            isLogged: socketData.isLogged,
+            color: Color.getColorByString(socketData.name),
+            tags: socketData.tags,
+            cameraState: false,
+            screenSharingState: false,
+            microphoneState: false,
+            megaphoneState: false,
+            characterTextures: socketData.characterTextures,
+            visitCardUrl: socketData.visitCardUrl ?? undefined,
+            chatID: socketData.chatID ?? undefined,
+        });
+
+        this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+        this._space._localConnectedUser.set(spaceUserId, client);
 
         try {
             await this._space.query.send({
@@ -64,6 +84,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             }
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
+            this._space._localConnectedUserWithSpaceUser.delete(client);
             throw e;
         }
     }
@@ -73,20 +94,22 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!spaceUserId) {
             throw new Error("spaceUserId not found");
         }
-        const userSocket = this._space._localConnectedUser.get(spaceUserId);
+        // const userSocket = this._space._localConnectedUser.get(spaceUserId);
 
-        if (!userSocket) {
-            throw new Error("User not found");
-        }
+        // if (!userSocket) {
+        //     throw new Error("User not found");
+        // }
+        // //TODO : faire la comparaison avec le socketData.spaceUser pour voir si on doit mettre a jour le spaceUser
 
-        //TODO : voir si c'est la bonne méthode car on met a jour directment la socket qui peut etre utilisé par d'autres spaces
-        if (userSocket) {
-            const userData = userSocket.getUserData();
-            const actualUser = userData.spaceUser;
+        // if (userSocket) {
+        //     const actualUser = this._space._localConnectedUserWithSpaceUser.get(userSocket);
+        //     if (!actualUser) {
+        //         throw new Error("actualUser not found");
+        //     }
 
-            const updateValues = applyFieldMask(spaceUser, updateMask);
-            merge(actualUser, updateValues);
-        }
+        //     const updateValues = applyFieldMask(spaceUser, updateMask);
+        //     merge(actualUser, updateValues);
+        // }
 
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceUserMessage",
@@ -101,7 +124,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
     async unregisterUser(socket: Socket): Promise<void> {
         const userData = socket.getUserData();
 
-        const spaceUserId = userData.spaceUser.spaceUserId;
+        const spaceUserId = userData.spaceUserId;
         if (!spaceUserId) {
             throw new Error("spaceUserId not found");
         }
@@ -113,6 +136,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         try {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
+            this._space._localConnectedUserWithSpaceUser.delete(socket);
 
             await this._space.query.send({
                 $case: "removeSpaceUserQuery",
@@ -134,6 +158,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             debug(`${this._space.name} : user remove sent ${spaceUserId}`);
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUserId);
+            this._space._localConnectedUserWithSpaceUser.delete(socket);
+            this._space._localWatchers.delete(spaceUserId);
             if (this._space._localConnectedUser.size === 0) {
                 this._space.cleanup();
                 return;

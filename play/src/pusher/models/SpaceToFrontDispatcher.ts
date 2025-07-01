@@ -345,10 +345,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
      * It is used solely for public events.
      */
     private notifyAllUsers(subMessage: SubMessage, senderId: string) {
-        for (const user of this._space._localConnectedUser.values()) {
-            const userData = user.getUserData();
-            if (userData.spaceUser.spaceUserId !== senderId) {
-                userData.emitInBatch(subMessage);
+        for (const [socket, spaceUser] of this._space._localConnectedUserWithSpaceUser.entries()) {
+            if (spaceUser.spaceUserId !== senderId) {
+                socket.getUserData().emitInBatch(subMessage);
             }
         }
     }

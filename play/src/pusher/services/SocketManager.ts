@@ -5,7 +5,6 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
-    AvailabilityStatus,
     BanMessage,
     BanPlayerMessage,
     ChatMembersAnswer,
@@ -38,7 +37,6 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SpaceUser,
     UpdateSpaceUserMessage,
     UserMovesMessage,
     ViewportMessage,
@@ -254,8 +252,9 @@ export class SocketManager implements ZoneEventListener {
                     }
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
+                            //TODO : create id directly in the space ??
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
-                            socketData.spaceUser.spaceUserId =
+                            socketData.spaceUserId =
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
@@ -478,51 +477,25 @@ export class SocketManager implements ZoneEventListener {
 
         this.forwardMessageToBack(client, pusherToBackMessage);
 
-        const fieldMask: string[] = [];
-        const oldStatus = socketData.spaceUser.availabilityStatus;
-        const newStatus = playerDetailsMessage.availabilityStatus;
-
-        if (newStatus !== oldStatus && newStatus !== AvailabilityStatus.UNCHANGED) {
-            fieldMask.push("availabilityStatus");
-            socketData.spaceUser.availabilityStatus = newStatus;
-        }
-
-        if (playerDetailsMessage.chatID !== socketData.spaceUser.chatID && playerDetailsMessage.chatID !== "") {
-            fieldMask.push("chatID");
-            socketData.spaceUser.chatID = playerDetailsMessage.chatID;
-        }
-        if (
-            playerDetailsMessage.showVoiceIndicator !== undefined &&
-            socketData.spaceUser.showVoiceIndicator !== playerDetailsMessage.showVoiceIndicator
-        ) {
-            fieldMask.push("showVoiceIndicator");
-            socketData.spaceUser.showVoiceIndicator = playerDetailsMessage.showVoiceIndicator;
-        }
-        if (fieldMask.length > 0) {
-            const partialSpaceUser: SpaceUser = SpaceUser.fromPartial({
-                availabilityStatus: playerDetailsMessage.availabilityStatus,
-                spaceUserId: socketData.spaceUser.spaceUserId,
-                chatID: playerDetailsMessage.chatID,
-                showVoiceIndicator: playerDetailsMessage.showVoiceIndicator,
-            });
-
-            socketData.spaces.forEach((spaceName) => {
-                const space = this.spaces.get(spaceName);
-                if (space) {
-                    space.forwarder.updateUser(partialSpaceUser, fieldMask);
-                } else {
-                    console.log("space not found", socketData.spaces);
-                    console.error(
-                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
-                    );
-                    Sentry.captureException(
-                        new Error(
-                            `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
-                        )
-                    );
+        socketData.spaces.forEach((spaceName) => {
+            const space = this.spaces.get(spaceName);
+            if (space) {
+                const changedFields = space.getUpdatedFieldsForUser(client, playerDetailsMessage);
+                if (changedFields) {
+                    space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
                 }
-            });
-        }
+            } else {
+                console.log("space not found", socketData.spaces);
+                console.error(
+                    `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                );
+                Sentry.captureException(
+                    new Error(
+                        `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
+                    )
+                );
+            }
+        });
     }
 
     async handleReportMessage(client: Socket, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
@@ -1005,9 +978,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleUpdateSpaceUser(client: Socket, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const message = noUndefined(updateSpaceUserMessage);
-        //const socketData = client.getUserData();
-        //const toUpdateValues = applyFieldMask(message.user, message.updateMask);
-        //merge(socketData.spaceUser, toUpdateValues);
+
         await this.checkClientIsPartOfSpace(client, message.spaceName);
         const space = this.spaces.get(message.spaceName);
         if (!space) {
@@ -1015,7 +986,17 @@ export class SocketManager implements ZoneEventListener {
                 `Could not find space ${message.spaceName} when updating value(s) ${message.updateMask.join(", ")}`
             );
         }
-        space.forwarder.updateUser(message.user, message.updateMask);
+
+        const userDetails = {
+            availabilityStatus: message.user.availabilityStatus,
+            chatID: message.user.chatID ?? "",
+            showVoiceIndicator: message.user.showVoiceIndicator ?? false,
+        };
+
+        const updatedSpaceUser = space.getUpdatedFieldsForUser(client, userDetails);
+        if (updatedSpaceUser) {
+            space.forwarder.updateUser(updatedSpaceUser.partialSpaceUser, updatedSpaceUser.changedFields);
+        }
     }
 
     async handleRoomTagsQuery(client: Socket, queryMessage: QueryMessage) {
@@ -1283,7 +1264,7 @@ export class SocketManager implements ZoneEventListener {
             $case: "publicEvent",
             publicEvent: {
                 ...publicEvent,
-                senderUserId: socketData.spaceUser.spaceUserId,
+                senderUserId: socketData.spaceUserId,
             },
         });
     }
@@ -1306,7 +1287,7 @@ export class SocketManager implements ZoneEventListener {
             $case: "privateEvent",
             privateEvent: {
                 ...privateEvent,
-                senderUserId: socketData.spaceUser.spaceUserId,
+                senderUserId: socketData.spaceUserId,
             },
         });
     }

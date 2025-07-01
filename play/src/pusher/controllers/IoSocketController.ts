@@ -8,13 +8,11 @@ import {
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SpaceUser,
     SubMessage,
     WokaDetail,
 } from "@workadventure/messages";
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
-import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
@@ -478,27 +476,8 @@ export class IoSocketController {
                             activatedInviteUser: userData.activatedInviteUser ?? undefined,
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
-                            spaceUser: SpaceUser.fromPartial({
-                                spaceUserId: "",
-                                uuid: userData.userUuid,
-                                name,
-                                playUri: roomId,
-                                roomName: roomName === "" ? undefined : roomName,
-                                availabilityStatus,
-                                isLogged,
-                                color: Color.getColorByString(name),
-                                tags: memberTags,
-                                cameraState: false,
-                                screenSharingState: false,
-                                microphoneState: false,
-                                megaphoneState: false,
-                                characterTextures: characterTextures.map((characterTexture) => ({
-                                    url: characterTexture.url,
-                                    id: characterTexture.id,
-                                })),
-                                visitCardUrl: memberVisitCardUrl ?? undefined,
-                                chatID,
-                            }),
+                            spaceUserId: "",
+                            roomName: roomName,
                             emitInBatch: (payload: SubMessage): void => {},
                             batchedMessages: {
                                 event: "",
