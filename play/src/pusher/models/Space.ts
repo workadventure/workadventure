@@ -44,7 +44,7 @@ export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
 }
 
-export class Space implements SpaceInterface {
+export class Space implements SpaceForSpaceConnectionInterface {
     public readonly users: Map<string, SpaceUserExtended>;
 
     public readonly metadata: Map<string, unknown>;
