@@ -150,10 +150,10 @@ export class Space implements CustomJsonReplacerInterface {
             usersList.delete(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
 
-            if (usersList.size === 0) {
-                debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
-                this.users.delete(sourceWatcher);
-            }
+            // if (usersList.size === 0) {
+            //     debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
+            //     this.users.delete(sourceWatcher);
+            // }
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
