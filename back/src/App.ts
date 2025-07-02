@@ -1,7 +1,7 @@
 // lib/app.ts
 import * as grpc from "@grpc/grpc-js";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { adminApi } from "../../play/src/pusher/services/AdminApi";
+import { adminApi } from "@workadventure/shared-utils/src/adminApi";
 import { roomManager } from "./RoomManager";
 import { HTTP_PORT, PROMETHEUS_PORT, GRPC_PORT } from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
