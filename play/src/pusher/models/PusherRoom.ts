@@ -65,6 +65,8 @@ export class PusherRoom {
         this.backConnection = apiClient.listenRoom({
             roomId: this.roomUrl,
         });
+        // Event listeners are valid for the lifetime of the connection
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.payload) {
                 if (!message.message) {
