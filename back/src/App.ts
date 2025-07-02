@@ -1,9 +1,15 @@
 // lib/app.ts
 import * as grpc from "@grpc/grpc-js";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { adminApi } from "@workadventure/shared-utils/src/adminApi";
+import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";
 import { roomManager } from "./RoomManager";
-import { HTTP_PORT, PROMETHEUS_PORT, GRPC_PORT } from "./Enum/EnvironmentVariable";
+import {
+    HTTP_PORT,
+    PROMETHEUS_PORT,
+    GRPC_PORT,
+    ADMIN_API_RETRY_DELAY,
+    ADMIN_API_URL,
+} from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
 import { App as uwsApp } from "./Server/sifrr.server";
 import { DebugController } from "./Controller/DebugController";
@@ -11,6 +17,7 @@ import { PrometheusController } from "./Controller/PrometheusController";
 import { spaceManager } from "./SpaceManager";
 import { setCapabilities } from "./Services/Capabilities";
 
+const sharedAdminApi = new SharedAdminApi(ADMIN_API_RETRY_DELAY, ADMIN_API_URL);
 class App {
     private app: uwsApp;
     private prometheusApp: uwsApp | undefined;
@@ -41,7 +48,7 @@ class App {
     }
 
     public async init() {
-        setCapabilities(await adminApi.initialise());
+        setCapabilities(await sharedAdminApi.initialise());
     }
 
     public grpcListen(): void {
