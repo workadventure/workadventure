@@ -271,7 +271,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
         const allMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
 
-        console.log("🤟 Processing room:", rooms);
         rooms.forEach((room) => {
             const roomId = room.room_id;
             if (this.id === roomId) return;

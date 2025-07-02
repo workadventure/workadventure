@@ -108,7 +108,9 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton")).toBeAttached();
     await page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton").click();
 
-    await matrixApi.acceptAllInvitations(publicChatRoomName);
+    const roomId = await page.getByTestId("roomID").textContent();
+
+    await matrixApi.acceptRoomInvitations(roomId);
    
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 

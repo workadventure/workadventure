@@ -130,6 +130,20 @@ class MatrixApi {
     }
   }
 
+  public async acceptRoomInvitations(roomId : string) {
+      if (roomId) {
+        try {
+          await axios.post(
+              `${matrix_server_url}/_matrix/client/r0/join/${roomId}`,
+              {},
+              this.getAuthenticatedHeader()
+          );
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+  }
+
   public async getMemberPowerLevel(roomAlias: string): Promise<number> {
     try {
       const publicRoomsResponse = await axios.get(
