@@ -94,6 +94,7 @@ export class Space implements CustomJsonReplacerInterface {
             usersList.set(spaceUser.spaceUserId, user);
 
             if (!oldFilter && newFilter) {
+                debug(`${this.name} : user updated => added ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`);
                 this.notifyWatchers({
                     message: {
                         $case: "addSpaceUserMessage",
@@ -104,6 +105,9 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
             } else if (oldFilter && !newFilter) {
+                debug(
+                    `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
+                );
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -114,6 +118,9 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
             } else if (oldFilter && newFilter) {
+                debug(
+                    `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
+                );
                 this.notifyWatchers({
                     message: {
                         $case: "updateSpaceUserMessage",

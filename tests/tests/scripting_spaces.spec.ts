@@ -312,6 +312,7 @@ test.describe('Scripting space-related functions', () => {
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
+            await WA.player.teleport(1, 1);
             window.userCount = 0;
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
             window.mySpace.userJoinedObservable.subscribe((user) => {
