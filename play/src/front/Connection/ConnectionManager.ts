@@ -467,9 +467,11 @@ class ConnectionManager {
                 lastCommandId
             );
 
-            connection.onConnectError((error: object) => {
+            // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            connection.websocketErrorStream.subscribe((error: Event) => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(asError(error));
+                reject(asError(event));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
