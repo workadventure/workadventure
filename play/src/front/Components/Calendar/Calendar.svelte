@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { CalendarEventInterface } from "@workadventure/shared-utils";
+    import { get } from "svelte/store";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { extensionModuleStore } from "../../Stores/GameSceneStore";
@@ -10,6 +11,8 @@
     import ButtonClose from "../Input/ButtonClose.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
+    import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -60,7 +63,11 @@
             <div class="header-container">
                 <div class="flex flex-row items-start justify-between">
                     <div class="flex flex-row items-center gap-2 flex-wrap">
-                        <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                        {#if get(externalSvelteComponentService.getComponentsByZone("calendarImage")).size > 0}
+                            <ExternalComponents zone="calendarImage" />
+                        {:else}
+                            <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                        {/if}
                         <h3 class="text-xl text-left leading-none">
                             {new Date().toLocaleString("en-EN", {
                                 month: "long",
@@ -73,8 +80,10 @@
 
                     <ButtonClose on:click={closeCalendar} />
                 </div>
-                <div class="bg-white/20 h-[1px] w-full my-2" />
-                <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                {#if $userIsConnected}
+                    <div class="bg-white/20 h-[1px] w-full my-2" />
+                    <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                {/if}
             </div>
             <div class="flex flex-col justify-center gap-4">
                 {#if !$userIsConnected}

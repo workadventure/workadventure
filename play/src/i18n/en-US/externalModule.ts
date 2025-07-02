@@ -10,8 +10,8 @@ const externalModule: BaseTranslation = {
     teams: {
         openingMeeting: "Opening Teams Meeting...",
         unableJoinMeeting: "Unable to join Teams Meeting!",
-        userNotConnected: "You are not connected to Teams!",
-        connectToYourTeams: "Connect to your Teams account 🙏",
+        userNotConnected: "You are not synchronize with your calendar Outlook or Google!",
+        connectToYourTeams: "Connect to your calendar Outlook or Google 🙏",
         temasAppInfo:
             "Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call, and collaborate all in one place 😍",
         buttonSync: "Sync my Teams 🚀",
