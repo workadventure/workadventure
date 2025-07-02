@@ -142,7 +142,11 @@ export class SpaceConnection {
             });
     }
 
-    private joinSpace(spaceStreamToBackPromise: Promise<BackSpaceConnection>, space: SpaceForSpaceConnectionInterface) {
+    private joinSpace(
+        spaceStreamToBackPromise: Promise<BackSpaceConnection>,
+        space: SpaceForSpaceConnectionInterface,
+        isRetry: boolean = false
+    ) {
         spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
                 spaceStreamToBack.write({
@@ -151,6 +155,7 @@ export class SpaceConnection {
                         joinSpaceMessage: {
                             spaceName: space.name,
                             filterType: space.filterType,
+                            isRetry,
                         },
                     },
                 });
@@ -185,7 +190,7 @@ export class SpaceConnection {
 
         spaceForBackId.forEach((space) => {
             space.setSpaceStreamToBack(spaceStreamToBackPromise);
-            this.joinSpace(spaceStreamToBackPromise, space);
+            this.joinSpace(spaceStreamToBackPromise, space, true);
             space.sendLocalUsersToBack();
         });
     }

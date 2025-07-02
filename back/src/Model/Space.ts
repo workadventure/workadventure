@@ -227,6 +227,7 @@ export class Space implements CustomJsonReplacerInterface {
             metadata[key] = this.metadata.get(key);
         }
 
+        //TODO : see if during the lost connection, the metadata is lost ????
         watcher.write({
             message: {
                 $case: "updateSpaceMetadataMessage",

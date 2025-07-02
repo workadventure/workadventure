@@ -1404,7 +1404,10 @@ export class SocketManager {
         }
 
         pusher.watchSpace(space.name);
-        space.addWatcher(pusher);
+
+        if (!joinSpaceMessage.isRetry) {
+            space.addWatcher(pusher);
+        }
     }
 
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {

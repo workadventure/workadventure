@@ -6,6 +6,8 @@ import {
     SetPlayerDetailsMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
+import { merge } from "lodash";
+import { applyFieldMask } from "protobuf-fieldmask";
 import { Socket } from "../services/SocketManager";
 import { BackSpaceConnection } from "./Websocket/SocketData";
 import { EventProcessor } from "./EventProcessor";
@@ -218,7 +220,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
         return null;
     }
-
+    //TODO : rename to tell the user that the update is done
     public getUpdatedFieldsForUserFromUpdateSpaceUserMessage(
         client: Socket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
@@ -229,6 +231,15 @@ export class Space implements SpaceForSpaceConnectionInterface {
         if (!updateSpaceUserMessage.updateMask || !updateSpaceUserMessage.user) {
             return null;
         }
+
+        const spaceUser = this._localConnectedUserWithSpaceUser.get(client);
+        if (!spaceUser) {
+            throw new Error("spaceUser not found");
+        }
+
+        const updateValues = applyFieldMask(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+
+        merge(spaceUser, updateValues);
 
         return {
             changedFields: updateSpaceUserMessage.updateMask,

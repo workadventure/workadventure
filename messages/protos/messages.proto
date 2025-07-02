@@ -1331,6 +1331,7 @@ message BackToPusherSpaceMessage{
 message JoinSpaceMessage{
   string spaceName = 1;
   FilterType filterType = 2;
+  bool isRetry = 3;
 }
 
 enum FilterType{
