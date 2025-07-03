@@ -183,6 +183,16 @@ export class SpaceConnection {
 
         const spaceForBackId = this.spacePerBackId.get(backId);
         if (!spaceForBackId) {
+            console.log(
+                "[SpaceConnection] spacePerBackId contents:",
+                Array.from(this.spacePerBackId.entries()).map(([id, map]) => ({
+                    backId: id,
+                    spaces: Array.from(map.entries()).map(([name, value]) => ({
+                        spaceName: name,
+                        defined: value !== undefined,
+                    })),
+                }))
+            );
             throw new Error("spaceForBackId not found");
         }
 
@@ -226,6 +236,7 @@ export class SpaceConnection {
         }
 
         if (spacesForBackId.size === 0) {
+            debug("Deleting backId", backId);
             this.spacePerBackId.delete(backId);
 
             const spaceStreamToBack = this.spaceStreamToBackPromises.get(backId);

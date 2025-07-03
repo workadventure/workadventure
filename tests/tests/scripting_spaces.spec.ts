@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {expect, request, test} from '@playwright/test';
 import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
@@ -10,8 +11,9 @@ test.describe('Scripting space-related functions', () => {
         const apiContext = await request.newContext();
         const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
         const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        console.log({dumpBack : await dumpBack.text()});
-        console.log({dumpPusher :await dumpPusher.text()});
+        fs.mkdirSync('playwright-report', { recursive: true });
+        fs.writeFileSync('playwright-report/dumpBack1.json', await dumpBack.text());
+        fs.writeFileSync('playwright-report/dumpPusher1.json', await dumpPusher.text());
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -203,8 +205,9 @@ test.describe('Scripting space-related functions', () => {
         const apiContext = await request.newContext();
         const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
         const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        console.log({dumpBack : await dumpBack.text()});
-        console.log({dumpPusher :await dumpPusher.text()});
+        fs.mkdirSync('playwright-report', { recursive: true });
+        fs.writeFileSync('playwright-report/dumpBack2.json', await dumpBack.text());
+        fs.writeFileSync('playwright-report/dumpPusher2.json', await dumpPusher.text());
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -234,8 +237,9 @@ test.describe('Scripting space-related functions', () => {
         const apiContext = await request.newContext();
         const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
         const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        console.log({dumpBack : await dumpBack.text()});
-        console.log({dumpPusher :await dumpPusher.text()});
+        fs.mkdirSync('playwright-report', { recursive: true });
+        fs.writeFileSync('playwright-report/dumpBack3.json', await dumpBack.text());
+        fs.writeFileSync('playwright-report/dumpPusher3.json', await dumpPusher.text());
 
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
@@ -273,8 +277,9 @@ test.describe('Scripting space-related functions', () => {
     const apiContext = await request.newContext();
     const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
     const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-    console.log({dumpBack : await dumpBack.text()});
-    console.log({dumpPusher :await dumpPusher.text()});
+    fs.mkdirSync('playwright-report', { recursive: true });
+    fs.writeFileSync('playwright-report/dumpBack4.json', await dumpBack.text());
+    fs.writeFileSync('playwright-report/dumpPusher4.json', await dumpPusher.text());
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -342,8 +347,9 @@ test.describe('Scripting space-related functions', () => {
     const apiContext = await request.newContext();
     const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
     const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-    console.log({dumpBack : await dumpBack.text()});
-    console.log({dumpPusher :await dumpPusher.text()});
+    fs.mkdirSync('playwright-report', { recursive: true });
+    fs.writeFileSync('playwright-report/dumpBack5.json', await dumpBack.text());
+    fs.writeFileSync('playwright-report/dumpPusher5.json', await dumpPusher.text());
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
