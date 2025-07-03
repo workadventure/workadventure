@@ -46,6 +46,7 @@ const chat: BaseTranslation = {
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
+    joinableRooms: "Salons rejoignables",
     availableRooms: "Available rooms",
     proximity: "Proximity Chat",
     role: {
@@ -218,10 +219,10 @@ const chat: BaseTranslation = {
         suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
-            label: "Who can read history ?",
-            world_readable: "Anyone",
-            joined: "Members only (since they joined)",
-            invited: "Members only (since they were invited)",
+            label: "Visibility of previous messages",
+            world_readable: "All messages are visible",
+            joined: "Messages sent after joining are visible",
+            invited: "Messages sent after being invited are visible",
         },
         buttons: {
             edit: "Edit",

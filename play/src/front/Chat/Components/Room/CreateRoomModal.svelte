@@ -10,13 +10,12 @@
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import Input from "../../../Components/Input/Input.svelte";
-    import Select from "../../../Components/Input/Select.svelte";
     import InputCheckbox from "../../../Components/Input/InputCheckbox.svelte";
     import InputRadio from "../../../Components/Input/InputRadio.svelte";
 
     export let isOpen: boolean;
     export let parentID: string | undefined;
-    let createRoomOptions: CreateRoomOptions = { visibility: "public" };
+    let createRoomOptions: CreateRoomOptions = { visibility: "private" };
     if (parentID) createRoomOptions.parentSpaceID = parentID;
     let createRoomError: string | undefined = undefined;
 
@@ -94,31 +93,6 @@
                 on:focusin={focusChatInput}
                 on:focusout={unfocusChatInput}
             />
-
-            <Select
-                data-testid="createRoomVisibility"
-                label={$LL.chat.createRoom.visibility.label()}
-                bind:value={createRoomOptions.visibility}
-            >
-                <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
-                <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
-                {#if parentID}
-                    <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
-                {/if}
-
-                <span slot="helper">
-                    <p class="text-xs m-0 p-0 text-gray-300 flex items-center mb-1">
-                        <IconHelpCircle class="mr-2" font-size={18} />
-                        {#if createRoomOptions.visibility === "private"}
-                            {$LL.chat.createRoom.visibility.privateDescription()}
-                        {:else if createRoomOptions.visibility === "public"}
-                            {$LL.chat.createRoom.visibility.publicDescription()}
-                        {:else if createRoomOptions.visibility === "restricted"}
-                            {$LL.chat.createRoom.visibility.restrictedDescription()}
-                        {/if}
-                    </p>
-                </span>
-            </Select>
 
             {#if parentID}
                 <div class="pl-1">

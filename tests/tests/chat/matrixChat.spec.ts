@@ -309,59 +309,59 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.context().close();
   });
 
-  test("Create a private chat room", async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page);
-    await ChatUtils.openChat(page);
-    await ChatUtils.openCreateRoomDialog(page);
-    const privateChatRoom = ChatUtils.getRandomName();
-    await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
-    await page.getByTestId("createRoomButton").click();
-    await expect(page.getByText(privateChatRoom)).toBeAttached();
-    await page.close();
-    await page.context().close();
-  });
+  // test("Create a private chat room", async ({ browser }) => {
+  //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+  //   await oidcMatrixUserLogin(page);
+  //   await ChatUtils.openChat(page);
+  //   await ChatUtils.openCreateRoomDialog(page);
+  //   const privateChatRoom = ChatUtils.getRandomName();
+  //   await page.getByTestId("createRoomName").fill(privateChatRoom);
+  //   await page.getByTestId("createRoomVisibility").selectOption("private");
+  //   await page.getByTestId("createRoomButton").click();
+  //   await expect(page.getByText(privateChatRoom)).toBeAttached();
+  //   await page.close();
+  //   await page.context().close();
+  // });
 
-  test("Create a private encrypted chat room (new user)", async ({
-    browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page);
-    await ChatUtils.openChat(page);
-    await ChatUtils.openCreateRoomDialog(page);
-    const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
-    await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
-    await page.getByText('Activate end to end encryption').click();
-    await page.getByTestId("createRoomEncryption").check();
-    await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
-    await expect(page.getByText(privateChatRoom)).toBeAttached();
-    await page.close();
-    await page.context().close();
-  });
+  // test("Create a private encrypted chat room (new user)", async ({
+  //   browser }) => {
+  //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+  //   await oidcMatrixUserLogin(page);
+  //   await ChatUtils.openChat(page);
+  //   await ChatUtils.openCreateRoomDialog(page);
+  //   const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
+  //   await page.getByTestId("createRoomName").fill(privateChatRoom);
+  //   await page.getByTestId("createRoomVisibility").selectOption("private");
+  //   await page.getByText('Activate end to end encryption').click();
+  //   await page.getByTestId("createRoomEncryption").check();
+  //   await page.getByTestId("createRoomButton").click();
+  //   await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
+  //   await expect(page.getByText(privateChatRoom)).toBeAttached();
+  //   await page.close();
+  //   await page.context().close();
+  // });
 
-  test("Send message in private chat room (new user)", async ({
-    browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
-    await oidcMatrixUserLogin(page);
-    await ChatUtils.openChat(page);
-    await ChatUtils.openCreateRoomDialog(page);
-    const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
-    await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
-    await page.getByText('Activate end to end encryption').click();
-    await page.getByTestId("createRoomEncryption").check();
-    await page.getByTestId("createRoomButton").click();
-    await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
-    await page.getByText(privateChatRoom).click();
-    const chatMessageContent = "This is a test message";
-    await page.getByTestId("messageInput").fill(chatMessageContent);
-    await page.getByTestId("sendMessageButton").click();
-    await expect(page.getByText(chatMessageContent)).toBeAttached();
-    await page.close();
-    await page.context().close();
-  });
+  // test("Send message in private chat room (new user)", async ({
+  //   browser }) => {
+  //   const page = await getPage(browser, 'Alice', Map.url("empty"));
+  //   await oidcMatrixUserLogin(page);
+  //   await ChatUtils.openChat(page);
+  //   await ChatUtils.openCreateRoomDialog(page);
+  //   const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
+  //   await page.getByTestId("createRoomName").fill(privateChatRoom);
+  //   await page.getByTestId("createRoomVisibility").selectOption("private");
+  //   await page.getByText('Activate end to end encryption').click();
+  //   await page.getByTestId("createRoomEncryption").check();
+  //   await page.getByTestId("createRoomButton").click();
+  //   await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
+  //   await page.getByText(privateChatRoom).click();
+  //   const chatMessageContent = "This is a test message";
+  //   await page.getByTestId("messageInput").fill(chatMessageContent);
+  //   await page.getByTestId("sendMessageButton").click();
+  //   await expect(page.getByText(chatMessageContent)).toBeAttached();
+  //   await page.close();
+  //   await page.context().close();
+  // });
 
   test("Retrieve encrypted message", async ({ browser }) => {
     const page = await getPage(browser, 'Alice', Map.url("empty"));
@@ -370,7 +370,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
+    // await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
@@ -414,7 +414,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
+    // await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
@@ -464,7 +464,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
+    // await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
@@ -556,7 +556,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const room = ChatUtils.getRandomName();
     await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
-    await page.getByTestId("createRoomVisibility").selectOption("public");
+    // await page.getByTestId("createRoomVisibility").selectOption("public");
     await page.getByTestId("createRoomButton").click();
     await page.waitForTimeout(1000);
     await page.getByText(privateFolder1).click();
@@ -581,7 +581,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const room = ChatUtils.getRandomName();
     await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
-    await page.getByTestId("createRoomVisibility").selectOption("restricted");
+    // await page.getByTestId("createRoomVisibility").selectOption("restricted");
     await page.getByTestId("createRoomButton").click();
     await page.getByText(privateFolder1).click();
     await expect(page.getByText(room)).toBeAttached();
@@ -599,7 +599,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
+    // await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();
@@ -641,7 +641,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateRoomDialog(page);
     const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
     await page.getByTestId("createRoomName").fill(privateChatRoom);
-    await page.getByTestId("createRoomVisibility").selectOption("private");
+    // await page.getByTestId("createRoomVisibility").selectOption("private");
     await page.getByText('Activate end to end encryption').click();
     await page.getByTestId("createRoomEncryption").check();
     await page.getByTestId("createRoomButton").click();

@@ -117,7 +117,7 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
 };
-export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
+export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
@@ -127,6 +127,7 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     folders: Readable<RoomFolder[]>;
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 }
 
 export interface CreateRoomOptions {
