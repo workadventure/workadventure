@@ -74,6 +74,7 @@ export class WebRTCState extends CommunicationState {
                     livekitApiKey: LIVEKIT_API_KEY,
                     livekitApiSecret: LIVEKIT_API_SECRET,
                 });
+                console.log("Default credentials", res);
                 nextState = new LivekitState(this._space, this._communicationManager, res); //fallback to default credentials
             }
             this._readyUsers.add(user.spaceUserId);
