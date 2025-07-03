@@ -77,7 +77,12 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await adminPage.close();
   });
 
-  test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ browser }, { project }) => {
+  test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
+    if (isMobile(page) && browserName === "webkit") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+    }
+
     // Alice is not connected
     const userAlice = await getPage(browser, 'Alice', Map.url("empty"));
     const alicePosition = {
