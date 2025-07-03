@@ -11,8 +11,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     teams: {
         openingMeeting: "Ouverture de la réunion Teams...",
         unableJoinMeeting: "Impossible de rejoindre la réunion Teams !",
-        userNotConnected: "Vous n'êtes pas connecté à Teams !",
-        connectToYourTeams: "Connectez-vous à votre compte Teams 🙏",
+        userNotConnected: "Vous n'êtes pas syncronisé avec votre compte Outlook ou Google!",
+        connectToYourTeams: "Connectez-vous à votre compte Outllok ou Google 🙏",
         temasAppInfo:
             "Teams est une application Microsoft 365 qui aide votre équipe à rester connectée et organisée. Vous pouvez discuter, rencontrer, appeler et collaborer au même endroit 😍",
         buttonSync: "Synchroniser Teams 🚀",
