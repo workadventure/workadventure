@@ -5,7 +5,14 @@ import { getPage } from './utils/auth';
 import Menu from "./utils/menu";
 
 test.describe('Scripting space-related functions', () => {
+
     test('can join and watch space', async ({ browser}, { project }) => {
+        const apiContext = await request.newContext();
+        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
+        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
+        console.log({dumpBack : await dumpBack.text()});
+        console.log({dumpPusher :await dumpPusher.text()});
+
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
@@ -178,6 +185,8 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(1);
 
+
+
          await bob.close();
          await bob.context().close();
          await page.close();
@@ -189,8 +198,13 @@ test.describe('Scripting space-related functions', () => {
 
     // Récupère toutes les pages ouvertes dans le contexte
     const pages = context.pages();
-
     await expect.poll(() => pages.length).toBe(0);
+
+        const apiContext = await request.newContext();
+        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
+        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
+        console.log({dumpBack : await dumpBack.text()});
+        console.log({dumpPusher :await dumpPusher.text()});
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -212,9 +226,18 @@ test.describe('Scripting space-related functions', () => {
 
     test('cannot join a space with a different filter in 2 browsers', async ({ browser ,context}, { project }) => {
             // Récupère toutes les pages ouvertes dans le contexte
+    
     const pages = context.pages();
 
     await expect.poll(() => pages.length).toBe(0);
+
+        const apiContext = await request.newContext();
+        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
+        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
+        console.log({dumpBack : await dumpBack.text()});
+        console.log({dumpPusher :await dumpPusher.text()});
+
+
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
@@ -246,6 +269,12 @@ test.describe('Scripting space-related functions', () => {
     const pages = context.pages();
 
     await expect.poll(() => pages.length).toBe(0);
+
+    const apiContext = await request.newContext();
+    const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
+    const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
+    console.log({dumpBack : await dumpBack.text()});
+    console.log({dumpPusher :await dumpPusher.text()});
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -296,18 +325,25 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(0);
 
-         await bob.close();
-         await bob.context().close();
-         await page.close();
+        
+        await bob.close();
+        await bob.context().close();
+        await page.close();
          await page.context().close();
 
     });
 
     test('shoud reconnect to a space when back restarted ',async ({ browser, context}, { project })=>{
 
- const pages = context.pages();
+    const pages = context.pages();
 
     await expect.poll(() => pages.length).toBe(0);
+
+    const apiContext = await request.newContext();
+    const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
+    const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
+    console.log({dumpBack : await dumpBack.text()});
+    console.log({dumpPusher :await dumpPusher.text()});
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -346,11 +382,10 @@ test.describe('Scripting space-related functions', () => {
 
         // Delete spce connection in the back
         // This simulates a back restart, as the space connection will be closed
-        const apiContext = await request.newContext();
         await apiContext.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space&token=123');
 
-        await page.waitForTimeout(5000);
 
+        await page.waitForTimeout(5000);
 
         // Alice should see Bob's user
         await expect.poll(() => evaluateScript(page, async () => {
@@ -367,12 +402,12 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(0);
 
-         await bob.close();
-         await bob.context().close();
-         await page.close();
-         await page.context().close();
 
-
+        
+        await bob.close();
+        await bob.context().close();
+        await page.close();
+        await page.context().close();
 
     })
 });
