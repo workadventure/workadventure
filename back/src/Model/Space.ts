@@ -287,6 +287,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public canBeDeleted(): boolean {
+        debug(`${this.name} : canBeDeleted => size ${this.users.size}`);
         return this.users.size === 0;
     }
 

@@ -131,6 +131,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             });
 
             if (this._space._localConnectedUser.size === 0) {
+                debug(`>>>>>>${this._space.name} : space is empty, cleaning up`);
                 this._space.cleanup();
                 return;
             }
@@ -145,6 +146,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._space._localWatchers.delete(spaceUserId);
             if (this._space._localConnectedUser.size === 0) {
+                debug(`>>>>>> ${this._space.name} : space is empty, cleaning up`);
                 this._space.cleanup();
                 return;
             }
