@@ -115,6 +115,7 @@ export class SpaceConnection {
                                     } catch (e) {
                                         console.error("Error while retrying connection ...", e);
                                         Sentry.captureException(e);
+                                        this.cleanUpSpacePerBackId(backId);
                                     }
                                 }, 1000 * 60);
                                 break;
@@ -149,6 +150,7 @@ export class SpaceConnection {
                     //TODO : see if we retry the connection here or in the retryConnection method
                     console.error("Error while retrying connection ...", e);
                     Sentry.captureException(e);
+                    this.cleanUpSpacePerBackId(backId);
                 }
             });
     }
@@ -254,6 +256,15 @@ export class SpaceConnection {
                 });
             this.spaceStreamToBackPromises.delete(backId);
         }
+    }
+
+    private cleanUpSpacePerBackId(backId: number) {
+        this.spacePerBackId.get(backId)?.forEach((space) => {
+            space.handleConnectionRetryFailure();
+        });
+        this.spacePerBackId.delete(backId);
+        this.spaceStreamToBackPromises.delete(backId);
+        debug(`[SpaceConnection] spacePerBackId cleaned up for backId ${backId}`);
     }
 }
 

@@ -65,6 +65,7 @@ export interface SpaceInterface {
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
     sendLocalUsersToBack(): void;
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
+    handleConnectionRetryFailure(): void;
 }
 
 export class Space implements SpaceForSpaceConnectionInterface {
@@ -160,6 +161,14 @@ export class Space implements SpaceForSpaceConnectionInterface {
     public cleanup(): void {
         this.forwarder.leaveSpace();
         this.spaceConnection.removeSpace(this);
+        this._onSpaceEmpty(this);
+    }
+
+    /**
+     * Called when the retry to connect to the back server fails in SpaceConnection.
+     * This function should handle cleanup or notify the space that the connection cannot be established.
+     */
+    public handleConnectionRetryFailure() {
         this._onSpaceEmpty(this);
     }
 
