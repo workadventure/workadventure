@@ -62,7 +62,6 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emoteTween: Phaser.Tweens.Tween | null = null;
     private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
     private textsToBuild = new Map();
-    private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();

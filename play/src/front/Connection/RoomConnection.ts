@@ -121,7 +121,7 @@ import { localUserStore } from "./LocalUserStore";
 const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
@@ -197,6 +197,10 @@ export class RoomConnection implements RoomConnection {
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _websocketErrorStream = new Subject<Event>();
+    public readonly websocketErrorStream = this._websocketErrorStream.asObservable();
+    // Triggered if a "close" event is received from the WebSocket before a message is received
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
@@ -270,9 +274,6 @@ export class RoomConnection implements RoomConnection {
 
         const params = urlObj.searchParams;
         params.set("roomId", roomUrl);
-        if (token) {
-            params.set("token", token);
-        }
         params.set("name", name);
         for (const textureId of characterTextureIds) {
             params.append("characterTextureIds", textureId);
@@ -295,10 +296,16 @@ export class RoomConnection implements RoomConnection {
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
 
         const url = urlObj.toString();
+        let subProtocols: string[] | undefined = undefined;
+        if (token) {
+            // We abuse the subprotocols to pass the token to the server
+            subProtocols = [token];
+        }
+
         if (RoomConnection.websocketFactory) {
-            this.socket = RoomConnection.websocketFactory(url);
+            this.socket = RoomConnection.websocketFactory(url, subProtocols);
         } else {
-            this.socket = new WebSocket(url);
+            this.socket = new WebSocket(url, subProtocols);
         }
 
         this.socket.binaryType = "arraybuffer";
@@ -308,20 +315,7 @@ export class RoomConnection implements RoomConnection {
             this.resetPingTimeout();
         };
 
-        this.socket.addEventListener("close", (event) => {
-            console.info("Socket has been closed", this.userId, this.closed, event);
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-            }
-
-            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(event);
-                return;
-            }
-
-            this.cleanupConnection(event.code === 1000);
-        });
+        this.socket.addEventListener("close", this.handleSocketClose);
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
@@ -726,7 +720,29 @@ export class RoomConnection implements RoomConnection {
                 }
             }
         };
+
+        this.socket.addEventListener("error", this.handleSocketError);
     }
+
+    // Event handlers as arrow function in order not to have to bind this explicitly
+    private handleSocketClose = (event: CloseEvent) => {
+        console.info("Socket has been closed", this.userId, this.closed, event);
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+
+        // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+        if (this.userId === null && !this.closed) {
+            this._connectionErrorStream.next(event);
+            return;
+        }
+
+        this.cleanupConnection(event.code === 1000);
+    };
+
+    private handleSocketError = (event: Event) => {
+        this._websocketErrorStream.next(event);
+    };
 
     private cleanupConnection(isNormalClosure: boolean) {
         // Cleanup queries:
@@ -855,6 +871,8 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.socket?.removeEventListener("close", this.handleSocketClose);
+        this.socket?.removeEventListener("error", this.handleSocketError);
         this.closed = true;
     }
 
@@ -891,10 +909,6 @@ export class RoomConnection implements RoomConnection {
                 viewportMessage: this.toViewportMessage(viewport),
             },
         });
-    }
-
-    public onConnectError(callback: (error: Event) => void): void {
-        this.socket.addEventListener("error", callback);
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
@@ -1883,6 +1897,7 @@ export class RoomConnection implements RoomConnection {
         this._variableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
+        this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
         this._joinMucRoomMessageStream.complete();

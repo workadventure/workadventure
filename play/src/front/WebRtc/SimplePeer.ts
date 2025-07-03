@@ -208,8 +208,12 @@ export class SimplePeer {
         );
 
         peer.toClose = false;
+
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
+
+        // Event listener is valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("connect", () => {
             const streamResult = get(screenSharingLocalStreamStore);
             if (streamResult.type === "success" && streamResult.stream !== undefined) {

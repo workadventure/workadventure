@@ -18,6 +18,8 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable", () => {
     };
 });
 
+/* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
 describe("RoomApiServer", () => {
     beforeAll(() => {
         vi.mock("../../src/room-api/guards/AuthenticationGuard", () => {

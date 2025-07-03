@@ -288,6 +288,8 @@ declare global {
 
 window.WA = wa;
 
+// Event listener is valid for the lifetime of the object and will be garbage collected when the object is destroyed
+// eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
 window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
     if (message.source !== window.parent) {
         return; // Skip message in this event listener

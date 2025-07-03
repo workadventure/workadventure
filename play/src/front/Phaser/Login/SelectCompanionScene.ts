@@ -15,6 +15,9 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { ResizableScene } from "./ResizableScene";
 
+// Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
+/* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
 export class SelectCompanionScene extends ResizableScene {

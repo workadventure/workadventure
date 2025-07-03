@@ -81,6 +81,11 @@ spec:
                 name: {{ .Values.mapstorage.externalSecretName }}
             {{- end }}
           env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: SECRET_KEY
             - name: MAP_STORAGE_API_TOKEN
               valueFrom:
                 secretKeyRef:
