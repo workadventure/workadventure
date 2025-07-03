@@ -6,7 +6,7 @@ import { LiveKitService } from "../Services/LivekitService";
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private usersReady: string[] = [];
 
-    constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
+    constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
             console.error(`Error creating room ${this.space.getSpaceName()} on Livekit:`, error);
             Sentry.captureException(error);
@@ -14,9 +14,24 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
+        // First ensure the room exists before generating a token
         this.livekitService
-            .generateToken(this.space.getSpaceName(), user)
+            .createRoom(this.space.getSpaceName())
+            .then(() => {
+                return this.livekitService.generateToken(this.space.getSpaceName(), user);
+            })
             .then((token) => {
+                // Check if the user is still in the space before sending the invitation
+                const userStillInSpace = this.space.getAllUsers().some((u) => u.spaceUserId === user.spaceUserId);
+                if (!userStillInSpace) {
+                    console.warn(
+                        `LivekitCommunicationStrategy.addUser: User ${user.name} (${user.spaceUserId}) is no longer in the space, skipping invitation`
+                    );
+                    return;
+                }
+
+                const serverUrl = this.livekitService.getLivekitFrontendUrl();
+
                 this.space.dispatchPrivateEvent({
                     spaceName: this.space.getSpaceName(),
                     receiverUserId: user.spaceUserId,
@@ -26,7 +41,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                             $case: "livekitInvitationMessage",
                             livekitInvitationMessage: {
                                 token: token,
-                                serverUrl: this.livekitService.getLivekitFrontendUrl(),
+                                serverUrl: serverUrl,
                                 shouldJoinRoomImmediately: !switchInProgress,
                             },
                         },
@@ -34,7 +49,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 });
             })
             .catch((error) => {
-                console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
+                console.error(
+                    `LivekitCommunicationStrategy.addUser: Error adding user ${user.name} (${user.spaceUserId}) to Livekit:`,
+                    error
+                );
                 Sentry.captureException(error);
             });
     }
@@ -65,7 +83,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
     initialize(readyUsers: Set<string>): void {
         const users = this.space.getAllUsers().filter((user) => !readyUsers.has(user.spaceUserId));
-        console.log(">>> initialize livekit with ", users.length, " users");
         users.forEach((user) => {
             this.addUser(user, false);
         });

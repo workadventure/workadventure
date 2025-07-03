@@ -15,6 +15,7 @@ export enum CommunicationType {
 export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoom: LiveKitRoom | undefined;
+
     constructor(private space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
         this.initialize();
     }
@@ -35,10 +36,7 @@ export class LivekitConnection {
                                     console.error("An error occurred in executeSwitchMessage", err);
                                     Sentry.captureException(err);
                                 })
-                                .finally(() => {
-                                    console.log(">>>> joinLivekitRoom");
-                                    console.timeEnd(">>>> joinLivekitRoom");
-                                });
+                                .finally(() => {});
                         } else {
                             this.space.emitPrivateMessage(
                                 {
@@ -71,44 +69,62 @@ export class LivekitConnection {
         );
     }
 
-    async joinRoom() {
+    async joinRoom(): Promise<void> {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
             throw new Error("LivekitRoom not found");
         }
 
-        await this.livekitRoom.joinRoom();
+        try {
+            await this.livekitRoom.joinRoom();
+        } catch (err) {
+            console.error("Error joining Livekit room:", err);
+            Sentry.captureException(err);
+            throw err;
+        }
     }
 
     async dispatchSound(url: URL): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
-            throw new Error("LivekitRoom not found");
+            console.error("LivekitRoom not found for dispatchSound");
+            throw new Error("LivekitRoom not found for dispatchSound");
         }
 
-        await this.livekitRoom.dispatchSound(url);
+        try {
+            await this.livekitRoom.dispatchSound(url);
+        } catch (err) {
+            console.error("Error dispatching sound to Livekit room:", err);
+            Sentry.captureException(err);
+            throw err;
+        }
     }
 
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
-            throw new Error("LivekitRoom not found");
+            console.error("LivekitRoom not found for dispatchStream");
+            throw new Error("LivekitRoom not found for dispatchStream");
         }
 
-        await this.livekitRoom.dispatchStream(mediaStream);
+        try {
+            await this.livekitRoom.dispatchStream(mediaStream);
+        } catch (err) {
+            console.error("Error dispatching stream to Livekit room:", err);
+            Sentry.captureException(err);
+            throw err;
+        }
     }
 
     destroy() {
         if (!this.livekitRoom) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
             return;
         }
 
-        this.livekitRoom.destroy();
+        try {
+            this.livekitRoom.destroy();
+        } catch (err) {
+            console.error("Error destroying Livekit room:", err);
+            Sentry.captureException(err);
+        }
 
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();
