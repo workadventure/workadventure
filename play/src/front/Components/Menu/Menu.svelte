@@ -96,6 +96,9 @@
                     break;
             }
         } else {
+            // Save custom menu click for analytics
+            analyticsClient.menuCustom(menu.key);
+
             const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
                 activeSubMenu = menu;
