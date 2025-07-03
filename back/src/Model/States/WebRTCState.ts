@@ -6,6 +6,8 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { adminApi } from "../../Services/AdminApi";
 import { getCapability } from "../../Services/Capabilities";
+import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
+import { LIVEKIT_HOST, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../../Enum/EnvironmentVariable";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { LivekitState } from "./LivekitState";
 
@@ -62,11 +64,17 @@ export class WebRTCState extends CommunicationState {
     private switchToNextState(user: SpaceUser): void {
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;
+            let res;
             if (getCapability("api/livekit/credentials")) {
-                const res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
+                res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
                 nextState = new LivekitState(this._space, this._communicationManager, res);
             } else {
-                nextState = new LivekitState(this._space, this._communicationManager);
+                res = LivekitCredentialsResponse.parse({
+                    livekitHost: LIVEKIT_HOST,
+                    livekitApiKey: LIVEKIT_API_KEY,
+                    livekitApiSecret: LIVEKIT_API_SECRET,
+                });
+                nextState = new LivekitState(this._space, this._communicationManager, res); //fallback to default credentials
             }
             this._readyUsers.add(user.spaceUserId);
             try {
