@@ -31,6 +31,30 @@
     let screenWakeRelease: (() => Promise<void>) | undefined;
     let jistiMeetLoadedPromise: CancelablePromise<void>;
 
+    // Event handlers as named functions to enable proper cleanup
+    const onVideoConferenceJoined = () => {
+        jitsiApi.executeCommand("displayName", playerName);
+        jitsiApi.executeCommand("avatarUrl", get(currentPlayerWokaStore));
+        jitsiApi.executeCommand("setNoiseSuppressionEnabled", {
+            enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
+        });
+
+        screenWakeLock
+            .requestWakeLock()
+            .then((release) => (screenWakeRelease = release))
+            .catch((error) => console.error(error));
+
+        updateParticipantsCountStore();
+    };
+
+    const onVideoConferenceLeft = () => {
+        coWebsites.remove(actualCowebsite);
+    };
+
+    const onReadyToClose = () => {
+        coWebsites.remove(actualCowebsite);
+    };
+
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
             userIsJitsiDominantSpeakerStore.set(data.id === getCurrentParticipantId(jitsiApi.getParticipantsInfo()));
@@ -114,20 +138,7 @@
 
                     jitsiApi = new window.JitsiMeetExternalAPI(new URL(domain).hostname, options);
 
-                    jitsiApi.addListener("videoConferenceJoined", () => {
-                        jitsiApi.executeCommand("displayName", playerName);
-                        jitsiApi.executeCommand("avatarUrl", get(currentPlayerWokaStore));
-                        jitsiApi.executeCommand("setNoiseSuppressionEnabled", {
-                            enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
-                        });
-
-                        screenWakeLock
-                            .requestWakeLock()
-                            .then((release) => (screenWakeRelease = release))
-                            .catch((error) => console.error(error));
-
-                        updateParticipantsCountStore();
-                    });
+                    jitsiApi.addListener("videoConferenceJoined", onVideoConferenceJoined);
 
                     jitsiApi.addListener("audioMuteStatusChanged", onAudioChange);
                     jitsiApi.addListener("videoMuteStatusChanged", onVideoChange);
@@ -145,13 +156,9 @@
                         }
 
                         if (jitsiApi) {
-                            jitsiApi.addListener("videoConferenceLeft", () => {
-                                coWebsites.remove(actualCowebsite);
-                            });
+                            jitsiApi.addListener("videoConferenceLeft", onVideoConferenceLeft);
 
-                            jitsiApi.addListener("readyToClose", () => {
-                                coWebsites.remove(actualCowebsite);
-                            });
+                            jitsiApi.addListener("readyToClose", onReadyToClose);
                         } else {
                             console.error("No iframe or no jitsiApi. We may have a problem.");
                         }
@@ -169,18 +176,15 @@
         jistiMeetLoadedPromise.cancel();
 
         if (jitsiApi) {
+            jitsiApi.removeListener("videoConferenceJoined", onVideoConferenceJoined);
             jitsiApi.removeListener("audioMuteStatusChanged", onAudioChange);
             jitsiApi.removeListener("videoMuteStatusChanged", onVideoChange);
             jitsiApi.removeListener("dominantSpeakerChanged", onDominantSpeakerChanged);
             jitsiApi.removeListener("participantJoined", onParticipantsCountChange);
             jitsiApi.removeListener("participantLeft", onParticipantsCountChange);
             jitsiApi.removeListener("participantKickedOut", onParticipantsCountChange);
-            jitsiApi.removeListener("videoConferenceLeft", () => {
-                coWebsites.remove(actualCowebsite);
-            });
-            jitsiApi.removeListener("readyToClose", () => {
-                coWebsites.remove(actualCowebsite);
-            });
+            jitsiApi.removeListener("videoConferenceLeft", onVideoConferenceLeft);
+            jitsiApi.removeListener("readyToClose", onReadyToClose);
             jitsiApi.dispose();
         }
 
