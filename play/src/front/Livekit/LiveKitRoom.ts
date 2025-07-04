@@ -24,6 +24,7 @@ import { SpaceInterface } from "../Space/SpaceInterface";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
+import {SpaceUserExtended} from "../Space/SpaceFilter/SpaceFilter";
 export class LiveKitRoom {
     private room: Room | undefined;
     private localParticipant: LocalParticipant | undefined;
@@ -309,6 +310,25 @@ export class LiveKitRoom {
     }
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
+        let priority = 0;
+
+        for (const speaker of speakers) {
+            const extendedVideoStream = this.space.videoStreamStore.get(speaker.identity);
+            if (extendedVideoStream) {
+                extendedVideoStream.priority = priority;
+            }
+            priority++;
+        }
+
+        // Let's trigger an update onf the space's videoStreamStore to reorder the view
+        // To do so, we just take the first element of the map and put it back in the store at the same key.
+        const firstEntry = this.space.videoStreamStore.entries().next();
+        if (!firstEntry.done) {
+            const [key, value] = firstEntry.value;
+            this.space.videoStreamStore.set(key, value);
+        }
+
+
         //TODO : revoir impl iteration sur tout les participants a chaque fois
         console.log("active speakers", speakers);
         this.participants.forEach((participant) => {
