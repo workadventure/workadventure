@@ -37,7 +37,7 @@ export class SpaceConnection {
 
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
-        //TODO: Throw an error if we are trying to join a space that is already joined ??
+
         if (this.spacePerBackId.has(backId)) {
             this.spacePerBackId.get(backId)?.set(space.name, space);
         } else {
@@ -57,11 +57,22 @@ export class SpaceConnection {
     }
 
     private async createBackConnection(space: SpaceForSpaceConnectionInterface, backId: number) {
-        const apiSpaceClient = await this._apiClientRepository.getSpaceClient(space.name, this._GRPC_MAX_MESSAGE_SIZE);
-        await this._apiClientRepository.waitForClientReady(apiSpaceClient);
-        const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
-        this.registerEventsOnConnection(spaceStreamToBack, backId, apiSpaceClient);
-        return spaceStreamToBack;
+        try {
+            const apiSpaceClient = await this._apiClientRepository.getSpaceClient(
+                space.name,
+                this._GRPC_MAX_MESSAGE_SIZE
+            );
+            const spaceStreamToBack = apiSpaceClient.watchSpace() as BackSpaceConnection;
+            this.registerEventsOnConnection(spaceStreamToBack, backId, apiSpaceClient);
+            return spaceStreamToBack;
+        } catch (error) {
+            console.error("Error while creating back connection", error);
+            return new Promise<BackSpaceConnection>((resolve) => {
+                setTimeout(() => {
+                    resolve(this.createBackConnection(space, backId));
+                }, 5000 * 10);
+            });
+        }
     }
 
     private registerEventsOnConnection(
@@ -136,10 +147,6 @@ export class SpaceConnection {
                 debug("[space] spaceStreamsToBack ended");
                 if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
             })
-            .on("status", (status) => {
-                console.log("status : ", status);
-                //voir si on peut gerer la fin de la connexion ici
-            })
             .on("error", (err: Error) => {
                 if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
                 console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
@@ -147,7 +154,6 @@ export class SpaceConnection {
                 try {
                     this.retryConnection(backId);
                 } catch (e) {
-                    //TODO : see if we retry the connection here or in the retryConnection method
                     console.error("Error while retrying connection ...", e);
                     Sentry.captureException(e);
                     this.cleanUpSpacePerBackId(backId);

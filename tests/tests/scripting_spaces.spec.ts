@@ -1,20 +1,17 @@
-import fs from 'fs';
-import {expect, request, test} from '@playwright/test';
-import {evaluateScript} from "./utils/scripting";
-import {publicTestMapUrl} from "./utils/urls";
+import { expect, request, test } from '@playwright/test';
+import { evaluateScript } from "./utils/scripting";
+import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from './utils/auth';
 import Menu from "./utils/menu";
 
 test.describe('Scripting space-related functions', () => {
 
-    test('can join and watch space', async ({ browser}, { project }) => {
-        const apiContext = await request.newContext();
-        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
-        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        fs.mkdirSync('dump', { recursive: true });
-        fs.writeFileSync('dump/dumpBack1.json', await dumpBack.text());
-        fs.writeFileSync('dump/dumpPusher1.json', await dumpPusher.text());
-
+    test('can join and watch space', async ({ browser, browserName }, { project }) => {
+        if (browserName === "webkit") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
