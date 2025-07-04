@@ -1,5 +1,5 @@
 import { ChatUser } from "../Connection/ChatConnection";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../../Space/SpaceInterface";
 
 export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUser {
     return {

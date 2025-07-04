@@ -5,7 +5,7 @@ import { Deferred } from "ts-deferred";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { TrackWrapper } from "../Common/TrackWrapper";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../../Space/SpaceInterface";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper implements TrackWrapper {

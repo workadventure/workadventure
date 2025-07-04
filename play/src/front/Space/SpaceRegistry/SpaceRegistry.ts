@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/svelte";
+import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
 import { SpaceInterface } from "../SpaceInterface";
@@ -24,7 +25,6 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitPublicSpaceEvent"
     | "emitRemoveSpaceFilter"
     | "emitAddSpaceFilter"
-    | "emitUpdateSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
@@ -51,38 +51,34 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         private connectStream = connectionManager.roomConnectionStream
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
-            if (!message.user || !message.filterName) {
+            if (!message.user) {
                 console.error(message);
-                throw new Error("addSpaceUserMessage is missing a user or a filterName");
+                throw new Error("addSpaceUserMessage is missing a user");
             }
 
             this.spaces
                 .get(message.spaceName)
-                ?.getSpaceFilter(message.filterName)
-                .addUser(message.user)
+                ?.addUser(message.user)
                 .catch((e) => console.error(e));
         });
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.user || !message.filterName || !message.updateMask) {
-                    throw new Error("updateSpaceUserMessage is missing a user or a filterName or an updateMask");
+                if (!message.user || !message.updateMask) {
+                    throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
-                this.spaces
-                    .get(message.spaceName)
-                    ?.getSpaceFilter(message.filterName)
-                    .updateUserData(message.user, message.updateMask);
+                this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
             }
         );
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.spaceUserId || !message.filterName) {
-                    throw new Error("removeSpaceUserMessage is missing a spaceUserId or a filterName");
+                if (!message.spaceUserId) {
+                    throw new Error("removeSpaceUserMessage is missing a spaceUserId");
                 }
 
-                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.spaceUserId);
+                this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
             }
         );
 
@@ -136,26 +132,30 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            this.reconnect(connection);
+            this.reconnect(connection).catch((e) => console.error(e));
         });
     }
 
-    joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
+    async joinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        metadata: Map<string, unknown> = new Map<string, unknown>()
+    ): Promise<SpaceInterface> {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection);
+        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
     exist(spaceName: string): boolean {
         return this.spaces.has(spaceName);
     }
-    leaveSpace(space: SpaceInterface): void {
+    async leaveSpace(space: SpaceInterface): Promise<void> {
         const spaceName = space.getName();
         const spaceInRegistry = this.spaces.get(spaceName);
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        spaceInRegistry.destroy();
+        await spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
@@ -169,16 +169,24 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    reconnect(connection: RoomConnectionForSpacesInterface) {
+    async reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
-        this.spaces.forEach((space) => {
-            this.leaveSpace(space);
-            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
-            this.spaces.set(newSpace.getName(), newSpace);
-        });
+        const spacesArray = Array.from(this.spaces.values());
+        await Promise.all(
+            spacesArray.map(async (space) => {
+                await this.leaveSpace(space);
+                const newSpace = await Space.create(
+                    space.getName(),
+                    space.filterType,
+                    this.roomConnection,
+                    space.getMetadata()
+                );
+                this.spaces.set(newSpace.getName(), newSpace);
+            })
+        );
     }
 
-    destroy() {
+    async destroy() {
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
@@ -190,11 +198,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         // Technically, all spaces should have been destroyed by now.
         // If a space is not destroyed, it means that there is a bug in the code.
-        for (const space of this.spaces.values()) {
-            space.destroy();
-            console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-            Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
-        }
+        await Promise.all(
+            Array.from(this.spaces.values()).map(async (space) => {
+                await space.destroy();
+                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+            })
+        );
+
         this.spaces.clear();
     }
 }

@@ -13,9 +13,9 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -64,7 +64,7 @@ export class VideoPeer extends Peer implements Streamable {
         initiator: boolean,
         public readonly player: RemotePlayerData,
         private connection: RoomConnection,
-        private spaceFilter: Promise<SpaceFilterInterface>
+        private space: Promise<SpaceInterface>
     ) {
         const bandwidth = get(videoBandwidthStore);
         super({
@@ -367,7 +367,7 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const spaceFilter = await this.spaceFilter;
+        const spaceFilter = await this.space;
         return lookupUserById(this.userId, spaceFilter, 30_000);
     }
 

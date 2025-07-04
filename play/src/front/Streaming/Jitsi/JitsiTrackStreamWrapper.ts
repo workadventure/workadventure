@@ -2,9 +2,9 @@ import { derived, get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import * as Sentry from "@sentry/svelte";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackStreamable, MediaStoreStreamable, Streamable } from "../../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../../WebRtc/VideoPeer";
+import { SpaceUserExtended } from "../../Space/SpaceInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 
 export interface JitsiTrackExt extends JitsiTrack {

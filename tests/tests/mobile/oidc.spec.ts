@@ -53,5 +53,8 @@ test.describe('OpenId connect @oidc mobile', () => {
             await WA.nav.goToLogin();
         });
         await expect(page.locator('#Input_Username')).toBeVisible();
+
+        await page.close();
+        await page.context().close();
     });
 });
