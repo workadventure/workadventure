@@ -789,6 +789,9 @@ export class GameScene extends DirtyScene {
         }
 
         this.animatedTiles.init(this.Map);
+
+        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         this.events.on("tileanimationupdate", () => (this.dirty = true));
         if (localUserStore.getDisableAnimations()) {
             this.animatedTiles.pause();
@@ -1504,6 +1507,7 @@ export class GameScene extends DirtyScene {
             }
         }
 
+        // TODO: remove support for these objects. They have been superseded by variables and scripting and entities for a long time.
         for (const [itemType, objectsOfType] of this.objectsByType) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
@@ -1524,6 +1528,8 @@ export class GameScene extends DirtyScene {
             itemFactory.preload(this.load);
             this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
 
+            // Note: the code below is probably wrong, but not used anymore.
+            // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
             this.load.on("complete", () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
@@ -3050,13 +3056,22 @@ ${escapedMessage}
                     //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
                     newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
                 }
+
                 return new Promise((resolve, reject) => {
-                    this.load.on("filecomplete-json-" + eventTileset.url, () => {
+                    const errorHandler = (file: Phaser.Loader.File) => {
+                        if (file.src === eventTileset.url) {
+                            console.error("Error while loading " + eventTileset.url + ".");
+                            reject(new Error("Error while loading " + eventTileset.url + "."));
+                        }
+                        this.load.off("loaderror", errorHandler);
+                    };
+
+                    this.load.once("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
                         const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
 
                         this.load.image(imageUrl, imageUrl);
-                        this.load.on("filecomplete-image-" + imageUrl, () => {
+                        this.load.once("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
                             jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
                             this.mapFile.tilesets.push(jsonTileset);
@@ -3107,13 +3122,9 @@ ${escapedMessage}
                             new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
                             resolve(newFirstgid);
                         });
+                        this.load.off("loaderror", errorHandler);
                     });
-                    this.load.on("loaderror", (file: Phaser.Loader.File) => {
-                        if (file.src === eventTileset.url) {
-                            console.error("Error while loading " + eventTileset.url + ".");
-                            reject(new Error("Error while loading " + eventTileset.url + "."));
-                        }
-                    });
+                    this.load.on("loaderror", errorHandler);
 
                     this.load.json(eventTileset.url, eventTileset.url);
                     this.load.start();

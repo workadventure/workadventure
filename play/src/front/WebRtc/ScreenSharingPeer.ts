@@ -73,6 +73,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
+        // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
         this.on("data", (chunk: Buffer) => {
             try {
                 const data = JSON.parse(chunk.toString("utf8"));

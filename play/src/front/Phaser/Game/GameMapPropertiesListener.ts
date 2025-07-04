@@ -180,17 +180,8 @@ export class GameMapPropertiesListener {
                 if (domain === undefined) {
                     throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
                 }
-
-                let domainWithoutProtocol = domain;
-                if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                    domainWithoutProtocol = domain;
-                    domain = `${location.protocol}//${domain}`;
-                } else {
-                    if (domain.startsWith("http://")) {
-                        domainWithoutProtocol = domain.substring(7);
-                    } else {
-                        domainWithoutProtocol = domain.substring(8);
-                    }
+                if (!domain.startsWith("http")) {
+                    domain = "https://" + domain;
                 }
 
                 inJitsiStore.set(true);
@@ -230,7 +221,6 @@ export class GameMapPropertiesListener {
                     jwt,
                     jitsiConfig,
                     jitsiInterfaceConfig,
-                    domainWithoutProtocol,
                     jitsiRoomAdminTag
                 );
 

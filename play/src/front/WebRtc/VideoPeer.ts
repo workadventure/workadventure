@@ -134,6 +134,9 @@ export class VideoPeer extends Peer implements Streamable {
             return !$constraintStore?.audio;
         });
 
+        // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);

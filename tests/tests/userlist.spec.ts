@@ -86,7 +86,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     };
     await Map.teleportToPosition(userAlice, alicePosition.x, alicePosition.y);
     
-    const userUserLogin1 = await getPage(browser, 'UserLogin1', Map.url("empty"));
+    const userUserLogin1 = await getPage(browser, 'Member1', Map.url("empty"));
     await chatUtils.open(userUserLogin1, false);
     await chatUtils.slideToUsers(userUserLogin1);
     // Click on chat button

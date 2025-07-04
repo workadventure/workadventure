@@ -243,7 +243,7 @@ export class FrontController extends BaseHttpController {
                 accessKey,
                 AUTOLOGIN_URL,
             });
-            res.type("html").send(html);
+            res.set("Cache-Control", "no-cache").type("html").send(html);
             return;
         }
 
@@ -283,7 +283,7 @@ export class FrontController extends BaseHttpController {
             console.info(`Cannot render metatags on "%"`, url, e);
         }
 
-        res.type("html").send(html);
+        res.set("Cache-Control", "no-cache").type("html").send(html);
         return;
     }
 

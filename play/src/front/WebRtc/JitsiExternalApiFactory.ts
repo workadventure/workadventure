@@ -1,18 +1,21 @@
 class JitsiExternalApiFactory {
     private loadingPromise: Promise<void> | undefined;
 
+    public getJitsiApiUrl(domain: string): string {
+        if (!domain.startsWith("https://") && !domain.startsWith("http://")) {
+            domain = "https://" + domain;
+        }
+        return domain + "/external_api.js";
+    }
+
     public loadJitsiScript(domain: string): Promise<void> {
         if (this.loadingPromise) {
             return this.loadingPromise;
         }
 
         return (this.loadingPromise = new Promise<void>((resolve, reject) => {
-            // Load Jitsi if the environment variable is set.
             const jitsiScript = document.createElement("script");
-            if (!domain.startsWith("https://")) {
-                domain = "https://" + domain;
-            }
-            jitsiScript.src = domain + "/external_api.js";
+            jitsiScript.src = this.getJitsiApiUrl(domain);
             jitsiScript.onload = () => {
                 resolve();
             };
