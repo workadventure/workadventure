@@ -34,7 +34,7 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // Texture handling
     private generatedTextureKey: string | null = null;
     // Whether the bubble is currently wobbling
-    private _isAnimating: boolean = false;
+    private _isAnimating: boolean = true;
 
     constructor(scene: GameScene, x: number, y: number, locked: boolean, userIds: number[]) {
         super(scene, x, y, "");
