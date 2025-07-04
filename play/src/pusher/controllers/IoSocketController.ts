@@ -53,7 +53,6 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     constructor(private readonly app: TemplatedApp) {
-        
         // Global handler for unhandled Promises
         // The listener never needs to be removed, because we are in a singleton that is never destroyed.
         // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
