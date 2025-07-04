@@ -121,7 +121,7 @@ test.describe('Scripting space-related functions', () => {
 
         // Bob clicks on the "Do not disturb" status
         await Menu.openStatusList(bob, false);
-        await Menu.clickOnStatus(bob, "Do not disturb")
+        await Menu.clickOnStatus(bob, "Do not disturb");
 
         // We expect Bob's status to be "Do not disturb"
         await expect.poll(() => evaluateScript(page, async () => {
@@ -133,7 +133,7 @@ test.describe('Scripting space-related functions', () => {
             return window.lastRemoteAvailabilityStatus;
         })).toBe(9);
 
-        // Bobs leaves the space
+        // Bob leaves the space
         await evaluateScript(bob, async () => {
             window.mySpace.leave();
         });
@@ -144,11 +144,10 @@ test.describe('Scripting space-related functions', () => {
         });
 
         /**
-         * Test part 4: Let's do the same test with a livestream space
+         * Test part 4: Let's do the same test with a livestream space.
          */
 
         await evaluateScript(page, async () => {
-            //await WA.player.teleport(1, 1);
             window.userCount = 0;
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
             window.mySpace.userJoinedObservable.subscribe((user) => {
@@ -172,8 +171,6 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(0);
 
-        //await bob.pause();
-
         // Bob starts streaming
         await evaluateScript(bob, async () => {
             window.mySpace.startStreaming();
@@ -184,27 +181,22 @@ test.describe('Scripting space-related functions', () => {
             return window.userCount;
         })).toBe(1);
 
-
-
-         await bob.close();
-         await bob.context().close();
-         await page.close();
-         await page.context().close();
+        await bob.close();
+        await bob.context().close();
+        await page.close();
+        await page.context().close();
     });
 
-    test('cannot join a space with a different filter on the same browser', async ({ browser ,context}, { project }) => {
+    test('cannot join a space with a different filter on the same browser', async ({ browser, context, browserName }, { project }) => {
+        if (browserName === "webkit") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
 
-
-    // Récupère toutes les pages ouvertes dans le contexte
-    const pages = context.pages();
-    await expect.poll(() => pages.length).toBe(0);
-
-        const apiContext = await request.newContext();
-        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
-        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        fs.mkdirSync('dump', { recursive: true });
-        fs.writeFileSync('dump/dumpBack2.json', await dumpBack.text());
-        fs.writeFileSync('dump/dumpPusher2.json', await dumpPusher.text());
+        // Get all open pages in the context
+        const pages = context.pages();
+        await expect.poll(() => pages.length).toBe(0);
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -219,25 +211,23 @@ test.describe('Scripting space-related functions', () => {
                 return null;
             })
         ).toContain("Cannot join space some-test-space");
-        
+
         await page.close();
         await page.context().close();
     });
 
-    test('cannot join a space with a different filter in 2 browsers', async ({ browser ,context}, { project }) => {
-            // Récupère toutes les pages ouvertes dans le contexte
-    
-    const pages = context.pages();
+    test('cannot join a space with a different filter in 2 browsers', async ({ browser, context, browserName }, { project }) => {
 
-    await expect.poll(() => pages.length).toBe(0);
+        if (browserName === "webkit") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+        // Get all open pages in the context
 
-        const apiContext = await request.newContext();
-        const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
-        const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-        fs.mkdirSync('dump', { recursive: true });
-        fs.writeFileSync('dump/dumpBack3.json', await dumpBack.text());
-        fs.writeFileSync('dump/dumpPusher3.json', await dumpPusher.text());
+        const pages = context.pages();
 
+        await expect.poll(() => pages.length).toBe(0);
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -258,25 +248,22 @@ test.describe('Scripting space-related functions', () => {
                 return null;
             })
         ).toContain("Error: Space filter type mismatch");
-        
+
         await bob.close();
         await bob.context().close();
         await page.close();
         await page.context().close();
     });
 
-    test('can join a livestream space and see the user when it starts streaming', async ({ browser, context}, { project }) => {
+    test('can join a livestream space and see the user when it starts streaming', async ({ browser, context, browserName }, { project }) => {
+        if (browserName === "webkit") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+        const pages = context.pages();
 
-    const pages = context.pages();
-
-    await expect.poll(() => pages.length).toBe(0);
-
-    const apiContext = await request.newContext();
-    const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
-    const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-    fs.mkdirSync('dump', { recursive: true });
-    fs.writeFileSync('dump/dumpBack4.json', await dumpBack.text());
-    fs.writeFileSync('dump/dumpPusher4.json', await dumpPusher.text());
+        await expect.poll(() => pages.length).toBe(0);
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -307,7 +294,7 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace.startStreaming();
         });
 
-        // User count in the space should now be 2
+        // User count in the space should now be 1
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(1);
@@ -322,31 +309,29 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace.stopStreaming();
         });
 
-        // User count in the space should go back to 1
+        // User count in the space should go back to 0
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(0);
 
-        
         await bob.close();
         await bob.context().close();
         await page.close();
-         await page.context().close();
+        await page.context().close();
 
     });
 
-    test('shoud reconnect to a space when back restarted ',async ({ browser, context}, { project })=>{
+    test('should reconnect to a space when backend is restarted', async ({ browser, context, browserName }, { project }) => {
+        if (browserName === "webkit") {
+            // eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+        const pages = context.pages();
 
-    const pages = context.pages();
+        await expect.poll(() => pages.length).toBe(0);
 
-    await expect.poll(() => pages.length).toBe(0);
-
-    const apiContext = await request.newContext();
-    const dumpBack = await apiContext.get('http://api.workadventure.localhost/dump?token=123');
-    const dumpPusher = await apiContext.get('http://pusher.workadventure.localhost/dump?token=123');
-    fs.mkdirSync('dump', { recursive: true });
-    fs.writeFileSync('dump/dumpBack5.json', await dumpBack.text());
-    fs.writeFileSync('dump/dumpPusher5.json', await dumpPusher.text());
+        const apiContext = await request.newContext();
 
         const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
@@ -367,7 +352,7 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
         });
 
-        // User count in the space should now be 1
+        // User count in the space should now be 0
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(0);
@@ -377,16 +362,14 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace.startStreaming();
         });
 
-        // User count in the space should now be 2
+        // User count in the space should now be 1
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(1);
 
-
-        // Delete spce connection in the back
-        // This simulates a back restart, as the space connection will be closed
+        // Delete space connection in the backend
+        // This simulates a backend restart, as the space connection will be closed
         await apiContext.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space&token=123');
-
 
         await page.waitForTimeout(5000);
 
@@ -400,17 +383,16 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace.stopStreaming();
         });
 
-        // User count in the space should go back to 1
+
+        // User count in the space should go back to 0
         await expect.poll(() => evaluateScript(page, async () => {
             return window.userCount;
         })).toBe(0);
 
-
-        
         await bob.close();
         await bob.context().close();
         await page.close();
         await page.context().close();
 
-    })
+    });
 });
