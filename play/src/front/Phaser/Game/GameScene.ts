@@ -1244,8 +1244,8 @@ export class GameScene extends DirtyScene {
             player.updatePosition(moveEvent);
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
-        if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame) {
-            for (const group of this.groups.values()) {
+        for (const group of this.groups.values()) {
+            if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame || group.isAnimating) {
                 group.step();
             }
         }
