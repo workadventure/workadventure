@@ -20,7 +20,7 @@ import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
 import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../SpaceInterface";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 

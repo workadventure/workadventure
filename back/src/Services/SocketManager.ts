@@ -356,7 +356,6 @@ export class SocketManager {
             this.cleanupRoomIfEmpty(room);
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
-            console.log("A user left");
         }
     }
 
@@ -417,7 +416,7 @@ export class SocketManager {
         const user = await room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " A user joined");
+
         return { room, user };
     }
 
@@ -948,7 +947,7 @@ export class SocketManager {
             userID: user.id,
             joinViaHtml5: true,
         });
-        console.log(
+        debug(
             `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
                 isAdmin ? "Admin" : "Participant"
             }.`
@@ -1670,7 +1669,6 @@ export class SocketManager {
         if (!spaceQueryMessage.query) {
             console.error("SpaceQueryMessage has no query");
             Sentry.captureException("SpaceQueryMessage has no query");
-            //TODO : renvoyer un message d'erreur au client ?? et avec l'id de la query ?
             return;
         }
 
@@ -1688,7 +1686,6 @@ export class SocketManager {
             });
 
             if (space.canBeDeleted()) {
-                console.log("handleSpaceQueryMessage space can be deleted", space.name);
                 debug("[space] Space %s => deleted", space.name);
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);

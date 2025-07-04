@@ -1,7 +1,6 @@
 import { Unsubscriber } from "svelte/store";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { SpaceInterface } from "../SpaceInterface";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
 
 /**
  * Waits for the user whose id is "id" to be present in the space.

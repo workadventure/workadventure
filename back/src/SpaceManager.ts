@@ -96,10 +96,6 @@ const spaceManager = {
                 Sentry.captureException(`Error on watchSpace ${JSON.stringify(e)}`);
                 socketManager.handleUnwatchAllSpaces(pusher);
             })
-            .on("status", (status) => {
-                // Le status est toujours appelé ; on pourrait peut-être gérer la fin de la connexion ici si besoin.
-                console.log("status : ", status);
-            })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);
                 pusher.end();

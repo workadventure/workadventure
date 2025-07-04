@@ -53,7 +53,7 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     constructor(private readonly app: TemplatedApp) {
-        // Gestionnaire global pour les Promises non gérées
+        // Global handler for unhandled Promises
         process.on("unhandledRejection", (reason, promise) => {
             console.error("Unhandled Rejection at:", promise, "reason:", reason);
             Sentry.captureException(reason);
@@ -1024,7 +1024,6 @@ export class IoSocketController {
                             message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.publicEvent.spaceName
                             }`;
-                            //TODO : handle error
                             await socketManager.handlePublicEvent(socket, message.message.publicEvent);
                             break;
                         }
@@ -1032,7 +1031,6 @@ export class IoSocketController {
                             message.message.privateEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.privateEvent.spaceName
                             }`;
-                            //TODO : handle error
                             await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                             break;
                         }

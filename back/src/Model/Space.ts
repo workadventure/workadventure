@@ -62,15 +62,6 @@ export class Space implements CustomJsonReplacerInterface {
             // So we need to remove user from the source watcher
             this.removeUser(sourceWatcher, spaceUser.spaceUserId);
             throw e;
-            // this.notifyWatchers({
-            //     message: {
-            //         $case: "removeSpaceUserMessage",
-            //         removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-            //             spaceName: this.name,
-            //             spaceUserId: spaceUser.spaceUserId,
-            //         }),
-            //     },
-            // });
         }
     }
 
@@ -139,15 +130,6 @@ export class Space implements CustomJsonReplacerInterface {
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
             this.removeUser(sourceWatcher, spaceUser.spaceUserId);
-            // this.notifyWatchers({
-            //     message: {
-            //         $case: "removeSpaceUserMessage",
-            //         removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-            //             spaceName: this.name,
-            //             spaceUserId: spaceUser.spaceUserId,
-            //         }),
-            //     },
-            // });
         }
     }
 
@@ -156,11 +138,6 @@ export class Space implements CustomJsonReplacerInterface {
             const usersList = this.usersList(sourceWatcher);
             usersList.delete(spaceUserId);
             debug(`${this.name} : user => removed ${spaceUserId}`);
-
-            // if (usersList.size === 0) {
-            //     debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
-            //     this.users.delete(sourceWatcher);
-            // }
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
@@ -234,7 +211,6 @@ export class Space implements CustomJsonReplacerInterface {
             metadata[key] = this.metadata.get(key);
         }
 
-        //TODO : see if during the lost connection, the metadata is lost ????
         watcher.write({
             message: {
                 $case: "updateSpaceMetadataMessage",
@@ -250,12 +226,6 @@ export class Space implements CustomJsonReplacerInterface {
         const spaceUsers = this.users.get(watcher);
 
         this.users.delete(watcher);
-        debug(
-            ">>>>>>> removeWatcher spaceUsers",
-            watcher.id,
-            Array.from(this.users.values()).map((users) => users.size)
-        );
-
         // In case was not empty when it was removed, we need to notify the other watchers
         for (const spaceUser of spaceUsers?.values() || []) {
             if (this.filterOneUser(spaceUser)) {

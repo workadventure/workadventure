@@ -93,7 +93,7 @@ export class SpaceConnection {
                             case "publicEvent":
                             case "privateEvent":
                             case "spaceAnswerMessage": {
-                                const spaceName = extractSpaceName(message);
+                                const spaceName = this.extractSpaceName(message);
                                 if (spaceName) {
                                     const space = this.spacePerBackId.get(backId)?.get(spaceName);
                                     if (space) {
@@ -187,20 +187,8 @@ export class SpaceConnection {
     }
 
     private retryConnection(backId: number) {
-        console.trace(">>>>>>>>> retryConnection");
-
         const spaceForBackId = this.spacePerBackId.get(backId);
         if (!spaceForBackId) {
-            console.log(
-                "[SpaceConnection] spacePerBackId contents:",
-                Array.from(this.spacePerBackId.entries()).map(([id, map]) => ({
-                    backId: id,
-                    spaces: Array.from(map.entries()).map(([name, value]) => ({
-                        spaceName: name,
-                        defined: value !== undefined,
-                    })),
-                }))
-            );
             throw new Error("spaceForBackId not found");
         }
 
@@ -272,33 +260,32 @@ export class SpaceConnection {
         this.spaceStreamToBackPromises.delete(backId);
         debug(`[SpaceConnection] spacePerBackId cleaned up for backId ${backId}`);
     }
-}
 
-// Fonction helper pour extraire le spaceName de manière type-safe
-function extractSpaceName(message: BackToPusherSpaceMessage): string | undefined {
-    if (!message.message) return undefined;
+    private extractSpaceName(message: BackToPusherSpaceMessage): string | undefined {
+        if (!message.message) return undefined;
 
-    switch (message.message.$case) {
-        case "addSpaceUserMessage":
-            return message.message.addSpaceUserMessage?.spaceName;
-        case "updateSpaceUserMessage":
-            return message.message.updateSpaceUserMessage?.spaceName;
-        case "removeSpaceUserMessage":
-            return message.message.removeSpaceUserMessage?.spaceName;
-        case "updateSpaceMetadataMessage":
-            return message.message.updateSpaceMetadataMessage?.spaceName;
-        case "kickOffMessage":
-            return message.message.kickOffMessage?.spaceName;
-        case "publicEvent":
-            return message.message.publicEvent?.spaceName;
-        case "privateEvent":
-            return message.message.privateEvent?.spaceName;
-        case "spaceAnswerMessage": {
-            return message.message.spaceAnswerMessage?.spaceName;
+        switch (message.message.$case) {
+            case "addSpaceUserMessage":
+                return message.message.addSpaceUserMessage?.spaceName;
+            case "updateSpaceUserMessage":
+                return message.message.updateSpaceUserMessage?.spaceName;
+            case "removeSpaceUserMessage":
+                return message.message.removeSpaceUserMessage?.spaceName;
+            case "updateSpaceMetadataMessage":
+                return message.message.updateSpaceMetadataMessage?.spaceName;
+            case "kickOffMessage":
+                return message.message.kickOffMessage?.spaceName;
+            case "publicEvent":
+                return message.message.publicEvent?.spaceName;
+            case "privateEvent":
+                return message.message.privateEvent?.spaceName;
+            case "spaceAnswerMessage": {
+                return message.message.spaceAnswerMessage?.spaceName;
+            }
+            case "pingMessage":
+                return undefined;
+            default:
+                return undefined;
         }
-        case "pingMessage":
-            return undefined;
-        default:
-            return undefined;
     }
 }

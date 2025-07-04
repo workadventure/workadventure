@@ -18,7 +18,6 @@ export class Space {
         this.messagesSubscription = this.port.messages.subscribe((event) => {
             switch (event.data.type) {
                 case "onNewUser": {
-                    console.log("New user joined the space:", event.data.data);
                     if (this.users.has(event.data.data.spaceUserId)) {
                         throw new Error(`User already exists in the space: ${event.data.data.spaceUserId}`);
                     }
@@ -33,13 +32,11 @@ export class Space {
                     break;
                 }
                 case "onDeleteUser": {
-                    console.log("User left the space:", event.data.data);
                     this._userLeftSubscriber?.next(this.users.get(event.data.data.spaceUserId));
                     this.users.delete(event.data.data.spaceUserId);
                     break;
                 }
                 case "onUpdateUser": {
-                    console.log("User updated in the space:", event.data.data);
                     const user = this.users.get(event.data.data.spaceUserId);
                     if (!user) {
                         throw new Error(`User not found in the space: ${event.data.data.spaceUserId}`);

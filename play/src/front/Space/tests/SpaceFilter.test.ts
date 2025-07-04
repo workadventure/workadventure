@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { FilterType, SpaceUser } from "@workadventure/messages";
 import { get } from "svelte/store";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { Space } from "../Space";
+import { SpaceUserExtended } from "../SpaceInterface";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {

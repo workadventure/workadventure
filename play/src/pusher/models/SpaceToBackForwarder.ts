@@ -27,7 +27,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!spaceUserId) {
             throw new Error("Space user id not found");
         }
-        //TODO : voir pourquoi on a des doublons
+
         if (this._space._localConnectedUser.has(spaceUserId)) {
             throw new Error("Watcher already added for user " + spaceUserId);
         }
@@ -131,7 +131,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             });
 
             if (this._space._localConnectedUser.size === 0) {
-                debug(`>>>>>>${this._space.name} : space is empty, cleaning up`);
+                debug(`${this._space.name} : space is empty, cleaning up`);
                 this._space.cleanup();
                 return;
             }
@@ -146,7 +146,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._space._localWatchers.delete(spaceUserId);
             if (this._space._localConnectedUser.size === 0) {
-                debug(`>>>>>> ${this._space.name} : space is empty, cleaning up`);
+                debug(`${this._space.name} : space is empty, cleaning up`);
                 this._space.cleanup();
                 return;
             }

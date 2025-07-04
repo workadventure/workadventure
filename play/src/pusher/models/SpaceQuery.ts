@@ -1,7 +1,6 @@
 import { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
 import { Space } from "./Space";
 
-//TODO : Test Unitaire ??
 export class Query {
     private readonly _queries = new Map<
         number,

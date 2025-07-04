@@ -45,15 +45,14 @@ export interface SpaceInterface {
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
-    //TODO : see if we can merge these two methods , more generic
-    getUpdatedFieldsForUserFromSetPlayerDetails(
+    applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
         playerDetailsMessage: SetPlayerDetailsMessage
     ): {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
-    getUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+    applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(
         client: Socket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {
@@ -180,7 +179,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         return this._filterType;
     }
 
-    public getUpdatedFieldsForUserFromSetPlayerDetails(
+    public applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
         playerDetails: SetPlayerDetailsMessage
     ): {
@@ -229,8 +228,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
         return null;
     }
-    //TODO : rename to tell the user that the update is done
-    public getUpdatedFieldsForUserFromUpdateSpaceUserMessage(
+
+    public applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(
         client: Socket,
         updateSpaceUserMessage: UpdateSpaceUserMessage
     ): {

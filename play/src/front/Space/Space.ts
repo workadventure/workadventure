@@ -19,9 +19,10 @@ import {
     SpaceInterface,
     SpaceUserUpdate,
     UpdateSpaceUserEvent,
+    ReactiveSpaceUser,
+    SpaceUserExtended,
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
-import { ReactiveSpaceUser, SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 
 export class Space implements SpaceInterface {

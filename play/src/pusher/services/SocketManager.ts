@@ -252,7 +252,6 @@ export class SocketManager implements ZoneEventListener {
                     }
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
-                            //TODO : create id directly in the space ??
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
                             socketData.spaceUserId =
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
@@ -480,12 +479,14 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
-                const changedFields = space.getUpdatedFieldsForUserFromSetPlayerDetails(client, playerDetailsMessage);
+                const changedFields = space.applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
+                    client,
+                    playerDetailsMessage
+                );
                 if (changedFields) {
                     space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
                 }
             } else {
-                console.log("space not found", socketData.spaces);
                 console.error(
                     `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
                 );
@@ -580,7 +581,6 @@ export class SocketManager implements ZoneEventListener {
             if (space) {
                 try {
                     await space.forwarder.unregisterUser(socket);
-                    console.log("delete space from unregisterUser", spaceName);
                     socketData.joinSpacesPromise.delete(spaceName);
                     return { space, spaceName, success: true };
                 } catch (error) {
@@ -589,7 +589,6 @@ export class SocketManager implements ZoneEventListener {
                     return { space, spaceName, success: false };
                 }
             } else {
-                console.log("space not found", socketData.spaces);
                 console.error(
                     `User ${socketData.name} thinks he is in space ${spaceName} but this space does not exist anymore.`
                 );
@@ -987,7 +986,7 @@ export class SocketManager implements ZoneEventListener {
             );
         }
 
-        const updatedSpaceUser = space.getUpdatedFieldsForUserFromUpdateSpaceUserMessage(client, message);
+        const updatedSpaceUser = space.applyAndGetUpdatedFieldsForUserFromUpdateSpaceUserMessage(client, message);
         if (updatedSpaceUser) {
             space.forwarder.updateUser(updatedSpaceUser.partialSpaceUser, updatedSpaceUser.changedFields);
         }

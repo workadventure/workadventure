@@ -7,7 +7,6 @@ import {
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
-import { SpaceUserExtended } from "./SpaceFilter/SpaceFilter";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -75,3 +74,25 @@ export interface SpaceInterface {
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
     readonly filterType: FilterType;
 }
+
+export type ReactiveSpaceUser = {
+    [K in keyof Omit<SpaceUser, "spaceUserId">]: Readonly<Readable<SpaceUser[K]>>;
+} & {
+    spaceUserId: string;
+    playUri: string | undefined;
+    roomName: string | undefined;
+};
+
+export type SpaceUserExtended = SpaceUser & {
+    wokaPromise: Promise<string> | undefined;
+    getWokaBase64: string;
+    updateSubject: Subject<{
+        newUser: SpaceUserExtended;
+        changes: SpaceUser;
+        updateMask: string[];
+    }>;
+    emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
+    //emitter: JitsiEventEmitter | undefined;
+    space: SpaceInterface;
+    reactiveUser: ReactiveSpaceUser;
+};

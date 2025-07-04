@@ -65,7 +65,6 @@ export class SpacesWatcher {
     public end() {
         clearInterval(this.pingInterval);
         this.clearPongTimeout();
-        //this.socket.end();
     }
 
     /**

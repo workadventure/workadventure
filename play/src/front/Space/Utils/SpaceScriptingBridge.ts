@@ -1,8 +1,7 @@
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
-import { SpaceInterface } from "../SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
 import { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 
 /**
  * Represents a bridge between one Space and the scripting API.
@@ -48,7 +47,6 @@ export class SpaceScriptingBridge {
 
                         // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
                         this.userLeftSubscription = this.space.observeUserLeft.subscribe((user) => {
-                            console.log(">>> SpaceScriptingBridge.ts >>> User left the space:", user);
                             this.port.postMessage({
                                 type: "onDeleteUser",
                                 data: {
