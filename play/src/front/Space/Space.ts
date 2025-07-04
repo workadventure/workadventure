@@ -25,9 +25,9 @@ export class Space implements SpaceInterface {
     private filterNumber = 0;
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
-    private peerManager: SpacePeerManager | undefined;
-    public videoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public screenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    private readonly peerManager: SpacePeerManager | undefined;
+    public readonly videoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public readonly screenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
