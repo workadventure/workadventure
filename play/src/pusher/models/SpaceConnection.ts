@@ -70,7 +70,7 @@ export class SpaceConnection {
             return new Promise<BackSpaceConnection>((resolve) => {
                 setTimeout(() => {
                     resolve(this.createBackConnection(space, backId));
-                }, 5000 * 10);
+                }, 5000);
             });
         }
     }
@@ -80,6 +80,8 @@ export class SpaceConnection {
         backId: number,
         apiSpaceClient: SpaceManagerClient
     ) {
+        // we use removeAllListeners before deleting the connection to avoid memory leaks, not taken into account by eslint
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         spaceStreamToBack
             .on("data", (message: BackToPusherSpaceMessage) => {
                 try {
@@ -126,7 +128,10 @@ export class SpaceConnection {
                                     } catch (e) {
                                         console.error("Error while retrying connection ...", e);
                                         Sentry.captureException(e);
-                                        this.cleanUpSpacePerBackId(backId);
+                                        this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                            console.error("Error while cleaning up space per back id", e);
+                                            Sentry.captureException(e);
+                                        });
                                     }
                                 }, 1000 * 60);
                                 break;
@@ -156,7 +161,10 @@ export class SpaceConnection {
                 } catch (e) {
                     console.error("Error while retrying connection ...", e);
                     Sentry.captureException(e);
-                    this.cleanUpSpacePerBackId(backId);
+                    this.cleanUpSpacePerBackId(backId).catch((e) => {
+                        console.error("Error while cleaning up space per back id", e);
+                        Sentry.captureException(e);
+                    });
                 }
             });
     }
@@ -241,23 +249,31 @@ export class SpaceConnection {
             }
 
             spaceStreamToBack
-                .then((spaceStreamToBack) => {
-                    spaceStreamToBack.end();
+                .then((connection) => {
+                    connection.removeAllListeners();
+                    connection.end();
                 })
                 .catch((e) => {
                     console.error("Error while closing space back connection", e);
                     Sentry.captureException(e);
                 });
+
             this.spaceStreamToBackPromises.delete(backId);
         }
     }
 
-    private cleanUpSpacePerBackId(backId: number) {
+    private async cleanUpSpacePerBackId(backId: number) {
         this.spacePerBackId.get(backId)?.forEach((space) => {
             space.handleConnectionRetryFailure();
         });
         this.spacePerBackId.delete(backId);
+        const spaceStreamToBack = this.spaceStreamToBackPromises.get(backId);
         this.spaceStreamToBackPromises.delete(backId);
+        if (spaceStreamToBack) {
+            const connection = await spaceStreamToBack;
+            connection.removeAllListeners();
+        }
+
         debug(`[SpaceConnection] spacePerBackId cleaned up for backId ${backId}`);
     }
 
