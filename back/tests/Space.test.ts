@@ -534,7 +534,7 @@ describe("Space with filter", () => {
     });
 
     describe("removeUser", () => {
-        it("should send remove user message to all watchers except the one who removed the user", () => {
+        it("should send remove user message to all watchers", () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -564,8 +564,7 @@ describe("Space with filter", () => {
 
             space.removeUser(watcher, "foo_1");
 
-            // watcher1 should not have received the event because it no longer has any users in its list
-            expect(mockWriteFunction).toHaveBeenCalledTimes(0);
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
 
             expect(mockWriteFunction2).toHaveBeenCalledWith(
