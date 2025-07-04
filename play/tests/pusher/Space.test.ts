@@ -75,21 +75,32 @@ describe("Space", () => {
                 mockSpaceToFrontDispatcherFactory
             );
 
-            space._localConnectedUser.set("foo_1", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[0],
-                }),
-            } as unknown as Socket);
-            space._localConnectedUser.set("foo_2", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[1],
-                }),
-            } as unknown as Socket);
-            space._localConnectedUser.set("foo_3", {
-                getUserData: vi.fn().mockReturnValue({
-                    spaceUser: mockUsers[2],
-                }),
-            } as unknown as Socket);
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[0],
+                    }),
+                } as unknown as Socket,
+                mockUsers[0]
+            );
+
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[1],
+                    }),
+                } as unknown as Socket,
+                mockUsers[1]
+            );
+
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[2],
+                    }),
+                } as unknown as Socket,
+                mockUsers[2]
+            );
 
             space.sendLocalUsersToBack();
 
@@ -165,6 +176,8 @@ describe("Space", () => {
                     spaceUser: mockUsers[0],
                 }),
             });
+
+            space._localConnectedUserWithSpaceUser.set(mockSocket, mockUsers[0]);
 
             await flushPromises();
 
@@ -244,6 +257,8 @@ describe("Space", () => {
                     spaceUser: mockUsers[0],
                 }),
             });
+
+            space._localConnectedUserWithSpaceUser.set(mockSocket, mockUsers[0]);
 
             await flushPromises();
 
@@ -392,6 +407,7 @@ describe("SpaceConnection", () => {
                     joinSpaceMessage: {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
+                        isRetry: false,
                     },
                 },
             });

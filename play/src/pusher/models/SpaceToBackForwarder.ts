@@ -95,6 +95,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("spaceUserId not found");
         }
 
+        const spaceUserFromPusher = this._space._localConnectedUser.get(spaceUserId);
+
+        if (!spaceUserFromPusher) {
+            throw new Error("spaceUser not found");
+        }
+
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceUserMessage",
             updateSpaceUserMessage: {
