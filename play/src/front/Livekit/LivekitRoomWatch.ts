@@ -163,16 +163,14 @@ export class LiveKitRoomWatch implements LiveKitRoom {
                 extendedVideoStream.priority = priority;
             }
             priority++;
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
-            // TODO : trigger un update on the videoStreamStore pour réordonner la vue (ou sur autre chose!)
+        }
+
+        // Let's trigger an update onf the space's videoStreamStore to reorder the view
+        // To do so, we just take the first element of the map and put it back in the store at the same key.
+        const firstEntry = this.space.videoStreamStore.entries().next();
+        if (!firstEntry.done) {
+            const [key, value] = firstEntry.value;
+            this.space.videoStreamStore.set(key, value);
         }
 
         this.participants.forEach((participant) => {

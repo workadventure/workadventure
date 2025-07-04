@@ -43,6 +43,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
     import ResizeHandle from "./ResizeHandle.svelte";
+    import {orderedStreamableCollectionStore, maxVisibleVideosStore} from "../../Stores/OrderedStreamableCollectionStore";
 
     setContext("inCameraContainer", true);
 
@@ -141,6 +142,10 @@
 
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
+
+                // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                maxVisibleVideosStore.set(maxVisibleVideos);
+
                 //console.log("max width for vpr", width);
                 //console.log('vpr', vpr);
                 // Calculate total number of rows needed
@@ -266,9 +271,9 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+        {#each $orderedStreamableCollectionStore as peer (peer.uniqueId)}
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
-                {#key uniqueId}
+                {#key peer.uniqueId}
                     <div
                         style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
                             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""

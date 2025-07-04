@@ -192,7 +192,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
-function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
+function createStreamableCollectionStore(): Readable<Map<string, ExtendedStreamable>> {
     return derived(
         [
             broadcastTracksStore,
