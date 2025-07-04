@@ -9,6 +9,7 @@ import { Socket } from "../../src/pusher/services/SocketManager";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
 import { SpaceConnection, SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
+import { ClientEventsEmitter } from "../../src/pusher/services/ClientEventsEmitter";
 
 const flushPromises = () => new Promise(setImmediate);
 
@@ -154,6 +155,11 @@ describe("Space", () => {
                 removeSpace: vi.fn(),
             });
 
+            const mockClientEventsEmitter = mock<ClientEventsEmitter>({
+                emitWatchSpace: vi.fn(),
+                emitUnwatchSpace: vi.fn(),
+            });
+
             const space = new Space(
                 "test",
                 "test",
@@ -162,7 +168,8 @@ describe("Space", () => {
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
                 mockSpaceToBackForwarderFactory,
-                mockSpaceToFrontDispatcherFactory
+                mockSpaceToFrontDispatcherFactory,
+                mockClientEventsEmitter
             );
 
             space.initSpace();

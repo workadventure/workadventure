@@ -81,6 +81,27 @@ export class SocketManager implements ZoneEventListener {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
+        clientEventsEmitter.registerToClientJoinSpace((clientUUid: string, spaceName: string) => {
+            gaugeManager.incNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToClientLeaveSpace((clientUUid: string, spaceName: string) => {
+            gaugeManager.decNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToCreateSpace((spaceName: string) => {
+            gaugeManager.incNbSpaces();
+        });
+        clientEventsEmitter.registerToDeleteSpace((spaceName: string) => {
+            gaugeManager.decNbSpaces();
+        });
+        clientEventsEmitter.registerToSpaceEvent((spaceName: string, eventType: string) => {
+            gaugeManager.incSpaceEvents(spaceName, eventType);
+        });
+        clientEventsEmitter.registerFromWatchSpace((spaceName: string) => {
+            gaugeManager.incNbWatchersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerFromUnwatchSpace((spaceName: string) => {
+            gaugeManager.decNbWatchersPerSpace(spaceName);
+        });
     }
 
     async handleAdminRoom(client: AdminSocket, roomId: string): Promise<void> {
@@ -356,6 +377,7 @@ export class SocketManager implements ZoneEventListener {
         if (!space) {
             const onSpaceEmpty = (space: SpaceInterface) => {
                 this.spaces.delete(space.name);
+                clientEventsEmitter.emitDeleteSpace(space.name);
             };
 
             space = new Space(
@@ -368,6 +390,7 @@ export class SocketManager implements ZoneEventListener {
             );
 
             this.spaces.set(spaceName, space);
+            clientEventsEmitter.emitCreateSpace(spaceName);
 
             space.initSpace();
         }

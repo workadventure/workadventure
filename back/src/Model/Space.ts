@@ -15,6 +15,7 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import { asError } from "catch-unknown";
+import { clientEventsEmitter } from "../Services/ClientEventsEmitter";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { SpacesWatcher } from "./SpacesWatcher";
 
@@ -27,7 +28,7 @@ export class Space implements CustomJsonReplacerInterface {
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
 
-    constructor(name: string, private _filterType: Filter) {
+    constructor(name: string, private _filterType: Filter, private _clientEventsEmitter = clientEventsEmitter) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
@@ -38,6 +39,7 @@ export class Space implements CustomJsonReplacerInterface {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
+            this._clientEventsEmitter.emitSpaceJoin(this.name);
 
             if (!this.filterOneUser(spaceUser)) {
                 return;
@@ -137,6 +139,7 @@ export class Space implements CustomJsonReplacerInterface {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.delete(spaceUserId);
+            this._clientEventsEmitter.emitSpaceLeave(this.name);
             debug(`${this.name} : user => removed ${spaceUserId}`);
         } catch (e) {
             console.error("Error while removing user", e);
@@ -328,6 +331,7 @@ export class Space implements CustomJsonReplacerInterface {
                     }
 
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
+                    this._clientEventsEmitter.emitSpaceJoin(this.name);
                     return {
                         answer: {
                             $case: "addSpaceUserAnswer",
@@ -340,6 +344,7 @@ export class Space implements CustomJsonReplacerInterface {
                 }
                 case "removeSpaceUserQuery": {
                     this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
+                    this._clientEventsEmitter.emitSpaceLeave(this.name);
                     return {
                         answer: {
                             $case: "removeSpaceUserAnswer",

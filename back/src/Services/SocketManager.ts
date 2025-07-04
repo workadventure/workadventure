@@ -108,6 +108,18 @@ export class SocketManager {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
+        clientEventsEmitter.registerToSpaceJoin((spaceName: string) => {
+            gaugeManager.incNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToSpaceLeave((spaceName: string) => {
+            gaugeManager.decNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToCreateSpace(() => {
+            gaugeManager.incNbSpaces();
+        });
+        clientEventsEmitter.registerToDeleteSpace(() => {
+            gaugeManager.decNbSpaces();
+        });
     }
 
     public async handleJoinRoom(
@@ -1396,6 +1408,7 @@ export class SocketManager {
             }
             space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
             this.spaces.set(joinSpaceMessage.spaceName, space);
+            clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
         }
 
         if (space.filterType !== joinSpaceMessage.filterType) {
@@ -1415,6 +1428,7 @@ export class SocketManager {
             throw new Error("Cant unwatch space, space not found");
         }
         this.removeSpaceWatcher(pusher, space);
+        clientEventsEmitter.emitSpaceLeave(space.name);
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
@@ -1436,6 +1450,7 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
+            clientEventsEmitter.emitDeleteSpace(space.name);
         }
     }
 
@@ -1465,6 +1480,7 @@ export class SocketManager {
                 debug("[space] Space %s => deleted", space.name);
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);
+                clientEventsEmitter.emitDeleteSpace(space.name);
             }
         }
     }
@@ -1657,6 +1673,7 @@ export class SocketManager {
         }
         space.closeAllWatcherConnections();
         this.spaces.delete(spaceName);
+        clientEventsEmitter.emitDeleteSpace(spaceName);
     }
 
     handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
@@ -1689,6 +1706,7 @@ export class SocketManager {
                 debug("[space] Space %s => deleted", space.name);
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);
+                clientEventsEmitter.emitDeleteSpace(space.name);
             }
         } catch (e) {
             console.error("Error while handling space query", e);

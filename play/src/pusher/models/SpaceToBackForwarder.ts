@@ -4,6 +4,7 @@ import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
 
 import { Socket } from "../services/SocketManager";
+import { clientEventsEmitter } from "../services/ClientEventsEmitter";
 import { PartialSpaceUser, Space } from "./Space";
 
 const debug = Debug("space-to-back-forwarder");
@@ -19,7 +20,7 @@ export interface SpaceToBackForwarderInterface {
 }
 
 export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
-    constructor(private readonly _space: Space) {}
+    constructor(private readonly _space: Space, private readonly _clientEventsEmitter = clientEventsEmitter) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
@@ -57,6 +58,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
         this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
         this._space._localConnectedUser.set(spaceUserId, client);
+        this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
 
         try {
             await this._space.query.send({
@@ -85,6 +87,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
+            this._clientEventsEmitter.emitClientLeaveSpace(socketData.userUuid, this._space.name);
             throw e;
         }
     }
@@ -127,6 +130,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localWatchers.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
+            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
 
             await this._space.query.send({
                 $case: "removeSpaceUserQuery",
@@ -151,6 +155,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUser.delete(spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._space._localWatchers.delete(spaceUserId);
+            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
             if (this._space._localConnectedUser.size === 0) {
                 debug(`${this._space.name} : space is empty, cleaning up`);
                 this._space.cleanup();
@@ -180,6 +185,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 spaceStreamToBack.write({
                     message: pusherToBackSpaceMessage,
                 });
+
+                if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
+                    this._clientEventsEmitter.emitSpaceEvent(this._space.name, pusherToBackSpaceMessage.$case);
+                }
             })
             .catch((error) => {
                 console.error("Error while forwarding message to space back", error);
