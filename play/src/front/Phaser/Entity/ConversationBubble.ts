@@ -17,7 +17,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // ==== Tunables =========================================================
     private readonly R0 = 64; // resting radius (px)
     private readonly lambda = 40; // fall-off distance for influence (px)
-    private readonly k = 4; // angular sharpness of the bump
+    private readonly kInside = 2; // angular sharpness of the bump from players inside the bubble
+    private readonly kOutside = 20; // angular sharpness of the bump from players outside the bubble
     private readonly amp = 20; // max deformation per avatar (px)
     private readonly segments = 64; // angular samples (higher = smoother)
     private readonly speed = 0.1; // If set to 1, the bubble size instantly matches the avatars position. Set between 0 and 1 to have a smooth transition.
@@ -131,14 +132,14 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
                 const A = av.inside ? +this.amp : -this.amp;
 
                 targetR +=
-                    ((A * Math.exp(-Math.abs(dBoundary) / this.lambda) * this.angularFalloff(θ - φ)) / avatars.length) *
+                    ((A * Math.exp(-Math.abs(dBoundary) / this.lambda) * this.angularFalloff(θ - φ, av.inside)) /
+                        avatars.length) *
                     2;
             }
 
             /* --- 2.  Dampen changes with simple lerp for a jelly feel ---- */
             const newRadius = Phaser.Math.Linear(this.radii[s], targetR, this.speed);
             if (Math.abs(newRadius - this.radii[s]) > this.stopAnimationThreshold) {
-                console.log("Animating");
                 this._isAnimating = true; // mark as animating if there's a significant change
             }
             this.radii[s] = newRadius;
@@ -155,9 +156,9 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // -----------------------------------------------------------------------
 
     /** Cosine lobe clamped to zero and sharpened by k. */
-    private angularFalloff(delta: number): number {
+    private angularFalloff(delta: number, isInside: boolean): number {
         const c = Math.cos(delta);
-        return c <= 0 ? 0 : Math.pow(c, this.k);
+        return c <= 0 ? 0 : Math.pow(c, isInside ? this.kInside : this.kOutside);
     }
 
     /**
