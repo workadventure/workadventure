@@ -36,6 +36,24 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         saveSync: "Enregistrer et synchroniser 🔌",
         logout: "Se déconnecter",
     },
+    outlook: {
+        signIn: "Se connecter avec Outlook",
+        popupScopeToSync: "Connecter mon compte Outlook",
+        popupScopeToSyncExplainText:
+            "Nous avons besoin de nous connecter à votre compte Outlook pour synchroniser votre calendrier et / ou vos tâches. Cela vous permettra de voir vos réunions et vos tâches dans WorkAdventure et de les rejoindre directement depuis la carte.",
+        popupScopeToSyncCalendar: "Synchroniser mon calendrier",
+        popupScopeToSyncTask: "Synchroniser mes tâches",
+        popupCancel: "Annuler",
+    },
+    google: {
+        signIn: "Se connecter avec Google",
+        popupScopeToSync: "Connecter mon compte Google",
+        popupScopeToSyncExplainText:
+            "Nous avons besoin de nous connecter à votre compte Google pour synchroniser votre calendrier et / ou vos tâches. Cela vous permettra de voir vos réunions et vos tâches dans WorkAdventure et de les rejoindre directement depuis la carte.",
+        popupScopeToSyncCalendar: "Synchroniser mon calendrier",
+        popupScopeToSyncTask: "Synchroniser mes tâches",
+        popupCancel: "Annuler",
+    },
 };
 
 export default externalModule;
