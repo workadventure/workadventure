@@ -349,6 +349,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuCustom(name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_custom", { name });
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {
