@@ -57,7 +57,7 @@
                         {:else}
                             <img draggable="false" src={todoListPng} class="w-6" alt={$LL.menu.icon.open.todoList()} />
                         {/if}
-                        <h3 class="text-lg text-left py-2">To Do 📋</h3>
+                        <h3 class="text-lg text-left py-2">${$LL.externalModule.todoList.title()}</h3>
                         <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
                     </div>
 
@@ -69,11 +69,15 @@
                     <div class="flex flex-col justify-center items-center">
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
-                        <button
-                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                            on:click={goToLoginPage}
-                            >{$LL.menu.profile.login()}
-                        </button>
+                        {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size > 0}
+                            <ExternalComponents zone="todoListButton" />
+                        {:else}
+                            <button
+                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                                on:click={goToLoginPage}
+                                >{$LL.menu.profile.login()}
+                            </button>
+                        {/if}
                     </div>
                 {/if}
                 {#each [...$todoListsStore.entries()] as [key, todoList] (key)}
@@ -141,7 +145,7 @@
                     class="text-center text-xs text-gray-400 italic hover:underline cursor-pointer mt-5"
                     on:click={closeTodoList}
                 >
-                    Take a break 🙏 maybe have a coffee or tea? ☕
+                    ${$LL.externalModule.todoList.sentence()}
                 </p>
             {/if}
         </div>

@@ -82,7 +82,9 @@
                 </div>
                 {#if $userIsConnected}
                     <div class="bg-white/20 h-[1px] w-full my-2" />
-                    <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                    <h4 class=" text-base font-bold text-left">
+                        ${$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
+                    </h4>
                 {/if}
             </div>
             <div class="flex flex-col justify-center gap-4">
@@ -90,11 +92,15 @@
                     <div class="flex flex-col justify-center items-center">
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
-                        <button
-                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                            on:click={goToLoginPage}
-                            >{$LL.menu.profile.login()}
-                        </button>
+                        {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size > 0}
+                            <ExternalComponents zone="calendarButton" />
+                        {:else}
+                            <button
+                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                                on:click={goToLoginPage}
+                                >{$LL.menu.profile.login()}
+                            </button>
+                        {/if}
                     </div>
                 {/if}
                 {#if $calendarEventsStore.size > 0}
@@ -123,7 +129,7 @@
                                                 }
                                             }}
                                             class="text-xs text-right text-secondary-500"
-                                            target="_blank">Click here to join the meeting</a
+                                            target="_blank">${$LL.externalModule.calendar.joinMeeting()}</a
                                         >
                                     {/if}
                                 </div>
