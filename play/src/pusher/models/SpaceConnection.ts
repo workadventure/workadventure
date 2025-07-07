@@ -130,22 +130,22 @@ export class SpaceConnection {
                             //TODO: at worst, we should close the connection to reconnect and handle it properly on the backend
                             //TODO: review the reconnection and the ping system ==> can we replace it with something more gRPC and more reliable??
                             //TODO : voir reconnection sur un back qui ne s'est pas éteint ==> est ce que les pusher doivent passer des uuid pour s'identifier et si on recois une nouvelle connexion pour un effacer les données qu'il y a avant ??
-                            // spaceStreamToBack.pingTimeout = setTimeout(() => {
-                            //     console.error("Error spaceStreamToBack timed out for back:", backId);
-                            //     Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
-                            //     spaceStreamToBack.end();
-                            //     try {
-                            //         this.removeListeners(spaceStreamToBack, backId);
-                            //         this.retryConnection(backId);
-                            //     } catch (e) {
-                            //         console.error("Error while retrying connection ...", e);
-                            //         Sentry.captureException(e);
-                            //         this.cleanUpSpacePerBackId(backId).catch((e) => {
-                            //             console.error("Error while cleaning up space per back id", e);
-                            //             Sentry.captureException(e);
-                            //         });
-                            //     }
-                            // }, 1000 * 60);
+                            spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                console.error("Error spaceStreamToBack timed out for back:", backId);
+                                Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
+                                spaceStreamToBack.end();
+                                try {
+                                    this.removeListeners(spaceStreamToBack, backId);
+                                    this.retryConnection(backId);
+                                } catch (e) {
+                                    console.error("Error while retrying connection ...", e);
+                                    Sentry.captureException(e);
+                                    this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                        console.error("Error while cleaning up space per back id", e);
+                                        Sentry.captureException(e);
+                                    });
+                                }
+                            }, 1000 * 60);
                             break;
                         }
                         default: {
