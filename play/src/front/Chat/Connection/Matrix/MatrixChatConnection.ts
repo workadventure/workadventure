@@ -692,12 +692,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             });
             //get room parent folder and refresh his child rooms
             const parentsFolderIds = this.getParentRoomID(room);
-            const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
-            if (parentFolder) {
-                parentFolder.refreshAllChildRooms().catch((e) => {
-                    console.error("Failed to refresh child rooms : ", e);
-                });
-            }
+            void (async () => {
+                try {
+                    const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
+                    if (parentFolder) {
+                        await parentFolder.refreshAllChildRooms();
+                    }
+                } catch (e) {
+                    console.error("Failed to refresh child rooms:", e);
+                }
+            })();
             return;
         }
     }
