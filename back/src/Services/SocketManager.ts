@@ -139,6 +139,7 @@ export class SocketManager {
                 },
             };
 
+
             commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
                 getMapStorageClient().handleUpdateMapToNewestMessage(
                     updateMapToNewestWithKeyMessage,
@@ -153,6 +154,8 @@ export class SocketManager {
                 );
             });
         }
+
+
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -1422,6 +1425,7 @@ export class SocketManager {
         }
     }
 
+
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
         const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);
         if (!space) {
@@ -1433,7 +1437,6 @@ export class SocketManager {
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
         pusher.spacesWatched.forEach((spaceName) => {
-            console.log(">>>>>>> handleUnwatchAllSpaces spaceName", spaceName);
             const space = this.spaces.get(spaceName);
             if (!space) {
                 console.error("Cant unwatch space, space not found");

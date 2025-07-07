@@ -206,6 +206,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
     leaveSpace(): void {
+        console.log("leaveSpace ====> from leaveSpace", this._space.name);
         this.forwardMessageToSpaceBack({
             $case: "leaveSpaceMessage",
             leaveSpaceMessage: {
