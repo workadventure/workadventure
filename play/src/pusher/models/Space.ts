@@ -190,18 +190,20 @@ export class Space implements SpaceForSpaceConnectionInterface {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null {
-        
-                //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
+        //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
         const userUuid = client.getUserData().userUuid;
         const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
             (user) => user.uuid === userUuid
         );
         if (!spaceUser) {
-            console.error("spaceUser not found", userUuid, client.getUserData().name , Array.from(this._localConnectedUserWithSpaceUser.values()).map(user => user.name + " / " + user.uuid));
+            console.error(
+                "spaceUser not found",
+                userUuid,
+                client.getUserData().name,
+                Array.from(this._localConnectedUserWithSpaceUser.values()).map((user) => user.name + " / " + user.uuid)
+            );
             throw new Error(`spaceUser not found ${userUuid} / ${client.getUserData().name}`);
         }
-
-        
 
         const fieldMask: string[] = [];
 

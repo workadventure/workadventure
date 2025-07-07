@@ -139,7 +139,6 @@ export class SocketManager {
                 },
             };
 
-
             commandsToApply = await new Promise<EditMapCommandMessage[]>((resolve, reject) => {
                 getMapStorageClient().handleUpdateMapToNewestMessage(
                     updateMapToNewestWithKeyMessage,
@@ -154,8 +153,6 @@ export class SocketManager {
                 );
             });
         }
-
-
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -1424,7 +1421,6 @@ export class SocketManager {
             space.addWatcher(pusher);
         }
     }
-
 
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
         const space: Space | undefined = this.spaces.get(leaveSpaceMessage.spaceName);

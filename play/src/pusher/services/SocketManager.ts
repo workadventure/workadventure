@@ -964,8 +964,6 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-
-    
     async handleAddSpaceFilterMessage(
         client: Socket,
         addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>
