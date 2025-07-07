@@ -215,6 +215,8 @@ export class Zone {
                     y: this.y,
                 };
                 this.backConnection = apiClient.listenZone(zoneMessage);
+                // Event listeners are valid for the lifetime of the connection
+                /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
                 this.backConnection.on("data", (batch: BatchToPusherMessage) => {
                     for (const message of batch.payload) {
                         if (!message.message) {

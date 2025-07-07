@@ -11,6 +11,8 @@ import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
+import listeners from "eslint-plugin-listeners";
+
 
 export function generateConfig(tsconfigRootDir) {
     return defineConfig([
@@ -102,6 +104,7 @@ export function generateConfig(tsconfigRootDir) {
             plugins: {
                 //"@typescript-eslint": typescriptEslint,
                 rxjs: rxjs,
+                listeners: listeners,
                 //"unused-imports": unusedImports,
             },
 

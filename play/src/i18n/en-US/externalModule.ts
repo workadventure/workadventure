@@ -10,8 +10,8 @@ const externalModule: BaseTranslation = {
     teams: {
         openingMeeting: "Opening Teams Meeting...",
         unableJoinMeeting: "Unable to join Teams Meeting!",
-        userNotConnected: "You are not connected to Teams!",
-        connectToYourTeams: "Connect to your Teams account 🙏",
+        userNotConnected: "You are not synchronize with your Outlook or Google account!",
+        connectToYourTeams: "Connect to your Outlook or Google account 🙏",
         temasAppInfo:
             "Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call, and collaborate all in one place 😍",
         buttonSync: "Sync my Teams 🚀",
@@ -38,6 +38,32 @@ const externalModule: BaseTranslation = {
         logout: "Logout",
         guilds: "Discord servers",
         guildExplain: "Select channels you want to add to Workadventure chat interface.\n",
+    },
+    outlook: {
+        signIn: "Sign in with Outlook",
+        popupScopeToSync: "Connect my Outlook Account",
+        popupScopeToSyncExplainText:
+            "We need to connect to your Outlook account to synchronize your calendar and / or your task. This will allow you to see your meetings and tasks in WorkAdventure and join them directly from the map.",
+        popupScopeToSyncCalendar: "Synchronize my calendar",
+        popupScopeToSyncTask: "Synchronize my tasks",
+        popupCancel: "Cancel",
+    },
+    google: {
+        signIn: "Sign in with Google",
+        popupScopeToSync: "Connect my Google Account",
+        popupScopeToSyncExplainText:
+            "We need to connect to your Google account to synchronize your calendar and / or your task. This will allow you to see your meetings and tasks in WorkAdventure and join them directly from the map.",
+        popupScopeToSyncCalendar: "Synchronize my calendar",
+        popupScopeToSyncTask: "Synchronize my tasks",
+        popupCancel: "Cancel",
+    },
+    calendar: {
+        title: "Your meeting today 🗓️",
+        joinMeeting: "Click here to join the meeting",
+    },
+    todoList: {
+        title: "To Do 📋",
+        sentence: "Take a break 🙏 maybe have a coffee or tea? ☕",
     },
 };
 

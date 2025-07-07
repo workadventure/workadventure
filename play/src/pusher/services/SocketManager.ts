@@ -105,6 +105,8 @@ export class SocketManager implements ZoneEventListener {
         }
         socketData.adminConnections.set(roomId, adminRoomStream);
 
+        // Event listeners are valid for the lifetime of the connection
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         adminRoomStream
             .on("data", (message: ServerToAdminClientMessage) => {
                 if (!message.message) {

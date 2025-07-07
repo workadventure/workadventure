@@ -6,6 +6,9 @@ import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 
+// Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
+/* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
 interface UserInputManagerDatum {
     keyInstance?: Phaser.Input.Keyboard.Key;
     event: UserInputEvent;
