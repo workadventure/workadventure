@@ -177,4 +177,13 @@
     .clickable:hover {
         cursor: pointer;
     }
-}
+    
+}/* Fix iOS: empêcher la coloration automatique des liens dans le menu */
+.menu-item, .menu-item * {
+    color: white !important;
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    -webkit-text-size-adjust: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-modify: read-write-plaintext-only;
+  }
