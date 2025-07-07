@@ -248,6 +248,7 @@ export class GameRoom implements BrothersFinder {
         );
         console.log("join ====> from join", {
             users: this.users.size,
+            user: user.name,
         });
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);

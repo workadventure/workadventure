@@ -229,6 +229,10 @@ const roomManager = {
         });
 
         const closeConnection = () => {
+            console.log("closeConnection ====> from closeConnection", {
+                user: user?.name,
+                room: room?.roomUrl,
+            });
             if (user !== null && room !== null) {
                 socketManager.leaveRoom(room, user);
             }
@@ -240,6 +244,10 @@ const roomManager = {
                 pongTimeoutId = undefined;
             }
             call.end();
+            console.log("closeConnection ====> from closeConnection (end)", {
+                user: user?.name,
+                room: room?.roomUrl,
+            });
             room = null;
             user = null;
         };
