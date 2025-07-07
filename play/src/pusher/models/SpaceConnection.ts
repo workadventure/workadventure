@@ -29,17 +29,19 @@ export class SpaceConnection {
         number,
         Map<string, SpaceForSpaceConnectionInterface>
     >();
-    private listenersPerBackId: Map<number, {
-        dataListener: (message: BackToPusherSpaceMessage) => void;
-        endListener: () => void;
-        errorListener: (err: Error) => void;
-    }> = new Map();
+    private listenersPerBackId: Map<
+        number,
+        {
+            dataListener: (message: BackToPusherSpaceMessage) => void;
+            endListener: () => void;
+            errorListener: (err: Error) => void;
+        }
+    > = new Map();
 
     constructor(
         private _apiClientRepository = apiClientRepository,
         private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
     ) {}
-
 
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
@@ -157,7 +159,11 @@ export class SpaceConnection {
         };
     }
 
-    private onErrorListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+    private onErrorListener(
+        spaceStreamToBack: BackSpaceConnection,
+        backId: number,
+        apiSpaceClient: SpaceManagerClient
+    ) {
         return (err: Error) => {
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
             console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
@@ -195,10 +201,8 @@ export class SpaceConnection {
         const endListener = this.onEndListener(spaceStreamToBack, backId, apiSpaceClient);
         const errorListener = this.onErrorListener(spaceStreamToBack, backId, apiSpaceClient);
 
-        spaceStreamToBack
-            .on("data", dataListener)
-            .on("end", endListener)
-            .on("error", errorListener);
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener , listeners/matching-remove-event-listener
+        spaceStreamToBack.on("data", dataListener).on("end", endListener).on("error", errorListener);
 
         this.listenersPerBackId.set(backId, {
             dataListener,
@@ -303,7 +307,6 @@ export class SpaceConnection {
     }
 
     private async cleanUpSpacePerBackId(backId: number) {
-        
         this.spacePerBackId.get(backId)?.forEach((space) => {
             space.handleConnectionRetryFailure();
         });
