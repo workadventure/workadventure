@@ -44,10 +44,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     searchUser: "Rechercher un utilisateur, une map, etc ...",
     searchChat: "Rechercher un canal, un message, etc ...",
     people: "Personnes",
-    rooms: "Salons",
+    rooms: "Vos Discussions",
     invitations: "Invitations",
     suggestedRooms: "Salons recommandés",
-    joinableRooms: "Salons rejoignables",
+    joinableRooms: "Salons disponibles",
     availableRooms: "Salon(s) disponible(s)",
     proximity: "Bulle de discussion",
     role: {
@@ -202,6 +202,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     addRoomToFolderError: "Impossible d'ajouter la room au dossier",
     createRoom: {
         title: "Créer un nouveau salon",
+        rootTitle: "Créer une nouvelle discussion",
         name: "Nom",
         visibility: {
             label: "Visibilité",
@@ -233,6 +234,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         error: "Erreur lors de la création du salon",
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
+        restrictedDescription: "Visible seulement pour les membres du dossier parent: {folderName}",
     },
     createFolder: {
         title: "Créer un nouveau dossier",

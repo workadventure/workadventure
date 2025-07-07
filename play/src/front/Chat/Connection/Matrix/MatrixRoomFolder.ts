@@ -283,7 +283,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     isJoinOrInvite = true;
                 }
             }
-            // On ne garde que les rooms où l'utilisateur n'est pas membre/invité/banni
             if (!isJoinOrInvite) {
                 const avatarUrl = chatRoom?.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
                 allMatrixChatRooms.push({ name: room.name ?? "", id: roomId, avatarUrl });

@@ -1,6 +1,7 @@
 import { Readable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
+import { StateEvents } from "matrix-js-sdk";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 export type memberTypingInformation = { id: string; name: string | null; avatarUrl: string | null };
@@ -75,6 +76,7 @@ export interface ChatRoomModeration {
     readonly id: string;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
+    readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
     readonly kick: (userID: string) => Promise<void>;
     readonly ban: (userID: string) => Promise<void>;
     readonly unban: (userID: string) => Promise<void>;

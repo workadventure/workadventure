@@ -51,8 +51,8 @@
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
     <div
-        class={`group relative px-3 m-0 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
-            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10" : ""
+        class={`group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
+            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-md"
         }`}
         class:mb-2={isOpen || rootFolder}
     >
@@ -82,9 +82,9 @@
         {#if isOpen}
             <div class="flex flex-col ">
                 {#if $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
-                    <div class="mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4">
+                    <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div
-                            class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
+                            class="group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-8 hover:bg-contrast-200/10 w-full flex space-x-2 items-center"
                             class:mb-2={joinableRoomsOpen}
                         >
                             <div class="flex items-center space-x-2 grow m-0 p-0">

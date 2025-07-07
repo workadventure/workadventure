@@ -42,7 +42,7 @@ const chat: BaseTranslation = {
     searchUser: "Search for user, map, etc ...",
     searchChat: "Search for channel, message, etc ...",
     people: "People",
-    rooms: "Rooms",
+    rooms: "Your Discussions",
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
@@ -201,6 +201,7 @@ const chat: BaseTranslation = {
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
+        rootTitle: "Create new discussion",
         name: "Name",
         visibility: {
             label: "Visibility",
@@ -232,6 +233,7 @@ const chat: BaseTranslation = {
         error: "Error on room creation",
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
+        restrictedDescription: "This room will be visible only to members of the parent folder: {folderName}",
     },
     createFolder: {
         title: "Create new folder",
