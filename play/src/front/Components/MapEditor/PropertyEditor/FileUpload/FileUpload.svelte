@@ -64,8 +64,9 @@
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
-        const fileName = selectedFile.name.split(".")[0];
-        const fileExt = selectedFile.name.split(".")[1];
+        const lastDot = selectedFile.name.lastIndexOf(".");
+        const fileName = selectedFile.name.slice(0, lastDot);
+        const fileExt = selectedFile.name.slice(lastDot + 1);
 
         const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
             property.id
