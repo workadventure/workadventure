@@ -346,9 +346,4 @@
         bottom: 0;
         z-index: 1000;
     }
-
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
- 
 </style>
