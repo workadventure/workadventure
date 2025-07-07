@@ -19,11 +19,8 @@ vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
     };
 });
 
-//TODO : see if there are not too many repetitions in the tests
-
 describe("Space", () => {
     describe("sendLocalUsersToBack", () => {
-        //TODO : do the same test for pingTimeout ?
         it("should try to reconnect to back if the connection is lost and send local users to back", () => {
             const callbackMap = new Map<string, (...args: unknown[]) => void>();
 

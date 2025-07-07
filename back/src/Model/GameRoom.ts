@@ -246,6 +246,9 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.chatID,
             undefined
         );
+        console.log("join ====> from join", {
+            users: this.users.size,
+        });
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
@@ -287,6 +290,9 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
+        console.log("leave ====> from leave", {
+            users: this.users.size,
+        });
         const set = this.usersByUuid.get(user.uuid);
         if (set !== undefined) {
             set.delete(user);
@@ -306,6 +312,14 @@ export class GameRoom implements BrothersFinder {
     }
 
     public isEmpty(): boolean {
+        // console.log("isEmpty ====> from isEmpty", {
+        //     users: this.users.size,
+        //     admins: this.admins.size,
+        //     roomListeners: this.roomListeners.size,
+        //     variableListeners: this.variableListeners.size,
+        //     eventListeners: this.eventListeners.size,
+        // });
+
         return (
             this.users.size === 0 &&
             this.admins.size === 0 &&
@@ -317,7 +331,6 @@ export class GameRoom implements BrothersFinder {
 
     public updatePosition(user: User, userPosition: PointInterface): void {
         user.setPosition(userPosition);
-
         this.updateUserGroup(user);
     }
 
