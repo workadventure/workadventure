@@ -29,6 +29,11 @@ export class SpaceConnection {
         number,
         Map<string, SpaceForSpaceConnectionInterface>
     >();
+    private listenersPerBackId: Map<number, {
+        dataListener: (message: BackToPusherSpaceMessage) => void;
+        endListener: () => void;
+        errorListener: (err: Error) => void;
+    }> = new Map();
 
     constructor(
         private _apiClientRepository = apiClientRepository,
@@ -75,98 +80,130 @@ export class SpaceConnection {
         }
     }
 
+    private onDataListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+        return (message: BackToPusherSpaceMessage) => {
+            try {
+                if (message.message) {
+                    switch (message.message.$case) {
+                        case "addSpaceUserMessage":
+                        case "updateSpaceUserMessage":
+                        case "removeSpaceUserMessage":
+                        case "updateSpaceMetadataMessage":
+                        case "kickOffMessage":
+                        case "publicEvent":
+                        case "privateEvent":
+                        case "spaceAnswerMessage": {
+                            const spaceName = this.extractSpaceName(message);
+                            if (spaceName) {
+                                const space = this.spacePerBackId.get(backId)?.get(spaceName);
+                                if (space) {
+                                    space.dispatcher.handleMessage(message);
+                                } else {
+                                    console.error("Space not found", spaceName);
+                                }
+                            }
+                            break;
+                        }
+                        case "pingMessage": {
+                            if (spaceStreamToBack.pingTimeout) {
+                                clearTimeout(spaceStreamToBack.pingTimeout);
+                                spaceStreamToBack.pingTimeout = undefined;
+                            }
+
+                            spaceStreamToBack.write({
+                                message: {
+                                    $case: "pongMessage",
+                                    pongMessage: {},
+                                },
+                            });
+
+                            spaceStreamToBack.pingTimeout = setTimeout(() => {
+                                console.error("Error spaceStreamToBack timed out for back:", backId);
+                                Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
+                                spaceStreamToBack.end();
+                                try {
+                                    this.removeListeners(spaceStreamToBack, backId);
+                                    this.retryConnection(backId);
+                                } catch (e) {
+                                    console.error("Error while retrying connection ...", e);
+                                    Sentry.captureException(e);
+                                    this.cleanUpSpacePerBackId(backId).catch((e) => {
+                                        console.error("Error while cleaning up space per back id", e);
+                                        Sentry.captureException(e);
+                                    });
+                                }
+                            }, 1000 * 60);
+                            break;
+                        }
+                        default: {
+                            const _exhaustiveCheck: never = message.message;
+                        }
+                    }
+                } else {
+                    throw new Error("Message is empty");
+                }
+            } catch (e) {
+                console.error("Error while handling message", e);
+                Sentry.captureException(e);
+            }
+        };
+    }
+
+    private onEndListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+        return () => {
+            debug("[space] spaceStreamsToBack ended");
+            if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
+        };
+    }
+
+    private onErrorListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+        return (err: Error) => {
+            if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
+            console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
+            Sentry.captureException(err);
+            try {
+                this.removeListeners(spaceStreamToBack, backId);
+                this.retryConnection(backId);
+            } catch (e) {
+                console.error("Error while retrying connection ...", e);
+                Sentry.captureException(e);
+                this.cleanUpSpacePerBackId(backId).catch((e) => {
+                    console.error("Error while cleaning up space per back id", e);
+                    Sentry.captureException(e);
+                });
+            }
+        };
+    }
+
+    private removeListeners(spaceStreamToBack: BackSpaceConnection, backId: number) {
+        const listeners = this.listenersPerBackId.get(backId);
+        if (listeners) {
+            spaceStreamToBack.off("data", listeners.dataListener);
+            spaceStreamToBack.off("end", listeners.endListener);
+            spaceStreamToBack.off("error", listeners.errorListener);
+            this.listenersPerBackId.delete(backId);
+        }
+    }
+
     private registerEventsOnConnection(
         spaceStreamToBack: BackSpaceConnection,
         backId: number,
         apiSpaceClient: SpaceManagerClient
     ) {
-        // we use removeAllListeners before deleting the connection to avoid memory leaks, not taken into account by eslint
-        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
+        const dataListener = this.onDataListener(spaceStreamToBack, backId, apiSpaceClient);
+        const endListener = this.onEndListener(spaceStreamToBack, backId, apiSpaceClient);
+        const errorListener = this.onErrorListener(spaceStreamToBack, backId, apiSpaceClient);
+
         spaceStreamToBack
-            .on("data", (message: BackToPusherSpaceMessage) => {
-                try {
-                    if (message.message) {
-                        switch (message.message.$case) {
-                            case "addSpaceUserMessage":
-                            case "updateSpaceUserMessage":
-                            case "removeSpaceUserMessage":
-                            case "updateSpaceMetadataMessage":
-                            case "kickOffMessage":
-                            case "publicEvent":
-                            case "privateEvent":
-                            case "spaceAnswerMessage": {
-                                const spaceName = this.extractSpaceName(message);
-                                if (spaceName) {
-                                    const space = this.spacePerBackId.get(backId)?.get(spaceName);
-                                    if (space) {
-                                        space.dispatcher.handleMessage(message);
-                                    } else {
-                                        console.error("Space not found", spaceName);
-                                    }
-                                }
-                                break;
-                            }
-                            case "pingMessage": {
-                                if (spaceStreamToBack.pingTimeout) {
-                                    clearTimeout(spaceStreamToBack.pingTimeout);
-                                    spaceStreamToBack.pingTimeout = undefined;
-                                }
+            .on("data", dataListener)
+            .on("end", endListener)
+            .on("error", errorListener);
 
-                                spaceStreamToBack.write({
-                                    message: {
-                                        $case: "pongMessage",
-                                        pongMessage: {},
-                                    },
-                                });
-
-                                spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                    console.error("Error spaceStreamToBack timed out for back:", backId);
-                                    Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
-                                    spaceStreamToBack.end();
-                                    try {
-                                        this.retryConnection(backId);
-                                    } catch (e) {
-                                        console.error("Error while retrying connection ...", e);
-                                        Sentry.captureException(e);
-                                        this.cleanUpSpacePerBackId(backId).catch((e) => {
-                                            console.error("Error while cleaning up space per back id", e);
-                                            Sentry.captureException(e);
-                                        });
-                                    }
-                                }, 1000 * 60);
-                                break;
-                            }
-                            default: {
-                                const _exhaustiveCheck: never = message.message;
-                            }
-                        }
-                    } else {
-                        throw new Error("Message is empty");
-                    }
-                } catch (e) {
-                    console.error("Error while handling message", e);
-                    Sentry.captureException(e);
-                }
-            })
-            .on("end", () => {
-                debug("[space] spaceStreamsToBack ended");
-                if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-            })
-            .on("error", (err: Error) => {
-                if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-                console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
-                Sentry.captureException(err);
-                try {
-                    this.retryConnection(backId);
-                } catch (e) {
-                    console.error("Error while retrying connection ...", e);
-                    Sentry.captureException(e);
-                    this.cleanUpSpacePerBackId(backId).catch((e) => {
-                        console.error("Error while cleaning up space per back id", e);
-                        Sentry.captureException(e);
-                    });
-                }
-            });
+        this.listenersPerBackId.set(backId, {
+            dataListener,
+            endListener,
+            errorListener,
+        });
     }
 
     private joinSpace(
@@ -250,7 +287,7 @@ export class SpaceConnection {
 
             spaceStreamToBack
                 .then((connection) => {
-                    connection.removeAllListeners();
+                    this.removeListeners(connection, backId);
                     connection.end();
                 })
                 .catch((e) => {
@@ -271,7 +308,7 @@ export class SpaceConnection {
         this.spaceStreamToBackPromises.delete(backId);
         if (spaceStreamToBack) {
             const connection = await spaceStreamToBack;
-            connection.removeAllListeners();
+            this.removeListeners(connection, backId);
         }
 
         debug(`[SpaceConnection] spacePerBackId cleaned up for backId ${backId}`);

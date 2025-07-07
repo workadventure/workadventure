@@ -504,6 +504,7 @@ export class SocketManager implements ZoneEventListener {
         socketData.spaces.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (space) {
+                await this.checkClientIsPartOfSpace(client, spaceName);
                 const changedFields = space.applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
                     client,
                     playerDetailsMessage
