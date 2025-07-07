@@ -4,6 +4,7 @@
     import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
     import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
+    import * as Sentry from "@sentry/svelte";
     import ButtonClose from "../../../Input/ButtonClose.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
@@ -33,7 +34,10 @@
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
                 selectedFile = file;
-                void handleFileChange();
+                handleFileChange().catch((error) => {
+                    console.error("Error in handleFileChange:", error);
+                    Sentry.captureException(error);
+                });
             } else {
                 console.error("File format not supported");
                 errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();

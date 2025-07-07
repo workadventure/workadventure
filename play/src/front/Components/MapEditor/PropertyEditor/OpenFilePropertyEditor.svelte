@@ -182,17 +182,6 @@
         />
 
         <div class:active={optionAdvancedActivated} class="advanced-option px-2">
-            {#if property.trigger == ON_ACTION_TRIGGER_BUTTON}
-                <Input
-                    id="triggerMessage"
-                    type="text"
-                    placeholder={$LL.trigger.object()}
-                    label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
-                    bind:value={property.triggerMessage}
-                    onChange={onValueChange}
-                />
-            {/if}
-
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
@@ -230,10 +219,6 @@
             {/if} -->
             {#if !property.newTab}
                 <div class="mt-3 mb-3">
-                    <!-- <label for="websiteWidth"
-                        >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
-                    > -->
-
                     <RangeSlider
                         id="websiteWidth"
                         min={15}
@@ -267,3 +252,13 @@
         </div>
     </span>
 </PropertyEditorBase>
+
+<style lang="scss">
+    .advanced-option {
+        display: none;
+
+        &.active {
+            display: block;
+        }
+    }
+</style>
