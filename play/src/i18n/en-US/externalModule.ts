@@ -10,7 +10,7 @@ const externalModule: BaseTranslation = {
     teams: {
         openingMeeting: "Opening Teams Meeting...",
         unableJoinMeeting: "Unable to join Teams Meeting!",
-        userNotConnected: "You are not synchronize with your Outlook or Google account!",
+        userNotConnected: "You are not synchronized with your Outlook or Google account!",
         connectToYourTeams: "Connect to your Outlook or Google account 🙏",
         temasAppInfo:
             "Teams is a Microsoft 365 app that helps your team stay connected and organized. You can chat, meet, call, and collaborate all in one place 😍",
@@ -43,7 +43,7 @@ const externalModule: BaseTranslation = {
         signIn: "Sign in with Outlook",
         popupScopeToSync: "Connect my Outlook Account",
         popupScopeToSyncExplainText:
-            "We need to connect to your Outlook account to synchronize your calendar and / or your task. This will allow you to see your meetings and tasks in WorkAdventure and join them directly from the map.",
+            "We need to connect to your Outlook account to synchronize your calendar and/or tasks. This will allow you to view your meetings and tasks in WorkAdventure and join them directly from the map.",
         popupScopeToSyncCalendar: "Synchronize my calendar",
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
@@ -52,17 +52,17 @@ const externalModule: BaseTranslation = {
         signIn: "Sign in with Google",
         popupScopeToSync: "Connect my Google Account",
         popupScopeToSyncExplainText:
-            "We need to connect to your Google account to synchronize your calendar and / or your task. This will allow you to see your meetings and tasks in WorkAdventure and join them directly from the map.",
+            "We need to connect to your Google account to synchronize your calendar and/or tasks. This will allow you to view your meetings and tasks in WorkAdventure and join them directly from the map.",
         popupScopeToSyncCalendar: "Synchronize my calendar",
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
     },
     calendar: {
-        title: "Your meeting today 🗓️",
+        title: "Your meeting today",
         joinMeeting: "Click here to join the meeting",
     },
     todoList: {
-        title: "To Do 📋",
+        title: "To Do",
         sentence: "Take a break 🙏 maybe have a coffee or tea? ☕",
     },
 };
