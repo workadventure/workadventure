@@ -492,7 +492,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     // Useless now, will be useful again if we allow editing details in game
-    handleSetPlayerDetails(client: Socket, playerDetailsMessage: SetPlayerDetailsMessage): void {
+    async handleSetPlayerDetails(client: Socket, playerDetailsMessage: SetPlayerDetailsMessage): Promise<void> {
         const socketData = client.getUserData();
         const pusherToBackMessage: PusherToBackMessage["message"] = {
             $case: "setPlayerDetailsMessage",
@@ -501,7 +501,7 @@ export class SocketManager implements ZoneEventListener {
 
         this.forwardMessageToBack(client, pusherToBackMessage);
 
-        socketData.spaces.forEach((spaceName) => {
+        const spacePromises = Array.from(socketData.spaces).map(async (spaceName: string) => {
             const space = this.spaces.get(spaceName);
             if (space) {
                 await this.checkClientIsPartOfSpace(client, spaceName);
@@ -510,7 +510,7 @@ export class SocketManager implements ZoneEventListener {
                     playerDetailsMessage
                 );
                 if (changedFields) {
-                    space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
+                    return space.forwarder.updateUser(changedFields.partialSpaceUser, changedFields.changedFields);
                 }
             } else {
                 console.error(
@@ -523,6 +523,8 @@ export class SocketManager implements ZoneEventListener {
                 );
             }
         });
+
+        await Promise.all(spacePromises);
     }
 
     async handleReportMessage(client: Socket, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
@@ -962,6 +964,8 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+
+    
     async handleAddSpaceFilterMessage(
         client: Socket,
         addSpaceFilterMessage: NonUndefinedFields<AddSpaceFilterMessage>

@@ -190,10 +190,18 @@ export class Space implements SpaceForSpaceConnectionInterface {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null {
-        const spaceUser = this._localConnectedUserWithSpaceUser.get(client);
+        
+                //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
+        const userUuid = client.getUserData().userUuid;
+        const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
+            (user) => user.uuid === userUuid
+        );
         if (!spaceUser) {
-            throw new Error("spaceUser not found");
+            console.error("spaceUser not found", userUuid, client.getUserData().name , Array.from(this._localConnectedUserWithSpaceUser.values()).map(user => user.name + " / " + user.uuid));
+            throw new Error(`spaceUser not found ${userUuid} / ${client.getUserData().name}`);
         }
+
+        
 
         const fieldMask: string[] = [];
 
@@ -244,9 +252,13 @@ export class Space implements SpaceForSpaceConnectionInterface {
             return null;
         }
 
-        const spaceUser = this._localConnectedUserWithSpaceUser.get(client);
+        //TODO : see why search directly with client on localConnectedUserWithSpaceUser is not working
+        const userUuid = client.getUserData().userUuid;
+        const spaceUser = Array.from(this._localConnectedUserWithSpaceUser.values()).find(
+            (user) => user.uuid === userUuid
+        );
         if (!spaceUser) {
-            throw new Error("spaceUser not found");
+            throw new Error("spaceUser not found " + userUuid);
         }
 
         const updateValues = applyFieldMask(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);

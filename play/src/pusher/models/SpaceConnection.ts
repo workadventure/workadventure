@@ -40,6 +40,7 @@ export class SpaceConnection {
         private _GRPC_MAX_MESSAGE_SIZE = GRPC_MAX_MESSAGE_SIZE
     ) {}
 
+
     async getSpaceStreamToBackPromise(space: SpaceForSpaceConnectionInterface): Promise<BackSpaceConnection> {
         const backId = this._apiClientRepository.getIndex(space.name);
 
@@ -105,11 +106,14 @@ export class SpaceConnection {
                             break;
                         }
                         case "pingMessage": {
+                            console.log("pingMessage ====> from onDataListener", backId);
                             if (spaceStreamToBack.pingTimeout) {
+                                console.log("clearTimeout ====> from onDataListener", backId);
                                 clearTimeout(spaceStreamToBack.pingTimeout);
                                 spaceStreamToBack.pingTimeout = undefined;
                             }
 
+                            console.log("write pongMessage ====> from onDataListener", backId);
                             spaceStreamToBack.write({
                                 message: {
                                     $case: "pongMessage",
@@ -117,22 +121,31 @@ export class SpaceConnection {
                                 },
                             });
 
-                            spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                console.error("Error spaceStreamToBack timed out for back:", backId);
-                                Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
-                                spaceStreamToBack.end();
-                                try {
-                                    this.removeListeners(spaceStreamToBack, backId);
-                                    this.retryConnection(backId);
-                                } catch (e) {
-                                    console.error("Error while retrying connection ...", e);
-                                    Sentry.captureException(e);
-                                    this.cleanUpSpacePerBackId(backId).catch((e) => {
-                                        console.error("Error while cleaning up space per back id", e);
-                                        Sentry.captureException(e);
-                                    });
-                                }
-                            }, 1000 * 60);
+                            console.log("setTimeout ====> from onDataListener", backId);
+
+                            //TODO: check if we are properly clearing the timeout each time
+
+                            //TODO: issue with reconnection or a timeout problem without reason, investigate why
+                            //TODO: issue when it triggers for no reason
+                            //TODO: at worst, we should close the connection to reconnect and handle it properly on the backend
+                            //TODO: review the reconnection and the ping system ==> can we replace it with something more gRPC and more reliable??
+                            //TODO : voir reconnection sur un back qui ne s'est pas éteint ==> est ce que les pusher doivent passer des uuid pour s'identifier et si on recois une nouvelle connexion pour un effacer les données qu'il y a avant ??
+                            // spaceStreamToBack.pingTimeout = setTimeout(() => {
+                            //     console.error("Error spaceStreamToBack timed out for back:", backId);
+                            //     Sentry.captureException("Error spaceStreamToBack timed out for back: " + backId);
+                            //     spaceStreamToBack.end();
+                            //     try {
+                            //         this.removeListeners(spaceStreamToBack, backId);
+                            //         this.retryConnection(backId);
+                            //     } catch (e) {
+                            //         console.error("Error while retrying connection ...", e);
+                            //         Sentry.captureException(e);
+                            //         this.cleanUpSpacePerBackId(backId).catch((e) => {
+                            //             console.error("Error while cleaning up space per back id", e);
+                            //             Sentry.captureException(e);
+                            //         });
+                            //     }
+                            // }, 1000 * 60);
                             break;
                         }
                         default: {
@@ -232,8 +245,10 @@ export class SpaceConnection {
     }
 
     private retryConnection(backId: number) {
+        console.log("retryConnection ====> from retryConnection (start)", backId);
         const spaceForBackId = this.spacePerBackId.get(backId);
         if (!spaceForBackId) {
+            console.error("spaceForBackId not found", this.spacePerBackId.size);
             throw new Error("spaceForBackId not found");
         }
 
@@ -245,12 +260,15 @@ export class SpaceConnection {
                     ", "
                 )}]`
             );
+            console.log("delete spacePerBackId ====> from retryConnection", backId);
             this.spacePerBackId.delete(backId);
             return;
         }
         const [, space] = validEntry;
 
+        console.log("createBackConnection ====> from retryConnection (start createBackConnection)", backId);
         const spaceStreamToBackPromise = this.createBackConnection(space, backId);
+        console.log("createBackConnection ====> from retryConnection (end createBackConnection)", backId);
         space.setSpaceStreamToBack(spaceStreamToBackPromise);
         this.spaceStreamToBackPromises.set(backId, spaceStreamToBackPromise);
 
@@ -277,6 +295,7 @@ export class SpaceConnection {
         }
 
         if (spacesForBackId.size === 0) {
+            console.log("delete spacePerBackId ====> from removeSpace", backId);
             debug("Deleting backId", backId);
             this.spacePerBackId.delete(backId);
 
@@ -287,6 +306,7 @@ export class SpaceConnection {
 
             spaceStreamToBack
                 .then((connection) => {
+                    if (connection.pingTimeout) clearTimeout(connection.pingTimeout);
                     this.removeListeners(connection, backId);
                     connection.end();
                 })
@@ -300,14 +320,17 @@ export class SpaceConnection {
     }
 
     private async cleanUpSpacePerBackId(backId: number) {
+        
         this.spacePerBackId.get(backId)?.forEach((space) => {
             space.handleConnectionRetryFailure();
         });
         this.spacePerBackId.delete(backId);
         const spaceStreamToBack = this.spaceStreamToBackPromises.get(backId);
+        console.log("delete spaceStreamToBack ====> from cleanUpSpacePerBackId", backId);
         this.spaceStreamToBackPromises.delete(backId);
         if (spaceStreamToBack) {
             const connection = await spaceStreamToBack;
+            if (connection.pingTimeout) clearTimeout(connection.pingTimeout);
             this.removeListeners(connection, backId);
         }
 

@@ -724,7 +724,7 @@ export class IoSocketController {
                             break;
                         }
                         case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
+                            await socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
 
@@ -935,6 +935,7 @@ export class IoSocketController {
                                         message: err.message,
                                     },
                                 };
+                                console.log("error", err.message);
                                 this.sendAnswerMessage(socket, answerMessage);
                             }
                             break;

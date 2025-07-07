@@ -22,6 +22,7 @@ export class SpacesWatcher {
     }
 
     private sendPing() {
+        console.log("sendPing ====> from sendPing", this.id);
         this.clearPongTimeout();
         this.socket.write({
             message: {
@@ -29,12 +30,14 @@ export class SpacesWatcher {
                 pingMessage: {},
             },
         });
-        this.pongTimeout = setTimeout(() => {
-            debug("SpacesWatcher %s => killed => no ping received from Watcher", this.id);
-            clearInterval(this.pingInterval);
-            this.pingInterval = undefined;
-            this.socket.end();
-        }, 1000 * this.timeout);
+
+        // this.pongTimeout = setTimeout(() => {
+        //     console.log("pongTimeout ====> from sendPing", this.id);
+        //     debug("SpacesWatcher %s => killed => no ping received from Watcher", this.id);
+        //     clearInterval(this.pingInterval);
+        //     this.pingInterval = undefined;
+        //     this.socket.end();
+        // }, 1000 * this.timeout);
     }
 
     public clearPongTimeout() {
