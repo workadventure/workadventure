@@ -57,7 +57,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private client: MatrixClient | undefined;
     private handleRoom: (room: Room) => void;
     private handleDeleteRoom: (roomId: string) => void;
-    private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => Promise<void>;
+    private handleMyMembership: (room: Room, membership: string, prevMembership: string | undefined) => void;
     private handleRoomStateEvent: (event: MatrixEvent) => void;
     private handleName: (room: Room) => void;
     private handleAccountDataEvent: (event: MatrixEvent) => void;
@@ -641,7 +641,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
 
-    private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
         const { roomId } = room;
 
         if (membership !== prevMembership && membership === KnownMembership.Join) {

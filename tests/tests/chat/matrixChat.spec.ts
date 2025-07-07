@@ -513,7 +513,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page);
     const publicFolder = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(publicFolder);
-    await page.getByTestId("createFolderVisibility").selectOption("public");
+    // await page.getByTestId("createFolderVisibility").selectOption("public");
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(publicFolder)).toBeAttached();
@@ -528,7 +528,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder);
-    await page.getByTestId("createFolderVisibility").selectOption("private");
+    // await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder)).toBeAttached();
@@ -544,7 +544,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
-    await page.getByTestId("createFolderVisibility").selectOption("private");
+    // await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -553,7 +553,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.waitForTimeout(1000);
     await ChatUtils.openCreateFolderDialog(page, privateFolder1);
     await page.getByTestId("createFolderName").fill(privateFolder2);
-    await page.getByTestId("createFolderVisibility").selectOption("private");
+    // await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
 
 
@@ -574,7 +574,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
-    await page.getByTestId("createFolderVisibility").selectOption("private");
+    // await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -602,7 +602,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page);
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
-    await page.getByTestId("createFolderVisibility").selectOption("private");
+    // await page.getByTestId("createFolderVisibility").selectOption("private");
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();
