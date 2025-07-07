@@ -83,7 +83,7 @@ export class SpaceConnection {
         }
     }
 
-    private onDataListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+    private onDataListener(spaceStreamToBack: BackSpaceConnection, backId: number) {
         return (message: BackToPusherSpaceMessage) => {
             try {
                 if (message.message) {
@@ -152,7 +152,7 @@ export class SpaceConnection {
         };
     }
 
-    private onEndListener(spaceStreamToBack: BackSpaceConnection, backId: number, apiSpaceClient: SpaceManagerClient) {
+    private onEndListener(spaceStreamToBack: BackSpaceConnection) {
         return () => {
             debug("[space] spaceStreamsToBack ended");
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
@@ -197,8 +197,8 @@ export class SpaceConnection {
         backId: number,
         apiSpaceClient: SpaceManagerClient
     ) {
-        const dataListener = this.onDataListener(spaceStreamToBack, backId, apiSpaceClient);
-        const endListener = this.onEndListener(spaceStreamToBack, backId, apiSpaceClient);
+        const dataListener = this.onDataListener(spaceStreamToBack, backId);
+        const endListener = this.onEndListener(spaceStreamToBack);
         const errorListener = this.onErrorListener(spaceStreamToBack, backId, apiSpaceClient);
 
         // eslint-disable-next-line listeners/no-missing-remove-event-listener , listeners/matching-remove-event-listener

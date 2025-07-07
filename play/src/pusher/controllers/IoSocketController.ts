@@ -935,7 +935,6 @@ export class IoSocketController {
                                         message: err.message,
                                     },
                                 };
-                                console.log("error", err.message);
                                 this.sendAnswerMessage(socket, answerMessage);
                             }
                             break;
