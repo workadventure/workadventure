@@ -5,6 +5,7 @@
     import { isTodoListVisibleStore, todoListsStore } from "../../Stores/TodoListStore";
     import LL from "../../../i18n/i18n-svelte";
     import todoListPng from "../images/applications/todolist.png";
+    import taskPng from "../images/applications/task.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -56,8 +57,10 @@
                             <ExternalComponents zone="todoListImage" />
                         {:else}
                             <img draggable="false" src={todoListPng} class="w-6" alt={$LL.menu.icon.open.todoList()} />
+                            <span>/</span>
+                            <img draggable="false" src={taskPng} class="w-6" alt={$LL.menu.icon.open.todoList()} />
                         {/if}
-                        <h3 class="text-lg text-left py-2">${$LL.externalModule.todoList.title()}</h3>
+                        <h3 class="text-lg text-left py-2">{$LL.externalModule.todoList.title()}</h3>
                         <span class="ml-1 px-1 py-0.5 rounded-sm bg-white text-secondary text-xxs font-bold">Beta</span>
                     </div>
 
