@@ -10,7 +10,10 @@ import { PlayerTextures } from "../Entity/PlayerTextures";
 import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { selectCharacterCustomizeSceneVisibleStore, selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+import {
+    selectCharacterCustomizeSceneVisibleStore,
+    selectCharacterSceneVisibleStore,
+} from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import {

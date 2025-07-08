@@ -176,7 +176,9 @@
 </script>
 
 <div class="bg-contrast w-screen h-screen absolute flex items-center justify-center">
-    <div class="rounded-lg flex flex-col max-w-4xl w-full mx-4 sm:h-[70vh] h-[80vh] relative bg-white/10 backdrop-blur-md">
+    <div
+        class="rounded-lg flex flex-col max-w-4xl w-full mx-4 sm:h-[70vh] h-[80vh] relative bg-white/10 backdrop-blur-md"
+    >
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -192,9 +194,14 @@
             <div class="flex-1 flex flex-col lg:flex-row items-start gap-6 min-h-0 p-6">
                 <div class="flex flex-row gap-4 w-full lg:w-fit">
                     <div class="flex flex-col gap-2">
-                        <WokaPreview {selectedTextures} {wokaData} {getTextureUrl} on:rotate={(e) => {
-                            assetsDirection = e.detail.direction;
-                        }} />
+                        <WokaPreview
+                            {selectedTextures}
+                            {wokaData}
+                            {getTextureUrl}
+                            on:rotate={(e) => {
+                                assetsDirection = e.detail.direction;
+                            }}
+                        />
 
                         <div class="mt-4 space-y-2">
                             <button
@@ -202,28 +209,26 @@
                                 on:click={randomizeOutfit}
                             >
                                 <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
-                                <span>
-                                    Randomize
-                                </span>
+                                <span> Randomize </span>
                             </button>
                         </div>
                     </div>
                     <div class="flex flex-col gap-0 mb-4 w-full lg:w-fit sm:hidden">
                         {#each bodyPartOrder as bodyPart (bodyPart)}
                             <button
-                                    class="flex-1 px-4 py-2 flex-grow capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
+                                class="flex-1 px-4 py-2 flex-grow capitalize flex flex-row items-center justify-center gap-2 border-b-2 {selectedBodyPart ===
                                 bodyPart
                                     ? 'text-white border-white'
                                     : 'text-white/50 border-white/10'}"
-                                    on:click={() => (selectedBodyPart = bodyPart)}
-                                    style="border-bottom-style: solid;"
+                                on:click={() => (selectedBodyPart = bodyPart)}
+                                style="border-bottom-style: solid;"
                             >
                                 <svelte:component
-                                        this={getBodyPartIcon(bodyPart)}
-                                        height="h-5"
-                                        width="w-5"
-                                        strokeColor="{selectedBodyPart === bodyPart ? 'stroke-white ' : 'stroke-white/50'}"
-                                        fillColor="{selectedBodyPart === bodyPart ? 'fill-white ' : 'fill-white/50'}"
+                                    this={getBodyPartIcon(bodyPart)}
+                                    height="h-5"
+                                    width="w-5"
+                                    strokeColor={selectedBodyPart === bodyPart ? "stroke-white " : "stroke-white/50"}
+                                    fillColor={selectedBodyPart === bodyPart ? "fill-white " : "fill-white/50"}
                                 />
                                 {bodyPart}
                             </button>
@@ -246,8 +251,8 @@
                                     this={getBodyPartIcon(bodyPart)}
                                     height="h-5"
                                     width="w-5"
-                                    strokeColor="{selectedBodyPart === bodyPart ? 'stroke-white ' : 'stroke-white/50'}"
-                                    fillColor="{selectedBodyPart === bodyPart ? 'fill-white ' : 'fill-white/50'}"
+                                    strokeColor={selectedBodyPart === bodyPart ? "stroke-white " : "stroke-white/50"}
+                                    fillColor={selectedBodyPart === bodyPart ? "fill-white " : "fill-white/50"}
                                 />
                                 {bodyPart}
                             </button>
@@ -259,10 +264,14 @@
                             {selectedBodyPart} Options
                         </h3>
                         <div class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full">
-                            <div class="overflow-y-scroll overflow-x-auto w-full scroll-mask flex flex-row flex-wrap items-start justify-start gap-3 py-[40px]">
+                            <div
+                                class="overflow-y-scroll overflow-x-auto w-full scroll-mask flex flex-row flex-wrap items-start justify-start gap-3 py-[40px]"
+                            >
                                 {#each getAvailableTextures(selectedBodyPart) as texture (texture.id)}
                                     <button
-                                        class="rounded border border-solid box-border p-0 h-fit {selectedTextures[selectedBodyPart] === texture.id
+                                        class="rounded border border-solid box-border p-0 h-fit {selectedTextures[
+                                            selectedBodyPart
+                                        ] === texture.id
                                             ? 'bg-white/50 border-white'
                                             : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                         on:click={() => selectTexture(selectedBodyPart, texture.id)}
@@ -281,9 +290,10 @@
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                         class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
-                                                    ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
+                                                        ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
                                                             d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
-                                                    /><path d="M9 9l6 6" /></svg>
+                                                        /><path d="M9 9l6 6" /></svg
+                                                    >
                                                 </div>
                                             {:else}
                                                 <div
@@ -301,18 +311,19 @@
                     </div>
                 </div>
             </div>
-            <div class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
+            <div
+                class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
                 style="border-top-style: solid;"
             >
                 <button
-                        class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
-                        on:click={goBack}
+                    class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
+                    on:click={goBack}
                 >
                     Cancel
                 </button>
                 <button
-                        class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
-                        on:click={saveAndContinue}
+                    class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
+                    on:click={saveAndContinue}
                 >
                     Finish
                 </button>
@@ -325,11 +336,11 @@
     .scroll-mask {
         mask-image: linear-gradient(to bottom, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
         -webkit-mask-image: linear-gradient(
-                to bottom,
-                transparent 0px,
-                black 40px,
-                black calc(100% - 40px),
-                transparent 100%
+            to bottom,
+            transparent 0px,
+            black 40px,
+            black calc(100% - 40px),
+            transparent 100%
         );
     }
 </style>
