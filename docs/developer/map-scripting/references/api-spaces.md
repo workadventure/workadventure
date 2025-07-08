@@ -64,9 +64,28 @@ As soon as the space is joined, you will receive the list of all users currently
 
 - **leave()**: Leaves the space. After calling this, the Space object should no longer be used.
 
-```ts
-space.leave();
-```
+  ```ts
+  space.leave();
+  ```
+
+- **leave()**: Leaves the space. After calling this, the Space object should no longer be used.
+
+  ```ts
+  space.leave();
+  ```
+- **startStreaming()**: Starts streaming audio/video in the space. This is only available if the `filterType` is set to `"streaming"`.
+  If the `filterType` is set to `"everyone"`, anyone starting a webcam or microphone will automatically be audible to all other users in the space.
+
+  ```ts
+  space.startStreaming();
+  ```
+
+- **stopStreaming()**: Stops streaming audio/video in the space. This is only available if the `filterType` is set to `"streaming"`.
+
+  ```ts
+  space.stopStreaming();
+  ```
+
 
 ## The SpaceUser object
 
