@@ -16,10 +16,6 @@ export const defaultPeerFactory: PeerFactoryInterface = {
     create: (_space: SpaceInterface, _streamableSubjects: StreamableSubjects) => {
         const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
         const peer = new SimplePeer(_space, playerRepository, _streamableSubjects);
-        const spaceFilter = _space.getLastSpaceFilter();
-        if (spaceFilter) {
-            peer.setSpaceFilter(spaceFilter);
-        }
         return peer;
     },
 };

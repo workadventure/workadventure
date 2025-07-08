@@ -10,8 +10,7 @@ import {
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
 import { derived, Writable, writable } from "svelte/store";
-import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";

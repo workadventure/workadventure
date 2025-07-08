@@ -1,5 +1,5 @@
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:20.8-bullseye-slim AS proto-builder
+FROM --platform=$BUILDPLATFORM node:22.16-bullseye-slim AS proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # final production image
-FROM node:20.8-bullseye-slim
+FROM node:22.16-bullseye-slim
 EXPOSE 8080 50051
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git curl

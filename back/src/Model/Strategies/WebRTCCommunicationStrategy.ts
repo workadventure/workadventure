@@ -127,7 +127,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return this._connections.hasConnection(userId1, userId2);
     }
 
-    //TODO : envoyer les events seulement aux personnes qui ont besoin de les recevoir dans prendre en compte les streaming 
+    //TODO : envoyer les events seulement aux personnes qui ont besoin de les recevoir dans prendre en compte les streaming
 
     private sendWebRTCStart(
         senderId: string,

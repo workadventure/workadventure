@@ -183,6 +183,8 @@ message EditMapMessage {
     ModifyCustomEntityMessage modifyCustomEntityMessage = 10;
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
+    UploadFileMessage uploadFileMessage = 13;
+    DeleteFileMessage deleteFileMessage = 14;
   }
 }
 
@@ -262,6 +264,11 @@ message DeleteEntityMessage {
   string id = 1;
 }
 
+message DeleteFileMessage {
+  string propertyId = 1;
+  string name = 2;
+}
+
 message CollisionGridRow {
   repeated uint32 row = 1;
 }
@@ -283,6 +290,15 @@ message UploadEntityMessage {
   string color = 7;
   optional google.protobuf.Value collisionGrid = 8;
   optional int32 depthOffset = 9;
+}
+
+message UploadFileMessage {
+  bytes file = 1;
+  string id = 2;
+  string name = 3;
+  string propertyId = 4;
+  optional string areaId = 5;
+  optional string entityId = 6;  
 }
 
 message ModifyCustomEntityMessage {
@@ -329,9 +345,6 @@ message ClientToServerMessage {
     EditMapCommandMessage editMapCommandMessage = 24;
     AddSpaceFilterMessage addSpaceFilterMessage = 25;
     RemoveSpaceFilterMessage removeSpaceFilterMessage = 26;
-    UpdateSpaceFilterMessage updateSpaceFilterMessage = 27;
-    JoinSpaceMessage joinSpaceMessage = 28;
-    LeaveSpaceMessage leaveSpaceMessage = 29;
     UpdateSpaceUserMessage updateSpaceUserMessage = 30;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     BanPlayerMessage banPlayerMessage = 41;
@@ -424,7 +437,13 @@ message QueryMessage {
     SearchTagsQuery searchTagsQuery = 11;
     OauthRefreshTokenQuery oauthRefreshTokenQuery = 12;
     EnterChatRoomAreaQuery enterChatRoomAreaQuery = 13;
+    JoinSpaceQuery joinSpaceQuery = 14;
+    LeaveSpaceQuery leaveSpaceQuery = 15;
+    MapStorageJwtQuery mapStorageJwtQuery = 16;
   }
+}
+
+message MapStorageJwtQuery {
 }
 
 message JitsiJwtQuery {
@@ -482,6 +501,15 @@ message EnterChatRoomAreaQuery{
   string roomID = 1;
 }
 
+message JoinSpaceQuery{
+  string spaceName = 1;
+  FilterType filterType = 2;
+  repeated string propertiesToSync = 3;
+}
+
+message LeaveSpaceQuery{
+  string spaceName = 1;
+}
 
 message AnswerMessage {
   int32 id = 1;
@@ -500,12 +528,21 @@ message AnswerMessage {
     SearchTagsAnswer searchTagsAnswer = 13;
     OauthRefreshTokenAnswer oauthRefreshTokenAnswer = 14;
     EnterChatRoomAreaAnswer enterChatRoomAreaAnswer = 15;
+    JoinSpaceAnswer joinSpaceAnswer = 16;
+    LeaveSpaceAnswer leaveSpaceAnswer = 17;
+    MapStorageJwtAnswer mapStorageJwtAnswer = 18;
   }
 }
+
+
 
 message JitsiJwtAnswer {
   string jwt = 1;
   string url = 2;
+}
+
+message MapStorageJwtAnswer {
+  string jwt = 1;
 }
 
 message JoinBBBMeetingAnswer {
@@ -562,7 +599,11 @@ message OauthRefreshTokenAnswer {
 message EnterChatRoomAreaAnswer{
 }
 
+message JoinSpaceAnswer{
+}
 
+message LeaveSpaceAnswer{
+}
 
 message Member {
   string id = 1;
@@ -589,8 +630,51 @@ message SearchTagsAnswer{
   repeated string tags = 1;
 }
 
+/*********** PUSHER TO BACK QUERYMESSAGES *************/
 
+message SpaceQueryMessage {
+  int32 id = 1;
+  string spaceName = 2;
+  oneof query {
+    AddSpaceUserQuery addSpaceUserQuery = 5;
+    RemoveSpaceUserQuery removeSpaceUserQuery = 6;
+  }
+}
 
+message AddSpaceUserQuery {
+  string spaceName = 1;
+  SpaceUser user = 2;
+  FilterType filterType = 3;
+}
+
+message RemoveSpaceUserQuery { 
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
+
+/*********** PUSHER TO BACK ANSWER MESSAGES *************/
+
+message SpaceAnswerMessage {
+  int32 id = 1;
+  string spaceName = 2;
+  oneof answer {
+    ErrorMessage error = 3;
+    AddSpaceUserAnswer addSpaceUserAnswer = 4;
+    RemoveSpaceUserAnswer removeSpaceUserAnswer = 5;
+    JoinSpaceAnswer joinSpaceAnswer = 6;
+    LeaveSpaceAnswer leaveSpaceAnswer = 7;
+  }
+}
+
+message AddSpaceUserAnswer {
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
+
+message RemoveSpaceUserAnswer {
+  string spaceName = 1;
+  string spaceUserId = 2;
+}
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -1249,15 +1333,15 @@ message PusherToBackSpaceMessage{
   oneof message {
     JoinSpaceMessage joinSpaceMessage = 1;
     LeaveSpaceMessage leaveSpaceMessage = 2;
-    AddSpaceUserMessage addSpaceUserMessage = 3;
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
-    RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 8;
     PublicEvent publicEvent = 15;
     PrivateEvent privateEvent = 16;
+    SyncSpaceUsersMessage syncSpaceUsersMessage = 17;
+    SpaceQueryMessage spaceQueryMessage = 18;
   }
 }
 
@@ -1272,6 +1356,7 @@ message BackToPusherSpaceMessage{
     KickOffMessage kickOffMessage = 6;
     PublicEvent publicEvent = 13;
     PrivateEvent privateEvent = 14;
+    SpaceAnswerMessage spaceAnswerMessage = 15;
   }
 }
 
@@ -1281,6 +1366,13 @@ message BackToPusherSpaceMessage{
 message JoinSpaceMessage{
   string spaceName = 1;
   repeated string propertiesToSync = 2;
+  FilterType filterType = 3;
+  bool isRetry = 4;
+}
+
+enum FilterType{
+  ALL_USERS = 0;
+  LIVE_STREAMING_USERS = 1;
 }
 message LeaveSpaceMessage{
   string spaceName = 1;
@@ -1333,11 +1425,11 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  FilterType filterType = 3;
 }
 message AddSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  string filterName = 3;
 }
 
 /**
@@ -1351,7 +1443,6 @@ message UpdateSpaceUserMessage{
 message UpdateSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  string filterName = 3;
   google.protobuf.FieldMask updateMask = 4;
 }
 
@@ -1365,13 +1456,20 @@ message RemoveSpaceUserMessage{
 message RemoveSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   string spaceUserId = 2;
-  string filterName = 3;
 }
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
-  google.protobuf.StringValue filterName = 3;
 }
+
+/**
+ * Message sent by the pusher to the back to sync the space users with the server after a reconnection
+ */
+message SyncSpaceUsersMessage{
+  string spaceName = 1;
+  repeated SpaceUser users = 2;
+}
+
 /**
  * The space we were listening to has been destroyed for some awful reason (connection to back was lost)
  */
@@ -1381,27 +1479,18 @@ message SpaceDestroyedMessage {
 message KickOffMessage{
   string spaceName = 1;
   string userId = 2;
-  google.protobuf.StringValue filterName = 3;
 }
 
 /** Filter **/
 message AddSpaceFilterMessage{
   SpaceFilterMessage spaceFilterMessage = 1;
 }
-message UpdateSpaceFilterMessage{
-  SpaceFilterMessage spaceFilterMessage = 1;
-}
+
 message RemoveSpaceFilterMessage{
   SpaceFilterMessage spaceFilterMessage = 1;
 }
 message SpaceFilterMessage{
-  string filterName = 1;
-  string spaceName = 2;
-  oneof filter {
-    SpaceFilterEverybody spaceFilterEverybody = 3;
-    SpaceFilterContainName spaceFilterContainName = 4;
-    SpaceFilterLiveStreaming spaceFilterLiveStreaming = 5;
-  }
+  string spaceName = 1;
 }
 message SpaceFilterContainName{
   string value = 1;
@@ -1463,4 +1552,3 @@ message DispatchEventRequest {
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
   repeated int32 targetUserIds = 4;
 }
-

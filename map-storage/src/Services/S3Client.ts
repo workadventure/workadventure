@@ -6,8 +6,12 @@ import {
     AWS_DEFAULT_REGION,
     AWS_SECRET_ACCESS_KEY,
     AWS_URL,
+    S3_CONNECTION_TIMEOUT,
+    S3_MAX_PARALLEL_REQUESTS,
+    S3_REQUEST_TIMEOUT,
     S3_UPLOAD_CONCURRENCY_LIMIT,
 } from "../Enum/EnvironmentVariable";
+import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5";
 
 let s3: S3 | undefined;
 
@@ -19,14 +23,20 @@ export function getS3Client(): S3 {
     const config: S3ClientConfig = {
         // ID and Secret are detected by default by the lib in the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env vars
         region: AWS_DEFAULT_REGION,
+        requestHandler: {
+            connectionTimeout: S3_CONNECTION_TIMEOUT,
+            requestTimeout: S3_REQUEST_TIMEOUT,
+            httpsAgent: { maxSockets: S3_MAX_PARALLEL_REQUESTS },
+        },
     };
 
     if (AWS_URL) {
         config.endpoint = AWS_URL;
         config.forcePathStyle = true;
+        return (s3 = createS3ClientWithMD5(config));
+    } else {
+        return (s3 = new S3(config));
     }
-
-    return (s3 = new S3(config));
 }
 
 export function hasS3Bucket(): boolean {

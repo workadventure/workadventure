@@ -3,7 +3,7 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import { AvailabilityStatus } from "@workadventure/messages";
+import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import {
     ChatMessage,
@@ -15,12 +15,11 @@ import {
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
-import { SpaceInterface } from "../../../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -73,7 +72,6 @@ export class ProximityChatRoom implements ChatRoom {
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     private _space: SpaceInterface | undefined;
-    private _spaceWatcher: SpaceFilterInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
     // Users by spaceUserId
@@ -374,16 +372,15 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public joinSpace(spaceName: string, propertiesToSync: string[]): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName, propertiesToSync);
+    public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
+        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync);
 
         // Set up manager of audio streams received by the scripting API (useful for bots)
         this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space.spacePeerManager);
         this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);
 
-        this._spaceWatcher = this._space.watchAllUsers();
-        bindMuteEventsToSpace(this._space, this._spaceWatcher);
-        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
+        bindMuteEventsToSpace(this._space);
+        this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
             this.hasUserInProximityChat.set(users.size > 1);
         });
@@ -393,14 +390,14 @@ export class ProximityChatRoom implements ChatRoom {
             return uuid && blackListManager.isBlackListed(uuid);
         };
 
-        this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
+        this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
             this.addIncomingUser(spaceUser);
         });
 
-        this.spaceWatcherUserLeftObserver = this._spaceWatcher.observeUserLeft.subscribe((spaceUser) => {
+        this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
             this.addOutcomingUser(spaceUser);
         });
 
@@ -428,7 +425,9 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this._space.simplePeer?.setSpaceFilter(this._spaceWatcher);
+        //TODO : suite au changmeent sur le space on n'a surement plus besoin de ça , a verifier
+        // this.simplePeer.setSpaceFilter(this._spaceWatcher);
+        // this._space.simplePeer?.setSpaceFilter(this._spaceWatcher);
 
         this.saveChatState();
 
@@ -446,7 +445,7 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
-    public leaveSpace(spaceName: string): void {
+    public async leaveSpace(spaceName: string): Promise<void> {
         if (!this._space) {
             console.error("Trying to leave a space that is not joined");
             Sentry.captureMessage("Trying to leave a space that is not joined");
@@ -481,7 +480,9 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this.spaceRegistry.leaveSpace(this._space);
+
+        await this.spaceRegistry.leaveSpace(this._space);
+
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 

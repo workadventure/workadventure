@@ -24,20 +24,6 @@ spec:
     - host: {{ .Values.domainName }}
       http:
         paths:
-          - path: /ws/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-play
-                port:
-                  number: {{ .Values.play.service.wsPort }}
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-play
-                port:
-                  number: {{ .Values.play.service.port }}
           - path: /api{{ .Values.ingress.rewritePathSuffix }}
             pathType: {{ .Values.ingress.pathType }}
             backend:

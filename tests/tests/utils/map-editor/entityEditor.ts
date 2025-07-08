@@ -66,8 +66,8 @@ class EntityEditor {
   }
 
   async setEntitySearcheable(page: Page, value: boolean) {
-    await expect(page.getByTestId('megaphone-switch')).toBeVisible();
-    await page.getByTestId('megaphone-switch').click();
+    await expect(page.getByTestId('searchable')).toBeVisible();
+    await page.getByTestId('searchable').click();
     await page.locator(".map-editor .sidebar input#searchable").setChecked(value);
   }
 
@@ -75,7 +75,7 @@ class EntityEditor {
     await page
       .getByTestId("uploadCustomAsset")
       .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFile()}`));
-    await page.getByTestId("floatingObject").check();
+    await page.getByTestId("floatingObject").click();
     await this.applyEntityModifications(page);
   }
 
@@ -83,7 +83,7 @@ class EntityEditor {
     await page
       .getByTestId("uploadCustomAsset")
       .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetFileWithOddSize()}`));
-    await page.getByTestId("floatingObject").check();
+    await page.getByTestId("floatingObject").click();
     await this.applyEntityModifications(page);
   }
 
@@ -112,6 +112,13 @@ class EntityEditor {
 
   async setOpenLinkProperty(page: Page, link: string) {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
+  }
+
+  async setOpenFileProperty(page: Page) {
+    const fileChooserPromise = page.waitForEvent("filechooser");
+    await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(path.join(__dirname, `../../assets/ipsum-lorem.pdf`));
   }
 
   getTestAssetFile(){

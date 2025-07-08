@@ -28,9 +28,15 @@ import players from "./front/Api/Iframe/players";
 import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./front/Api/Iframe/Ui/Popup";
 import type { Sound } from "./front/Api/Iframe/Sound/Sound";
-import { answerPromises, queryWorkadventure } from "./front/Api/Iframe/IframeApiContribution";
+import {
+    answerPromises,
+    answerPromisesMessagePort,
+    queryWorkadventure,
+} from "./front/Api/Iframe/IframeApiContribution";
 import camera from "./front/Api/Iframe/camera";
+import spaces from "./front/Api/Iframe/spaces";
 import mapEditor from "./front/Api/Iframe/mapEditor";
+import { isIframeErrorMessagePortEvent, isIframeSuccessMessagePortEvent } from "./front/Api/Events/MessagePortEvents";
 export type {
     CreateUIWebsiteEvent,
     ModifyUIWebsiteEvent,
@@ -111,6 +117,7 @@ const wa = {
     player,
     players,
     camera,
+    spaces,
     state: globalState,
     event,
     mapEditor,
@@ -288,6 +295,8 @@ declare global {
 
 window.WA = wa;
 
+// Event listener is valid for the lifetime of the object and will be garbage collected when the object is destroyed
+// eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
 window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
     if (message.source !== window.parent) {
         return; // Skip message in this event listener
@@ -296,8 +305,34 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
 
     //console.debug(payload);
 
+    const safeParseErrorMessagePortEvent = isIframeErrorMessagePortEvent.safeParse(payload);
+    const safeParseSuccessMessagePortEvent = isIframeSuccessMessagePortEvent.safeParse(payload);
     const safeParseErrorAnswerEvent = isIframeErrorAnswerEvent.safeParse(payload);
-    if (safeParseErrorAnswerEvent.success) {
+
+    if (safeParseErrorMessagePortEvent.success) {
+        const payloadData = safeParseErrorMessagePortEvent.data;
+        const queryId = payloadData.id;
+        const payloadError = payloadData.error;
+
+        const resolver = answerPromisesMessagePort.get(queryId);
+        if (resolver === undefined) {
+            throw new Error("In Iframe API, got an error for a message port opening we have no track of.");
+        }
+        resolver.reject(new Error(payloadError));
+
+        answerPromisesMessagePort.delete(queryId);
+    } else if (safeParseSuccessMessagePortEvent.success) {
+        const payloadData = safeParseSuccessMessagePortEvent.data;
+        const queryId = payloadData.id;
+
+        const resolver = answerPromisesMessagePort.get(queryId);
+        if (resolver === undefined) {
+            throw new Error("In Iframe API, got a success message port for a question that we have no track of.");
+        }
+        resolver.resolve();
+
+        answerPromisesMessagePort.delete(queryId);
+    } else if (safeParseErrorAnswerEvent.success) {
         const payloadData = safeParseErrorAnswerEvent.data;
         const queryId = payloadData.id;
         const payloadError = payloadData.error;

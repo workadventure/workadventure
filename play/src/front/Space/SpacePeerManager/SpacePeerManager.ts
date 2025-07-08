@@ -3,7 +3,6 @@
 import { Subject } from "rxjs";
 import { Readable, Unsubscriber } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
@@ -18,8 +17,6 @@ export interface ICommunicationState {
     dispatchStream(mediaStream: MediaStream): void;
 }
 
-
-
 export interface StreamableSubjects {
     videoPeerAdded: Subject<MediaStoreStreamable>;
     videoPeerRemoved: Subject<MediaStoreStreamable>;
@@ -30,7 +27,6 @@ export interface StreamableSubjects {
 export interface SimplePeerConnectionInterface {
     closeAllConnections(needToDelete?: boolean): void;
     blockedFromRemotePlayer(userId: string): void;
-    setSpaceFilter(filter: SpaceFilterInterface): void;
     unregister(): void;
     dispatchStream(mediaStream: MediaStream): void;
     cleanupStore(): void;
@@ -151,4 +147,3 @@ export class SpacePeerManager {
         this._communicationState.dispatchStream(mediaStream);
     }
 }
-

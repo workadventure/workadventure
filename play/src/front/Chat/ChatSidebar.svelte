@@ -38,7 +38,6 @@
             reposition();
         };
     };
-
     const handleTouchStart = (e: TouchEvent) => {
         let dragX = e.targetTouches[0].pageX;
 
@@ -52,13 +51,15 @@
             dragX = e.targetTouches[0].pageX;
         }
 
-        document.addEventListener("touchmove", onTouchMove);
-
-        document.addEventListener("touchend", () => {
+        function onTouchEnd() {
             document.removeEventListener("touchmove", onTouchMove);
+            document.removeEventListener("touchend", onTouchEnd);
             chatSidebarWidthStore.set(sideBarWidth);
             reposition();
-        });
+        }
+
+        document.addEventListener("touchmove", onTouchMove);
+        document.addEventListener("touchend", onTouchEnd);
     };
 
     const handleDbClick = () => {
