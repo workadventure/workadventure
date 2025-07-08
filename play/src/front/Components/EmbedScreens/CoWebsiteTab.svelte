@@ -77,14 +77,6 @@
     }
 
     $: isVerySmall = availableWidth < 190;
-
-    function handleClick() {
-        url = coWebsite.getUrl().toString();
-
-        window.open(url, "_blank");
-        analyticsClient.openCowebsiteInNewTab();
-        if (isJitsi) closeTab();
-    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
