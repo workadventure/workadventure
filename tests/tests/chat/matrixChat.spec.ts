@@ -560,11 +560,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await ChatUtils.openCreateFolderDialog(page, privateFolder1);
     await page.getByTestId("createFolderName").fill(privateFolder2);
     // await page.getByTestId("createFolderVisibility").selectOption("private");
-    await page.getByPlaceholder('Users').click();
-    await page.getByPlaceholder('Users').press('Enter');
     await page.getByTestId("createFolderButton").click();
-    await page.getByPlaceholder('Users').click();
-    await page.getByPlaceholder('Users').press('Enter');
 
 
     await expect(page.getByText(privateFolder2)).toBeHidden({
@@ -585,8 +581,6 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const privateFolder1 = ChatUtils.getRandomName();
     await page.getByTestId("createFolderName").fill(privateFolder1);
     // await page.getByTestId("createFolderVisibility").selectOption("private");
-    await page.getByPlaceholder('Users').click();
-    await page.getByPlaceholder('Users').press('Enter');
     await page.getByTestId("createFolderButton").click();
     await page.getByTestId("roomAccordeon").click();
     await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -594,8 +588,6 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const room = ChatUtils.getRandomName();
     await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
-    await page.getByPlaceholder('Users').click();
-    await page.getByPlaceholder('Users').press('Enter');
     // await page.getByTestId("createRoomVisibility").selectOption("public");
     await page.getByTestId("createRoomButton").click();
     await page.waitForTimeout(1000);
@@ -623,8 +615,6 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     const room = ChatUtils.getRandomName();
     await ChatUtils.openCreateRoomDialog(page, privateFolder1);
     await page.getByTestId("createRoomName").fill(room);
-    await page.getByPlaceholder('Users').click();
-    await page.getByPlaceholder('Users').press('Enter');
     // await page.getByTestId("createRoomVisibility").selectOption("restricted");
     await page.getByTestId("createRoomButton").click();
     await page.getByText(privateFolder1).click();
