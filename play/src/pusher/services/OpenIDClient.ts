@@ -68,7 +68,9 @@ class OpenIDClient {
         playUri: string,
         req: Request,
         manuallyTriggered: "true" | undefined,
-        chatRoomId: string | undefined
+        chatRoomId: string | undefined,
+        providerId: string | undefined,
+        providerScopes: string[] | undefined
     ): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -104,6 +106,8 @@ class OpenIDClient {
                 // is mandatory.
                 manuallyTriggered,
                 chatRoomId,
+                providerId,
+                providerScopes,
                 code_challenge,
                 code_challenge_method: "S256",
             });

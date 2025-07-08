@@ -7,7 +7,8 @@
     import { extensionModuleStore } from "../../Stores/GameSceneStore";
     import LL from "../../../i18n/i18n-svelte";
 
-    import calendarSvg from "../images/applications/outlook.svg";
+    import outlookSvg from "../images/applications/outlook.svg";
+    import calendarPng from "../images/applications/calendar.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -66,7 +67,9 @@
                         {#if get(externalSvelteComponentService.getComponentsByZone("calendarImage")).size > 0}
                             <ExternalComponents zone="calendarImage" />
                         {:else}
-                            <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                            <img draggable="false" src={outlookSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                            <span>/</span>
+                            <img draggable="false" src={calendarPng} class="w-8" alt={$LL.menu.icon.open.calendar()} />
                         {/if}
                         <h3 class="text-xl text-left leading-none">
                             {new Date().toLocaleString("en-EN", {
