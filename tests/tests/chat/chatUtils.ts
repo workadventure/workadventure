@@ -83,6 +83,7 @@ class ChatUtils {
       state: "visible",
       timeout: 20_000,
     });
+    await page.waitForTimeout(1000);
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByTestId("passphraseInput").blur();
     await page.getByTestId("confirmAccessSecretStorageButton").click();

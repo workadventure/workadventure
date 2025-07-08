@@ -41,6 +41,22 @@
                 @apply brightness-125;
             }
         }
+
+    .menu-item .ui-link,
+    .menu-item .ui-link:visited,
+    .menu-item .ui-link:active,
+    .menu-item .ui-link:-webkit-any-link {
+    -webkit-text-fill-color: #fff !important;
+    color: white !important;
+    text-decoration: none !important;
+    }
+
+
+    .menu-item .ui-link {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
     }
 
     .menu-icon {
@@ -177,13 +193,5 @@
     .clickable:hover {
         cursor: pointer;
     }
-    
-}/* Fix iOS: empêcher la coloration automatique des liens dans le menu */
-.menu-item, .menu-item * {
-    color: white !important;
-    -webkit-touch-callout: none;
-    -webkit-user-select: text;
-    -webkit-text-size-adjust: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-user-modify: read-write-plaintext-only;
-  }
+}
+
