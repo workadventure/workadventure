@@ -40,6 +40,7 @@ export interface GroupCreatedUpdatedMessageInterface {
     groupId: number;
     groupSize?: number;
     locked?: boolean;
+    userIds: number[];
 }
 
 export interface GroupUsersUpdateMessageInterface {

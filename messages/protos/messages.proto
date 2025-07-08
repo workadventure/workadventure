@@ -624,6 +624,7 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
     // FIXME: remove all this
     KickOffMessage kickOffMessage = 22;
     PublicEvent publicEvent = 29;
@@ -643,6 +644,7 @@ message GroupUpdateMessage {
   PointMessage position = 2;
   google.protobuf.UInt32Value groupSize = 3;
   google.protobuf.BoolValue locked = 4;
+  repeated int32 userIds = 5;
 }
 
 message GroupDeleteMessage {
@@ -945,7 +947,6 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
@@ -1007,6 +1008,7 @@ message GroupUpdateZoneMessage {
   int32  groupSize = 3;
   Zone fromZone = 4;
   bool locked = 5;
+  repeated int32 userIds = 6;
 }
 
 message GroupLeftZoneMessage {
@@ -1075,6 +1077,7 @@ message SubToPusherMessage {
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 12;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
   }
 }
 

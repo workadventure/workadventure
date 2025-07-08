@@ -31,7 +31,6 @@ import {
     RoomsList,
     SendEventQuery,
     SendUserMessage,
-    ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     TurnCredentialsAnswer,
@@ -299,11 +298,9 @@ export class SocketManager {
                 roomId,
                 (user: User, group: Group) => {
                     this.joinWebRtcRoom(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 (user: User, group: Group) => {
                     this.disConnectedUser(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
@@ -320,7 +317,10 @@ export class SocketManager {
                     void this.onLockGroup(groupId, listener, roomPromise);
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
-                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
+                (group: Group, listener: ZoneSocket) => {
+                    this.onUserEntersOrLeavesBubble(group, listener);
+                }
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -444,6 +444,21 @@ export class SocketManager {
         }
     }
 
+    private onUserEntersOrLeavesBubble(group: Group, client: ZoneSocket) {
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "groupUsersUpdateMessage",
+                    groupUsersUpdateMessage: {
+                        groupId: group.getId(),
+                        userIds: group.getUsers().map((user) => user.id),
+                    },
+                },
+            },
+            client
+        );
+    }
+
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         emitZoneMessage(
             {
@@ -498,6 +513,7 @@ export class SocketManager {
                         groupSize: group.getSize,
                         fromZone: SocketManager.toProtoZone(fromZone),
                         locked: group.isLocked(),
+                        userIds: group.getUsers().map((user) => user.id),
                     },
                 },
             },
@@ -543,20 +559,6 @@ export class SocketManager {
             };
         }
         return undefined;
-    }
-
-    private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const clientMessage: ServerToClientMessage["message"] = {
-            $case: "groupUsersUpdateMessage",
-            groupUsersUpdateMessage: {
-                groupId: group.getId(),
-                userIds: group.getUsers().map((user) => user.id),
-            },
-        };
-
-        group.getUsers().forEach((currentUser: User) => {
-            currentUser.write(clientMessage);
-        });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
@@ -1251,7 +1253,7 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            //FIXME : JWT 
+            //FIXME : JWT
             space = new Space(joinSpaceMessage.spaceName, eventProcessor, joinSpaceMessage.propertiesToSync);
             this.spaces.set(joinSpaceMessage.spaceName, space);
         }
