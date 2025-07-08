@@ -204,11 +204,17 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property);
+                this.handleSpeakerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnEnter(property);
+                this.handleListenerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -281,13 +287,19 @@ export class AreasPropertiesListener {
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty);
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleListenerMegaphonePropertyOnLeave(oldProperty);
-                this.handleListenerMegaphonePropertyOnEnter(newProperty);
+                this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -982,10 +994,10 @@ export class AreasPropertiesListener {
         popupStore.removePopup(actionId);
     }
 
-    private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
+    private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
             currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
@@ -1000,14 +1012,17 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(uniqRoomName);
+            this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
 
-    private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
+    private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),
@@ -1015,7 +1030,7 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 currentLiveStreamingSpaceStore.set(broadcastSpace.space);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(uniqRoomName, "live");
@@ -1033,7 +1048,10 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(uniqRoomName);
+                this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(uniqRoomName);
                 }

@@ -11,7 +11,7 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
+    import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { peerStore } from "../../Stores/PeerStore";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
