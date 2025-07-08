@@ -102,6 +102,8 @@ export class AuthenticateController extends BaseHttpController {
                     playUri: z.string(),
                     manuallyTriggered: z.literal("true").optional(),
                     chatRoomId: z.string().optional(),
+                    providerId: z.string().optional(),
+                    providerScopes: z.string().array().optional(), // Optional scopes to request
                 })
             );
             if (query === undefined) {
@@ -122,7 +124,9 @@ export class AuthenticateController extends BaseHttpController {
                 query.playUri,
                 req,
                 query.manuallyTriggered,
-                query.chatRoomId
+                query.chatRoomId,
+                query.providerId,
+                query.providerScopes
             );
             res.cookie("playUri", query.playUri, {
                 httpOnly: true, // dont let browser javascript access cookie ever
