@@ -44,6 +44,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncCalendar: "Synchroniser mon calendrier",
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
+        isSyncronized: "Synchronisé avec Outlook",
     },
     google: {
         signIn: "Se connecter avec Google",
@@ -53,6 +54,7 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncCalendar: "Synchroniser mon calendrier",
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
+        isSyncronized: "Synchronisé avec Google",
     },
 };
 
