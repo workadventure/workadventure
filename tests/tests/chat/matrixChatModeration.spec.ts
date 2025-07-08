@@ -76,7 +76,7 @@ test.describe("chat moderation @matrix", () => {
 
     await expect(page.getByText(publicChatRoomName)).toBeAttached();
 
-    await expect(page.getByTestId(publicChatRoomName).getByTestId("toggleRoomMenu")).toBeAttached(); 
+    await expect(page.getByTestId(publicChatRoomName).getByTestId("toggleRoomMenu")).toBeAttached();
 
     await page.getByTestId(publicChatRoomName).hover();
     await page.getByTestId(publicChatRoomName).getByTestId("toggleRoomMenu").click();
@@ -96,7 +96,7 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Invited");
-   
+
     await page.getByTestId("@admin:matrix.workadventure.localhost-banButton").click();
 
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Banned");
@@ -108,7 +108,10 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton")).toBeAttached();
     await page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton").click();
 
-    await matrixApi.acceptAllInvitations(publicChatRoomName);
+    let roomId = await page.getByTestId("roomID").textContent();
+    roomId = roomId.replace("Room ID : ", "");
+
+    await matrixApi.acceptRoomInvitations(roomId);
    
     await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 
@@ -123,7 +126,7 @@ test.describe("chat moderation @matrix", () => {
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(1000);
 
-    const powerLevel = await matrixApi.getMemberPowerLevel(publicChatRoomName);
+    const powerLevel = await matrixApi.getMemberPowerLevel(roomId);
 
     expect(powerLevel).toBe(50);
 
