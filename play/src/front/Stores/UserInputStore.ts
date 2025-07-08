@@ -7,6 +7,8 @@ import { refreshPromptStore } from "./RefreshPromptStore";
 
 export const inputFormFocusStore = writable(false);
 
+// Event listener is global and never freed
+/* eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 document.addEventListener("focusin", (event) => {
     if (
         event.target instanceof HTMLInputElement ||
@@ -21,6 +23,8 @@ document.addEventListener("focusin", (event) => {
     }
 });
 
+// Event listener is global and never freed
+/* eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 document.addEventListener("focusout", (event) => {
     if (
         event.target instanceof HTMLInputElement ||

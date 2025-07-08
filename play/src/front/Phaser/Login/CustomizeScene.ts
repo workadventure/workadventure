@@ -598,6 +598,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private bindKeyboardEventHandlers(): void {
+        // Phaser unsubscribes from the keyboard events when the scene is destroyed, so we don't need to unsubscribe here
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         this.input.keyboard?.on("keyup-ENTER", () => {
             this.nextSceneToCamera();
         });
@@ -631,6 +633,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.input.keyboard?.on("keydown-D", () => {
             this.selectNextGridItem();
         });
+        /* eslint-enable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
     }
 
     private selectBodyPartType(bodyPart: WokaBodyPart): void {

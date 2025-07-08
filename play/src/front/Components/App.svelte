@@ -31,6 +31,8 @@
     let gameDiv: HTMLDivElement;
     let activeCowebsite = $coWebsites[0];
     let gameContainer: HTMLDivElement;
+    let canvas: HTMLCanvasElement;
+    let handleCanvasClick: () => void;
 
     onMount(() => {
         if (SENTRY_DSN_FRONT != undefined) {
@@ -182,14 +184,16 @@
 
         waScaleManager.setGame(game);
 
-        const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+        canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+
+        handleCanvasClick = function () {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+        };
 
         if (canvas) {
-            canvas.addEventListener("click", function () {
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
-                }
-            });
+            canvas.addEventListener("click", handleCanvasClick);
         }
 
         //updateScreenSize();
@@ -225,6 +229,9 @@
 
     onDestroy(() => {
         canvasSizeUnsubscriber?.();
+        if (canvas && handleCanvasClick) {
+            canvas.removeEventListener("click", handleCanvasClick);
+        }
     });
 </script>
 

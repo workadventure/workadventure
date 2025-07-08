@@ -86,10 +86,13 @@ test.describe('Mobile', () => {
 
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowDown', { delay: 200 });
-        await page.locator('#body').press('ArrowRight', { delay: 10000 });
+        await page.locator('#body').press('ArrowRight', { delay: 3000 });
         // Now, let's move player 2 to the speaker zone
         
         // Click on the button to close the cowebsite
+        await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
+
+        // Click on the button to close the Jitsi
         await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
 
         // Check that the cowebsite is hidden

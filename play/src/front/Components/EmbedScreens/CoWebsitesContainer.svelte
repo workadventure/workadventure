@@ -113,6 +113,7 @@
         if (div) {
             document.body.removeChild(div);
         }
+        window.removeEventListener("mouseup", removeDivForResize);
     }
 
     const setActiveCowebsite = (coWebsite: CoWebsite) => {

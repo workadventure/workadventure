@@ -96,6 +96,8 @@ class ConnectionManager {
     }
 
     constructor() {
+        // The listener never needs to be removed, because we are in a singleton that is never destroyed.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         window.addEventListener("beforeunload", () => {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
@@ -124,8 +126,10 @@ class ConnectionManager {
      * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
      *
      * @param manuallyTriggered - Whether the login request resulted from a click on the "Sign in" button or from a mandatory authentication.
+     * @param providerId - The ID of the OpenID provider to use for authentication.
+     * @param providerScopes - The scopes to request from the OpenID provider.
      */
-    public loadOpenIDScreen(manuallyTriggered: boolean): URL | null {
+    public loadOpenIDScreen(manuallyTriggered: boolean, providerId?: string, providerScopes?: string[]): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
@@ -137,6 +141,14 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         if (manuallyTriggered) {
             redirectUrl.searchParams.append("manuallyTriggered", "true");
+        }
+        if (providerId) {
+            redirectUrl.searchParams.append("providerId", providerId);
+        }
+        if (providerScopes) {
+            providerScopes.forEach((scope) => {
+                redirectUrl.searchParams.append("providerScopes", scope);
+            });
         }
         return redirectUrl;
     }
@@ -465,9 +477,11 @@ class ConnectionManager {
                 lastCommandId
             );
 
-            connection.onConnectError((error: object) => {
+            // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            connection.websocketErrorStream.subscribe((error: Event) => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(asError(error));
+                reject(asError(event));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

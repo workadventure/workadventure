@@ -175,9 +175,12 @@ export class GameMapPropertiesListener {
                     jitsiUrl = answer.url;
                 }
 
-                const domain = jitsiUrl || JITSI_URL;
+                let domain = jitsiUrl || JITSI_URL;
                 if (domain === undefined) {
                     throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                }
+                if (!domain.startsWith("http")) {
+                    domain = "https://" + domain;
                 }
 
                 inJitsiStore.set(true);
