@@ -2,16 +2,16 @@ import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
 
 export class DefaultState implements ICommunicationState {
-    handleUserAdded(user: SpaceUser): void {
-        console.info("DefaultState handleUserAdded", user);
+    handleUserAdded(user: SpaceUser): Promise<void> {
+        return Promise.resolve();
     }
-    handleUserDeleted(user: SpaceUser): void {
-        console.info("DefaultState handleUserDeleted", user);
+    handleUserDeleted(user: SpaceUser): Promise<void> {
+        return Promise.resolve();
     }
-    handleUserUpdated(user: SpaceUser): void {
-        console.info("DefaultState handleUserUpdated", user);
+    handleUserUpdated(user: SpaceUser): Promise<void> {
+        return Promise.resolve();
     }
-    handleUserReadyForSwitch(userId: string): void {
-        console.info("DefaultState handleUserReadyForSwitch", userId);
+    handleUserReadyForSwitch(userId: string): Promise<void> {
+        return Promise.resolve();
     }
 }

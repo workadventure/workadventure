@@ -16,10 +16,11 @@ import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 
 const debug = Debug("space");
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
