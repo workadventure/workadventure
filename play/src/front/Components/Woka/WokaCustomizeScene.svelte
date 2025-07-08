@@ -17,9 +17,9 @@
     import HangerIcon from "../Icons/HangerIcon.svelte";
     import HatIcon from "../Icons/HatIcon.svelte";
     import SwordIcon from "../Icons/SwordIcon.svelte";
+    import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
-    import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
 
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = "body";

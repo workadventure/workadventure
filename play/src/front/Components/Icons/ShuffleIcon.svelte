@@ -1,4 +1,3 @@
-
 <script lang="ts">
     export let height = "h-6";
     export let width = "w-6";
