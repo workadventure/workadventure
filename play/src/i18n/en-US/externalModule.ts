@@ -47,6 +47,7 @@ const externalModule: BaseTranslation = {
         popupScopeToSyncCalendar: "Synchronize my calendar",
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
+        isSyncronized: "Synchronized with Outlook",
     },
     google: {
         signIn: "Sign in with Google",
@@ -56,6 +57,7 @@ const externalModule: BaseTranslation = {
         popupScopeToSyncCalendar: "Synchronize my calendar",
         popupScopeToSyncTask: "Synchronize my tasks",
         popupCancel: "Cancel",
+        isSyncronized: "Synchronized with Google",
     },
     calendar: {
         title: "Your meeting today",

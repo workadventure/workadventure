@@ -4,6 +4,7 @@
     import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
     import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
+    import * as Sentry from "@sentry/svelte";
     import ButtonClose from "../../../Input/ButtonClose.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
@@ -33,7 +34,10 @@
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
                 selectedFile = file;
-                void handleFileChange();
+                handleFileChange().catch((error) => {
+                    console.error("Error in handleFileChange:", error);
+                    Sentry.captureException(error);
+                });
             } else {
                 console.error("File format not supported");
                 errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
@@ -60,8 +64,9 @@
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
-        const fileName = selectedFile.name.split(".")[0];
-        const fileExt = selectedFile.name.split(".")[1];
+        const lastDot = selectedFile.name.lastIndexOf(".");
+        const fileName = selectedFile.name.slice(0, lastDot);
+        const fileExt = selectedFile.name.slice(lastDot + 1);
 
         const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
             property.id
