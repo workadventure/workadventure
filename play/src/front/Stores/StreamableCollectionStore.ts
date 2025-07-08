@@ -82,13 +82,22 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
+    // The lower the priority, the more important the streamable is.
+    // -2: reserved for the local camera
+    // -1: reserved for the local screen sharing
+    // 0 - 1000: Videos started with scripting API
+    // From 1000 - 2000: other screen sharing streams
+    // 2000+: other streams
+    priority: number;
 }
+
+export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
+export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
 
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;
     media: MediaStoreStreamable;
-    priority: number;
 };
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
@@ -186,13 +195,14 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
+        priority: -2,
     };
 });
 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
-function createStreamableCollectionStore(): Readable<Map<string, ExtendedStreamable>> {
+function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
         [
             broadcastTracksStore,

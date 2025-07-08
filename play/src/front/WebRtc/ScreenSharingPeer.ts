@@ -8,7 +8,7 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -50,6 +50,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly displayMode = "fit";
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = true;
+    public priority: number = SCREEN_SHARE_STARTING_PRIORITY;
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
