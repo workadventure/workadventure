@@ -23,6 +23,7 @@ import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { Socket } from "../services/SocketManager";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 
 const debug = Debug("zone");
 
@@ -33,6 +34,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: Socket): void;
     onGroupMoves(group: GroupDescriptor, listener: Socket): void;
     onGroupLeaves(groupId: number, listener: Socket): void;
+    onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void;
     onError(errorMessage: ErrorMessage, listener: Socket): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: Socket): void;
@@ -146,7 +148,8 @@ export class GroupDescriptor {
         public readonly groupId: number,
         private groupSize: number | undefined,
         private position: PointMessage,
-        private locked: boolean | undefined
+        private locked: boolean | undefined,
+        private _userIds: number[]
     ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
@@ -154,13 +157,17 @@ export class GroupDescriptor {
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.groupId, message.groupSize, position, message.locked);
+        return new GroupDescriptor(message.groupId, message.groupSize, position, message.locked, message.userIds);
     }
 
     public update(groupDescriptor: GroupDescriptor): void {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
         this.locked = groupDescriptor.locked;
+    }
+
+    public updateUsers(userIds: number[]): void {
+        this._userIds = userIds;
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
@@ -172,7 +179,12 @@ export class GroupDescriptor {
             groupSize: this.groupSize,
             position: this.position,
             locked: this.locked,
+            userIds: this._userIds,
         };
+    }
+
+    public get userIds(): number[] {
+        return this._userIds;
     }
 }
 
@@ -204,13 +216,18 @@ export class Zone {
         (async () => {
             debug("Opening connection to zone %d, %d on back server", this.x, this.y);
             try {
-                const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
+                const apiClient = await apiClientRepository.getClient(
+                    this.positionDispatcher.roomId,
+                    GRPC_MAX_MESSAGE_SIZE
+                );
                 const zoneMessage: ZoneMessage = {
                     roomId: this.positionDispatcher.roomId,
                     x: this.x,
                     y: this.y,
                 };
                 this.backConnection = apiClient.listenZone(zoneMessage);
+                // Event listeners are valid for the lifetime of the connection
+                /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
                 this.backConnection.on("data", (batch: BatchToPusherMessage) => {
                     for (const message of batch.payload) {
                         if (!message.message) {
@@ -245,6 +262,20 @@ export class Zone {
                                     const fromZone = groupUpdateZoneMessage.fromZone;
                                     this.notifyGroupEnter(groupDescriptor, fromZone);
                                 }
+                                break;
+                            }
+                            case "groupUsersUpdateMessage": {
+                                const groupUsersUpdateMessage = message.message.groupUsersUpdateMessage;
+                                const groupId = groupUsersUpdateMessage.groupId;
+                                const oldGroupDescriptor = this.groups.get(groupId);
+
+                                if (oldGroupDescriptor !== undefined) {
+                                    oldGroupDescriptor.updateUsers(message.message.groupUsersUpdateMessage.userIds);
+                                    this.notifyGroupUsersUpdated(oldGroupDescriptor);
+                                } else {
+                                    console.warn("Could not find group with id " + groupId + " to update users.");
+                                }
+
                                 break;
                             }
                             case "userLeftZoneMessage": {
@@ -424,6 +455,12 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyGroupUsersUpdated(groupDescriptor: GroupDescriptor): void {
+        for (const listener of this.listeners) {
+            this.socketListener.onGroupUsersUpdated(groupDescriptor, listener);
         }
     }
 

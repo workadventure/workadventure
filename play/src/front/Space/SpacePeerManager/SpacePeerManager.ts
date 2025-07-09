@@ -3,7 +3,6 @@
 import { Subject } from "rxjs";
 import {Readable, Unsubscriber, writable, Writable} from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
@@ -19,9 +18,6 @@ export interface ICommunicationState {
     shouldDisplayRecordButton: boolean;
 }
 
-// -------------------- Peer Manager --------------------
-//Communication manager ?
-
 export interface StreamableSubjects {
     videoPeerAdded: Subject<MediaStoreStreamable>;
     videoPeerRemoved: Subject<MediaStoreStreamable>;
@@ -29,6 +25,19 @@ export interface StreamableSubjects {
     screenSharingPeerRemoved: Subject<MediaStoreStreamable>;
 }
 
+export interface SimplePeerConnectionInterface {
+    closeAllConnections(needToDelete?: boolean): void;
+    blockedFromRemotePlayer(userId: string): void;
+    unregister(): void;
+    dispatchStream(mediaStream: MediaStream): void;
+    cleanupStore(): void;
+    removePeer(userId: string): void;
+    dispatchSound(url: URL): Promise<void>;
+}
+
+export interface PeerFactoryInterface {
+    create(space: SpaceInterface, streamableSubjects: StreamableSubjects): SimplePeerConnectionInterface;
+}
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
@@ -158,20 +167,4 @@ export class SpacePeerManager {
     }
 
 
-}
-// -------------------- Interfaces --------------------
-
-export interface SimplePeerConnectionInterface {
-    closeAllConnections(needToDelete?: boolean): void;
-    blockedFromRemotePlayer(userId: string): void;
-    setSpaceFilter(filter: SpaceFilterInterface): void;
-    unregister(): void;
-    dispatchStream(mediaStream: MediaStream): void;
-    cleanupStore(): void;
-    removePeer(userId: string): void;
-    dispatchSound(url: URL): Promise<void>;
-}
-
-export interface PeerFactoryInterface {
-    create(space: SpaceInterface, streamableSubjects: StreamableSubjects): SimplePeerConnectionInterface;
 }

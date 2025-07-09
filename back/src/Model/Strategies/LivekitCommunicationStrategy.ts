@@ -3,6 +3,8 @@ import * as Sentry from "@sentry/node";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
+export class LivekitCommunicationStrategy implements ICommunicationStrategy {
+    private usersReady: string[] = [];
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
@@ -62,8 +64,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             });
     }
 
-    updateUser(user: SpaceUser): void {
-    }
+    updateUser(user: SpaceUser): void {}
 
     initialize(readyUsers: Set<string>): void {
         const users = this.space.getAllUsers().filter((user) => !readyUsers.has(user.spaceUserId));
@@ -73,7 +74,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
 
     addUserReady(userId: string): void {
-        this.usersReady.add(userId);
+        this.usersReady.push(userId);
     }
 
     canSwitch(): boolean {

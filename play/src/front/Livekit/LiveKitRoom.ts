@@ -21,7 +21,7 @@ import {
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
-import { INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
+import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
 export class LiveKitRoom {
@@ -43,11 +43,10 @@ export class LiveKitRoom {
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
         private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
-        private nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
+        private _nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
     ) {}
 
     public async prepareConnection(): Promise<Room> {
-        //TODO : revoir les paramètres de la room
         this.room = new Room({
             adaptiveStream: {
                 pixelDensity: "screen",
@@ -81,21 +80,19 @@ export class LiveKitRoom {
             });
 
             this.synchronizeMediaState();
-            await Promise.all(
-                Array.from(room.remoteParticipants.values()).map((participant) => {
-                    const id = this.getParticipantId(participant);
-                    return this.space.getSpaceUserBySpaceUserId(id).then((spaceUser) => {
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for participant", id);
-                            return;
-                        }
-                        this.participants.set(
-                            spaceUser.uuid,
-                            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-                        );
-                    });
-                })
-            );
+
+            Array.from(room.remoteParticipants.values()).map((participant) => {
+                const id = this.getParticipantId(participant);
+                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+                if (!spaceUser) {
+                    console.error("spaceUser not found for participant", id);
+                    return;
+                }
+                this.participants.set(
+                    participant.sid,
+                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                );
+            });
         } catch (err) {
             console.error("An error occurred in joinRoom", err);
             Sentry.captureException(err);
@@ -287,22 +284,15 @@ export class LiveKitRoom {
 
     private handleParticipantConnected(participant: Participant) {
         const id = this.getParticipantId(participant);
-        this.space
-            .getSpaceUserBySpaceUserId(id)
-            .then((spaceUser) => {
-                if (!spaceUser) {
-                    console.info("spaceUser not found for participant", id);
-                    return;
-                }
-                this.participants.set(
-                    participant.sid,
-                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-                );
-            })
-            .catch((err) => {
-                console.error("An error occurred while getting spaceUser", err);
-                Sentry.captureException(err);
-            });
+        const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+        if (!spaceUser) {
+            console.info("spaceUser not found for participant", id);
+            return;
+        }
+        this.participants.set(
+            participant.sid,
+            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+        );
     }
 
     private handleParticipantDisconnected(participant: Participant) {
@@ -311,13 +301,10 @@ export class LiveKitRoom {
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
         //TODO : revoir impl iteration sur tout les participants a chaque fois
-        console.log("active speakers", speakers);
         this.participants.forEach((participant) => {
             if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
-                console.log("participant is active speaker", participant.participant.sid);
                 participant.setActiveSpeaker(true);
             } else {
-                console.log("participant is not active speaker", participant.participant.sid);
                 participant.setActiveSpeaker(false);
             }
         });
@@ -356,7 +343,7 @@ export class LiveKitRoom {
         this.dispatchSoundTrack = localTrack.track;
 
         bufferSource.onended = () => {
-            this.nbSoundPlayedInBubbleStore.soundEnded();
+            this._nbSoundPlayedInBubbleStore.soundEnded();
             if (!this.dispatchSoundTrack || !this.localParticipant) return;
 
             this.localParticipant
@@ -370,7 +357,7 @@ export class LiveKitRoom {
                 });
         };
 
-        this.nbSoundPlayedInBubbleStore.soundStarted();
+        this._nbSoundPlayedInBubbleStore.soundStarted();
     }
 
     //TODO : tester

@@ -1,8 +1,8 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { SpaceInterface } from "../Space/SpaceInterface";
-import { CommunicationMessageType } from "../Space/SpacePeerManager/LivekitState";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 //TODO : trouver le moyen de l'avoir coté front et back

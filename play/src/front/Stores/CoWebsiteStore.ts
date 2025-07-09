@@ -81,10 +81,16 @@ export const windowSize = readable({ width: window.innerWidth, height: window.in
 export const coWebsiteRatio = writable(0.5);
 
 export const canvasSize = derived(
-    [coWebsites, windowSize, coWebsiteRatio],
-    ([$coWebsites, $windowSize, $coWebsiteRatio]) => {
+    [coWebsites, windowSize, coWebsiteRatio, fullScreenCowebsite],
+    ([$coWebsites, $windowSize, $coWebsiteRatio, $fullScreenCowebsite]) => {
         if ($coWebsites.length === 0) {
             return { width: window.innerWidth, height: window.innerHeight };
+        }
+        if ($fullScreenCowebsite) {
+            return {
+                width: 0,
+                height: 0,
+            };
         }
         if ($windowSize.width <= $windowSize.height) {
             return {

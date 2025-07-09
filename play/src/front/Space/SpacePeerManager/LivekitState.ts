@@ -4,15 +4,7 @@ import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConne
 import { SpaceInterface } from "../SpaceInterface";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 import { WebRTCState } from "./WebRTCState";
-
-//TODO : move in a common file / à séparer en messageSwitch et messageLivekit ?
-export enum CommunicationMessageType {
-    PREPARE_SWITCH_MESSAGE = "prepareSwitchMessage",
-    EXECUTE_SWITCH_MESSAGE = "executeSwitchMessage",
-    COMMUNICATION_STRATEGY_MESSAGE = "communicationStrategyMessage",
-    LIVEKIT_INVITATION_MESSAGE = "livekitInvitationMessage",
-    LIVEKIT_DISCONNECT_MESSAGE = "livekitDisconnectMessage",
-}
+import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export class LivekitState implements ICommunicationState {
     public shouldDisplayRecordButton = true;
@@ -41,7 +33,6 @@ export class LivekitState implements ICommunicationState {
                     }
 
                     this._space.spacePeerManager.setState(this._nextState);
-                    console.log("switch back to webrtc");
                 }
             })
         );
@@ -85,7 +76,6 @@ export class LivekitState implements ICommunicationState {
     }
 
     dispatchStream(mediaStream: MediaStream): void {
-        //TODO : voir si on passe le dispatchStream en asynchrone ou non (pour le webrtc aussi)
         this.livekitConnection.dispatchStream(mediaStream).catch((err) => {
             console.error("An error occurred in dispatchStream", err);
             Sentry.captureException(err);

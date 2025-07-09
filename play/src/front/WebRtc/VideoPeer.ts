@@ -11,10 +11,9 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -62,9 +61,9 @@ export class VideoPeer extends Peer implements Streamable {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
+        //TODO : remove player passer les infos dnas le spaceUser
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
-        private spaceFilter: Promise<SpaceFilterInterface>,
         private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
@@ -134,6 +133,9 @@ export class VideoPeer extends Peer implements Streamable {
         this._isMuted = derived(this._constraintsStore, ($constraintStore) => {
             return !$constraintStore?.audio;
         });
+
+        // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
         //start listen signal for the peer connection
         this.on("signal", (data: unknown) => {
@@ -208,26 +210,23 @@ export class VideoPeer extends Peer implements Streamable {
                         this.blocked = true;
                         this.toggleRemoteStream(false);
                         const simplePeer = this.space.simplePeer;
-                        this.space
-                            .getSpaceUserByUserId(this.userId)
-                            .then((spaceUser) => {
-                                if (!spaceUser) {
-                                    console.error("spaceUser not found for userId", this.userId);
-                                    return;
-                                }
-                                const spaceUserId = spaceUser.spaceUserId;
-                                if (!spaceUserId) {
-                                    console.error("spaceUserId not found for userId", this.userId);
-                                    return;
-                                }
-                                if (simplePeer) {
-                                    simplePeer.blockedFromRemotePlayer(spaceUserId);
-                                }
-                            })
-                            .catch((e) => {
-                                console.error("Error while getting spaceUser", e);
-                                Sentry.captureException(e);
-                            });
+                        const spaceUser = this.space.getSpaceUserByUserId(this.userId);
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for userId", this.userId);
+                            return;
+                        }
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for userId", this.userId);
+                            return;
+                        }
+                        const spaceUserId = spaceUser.spaceUserId;
+                        if (!spaceUserId) {
+                            console.error("spaceUserId not found for userId", this.userId);
+                            return;
+                        }
+                        if (simplePeer) {
+                            simplePeer.blockedFromRemotePlayer(spaceUserId);
+                        }
                         break;
                     }
                     case "unblocked": {
@@ -393,8 +392,7 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const spaceFilter = await this.spaceFilter;
-        return lookupUserById(this.userId, spaceFilter, 30_000);
+        return lookupUserById(this.userId, this.space, 30_000);
     }
 
     get streamStore(): Readable<MediaStream | undefined> {

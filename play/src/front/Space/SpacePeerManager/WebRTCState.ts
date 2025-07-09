@@ -3,22 +3,19 @@ import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
-import { CommunicationMessageType, LivekitState } from "./LivekitState";
+import { LivekitState } from "./LivekitState";
 import {
     SimplePeerConnectionInterface,
     PeerFactoryInterface,
     ICommunicationState,
     StreamableSubjects,
 } from "./SpacePeerManager";
+import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (_space: SpaceInterface, _streamableSubjects: StreamableSubjects) => {
         const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
         const peer = new SimplePeer(_space, playerRepository, _streamableSubjects);
-        const spaceFilter = _space.getLastSpaceFilter();
-        if (spaceFilter) {
-            peer.setSpaceFilter(spaceFilter);
-        }
         return peer;
     },
 };

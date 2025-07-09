@@ -20,7 +20,7 @@ test.describe("Connection", () => {
     //Simulation of offline network
     await page.context().setOffline(true);
 
-    await expect(page.getByText("Reconnecting...")).toBeVisible({
+    await expect(page.getByText("Connecting...")).toBeVisible({
         timeout: 180_000,
     });
 

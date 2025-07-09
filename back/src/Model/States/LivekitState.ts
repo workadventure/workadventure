@@ -65,6 +65,10 @@ export class LivekitState extends CommunicationState implements IRecordableState
         return this.isSwitching() && isMaxUsersReached;
     }
 
+    protected areAllUsersReady(): boolean {
+        return this._readyUsers.size === this._space.getAllUsers().length;
+    }
+
     protected preparedSwitchAction(readyUsers: Set<string>): void {
         this._currentStrategy.initialize(readyUsers);
     }
@@ -81,7 +85,7 @@ export class LivekitState extends CommunicationState implements IRecordableState
         }
     }
 
-    //TODO : voir si on a pas un moyen plus simple de faire ça 
+    //TODO : voir si on a pas un moyen plus simple de faire ça
     private isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
         return 'handleStartRecording' in strategy && 'handleStopRecording' in strategy;
     }

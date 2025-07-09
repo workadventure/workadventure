@@ -44,7 +44,6 @@ export class LiveKitService {
         private livekitFrontendUrl = LIVEKIT_WS_URL
     ) {
         if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
-            //TODO : voir si on le gere d'une autre maniere / Sentry
             debug("Livekit host, api key or secret is not set");
             throw new Error("Livekit host, api key or secret is not set");
         }
@@ -53,11 +52,10 @@ export class LiveKitService {
     }
 
     async createRoom(roomName: string): Promise<void> {
-        //TODO : revoir les options
         const createOptions: CreateOptions = {
             name: roomName,
             emptyTimeout: 5 * 60 * 1000,
-            maxParticipants: 1000,
+            //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
         };
 

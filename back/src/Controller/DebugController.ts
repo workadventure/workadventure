@@ -1,34 +1,38 @@
 import { dumpVariable } from "@workadventure/shared-utils/src/Debug/dumpVariable";
-import { HttpRequest, HttpResponse } from "uWebSockets.js";
-import { parse } from "query-string";
+import { Express, Request, Response, NextFunction } from "express";
 import debug from "debug";
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
-import { App } from "../Server/sifrr.server";
 import { socketManager } from "../Services/SocketManager";
+
+// Middleware pour valider le token d'authentification
+const validateTokenMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+    if (!ADMIN_API_TOKEN) {
+        res.status(401).send("No token configured!");
+        return;
+    }
+
+    const query = req.query;
+    if (query.token !== ADMIN_API_TOKEN) {
+        res.status(401).send("Invalid token sent!");
+        return;
+    }
+
+    next();
+};
 
 export class DebugController {
     private debugTimeout: NodeJS.Timeout | undefined;
 
-    constructor(private App: App) {
+    constructor(private app: Express) {
         this.getDump();
         this.enableDebug();
         this.disableDebug();
+        this.closeSpaceConnection();
     }
 
-    getDump() {
-        this.App.get("/dump", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
-
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
-
-            res.writeStatus("200 OK").end(
+    private getDump() {
+        this.app.get("/dump", validateTokenMiddleware, (req: Request, res: Response): void => {
+            res.status(200).send(
                 dumpVariable(socketManager, (value: unknown) => {
                     if (value && typeof value === "object" && value.constructor) {
                         if (value.constructor.name === "uWS.WebSocket") {
@@ -48,28 +52,20 @@ export class DebugController {
                     return value;
                 })
             );
-            return;
         });
     }
 
-    enableDebug() {
-        this.App.put("/debug/enable", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
-
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
-
+    private enableDebug() {
+        this.app.put("/debug/enable", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const query = req.query;
             let namespaces = "*";
 
             if (query.namespaces) {
-                namespaces = Array.isArray(query.namespaces) ? query.namespaces.join(",") : query.namespaces;
+                if (Array.isArray(query.namespaces)) {
+                    namespaces = (query.namespaces as string[]).join(",");
+                } else {
+                    namespaces = query.namespaces as string;
+                }
             }
 
             debug.enable(namespaces);
@@ -80,23 +76,12 @@ export class DebugController {
                 debug.disable();
             }, ONE_DAY_IN_MS);
 
-            res.writeStatus("200 OK").end("Active debug");
+            res.status(200).send("Active debug");
         });
     }
-    disableDebug() {
-        this.App.put("/debug/disable", (res: HttpResponse, req: HttpRequest): void => {
-            const query = parse(req.getQuery());
 
-            if (!ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-
-            if (query.token !== ADMIN_API_TOKEN) {
-                res.writeStatus("401 Unauthorized").end("Invalid token sent!");
-                return;
-            }
-
+    private disableDebug() {
+        this.app.put("/debug/disable", validateTokenMiddleware, (req: Request, res: Response): void => {
             debug.disable();
 
             if (this.debugTimeout) {
@@ -104,7 +89,28 @@ export class DebugController {
                 this.debugTimeout = undefined;
             }
 
-            res.writeStatus("200 OK").end("Debug disabled");
+            res.status(200).send("Debug disabled");
+        });
+    }
+
+    private closeSpaceConnection() {
+        this.app.post("/debug/close-space-connection", validateTokenMiddleware, (req: Request, res: Response): void => {
+            const query = req.query;
+
+            if (!query.spaceName) {
+                res.status(400).send("Space name is required!");
+                return;
+            }
+
+            try {
+                socketManager.closeSpaceConnection(query.spaceName as string);
+            } catch (e) {
+                console.error("Error closing space connection", e);
+                res.status(500).send("Error closing space connection");
+                return;
+            }
+
+            res.status(200).send("Space connection closed");
         });
     }
 }

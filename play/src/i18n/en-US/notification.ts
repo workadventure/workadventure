@@ -25,6 +25,7 @@ const notification: BaseTranslation = {
         },
     },
     addNewTag: "add a new tag: '{tag}'",
+    screenSharingError: "Cannot start screen sharing",
 };
 
 export default notification;

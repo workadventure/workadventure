@@ -23,6 +23,7 @@ import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
+import messageScreen from "./messageScreen";
 
 const en_US: BaseTranslation = {
     area,
@@ -49,6 +50,7 @@ const en_US: BaseTranslation = {
     statusModal,
     externalModule,
     form,
+    messageScreen,
 };
 
 export default en_US;

@@ -11,8 +11,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
     teams: {
         openingMeeting: "Ouverture de la réunion Teams...",
         unableJoinMeeting: "Impossible de rejoindre la réunion Teams !",
-        userNotConnected: "Vous n'êtes pas connecté à Teams !",
-        connectToYourTeams: "Connectez-vous à votre compte Teams 🙏",
+        userNotConnected: "Vous n'êtes pas syncronisé avec votre compte Outlook ou Google!",
+        connectToYourTeams: "Connectez-vous à votre compte Outllok ou Google 🙏",
         temasAppInfo:
             "Teams est une application Microsoft 365 qui aide votre équipe à rester connectée et organisée. Vous pouvez discuter, rencontrer, appeler et collaborer au même endroit 😍",
         buttonSync: "Synchroniser Teams 🚀",
@@ -35,6 +35,26 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         loggedIn: "Connecté en tant que",
         saveSync: "Enregistrer et synchroniser 🔌",
         logout: "Se déconnecter",
+    },
+    outlook: {
+        signIn: "Se connecter avec Outlook",
+        popupScopeToSync: "Connecter mon compte Outlook",
+        popupScopeToSyncExplainText:
+            "Nous avons besoin de nous connecter à votre compte Outlook pour synchroniser votre calendrier et / ou vos tâches. Cela vous permettra de voir vos réunions et vos tâches dans WorkAdventure et de les rejoindre directement depuis la carte.",
+        popupScopeToSyncCalendar: "Synchroniser mon calendrier",
+        popupScopeToSyncTask: "Synchroniser mes tâches",
+        popupCancel: "Annuler",
+        isSyncronized: "Synchronisé avec Outlook",
+    },
+    google: {
+        signIn: "Se connecter avec Google",
+        popupScopeToSync: "Connecter mon compte Google",
+        popupScopeToSyncExplainText:
+            "Nous avons besoin de nous connecter à votre compte Google pour synchroniser votre calendrier et / ou vos tâches. Cela vous permettra de voir vos réunions et vos tâches dans WorkAdventure et de les rejoindre directement depuis la carte.",
+        popupScopeToSyncCalendar: "Synchroniser mon calendrier",
+        popupScopeToSyncTask: "Synchroniser mes tâches",
+        popupCancel: "Annuler",
+        isSyncronized: "Synchronisé avec Google",
     },
 };
 

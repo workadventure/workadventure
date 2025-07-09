@@ -2,8 +2,9 @@ import { Subscription } from "rxjs";
 import { SpaceInterface } from "../SpaceInterface";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
-import { CommunicationMessageType, LivekitState } from "./LivekitState";
+import { LivekitState } from "./LivekitState";
 import { WebRTCState } from "./WebRTCState";
+import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export class DefaultCommunicationState implements ICommunicationState {
     public readonly shouldDisplayRecordButton = false;
@@ -41,7 +42,5 @@ export class DefaultCommunicationState implements ICommunicationState {
         return Promise.resolve();
     }
 
-    dispatchStream(mediaStream: MediaStream): void {
-        //TODO : implement
-    }
+    dispatchStream(mediaStream: MediaStream): void {}
 }

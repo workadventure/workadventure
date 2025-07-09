@@ -1,5 +1,6 @@
 import axios from "axios";
 import Debug from "debug";
+import * as Sentry from "@sentry/svelte";
 
 import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
@@ -43,7 +44,6 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
     TokenExpiredMessage,
-    UpdateSpaceFilterMessage,
     UpdateSpaceMetadataMessage,
     UpdateWAMSettingsMessage,
     UploadEntityMessage,
@@ -70,6 +70,9 @@ import {
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
+    FilterType,
+    UploadFileMessage,
+    MapStorageJwtAnswer,
     StartRecordingMessage,
     StopRecordingMessage,
 } from "@workadventure/messages";
@@ -99,6 +102,7 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
+import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -118,7 +122,7 @@ import { localUserStore } from "./LocalUserStore";
 const manualPingDelay = 100_000;
 
 export class RoomConnection implements RoomConnection {
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
@@ -184,6 +188,10 @@ export class RoomConnection implements RoomConnection {
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _websocketErrorStream = new Subject<Event>();
+    public readonly websocketErrorStream = this._websocketErrorStream.asObservable();
+    // Triggered if a "close" event is received from the WebSocket before a message is received
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
@@ -256,43 +264,47 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        let url = ABSOLUTE_PUSHER_URL;
-        url = url.replace("http://", "ws://").replace("https://", "wss://");
-        if (!url.endsWith("/")) {
-            url += "/";
-        }
-        url += "ws/room";
-        url += "?roomId=" + encodeURIComponent(roomUrl);
-        if (token) {
-            url += "&token=" + encodeURIComponent(token);
-        }
-        url += "&name=" + encodeURIComponent(name);
+        const urlObj = new URL("ws/room", ABSOLUTE_PUSHER_URL);
+        urlObj.protocol = urlObj.protocol.replace("http", "ws");
+
+        const params = urlObj.searchParams;
+        params.set("roomId", roomUrl);
+        params.set("name", name);
         for (const textureId of characterTextureIds) {
-            url += "&characterTextureIds=" + encodeURIComponent(textureId);
+            params.append("characterTextureIds", textureId);
         }
-        url += "&x=" + Math.floor(position.x);
-        url += "&y=" + Math.floor(position.y);
-        url += "&top=" + Math.floor(viewport.top);
-        url += "&bottom=" + Math.floor(viewport.bottom);
-        url += "&left=" + Math.floor(viewport.left);
-        url += "&right=" + Math.floor(viewport.right);
+        params.set("x", Math.floor(position.x).toString());
+        params.set("y", Math.floor(position.y).toString());
+        params.set("top", Math.floor(viewport.top).toString());
+        params.set("bottom", Math.floor(viewport.bottom).toString());
+        params.set("left", Math.floor(viewport.left).toString());
+        params.set("right", Math.floor(viewport.right).toString());
         if (companionTextureId) {
-            url += "&companionTextureId=" + encodeURIComponent(companionTextureId);
+            params.set("companionTextureId", companionTextureId);
         }
-        url += "&availabilityStatus=" + availabilityStatus;
+        params.set("availabilityStatus", availabilityStatus.toString());
         if (lastCommandId) {
-            url += "&lastCommandId=" + lastCommandId;
+            params.set("lastCommandId", lastCommandId);
         }
-        url += "&version=" + apiVersionHash;
-        url += "&chatID=" + (localUserStore.getChatId() ?? "");
-        url += "&roomName=" + (gameManager.currentStartedRoom.roomName ?? "");
-        url += "&cameraState=" + (get(requestedCameraState) ?? "false");
-        url += "&microphoneState=" + (get(requestedMicrophoneState) ?? "false");
+        params.set("version", apiVersionHash);
+        params.set("chatID", localUserStore.getChatId() ?? "");
+        params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
+        params.set("cameraState", get(requestedCameraState) ? "true" : "false");
+        params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
+        //TODO : voir si on utilise la variable screenSharingState
+        params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
+
+        const url = urlObj.toString();
+        let subProtocols: string[] | undefined = undefined;
+        if (token) {
+            // We abuse the subprotocols to pass the token to the server
+            subProtocols = [token];
+        }
 
         if (RoomConnection.websocketFactory) {
-            this.socket = RoomConnection.websocketFactory(url);
+            this.socket = RoomConnection.websocketFactory(url, subProtocols);
         } else {
-            this.socket = new WebSocket(url);
+            this.socket = new WebSocket(url, subProtocols);
         }
 
         this.socket.binaryType = "arraybuffer";
@@ -302,20 +314,7 @@ export class RoomConnection implements RoomConnection {
             this.resetPingTimeout();
         };
 
-        this.socket.addEventListener("close", (event) => {
-            console.info("Socket has been closed", this.userId, this.closed, event);
-            if (this.timeout) {
-                clearTimeout(this.timeout);
-            }
-
-            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(event);
-                return;
-            }
-
-            this.cleanupConnection(event.code === 1000);
-        });
+        this.socket.addEventListener("close", this.handleSocketClose);
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
@@ -442,7 +441,10 @@ export class RoomConnection implements RoomConnection {
                                 isSpeakerStore.set(false);
                                 currentLiveStreamingSpaceStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
-                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
+                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName).catch((e) => {
+                                    console.error("Error while leaving space", e);
+                                    Sentry.captureException(e);
+                                });
 
                                 void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
@@ -466,6 +468,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "spaceDestroyedMessage": {
                                 this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
+                                break;
+                            }
+                            case "groupUsersUpdateMessage": {
+                                this._groupUsersUpdateMessageStream.next(subMessage.groupUsersUpdateMessage);
                                 break;
                             }
                             default: {
@@ -588,10 +594,6 @@ export class RoomConnection implements RoomConnection {
                     this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
                     break;
                 }
-                case "groupUsersUpdateMessage": {
-                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
-                    break;
-                }
                 case "sendUserMessage": {
                     adminMessagesService.onSendusermessage(message.sendUserMessage);
                     break;
@@ -685,7 +687,29 @@ export class RoomConnection implements RoomConnection {
                 }
             }
         };
+
+        this.socket.addEventListener("error", this.handleSocketError);
     }
+
+    // Event handlers as arrow function in order not to have to bind this explicitly
+    private handleSocketClose = (event: CloseEvent) => {
+        console.info("Socket has been closed", this.userId, this.closed, event);
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+
+        // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+        if (this.userId === null && !this.closed) {
+            this._connectionErrorStream.next(event);
+            return;
+        }
+
+        this.cleanupConnection(event.code === 1000);
+    };
+
+    private handleSocketError = (event: Event) => {
+        this._websocketErrorStream.next(event);
+    };
 
     private cleanupConnection(isNormalClosure: boolean) {
         // Cleanup queries:
@@ -814,6 +838,8 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.socket?.removeEventListener("close", this.handleSocketClose);
+        this.socket?.removeEventListener("error", this.handleSocketError);
         this.closed = true;
     }
 
@@ -1249,6 +1275,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorUploadFile(commandId: string, uploadFileMessage: UploadFileMessage): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "uploadFileMessage",
+                            uploadFileMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitModifiyWAMMetadataMessage(
         commandId: string,
         modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
@@ -1334,15 +1377,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-        this.send({
-            message: {
-                $case: "updateSpaceFilterMessage",
-                updateSpaceFilterMessage: filter,
-            },
-        });
-    }
-
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
         this.send({
             message: {
@@ -1363,6 +1397,17 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.jitsiJwtAnswer;
+    }
+
+    public async queryMapStorageJwtToken(): Promise<MapStorageJwtAnswer> {
+        const answer = await this.query({
+            $case: "mapStorageJwtQuery",
+            mapStorageJwtQuery: {},
+        });
+        if (answer.$case !== "mapStorageJwtAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.mapStorageJwtAnswer;
     }
 
     public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
@@ -1431,27 +1476,34 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinSpace(spaceName: string, propertiesToSync: string[]): void {
-        this.send({
-            message: {
-                $case: "joinSpaceMessage",
-                joinSpaceMessage: {
-                    spaceName,
-                    propertiesToSync,
-                },
+    public async emitJoinSpace(spaceName: string, filterType: FilterType, propertiesToSync: string[]): Promise<void> {
+        const answer = await this.query({
+            $case: "joinSpaceQuery",
+            joinSpaceQuery: {
+                spaceName,
+                filterType,
+                propertiesToSync,
             },
         });
+
+        if (answer.$case !== "joinSpaceAnswer") {
+            throw new Error("Unexpected answer");
+        }
+
+        return;
     }
 
-    public emitLeaveSpace(spaceName: string): void {
-        this.send({
-            message: {
-                $case: "leaveSpaceMessage",
-                leaveSpaceMessage: {
-                    spaceName,
-                },
+    public async emitLeaveSpace(spaceName: string): Promise<void> {
+        const answer = await this.query({
+            $case: "leaveSpaceQuery",
+            leaveSpaceQuery: {
+                spaceName,
             },
         });
+        if (answer.$case !== "leaveSpaceAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return;
     }
 
     public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
@@ -1778,6 +1830,7 @@ export class RoomConnection implements RoomConnection {
             position: position,
             groupSize: message.groupSize,
             locked: message.locked,
+            userIds: message.userIds,
         };
     }
 
@@ -1807,6 +1860,7 @@ export class RoomConnection implements RoomConnection {
         this._variableMessageStream.complete();
         this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
+        this._websocketErrorStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
         this._joinMucRoomMessageStream.complete();

@@ -3,7 +3,7 @@ import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
+import { ICommunicationState } from "./Interfaces/ICommunicationState";
 import { DefaultState } from "./States/DefaultState";
 import { LivekitState } from "./States/LivekitState";
 
@@ -53,7 +53,7 @@ export class RecordingManager implements IRecordingManager {
 
         this._isRecording = false;
         const currentState = this.communicationManager.currentState;
-        
+
         if (this.isRecordableState(currentState)) {
             await currentState.handleStopRecording();
             this._isRecording = false;
@@ -94,7 +94,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    //TODO : voir si on a un autre moyen de faire ça 
+    //TODO : voir si on a un autre moyen de faire ça
     private isRecordableState(state: ICommunicationState): state is IRecordableState {
         return 'handleStartRecording' in state && 'handleStopRecording' in state;
     }
