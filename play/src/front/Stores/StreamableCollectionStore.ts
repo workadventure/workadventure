@@ -78,7 +78,19 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
+    // The lower the priority, the more important the streamable is.
+    // -2: reserved for the local camera
+    // -1: reserved for the local screen sharing
+    // 0 - 1000: Videos started with scripting API
+    // From 1000 - 2000: other screen sharing streams
+    // 2000+: other streams
+    priority: number;
+    // Timestamp of the last time the streamable was speaking
+    lastSpeakTimestamp?: number;
 }
+
+export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
+export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
 
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
@@ -170,6 +182,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
+        priority: -2,
     };
 });
 

@@ -43,6 +43,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
     import ResizeHandle from "./ResizeHandle.svelte";
+    import {orderedStreamableCollectionStore, maxVisibleVideosStore} from "../../Stores/OrderedStreamableCollectionStore";
 
     setContext("inCameraContainer", true);
 
@@ -89,9 +90,11 @@
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
+                maxVisibleVideosStore.set(Math.ceil(containerWidth / videoWidth));
             } else {
                 videoWidth = containerWidth;
                 videoHeight = videoWidth * (9 / 16);
+                maxVisibleVideosStore.set(Math.ceil(containerHeight / videoHeight));
             }
         } else {
             const layout = calculateOptimalLayout(containerWidth, containerHeight);
@@ -133,6 +136,7 @@
             //if (height <= containerHeight) {
             // Calculate how many complete rows we can fit
             const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
+
             const maxVisibleVideos = rowsPerPage * vpr;
 
             //console.log("maxVisibleVideos", maxVisibleVideos);
@@ -146,6 +150,7 @@
 
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
+
                 //console.log("max width for vpr", width);
                 //console.log('vpr', vpr);
                 // Calculate total number of rows needed
@@ -155,6 +160,9 @@
                 // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
                 if (totalRows === 1) {
                     const adjustedWidth = (containerHeight * 16) / 9;
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set(vpr);
+
                     return {
                         videoWidth: Math.max(adjustedWidth, minMediaBoxWidth),
                     };
@@ -186,6 +194,10 @@
                     }
                     // if solution 1 is better
                     adjustedWidth = adjustedWidthWithReducedHeight;
+
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set(vpr * (rowsPerPage + 1));
+
                     //console.log("Solution 1, total row", totalRows, "vpr", vpr, "adjustedVpr", adjustedVpr, "adjustedWidth", adjustedWidth, "maxHeightPerVideo", maxHeightPerVideo, "containerHeight", containerHeight, "totalRows", totalRows, "containerWidth", containerWidth);
                 } else {
                     //console.log("Solution 2, vpr", vpr+1);
@@ -197,7 +209,8 @@
                     if (adjustedHeight < adjustedWidth * (9 / 16)) {
                         adjustedHeight = adjustedWidth * (9 / 16);
                     }
-                }
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set((vpr + 1) * adjustedTotalRows);                }
 
                 if (adjustedWidth < minMediaBoxWidth) {
                     return {
@@ -273,9 +286,9 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+        {#each $orderedStreamableCollectionStore as peer (peer.uniqueId)}
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
-                {#key uniqueId}
+                {#key peer.uniqueId}
                     <div
                         style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
                             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
