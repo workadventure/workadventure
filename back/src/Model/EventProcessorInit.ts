@@ -1,4 +1,5 @@
 import { WebRtcSignalToClientMessage } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
 import { TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { EventProcessor } from "./EventProcessor";
 import { webRTCCredentialsService } from "./Services/WebRTCCredentialsService";
@@ -61,3 +62,62 @@ eventProcessor.registerPrivateEventProcessor(
         };
     }
 );
+
+eventProcessor.registerPublicEventProcessor(
+    "startRecordingMessage",
+    async (event, senderId , space) => {
+        if (event.$case !== "startRecordingMessage") {
+            throw new Error("Invalid event type");
+        }
+        const spaceUser = space.getUser(senderId);
+        console.log("🤟🤟🤟Backend: Start recording for space", space.getSpaceName());
+        if (!spaceUser) {
+            console.error("Could not find space user to start recording");
+            throw new Error("Space user not found for start recording event");
+        }
+
+        try{
+            //await space.startRecording(spaceUser);
+
+            space.dispatchPrivateEvent({
+                spaceName : space.getSpaceName(),
+                senderUserId : senderId,
+                receiverUserId : senderId,
+                spaceEvent: {
+                    event : {
+                        $case : "startRecordingResultMessage",
+                        startRecordingResultMessage: {
+                            success : true
+                        }
+                    }
+                }
+            });
+
+            return {
+                $case : "startRecordingMessage",
+                startRecordingMessage: {
+                },
+            };
+        }catch(error){
+            space.dispatchPrivateEvent({
+                spaceName : space.getSpaceName(),
+                senderUserId : "0", // 0 means that the event is sent by the server
+                receiverUserId : senderId,
+                spaceEvent: {
+                    event : {
+                        $case : "startRecordingResultMessage",
+                        startRecordingResultMessage: {
+                            success : false
+                        }
+                    }
+                }
+            });
+
+            throw error
+
+        }
+
+
+
+    }
+)

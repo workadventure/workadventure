@@ -976,7 +976,7 @@ export class SocketManager implements ZoneEventListener {
 
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
-            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of`);
+            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of: ${JSON.stringify(socketData.spaces)}`);
         }
     }
 

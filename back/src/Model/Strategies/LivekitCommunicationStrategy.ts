@@ -1,10 +1,13 @@
 import { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private usersReady: string[] = [];
+
+export class LivekitCommunicationStrategy implements IRecordableStrategy {
+    private usersReady: Set<string> = new Set();
 
     constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
@@ -75,7 +78,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     canSwitch(): boolean {
-        return this.usersReady.length === this.space.getAllUsers().length;
+        return this.usersReady.size === this.space.getAllUsers().length;
     }
     cleanup(): void {
         const users = this.space.getAllUsers();
@@ -86,5 +89,11 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             console.error(error);
             Sentry.captureException(error);
         });
+    }
+    async startRecording(): Promise<void> {
+        await this.livekitService.startRecording(this.space.getSpaceName());
+    }
+    async stopRecording(): Promise<void> {
+        await this.livekitService.stopRecording();
     }
 }

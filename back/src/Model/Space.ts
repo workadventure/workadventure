@@ -308,7 +308,7 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    public dispatchPublicEvent(publicEvent: PublicEvent) {
+    public async  dispatchPublicEvent(publicEvent: PublicEvent) {
         if (!publicEvent.spaceEvent?.event) {
             // If there is no event, just forward the public event as-is
             this.notifyWatchers({
@@ -321,9 +321,10 @@ export class Space implements CustomJsonReplacerInterface {
         }
 
         // Process the event
-        const processedEvent = this.eventProcessor.processPublicEvent(
+        const processedEvent = await this.eventProcessor.processPublicEvent(
             publicEvent.spaceEvent.event,
-            publicEvent.senderUserId
+            publicEvent.senderUserId,
+            this
         );
 
         // Create new public event with processed event
@@ -478,16 +479,28 @@ export class Space implements CustomJsonReplacerInterface {
     public getAllUsers(): SpaceUser[] {
         return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
     }
-    // public getUser(spaceUserId: string): SpaceUser | undefined {
-    //     return Array.from(this.users.values())
-    //         .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
-    //         .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
-    // }
+    public getUser(spaceUserId: string): SpaceUser | undefined {
+        return Array.from(this.users.values())
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
 
     public getSpaceName(): string {
         return this.name;
     }
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+    public startRecording(user: SpaceUser) {
+        this.communicationManager.handleStartRecording(user);
+    }
+    public stopRecording(user: SpaceUser) {
+        this.communicationManager.handleStopRecording(user);
+    }
+    public destroy() {
+        // this.users.clear();
+        // this.metadata.clear();
+        this.communicationManager.destroy();
+        debug(`${this.name} => destroyed`);
     }
 }

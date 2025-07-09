@@ -961,6 +961,8 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+
+
                         // case "muteParticipantIdMessage": {
                         //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
                         //         message.message.muteParticipantIdMessage.spaceName
@@ -1022,6 +1024,7 @@ export class IoSocketController {
                         //     );
                         //     break;
                         // }
+
                         case "banPlayerMessage": {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;

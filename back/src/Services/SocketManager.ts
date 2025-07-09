@@ -48,6 +48,8 @@ import {
     FilterType,
     SyncSpaceUsersMessage,
     SpaceQueryMessage,
+    StartRecordingMessage,
+    StopRecordingMessage
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1318,6 +1320,7 @@ export class SocketManager {
         // If no anymore watchers we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
+            space.destroy();
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
             clientEventsEmitter.emitDeleteSpace(space.name);
@@ -1348,6 +1351,7 @@ export class SocketManager {
             space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
             if (space.canBeDeleted()) {
                 debug("[space] Space %s => deleted", space.name);
+                space.destroy();
                 this.spaces.delete(space.name);
                 pusher.unwatchSpace(space.name);
                 clientEventsEmitter.emitDeleteSpace(space.name);
@@ -1399,7 +1403,10 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent);
+        space.dispatchPublicEvent(publicEvent).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error)
+        });
     }
 
     handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {
