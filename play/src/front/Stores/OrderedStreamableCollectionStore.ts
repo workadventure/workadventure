@@ -45,14 +45,6 @@ export const orderedStreamableCollectionStore = derived(
         // Now, we need to sort the $streamableCollectionStore by priority.
         const sortedCollectionStore = Array.from($streamableCollectionStore.values()).sort((a, b) => {
             if (a.priority === b.priority) {
-                // If both priorities are equal, let's put first the last one who spoke.
-                if (
-                    a.lastSpeakTimestamp !== b.lastSpeakTimestamp &&
-                    (a.lastSpeakTimestamp !== undefined || b.lastSpeakTimestamp !== undefined)
-                ) {
-                    return (b.lastSpeakTimestamp ?? 0) - (a.lastSpeakTimestamp ?? 0);
-                }
-
                 // We need a stable sort. If 2 items have the same priority (probably because none is speaking), we need to keep the previous order from currentOrderForStore.
                 const indexA = currentOrderForStore.indexOf(a.uniqueId);
                 const indexB = currentOrderForStore.indexOf(b.uniqueId);

@@ -160,7 +160,15 @@ export class LiveKitRoomWatch implements LiveKitRoom {
 
         // Let's reset the priority of the participant
         for (const videoStream of this.space.videoStreamStore.values()) {
-            videoStream.priority = VIDEO_STARTING_PRIORITY + 9999;
+            const lastSpeakTimestamp = videoStream.lastSpeakTimestamp;
+            let bonusPriority = 0;
+            if (lastSpeakTimestamp) {
+                // If a participant has spoken but is not speaking anymore, we give a bonus priority based on the time since the last speak.
+                const lastTimeSinceLastSpeak = Date.now() - lastSpeakTimestamp;
+                // The bonus priority is calculated based on the time since the last speak and cannot be greater than 100.
+                bonusPriority = 100 * Math.exp(-lastTimeSinceLastSpeak / 100000);
+            }
+            videoStream.priority = VIDEO_STARTING_PRIORITY + 9999 - bonusPriority;
         }
 
         for (const speaker of speakers) {
