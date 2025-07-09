@@ -42,6 +42,20 @@ export const orderedStreamableCollectionStore = derived([streamableCollectionSto
 
     // Now, we need to sort the $streamableCollectionStore by priority.
     const sortedCollectionStore =  Array.from($streamableCollectionStore.values()).sort((a, b) => {
+        if (a.priority === b.priority) {
+            // We need a stable sort. If 2 items have the same priority (probably because none is speaking), we need to keep the previous order from currentOrderForStore.
+            const indexA = currentOrderForStore.indexOf(a.uniqueId);
+            const indexB = currentOrderForStore.indexOf(b.uniqueId);
+            if (indexA !== -1 && indexB !== -1) {
+                return indexA - indexB; // Maintain the order from currentOrderForStore
+            } else if (indexA !== -1) {
+                // Should never happen, but let's handle it gracefully.
+                return -1; // a is in currentOrderForStore, b is not
+            } else if (indexB !== -1) {
+                // Should never happen, but let's handle it gracefully.
+                return 1; // b is in currentOrderForStore, a is not
+            }
+        }
         return a.priority - b.priority;
     });
 
@@ -55,11 +69,11 @@ export const orderedStreamableCollectionStore = derived([streamableCollectionSto
             // Let's switch the less important item in currentOrderForStoreVisibleItems with the current streamable.
             // Let's find the less important item in currentOrderForStoreVisibleItems.
             let lessImportantItemIndex = -1;
-            let lessImportantItemPriority = Number.MAX_SAFE_INTEGER;
+            let lessImportantItemPriority = Number.MIN_SAFE_INTEGER;
             for (let j = 0; j < currentOrderForStoreVisibleItems.length; j++) {
                 const uniqueId = currentOrderForStoreVisibleItems[j];
                 const item = $streamableCollectionStore.get(uniqueId);
-                if (item && item.priority < lessImportantItemPriority) {
+                if (item && item.priority > lessImportantItemPriority) {
                     lessImportantItemPriority = item.priority;
                     lessImportantItemIndex = j;
                 }
@@ -74,7 +88,8 @@ export const orderedStreamableCollectionStore = derived([streamableCollectionSto
             }
             // Now let's switch the items.
             const lessImportantItemUniqueId = currentOrderForStore[lessImportantItemIndex];
-            currentOrderForStore[currentOrderForStore.indexOf(lessImportantItemUniqueId)] = streamable.uniqueId;
+            currentOrderForStore[lessImportantItemIndex] = streamable.uniqueId;
+            currentOrderForStoreVisibleItems[lessImportantItemIndex] = streamable.uniqueId;
             currentOrderForStore[indexToSwitch] = lessImportantItemUniqueId;
         }
     }
