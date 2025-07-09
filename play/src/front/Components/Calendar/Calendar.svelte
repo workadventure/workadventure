@@ -7,7 +7,8 @@
     import { extensionModuleStore } from "../../Stores/GameSceneStore";
     import LL from "../../../i18n/i18n-svelte";
 
-    import calendarSvg from "../images/applications/outlook.svg";
+    import outlookSvg from "../images/applications/outlook.svg";
+    import calendarPng from "../images/applications/calendar.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import { userIsConnected } from "../../Stores/MenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -66,7 +67,9 @@
                         {#if get(externalSvelteComponentService.getComponentsByZone("calendarImage")).size > 0}
                             <ExternalComponents zone="calendarImage" />
                         {:else}
-                            <img draggable="false" src={calendarSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                            <img draggable="false" src={outlookSvg} class="w-8" alt={$LL.menu.icon.open.calendar()} />
+                            <span>/</span>
+                            <img draggable="false" src={calendarPng} class="w-8" alt={$LL.menu.icon.open.calendar()} />
                         {/if}
                         <h3 class="text-xl text-left leading-none">
                             {new Date().toLocaleString("en-EN", {
@@ -82,7 +85,9 @@
                 </div>
                 {#if $userIsConnected}
                     <div class="bg-white/20 h-[1px] w-full my-2" />
-                    <h4 class=" text-base font-bold text-left">Your meeting today 🗓️ ({$calendarEventsStore.size})</h4>
+                    <h4 class=" text-base font-bold text-left">
+                        ${$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
+                    </h4>
                 {/if}
             </div>
             <div class="flex flex-col justify-center gap-4">
@@ -90,11 +95,15 @@
                     <div class="flex flex-col justify-center items-center">
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
-                        <button
-                            class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
-                            on:click={goToLoginPage}
-                            >{$LL.menu.profile.login()}
-                        </button>
+                        {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size > 0}
+                            <ExternalComponents zone="calendarButton" />
+                        {:else}
+                            <button
+                                class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
+                                on:click={goToLoginPage}
+                                >{$LL.menu.profile.login()}
+                            </button>
+                        {/if}
                     </div>
                 {/if}
                 {#if $calendarEventsStore.size > 0}
@@ -123,7 +132,7 @@
                                                 }
                                             }}
                                             class="text-xs text-right text-secondary-500"
-                                            target="_blank">Click here to join the meeting</a
+                                            target="_blank">${$LL.externalModule.calendar.joinMeeting()}</a
                                         >
                                     {/if}
                                 </div>

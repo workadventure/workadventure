@@ -52,6 +52,18 @@ const externalComponentsByZone = {
             { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
         >()
     ),
+    calendarButton: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
+    todoListButton: writable(
+        new Map<
+            string,
+            { componentType: ComponentType<SvelteComponentTyped>; props?: ComponentProps<SvelteComponentTyped> }
+        >()
+    ),
 };
 
 export type ExternalComponentZones = keyof typeof externalComponentsByZone;

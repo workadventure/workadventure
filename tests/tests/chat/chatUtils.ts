@@ -83,6 +83,9 @@ class ChatUtils {
       state: "visible",
       timeout: 20_000,
     });
+    //wait before filling the passphrase input because it fill too fast and the blur event is not triggered or not detected
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByTestId("passphraseInput").blur();
     await page.getByTestId("confirmAccessSecretStorageButton").click();

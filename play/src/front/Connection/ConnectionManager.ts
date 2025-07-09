@@ -126,8 +126,10 @@ class ConnectionManager {
      * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
      *
      * @param manuallyTriggered - Whether the login request resulted from a click on the "Sign in" button or from a mandatory authentication.
+     * @param providerId - The ID of the OpenID provider to use for authentication.
+     * @param providerScopes - The scopes to request from the OpenID provider.
      */
-    public loadOpenIDScreen(manuallyTriggered: boolean): URL | null {
+    public loadOpenIDScreen(manuallyTriggered: boolean, providerId?: string, providerScopes?: string[]): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
@@ -139,6 +141,14 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         if (manuallyTriggered) {
             redirectUrl.searchParams.append("manuallyTriggered", "true");
+        }
+        if (providerId) {
+            redirectUrl.searchParams.append("providerId", providerId);
+        }
+        if (providerScopes) {
+            providerScopes.forEach((scope) => {
+                redirectUrl.searchParams.append("providerScopes", scope);
+            });
         }
         return redirectUrl;
     }
