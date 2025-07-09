@@ -39,6 +39,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = false;
     public priority: number;
+    public lastSpeakTimestamp?: number;
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
         public readonly target: "video/audio" | "desktop"

@@ -89,6 +89,8 @@ export interface Streamable {
     // From 1000 - 2000: other screen sharing streams
     // 2000+: other streams
     priority: number;
+    // Timestamp of the last time the streamable was speaking
+    lastSpeakTimestamp?: number;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams

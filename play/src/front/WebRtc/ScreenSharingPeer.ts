@@ -51,6 +51,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = true;
     public priority: number = SCREEN_SHARE_STARTING_PRIORITY;
+    public lastSpeakTimestamp?: number;
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
