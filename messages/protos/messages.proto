@@ -836,6 +836,8 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+    StartRecordingMessage startRecordingMessage = 5;
+    StopRecordingMessage stopRecordingMessage = 6;
   }
 }
 
@@ -856,6 +858,8 @@ message PrivateSpaceEvent {
     LivekitInvitationMessage livekitInvitationMessage = 13;
     LivekitDisconnectMessage livekitDisconnectMessage = 14;
     UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
+    StartRecordingResultMessage startRecordingResultMessage = 16;
+    StartRecordingMessage startRecordingMessage = 17;
   }
 }
 
@@ -1369,6 +1373,19 @@ message UpdateSpaceMetadataMessage{
   string metadata = 2;
   google.protobuf.StringValue filterName = 3;
 }
+/**
+ * Message sent by the user to start recording a space
+ */
+message StartRecordingMessage{
+}
+message StopRecordingMessage{
+}
+
+message StartRecordingResultMessage{
+  bool success = 1;
+  optional string errorMessage = 2; // if success is false, this field contains the error message
+}
+
 /**
  * The space we were listening to has been destroyed for some awful reason (connection to back was lost)
  */

@@ -47,6 +47,8 @@ import {
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
+    StartRecordingMessage,
+    StopRecordingMessage
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1295,23 +1297,6 @@ export class SocketManager {
         }
     }
 
-    handleStartRecordingMessage(pusher: SpacesWatcher, startRecordingMessage: StartRecordingMessage) {
-        //TODO : voir les regles métiers JIRA / voir les informations de l'utilisateur pour enregistrer
-        //TODO : passer des infos sur le users pour le mettre dans le bon répertoire  
-        const space = this.spaces.get(startRecordingMessage.spaceName);
-        if (space) {
-            space.startRecording();
-        }
-    }
-
-    handleStopRecordingMessage(pusher: SpacesWatcher, stopRecordingMessage: StopRecordingMessage) {
-        //TODO : vérifier que c'est bien le user qui a commencé l'enregistrement qui arrête l'enregistrement
-        const space = this.spaces.get(stopRecordingMessage.spaceName);
-        if (space) {
-            space.stopRecording();
-        }
-    }
-
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const updateMask = updateSpaceUserMessage.updateMask;
         if (!updateSpaceUserMessage.user || !updateMask) {
@@ -1377,7 +1362,10 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent);
+        space.dispatchPublicEvent(publicEvent).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error)
+        });
     }
 
     handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {

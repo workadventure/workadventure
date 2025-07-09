@@ -48,14 +48,6 @@ const spaceManager = {
                         );
                         break;
                     }
-                    case "startRecordingMessage": {
-                        socketManager.handleStartRecordingMessage(pusher, message.message.startRecordingMessage);
-                        break;
-                    }
-                    case "stopRecordingMessage": {
-                        socketManager.handleStopRecordingMessage(pusher, message.message.stopRecordingMessage);
-                        break;
-                    }
                     case "removeSpaceUserMessage": {
                         socketManager.handleRemoveSpaceUserMessage(pusher, message.message.removeSpaceUserMessage);
                         break;

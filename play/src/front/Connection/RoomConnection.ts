@@ -70,6 +70,8 @@ import {
     LeaveChatRoomAreaMessage,
     SpaceDestroyedMessage,
     SayMessage,
+    StartRecordingMessage,
+    StopRecordingMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -204,6 +206,10 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
+    private readonly _startRecordingMessage = new Subject<StartRecordingMessage>();
+    public readonly startRecordingMessage = this._startRecordingMessage.asObservable();
+    private readonly _stopRecordingMessage = new Subject<StopRecordingMessage>();
+    public readonly stopRecordingMessage = this._stopRecordingMessage.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEvent>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
@@ -441,6 +447,14 @@ export class RoomConnection implements RoomConnection {
                                 void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
                                 break;
+                            }
+                            case "startRecordingMessage":{
+                                this._startRecordingMessage.next(subMessage.startRecordingMessage)
+                                break
+                            }
+                            case "stopRecordingMessage":{
+                                this._stopRecordingMessage.next(subMessage.stopRecordingMessage)
+                                break
                             }
                             case "publicEvent": {
                                 this._spacePublicMessageEvent.next(subMessage.publicEvent);
@@ -956,6 +970,26 @@ export class RoomConnection implements RoomConnection {
                 emotePromptMessage: {
                     emote: emoteName,
                 },
+            },
+        });
+    }
+
+    public emitStartRecording(spaceName: string): void {
+        this.emitPublicSpaceEvent(spaceName,{
+            $case: "startRecordingMessage",
+            startRecordingMessage: {
+                spaceName,
+                spaceUserId: this.getSpaceUserId(),
+            },
+        })
+    }
+
+    public emitStopRecording(spaceName: string): void {
+        this.emitPublicSpaceEvent(spaceName,{
+            $case: "stopRecordingMessage",
+            stopRecordingMessage: {
+                spaceName,
+                spaceUserId: this.getSpaceUserId(),
             },
         });
     }
@@ -1785,6 +1819,8 @@ export class RoomConnection implements RoomConnection {
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
+        this._startRecordingMessage.complete()
+        this._stopRecordingMessage.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();
         this._externalModuleMessage.complete();

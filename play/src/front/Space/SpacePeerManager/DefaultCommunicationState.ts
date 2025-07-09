@@ -6,6 +6,7 @@ import { CommunicationMessageType, LivekitState } from "./LivekitState";
 import { WebRTCState } from "./WebRTCState";
 
 export class DefaultCommunicationState implements ICommunicationState {
+    public readonly shouldDisplayRecordButton = false;
     private _rxJsUnsubscribers: Subscription[] = [];
     constructor(private _space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
         this._rxJsUnsubscribers.push(

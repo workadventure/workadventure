@@ -33,6 +33,7 @@
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
     import { IconArrowDown } from "@wa-icons";
+    import RecordingMenuItem from "./MenuIcons/RecordingMenuItem.svelte";
 
     let rightDiv: HTMLDivElement;
     let mediaSettingsDisplayed = false;
@@ -43,6 +44,7 @@
     const gameScene = gameManager.getCurrentGameScene();
     const showChatButton = gameScene.room.isChatEnabled;
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
+    const shouldDisplayRecordingButton= gameScene.spaceRegistry.spacesWithRecording
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -146,7 +148,9 @@
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
                             <ScreenSharingMenuItem />
-
+                            {#if $shouldDisplayRecordingButton.length > 0}
+                                <RecordingMenuItem />
+                            {/if}
                             {#if camMenuIsDropped}
                                 <div
                                     class="absolute bottom-20 sm:end-20 sm:bottom-auto md:mt-2 md:top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 sm:start-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:end-6 before:border-solid before:border-8 before:border-transparent before:border-b-contrast/80 transition-all @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"

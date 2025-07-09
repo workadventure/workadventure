@@ -10,4 +10,5 @@ export interface ICommunicationManager {
     handleStopRecording(user: SpaceUser): void;
     setState(state: ICommunicationState): void;
     currentState: ICommunicationState;
+    destroy(): void;
 }

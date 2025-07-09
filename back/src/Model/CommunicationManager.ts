@@ -10,6 +10,9 @@ import { LivekitState } from "./States/LivekitState";
 export interface IRecordingManager {
     startRecording(user: SpaceUser): Promise<void>;
     stopRecording(user: SpaceUser): Promise<void>;
+    handleAddUser(user: SpaceUser): void;
+    handleRemoveUser(user: SpaceUser): void;
+    isRecording: boolean;
     destroy(): void;
 }
 
@@ -42,8 +45,12 @@ export class RecordingManager implements IRecordingManager {
             throw new Error("No recording to stop");
         }
 
-        //TODO : verifier que ce soit le bon user qui stop 
-        
+        //TODO : verifier que ce soit le bon user qui stop
+
+        if(this._user !== user){
+            throw new Error("User is not the one recording");
+        }
+
         this._isRecording = false;
         const currentState = this.communicationManager.currentState;
         
@@ -51,8 +58,31 @@ export class RecordingManager implements IRecordingManager {
             await currentState.handleStopRecording();
             this._isRecording = false;
         }
+    }
 
+    public handleAddUser(user: SpaceUser): void {
+        if(!this._isRecording) {
+            return;
+        }
 
+        //TODO : send event to the space to notify that a user has been added to the recording
+        //this.space.dispatchPrivateEvent(
+//
+  //      )
+    }
+
+    public handleRemoveUser(user: SpaceUser): void {
+        if (!this._isRecording) {
+            return;
+        }
+
+        if (this._user === user) {
+            //TODO : stop recording if the user is the one recording
+        }
+    }
+
+    public get isRecording(): boolean {
+        return this._isRecording;
     }
 
     public destroy(): void {
@@ -80,14 +110,18 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserAdded(user: SpaceUser): void {
+        //TODO : race condition possible ??
         this._currentState.handleUserAdded(user);
+        this._recordingManager.handleAddUser(user);
     }
 
     public handleUserDeleted(user: SpaceUser): void {
         this._currentState.handleUserDeleted(user);
+        this._recordingManager.handleRemoveUser(user);
     }
 
     public handleUserUpdated(user: SpaceUser): void {
+        //TODO : voir si le user perd le tag qui permet de record ???
         this._currentState.handleUserUpdated(user);
     }
 

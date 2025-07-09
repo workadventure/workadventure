@@ -1,7 +1,7 @@
 // -------------------- Default Implementations --------------------x
 
 import { Subject } from "rxjs";
-import { Readable, Unsubscriber } from "svelte/store";
+import {Readable, Unsubscriber, writable, Writable} from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
@@ -16,6 +16,7 @@ export interface ICommunicationState {
     shouldSynchronizeMediaState(): boolean;
     dispatchSound(url: URL): Promise<void>;
     dispatchStream(mediaStream: MediaStream): void;
+    shouldDisplayRecordButton: boolean;
 }
 
 // -------------------- Peer Manager --------------------
@@ -46,6 +47,7 @@ export class SpacePeerManager {
     private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
+    public shouldDisplayRecordButton: Writable<boolean> = writable(false);
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
@@ -60,6 +62,22 @@ export class SpacePeerManager {
         private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
         this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
+
+        this.space.observePrivateEvent("startRecordingResultMessage").subscribe((message)=>{
+           console.log("startRecordingResultMessage" , message);
+        })
+
+        this.space.observePublicEvent("startRecordingMessage").subscribe(async (message)=>{
+
+           const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
+           console.log("startRecordingMessage", message , spaceUser);
+        })
+
+        this.space.observePublicEvent("stopRecordingMessage").subscribe(async (message)=>{
+            const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
+            console.log("stopRecordingMessage", message , spaceUser);
+        })
+
     }
 
     private synchronizeMediaState(): void {
@@ -128,6 +146,7 @@ export class SpacePeerManager {
 
         state.completeSwitch();
         this._communicationState = state;
+        this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
     }
 
     dispatchSound(url: URL): Promise<void> {
@@ -137,6 +156,8 @@ export class SpacePeerManager {
     dispatchStream(mediaStream: MediaStream): void {
         this._communicationState.dispatchStream(mediaStream);
     }
+
+
 }
 // -------------------- Interfaces --------------------
 

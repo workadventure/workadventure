@@ -31,6 +31,7 @@
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { recordingStore } from "../Stores/RecordingStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -60,6 +61,7 @@
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
+    import IsRecordingInfoModal from "./PopUp/IsRecordingInfoModal.svelte";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -201,6 +203,10 @@
 
             {#if $showLimitRoomModalStore}
                 <LimitRoomModal />
+            {/if}
+
+            {#if $recordingStore.isRecording}
+                <IsRecordingInfoModal/>
             {/if}
 
             {#if !$highlightFullScreen}
