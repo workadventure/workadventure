@@ -17,6 +17,7 @@
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
+    import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -52,6 +53,15 @@
 {#if $loaderVisibleStore}
     <div class="bg-contrast">
         <LoaderScene />
+    </div>
+{/if}
+{#if $draggingFile}
+    <div class="bg-contrast pointer-events-none">
+        <div class="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
+            <div class="bg-white p-4 rounded shadow-lg">
+                <p class="text-center text-black">Drop your files here</p>
+            </div>
+        </div>
     </div>
 {/if}
 {#if $errorScreenStore !== undefined}
