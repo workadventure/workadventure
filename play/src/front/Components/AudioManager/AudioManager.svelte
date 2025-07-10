@@ -6,6 +6,7 @@
     import { onDestroy, onMount } from "svelte";
     import { AudioManagerVolume, audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import LL from "../../../i18n/i18n-svelte";
 
     let audioPlayerVolumeIcon: HTMLElement;
     let audioPlayerVol: HTMLInputElement;
@@ -83,18 +84,19 @@
 </script>
 
 <div
-    class="main-audio-manager flex justify-center m-auto absolute left-0 -right-2 top-[70px] w-96 z-[500]"
+    class="main-audio-manager flex justify-center m-auto absolute left-0 -right-2 top-[70px] z-[500] pointer-events-none"
     transition:fly={{ y: 20, duration: 150 }}
     use:clickOutside={() => {
         /*activeSecondaryZoneActionBarStore.set(undefined)*/
     }}
 >
     <div
-        class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md p-4 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 md:flex-row"
+        class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur-md rounded-md p-4 flex flex-col items-stretch pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] duration-300 gap-2"
     >
         <!--        <div class="font-lg text-center text-white mb-4 opacity-50">-->
         <!--            {$LL.audio.volumeCtrl()}-->
         <!--        </div>-->
+        <span>{$LL.audio.volumeCtrl()}</span>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
