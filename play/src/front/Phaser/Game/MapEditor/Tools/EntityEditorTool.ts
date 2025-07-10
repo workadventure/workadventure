@@ -426,6 +426,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
 
+        console.log("entityPrefab", this.entityPrefab);
+        console.log("entityPrefabPreview", this.entityPrefabPreview);
+        console.log("execute command", pointer.worldX, "=>", x, pointer.worldY, "=>", y);
+
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
@@ -435,6 +439,49 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     undefined,
                     this.entitiesManager,
                     { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height }
+                )
+            )
+            .catch((e) => console.error(e));
+    }
+
+    public handleDropEntityEvent(e: DragEvent): void {
+        const pointer = this.scene.input.activePointer;
+        const x = Math.floor(pointer.worldX);
+        const y = Math.floor(pointer.worldY);
+
+        console.log("dragDropEntity", x, y);
+        // if (!this.entityPrefabPreview || !this.entityPrefab) {
+        //     console.warn("No entity prefab or preview set, cannot drop entity.");
+        //     return;
+        // }
+
+        // if (this.entityPrefab?.collisionGrid || this.shiftKey?.isDown) {
+        //     const offsets = this.getEntityPrefabAlignWithGridOffset();
+        //     x = Math.floor(e.x / 32) * 32 + offsets.x;
+        //     y = Math.floor(e.y / 32) * 32 + offsets.y;
+        // }
+
+        console.log(this.entityPrefab);
+        const entityData: WAMEntityData = {
+            x: x,
+            y: y,
+            prefabRef: {
+                id: "basic office decoration:Books (Variant 5):black:Down",
+                collectionName: "basic office decoration",
+            },
+            properties: [],
+        };
+
+        console.log("execute command");
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    undefined,
+                    entityData,
+                    undefined,
+                    this.entitiesManager,
+                    { width: 30, height: 30 }
                 )
             )
             .catch((e) => console.error(e));
