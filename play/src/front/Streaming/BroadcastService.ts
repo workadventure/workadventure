@@ -43,7 +43,7 @@ export class BroadcastService {
     ): Promise<BroadcastSpace> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.LIVE_STREAMING_USERS);
 
         const broadcastSpace = broadcastSpaceFactory
             ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
