@@ -69,5 +69,9 @@ export class DynamicAreaManager {
 
     close(): void {
         this.subscription.unsubscribe();
+
+        iframeListener.unregisterAnswerer("createArea");
+        iframeListener.unregisterAnswerer("getArea");
+        iframeListener.unregisterAnswerer("deleteArea");
     }
 }

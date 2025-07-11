@@ -354,7 +354,6 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
-        console.log("mapEditorSelectedAreaPreviewStore", $mapEditorSelectedAreaPreviewStore);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }

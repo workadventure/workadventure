@@ -12,7 +12,6 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
-    import { peerStore } from "../../Stores/PeerStore";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
@@ -79,9 +78,9 @@
         // FIXME: this works only in bubbles
         // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
         const spaceUserId = spaceUser.spaceUserId;
-        const userId = Number(spaceUserId.split("_").pop());
+        // const userId = Number(spaceUserId.split("_").pop());
 
-        peerStore.removePeer(userId);
+        spaceUser.space.simplePeer?.removePeer(spaceUserId);
         close();
     }
 

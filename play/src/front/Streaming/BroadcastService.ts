@@ -43,7 +43,12 @@ export class BroadcastService {
     ): Promise<BroadcastSpace> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        //TODO : verifier que ce sont les bonnes propriétés à sync et le bon type de filtre
+        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.LIVE_STREAMING_USERS, [
+            "screenSharing",
+            "cameraState",
+            "microphoneState",
+        ]);
 
         const broadcastSpace = broadcastSpaceFactory
             ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)

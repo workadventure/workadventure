@@ -732,6 +732,10 @@ jobs:
             GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
             GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
             MAP_STORAGE_API_TOKEN: \"${MAP_STORAGE_API_TOKEN}\"
+            LIVEKIT_HOST: \"${LIVEKIT_HOST}\"
+            LIVEKIT_API_KEY: \"${LIVEKIT_API_KEY}\"
+            LIVEKIT_API_SECRET: \"${LIVEKIT_API_SECRET}\"
+            LIVEKIT_WS_URL: \"${LIVEKIT_WS_URL}\"
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -753,6 +757,11 @@ jobs:
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
+          LIVEKIT_HOST: ${{ secrets.LIVEKIT_HOST }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+          LIVEKIT_WS_URL: ${{ secrets.LIVEKIT_WS_URL }}
+      
 
 
 #      - name: "Printing values file"

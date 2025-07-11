@@ -16,12 +16,14 @@ import { User } from "../Model/User";
 import {
     EmoteCallback,
     EntersCallback,
+    GroupUsersUpdatedCallback,
     LeavesCallback,
     LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
     Zone,
 } from "./Zone";
+import { Group } from "./Group";
 
 interface ZoneDescriptor {
     i: number;
@@ -52,7 +54,8 @@ export class PositionNotifier {
         private onUserLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
         private onLockGroup: LockGroupCallback,
-        private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
+        private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        private onGroupUsersUpdated: GroupUsersUpdatedCallback
     ) {}
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
@@ -115,6 +118,7 @@ export class PositionNotifier {
                 this.onEmote,
                 this.onLockGroup,
                 this.onPlayerDetailsUpdated,
+                this.onGroupUsersUpdated,
                 i,
                 j
             );
@@ -144,6 +148,12 @@ export class PositionNotifier {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
         zone.emitLockGroupEvent(groupId);
+    }
+
+    public emitGroupUsersUpdatedEvent(group: Group) {
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(group.getPosition().x, group.getPosition().y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        zone.emitGroupUsersUpdatedEvent(group);
     }
 
     public *getAllUsersInSquareAroundZone(zone: Zone): Generator<User> {

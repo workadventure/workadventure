@@ -2,13 +2,15 @@ import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { MapStore } from "@workadventure/store-utils";
+import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
-
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
  * This interface has a single purpose: making the creation of test doubles easier in unit tests.
@@ -37,7 +39,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  * It acts both as a factory and a registry.
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
-    private spaces: Map<string, Space> = new Map<string, Space>();
+    private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -46,6 +48,73 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
     private roomConnectionStreamSubscription: Subscription;
+
+    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
+        this.spaces,
+        ($spaces, set) => {
+            const allPeers: Map<string, ExtendedStreamable> = new Map();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                allPeers.clear();
+                if ($spaces.size === 0) {
+                    set(new Map());
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedPeerStores = space.videoStreamStore;
+                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        allPeers.clear();
+                        peerStores.forEach((streamable, userId) => {
+                            allPeers.set(userId, streamable);
+                        });
+                        set(new Map(allPeers));
+                    });
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        }
+    );
+
+    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
+        this.spaces,
+        ($spaces, set) => {
+            const allPeers: Map<string, ExtendedStreamable> = new Map();
+            const unsubscribers: (() => void)[] = [];
+
+            const updatePeers = () => {
+                allPeers.clear();
+                if ($spaces.size === 0) {
+                    set(new Map());
+                    return;
+                }
+                $spaces.forEach((space) => {
+                    const aggregatedPeerStores = space.screenShareStreamStore;
+                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
+                        allPeers.clear();
+                        peerStores.forEach((streamable, userId) => {
+                            allPeers.set(userId, streamable);
+                        });
+                        set(new Map(allPeers));
+                    });
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        }
+    );
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream
@@ -139,10 +208,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     async joinSpace(
         spaceName: string,
         filterType: FilterType,
+        propertiesToSync: string[],
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
+        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
@@ -179,6 +249,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     space.getName(),
                     space.filterType,
                     this.roomConnection,
+                    space.getPropertiesToSync(),
                     space.getMetadata()
                 );
                 this.spaces.set(newSpace.getName(), newSpace);

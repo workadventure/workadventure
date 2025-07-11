@@ -254,6 +254,8 @@ export class IoSocketController {
                             version: z.string(),
                             chatID: z.string(),
                             roomName: z.string(),
+                            cameraState: z.string().transform((val) => val === "true"),
+                            microphoneState: z.string().transform((val) => val === "true"),
                         })
                     );
 
@@ -283,6 +285,8 @@ export class IoSocketController {
                         version,
                         companionTextureId,
                         roomName,
+                        cameraState,
+                        microphoneState,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -479,7 +483,6 @@ export class IoSocketController {
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUserId: "",
-                            roomName: roomName,
                             emitInBatch: (payload: SubMessage): void => {},
                             batchedMessages: {
                                 event: "",
@@ -494,6 +497,9 @@ export class IoSocketController {
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
+                            roomName,
+                            microphoneState,
+                            cameraState,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -727,7 +733,6 @@ export class IoSocketController {
                             await socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
-
                         case "updateSpaceMetadataMessage": {
                             const isMetadata = z
                                 .record(z.string(), z.unknown())
@@ -879,18 +884,29 @@ export class IoSocketController {
                                             socket.getUserData().world
                                         }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
 
-                                        await socketManager.handleJoinSpace(
-                                            socket,
-                                            message.message.queryMessage.query.joinSpaceQuery.spaceName,
-                                            localSpaceName,
-                                            message.message.queryMessage.query.joinSpaceQuery.filterType
-                                        );
+                                        try {
+                                            await socketManager.handleJoinSpace(
+                                                socket,
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                                localSpaceName,
+                                                message.message.queryMessage.query.joinSpaceQuery.filterType,
+                                                message.message.queryMessage.query.joinSpaceQuery.propertiesToSync
+                                            );
 
-                                        answerMessage.answer = {
-                                            $case: "joinSpaceAnswer",
-                                            joinSpaceAnswer: {},
-                                        };
-                                        this.sendAnswerMessage(socket, answerMessage);
+                                            answerMessage.answer = {
+                                                $case: "joinSpaceAnswer",
+                                                joinSpaceAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                            );
+                                        } catch (e) {
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                            );
+                                            throw e;
+                                        }
                                         break;
                                     }
                                     case "leaveSpaceQuery": {
@@ -902,11 +918,17 @@ export class IoSocketController {
                                             socket,
                                             message.message.queryMessage.query.leaveSpaceQuery.spaceName
                                         );
+
                                         answerMessage.answer = {
                                             $case: "leaveSpaceAnswer",
                                             leaveSpaceAnswer: {},
                                         };
+
                                         this.sendAnswerMessage(socket, answerMessage);
+
+                                        socketManager.deleteSpaceIfEmpty(
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                        );
                                         break;
                                     }
                                     case "mapStorageJwtQuery": {
@@ -941,8 +963,6 @@ export class IoSocketController {
                         }
                         case "itemEventMessage":
                         case "variableMessage":
-                        case "webRtcSignalToServerMessage":
-                        case "webRtcScreenSharingSignalToServerMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
@@ -1075,7 +1095,6 @@ export class IoSocketController {
                 }
 
                 const socket = ws as Socket;
-
                 try {
                     socketData.disconnecting = true;
                     socketManager.leaveRoom(socket);

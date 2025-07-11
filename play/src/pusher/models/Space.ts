@@ -60,12 +60,14 @@ export interface SpaceInterface {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
+    cleanup(): void;
 }
 
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
     sendLocalUsersToBack(): void;
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
     handleConnectionRetryFailure(): void;
+    getPropertiesToSync(): string[];
 }
 
 export class Space implements SpaceForSpaceConnectionInterface {
@@ -90,6 +92,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private _filterType: FilterType,
         private _onSpaceEmpty: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
+        private propertiesToSync: string[] = [],
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
         private SpaceToFrontDispatcherFactory: (
@@ -271,5 +274,9 @@ export class Space implements SpaceForSpaceConnectionInterface {
             changedFields: updateSpaceUserMessage.updateMask,
             partialSpaceUser: updateSpaceUserMessage.user,
         };
+    }
+
+    getPropertiesToSync(): string[] {
+        return this.propertiesToSync;
     }
 }

@@ -69,6 +69,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
@@ -164,6 +165,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory,
                 mockClientEventsEmitter
@@ -245,6 +247,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
