@@ -192,7 +192,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 {
                     $case: "webRtcScreenSharingSignalToServerMessage",
                     webRtcScreenSharingSignalToServerMessage: {
-                        receiverId: this.userId,
+                        // receiverId: this.userId,
                         signal: JSON.stringify(data),
                     },
                 },

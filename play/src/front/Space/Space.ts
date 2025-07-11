@@ -16,6 +16,8 @@ import {
 import { gameManager } from "../Phaser/Game/GameManager";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -28,6 +30,7 @@ import {
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import { lookupUserById } from "./Utils/UserLookup";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -257,6 +260,18 @@ export class Space implements SpaceInterface {
         if (this._peerManager) {
             this._peerManager.destroy();
         }
+
+        this.videoStreamStore.forEach((peer) => {
+            if (peer instanceof VideoPeer) {
+                peer.destroy();
+            }
+        });
+
+        this.screenShareStreamStore.forEach((peer) => {
+            if (peer instanceof ScreenSharingPeer) {
+                peer.destroy();
+            }
+        });
     }
 
     get simplePeer(): SimplePeerConnectionInterface | undefined {
@@ -441,26 +456,13 @@ export class Space implements SpaceInterface {
     }
 
     //TODO : partie a modifier car plus de spacefilter
-    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
-        // const promises = Array.from(this.filters.values()).map((filter) => filter.getUserBySpaceUserId(id));
-        // const users = await Promise.all(promises);
-        // const foundUser = users.find((user) => user !== undefined);
-        // if (foundUser) {
-        //     return foundUser;
-        // }
-        return this._users.get(id);
+    public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
+        return lookupUserById(this.extractUserIdFromSpaceId(id), this, 30_000);
     }
 
     //TODO : reimplementer
-    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
-        // const promises = Array.from(this.filters.values()).map((filter) => filter.getUserByUserId(id));
-        // const users = await Promise.all(promises);
-        // const foundUser = users.find((user) => user !== undefined);
-        // if (foundUser) {
-        //     return foundUser;
-        // }
-
-        return undefined;
+    public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
+        return lookupUserById(id, this, 30_000);
     }
 
     public async dispatchSound(url: URL): Promise<void> {

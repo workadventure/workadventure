@@ -81,18 +81,20 @@ export class LiveKitRoom {
 
             this.synchronizeMediaState();
 
-            Array.from(room.remoteParticipants.values()).map((participant) => {
-                const id = this.getParticipantId(participant);
-                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
-                if (!spaceUser) {
-                    console.error("spaceUser not found for participant", id);
-                    return;
-                }
-                this.participants.set(
-                    participant.sid,
-                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-                );
-            });
+            await Promise.all(
+                Array.from(room.remoteParticipants.values()).map(async (participant) => {
+                    const id = this.getParticipantId(participant);
+                    const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
+                    if (!spaceUser) {
+                        console.error("spaceUser not found for participant", id);
+                        return;
+                    }
+                    this.participants.set(
+                        participant.sid,
+                        new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                    );
+                })
+            );
         } catch (err) {
             console.error("An error occurred in joinRoom", err);
             Sentry.captureException(err);
@@ -284,15 +286,24 @@ export class LiveKitRoom {
 
     private handleParticipantConnected(participant: Participant) {
         const id = this.getParticipantId(participant);
-        const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
-        if (!spaceUser) {
-            console.info("spaceUser not found for participant", id);
-            return;
-        }
-        this.participants.set(
-            participant.sid,
-            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-        );
+
+        this.space
+            .getSpaceUserBySpaceUserId(id)
+            .then((spaceUser) => {
+                if (!spaceUser) {
+                    console.info("spaceUser not found for participant", id);
+                    return;
+                }
+
+                this.participants.set(
+                    participant.sid,
+                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                );
+            })
+            .catch((err) => {
+                console.error("An error occurred in handleParticipantConnected", err);
+                Sentry.captureException(err);
+            });
     }
 
     private handleParticipantDisconnected(participant: Participant) {

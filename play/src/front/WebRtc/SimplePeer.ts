@@ -92,13 +92,18 @@ export class SimplePeer {
                     return;
                 }
 
-                const spaceUser = this._space.getSpaceUserByUserId(user.userId);
-                if (!spaceUser) {
-                    console.error("spaceUserId not found for userId", user.userId);
-                    return;
-                }
-
-                this.closeConnection(spaceUser.spaceUserId);
+                this._space
+                    .getSpaceUserByUserId(user.userId)
+                    .then((spaceUser) => {
+                        if (!spaceUser) {
+                            console.error("spaceUserId not found for userId", user.userId);
+                            return;
+                        }
+                        this.closeConnection(spaceUser.spaceUserId);
+                    })
+                    .catch((e) => {
+                        console.error("Error while getting space user by user id", e);
+                    });
             })
         );
     }
@@ -208,7 +213,7 @@ export class SimplePeer {
      * create peer connection to bind users
      */
     private async createPeerConnection(user: UserSimplePeerInterface): Promise<VideoPeer | null> {
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(user.userId);
+        const spaceUser = await this._space.getSpaceUserBySpaceUserId(user.userId);
 
         if (!spaceUser) {
             console.error("While creating peer connection, cannot find space user with ID " + user.userId);
@@ -216,7 +221,7 @@ export class SimplePeer {
         }
 
         console.log("createPeerConnection", spaceUser);
-        
+
         const player = await spaceUser.getPlayer();
         if (!player) {
             console.error("While creating peer connection, cannot find player with ID " + user.userId);
@@ -316,7 +321,7 @@ export class SimplePeer {
             user.webRtcPassword = this._lastWebrtcPassword;
         }
 
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(user.userId);
+        const spaceUser = await this._space.getSpaceUserBySpaceUserId(user.userId);
         if (!spaceUser) {
             console.error(
                 "While creating peer screen sharing connection, cannot find space user with ID " + user.userId
@@ -511,7 +516,7 @@ export class SimplePeer {
 
     //TODO : repasser dans les fonctions et bien faire la différence entre les userID et le spaceUserId
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(data.userId);
+        const spaceUser = await this._space.getSpaceUserBySpaceUserId(data.userId);
 
         if (!spaceUser) {
             console.error(
@@ -597,7 +602,7 @@ export class SimplePeer {
     }
 
     private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(userId);
+        const spaceUser = await this._space.getSpaceUserBySpaceUserId(userId);
         if (!spaceUser) {
             console.error("While sending local screen sharing, cannot find user with ID " + userId);
             return;
