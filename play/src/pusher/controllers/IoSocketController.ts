@@ -835,7 +835,7 @@ export class IoSocketController {
                                             searchTagsAnswer,
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
-                                        break;
+                                        break; 
                                     }
                                     case "getMemberQuery": {
                                         const getMemberAnswer = await socketManager.handleGetMemberQuery(
