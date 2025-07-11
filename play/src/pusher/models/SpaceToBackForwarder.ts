@@ -56,11 +56,11 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             chatID: socketData.chatID ?? undefined,
         });
 
-        this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
-        this._space._localConnectedUser.set(spaceUserId, client);
-        this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
-
         try {
+            this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+            this._space._localConnectedUser.set(spaceUserId, client);
+            this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
+
             await this._space.query.send({
                 $case: "addSpaceUserQuery",
                 addSpaceUserQuery: {
@@ -69,6 +69,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     filterType: filterType,
                 },
             });
+
             debug(`${this._space.name} : user add sent ${spaceUser.spaceUserId}`);
 
             if (this._space.metadata.size > 0) {
@@ -127,11 +128,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         }
 
         try {
-            this._space._localConnectedUser.delete(spaceUserId);
-            this._space._localWatchers.delete(spaceUserId);
-            this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-
             await this._space.query.send({
                 $case: "removeSpaceUserQuery",
                 removeSpaceUserQuery: {
@@ -140,11 +136,10 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 },
             });
 
-            if (this._space._localConnectedUser.size === 0) {
-                debug(`${this._space.name} : space is empty, cleaning up`);
-                this._space.cleanup();
-                return;
-            }
+            this._space._localConnectedUser.delete(spaceUserId);
+            this._space._localWatchers.delete(spaceUserId);
+            this._space._localConnectedUserWithSpaceUser.delete(socket);
+            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
 
             debug(
                 `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
@@ -156,11 +151,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._space._localWatchers.delete(spaceUserId);
             this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-            if (this._space._localConnectedUser.size === 0) {
-                debug(`${this._space.name} : space is empty, cleaning up`);
-                this._space.cleanup();
-                return;
-            }
             throw e;
         }
     }
@@ -206,7 +196,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         });
     }
     leaveSpace(): void {
-        console.log("leaveSpace ====> from leaveSpace", this._space.name);
         this.forwardMessageToSpaceBack({
             $case: "leaveSpaceMessage",
             leaveSpaceMessage: {

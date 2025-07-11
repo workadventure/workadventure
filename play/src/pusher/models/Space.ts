@@ -60,6 +60,7 @@ export interface SpaceInterface {
         changedFields: string[];
         partialSpaceUser: PartialSpaceUser;
     } | null;
+    cleanup(): void;
 }
 
 export interface SpaceForSpaceConnectionInterface extends SpaceInterface {

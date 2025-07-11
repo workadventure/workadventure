@@ -481,8 +481,6 @@ export class ProximityChatRoom implements ChatRoom {
         }
         this.users = undefined;
 
-        await this.spaceRegistry.leaveSpace(this._space);
-
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
@@ -490,6 +488,13 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingInputAudioStreamManager?.close();
         this.scriptingOutputAudioStreamManager = undefined;
         this.scriptingInputAudioStreamManager = undefined;
+
+        try {
+            await this.spaceRegistry.leaveSpace(this._space);
+        } catch (error) {
+            console.error("Error leaving space: ", error);
+            Sentry.captureException(error);
+        }
     }
 
     private restoreChatState() {
@@ -520,5 +525,15 @@ export class ProximityChatRoom implements ChatRoom {
 
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
+        this.spaceMessageSubscription?.unsubscribe();
+        this.spaceIsTypingSubscription?.unsubscribe();
+
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
+        this.spaceWatcherUserJoinedObserver?.unsubscribe();
+        this.spaceWatcherUserLeftObserver?.unsubscribe();
+        if (this.usersUnsubscriber) {
+            this.usersUnsubscriber();
+        }
     }
 }

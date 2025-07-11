@@ -625,6 +625,10 @@ export class SocketManager implements ZoneEventListener {
             if (space) {
                 try {
                     await space.forwarder.unregisterUser(socket);
+                    if (space.isEmpty()) {
+                        space.cleanup();
+                    }
+
                     socketData.joinSpacesPromise.delete(spaceName);
                     return { space, spaceName, success: true };
                 } catch (error) {
@@ -1401,6 +1405,13 @@ export class SocketManager implements ZoneEventListener {
             expiresIn: "1h",
         });
         return jwtToken;
+    }
+
+    deleteSpaceIfEmpty(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (space && space.isEmpty()) {
+            space.cleanup();
+        }
     }
 }
 
