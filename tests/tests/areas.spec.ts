@@ -54,7 +54,7 @@ test.describe('Areas', () => {
             await WA.player.teleport(240, 144);
             return;
         });
-        await Menu.expectButtonState(page, "music-button", "normal");
+        await Menu.expectButtonState(page, "music-button", "active");
         await page.getByTestId('music-button').click();
         await expect(page.getByRole('slider')).toBeVisible();
         await page.getByTestId('music-button').click();
