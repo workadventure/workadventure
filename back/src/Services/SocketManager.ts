@@ -24,7 +24,6 @@ import {
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
-    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
@@ -48,8 +47,6 @@ import {
     FilterType,
     SyncSpaceUsersMessage,
     SpaceQueryMessage,
-    StartRecordingMessage,
-    StopRecordingMessage
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1320,7 +1317,6 @@ export class SocketManager {
         // If no anymore watchers we delete the space
         if (space.canBeDeleted()) {
             debug("[space] Space %s => deleted", space.name);
-            space.destroy();
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
             clientEventsEmitter.emitDeleteSpace(space.name);
@@ -1343,20 +1339,6 @@ export class SocketManager {
         }
 
         space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
-    }
-
-    handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
-        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-        if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
-            if (space.canBeDeleted()) {
-                debug("[space] Space %s => deleted", space.name);
-                space.destroy();
-                this.spaces.delete(space.name);
-                pusher.unwatchSpace(space.name);
-                clientEventsEmitter.emitDeleteSpace(space.name);
-            }
-        }
     }
 
     handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
@@ -1405,7 +1387,7 @@ export class SocketManager {
         }
         space.dispatchPublicEvent(publicEvent).catch((error) => {
             console.error(error);
-            Sentry.captureException(error)
+            Sentry.captureException(error);
         });
     }
 
@@ -1578,13 +1560,6 @@ export class SocketManager {
                     },
                 },
             });
-
-            if (space.canBeDeleted()) {
-                debug("[space] Space %s => deleted", space.name);
-                this.spaces.delete(space.name);
-                pusher.unwatchSpace(space.name);
-                clientEventsEmitter.emitDeleteSpace(space.name);
-            }
         } catch (e) {
             console.error("Error while handling space query", e);
             Sentry.captureException("Error while handling space query");

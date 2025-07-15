@@ -122,7 +122,11 @@ describe("Space test", () => {
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
-        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, FilterType.ALL_USERS, defaultPropertiesToSync);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultPropertiesToSync
+        );
     });
 
     it("should emit leaveSpace event when you call destroy", async () => {

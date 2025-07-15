@@ -58,6 +58,135 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = false;
 
+    // Store event listener functions for proper cleanup
+    private readonly signalHandler = (data: unknown) => {
+        this.sendWebrtcSignal(data);
+
+        const ZodCandidate = z.object({
+            type: z.literal("candidate"),
+        });
+        if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
+            // If the signal is a candidate, we set a connection timer
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
+            }
+            this.connectTimeout = setTimeout(() => {
+                this._statusStore.set("error");
+            }, CONNECTION_TIMEOUT);
+        }
+    };
+
+    private readonly streamHandler = (stream: MediaStream) => this.stream(stream);
+
+    private readonly closeHandler = () => {
+        this._statusStore.set("closed");
+
+        this._connected = false;
+        this.toClose = true;
+        this.destroy();
+    };
+
+    private readonly errorHandler = (err: Error) => {
+        this._statusStore.set("error");
+
+        console.error(`error for user ${this.userId}`, err);
+        if ("code" in err) {
+            console.error(`error code => ${err.code}`);
+        }
+    };
+
+    private readonly iceTimeoutHandler = () => {
+        this._statusStore.set("error");
+    };
+
+    private readonly connectHandler = () => {
+        if (this.connectTimeout) {
+            clearTimeout(this.connectTimeout);
+        }
+        this._statusStore.set("connected");
+
+        this._connected = true;
+
+        /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
+
+        if (proximityRoomChat.addIncomingUser != undefined) {
+            const color = playersStore.getPlayerById(this.userId)?.color;
+            proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
+        }*/
+    };
+
+    private readonly dataHandler = (chunk: Buffer) => {
+        try {
+            const data = JSON.parse(chunk.toString("utf8"));
+            const message = P2PMessage.parse(data);
+
+            (async () => {
+                switch (message.type) {
+                    case "constraint": {
+                        this._constraintsStore.set(message.message);
+                        break;
+                    }
+                    case "blocked": {
+                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                        // Find a way to block A's output stream in A's js client
+                        //However, the output stream stream B is correctly blocked in A client
+                        this.blocked = true;
+                        this.toggleRemoteStream(false);
+                        const simplePeer = this.space.simplePeer;
+                        const spaceUser = await this.space.getSpaceUserByUserId(this.userId);
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for userId", this.userId);
+                            return;
+                        }
+                        if (!spaceUser) {
+                            console.error("spaceUser not found for userId", this.userId);
+                            return;
+                        }
+                        const spaceUserId = spaceUser.spaceUserId;
+                        if (!spaceUserId) {
+                            console.error("spaceUserId not found for userId", this.userId);
+                            return;
+                        }
+                        if (simplePeer) {
+                            simplePeer.blockedFromRemotePlayer(spaceUserId);
+                        }
+                        break;
+                    }
+                    case "unblocked": {
+                        this.blocked = false;
+                        this.toggleRemoteStream(true);
+                        break;
+                    }
+                    case "kickoff": {
+                        if (message.value !== this.userUuid) break;
+                        this._statusStore.set("closed");
+                        this._connected = false;
+                        this.toClose = true;
+                        this._onFinish();
+                        this.destroy();
+                        break;
+                    }
+                    default: {
+                        const _exhaustiveCheck: never = message;
+                    }
+                }
+            })().catch((e) => {
+                console.error("Error while handling P2P message", e);
+            });
+        } catch (e) {
+            console.error("Unexpected P2P message received from peer: ", e);
+            this._statusStore.set("error");
+        }
+    };
+
+    private readonly finishHandler = () => {
+        this._statusStore.set("closed");
+
+        this._onFinish();
+    };
+
+    private connectTimeout: ReturnType<typeof setTimeout> | undefined;
+
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
@@ -78,8 +207,6 @@ export class VideoPeer extends Peer implements Streamable {
         this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
-
-        let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
@@ -135,129 +262,24 @@ export class VideoPeer extends Peer implements Streamable {
         });
 
         // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
-        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+        /* eslint-disable listeners/no-missing-remove-event-listener */
 
         //start listen signal for the peer connection
-        this.on("signal", (data: unknown) => {
-            this.sendWebrtcSignal(data);
+        this.on("signal", this.signalHandler);
 
-            const ZodCandidate = z.object({
-                type: z.literal("candidate"),
-            });
-            if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
-                // If the signal is a candidate, we set a connection timer
-                if (connectTimeout) {
-                    clearTimeout(connectTimeout);
-                }
-                connectTimeout = setTimeout(() => {
-                    this._statusStore.set("error");
-                }, CONNECTION_TIMEOUT);
-            }
-        });
+        this.on("stream", this.streamHandler);
 
-        this.on("stream", (stream: MediaStream) => this.stream(stream));
+        this.on("close", this.closeHandler);
 
-        this.on("close", () => {
-            this._statusStore.set("closed");
+        this.on("error", this.errorHandler);
 
-            this._connected = false;
-            this.toClose = true;
-            this.destroy();
-        });
+        this.on("iceTimeout", this.iceTimeoutHandler);
 
-        this.on("error", (err: Error) => {
-            this._statusStore.set("error");
+        this.on("connect", this.connectHandler);
 
-            console.error(`error for user ${this.userId}`, err);
-            if ("code" in err) {
-                console.error(`error code => ${err.code}`);
-            }
-        });
+        this.on("data", this.dataHandler);
 
-        this.on("iceTimeout", () => {
-            this._statusStore.set("error");
-        });
-
-        this.on("connect", () => {
-            if (connectTimeout) {
-                clearTimeout(connectTimeout);
-            }
-            this._statusStore.set("connected");
-
-            this._connected = true;
-
-            /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
-
-            if (proximityRoomChat.addIncomingUser != undefined) {
-                const color = playersStore.getPlayerById(this.userId)?.color;
-                proximityRoomChat.addIncomingUser(this.userId, this.userUuid, this.player.name, color ?? undefined);
-            }*/
-        });
-
-        this.on("data", (chunk: Buffer) => {
-            try {
-                const data = JSON.parse(chunk.toString("utf8"));
-                const message = P2PMessage.parse(data);
-                switch (message.type) {
-                    case "constraint": {
-                        this._constraintsStore.set(message.message);
-                        break;
-                    }
-                    case "blocked": {
-                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                        // Find a way to block A's output stream in A's js client
-                        //However, the output stream stream B is correctly blocked in A client
-                        this.blocked = true;
-                        this.toggleRemoteStream(false);
-                        const simplePeer = this.space.simplePeer;
-                        const spaceUser = this.space.getSpaceUserByUserId(this.userId);
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for userId", this.userId);
-                            return;
-                        }
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for userId", this.userId);
-                            return;
-                        }
-                        const spaceUserId = spaceUser.spaceUserId;
-                        if (!spaceUserId) {
-                            console.error("spaceUserId not found for userId", this.userId);
-                            return;
-                        }
-                        if (simplePeer) {
-                            simplePeer.blockedFromRemotePlayer(spaceUserId);
-                        }
-                        break;
-                    }
-                    case "unblocked": {
-                        this.blocked = false;
-                        this.toggleRemoteStream(true);
-                        break;
-                    }
-                    case "kickoff": {
-                        if (message.value !== this.userUuid) break;
-                        this._statusStore.set("closed");
-                        this._connected = false;
-                        this.toClose = true;
-                        this._onFinish();
-                        this.destroy();
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message;
-                    }
-                }
-            } catch (e) {
-                console.error("Unexpected P2P message received from peer: ", e);
-                this._statusStore.set("error");
-            }
-        });
-
-        this.once("finish", () => {
-            this._statusStore.set("closed");
-
-            this._onFinish();
-        });
+        this.once("finish", this.finishHandler);
 
         this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
             if (userUuid === this.userUuid) {
@@ -321,7 +343,7 @@ export class VideoPeer extends Peer implements Streamable {
                 {
                     $case: "webRtcSignalToServerMessage",
                     webRtcSignalToServerMessage: {
-                        receiverId: this.userId,
+                        //receiverId: this.userId,
                         signal: JSON.stringify(data),
                     },
                 },
@@ -353,11 +375,22 @@ export class VideoPeer extends Peer implements Streamable {
      */
     public destroy(): void {
         try {
+            this.off("signal", this.signalHandler);
+            this.off("stream", this.streamHandler);
+            this.off("close", this.closeHandler);
+            this.off("error", this.errorHandler);
+            this.off("iceTimeout", this.iceTimeoutHandler);
+            this.off("connect", this.connectHandler);
+            this.off("data", this.dataHandler);
+            this.off("finish", this.finishHandler);
+
             this._connected = false;
             if (!this.toClose || this.closing) {
                 return;
             }
             this.closing = true;
+
+            // Unsubscribe from subscriptions
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();

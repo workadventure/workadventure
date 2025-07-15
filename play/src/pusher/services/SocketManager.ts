@@ -625,6 +625,10 @@ export class SocketManager implements ZoneEventListener {
             if (space) {
                 try {
                     await space.forwarder.unregisterUser(socket);
+                    if (space.isEmpty()) {
+                        space.cleanup();
+                    }
+
                     socketData.joinSpacesPromise.delete(spaceName);
                     return { space, spaceName, success: true };
                 } catch (error) {
@@ -976,7 +980,11 @@ export class SocketManager implements ZoneEventListener {
 
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
-            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of: ${JSON.stringify(socketData.spaces)}`);
+            throw new Error(
+                `Client is trying to do an operation on space ${spaceName} whose he is not part of: ${JSON.stringify(
+                    socketData.spaces
+                )}`
+            );
         }
     }
 
@@ -1401,6 +1409,13 @@ export class SocketManager implements ZoneEventListener {
             expiresIn: "1h",
         });
         return jwtToken;
+    }
+
+    deleteSpaceIfEmpty(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (space && space.isEmpty()) {
+            space.cleanup();
+        }
     }
 }
 

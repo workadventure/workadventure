@@ -113,7 +113,6 @@ message UserMovesMessage {
 }
 
 message WebRtcSignalToServerMessage {
-  int32 receiverId = 1;
   string signal = 2;
 }
 
@@ -827,7 +826,6 @@ message WebRtcDisconnectMessage {
 }
 
 message WebRtcSignalToClientMessage {
-  int32 userId = 1;
   string signal = 2;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
