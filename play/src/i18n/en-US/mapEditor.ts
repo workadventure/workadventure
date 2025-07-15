@@ -269,6 +269,7 @@ const mapEditor: BaseTranslation = {
         header: {
             title: "Add object to your map",
             description: "Search, upload or select existing object and add it in the map.",
+            choose: "Choose an object",
         },
         title: "Put your object",
         editing: "Editing: {name}",

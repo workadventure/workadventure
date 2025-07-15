@@ -106,6 +106,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         collectionName: entityPrefab.collectionName,
                     },
                     properties: createEntityMessage.properties,
+                    name: createEntityMessage.name,
                 };
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(

@@ -266,6 +266,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Ajouter un objet",
             description: "Recherchez, téléchargez ou sélectionnez un objet existant et ajoutez-le à la carte.",
+            choose: "Choisissez un objet",
         },
         title: "Outil d'édition d'entités",
         editing: "Edition : {name}",

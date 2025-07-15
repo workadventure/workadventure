@@ -125,7 +125,7 @@
     <span slot="header" class="flex justify-center items-center">
         <img
             class="w-6 mr-1"
-            src="resources/icons/icon_start.png"
+            src="resources/icons/icon_file.png"
             alt={$LL.mapEditor.properties.startProperties.description()}
         />
         {$LL.mapEditor.properties.openFileProperties.label()}
