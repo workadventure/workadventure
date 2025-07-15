@@ -54,11 +54,17 @@ test.describe('Areas', () => {
             await WA.player.teleport(240, 144);
             return;
         });
-        await Menu.expectButtonState(page, "music-button", "normal");
+
+        // Check that the manager sound is active
+        await Menu.expectButtonState(page, "music-button", "active");
+        // Click on the soud manager button
         await page.getByTestId('music-button').click();
-        await expect(page.getByRole('slider')).toBeVisible();
-        await page.getByTestId('music-button').click();
+        // Check that the slider is hidden
         await expect(page.getByRole('slider')).toBeHidden();
+        // Click on the soud manager button
+        await page.getByTestId('music-button').click();
+        // Check that the slider is visible
+        await expect(page.getByRole('slider')).toBeVisible();
 
         // Enable audio area blocking
         await Menu.openMenu(page);

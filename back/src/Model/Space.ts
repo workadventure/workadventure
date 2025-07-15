@@ -149,9 +149,16 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
+        let user: SpaceUser | undefined;
         try {
             const usersList = this.usersList(sourceWatcher);
-            const user = usersList.get(spaceUserId);
+            user = usersList.get(spaceUserId);
+
+            if (!user) {
+                console.error("User not found in this space", spaceUserId);
+                Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
+                return;
+            }
 
             usersList.delete(spaceUserId);
             this._clientEventsEmitter.emitSpaceLeave(this.name);
@@ -162,26 +169,23 @@ export class Space implements CustomJsonReplacerInterface {
                 this.users.delete(sourceWatcher);
             }
 
-            if (!user) {
-                console.error("User not found in this space", spaceUserId);
-                Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
-                return;
-            }
             this.communicationManager.handleUserDeleted(user);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
             debug("Error while removing user", e);
         } finally {
-            this.notifyWatchers({
-                message: {
-                    $case: "removeSpaceUserMessage",
-                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                        spaceName: this.name,
-                        spaceUserId: spaceUserId,
-                    }),
-                },
-            });
+            if (user && this.filterOneUser(user)) {
+                this.notifyWatchers({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                            spaceName: this.name,
+                            spaceUserId: spaceUserId,
+                        }),
+                    },
+                });
+            }
         }
     }
 
@@ -222,6 +226,10 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
         for (const spaceUsers of this.users.values()) {
             for (const spaceUser of spaceUsers.values()) {
+                if (!this.filterOneUser(spaceUser)) {
+                    continue;
+                }
+
                 watcher.write({
                     message: {
                         $case: "addSpaceUserMessage",
@@ -257,20 +265,22 @@ export class Space implements CustomJsonReplacerInterface {
         this.users.delete(watcher);
         // In case was not empty when it was removed, we need to notify the other watchers
         for (const spaceUser of spaceUsers?.values() || []) {
-            if (this.filterOneUser(spaceUser)) {
-                debug(
-                    `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
-                );
-                this.notifyWatchers({
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            spaceUserId: spaceUser.spaceUserId,
-                        }),
-                    },
-                });
+            if (!this.filterOneUser(spaceUser)) {
+                continue;
             }
+
+            debug(
+                `${this.name} => removing space user ${spaceUser.spaceUserId} from watcher ${watcher.id} before removing watcher`
+            );
+            this.notifyWatchers({
+                message: {
+                    $case: "removeSpaceUserMessage",
+                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                        spaceName: this.name,
+                        spaceUserId: spaceUser.spaceUserId,
+                    }),
+                },
+            });
         }
 
         debug(`${this.name} => watcher removed ${watcher.id}`);

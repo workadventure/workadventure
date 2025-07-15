@@ -1156,7 +1156,7 @@ export class GameScene extends DirtyScene {
 
         try {
             await this._spaceRegistry?.destroy();
-        } catch {
+        } catch (e) {
             console.error("Error while destroying space registry", e);
             Sentry.captureException(e);
         }
