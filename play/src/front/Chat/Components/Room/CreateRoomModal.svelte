@@ -5,19 +5,25 @@
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import LL from "../../../../i18n/i18n-svelte";
-    import { IconAlertTriangle, IconHelpCircle, IconLoader } from "../../../Components/Icons";
+    import { IconAlertTriangle, IconHelpCircle, IconInfoCircle } from "../../../Components/Icons";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import Input from "../../../Components/Input/Input.svelte";
-    import Select from "../../../Components/Input/Select.svelte";
     import InputCheckbox from "../../../Components/Input/InputCheckbox.svelte";
     import InputRadio from "../../../Components/Input/InputRadio.svelte";
+    import Spinner from "../../../Components/Icons/Spinner.svelte";
 
     export let isOpen: boolean;
     export let parentID: string | undefined;
-    let createRoomOptions: CreateRoomOptions = { visibility: "public" };
-    if (parentID) createRoomOptions.parentSpaceID = parentID;
+    let createRoomOptions: CreateRoomOptions = {
+        visibility: "private",
+        historyVisibility: historyVisibilityOptions[0], // Default to "joined"
+    };
+    if (parentID) {
+        createRoomOptions.parentSpaceID = parentID;
+        createRoomOptions.visibility = "restricted"; // Set to folder members only
+    }
     let createRoomError: string | undefined = undefined;
 
     const chat = gameManager.chatConnection;
@@ -73,11 +79,26 @@
 </script>
 
 <Popup {isOpen}>
-    <h1 slot="title">{$LL.chat.createRoom.title()}</h1>
-    <div slot="content" class="w-full flex flex-col gap-2">
+    <h1 slot="title">
+        {#if parentID}
+            {$LL.chat.createRoom.title()}
+        {:else}
+            {$LL.chat.createRoom.rootTitle()}
+        {/if}
+    </h1>
+    <div slot="content" class="w-full flex flex-col gap-5">
+        {#if parentID}
+            <span class="p-3 flex flex-row items-center gap-2 bg-white/10 rounded mt-3">
+                <IconInfoCircle />
+                {$LL.chat.createRoom.restrictedDescription({ folderName: get(chat.getRoomByID(parentID).name) })}
+            </span>
+        {/if}
         {#if loadingRoomCreation}
-            <div class="animate-[spin_2s_linear_infinite] self-center">
-                <IconLoader font-size="2em" />
+            <!--            <div class="animate-[spin_2s_linear_infinite] self-center">-->
+            <!--                <IconLoader font-size="2em" />-->
+            <!--            </div>-->
+            <div class="w-full flex items-center justify-center p-2">
+                <Spinner />
             </div>
         {:else}
             {#if createRoomError !== undefined}
@@ -85,94 +106,81 @@
                     {$LL.chat.createRoom.error()} : <b><i>{createRoomError}</i></b>
                 </div>
             {/if}
+            <div class="flex flex-col items-start gap-1">
+                <Input
+                    data-testid="createRoomName"
+                    label={$LL.chat.createRoom.name()}
+                    placeholder={$LL.chat.createRoom.name()}
+                    bind:value={createRoomOptions.name}
+                    on:focusin={focusChatInput}
+                    on:focusout={unfocusChatInput}
+                />
 
-            <Input
-                data-testid="createRoomName"
-                label={$LL.chat.createRoom.name()}
-                placeholder={$LL.chat.createRoom.name()}
-                bind:value={createRoomOptions.name}
-                on:focusin={focusChatInput}
-                on:focusout={unfocusChatInput}
-            />
-
-            <Select
-                data-testid="createRoomVisibility"
-                label={$LL.chat.createRoom.visibility.label()}
-                bind:value={createRoomOptions.visibility}
-            >
-                <option value="private">{$LL.chat.createRoom.visibility.private()}</option>
-                <option value="public">{$LL.chat.createRoom.visibility.public()}</option>
                 {#if parentID}
-                    <option value="restricted">{$LL.chat.createRoom.visibility.restricted()}</option>
+                    <div>
+                        <div class="pl-1">
+                            <input
+                                data-testid="createRoomSuggested"
+                                bind:checked={createRoomOptions.suggested}
+                                type="checkbox"
+                                id="suggestedData"
+                                on:focusin={focusChatInput}
+                                on:focusout={unfocusChatInput}
+                            />
+                            <label class="m-0" for="suggestedData">{$LL.chat.createRoom.suggested()}</label>
+                        </div>
+                        <span class="text-xs m-0 p-0 text-gray-400 pl-1 flex flex-row items-center gap-1">
+                            <IconHelpCircle font-size={18} />
+                            {$LL.chat.createRoom.suggestedDescription()}
+                        </span>
+                    </div>
                 {/if}
-
-                <span slot="helper">
-                    <p class="text-xs m-0 p-0 text-gray-300 flex items-center mb-1">
-                        <IconHelpCircle class="mr-2" font-size={18} />
-                        {#if createRoomOptions.visibility === "private"}
-                            {$LL.chat.createRoom.visibility.privateDescription()}
-                        {:else if createRoomOptions.visibility === "public"}
-                            {$LL.chat.createRoom.visibility.publicDescription()}
-                        {:else if createRoomOptions.visibility === "restricted"}
-                            {$LL.chat.createRoom.visibility.restrictedDescription()}
-                        {/if}
-                    </p>
-                </span>
-            </Select>
-
-            {#if parentID}
-                <div class="pl-1">
-                    <input
-                        data-testid="createRoomSuggested"
-                        bind:checked={createRoomOptions.suggested}
-                        type="checkbox"
-                        id="suggestedData"
-                        on:focusin={focusChatInput}
-                        on:focusout={unfocusChatInput}
-                    />
-                    <label class="m-0" for="suggestedData">{$LL.chat.createRoom.suggested()}</label>
-                </div>
-                <p class="text-xs m-0 p-0 text-gray-400 pl-1">
-                    <IconHelpCircle font-size={18} />
-                    {$LL.chat.createRoom.suggestedDescription()}
-                </p>
-            {/if}
-            {#if createRoomOptions.visibility === "private"}
-                <div class="pl-1">
-                    <InputCheckbox
-                        data-testid="createRoomEncryption"
-                        label={$LL.chat.createRoom.e2eEncryption.label()}
-                        bind:value={createRoomOptions.encrypt}
-                        id="encryptData"
-                        on:focusin={focusChatInput}
-                        on:focusout={unfocusChatInput}
+                {#if createRoomOptions.visibility === "private"}
+                    <div class="flex flex-row items-center gap-0">
+                        <div class="pl-1">
+                            <InputCheckbox
+                                data-testid="createRoomEncryption"
+                                label={$LL.chat.createRoom.e2eEncryption.label()}
+                                bind:value={createRoomOptions.encrypt}
+                                id="encryptData"
+                                on:focusin={focusChatInput}
+                                on:focusout={unfocusChatInput}
+                            />
+                        </div>
+                        <p class="text-xs m-0 p-0 text-gray-400 flex items-center ">
+                            <IconAlertTriangle class="mr-2" font-size={16} />
+                            {$LL.chat.createRoom.e2eEncryption.description()}
+                        </p>
+                    </div>
+                {/if}
+            </div>
+            {#if !parentID}
+                <div class="flex flex-col items-start gap-1">
+                    <div class="input-label">
+                        <span>{$LL.chat.createRoom.users()}</span>
+                    </div>
+                    <SelectMatrixUser
+                        on:error={handleSelectMatrixUserError}
+                        bind:value={createRoomOptions.invite}
+                        placeholder={$LL.chat.createRoom.users()}
                     />
                 </div>
-                <p class="text-xs m-0 p-0 text-gray-400 pl-3 flex items-center ">
-                    <IconAlertTriangle class="mr-2" font-size={18} />
-                    {$LL.chat.createRoom.e2eEncryption.description()}
-                </p>
             {/if}
-            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createRoom.users()}</p>
-            <SelectMatrixUser
-                on:error={handleSelectMatrixUserError}
-                bind:value={createRoomOptions.invite}
-                placeholder={$LL.chat.createRoom.users()}
-            />
-
-            <p class="p-0 m-0 pl-1 font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
-            {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
-                <label class="m-0" for="historyVisibility-{historyVisibilityOption}">
-                    <InputRadio
-                        id={`historyVisibility-${historyVisibilityOption}`}
-                        bind:group={createRoomOptions.historyVisibility}
-                        value={historyVisibilityOption}
-                        on:focusin={focusChatInput}
-                        on:focusout={unfocusChatInput}
-                        label={getHistoryTranslation(historyVisibilityOption)}
-                    />
-                </label>
-            {/each}
+            <div>
+                <p class="p-0 m-0 pl-1 py-2 font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
+                {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
+                    <label class="m-0" for="historyVisibility-{historyVisibilityOption}">
+                        <InputRadio
+                            id={`historyVisibility-${historyVisibilityOption}`}
+                            bind:group={createRoomOptions.historyVisibility}
+                            value={historyVisibilityOption}
+                            on:focusin={focusChatInput}
+                            on:focusout={unfocusChatInput}
+                            label={getHistoryTranslation(historyVisibilityOption)}
+                        />
+                    </label>
+                {/each}
+            </div>
         {/if}
     </div>
 
@@ -186,7 +194,9 @@
             <button
                 data-testid="createRoomButton"
                 class="disabled:text-gray-400  btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
-                disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0}
+                disabled={createRoomOptions.name === undefined ||
+                    createRoomOptions.name?.trim().length === 0 ||
+                    (createRoomOptions.visibility === "private" && (createRoomOptions.invite?.length ?? 0) < 1)}
                 on:click={() => createNewRoom(createRoomOptions)}
                 >{$LL.chat.createRoom.buttons.create()}
             </button>
