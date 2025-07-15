@@ -551,6 +551,7 @@ describe("Space with filter", () => {
             const spaceUser: SpaceUser = SpaceUser.fromPartial({
                 spaceUserId: "foo_1",
                 uuid: "uuid-test",
+                megaphoneState: true,
             });
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
@@ -597,6 +598,7 @@ describe("Space with filter", () => {
             const spaceUser: SpaceUser = SpaceUser.fromPartial({
                 spaceUserId: "foo_1",
                 uuid: "uuid-test",
+                megaphoneState: true,
             });
 
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
