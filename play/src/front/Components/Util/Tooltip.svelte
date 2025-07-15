@@ -25,7 +25,6 @@
         } else if (rightPosition === "true") {
             toolTipPosition = "right-tooltip";
         }
-        console.log("tooltip parent ::::", tooltipElement?.parentElement);
         tooltipElement?.parentElement?.addEventListener("mouseenter", show);
         tooltipElement?.parentElement?.addEventListener("mouseleave", hide);
     });

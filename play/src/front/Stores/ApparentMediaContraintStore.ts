@@ -19,6 +19,12 @@ function createNbSoundPlayedInBubbleStore() {
 }
 export const nbSoundPlayedInBubbleStore = createNbSoundPlayedInBubbleStore();
 
+export interface INbSoundPlayedInBubbleStore {
+    subscribe: (fn: (value: number) => void) => void;
+    soundStarted: () => void;
+    soundEnded: () => void;
+}
+
 /**
  * The "apparent media constraint store" represents what the OTHER users see as the media constraint for this user.
  * It is used to display / hide the webcam or the muted sound icon.

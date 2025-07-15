@@ -8,7 +8,6 @@ import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { peerStore } from "../../Stores/PeerStore";
 import { popupStore } from "../../Stores/PopupStore";
 import MuteDialogPopup from "../../Components/PopUp/MuteDialogPopup.svelte";
 
@@ -105,8 +104,11 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
         });
         chatZoneLiveStore.set(false);
         // Close all connection simple peer
-        scene.getSimplePeer().closeAllConnections();
-        peerStore.cleanupStore();
+        const simplePeer = space.simplePeer;
+        if (simplePeer) {
+            simplePeer.closeAllConnections(true);
+            simplePeer.cleanupStore();
+        }
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

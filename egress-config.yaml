@@ -1,0 +1,14 @@
+# required fields
+api_key: "devkey"
+api_secret: "12345678901234567890123456789012"
+ws_url: "ws://livekit:7880"
+log_level: "debug"
+insecure: true
+template_port: 7980
+health_port: 8081
+prometheus_port: 9000
+redis:
+  address: "redis:6379"
+  username: ""
+  password: ""
+  db: 2

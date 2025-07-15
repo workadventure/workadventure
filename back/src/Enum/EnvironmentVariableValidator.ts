@@ -95,6 +95,10 @@ Note that anonymous players don't have any TTL limit because their data is store
         .optional()
         .default(20 * 1024 * 1024) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
+    LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
+    LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
+    LIVEKIT_WS_URL: z.string().optional().describe("The Livekit WebSocket URL."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
