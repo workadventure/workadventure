@@ -2,21 +2,56 @@ import { writable } from 'svelte/store';
 
 interface RecordingState {
     isRecording: boolean;
-    isCurrentUserSharing: boolean;
+    shouldShowInfoPopup: boolean;
+    isCurrentUserRecorder: boolean;
 }
 
 const initialState: RecordingState = {
     isRecording: false,
-    isCurrentUserSharing: false,
+    shouldShowInfoPopup: false,
+    isCurrentUserRecorder: false,
 };
 
-export const recordingStore = writable<RecordingState>(initialState);
+function createRecordingStore() {
+    const { subscribe, update, set } = writable<RecordingState>(initialState);
 
-export function setRecording(isRecording: boolean) {
-    recordingStore.update(state => ({ ...state, isRecording }));
+    return {
+        subscribe,
+        shouldShowInfoPopup: initialState.shouldShowInfoPopup,
+        isRecording: initialState.isRecording,
+        isCurrentUserRecorder: initialState.isCurrentUserRecorder,
+        startRecord(isCurrentUser: boolean = false) {
+            update(state => ({
+                ...state,
+                isRecording: true,
+                isCurrentUserRecorder: isCurrentUser
+            }));
+            if (!isCurrentUser) this.showInfoPopup();
+        },
+        stopRecord() {
+            update(state => ({
+                ...state,
+                isRecording: false,
+                isCurrentUserRecorder: false
+            }));
+            this.hideInfoPopup();
+        },
+        showInfoPopup() {
+            update(state => ({
+                ...state,
+                shouldShowInfoPopup: true
+            }));
+        },
+        hideInfoPopup() {
+            update(state => ({
+                ...state,
+                shouldShowInfoPopup: false
+            }));
+        },
+        reset() {
+            set(initialState);
+        }
+    };
 }
 
-export function setCurrentUserSharing(isCurrentUserSharing: boolean) {
-    recordingStore.update(state => ({ ...state, isCurrentUserSharing }));
-}
-
+export const recordingStore = createRecordingStore();

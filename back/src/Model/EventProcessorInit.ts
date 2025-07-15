@@ -101,7 +101,7 @@ eventProcessor.registerPublicEventProcessor(
         }catch(error){
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
-                senderUserId : "0", // 0 means that the event is sent by the server
+                senderUserId : senderId, // 0 means that the event is sent by the server
                 receiverUserId : senderId,
                 spaceEvent: {
                     event : {
@@ -116,8 +116,58 @@ eventProcessor.registerPublicEventProcessor(
             throw error
 
         }
-
-
-
     }
 )
+
+eventProcessor.registerPublicEventProcessor(
+    "stopRecordingMessage",
+    async (event, senderId, space) => {
+        if (event.$case !== "stopRecordingMessage") {
+            throw new Error("Invalid event type");
+        }
+        const spaceUser = space.getUser(senderId);
+        console.log("🤟🤟🤟Backend: Stop recording for space", space.getSpaceName());
+        if (!spaceUser) {
+            console.error("Could not find space user to stop recording");
+            throw new Error("Space user not found for stop recording event");
+        }
+
+        try{
+            //await space.stopRecording(spaceUser);
+            space.dispatchPrivateEvent({
+                spaceName : space.getSpaceName(),
+                senderUserId : senderId,
+                receiverUserId : senderId,
+                spaceEvent: {
+                    event : {
+                        $case : "stopRecordingResultMessage",
+                        stopRecordingResultMessage: {
+                            success : true
+                        }
+                    }
+                }
+            });
+            return {
+                $case : "stopRecordingMessage",
+                stopRecordingMessage: {
+                },
+            };
+        }catch(error){
+            space.dispatchPrivateEvent({
+                spaceName : space.getSpaceName(),
+                senderUserId : senderId,
+                receiverUserId : senderId,
+                spaceEvent: {
+                    event : {
+                        $case : "stopRecordingResultMessage",
+                        stopRecordingResultMessage: {
+                            success : false,
+                            errorMessage: "Error while stopping recording"
+                        }
+                    }
+                }
+            });
+            throw error
+        }
+    }
+);

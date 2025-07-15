@@ -450,14 +450,6 @@ export class RoomConnection implements RoomConnection {
                                 chatZoneLiveStore.set(false);
                                 break;
                             }
-                            case "startRecordingMessage":{
-                                this._startRecordingMessage.next(subMessage.startRecordingMessage)
-                                break
-                            }
-                            case "stopRecordingMessage":{
-                                this._stopRecordingMessage.next(subMessage.stopRecordingMessage)
-                                break
-                            }
                             case "publicEvent": {
                                 this._spacePublicMessageEvent.next(subMessage.publicEvent);
                                 break;

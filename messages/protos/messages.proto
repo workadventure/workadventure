@@ -944,6 +944,7 @@ message PrivateSpaceEvent {
     UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
     StartRecordingResultMessage startRecordingResultMessage = 16;
     StartRecordingMessage startRecordingMessage = 17;
+    StopRecordingResultMessage stopRecordingResultMessage = 18;
   }
 }
 
@@ -1481,6 +1482,11 @@ message StopRecordingMessage{
 }
 
 message StartRecordingResultMessage{
+  bool success = 1;
+  optional string errorMessage = 2; // if success is false, this field contains the error message
+}
+
+message StopRecordingResultMessage{
   bool success = 1;
   optional string errorMessage = 2; // if success is false, this field contains the error message
 }

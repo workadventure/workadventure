@@ -10,7 +10,7 @@ import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
-import { recordingStore, setRecording, setCurrentUserSharing } from "../../Stores/RecordingStore";
+// import { recordingStore } from "../../Stores/RecordingStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -48,8 +48,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
-    private startRecordingMessageSubscription: Subscription;
-    private stopRecordingMessageSubscription: Subscription;
+    // private startRecordingMessageSubscription: Subscription;
+    // private stopRecordingMessageSubscription: Subscription;
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
@@ -209,28 +209,27 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
-        this.startRecordingMessageSubscription = roomConnection.startRecordingMessage.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a start recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-                );
-                return;
-            }
-            setRecording(true);
-        });
-
-        this.stopRecordingMessageSubscription = roomConnection.stopRecordingMessage.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a stop recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-                );
-                return;
-            }
-            setRecording(false);
-            setCurrentUserSharing(false);
-        });
+        // this.startRecordingMessageSubscription = roomConnection.startRecordingMessage.subscribe((message) => {
+        //     // const space = this.spaces.get(message.spaceName);
+        //     // if (!space) {
+        //     //     console.warn(
+        //     //         `Received a start recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+        //     //     );
+        //     //     return;
+        //     // }
+        //     recordingStore.startRecord()
+        // });
+        //
+        // this.stopRecordingMessageSubscription = roomConnection.stopRecordingMessage.subscribe((message) => {
+        //     // const space = this.spaces.get(message.spaceName);
+        //     // if (!space) {
+        //     //     console.warn(
+        //     //         `Received a stop recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+        //     //     );
+        //     //     return;
+        //     // }
+        //     recordingStore.stopRecord()
+        // });
 
         this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
             const space = this.spaces.get(message.spaceName);
@@ -325,8 +324,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
-        this.startRecordingMessageSubscription.unsubscribe();
-        this.stopRecordingMessageSubscription.unsubscribe();
+        // this.startRecordingMessageSubscription.unsubscribe();
+        // this.stopRecordingMessageSubscription.unsubscribe();
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();

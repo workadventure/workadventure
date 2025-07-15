@@ -3,23 +3,31 @@
 import { get } from "svelte/store";
 import ActionBarButton from "../ActionBarButton.svelte";
 import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+import StopRecordingIcon from "../../Icons/StopRecordingIcon.svelte";
+import { recordingStore } from "../../../Stores/RecordingStore";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import {SpaceInterface} from "../../../Space/SpaceInterface";
+import {IconAlertTriangle} from "@wa-icons";
 
 
 function requestRecording(): void {
-    // This function should handle the recording logic.
-    // For now, we just log a message to the console.
     console.log("Recording started");
     const spaceRegistry = gameManager.getCurrentGameScene().spaceRegistry;
     const spaceWithRecording = get(spaceRegistry.spacesWithRecording);
     if (spaceWithRecording.length > 0) {
+        const isRecording = get(recordingStore).isRecording;
         const space: SpaceInterface = get(spaceRegistry.spacesWithRecording)[0];
-        gameManager.getCurrentGameScene().connection?.emitStartRecording(space.getName());
-        console.log("👊👊👊 Emit from button component")
+        if (isRecording) {
+            gameManager.getCurrentGameScene().connection?.emitStopRecording(space.getName());
+            console.log("👊👊👊 Emit stop recording from button component");
+        } else {
+            gameManager.getCurrentGameScene().connection?.emitStartRecording(space.getName());
+            console.log("👊👊👊 Emit from button component")
+        }
     }
-
 }
+
+
 </script>
 
 <ActionBarButton
@@ -27,12 +35,46 @@ function requestRecording(): void {
         requestRecording();
     }}
     classList="group/btn-recording"
-    tooltipTitle="Recording"
-    disabledHelp={true}
-    state="normal"
+    tooltipTitle={ $recordingStore.isRecording ?
+        $recordingStore.isCurrentUserRecorder ? "Stop recording" : "A recording is in progress"
+        : "Start a recording"
+    }
+    state={$recordingStore.isRecording ? ($recordingStore.isCurrentUserRecorder ? "active" : "disabled") : "normal"}
     dataTestId="recordingButton"
-    desc="Record your session">
+    tooltipDelay={0}
+>
 
-    <StartRecordingIcon/>
+    {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder }
+        <StopRecordingIcon/>
+    {:else}
+        <StartRecordingIcon/>
+    {/if}
+
+    <div slot="tooltip" class="text-white relative">
+        <div>
+            {#if !$recordingStore.isRecording }
+                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
+                    <IconAlertTriangle />
+                    <span>
+                        All participants will be notified that you are starting a recording.
+                    </span>
+                </div>
+            {:else if $recordingStore.isCurrentUserRecorder}
+                <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1 ">
+                    <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse"></div>
+                    <div>
+                        Your recording is in progress. Click to stop it.
+                    </div>
+                </div>
+            {:else}
+                <div class="text-sm text-white px-2 py-1">
+                    <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse"></div>
+                    <div>
+                        A recording is in progress.
+                    </div>
+                </div>
+            {/if}
+        </div>
+    </div>
 
 </ActionBarButton>

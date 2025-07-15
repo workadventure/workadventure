@@ -20,6 +20,7 @@
     import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
+    import { recordingStore } from "../../Stores/RecordingStore";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
@@ -47,9 +48,10 @@
     const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
 
     const shouldDisplayRecordingButton = derived(
-        spacesWithRecording,
-        (spacesWithRecording) => spacesWithRecording.length > 0
-    )
+        [spacesWithRecording],
+        ([$spacesWithRecording]) =>
+            $spacesWithRecording.length > 0
+    );
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));

@@ -1,12 +1,14 @@
 // -------------------- Default Implementations --------------------x
 
 import { Subject } from "rxjs";
-import {Readable, Unsubscriber, writable, Writable} from "svelte/store";
+import {Readable, Unsubscriber, writable, Writable, get} from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { recordingStore } from "../../Stores/RecordingStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
+import {notificationPlayingStore} from "../../Stores/NotificationStore";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
@@ -68,23 +70,31 @@ export class SpacePeerManager {
         private space: SpaceInterface,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
+        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState,
     ) {
         this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
 
         this.space.observePrivateEvent("startRecordingResultMessage").subscribe((message)=>{
-           console.log("startRecordingResultMessage" , message);
+            recordingStore.startRecord(true)
+            console.log("startRecordingResultMessage" , message);
+        })
+
+        this.space.observePrivateEvent('stopRecordingResultMessage').subscribe((message)=>{
+            recordingStore.stopRecord()
+            notificationPlayingStore.playNotification('Recording stopped');
         })
 
         this.space.observePublicEvent("startRecordingMessage").subscribe(async (message)=>{
-
-           const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
-           console.log("startRecordingMessage", message , spaceUser);
+           // const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
+           //  const spaceUser = await  this.space.getSpaceUserBySpaceUserId(message.sender)
+            recordingStore.startRecord()
+            console.trace("startRecordingMessage", message , message.sender);
         })
 
         this.space.observePublicEvent("stopRecordingMessage").subscribe(async (message)=>{
-            const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
-            console.log("stopRecordingMessage", message , spaceUser);
+            // const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
+            recordingStore.stopRecord()
+            console.log("stopRecordingMessage", message , message.sender);
         })
 
     }

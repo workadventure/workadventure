@@ -213,8 +213,7 @@
             {#if $showLimitRoomModalStore}
                 <LimitRoomModal />
             {/if}
-
-            {#if $recordingStore.isRecording}
+            {#if $recordingStore.shouldShowInfoPopup}
                 <IsRecordingInfoModal/>
             {/if}
 
