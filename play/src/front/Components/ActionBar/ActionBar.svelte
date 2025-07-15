@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get } from "svelte/store";
+    import {derived, get} from "svelte/store";
     import { fly } from "svelte/transition";
     import { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
@@ -44,7 +44,12 @@
     const gameScene = gameManager.getCurrentGameScene();
     const showChatButton = gameScene.room.isChatEnabled;
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
-    const shouldDisplayRecordingButton= gameScene.spaceRegistry.spacesWithRecording
+    const spacesWithRecording = gameScene.spaceRegistry.spacesWithRecording;
+
+    const shouldDisplayRecordingButton = derived(
+        spacesWithRecording,
+        (spacesWithRecording) => spacesWithRecording.length > 0
+    )
 
     function focusModeOn() {
         focusMode.set(!get(focusMode));
@@ -147,7 +152,7 @@
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         {#if $bottomActionBarVisibilityStore}
                             <ScreenSharingMenuItem />
-                            {#if $shouldDisplayRecordingButton.length > 0}
+                            {#if $shouldDisplayRecordingButton}
                                 <RecordingMenuItem />
                             {/if}
                             {#if camMenuIsDropped}

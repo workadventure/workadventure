@@ -3,7 +3,7 @@ import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
-import { ICommunicationState } from "./Interfaces/ICommunicationState";
+import {ICommunicationState, IRecordableState} from "./Interfaces/ICommunicationState";
 import { DefaultState } from "./States/DefaultState";
 import { LivekitState } from "./States/LivekitState";
 
