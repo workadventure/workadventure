@@ -131,9 +131,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             // TODO: implement a retry mechanism.
         });
 
-        this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            this.reconnect(connection).catch((e) => console.error(e));
-        });
+        // this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
+        //    // this.reconnect(connection).catch((e) => console.error(e));
+        // });
     }
 
     async joinSpace(
