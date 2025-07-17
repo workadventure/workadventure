@@ -2,26 +2,28 @@
     import { v4 as uuidv4 } from "uuid";
     import { get } from "svelte/store";
     import type { EntityPrefab, OpenFilePropertyData, WAMEntityData } from "@workadventure/map-editor";
+    import { onMount } from "svelte";
     import Input from "../Input/Input.svelte";
-    import InputSwitch from "../Input/InputSwitch.svelte";
-    import InputCheckbox from "../Input/InputCheckbox.svelte";
-    import InputTags from "../Input/InputTags.svelte";
-    import RangeSlider from "../Input/RangeSlider.svelte";
-    import Select from "../Input/Select.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
     import { CreateEntityFrontCommand } from "../../Phaser/Game/MapEditor/Commands/Entity/CreateEntityFrontCommand";
     import { gameSceneStore } from "../../Stores/GameSceneStore";
-    import {
-        ON_ACTION_TRIGGER_ENTER,
-        ON_ICON_TRIGGER_BUTTON,
-        ON_ACTION_TRIGGER_BUTTON,
-    } from "../../WebRtc/LayoutManager";
-    import type { InputTagOption } from "../Input/InputTagOption";
     import { popupStore } from "../../Stores/PopupStore";
     import LL from "../../../i18n/i18n-svelte";
-    import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
+    import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
+    import { TexturesHelper } from "../../Phaser/Helpers/TexturesHelper";
+    import { GameScene } from "../../Phaser/Game/GameScene";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import {
+        mapEditorEntityModeStore,
+        mapEditorModeStore,
+        mapEditorSelectedEntityStore,
+    } from "../../Stores/MapEditorStore";
+    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
+    import { Entity } from "../../Phaser/ECS/Entity";
     import PopUpContainer from "./PopUpContainer.svelte";
+    import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
     export let x: number;
     export let y: number;
@@ -30,7 +32,6 @@
     let property = {
         link: null,
         name: null,
-        trigger: ON_ACTION_TRIGGER_ENTER,
         buttonLabel: "Open",
         newTab: false,
         hideButtonLabel: false,
@@ -44,58 +45,50 @@
             id: "basic office decoration:Books (Variant 5):black:Down",
             collectionName: "basic office decoration",
         },
+        name: file.name,
     };
 
-    let policy: InputTagOption[] | undefined = undefined;
+    // eslint-disable-next-line no-undef
+    let entityPrefabPreview: Phaser.GameObjects.Image | undefined = undefined;
 
-    let policyOption: InputTagOption[] = [
-        { value: "accelerometer", label: "accelerometer", created: undefined },
-        { value: "ambient-light-sensor", label: "ambient-light-sensor", created: undefined },
-        { value: "autoplay", label: "autoplay", created: undefined },
-        { value: "battery", label: "battery", created: undefined },
-        { value: "browsing-topics", label: "browsing-topics", created: undefined },
-        { value: "camera", label: "camera", created: undefined },
-        { value: "document-domain", label: "document-domain", created: undefined },
-        { value: "encrypted-media", label: "encrypted-media", created: undefined },
-        { value: "execution-while-not-rendered", label: "execution-while-not-rendered", created: undefined },
-        { value: "execution-while-out-of-viewport", label: "execution-while-out-of-viewport", created: undefined },
-        { value: "fullscreen", label: "fullscreen", created: undefined },
-        { value: "gamepad", label: "gamepad", created: undefined },
-        { value: "geolocation", label: "geolocation", created: undefined },
-        { value: "gyroscope", label: "gyroscope", created: undefined },
-        { value: "hid", label: "hid", created: undefined },
-        { value: "identity-credentials-get", label: "identity-credentials-get", created: undefined },
-        { value: "idle-detection", label: "idle-detection", created: undefined },
-        { value: "local-fonts ", label: "local-fonts", created: undefined },
-        { value: "magnetometer", label: "magnetometer", created: undefined },
-        { value: "microphone", label: "microphone", created: undefined },
-        { value: "midi", label: "midi", created: undefined },
-        { value: "otp-credentials", label: "otp-credentials", created: undefined },
-        { value: "payment", label: "payment", created: undefined },
-        { value: "picture-in-picture", label: "picture-in-picture", created: undefined },
-        { value: "publickey-credentials-get", label: "publickey-credentials-get", created: undefined },
-        { value: "screen-wake-lock", label: "screen-wake-lock", created: undefined },
-        { value: "serial", label: "serial", created: undefined },
-        { value: "speaker-selection", label: "speaker-selection", created: undefined },
-        { value: "storage-access", label: "storage-access", created: undefined },
-        { value: "usb", label: "usb", created: undefined },
-        { value: "web-share", label: "web-share", created: undefined },
-        { value: "window-management", label: "window-management", created: undefined },
-        { value: "xr-spatial-tracking", label: "xr-spatial-tracking", created: undefined },
-    ];
+    let entityPrefab: EntityPrefab = {
+        collectionName: "basic office decoration",
+        collisionGrid: undefined,
+        color: "black",
+        depthOffset: 0,
+        direction: "Down" as "Down" | "Left" | "Up" | "Right",
+        id: "basic office decoration:Books (Variant 5):black:Down",
+        imagePath: "http://play.workadventure.localhost/collections/Office/Props/Book5.png",
+        name: "Books (Variant 5)",
+        tags: ["furniture", "book", "furniture", "office", "basic"],
+        type: "Default" as "Default" | "Custom",
+    };
 
-    let isArea = true;
-    let optionAdvancedActivated = false;
-    const triggerOptionActivated = true;
-    const triggerOnActionChoosen = true;
+    onMount(() => {
+        showEntityPreviewAtPosition().catch((error) => {
+            console.error("Error showing entity preview:", error);
+        });
 
-    function selectEntity(entityPrefab: EntityPrefab) {
-        entity.prefabRef.id = entityPrefab.id;
-        entity.prefabRef.collectionName = entityPrefab.collectionName;
-    }
+        return () => {
+            destroyEntityPreview();
+        };
+    });
 
     async function onSave() {
         const scene = gameManager.getCurrentGameScene();
+
+        if (!scene) {
+            console.error("No current game scene found.");
+            return;
+        }
+
+        if (!canEntityBePlaced(scene)) {
+            console.error("Entity cannot be placed at the current position.");
+            return;
+        }
+
+        // TODO: Check if we can place the entity at the current position
+
         const pointerX = x;
         const pointerY = y;
 
@@ -110,8 +103,8 @@
         )?.room.mapStorageUrl?.toString()}private/files/${name}-${propertyId}.${fileExt}`;
 
         const entityData: WAMEntityData = {
-            x: Math.floor(pointerX - 16),
-            y: Math.floor(pointerY - 16),
+            x: Math.floor(pointerX) - 16,
+            y: Math.floor(pointerY) - 16,
             prefabRef: {
                 id: entity.prefabRef.id,
                 collectionName: entity.prefabRef.collectionName,
@@ -127,8 +120,8 @@
             link: fileUrl,
             id: propertyId,
             name: file.name,
-            buttonLabel: property.buttonLabel || "Open",
-            trigger: property.trigger as OpenFilePropertyData["trigger"],
+            buttonLabel: property.buttonLabel,
+            trigger: ON_ACTION_TRIGGER_BUTTON,
             triggerMessage: property.triggerMessage,
             closable: property.closable,
             width: property.width,
@@ -136,7 +129,6 @@
 
         entityData.properties?.push(propertyObj);
 
-        // Upload file
         const fileBuffer = await file.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         const fileToUpload = {
@@ -151,11 +143,9 @@
 
         new UploadFileFrontCommand(fileToUpload).emitEvent(roomConnection);
 
-        // Create Entity
         const mapEditorModeManager = scene.getMapEditorModeManager();
         const entitiesManager = scene.getGameMapFrontWrapper().getEntitiesManager();
 
-        console.log("Executing CreateEntityFrontCommand with entityId:", entityId, "and entityData:", entityData);
         await mapEditorModeManager.executeCommand(
             new CreateEntityFrontCommand(scene.getGameMap(), entityId, entityData, undefined, entitiesManager, {
                 width: 32,
@@ -163,11 +153,112 @@
             })
         );
 
+        const openEntity = new Entity(scene, entityId, entityData, entityPrefab);
+        mapEditorSelectedEntityStore.set(openEntity);
+        analyticsClient.toggleMapEditor(true);
+        mapEditorModeStore.switchMode(true);
+        isTodoListVisibleStore.set(false);
+        isCalendarVisibleStore.set(false);
+        mapEditorEntityModeStore.set("EDIT");
+
+        destroyEntityPreview();
         removePopup();
     }
 
+    async function showEntityPreviewAtPosition(): Promise<void> {
+        const scene = gameManager.getCurrentGameScene();
+
+        if (!scene) {
+            console.error("No current game scene found.");
+            return;
+        }
+
+        if (!entityPrefab || !entityPrefab.imagePath) {
+            console.error("Entity prefab or image path is not defined.");
+            return;
+        }
+
+        if (!scene.textures.exists(entityPrefab.imagePath)) {
+            try {
+                await TexturesHelper.loadEntityImage(scene, entityPrefab.imagePath, entityPrefab.imagePath);
+            } catch {
+                console.error("Failed to load entity preview texture.");
+                return;
+            }
+        }
+
+        const offset = getEntityPrefabAlignWithGridOffset(entityPrefab, entityPrefabPreview);
+        const snappedX = Math.floor(x) + offset.x;
+        const snappedY = Math.floor(y) + offset.y;
+        console.log("Snapped position for entity preview:", snappedX, snappedY);
+
+        if (!entityPrefabPreview) {
+            entityPrefabPreview = scene.add.image(snappedX, snappedY, entityPrefab.imagePath).setOrigin(0);
+        } else {
+            entityPrefabPreview.setTexture(entityPrefab.imagePath);
+        }
+
+        scene.markDirty?.();
+    }
+
+    function getEntityPrefabAlignWithGridOffset(
+        entityPrefab: EntityPrefab,
+        // eslint-disable-next-line no-undef
+        preview?: Phaser.GameObjects.Image
+    ): { x: number; y: number } {
+        const collisionGrid = entityPrefab.collisionGrid;
+        if (collisionGrid && collisionGrid.length > 0) {
+            return {
+                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
+                y: collisionGrid.length % 2 === 1 ? 16 : 0,
+            };
+        }
+
+        if (preview) {
+            return {
+                x: Math.floor(preview.displayWidth / 32) % 2 === 1 ? 16 : 0,
+                y: Math.floor(preview.displayHeight / 32) % 2 === 1 ? 16 : 0,
+            };
+        }
+
+        return { x: 0, y: 0 };
+    }
+
+    function selectEntity(selctedEntityPrefab: EntityPrefab) {
+        entity.prefabRef.id = selctedEntityPrefab.id;
+        entity.prefabRef.collectionName = selctedEntityPrefab.collectionName;
+
+        entityPrefab = selctedEntityPrefab;
+
+        showEntityPreviewAtPosition().catch((error) => {
+            console.error("Error showing entity preview:", error);
+        });
+    }
+
+    function canEntityBePlaced(scene: GameScene) {
+        const gameMapFrontWrapper = scene.getGameMapFrontWrapper();
+        if (!entityPrefabPreview || !entityPrefab) {
+            return false;
+        }
+        return gameMapFrontWrapper.canEntityBePlacedOnMap(
+            entityPrefabPreview.getTopLeft(),
+            entityPrefabPreview.displayWidth,
+            entityPrefabPreview.displayHeight,
+            entityPrefab.collisionGrid,
+            undefined
+        );
+    }
+
     function removePopup() {
+        destroyEntityPreview();
         popupStore.removePopup("popupDropFileEntity");
+    }
+
+    function destroyEntityPreview() {
+        if (entityPrefabPreview) {
+            entityPrefabPreview.destroy();
+            entityPrefabPreview = undefined;
+        }
     }
 </script>
 
@@ -175,97 +266,11 @@
     <div class="flex flex-col gap-4 p-2 max-h-[80vh] overflow-y-auto">
         <DropFileEntityPicker on:select={(event) => selectEntity(event.detail)} />
 
-        <div class="flex justify-center items-center my-2">
-            <img class="w-6 mr-1" src="resources/icons/icon_file.png" alt="Start icon" />
-            <span class="font-semibold">{$LL.mapEditor.properties.openFileProperties.label()}</span>
-        </div>
-
-        {#if isArea}
-            <Select
-                id="trigger"
-                label={$LL.mapEditor.properties.linkProperties.trigger()}
-                bind:value={property.trigger}
-            >
-                <option value={ON_ACTION_TRIGGER_ENTER}
-                    >{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
-                >
-                {#if !property.newTab}
-                    <option value={ON_ICON_TRIGGER_BUTTON}
-                        >{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option
-                    >
-                {/if}
-                <option value={ON_ACTION_TRIGGER_BUTTON}
-                    >{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option
-                >
-            </Select>
-        {/if}
-
-        {#if !property.hideButtonLabel}
-            <Input
-                label={$LL.mapEditor.entityEditor.buttonLabel()}
-                id="linkButton"
-                type="text"
-                bind:value={property.buttonLabel}
-            />
-        {/if}
-
-        <InputSwitch
-            id="advancedOption"
-            label={$LL.mapEditor.properties.advancedOptions()}
-            bind:value={optionAdvancedActivated}
-        />
-
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
-            {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
-                <Input
-                    id="triggerMessage"
-                    type="text"
-                    placeholder={$LL.trigger.object()}
-                    label={$LL.mapEditor.properties.linkProperties.triggerMessage()}
-                    bind:value={property.triggerMessage}
-                />
-            {/if}
-
-            <InputSwitch
-                id="newTab"
-                label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
-                bind:value={property.newTab}
-            />
-
-            {#if !property.newTab}
-                <div class="mt-3 mb-3">
-                    <RangeSlider
-                        id="websiteWidth"
-                        min={15}
-                        max={85}
-                        label={$LL.mapEditor.properties.linkProperties.width()}
-                        bind:value={property.width}
-                        variant="secondary"
-                        buttonShape="square"
-                    />
-                </div>
-
-                <InputCheckbox
-                    id="closable"
-                    label={$LL.mapEditor.properties.linkProperties.closable()}
-                    bind:value={property.closable}
-                />
-
-                {#if policy !== undefined}
-                    <InputTags
-                        label={$LL.mapEditor.properties.linkProperties.policy()}
-                        options={policyOption}
-                        bind:value={policy}
-                    />
-                {/if}
-            {/if}
-        </div>
+        <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" type="text" bind:value={entity.name} />
     </div>
 
     <svelte:fragment slot="buttons">
         <button class="btn btn-primary btn-sm w-full max-w-96 justify-center" on:click={onSave}>Save</button>
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={() => removePopup}
-            >Cancel</button
-        >
+        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={removePopup}>Cancel</button>
     </svelte:fragment>
 </PopUpContainer>
