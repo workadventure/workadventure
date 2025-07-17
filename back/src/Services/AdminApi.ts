@@ -12,16 +12,21 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LivekitCredentialsResponse } from "./Repository/LivekitCredentialsResponse";
 
 class AdminApi {
-    async fetchLivekitCredentials(spaceId: string): Promise<LivekitCredentialsResponse> {
+    async fetchLivekitCredentials(spaceId: string, playUri: string): Promise<LivekitCredentialsResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
+
+        const params: { playUri: string } = {
+            playUri,
+        };
 
         const res = await axios.get(new URL("api/livekit/credentials", ADMIN_API_URL).toString(), {
             headers: {
                 Authorization: `${ADMIN_API_TOKEN ?? ""}`,
                 Accept: "application/json",
             },
+            params,
         });
 
         return LivekitCredentialsResponse.parse(res.data);

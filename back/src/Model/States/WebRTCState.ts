@@ -66,7 +66,7 @@ export class WebRTCState extends CommunicationState {
             let nextState: LivekitState | undefined;
             let res;
             if (getCapability("api/livekit/credentials")) {
-                res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName());
+                res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName(), user.playUri);
                 nextState = new LivekitState(this._space, this._communicationManager, res);
             } else {
                 res = LivekitCredentialsResponse.parse({
