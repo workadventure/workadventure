@@ -17,6 +17,7 @@ import { SpaceToFrontDispatcher, SpaceToFrontDispatcherInterface } from "./Space
 import { Query } from "./SpaceQuery";
 import { SpaceConnectionInterface } from "./SpaceConnection";
 
+
 export type SpaceUserExtended = {
     lowercaseName: string;
     // If the user is connected to this pusher, we store the socket to be able to contact the user directly.
@@ -75,10 +76,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
 
     public readonly metadata: Map<string, unknown>;
 
+
     // The list of users connected to THIS pusher specifically
     public readonly _localConnectedUser: Map<string, Socket>;
     public readonly _localWatchers: Set<string> = new Set<string>();
-    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUser>();
+    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUserExtended>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
@@ -122,6 +124,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.forwarder.syncLocalUsersWithServer(localUsers);
     }
 
+
     public handleWatch(watcher: Socket) {
         debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
 
@@ -139,12 +142,15 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
+        console.log("👌👌👌👌👌👌👌 Space handleWatch addUserToNotify", spaceUser , this.name);
+        this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 
         this.users.forEach((user) => {
             this.dispatcher.notifyMeAddUser(watcher, user);
         });
     }
+    
 
     public handleUnwatch(watcher: Socket) {
         const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
@@ -152,6 +158,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             throw new Error("spaceUser not found");
         }
         this._localWatchers.delete(spaceUser.spaceUserId);
+        this.forwarder.deleteUserFromNotify(spaceUser);
         this._clientEventsEmitter.emitUnwatchSpace(this.name);
 
         debug(`${this.name} : filter removed for ${watcher.getUserData().userId}`);

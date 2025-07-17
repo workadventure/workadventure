@@ -1,8 +1,9 @@
-import { SpaceUser } from "@workadventure/messages";
+import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
+
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private usersReady: string[] = [];
 
@@ -14,29 +15,11 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
-        this.livekitService
-            .generateToken(this.space.getSpaceName(), user)
-            .then((token) => {
-                this.space.dispatchPrivateEvent({
-                    spaceName: this.space.getSpaceName(),
-                    receiverUserId: user.spaceUserId,
-                    senderUserId: user.spaceUserId,
-                    spaceEvent: {
-                        event: {
-                            $case: "livekitInvitationMessage",
-                            livekitInvitationMessage: {
-                                token: token,
-                                serverUrl: this.livekitService.getLivekitFrontendUrl(),
-                                shouldJoinRoomImmediately: !switchInProgress,
-                            },
-                        },
-                    },
-                });
-            })
-            .catch((error) => {
-                console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
-                Sentry.captureException(error);
-            });
+        console.log("🎥🎥🎥🎥🎥 send Streamer token", user.name, switchInProgress);
+        this.sendLivekitInvitationMessage(user, LivekitTokenType.STREAMER, switchInProgress).catch((error) => {
+            console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
+        });
     }
 
     deleteUser(user: SpaceUser): void {
@@ -47,26 +30,36 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 Sentry.captureException(error);
             })
             .finally(() => {
-                this.space.dispatchPrivateEvent({
-                    spaceName: this.space.getSpaceName(),
-                    receiverUserId: user.spaceUserId,
-                    senderUserId: user.spaceUserId,
-                    spaceEvent: {
-                        event: {
-                            $case: "livekitDisconnectMessage",
-                            livekitDisconnectMessage: {},
+                try {
+                    this.space.dispatchPrivateEvent({
+                        spaceName: this.space.getSpaceName(),
+                        receiverUserId: user.spaceUserId,
+                        senderUserId: user.spaceUserId,
+                        spaceEvent: {
+                            event: {
+                                $case: "livekitDisconnectMessage",
+                                livekitDisconnectMessage: {},
+                            },
                         },
-                    },
-                });
+                    });
+                } catch (error) {
+                    console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
+                    //  Sentry.captureException(error);
+                }
             });
     }
 
     updateUser(user: SpaceUser): void {}
 
     initialize(readyUsers: Set<string>): void {
-        const users = this.space.getAllUsers().filter((user) => !readyUsers.has(user.spaceUserId));
+        const users = this.space.getUsersInFilter().filter((user) => !readyUsers.has(user.spaceUserId));
         users.forEach((user) => {
             this.addUser(user, false);
+        });
+
+        const usersToNotify = this.space.getUsersToNotify().filter((user) => !readyUsers.has(user.spaceUserId));
+        usersToNotify.forEach((user) => {
+            this.addUserToNotify(user, false);
         });
     }
 
@@ -77,6 +70,49 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     canSwitch(): boolean {
         return this.usersReady.length === this.space.getAllUsers().length;
     }
+
+    //TODO : voir comment on gere le fait de pouvoir juste watch sur livekit
+    //TODO : voir les video mais ne pas avoir le droit de streamer
+    //TODO : est ce qu'on peut mettre a jour le token ou renvoyer un nouveau token ?
+    //TODO : voir comment on gere plus tard faire fonctionner le webrtc deja
+    //TODO : sinon solution avec 2 token / 1 pour publier la video et 1 pour recuperer la video des autres
+    // permet de virer un token et de garder l'autre
+    addUserToNotify(user: SpaceUser, switchInProgress = false): void {
+        this.sendLivekitInvitationMessage(user, LivekitTokenType.WATCHER, switchInProgress).catch((error) => {
+            console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
+            Sentry.captureException(error);
+        });
+    }
+
+    deleteUserFromNotify(user: SpaceUser): void {
+        this.deleteUser(user);
+    }
+
+    private async sendLivekitInvitationMessage(
+        user: SpaceUser,
+        tokenType: LivekitTokenType,
+        switchInProgress = false
+    ): Promise<void> {
+        const token = await this.livekitService.generateToken(this.space.getSpaceName(), user, tokenType);
+
+        this.space.dispatchPrivateEvent({
+            spaceName: this.space.getSpaceName(),
+            receiverUserId: user.spaceUserId,
+            senderUserId: user.spaceUserId,
+            spaceEvent: {
+                event: {
+                    $case: "livekitInvitationMessage",
+                    livekitInvitationMessage: {
+                        token: token,
+                        serverUrl: this.livekitService.getLivekitFrontendUrl(),
+                        shouldJoinRoomImmediately: !switchInProgress,
+                        tokenType,
+                    },
+                },
+            },
+        });
+    }
+
     cleanup(): void {
         const users = this.space.getAllUsers();
         users.forEach((user) => {

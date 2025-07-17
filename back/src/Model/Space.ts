@@ -31,6 +31,7 @@ export class Space implements CustomJsonReplacerInterface {
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
     private communicationManager: ICommunicationManager;
+    private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
 
     constructor(
         name: string,
@@ -41,6 +42,8 @@ export class Space implements CustomJsonReplacerInterface {
     ) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
+        //equivalent of watchers in the pusher
+        this.usersToNotify = new Map<SpacesWatcher, Map<string, SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);
@@ -109,6 +112,9 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
+                //TODO : voir si on peut séparer la logique qui watch et qui peut etre watch / pour l'instant on a un probleme les videos ne sont envoyées que a tout les personnes qu'on peut watcher pas aux autres
+
+                this.communicationManager.handleUserAdded(user);
             } else if (oldFilter && !newFilter) {
                 debug(
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
@@ -122,9 +128,13 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
-            } else if (oldFilter && newFilter) {
+
+                this.communicationManager.handleUserDeleted(user);
+            } else if (oldFilter !== false && newFilter !== false) {
                 debug(
-                    `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
+                    `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(
+                        ", "
+                    )} in space ${this.name}`
                 );
                 this.notifyWatchers({
                     message: {
@@ -136,8 +146,9 @@ export class Space implements CustomJsonReplacerInterface {
                         },
                     },
                 });
+
+                this.communicationManager.handleUserUpdated(spaceUser);
             }
-            this.communicationManager.handleUserUpdated(spaceUser);
         } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
@@ -145,6 +156,7 @@ export class Space implements CustomJsonReplacerInterface {
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
             this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            this.communicationManager.handleUserDeleted(spaceUser);
         }
     }
 
@@ -169,7 +181,7 @@ export class Space implements CustomJsonReplacerInterface {
                 this.users.delete(sourceWatcher);
             }
 
-            this.communicationManager.handleUserDeleted(user);
+            // this.communicationManager.handleUserDeleted(user);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
@@ -185,6 +197,7 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
+                this.communicationManager.handleUserDeleted(user);
             }
         }
     }
@@ -223,6 +236,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     public addWatcher(watcher: SpacesWatcher) {
         this.users.set(watcher, new Map<string, SpaceUser>());
+        this.usersToNotify.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
         for (const spaceUsers of this.users.values()) {
             for (const spaceUser of spaceUsers.values()) {
@@ -263,6 +277,14 @@ export class Space implements CustomJsonReplacerInterface {
     public removeWatcher(watcher: SpacesWatcher) {
         const spaceUsers = this.users.get(watcher);
         this.users.delete(watcher);
+        const spaceUsersToNotify = this.usersToNotify.get(watcher);
+
+        if (spaceUsersToNotify) {
+            for (const spaceUser of spaceUsersToNotify.values()) {
+                this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+            }
+        }
+        this.usersToNotify.delete(watcher);
         // In case was not empty when it was removed, we need to notify the other watchers
         for (const spaceUser of spaceUsers?.values() || []) {
             if (!this.filterOneUser(spaceUser)) {
@@ -286,6 +308,24 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
+    public addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+        const usersList = this.usersListToNotify(sourceWatcher);
+        usersList.set(spaceUser.spaceUserId, spaceUser);
+
+        this.communicationManager.handleUserToNotifyAdded(spaceUser);
+        debug(`${this.name} : user to notify => added ${spaceUser.spaceUserId}`);
+    }
+
+    public deleteUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+        const usersList = this.usersListToNotify(sourceWatcher);
+        usersList.delete(spaceUser.spaceUserId);
+        this.communicationManager.handleUserToNotifyDeleted(spaceUser);
+        debug(`${this.name} : user to notify => deleted ${spaceUser.spaceUserId}`);
+    }
+
+    public removeUserFromNotify(watcher: SpacesWatcher, spaceUser: SpaceUser) {
+        this.usersToNotify.delete(watcher);
+    }
     /**
      * Notify all watchers expect the one that sent the message
      */
@@ -302,6 +342,14 @@ export class Space implements CustomJsonReplacerInterface {
 
     private usersList(watcher: SpacesWatcher): Map<string, SpaceUser> {
         const usersList = this.users.get(watcher);
+        if (!usersList) {
+            throw new Error("No users list associated to the watcher :" + this.name);
+        }
+        return usersList;
+    }
+
+    private usersListToNotify(watcher: SpacesWatcher): Map<string, SpaceUser> {
+        const usersList = this.usersToNotify.get(watcher);
         if (!usersList) {
             throw new Error("No users list associated to the watcher :" + this.name);
         }
@@ -352,6 +400,11 @@ export class Space implements CustomJsonReplacerInterface {
         });
     }
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
+        const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
+        if (!sender) {
+            throw new Error(`Sender ${privateEvent.senderUserId} not found in space ${this.name}`);
+        }
+
         // Let's notify the watcher that contains the user
         if (!privateEvent.spaceEvent?.event) {
             // If there is no event, just forward the private event as-is
@@ -360,7 +413,10 @@ export class Space implements CustomJsonReplacerInterface {
                     watcher.write({
                         message: {
                             $case: "privateEvent",
-                            privateEvent,
+                            privateEvent: {
+                                ...privateEvent,
+                                sender,
+                            },
                         },
                     });
                 }
@@ -394,7 +450,10 @@ export class Space implements CustomJsonReplacerInterface {
                 watcher.write({
                     message: {
                         $case: "privateEvent",
-                        privateEvent: processedPrivateEvent,
+                        privateEvent: {
+                            ...processedPrivateEvent,
+                            sender,
+                        },
                     },
                 });
             }
@@ -488,11 +547,13 @@ export class Space implements CustomJsonReplacerInterface {
     public getAllUsers(): SpaceUser[] {
         return Array.from(this.users.values()).flatMap((users) => Array.from(users.values()));
     }
-    // public getUser(spaceUserId: string): SpaceUser | undefined {
-    //     return Array.from(this.users.values())
-    //         .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
-    //         .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
-    // }
+    public getUsersInFilter(): SpaceUser[] {
+        return this.getAllUsers().filter((user) => this.filterOneUser(user));
+    }
+
+    public getUsersToNotify(): SpaceUser[] {
+        return Array.from(this.usersToNotify.values()).flatMap((users) => Array.from(users.values()));
+    }
 
     public getSpaceName(): string {
         return this.name;

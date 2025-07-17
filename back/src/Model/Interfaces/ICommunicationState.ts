@@ -5,4 +5,6 @@ export interface ICommunicationState {
     handleUserDeleted(user: SpaceUser): void;
     handleUserUpdated(user: SpaceUser): void;
     handleUserReadyForSwitch(userId: string): void;
+    handleUserToNotifyAdded(user: SpaceUser): void;
+    handleUserToNotifyDeleted(user: SpaceUser): void;
 }

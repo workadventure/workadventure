@@ -711,7 +711,7 @@ message SubMessage {
     // FIXME: remove all this
     KickOffMessage kickOffMessage = 22;
     PublicEvent publicEvent = 29;
-    PrivateEvent privateEvent = 30;
+    PrivateEventPusherToFront privateEvent = 30;
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
   }
@@ -955,10 +955,16 @@ message ExecuteSwitchMessage {
   string strategy = 1;
 }
 
+enum LivekitTokenType {
+  WATCHER = 0;
+  STREAMER = 1;
+}
+
 message LivekitInvitationMessage {
   string token = 1;
   string serverUrl = 2;
   bool shouldJoinRoomImmediately = 3;
+  LivekitTokenType tokenType = 4;
 }
 
 message LivekitDisconnectMessage {
@@ -979,6 +985,21 @@ message PrivateEvent {
   string spaceName = 1;
   string receiverUserId = 2;
   string senderUserId = 3;
+  PrivateSpaceEvent spaceEvent = 4;
+}
+
+//TODO : voir si on utilise le meme message pour back--->pusher et pusher--->front
+message PrivateEventBackToPusher {
+  string spaceName = 1;
+  string receiverUserId = 2;
+  SpaceUser sender = 3;
+  PrivateSpaceEvent spaceEvent = 4;
+}
+
+message PrivateEventPusherToFront {
+  string spaceName = 1;
+  string receiverUserId = 2;
+  SpaceUser sender = 3;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
@@ -1340,6 +1361,8 @@ message PusherToBackSpaceMessage{
     PrivateEvent privateEvent = 16;
     SyncSpaceUsersMessage syncSpaceUsersMessage = 17;
     SpaceQueryMessage spaceQueryMessage = 18;
+    AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
+    DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
   }
 }
 
@@ -1353,7 +1376,7 @@ message BackToPusherSpaceMessage{
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 6;
     PublicEvent publicEvent = 13;
-    PrivateEvent privateEvent = 14;
+    PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
   }
 }
@@ -1466,6 +1489,22 @@ message UpdateSpaceMetadataMessage{
 message SyncSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+}
+
+/**
+ * Message sent by the pusher to the back to add a user to the notify list
+ */
+message AddSpaceUserToNotifyMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+
+/**
+ * Message sent by the pusher to the back to delete a user from the notify list
+ */
+message DeleteSpaceUserToNotifyMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
 }
 
 /**

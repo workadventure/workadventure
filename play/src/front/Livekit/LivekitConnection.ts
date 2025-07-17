@@ -1,11 +1,14 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { LivekitTokenType } from "@workadventure/messages";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
 import { LiveKitRoom } from "./LiveKitRoom";
+import { LiveKitRoomWatch } from "./LivekitRoomWatch";
+import { LiveKitRoomStream } from "./LivekitRoomStream";
 
-//TODO : trouver le moyen de l'avoir coté front et back
+//TODO : trouver le moyen de l'avoir coté front et back , message.proto ?
 export enum CommunicationType {
     NONE = "NONE",
     WEBRTC = "WEBRTC",
@@ -14,9 +17,26 @@ export enum CommunicationType {
 
 export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
-    private livekitRoom: LiveKitRoom | undefined;
+    private livekitRoomStreamer: LiveKitRoomStream | undefined;
+    private livekitRoomWatcher: LiveKitRoomWatch | undefined;
     constructor(private space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
         this.initialize();
+    }
+
+    private createLivekitRoom(serverUrl: string, token: string, tokenType: LivekitTokenType): LiveKitRoom {
+        let room: LiveKitRoom;
+
+        if (tokenType === LivekitTokenType.STREAMER) {
+            this.livekitRoomStreamer = new LiveKitRoomStream(serverUrl, token);
+            room = this.livekitRoomStreamer;
+        } else if (tokenType === LivekitTokenType.WATCHER) {
+            this.livekitRoomWatcher = new LiveKitRoomWatch(serverUrl, token, this.space, this._streamableSubjects);
+            room = this.livekitRoomWatcher;
+        } else {
+            throw new Error("Invalid token type");
+        }
+
+        return room;
     }
 
     private initialize() {
@@ -24,21 +44,17 @@ export class LivekitConnection {
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
-                this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space, this._streamableSubjects);
+                const tokenType = message.livekitInvitationMessage.tokenType;
 
-                this.livekitRoom
-                    .prepareConnection()
+                const room = this.createLivekitRoom(serverUrl, token, tokenType);
+
+                room.prepareConnection()
                     .then(() => {
                         if (message.livekitInvitationMessage.shouldJoinRoomImmediately) {
-                            this.joinRoom()
-                                .catch((err) => {
-                                    console.error("An error occurred in executeSwitchMessage", err);
-                                    Sentry.captureException(err);
-                                })
-                                .finally(() => {
-                                    console.log(">>>> joinLivekitRoom");
-                                    console.timeEnd(">>>> joinLivekitRoom");
-                                });
+                            room.joinRoom().catch((err) => {
+                                console.error("An error occurred in executeSwitchMessage", err);
+                                Sentry.captureException(err);
+                            });
                         } else {
                             this.space.emitPrivateMessage(
                                 {
@@ -59,56 +75,62 @@ export class LivekitConnection {
         );
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe(() => {
-                if (!this.livekitRoom) {
+                if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
                     console.error("LivekitRoom not found");
                     Sentry.captureException(new Error("LivekitRoom not found"));
                     return;
                 }
-                this.livekitRoom.leaveRoom();
-                this.livekitRoom.destroy();
-                this.livekitRoom = undefined;
+
+                this.livekitRoomStreamer?.leaveRoom();
+                this.livekitRoomWatcher?.leaveRoom();
+                this.livekitRoomStreamer?.destroy();
+                this.livekitRoomWatcher?.destroy();
+                this.livekitRoomStreamer = undefined;
+                this.livekitRoomWatcher = undefined;
             })
         );
     }
 
     async joinRoom() {
-        if (!this.livekitRoom) {
+        if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
             console.error("LivekitRoom not found");
             Sentry.captureException(new Error("LivekitRoom not found"));
             throw new Error("LivekitRoom not found");
         }
 
-        await this.livekitRoom.joinRoom();
+        await this.livekitRoomStreamer?.joinRoom();
+        await this.livekitRoomWatcher?.joinRoom();
     }
 
     async dispatchSound(url: URL): Promise<void> {
-        if (!this.livekitRoom) {
+        if (!this.livekitRoomStreamer) {
             console.error("LivekitRoom not found");
             Sentry.captureException(new Error("LivekitRoom not found"));
             throw new Error("LivekitRoom not found");
         }
 
-        await this.livekitRoom.dispatchSound(url);
+        await this.livekitRoomStreamer.dispatchSound(url);
     }
 
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
-        if (!this.livekitRoom) {
+        if (!this.livekitRoomStreamer) {
             console.error("LivekitRoom not found");
             Sentry.captureException(new Error("LivekitRoom not found"));
             throw new Error("LivekitRoom not found");
         }
 
-        await this.livekitRoom.dispatchStream(mediaStream);
+        await this.livekitRoomStreamer.dispatchStream(mediaStream);
     }
 
     destroy() {
-        if (!this.livekitRoom) {
+        if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
             console.error("LivekitRoom not found");
             Sentry.captureException(new Error("LivekitRoom not found"));
             return;
         }
 
-        this.livekitRoom.destroy();
+        this.livekitRoomStreamer?.destroy();
+        this.livekitRoomWatcher?.destroy();
 
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();

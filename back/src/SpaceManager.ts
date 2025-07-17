@@ -69,6 +69,14 @@ const spaceManager = {
                         socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
                         break;
                     }
+                    case "addSpaceUserToNotifyMessage": {
+                        socketManager.handleAddSpaceUserToNotifyMessage(pusher, message.message.addSpaceUserToNotifyMessage);
+                        break;
+                    }
+                    case "deleteSpaceUserToNotifyMessage": {
+                        socketManager.handleDeleteSpaceUserToNotifyMessage(pusher, message.message.deleteSpaceUserToNotifyMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

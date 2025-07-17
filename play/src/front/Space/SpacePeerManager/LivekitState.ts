@@ -11,6 +11,7 @@ export class LivekitState implements ICommunicationState {
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;
     constructor(private _space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
+        console.log("🚀🚀🚀🚀🚀🚀🚀 LivekitState constructor");
         this.livekitConnection = new LivekitConnection(this._space, this._streamableSubjects);
 
         this.rxJsUnsubscribers.push(
@@ -35,6 +36,8 @@ export class LivekitState implements ICommunicationState {
                 }
             })
         );
+
+        //TODO : voir si on ajoute les event pour gerer les 2 tokens ici 
 
         this.rxJsUnsubscribers.push(
             this._space

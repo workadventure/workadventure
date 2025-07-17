@@ -73,6 +73,7 @@ import {
     FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
+    PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -212,7 +213,7 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
-    private readonly _spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
     public readonly spacePublicMessageEvent = this._spacePublicMessageEvent.asObservable();

@@ -28,6 +28,13 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
+    public handleUserToNotifyAdded(user: SpaceUser): void {
+        this._currentState.handleUserToNotifyAdded(user);
+    }
+
+    public handleUserToNotifyDeleted(user: SpaceUser): void {
+        this._currentState.handleUserToNotifyDeleted(user);
+    }
     public setState(state: ICommunicationState): void {
         this._currentState = state;
     }

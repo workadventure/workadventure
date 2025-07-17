@@ -11,7 +11,6 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
@@ -425,7 +424,8 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return lookupUserById(this.userId, this.space, 30_000);
+        return this.space.extendSpaceUser(this.spaceUser);
+        //return lookupUserById(this.userId, this.space, 30_000);
     }
 
     get streamStore(): Readable<MediaStream | undefined> {

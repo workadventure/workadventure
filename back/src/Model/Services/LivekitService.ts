@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
     AccessToken,
@@ -58,12 +58,12 @@ export class LiveKitService {
         };
 
         await this.roomServiceClient.createRoom(createOptions);
-        //this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
+        // this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
     }
 
-    async generateToken(roomName: string, user: SpaceUser): Promise<string> {
+    async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            identity: user.spaceUserId,
+            identity: user.spaceUserId + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER"),
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
@@ -73,8 +73,8 @@ export class LiveKitService {
 
         token.addGrant({
             room: roomName,
-            canPublish: true,
-            canSubscribe: true,
+            canPublish: tokenType === LivekitTokenType.STREAMER,
+            canSubscribe: tokenType === LivekitTokenType.WATCHER,
             roomJoin: true,
             canPublishSources: [
                 TrackSource.CAMERA,

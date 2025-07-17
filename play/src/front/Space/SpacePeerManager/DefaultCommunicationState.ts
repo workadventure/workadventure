@@ -14,10 +14,12 @@ export class DefaultCommunicationState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
+                        console.log("👌👌👌👌👌👌👌 DefaultCommunicationState switch to WebRTCState");
                         const nextState = new WebRTCState(this._space, this._streamableSubjects);
                         this._space.spacePeerManager.setState(nextState);
                     }
                     if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
+                        console.log("👌👌👌👌👌👌👌 DefaultCommunicationState switch to LivekitState");
                         const nextState = new LivekitState(this._space, this._streamableSubjects);
                         this._space.spacePeerManager.setState(nextState);
                     }
@@ -27,7 +29,9 @@ export class DefaultCommunicationState implements ICommunicationState {
 
     completeSwitch() {}
 
-    destroy() {}
+    destroy() {
+        this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
+    }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return undefined;
