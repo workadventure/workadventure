@@ -2,9 +2,11 @@ import { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
+import { v4 as uuidv4 } from "uuid";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorDeleteCustomEntityEventStore,
+    mapEditorEntityFileDroppedStore,
     mapEditorEntityModeStore,
     mapEditorEntityUploadEventStore,
     mapEditorModifyCustomEntityEventStore,
@@ -420,6 +422,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
+        const entityId = uuidv4();
+
         const entityData: WAMEntityData = {
             x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),
             y: Math.floor(y - this.entityPrefabPreview.displayHeight * 0.5),
@@ -428,6 +432,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         };
 
         console.log("entityPrefab", this.entityPrefab);
+        const openEntity = new Entity(this.scene, entityId, entityData, this.entityPrefab);
+
         console.log("entityPrefabPreview", this.entityPrefabPreview);
         console.log("execute command", pointer.worldX, "=>", x, pointer.worldY, "=>", y);
 
@@ -435,7 +441,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             .executeCommand(
                 new CreateEntityFrontCommand(
                     this.scene.getGameMap(),
-                    undefined,
+                    entityId,
                     entityData,
                     undefined,
                     this.entitiesManager,
@@ -443,6 +449,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 )
             )
             .catch((e) => console.error(e));
+
+        if (get(mapEditorEntityFileDroppedStore)) {
+            mapEditorEntityFileDroppedStore.set(false);
+            mapEditorEntityModeStore.set("EDIT");
+            mapEditorSelectedEntityStore.set(openEntity);
+        }
     }
 
     protected unbindEventHandlers(): void {

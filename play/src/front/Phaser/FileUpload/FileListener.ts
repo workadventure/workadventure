@@ -1,6 +1,5 @@
 import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
 import { draggingFile } from "../../Stores/FileUploadStore";
-import { gameManager } from "../Game/GameManager";
 import { popupStore } from "../../Stores/PopupStore";
 import PopupDropFileEntity from "../../Components/PopUp/PopupDropFileEntity.svelte";
 
@@ -32,26 +31,7 @@ export class FileListener {
         event.preventDefault();
         event.stopPropagation();
 
-        const rect = this.canvas.getBoundingClientRect();
-        ["mousedown", "mouseup", "click"].forEach((type) => {
-            const mockPlayer = new MouseEvent(type, {
-                bubbles: true,
-                cancelable: true,
-                clientX: event.x - rect.left,
-                clientY: event.y - rect.top,
-                view: window,
-            });
-            this.canvas.dispatchEvent(mockPlayer);
-        });
-
-        const scene = gameManager.getCurrentGameScene();
-
-        const pointer = scene.input.mousePointer;
-
-        const x = pointer.worldX;
-        const y = pointer.worldY;
-
-        console.log("x", x, "y", y, "dataTransfer", { ...event.dataTransfer });
+        // TODO: add a check to see if the user is allowed to drop files
 
         const { files: filesFromDropEvent } = event.dataTransfer ?? {};
         if (filesFromDropEvent) {
@@ -64,14 +44,13 @@ export class FileListener {
                         popupStore.addPopup(
                             PopupDropFileEntity,
                             {
-                                x: Math.floor(x),
-                                y: Math.floor(y),
                                 file: file,
                             },
                             "popupDropFileEntity"
                         );
                     }
                 } else {
+                    console.log("File format not supported", file?.type);
                     console.error("File format not supported");
                 }
             }

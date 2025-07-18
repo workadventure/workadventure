@@ -1,44 +1,41 @@
 <script lang="ts">
     import { v4 as uuidv4 } from "uuid";
     import { get } from "svelte/store";
-    import type { EntityPrefab, OpenFilePropertyData, WAMEntityData } from "@workadventure/map-editor";
-    import { onMount } from "svelte";
+    import type { EntityPrefab, OpenFilePropertyData } from "@workadventure/map-editor";
     import Input from "../Input/Input.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
-    import { CreateEntityFrontCommand } from "../../Phaser/Game/MapEditor/Commands/Entity/CreateEntityFrontCommand";
     import { gameSceneStore } from "../../Stores/GameSceneStore";
     import { popupStore } from "../../Stores/PopupStore";
     import LL from "../../../i18n/i18n-svelte";
     import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-    import { TexturesHelper } from "../../Phaser/Helpers/TexturesHelper";
-    import { GameScene } from "../../Phaser/Game/GameScene";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import {
+        mapEditorCopiedEntityDataPropertiesStore,
+        mapEditorEntityFileDroppedStore,
         mapEditorEntityModeStore,
         mapEditorModeStore,
-        mapEditorSelectedEntityStore,
+        mapEditorSelectedEntityPrefabStore,
     } from "../../Stores/MapEditorStore";
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
-    import { Entity } from "../../Phaser/ECS/Entity";
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
-    export let x: number;
-    export let y: number;
+    // export let x: number;
+    // export let y: number;
     export let file: File;
 
-    let property = {
-        link: null,
-        name: null,
-        buttonLabel: "Open",
-        newTab: false,
-        hideButtonLabel: false,
-        triggerMessage: "",
-        closable: true,
-        width: 50,
-    };
+    // let property = {
+    //     link: null,
+    //     name: null,
+    //     buttonLabel: "Open",
+    //     newTab: false,
+    //     hideButtonLabel: false,
+    //     triggerMessage: "",
+    //     closable: true,
+    //     width: 50,
+    // };
 
     let entity = {
         prefabRef: {
@@ -48,8 +45,7 @@
         name: file.name,
     };
 
-    // eslint-disable-next-line no-undef
-    let entityPrefabPreview: Phaser.GameObjects.Image | undefined = undefined;
+    // let entityPrefabPreview: Phaser.GameObjects.Image | undefined = undefined;
 
     let entityPrefab: EntityPrefab = {
         collectionName: "basic office decoration",
@@ -64,15 +60,15 @@
         type: "Default" as "Default" | "Custom",
     };
 
-    onMount(() => {
-        showEntityPreviewAtPosition().catch((error) => {
-            console.error("Error showing entity preview:", error);
-        });
+    // onMount(() => {
+    //     showEntityPreviewAtPosition().catch((error) => {
+    //         console.error("Error showing entity preview:", error);
+    //     });
 
-        return () => {
-            destroyEntityPreview();
-        };
-    });
+    //     return () => {
+    //         destroyEntityPreview();
+    //     };
+    // });
 
     async function onSave() {
         const scene = gameManager.getCurrentGameScene();
@@ -82,18 +78,16 @@
             return;
         }
 
-        if (!canEntityBePlaced(scene)) {
-            console.error("Entity cannot be placed at the current position.");
-            return;
-        }
+        // if (!canEntityBePlaced(scene)) {
+        //     console.error("Entity cannot be placed at the current position.");
+        //     return;
+        // }
 
-        // TODO: Check if we can place the entity at the current position
-
-        const pointerX = x;
-        const pointerY = y;
+        // const pointerX = x;
+        // const pointerY = y;
 
         const propertyId = uuidv4();
-        const entityId = uuidv4();
+        // const entityId = uuidv4();
 
         const lastDot = file.name.lastIndexOf(".");
         const name = file.name.slice(0, lastDot);
@@ -102,32 +96,32 @@
             gameSceneStore
         )?.room.mapStorageUrl?.toString()}private/files/${name}-${propertyId}.${fileExt}`;
 
-        const entityData: WAMEntityData = {
-            x: Math.floor(pointerX) - 16,
-            y: Math.floor(pointerY) - 16,
-            prefabRef: {
-                id: entity.prefabRef.id,
-                collectionName: entity.prefabRef.collectionName,
-            },
-            properties: [],
-            name: name,
-        };
-        console.log("Creating entity with data:", entityData);
+        // const entityData: WAMEntityData = {
+        //     x: Math.floor(pointerX) - (entityPrefabPreview?.displayWidth ?? 32) / 2,
+        //     y: Math.floor(pointerY) - (entityPrefabPreview?.displayHeight ?? 32) / 2,
+        //     prefabRef: {
+        //         id: entity.prefabRef.id,
+        //         collectionName: entity.prefabRef.collectionName,
+        //     },
+        //     properties: [],
+        //     name: name,
+        // };
+        // console.log("Creating entity with data:", entityData);
 
-        const propertyObj: OpenFilePropertyData = {
-            type: "openFile",
-            newTab: property.newTab,
-            link: fileUrl,
-            id: propertyId,
-            name: file.name,
-            buttonLabel: property.buttonLabel,
-            trigger: ON_ACTION_TRIGGER_BUTTON,
-            triggerMessage: property.triggerMessage,
-            closable: property.closable,
-            width: property.width,
-        };
+        // const propertyObj: OpenFilePropertyData = {
+        //     type: "openFile",
+        //     newTab: property.newTab,
+        //     link: fileUrl,
+        //     id: propertyId,
+        //     name: file.name,
+        //     buttonLabel: property.buttonLabel,
+        //     trigger: ON_ACTION_TRIGGER_BUTTON,
+        //     triggerMessage: property.triggerMessage,
+        //     closable: property.closable,
+        //     width: property.width,
+        // };
 
-        entityData.properties?.push(propertyObj);
+        // entityData.properties?.push(propertyObj);
 
         const fileBuffer = await file.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
@@ -143,86 +137,100 @@
 
         new UploadFileFrontCommand(fileToUpload).emitEvent(roomConnection);
 
-        const mapEditorModeManager = scene.getMapEditorModeManager();
-        const entitiesManager = scene.getGameMapFrontWrapper().getEntitiesManager();
+        // const mapEditorModeManager = scene.getMapEditorModeManager();
+        // const entitiesManager = scene.getGameMapFrontWrapper().getEntitiesManager();
 
-        await mapEditorModeManager.executeCommand(
-            new CreateEntityFrontCommand(scene.getGameMap(), entityId, entityData, undefined, entitiesManager, {
-                width: 32,
-                height: 32,
-            })
-        );
+        // console.log("Executing CreateEntityFrontCommand with entityData:", entityData);
 
-        const openEntity = new Entity(scene, entityId, entityData, entityPrefab);
-        mapEditorSelectedEntityStore.set(openEntity);
+        // await mapEditorModeManager.executeCommand(
+        //     new CreateEntityFrontCommand(scene.getGameMap(), entityId, entityData, undefined, entitiesManager, {
+        //         width: 32,
+        //         height: 32,
+        //     })
+        // );
+        const property: OpenFilePropertyData = {
+            type: "openFile",
+            newTab: false,
+            link: fileUrl,
+            id: propertyId,
+            name: file.name,
+            buttonLabel: "Open File",
+            trigger: ON_ACTION_TRIGGER_BUTTON,
+            triggerMessage: "",
+            closable: true,
+            width: 50,
+        };
+
+        mapEditorCopiedEntityDataPropertiesStore.update((properties) => {
+            const newProperties = properties ? [...properties] : [];
+            newProperties.push(property);
+            return newProperties;
+        });
+
+        // const openEntity = new Entity(scene, entityId, entityData, entityPrefab);
+        // mapEditorSelectedEntityStore.set(openEntity);
         analyticsClient.toggleMapEditor(true);
         mapEditorModeStore.switchMode(true);
+        mapEditorEntityFileDroppedStore.set(true);
+        mapEditorEntityModeStore.set("ADD");
+        mapEditorSelectedEntityPrefabStore.set(entityPrefab);
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
-        mapEditorEntityModeStore.set("EDIT");
 
-        destroyEntityPreview();
+        // destroyEntityPreview();
         removePopup();
     }
 
-    async function showEntityPreviewAtPosition(): Promise<void> {
-        const scene = gameManager.getCurrentGameScene();
+    // async function showEntityPreviewAtPosition(): Promise<void> {
+    //     const scene = gameManager.getCurrentGameScene();
 
-        if (!scene) {
-            console.error("No current game scene found.");
-            return;
-        }
+    //     if (!scene) {
+    //         console.error("No current game scene found.");
+    //         return;
+    //     }
 
-        if (!entityPrefab || !entityPrefab.imagePath) {
-            console.error("Entity prefab or image path is not defined.");
-            return;
-        }
+    //     if (!entityPrefab || !entityPrefab.imagePath) {
+    //         console.error("Entity prefab or image path is not defined.");
+    //         return;
+    //     }
 
-        if (!scene.textures.exists(entityPrefab.imagePath)) {
-            try {
-                await TexturesHelper.loadEntityImage(scene, entityPrefab.imagePath, entityPrefab.imagePath);
-            } catch {
-                console.error("Failed to load entity preview texture.");
-                return;
-            }
-        }
+    //     if (!scene.textures.exists(entityPrefab.imagePath)) {
+    //         try {
+    //             await TexturesHelper.loadEntityImage(scene, entityPrefab.imagePath, entityPrefab.imagePath);
+    //         } catch {
+    //             console.error("Failed to load entity preview texture.");
+    //             return;
+    //         }
+    //     }
 
-        const offset = getEntityPrefabAlignWithGridOffset(entityPrefab, entityPrefabPreview);
-        const snappedX = Math.floor(x) + offset.x;
-        const snappedY = Math.floor(y) + offset.y;
-        console.log("Snapped position for entity preview:", snappedX, snappedY);
+    //     const offset = getEntityPrefabAlignWithGridOffset(entityPrefab);
+    //     const snappedX = Math.floor(x) + offset.x - (entityPrefabPreview?.displayWidth ?? 32) / 2;
+    //     const snappedY = Math.floor(y) + offset.y - (entityPrefabPreview?.displayHeight ?? 32) / 2;
+    //     console.log("Snapped position for entity preview:", snappedX, snappedY);
 
-        if (!entityPrefabPreview) {
-            entityPrefabPreview = scene.add.image(snappedX, snappedY, entityPrefab.imagePath).setOrigin(0);
-        } else {
-            entityPrefabPreview.setTexture(entityPrefab.imagePath);
-        }
+    //     if (!entityPrefabPreview) {
+    //         entityPrefabPreview = scene.add.image(snappedX, snappedY, entityPrefab.imagePath).setOrigin(0);
+    //     } else {
+    //         entityPrefabPreview.setTexture(entityPrefab.imagePath);
+    //     }
 
-        scene.markDirty?.();
-    }
+    //     scene.markDirty?.();
+    // }
 
-    function getEntityPrefabAlignWithGridOffset(
-        entityPrefab: EntityPrefab,
-        // eslint-disable-next-line no-undef
-        preview?: Phaser.GameObjects.Image
-    ): { x: number; y: number } {
-        const collisionGrid = entityPrefab.collisionGrid;
-        if (collisionGrid && collisionGrid.length > 0) {
-            return {
-                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-                y: collisionGrid.length % 2 === 1 ? 16 : 0,
-            };
-        }
+    // function getEntityPrefabAlignWithGridOffset(
+    //     entityPrefab: EntityPrefab,
+    // ): { x: number; y: number } {
+    //     const collisionGrid = entityPrefab.collisionGrid;
+    //     if (collisionGrid && collisionGrid.length > 0) {
+    //         console.log("Collision grid found, calculating offset.");
+    //         return {
+    //             x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
+    //             y: collisionGrid.length % 2 === 1 ? 16 : 0,
+    //         };
+    //     }
 
-        if (preview) {
-            return {
-                x: Math.floor(preview.displayWidth / 32) % 2 === 1 ? 16 : 0,
-                y: Math.floor(preview.displayHeight / 32) % 2 === 1 ? 16 : 0,
-            };
-        }
-
-        return { x: 0, y: 0 };
-    }
+    //     return { x: 0, y: 0 };
+    // }
 
     function selectEntity(selctedEntityPrefab: EntityPrefab) {
         entity.prefabRef.id = selctedEntityPrefab.id;
@@ -230,36 +238,36 @@
 
         entityPrefab = selctedEntityPrefab;
 
-        showEntityPreviewAtPosition().catch((error) => {
-            console.error("Error showing entity preview:", error);
-        });
+        // showEntityPreviewAtPosition().catch((error) => {
+        //     console.error("Error showing entity preview:", error);
+        // });
     }
 
-    function canEntityBePlaced(scene: GameScene) {
-        const gameMapFrontWrapper = scene.getGameMapFrontWrapper();
-        if (!entityPrefabPreview || !entityPrefab) {
-            return false;
-        }
-        return gameMapFrontWrapper.canEntityBePlacedOnMap(
-            entityPrefabPreview.getTopLeft(),
-            entityPrefabPreview.displayWidth,
-            entityPrefabPreview.displayHeight,
-            entityPrefab.collisionGrid,
-            undefined
-        );
-    }
+    // function canEntityBePlaced(scene: GameScene) {
+    //     const gameMapFrontWrapper = scene.getGameMapFrontWrapper();
+    //     if (!entityPrefabPreview || !entityPrefab) {
+    //         return false;
+    //     }
+    //     return gameMapFrontWrapper.canEntityBePlacedOnMap(
+    //         entityPrefabPreview.getTopLeft(),
+    //         entityPrefabPreview.displayWidth,
+    //         entityPrefabPreview.displayHeight,
+    //         entityPrefab.collisionGrid,
+    //         undefined
+    //     );
+    // }
 
     function removePopup() {
-        destroyEntityPreview();
+        //destroyEntityPreview();
         popupStore.removePopup("popupDropFileEntity");
     }
 
-    function destroyEntityPreview() {
-        if (entityPrefabPreview) {
-            entityPrefabPreview.destroy();
-            entityPrefabPreview = undefined;
-        }
-    }
+    // function destroyEntityPreview() {
+    //     if (entityPrefabPreview) {
+    //         entityPrefabPreview.destroy();
+    //         entityPrefabPreview = undefined;
+    //     }
+    // }
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true}>
