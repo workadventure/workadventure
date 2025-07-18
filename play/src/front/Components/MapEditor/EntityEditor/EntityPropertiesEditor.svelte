@@ -399,7 +399,7 @@
                     id="objectDescription"
                     placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                     bind:value={entityDescription}
-                    on:change={onUpdateDescription}
+                    onChange={onUpdateDescription}
                     onKeyPress={() => {}}
                 />
             {/if}
