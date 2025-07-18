@@ -8,7 +8,7 @@ import {
     SubMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import { asError } from "catch-unknown";
+//import { asError } from "catch-unknown";
 import debug from "debug";
 import { merge } from "lodash";
 import { applyFieldMask } from "protobuf-fieldmask";
@@ -103,17 +103,18 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
             }
         } catch (error) {
-            this.notifyAllUsers(
-                {
-                    message: {
-                        $case: "errorMessage",
-                        errorMessage: {
-                            message: "An error occurred in pusher connection to back: " + asError(error).message,
-                        },
-                    },
-                },
-                "pusher"
-            );
+            // TODO : remove this when we have finished the migration to the new space system
+            // this.notifyAllUsers(
+            //     {
+            //         message: {
+            //             $case: "errorMessage",
+            //             errorMessage: {
+            //                 message: "An error occurred in pusher connection to back: " + asError(error).message,
+            //             },
+            //         },
+            //     },
+            //     "pusher"
+            // );
 
             console.error(error);
             Sentry.captureException(error);

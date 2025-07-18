@@ -47,7 +47,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             uuid: socketData.userUuid,
             name: socketData.name,
             playUri: socketData.roomId,
-            roomName: socketData.roomId === "" ? undefined : socketData.roomId,
+            roomName: socketData.roomName === "" ? undefined : socketData.roomName,
             availabilityStatus: socketData.availabilityStatus,
             isLogged: socketData.isLogged,
             color: Color.getColorByString(socketData.name),
