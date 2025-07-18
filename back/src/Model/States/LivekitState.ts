@@ -75,7 +75,16 @@ export class LivekitState extends CommunicationState implements IRecordableState
 
     async handleStartRecording(): Promise<void> {
         if (this.isRecordableStrategy(this._currentStrategy)) {
-            return this._currentStrategy.startRecording();
+            console.log("➡️➡️➡️➡️LivekitState.ts => handleStartRecording()");
+            try {
+                await this._currentStrategy.startRecording();
+            } catch (error) {
+                console.error("❌ LivekitState.ts => handleStartRecording() - Error starting recording: ", error);
+                throw error; // Re-throw the error to be handled by the caller
+            }
+        }
+        else {
+            console.log("❌ LivekitState.ts => handleStartRecording() - Not a recordable strategy: ", this._currentStrategy);
         }
     }
 
@@ -86,8 +95,7 @@ export class LivekitState extends CommunicationState implements IRecordableState
     }
 
     //TODO : voir si on a pas un moyen plus simple de faire ça
-    private isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
-        return 'handleStartRecording' in strategy && 'handleStopRecording' in strategy;
-    }
-
+    // private isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
+    //     return 'handleStartRecording' in strategy && 'handleStopRecording' in strategy;
+    // }
 }

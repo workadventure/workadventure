@@ -6,6 +6,7 @@ import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import {ICommunicationState, IRecordableState} from "./Interfaces/ICommunicationState";
 import { DefaultState } from "./States/DefaultState";
 import { LivekitState } from "./States/LivekitState";
+import { set } from "zod";
 
 export interface IRecordingManager {
     startRecording(user: SpaceUser): Promise<void>;
@@ -23,18 +24,29 @@ export class RecordingManager implements IRecordingManager {
     constructor(private readonly communicationManager: ICommunicationManager, private readonly space: ICommunicationSpace) {}
 
     public async startRecording(user: SpaceUser): Promise<void> {
+        console.log("➡️➡️➡️ RecordingManager.ts => startRecording()", user);
         if (this._isRecording) {
             throw new Error("Recording already started");
         }
         this._isRecording = true;
         const currentState = this.communicationManager.currentState;
+        this._user = user;
 
         if (this.isRecordableState(currentState)) {
             await currentState.handleStartRecording();
         } else {
+            // If the current state is not recordable, switch to LivekitState
+            console.log("🍪🍪🍪 Switching to LivekitState for recording");
             const livekitState = new LivekitState(this.space, this.communicationManager);
             this.communicationManager.setState(livekitState);
-            await livekitState.handleStartRecording();
+            try {
+                setTimeout(async () => {
+                    await livekitState.handleStartRecording();
+                }, 5000);
+            } catch (error) {
+                console.error("❌ RecordingManager.ts => startRecording() - Error starting recording: ", error);
+                throw error; // Re-throw the error to be handled by the caller
+            }
         }
 
         this._isRecording = true;
@@ -48,6 +60,7 @@ export class RecordingManager implements IRecordingManager {
         //TODO : verifier que ce soit le bon user qui stop
 
         if(this._user !== user){
+            console.log("this._user", this._user, "  user", user);
             throw new Error("User is not the one recording");
         }
 
@@ -129,18 +142,13 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
-    public handleStartRecording(user: SpaceUser): void {
-        this._recordingManager.startRecording(user).catch((error) => {
-            console.error(error);
-            Sentry.captureException(error);
-        });
+    public async handleStartRecording(user: SpaceUser): Promise<void> {
+        console.log("➡️➡️ CommunicationManager.ts => handleStartRecording()", user);
+        await this._recordingManager.startRecording(user);
     }
 
-    public  handleStopRecording(user: SpaceUser): void {
-        this._recordingManager.stopRecording(user).catch((error) => {
-            console.error(error);
-            Sentry.captureException(error);
-        });
+    public async handleStopRecording(user: SpaceUser): Promise<void> {
+        await this._recordingManager.stopRecording(user);
     }
 
     get currentState(): ICommunicationState {
@@ -167,5 +175,5 @@ export class CommunicationManager implements ICommunicationManager {
 
 export const CommunicationConfig = {
     //TODO : switch back to 4
-    MAX_USERS_FOR_WEBRTC: 4,
+    MAX_USERS_FOR_WEBRTC: 2,
 };

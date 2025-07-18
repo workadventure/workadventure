@@ -70,14 +70,15 @@ eventProcessor.registerPublicEventProcessor(
             throw new Error("Invalid event type");
         }
         const spaceUser = space.getUser(senderId);
-        console.log("🤟🤟🤟Backend: Start recording for space", space.getSpaceName());
         if (!spaceUser) {
             console.error("Could not find space user to start recording");
             throw new Error("Space user not found for start recording event");
         }
 
+        console.log('🚀 🚀 🚀 User found for starting recording:', spaceUser);
+
         try{
-            //await space.startRecording(spaceUser);
+            await space.startRecording(spaceUser);
 
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
@@ -99,6 +100,7 @@ eventProcessor.registerPublicEventProcessor(
                 },
             };
         }catch(error){
+            console.log("📬 📬 📬 Error while starting recording: ", error);
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
                 senderUserId : senderId, // 0 means that the event is sent by the server
@@ -112,9 +114,7 @@ eventProcessor.registerPublicEventProcessor(
                     }
                 }
             });
-
             throw error
-
         }
     }
 )
@@ -126,14 +126,13 @@ eventProcessor.registerPublicEventProcessor(
             throw new Error("Invalid event type");
         }
         const spaceUser = space.getUser(senderId);
-        console.log("🤟🤟🤟Backend: Stop recording for space", space.getSpaceName());
         if (!spaceUser) {
             console.error("Could not find space user to stop recording");
             throw new Error("Space user not found for stop recording event");
         }
 
         try{
-            //await space.stopRecording(spaceUser);
+            await space.stopRecording(spaceUser);
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
                 senderUserId : senderId,

@@ -75,7 +75,11 @@ export class SpacePeerManager {
         this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
 
         this.space.observePrivateEvent("startRecordingResultMessage").subscribe((message)=>{
-            recordingStore.startRecord(true)
+            if (!message.startRecordingResultMessage.success) {
+                notificationPlayingStore.playNotification('Recording failed to start');
+                return;
+            }
+            recordingStore.startRecord(true);
             console.log("startRecordingResultMessage" , message);
         })
 

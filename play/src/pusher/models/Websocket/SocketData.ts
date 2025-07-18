@@ -64,4 +64,5 @@ export type SocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    canRecord: boolean;
 };

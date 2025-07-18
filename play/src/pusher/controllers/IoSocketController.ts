@@ -358,6 +358,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -500,6 +501,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            canRecord: userData.canRecord ?? false,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */

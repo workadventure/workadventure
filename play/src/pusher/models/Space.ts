@@ -93,8 +93,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private _onSpaceEmpty: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
         private propertiesToSync: string[] = [],
-        private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
-            new SpaceToBackForwarder(space),
+        private SpaceToBackForwarderFactory: (
+            space: Space,
+            eventProcessor: EventProcessor
+        ) => SpaceToBackForwarderInterface = (space: Space, eventProcessor: EventProcessor) =>
+            new SpaceToBackForwarder(space, eventProcessor),
         private SpaceToFrontDispatcherFactory: (
             space: Space,
             eventProcessor: EventProcessor
@@ -105,7 +108,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.users = new Map<string, SpaceUserExtended>();
         this.metadata = new Map<string, unknown>();
         this._localConnectedUser = new Map<string, Socket>();
-        this.forwarder = this.SpaceToBackForwarderFactory(this);
+        this.forwarder = this.SpaceToBackForwarderFactory(this, eventProcessor);
         this.dispatcher = this.SpaceToFrontDispatcherFactory(this, eventProcessor);
         this.query = new Query(this);
         debug(`created : ${name}`);

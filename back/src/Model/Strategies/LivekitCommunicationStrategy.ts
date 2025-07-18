@@ -92,7 +92,13 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
     async startRecording(): Promise<void> {
-        await this.livekitService.startRecording(this.space.getSpaceName());
+        try {
+            await this.livekitService.startRecording(this.space.getSpaceName());
+            console.log("🎇 LivekitCommunicationStrategy.ts => startRecording() called");
+        } catch (e) {
+            console.log("❌ LivekitCommunicationStrategy.ts => startRecording() - Error starting recording: ", e);
+            throw "An error occurred while starting the recording: " + e;
+        }
     }
     async stopRecording(): Promise<void> {
         await this.livekitService.stopRecording();

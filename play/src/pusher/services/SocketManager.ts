@@ -1305,13 +1305,14 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "publicEvent",
-            publicEvent: {
-                ...publicEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        // space.forwarder.forwardMessageToSpaceBack({
+        //     $case: "publicEvent",
+        //     publicEvent: {
+        //         ...publicEvent,
+        //         senderUserId: socketData.spaceUserId,
+        //     },
+        // });
+        space.forwarder.sendPublicEvent(publicEvent, socketData)
     }
 
     async handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
@@ -1328,13 +1329,14 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("User id not found");
         }
 
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "privateEvent",
-            privateEvent: {
-                ...privateEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        // space.forwarder.forwardMessageToSpaceBack({
+        //     $case: "privateEvent",
+        //     privateEvent: {
+        //         ...privateEvent,
+        //         senderUserId: socketData.spaceUserId,
+        //     },
+        // });
+        space.forwarder.sendPrivateEvent(privateEvent, socketData);
     }
 
     async leaveChatRoomArea(socket: Socket): Promise<void> {
