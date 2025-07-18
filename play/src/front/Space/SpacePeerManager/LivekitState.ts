@@ -7,6 +7,7 @@ import { WebRTCState } from "./WebRTCState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export class LivekitState implements ICommunicationState {
+    public shouldDisplayRecordButton = true;
     private livekitConnection: LivekitConnection;
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;

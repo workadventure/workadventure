@@ -980,7 +980,11 @@ export class SocketManager implements ZoneEventListener {
 
         const socketData = client.getUserData();
         if (!socketData.spaces.has(spaceName)) {
-            throw new Error(`Client is trying to do an operation on space ${spaceName} whose he is not part of`);
+            throw new Error(
+                `Client is trying to do an operation on space ${spaceName} whose he is not part of: ${JSON.stringify(
+                    socketData.spaces
+                )}`
+            );
         }
     }
 
@@ -1301,13 +1305,14 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "publicEvent",
-            publicEvent: {
-                ...publicEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        // space.forwarder.forwardMessageToSpaceBack({
+        //     $case: "publicEvent",
+        //     publicEvent: {
+        //         ...publicEvent,
+        //         senderUserId: socketData.spaceUserId,
+        //     },
+        // });
+        space.forwarder.sendPublicEvent(publicEvent, socketData)
     }
 
     async handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
@@ -1324,13 +1329,14 @@ export class SocketManager implements ZoneEventListener {
             throw new Error("User id not found");
         }
 
-        space.forwarder.forwardMessageToSpaceBack({
-            $case: "privateEvent",
-            privateEvent: {
-                ...privateEvent,
-                senderUserId: socketData.spaceUserId,
-            },
-        });
+        // space.forwarder.forwardMessageToSpaceBack({
+        //     $case: "privateEvent",
+        //     privateEvent: {
+        //         ...privateEvent,
+        //         senderUserId: socketData.spaceUserId,
+        //     },
+        // });
+        space.forwarder.sendPrivateEvent(privateEvent, socketData);
     }
 
     async leaveChatRoomArea(socket: Socket): Promise<void> {

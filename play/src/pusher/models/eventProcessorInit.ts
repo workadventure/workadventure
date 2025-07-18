@@ -39,3 +39,11 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender, receiv
 
     return event;
 });
+
+eventProcessor.registerPublicEventProcessor("startRecordingMessage", (event, sender, senderSocketData) => {
+    console.log(" 🍪 🍪 🍪 startRecordingMessage processor", event, sender, senderSocketData);
+    if (!senderSocketData.canRecord) {
+        throw new Error("You are not allowed to record");
+    }
+    return event;
+});

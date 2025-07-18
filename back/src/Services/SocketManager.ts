@@ -1385,7 +1385,10 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent);
+        space.dispatchPublicEvent(publicEvent).catch((error) => {
+            console.error(error);
+            Sentry.captureException(error);
+        });
     }
 
     handlePrivateEvent(pusher: SpacesWatcher, privateEvent: PrivateEvent) {

@@ -18,8 +18,10 @@ const debug = Debug("livekit");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
+
 const defaultEgressClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new EgressClient(livekitHost, livekitApiKey, livekitApiSecret);
+
 export class LiveKitService {
     private roomServiceClient: RoomServiceClient;
     private egressClient: EgressClient;
@@ -57,7 +59,8 @@ export class LiveKitService {
             departureTimeout: 5 * 60 * 1000,
         };
 
-        await this.roomServiceClient.createRoom(createOptions);
+        const room = await this.roomServiceClient.createRoom(createOptions);
+        console.log("☎️☎️☎️ Livekit service: Room created successfully:", room.name);
         //this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
     }
 
@@ -129,13 +132,19 @@ export class LiveKitService {
     }
 
     async startRecording(roomName: string, layout = "grid"): Promise<void> {
+        console.log("🤟🤟🤟Backend: Start recording for room : ", roomName);
         try {
+
+            // throw new Error("Livekit recording is not implemented yet");
             //TODO : use env variable / voir si on utilise toujours un S3
             const endpoint = "http://minio-livekit:9000";
             const accessKey = "minio-access-key";
             const secret = "minio-secret-access-key";
             const region = "eu-west-1";
             const bucket = "livekit-recording";
+
+            //TODO : intégrer le nom de l'utilisateur dans le chemin de l'enregistrement pour pouvoir le retrouver plus tard (voir si on mets cette parttie dans une autre classe qui gere la recuperation des fichiers etc...)
+
             const filepath = `out/test-${new Date().toISOString().slice(0, 19)}`;
 
             const output = new EncodedFileOutput({
@@ -167,6 +176,8 @@ export class LiveKitService {
 
             this.currentRecordingInformation = result;
 
+            console.log("🎇🎇 LivekitService.ts => Recording started successfully:", result);
+
             // Stop recording after 60 seconds
             // setTimeout(async () => {
             //     try {
@@ -177,7 +188,7 @@ export class LiveKitService {
             //     }
             // }, 60000);
         } catch (error) {
-            console.error("Failed to start recording:", error);
+            console.error("LivekitService.ts => Failed to start recording:", error);
             Sentry.captureException(error);
             throw new Error("Failed to start recording");
         }
@@ -190,5 +201,6 @@ export class LiveKitService {
         }
         await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
         this.currentRecordingInformation = null;
+        console.log("🤟🤟🤟LivekitService.ts => Stop recording");
     }
 }

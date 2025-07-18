@@ -1,7 +1,7 @@
 import { SpaceUser, PrivateEvent } from "@workadventure/messages";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { ICommunicationState } from "../Interfaces/ICommunicationState";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import {ICommunicationStrategy, IRecordableStrategy} from "../Interfaces/ICommunicationStrategy";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { CommunicationConfig } from "../CommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
@@ -120,7 +120,6 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     protected abstract shouldSwitchBackToCurrentState(): boolean;
     protected abstract shouldSwitchToNextState(): boolean;
-    protected abstract areAllUsersReady(): boolean;
 
     protected afterSwitchAction(): void {}
     protected preparedSwitchAction(readyUsers: Set<string>): void {}
@@ -133,5 +132,13 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     protected isSwitching(): boolean {
         return !!this._nextState;
+    }
+
+    protected areAllUsersReady(): boolean {
+        return this._readyUsers.size === this._space.getAllUsers().length;
+    }
+
+    protected isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
+        return 'startRecording' in strategy && 'stopRecording' in strategy;
     }
 }

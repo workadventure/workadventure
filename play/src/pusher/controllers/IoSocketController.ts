@@ -358,6 +358,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -500,6 +501,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            canRecord: userData.canRecord ?? false,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -984,6 +986,7 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+
                         // case "muteParticipantIdMessage": {
                         //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
                         //         message.message.muteParticipantIdMessage.spaceName
@@ -1045,6 +1048,7 @@ export class IoSocketController {
                         //     );
                         //     break;
                         // }
+
                         case "banPlayerMessage": {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;
