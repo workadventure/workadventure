@@ -101,7 +101,7 @@
             {/if}
             {#if label}<span>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
+        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle != "" || tooltipDesc != "")}
             <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
         {/if}
     </div>
