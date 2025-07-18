@@ -189,10 +189,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         myCameraStore.set(false);
         myMicrophoneStore.set(false);
         batchGetUserMediaStore.commitChanges();
-        // this.scene.stop(SelectCharacterSceneName);
-        // this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
-        // gameManager.tryResumingGame(EnableCameraSceneName)
         selectCharacterCustomizeSceneVisibleStore.set(true);
     }
 
