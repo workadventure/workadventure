@@ -102,8 +102,8 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
-    <div class="flex flex-row w-full items-center gap-2 min-w-80">
-        <ButtonClose on:click={closeBanner} bgColor="bg-constrast" hoverColor="bg-white/20" size="md" />
+    <div class="flex flex-row w-full items-center gap-2 min-w-80" data-testid="say-popup">
+        <ButtonClose on:click={closeBanner} bgColor="bg-constrast" hoverColor="bg-white/20" size="md" dataTestId="btn-close-say-popup" />
         <div class="flex-none w-24">
             <Select
                 bind:value={type}

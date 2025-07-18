@@ -232,8 +232,7 @@
 
             <div class="px-1 py-2  flex flex-row items-center justify-between">
                 <div class="flex flex-row justify-between gap-2 items-center w-full">
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
+                    <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         on:mouseenter={() => (showSayBubbleTooltip = true)}
                         on:mouseleave={() => (showSayBubbleTooltip = false)}
@@ -241,9 +240,10 @@
                             popupStore.addPopup(SayPopUp, {type: "say"}, "say");
                             analyticsClient.openSayBubble();
                         }}
+                        data-testid="say-bubble-button"
                     >
                         Say Bubble
-                    </div>
+                    </button>
                     {#if showSayBubbleTooltip}
                         <div class="absolute top-1/3 left-0 m-auto w-2 h-1">
                             <HelpTooltip
@@ -255,8 +255,7 @@
                             />
                         </div>
                     {/if}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
+                    <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         on:mouseenter={() => (showThinkBubbleTooltip = true)}
                         on:mouseleave={() => (showThinkBubbleTooltip = false)}
@@ -264,9 +263,10 @@
                             popupStore.addPopup(SayPopUp, {type: "think"}, "say");
                             analyticsClient.openThinkBubble();
                         }}
+                        data-testid="think-bubble-button"
                     >
                         Think Bubble
-                    </div>
+                    </button>
                     {#if showThinkBubbleTooltip}
                         <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
                             <HelpTooltip
