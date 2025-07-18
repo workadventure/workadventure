@@ -273,6 +273,7 @@ const mapStorageServer: MapStorageServer = {
                                     x: message.x,
                                     y: message.y,
                                     properties: message.properties as EntityDataProperties,
+                                    name: message.name,
                                 },
                                 commandId
                             )
