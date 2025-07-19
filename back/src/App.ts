@@ -4,6 +4,8 @@ import { PrometheusController } from "./Controller/PrometheusController";
 import { DebugController } from "./Controller/DebugController";
 import { PingController } from "./Controller/PingController";
 import { HTTP_PORT, PROMETHEUS_PORT } from "./Enum/EnvironmentVariable";
+import { GoogleOAuthController } from "./Controller/GoogleOAuthController";
+import session from "express-session";
 
 class App {
     private app: Express;
@@ -11,12 +13,21 @@ class App {
     private prometheusController: PrometheusController;
     private debugController: DebugController;
     private pingController: PingController;
+    private googleOAuthController: GoogleOAuthController;
 
     constructor() {
         // Création de l'application principale
         this.app = express();
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(
+            session({
+                secret: "your-secret-key", // TODO Replace with a strong secret
+                resave: false,
+                saveUninitialized: true,
+                cookie: { secure: "auto" }, // Set to true if using HTTPS
+            })
+        );
 
         // Création de l'application Prometheus si nécessaire
         if (PROMETHEUS_PORT) {
@@ -30,6 +41,7 @@ class App {
 
         this.debugController = new DebugController(this.app);
         this.pingController = new PingController(this.app);
+        this.googleOAuthController = new GoogleOAuthController(this.app);
     }
 
     public listen(): void {

@@ -51,6 +51,7 @@ import type { OnConnectInterface, PositionInterface, ViewportInterface } from ".
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+import { googleAuthService } from "./GoogleAuthService";
 export const enum defautlNativeIntegrationAppName {
     KLAXOON = "Klaxoon",
     YOUTUBE = "Youtube",
@@ -118,6 +119,8 @@ class ConnectionManager {
         this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
         this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
         this.cardsToolActivated = CARDS_ENABLED;
+
+        googleAuthService.start();
     }
 
     /**
@@ -595,6 +598,7 @@ class ConnectionManager {
                 }
                 this._roomConnectionStream.next(connection);
                 errorScreenStore.delete();
+                googleAuthService.init(connection.pingPong);
                 resolve(connect);
             });
         }).catch((err) => {
