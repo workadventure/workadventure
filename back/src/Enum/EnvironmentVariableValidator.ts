@@ -95,6 +95,9 @@ Note that anonymous players don't have any TTL limit because their data is store
         .optional()
         .default(20 * 1024 * 1024) // Default to 20 MB
         .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
+    GOOGLE_OAUTH_CLIENT_ID: z.string().optional().transform(emptyStringToUndefined),
+    GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional().transform(emptyStringToUndefined),
+    GOOGLE_CALENDAR_API_KEY: z.string().optional().transform(emptyStringToUndefined),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

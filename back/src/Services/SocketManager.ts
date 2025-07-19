@@ -103,9 +103,12 @@ export class SocketManager {
     private spaces = new Map<string, Space>();
 
     private googleChat: GoogleChat;
+    public googleMeet: GoogleMeet;
 
     constructor() {
-        this.googleChat = new GoogleChat(getOAuth2Client());
+        const oAuth2Client = getOAuth2Client();
+        this.googleChat = new GoogleChat(oAuth2Client);
+        this.googleMeet = new GoogleMeet(oAuth2Client);
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });
