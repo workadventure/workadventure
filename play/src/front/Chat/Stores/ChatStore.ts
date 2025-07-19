@@ -74,7 +74,9 @@ export function initializeChatVisibilitySubscription() {
     };
 }
 
-export const selectedChatMessageToReply = writable<NewChatMessage | null>(null);
+export const selectedChatMessageToReply = writable<{ message: NewChatMessage; type: "direct" | "thread" } | null>(
+    null
+);
 
 export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 

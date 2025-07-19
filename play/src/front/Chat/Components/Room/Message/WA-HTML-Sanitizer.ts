@@ -8,5 +8,22 @@ DOMPurify.addHook("afterSanitizeAttributes", function (node) {
 });
 
 export const sanitizeHTML = (html: string | Node): string => {
-    return DOMPurify.sanitize(html);
+    return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+            "b",
+            "i",
+            "u",
+            "s",
+            "blockquote",
+            "pre",
+            "code",
+            "ul",
+            "ol",
+            "li",
+            "a",
+            "p",
+            "br",
+            "span",
+        ],
+    });
 };
