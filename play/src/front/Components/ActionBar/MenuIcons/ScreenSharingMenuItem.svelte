@@ -20,8 +20,10 @@
         if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
+            //TODO Add visual feedback
         } else {
             requestedScreenSharingState.enableScreenSharing();
+            //TODO Add visual feedback
         }
     }
 </script>

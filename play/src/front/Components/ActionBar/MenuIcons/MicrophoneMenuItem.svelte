@@ -29,8 +29,10 @@
         if ($silentStore) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
+            //TODO Add visual feedback
         } else {
             requestedMicrophoneState.enableMicrophone();
+            //TODO Add visual feedback
         }
     }
 </script>
