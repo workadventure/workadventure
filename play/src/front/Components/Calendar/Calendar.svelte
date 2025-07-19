@@ -14,6 +14,9 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
     import ExternalComponents from "../ExternalModules/ExternalComponents.svelte";
+    import CreateEvent from "./CreateEvent.svelte";
+
+    let showCreateEvent = false;
 
     function closeCalendar() {
         isCalendarVisibleStore.set(false);
@@ -85,9 +88,19 @@
                 </div>
                 {#if $userIsConnected}
                     <div class="bg-white/20 h-[1px] w-full my-2" />
-                    <h4 class=" text-base font-bold text-left">
-                        ${$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
-                    </h4>
+                    <div class="flex flex-row justify-between">
+                        <h4 class=" text-base font-bold text-left">
+                            ${$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
+                        </h4>
+                        <button
+                            class="btn-primary"
+                            on:click={() => {
+                                showCreateEvent = true;
+                            }}
+                        >
+                            +
+                        </button>
+                    </div>
                 {/if}
             </div>
             <div class="flex flex-col justify-center gap-4">
@@ -147,6 +160,13 @@
             </div>
         </div>
     </div>
+    {#if showCreateEvent}
+        <CreateEvent
+            close={() => {
+                showCreateEvent = false;
+            }}
+        />
+    {/if}
 </div>
 
 <style lang="scss">
