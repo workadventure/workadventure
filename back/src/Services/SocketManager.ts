@@ -77,6 +77,8 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
 import { emitError } from "./MessageHelpers";
 import { cpuTracker } from "./CpuTracker";
+import { GoogleChat } from "./GoogleChat/GoogleChat";
+import { getOAuth2Client } from "./GoogleOAuthService";
 
 const debug = Debug("socketmanager");
 
@@ -100,7 +102,10 @@ export class SocketManager {
 
     private spaces = new Map<string, Space>();
 
+    private googleChat: GoogleChat;
+
     constructor() {
+        this.googleChat = new GoogleChat(getOAuth2Client());
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });

@@ -1514,3 +1514,28 @@ message DispatchEventRequest {
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
   repeated int32 targetUserIds = 4;
 }
+
+message SendGoogleChatMessageRequest {
+  string space_id = 1;
+  string message = 2;
+}
+
+message CreateGoogleChatSpaceRequest {
+  string name = 1;
+  repeated string members = 2;
+}
+
+message GoogleChatSpace {
+  string name = 1;
+  string display_name = 2;
+}
+
+message AddMemberToGoogleChatSpaceRequest {
+  string space_id = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberFromGoogleChatSpaceRequest {
+  string space_id = 1;
+  string user_id = 2;
+}

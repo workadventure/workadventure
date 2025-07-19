@@ -29,6 +29,12 @@ service RoomManager {
   rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
   rpc dispatchGlobalEvent(DispatchGlobalEventRequest) returns (google.protobuf.Empty); // Dispatch a scripting API message to ALL rooms
   rpc dispatchExternalModuleMessage(ExternalModuleMessage) returns (google.protobuf.Empty); // Dispatch an externam module message to room and user if is defined
+
+  // GOOGLE CHAT
+  rpc sendGoogleChatMessage(SendGoogleChatMessageRequest) returns (google.protobuf.Empty);
+  rpc createGoogleChatSpace(CreateGoogleChatSpaceRequest) returns (GoogleChatSpace);
+  rpc addMemberToGoogleChatSpace(AddMemberToGoogleChatSpaceRequest) returns (google.protobuf.Empty);
+  rpc removeMemberFromGoogleChatSpace(RemoveMemberFromGoogleChatSpaceRequest) returns (google.protobuf.Empty);
 }
 
 /**
