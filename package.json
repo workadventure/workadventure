@@ -2,7 +2,8 @@
   "name": "workadventure",
   "private": true,
   "devDependencies": {
-    "husky": "^7.0.1"
+    "husky": "^7.0.1",
+    "cross-env": "^7.0.3"
   },
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
