@@ -42,6 +42,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import ResizeHandle from "./ResizeHandle.svelte";
+    import { GoogleMeetCoWebsite } from "../../WebRtc/CoWebsite/GoogleMeetCoWebsite";
 
     setContext("inCameraContainer", true);
 
