@@ -56,6 +56,7 @@
     "debug": "^4.3.1",
     "express": "^5.1.0",
     "google-protobuf": "^3.21.0",
+    "googleapis": "^153.0.0",
     "jsonwebtoken": "^9.0.0",
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
