@@ -637,6 +637,54 @@ const roomManager = {
     dispatchExternalModuleMessage(call) {
         socketManager.handleExternalModuleMessage(call.request).catch((e) => console.error(e));
     },
+    sendGoogleChatMessage(call: ServerUnaryCall<any, Empty>, callback: sendUnaryData<Empty>): void {
+        socketManager.googleChat
+            .sendMessage(call.request.spaceId, call.request.message)
+            .then(() => {
+                callback(null, {});
+            })
+            .catch((err) => {
+                console.error(err);
+                Sentry.captureException(err);
+                callback(err as ServerErrorResponse, {});
+            });
+    },
+    createGoogleChatSpace(call: ServerUnaryCall<any, Empty>, callback: sendUnaryData<Empty>): void {
+        socketManager.googleChat
+            .createSpace(call.request.name, call.request.members)
+            .then((space) => {
+                callback(null, space);
+            })
+            .catch((err) => {
+                console.error(err);
+                Sentry.captureException(err);
+                callback(err as ServerErrorResponse, {});
+            });
+    },
+    addMemberToGoogleChatSpace(call: ServerUnaryCall<any, Empty>, callback: sendUnaryData<Empty>): void {
+        socketManager.googleChat
+            .addMemberToSpace(call.request.spaceId, call.request.userId)
+            .then(() => {
+                callback(null, {});
+            })
+            .catch((err) => {
+                console.error(err);
+                Sentry.captureException(err);
+                callback(err as ServerErrorResponse, {});
+            });
+    },
+    removeMemberFromGoogleChatSpace(call: ServerUnaryCall<any, Empty>, callback: sendUnaryData<Empty>): void {
+        socketManager.googleChat
+            .removeMemberFromSpace(call.request.spaceId, call.request.userId)
+            .then(() => {
+                callback(null, {});
+            })
+            .catch((err) => {
+                console.error(err);
+                Sentry.captureException(err);
+                callback(err as ServerErrorResponse, {});
+            });
+    },
 } satisfies RoomManagerServer;
 
 export { roomManager };
