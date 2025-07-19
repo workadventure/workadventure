@@ -44,7 +44,7 @@ export interface ChatRoom {
     readonly hasUnreadMessages: Readable<boolean>;
     readonly avatarUrl: string | undefined;
     readonly messages: Readable<readonly ChatMessage[]>;
-    readonly sendMessage: (message: string) => void;
+    readonly sendMessage: (message: string, threadId?: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
     readonly setTimelineAsRead: () => void;
     readonly hasPreviousMessage: Readable<boolean>;
@@ -100,6 +100,7 @@ export interface ChatMessage {
     isModified: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canDelete: Readable<boolean>;
+    threadId?: string;
 }
 
 export interface ChatMessageReaction {

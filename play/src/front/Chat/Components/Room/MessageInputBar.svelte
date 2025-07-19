@@ -62,10 +62,10 @@
     let replyMessageId: string | null = null;
     const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
-    const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((chatMessage) => {
-        if (chatMessage !== null) {
+    const selectedChatChatMessageToReplyUnsubscriber = selectedChatMessageToReply.subscribe((reply) => {
+        if (reply !== null) {
             messageInput.focus();
-            replyMessageId = chatMessage.id;
+            replyMessageId = reply.message.id;
         }
     });
 
@@ -124,7 +124,12 @@
 
         // send message
         if (messageToSend.trim().length !== 0) {
-            room?.sendMessage(messageToSend);
+            const reply = $selectedChatMessageToReply;
+            let threadId: string | undefined = undefined;
+            if (reply && reply.type === "thread") {
+                threadId = reply.message.id;
+            }
+            room?.sendMessage(messageToSend, threadId);
             messageInput.innerText = "";
             message = "";
             if (stopTypingTimeOutID) {
@@ -389,6 +394,31 @@
         applicationProperty = applicationPropertyEvent.detail;
     }
 
+    function formatText(format: "bold" | "italic" | "strikethrough") {
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        const selectedText = range.toString();
+        let formattedText = "";
+
+        switch (format) {
+            case "bold":
+                formattedText = `<b>${selectedText}</b>`;
+                break;
+            case "italic":
+                formattedText = `<i>${selectedText}</i>`;
+                break;
+            case "strikethrough":
+                formattedText = `<s>${selectedText}</s>`;
+                break;
+        }
+
+        range.deleteContents();
+        range.insertNode(document.createTextNode(formattedText));
+        message = messageInput.innerHTML;
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -625,48 +655,55 @@
 {#if fileAttachmentComponentOpened}
     <MessageFileInput {room} on:fileUploaded={() => closeFileAttachmentComponent()} />
 {/if}
-<div
-    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
-    bind:this={messageBarRef}
->
-    {#if $selectedChatMessageToReply !== null}
-        <div class="flex p-2 items-start absolute top-0 -translate-y-full w-full">
-            <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded w-full backdrop-blur">
-                <div class="flex flex-col p-2 rounded w-full">
-                    <span class="flex flex-row justify-between">
-                        <span class="text-sm text-gray-400">
-                            {$LL.chat.replyTo()}
+<div class="flex flex-col w-full">
+    <div class="flex flex-row gap-2 p-2 bg-contrast/50">
+        <button class="p-1 hover:bg-white/10 rounded" on:click={() => formatText("bold")}><b>B</b></button>
+        <button class="p-1 hover:bg-white/10 rounded" on:click={() => formatText("italic")}><i>I</i></button>
+        <button class="p-1 hover:bg-white/10 rounded" on:click={() => formatText("strikethrough")}><s>S</s></button>
+    </div>
+    <div
+        class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
+        bind:this={messageBarRef}
+    >
+        {#if $selectedChatMessageToReply !== null}
+            <div class="flex p-2 items-start absolute top-0 -translate-y-full w-full">
+                <div class="flex flex-row gap-2 items-center justify-between bg-contrast rounded w-full backdrop-blur">
+                    <div class="flex flex-col p-2 rounded w-full">
+                        <span class="flex flex-row justify-between">
+                            <span class="text-sm text-gray-400">
+                                {$LL.chat.replyTo()}
+                            </span>
+                            <button class="p-2 m-0" on:click={unselectChatMessageToReply}>
+                                <!--<IconCircleX />-->
+                                <IconX font-size={18} />
+                            </button>
                         </span>
-                        <button class="p-2 m-0" on:click={unselectChatMessageToReply}>
-                            <!--<IconCircleX />-->
-                            <IconX font-size={18} />
-                        </button>
-                    </span>
-                    <div class="flex row w-full border-l border-l-white/10 ml-1 border-solid border-0">
-                        <p
-                            class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
-                            style:overflow-wrap="anywhere"
-                        >
-                            {$quotedMessageContent?.body}
-                        </p>
+                        <div class="flex row w-full border-l border-l-white/10 ml-1 border-solid border-0">
+                            <p
+                                class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
+                                style:overflow-wrap="anywhere"
+                            >
+                                {$quotedMessageContent?.body}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    {/if}
-    <MessageInput
-        onKeyDown={sendMessageOrEscapeLine}
-        onInput={onInputHandler}
-        on:pasteFiles={handleFiles}
-        {focusin}
-        {focusout}
-        bind:message
-        bind:messageInput
-        disabled={disabled && !isProximityChatRoom}
-        inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
-        dataText={$LL.chat.enter()}
-        dataTestid="messageInput"
-    />
+        {/if}
+        <MessageInput
+            onKeyDown={sendMessageOrEscapeLine}
+            onInput={onInputHandler}
+            on:pasteFiles={handleFiles}
+            {focusin}
+            {focusout}
+            bind:message
+            bind:messageInput
+            disabled={disabled && !isProximityChatRoom}
+            inputClass="message-input flex-grow !m-0 px-5 py-2.5 max-h-36 overflow-auto  h-full rounded-xl wa-searchbar block text-white placeholder:text-base border-light-purple border !bg-transparent resize-none border-none outline-none shadow-none focus:ring-0"
+            dataText={$LL.chat.enter()}
+            dataTestid="messageInput"
+        />
+</div>
     <button
         data-testid="addApplicationButton"
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-none"

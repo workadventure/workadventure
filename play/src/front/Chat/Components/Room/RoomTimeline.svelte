@@ -43,6 +43,15 @@
     $: roomName = room?.name;
     $: typingMembers = room.typingMembers;
 
+    $: threadedMessages = $messages.reduce((acc, message) => {
+        const threadId = message.threadId || message.id;
+        if (!acc[threadId]) {
+            acc[threadId] = [];
+        }
+        acc[threadId].push(message);
+        return acc;
+    }, {} as { [key: string]: any[] });
+
     onMount(() => {
         initMessages()
             .catch((error) => console.error(error))
@@ -281,14 +290,27 @@
                         </li>
                     {/if}
                 {/if}
-                {#each $messages as message (message.id)}
-                    <li class="last:pb-3" data-event-id={message.id}>
-                        {#if message.type === "outcoming" || message.type === "incoming"}
-                            <MessageSystem {message} />
+                {#each Object.values(threadedMessages) as thread (thread[0].id)}
+                    <li class="last:pb-3" data-event-id={thread[0].id}>
+                        {#if thread[0].type === "outcoming" || thread[0].type === "incoming"}
+                            <MessageSystem message={thread[0]} />
                         {:else}
-                            <Message on:updateMessageBody={onUpdateMessageBody} {message} />
+                            <Message on:updateMessageBody={onUpdateMessageBody} message={thread[0]} />
                         {/if}
                     </li>
+                    {#if thread.length > 1}
+                        <li class="pl-8">
+                            {#each thread.slice(1) as message (message.id)}
+                                <div class="last:pb-3" data-event-id={message.id}>
+                                    {#if message.type === "outcoming" || message.type === "incoming"}
+                                        <MessageSystem {message} />
+                                    {:else}
+                                        <Message on:updateMessageBody={onUpdateMessageBody} {message} />
+                                    {/if}
+                                </div>
+                            {/each}
+                        </li>
+                    {/if}
                 {/each}
             </ul>
         </div>

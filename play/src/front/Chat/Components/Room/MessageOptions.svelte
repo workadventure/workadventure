@@ -7,8 +7,8 @@
     export let message: ChatMessage;
     export let messageRef: HTMLDivElement | undefined;
 
-    function replyToMessage() {
-        selectedChatMessageToReply.set(message);
+    function replyToMessage(type: "direct" | "thread") {
+        selectedChatMessageToReply.set({ message, type });
     }
 
     function removeMessage() {
@@ -40,7 +40,14 @@
     <button
         class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
         data-testid="replyToMessageButton"
-        on:click={replyToMessage}
+        on:click={() => replyToMessage("direct")}
+    >
+        <IconArrowBackUp font-size={16} />
+    </button>
+    <button
+        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+        data-testid="replyInThreadButton"
+        on:click={() => replyToMessage("thread")}
     >
         <IconArrowBackUp font-size={16} />
     </button>

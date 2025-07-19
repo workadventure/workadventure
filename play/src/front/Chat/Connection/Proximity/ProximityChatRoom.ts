@@ -132,7 +132,7 @@ export class ProximityChatRoom implements ChatRoom {
             });
     }
 
-    sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
+    sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true, threadId?: string): void {
         // Create content message
         const newChatMessageContent = {
             body: message,

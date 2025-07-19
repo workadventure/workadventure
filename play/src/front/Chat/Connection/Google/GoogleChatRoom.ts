@@ -20,8 +20,8 @@ export class GoogleChatRoom implements ChatRoom {
         this.name = writable(name);
     }
 
-    sendMessage(message: string): void {
-        axios.post(`/api/google-chat/spaces/${this.id}/messages`, { message });
+    sendMessage(message: string, threadId?: string): void {
+        axios.post(`/api/google-chat/spaces/${this.id}/messages`, { message, threadId });
     }
 
     async sendFiles(files: FileList): Promise<void> {
