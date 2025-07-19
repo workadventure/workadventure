@@ -41,8 +41,18 @@
 <!-- Bug with transition : transition:fly={{ y: 50, duration: 150 }} -->
 
 <div
-    class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full"
+    class="video-media-box pointer-events-auto media-container justify-center relative h-full w-full video-overlay"
     in:fly={{ y: 50, duration: 150 }}
 >
     <VideoMediaBox peer={streamable} {fullScreen} />
 </div>
+
+<style lang="scss">
+    .video-overlay {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        background-color: #202124;
+        border-radius: 8px;
+    }
+</style>

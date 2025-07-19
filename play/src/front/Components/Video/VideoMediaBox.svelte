@@ -22,6 +22,7 @@
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
+    import VideoOffOverlay from "./VideoOffOverlay.svelte";
 
     export let fullScreen = false;
     export let peer: Streamable;
@@ -165,6 +166,7 @@
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
+        class:video-off={!videoEnabled}
         class:rounded-lg={!fullScreen}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
@@ -183,6 +185,10 @@
                     <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
                 </div>
             </div>
+        {/if}
+
+        {#if !videoEnabled}
+            <VideoOffOverlay player={peer} />
         {/if}
 
         {#if showAfterDelay}

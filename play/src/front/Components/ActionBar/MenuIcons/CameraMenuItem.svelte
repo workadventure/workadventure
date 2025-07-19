@@ -34,8 +34,10 @@
         if ($silentStore) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
+            //TODO Add visual feedback
         } else {
             requestedCameraState.enableWebcam();
+            //TODO Add visual feedback
         }
     }
 </script>
