@@ -204,6 +204,12 @@
                 withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
                 bind:missingUserActivation
             >
+                <iframe
+                    title="Google Meet"
+                    allow="camera;microphone;fullscreen;display-capture"
+                    src={peer.url.toString()}
+                    class="w-full h-full"
+                ></iframe>
                 <UserName
                     name={$name}
                     picture={pictureStore}
