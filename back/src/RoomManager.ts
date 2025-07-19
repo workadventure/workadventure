@@ -43,6 +43,8 @@ import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import { Admin } from "./Model/Admin";
 import { getMapStorageClient } from "./Services/MapStorageClient";
+import { GoogleMeet } from "./Services/GoogleMeet/GoogleMeet";
+import { getOAuth2Client } from "./Services/GoogleOAuthService";
 
 const debug = Debug("roommanager");
 
@@ -501,6 +503,18 @@ const roomManager = {
             .dispatchChatMessagePrompt(call.request)
             .then(() => {
                 callback(null, {});
+            })
+            .catch((err) => {
+                console.error(err);
+                Sentry.captureException(err);
+                callback(err as ServerErrorResponse, {});
+            });
+    },
+    createMeetConference(call: ServerUnaryCall<any, Empty>, callback: sendUnaryData<Empty>): void {
+        socketManager.googleMeet
+            .createMeetConference(call.request.roomName, call.request.participants)
+            .then((hangoutLink) => {
+                callback(null, { hangoutLink });
             })
             .catch((err) => {
                 console.error(err);
