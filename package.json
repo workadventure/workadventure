@@ -3,7 +3,8 @@
   "private": true,
   "devDependencies": {
     "husky": "^7.0.1",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "vitest": "^1.4.0"
   },
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
