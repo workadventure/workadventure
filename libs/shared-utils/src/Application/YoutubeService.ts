@@ -10,10 +10,12 @@ export type YoutubeEmbedData = {
 const cashManagement: Map<string, YoutubeEmbedData> = new Map();
 
 const getUrlFromHtml = (html: string) => {
-    const div = document.createElement("div");
-    div.insertAdjacentHTML("beforeend", html);
-    const iframe: HTMLIFrameElement = div.firstChild as HTMLIFrameElement;
-    return iframe.src;
+    const srcRegex = /src="([^"]+)"/;
+    const match = html.match(srcRegex);
+    if (match && match[1]) {
+        return match[1];
+    }
+    throw new Error("No src found in html");
 };
 
 const genreateUrlOembed = (url: URL) => {
