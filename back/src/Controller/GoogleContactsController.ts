@@ -2,10 +2,7 @@ import { Express, Request, Response } from "express";
 import { GoogleContactsService } from "../Services/GoogleContacts/GoogleContactsService";
 
 export class GoogleContactsController {
-    private readonly contactsService: GoogleContactsService;
-
-    constructor(private app: Express) {
-        this.contactsService = new GoogleContactsService();
+    constructor(private app: Express, private contactsService: GoogleContactsService) {
         this.app.get("/contacts/:resourceName", this.getContact.bind(this));
         this.app.put("/contacts/:resourceName", this.updateContact.bind(this));
     }

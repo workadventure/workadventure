@@ -7,7 +7,13 @@ import { HTTP_PORT, PROMETHEUS_PORT } from "./Enum/EnvironmentVariable";
 import { GoogleOAuthController } from "./Controller/GoogleOAuthController";
 import { GoogleContactsController } from "./Controller/GoogleContactsController";
 import { GoogleCalendarController } from "./Controller/GoogleCalendarController";
+import { DEMO_MODE } from "./Enum/EnvironmentVariable";
 import { GoogleCalendarService } from "./Services/GoogleCalendarService";
+import { GoogleCalendarService as MockGoogleCalendarService } from "./Services/Mock/GoogleCalendarService";
+import { GoogleContactsService } from "./Services/GoogleContacts/GoogleContactsService";
+import { GoogleContactsService as MockGoogleContactsService } from "./Services/Mock/GoogleContactsService";
+import * as GoogleOAuthService from "./Services/GoogleOAuthService";
+import * as MockGoogleOAuthService from "./Services/Mock/GoogleOAuthService";
 import session from "express-session";
 
 class App {
@@ -19,9 +25,17 @@ class App {
     private googleOAuthController: GoogleOAuthController;
     private googleCalendarController: GoogleCalendarController;
     private googleCalendarService: GoogleCalendarService;
+    private googleContactsService: GoogleContactsService;
     private googleContactsController: GoogleContactsController;
 
     constructor() {
+        let googleOAuthService: typeof GoogleOAuthService | typeof MockGoogleOAuthService;
+        if (DEMO_MODE) {
+            googleOAuthService = MockGoogleOAuthService;
+        } else {
+            googleOAuthService = GoogleOAuthService;
+        }
+
         // Création de l'application principale
         this.app = express();
         this.app.use(express.json());
@@ -47,10 +61,16 @@ class App {
 
         this.debugController = new DebugController(this.app);
         this.pingController = new PingController(this.app);
-        this.googleOAuthController = new GoogleOAuthController(this.app);
-        this.googleCalendarService = new GoogleCalendarService();
+        this.googleOAuthController = new GoogleOAuthController(this.app, googleOAuthService);
+        if (DEMO_MODE) {
+            this.googleCalendarService = new MockGoogleCalendarService();
+            this.googleContactsService = new MockGoogleContactsService();
+        } else {
+            this.googleCalendarService = new GoogleCalendarService();
+            this.googleContactsService = new GoogleContactsService();
+        }
         this.googleCalendarController = new GoogleCalendarController(this.app, this.googleCalendarService);
-        this.googleContactsController = new GoogleContactsController(this.app);
+        this.googleContactsController = new GoogleContactsController(this.app, this.googleContactsService);
     }
 
     public listen(): void {

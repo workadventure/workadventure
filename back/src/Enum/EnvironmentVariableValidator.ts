@@ -98,6 +98,7 @@ Note that anonymous players don't have any TTL limit because their data is store
     GOOGLE_OAUTH_CLIENT_ID: z.string().optional().transform(emptyStringToUndefined),
     GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional().transform(emptyStringToUndefined),
     GOOGLE_CALENDAR_API_KEY: z.string().optional().transform(emptyStringToUndefined),
+    DEMO_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

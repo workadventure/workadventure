@@ -79,7 +79,6 @@
     "@types/jsonwebtoken": "^8.3.8",
     "@types/mkdirp": "^1.0.1",
     "@types/node": "^18.11.9",
-    "@workadventure/eslint-config": "1.0.0",
     "catch-unknown": "^2.0.0",
     "eslint": "^9.25.1",
     "lint-staged": "^11.0.0",
