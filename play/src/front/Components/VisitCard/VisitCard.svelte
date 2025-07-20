@@ -9,6 +9,7 @@
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Spinner from "../Icons/Spinner.svelte";
     import { IconLoader } from "@wa-icons";
+    import GoogleContactsButton from "./GoogleContactsButton.svelte";
 
     export let visitCardUrl: string;
     export let isEmbedded = false;
@@ -18,6 +19,7 @@
     let h = 250;
     let hidden = true;
     let cvIframe: HTMLIFrameElement;
+    let contacts: undefined;
 
     const chatConnection = gameManager.chatConnection;
     const selectPlayerChatID = get(selectedChatIDRemotePlayerStore);
@@ -72,6 +74,7 @@
         </div>
         {#if !hidden && !isEmbedded}
             <div class="buttonContainer p-2.5 flex flex-row justify-end gap-2 bg-contrast rounded-b-lg">
+                <GoogleContactsButton on:contactsFetched={(e) => contacts = e.detail} />
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
                         <button
@@ -89,6 +92,9 @@
                     {/if}
                 {/if}
             </div>
+        {/if}
+        {#if contacts}
+            <pre>{JSON.stringify(contacts, null, 2)}</pre>
         {/if}
     </div>
 </section>
