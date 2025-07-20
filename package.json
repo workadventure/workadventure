@@ -2,8 +2,8 @@
   "name": "workadventure",
   "private": true,
   "devDependencies": {
-    "husky": "^7.0.1",
     "cross-env": "^7.0.3",
+    "husky": "^7.0.1",
     "vitest": "^1.4.0"
   },
   "scripts": {
@@ -17,5 +17,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ]
+  ],
+  "dependencies": {
+    "googleapis": "^153.0.0"
+  }
 }
