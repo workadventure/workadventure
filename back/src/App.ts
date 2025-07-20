@@ -5,6 +5,7 @@ import { DebugController } from "./Controller/DebugController";
 import { PingController } from "./Controller/PingController";
 import { HTTP_PORT, PROMETHEUS_PORT } from "./Enum/EnvironmentVariable";
 import { GoogleOAuthController } from "./Controller/GoogleOAuthController";
+import { GoogleContactsController } from "./Controller/GoogleContactsController";
 import { GoogleCalendarController } from "./Controller/GoogleCalendarController";
 import { GoogleCalendarService } from "./Services/GoogleCalendarService";
 import session from "express-session";
@@ -18,6 +19,7 @@ class App {
     private googleOAuthController: GoogleOAuthController;
     private googleCalendarController: GoogleCalendarController;
     private googleCalendarService: GoogleCalendarService;
+    private googleContactsController: GoogleContactsController;
 
     constructor() {
         // Création de l'application principale
@@ -48,6 +50,7 @@ class App {
         this.googleOAuthController = new GoogleOAuthController(this.app);
         this.googleCalendarService = new GoogleCalendarService();
         this.googleCalendarController = new GoogleCalendarController(this.app, this.googleCalendarService);
+        this.googleContactsController = new GoogleContactsController(this.app);
     }
 
     public listen(): void {
