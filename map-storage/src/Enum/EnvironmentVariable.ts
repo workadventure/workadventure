@@ -28,6 +28,8 @@ if (!envChecking.success) {
 const env = envChecking.data;
 
 export const API_URL = env.API_URL;
+export const GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY = env.GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY;
+export const GOOGLE_DRIVE_ROOT_FOLDER_ID = env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
 export const AWS_ACCESS_KEY_ID = env.AWS_ACCESS_KEY_ID;
 export const AWS_SECRET_ACCESS_KEY = env.AWS_SECRET_ACCESS_KEY;
 export const AWS_DEFAULT_REGION = env.AWS_DEFAULT_REGION;

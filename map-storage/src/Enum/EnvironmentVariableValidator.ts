@@ -11,6 +11,8 @@ import {
 
 export const EnvironmentVariables = z.object({
     API_URL: z.string().min(1).describe("The URI(s) of the back server"),
+    GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY: z.string().optional().transform(emptyStringToUndefined),
+    GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional().transform(emptyStringToUndefined),
     AWS_ACCESS_KEY_ID: z.string().optional().transform(emptyStringToUndefined),
     AWS_SECRET_ACCESS_KEY: z.string().optional().transform(emptyStringToUndefined),
     AWS_DEFAULT_REGION: z.string().optional().transform(emptyStringToUndefined),
