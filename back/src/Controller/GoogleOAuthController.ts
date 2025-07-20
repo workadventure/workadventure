@@ -26,6 +26,7 @@ export class GoogleOAuthController {
                 "https://www.googleapis.com/auth/drive.file",
                 "https://www.googleapis.com/auth/userinfo.profile",
                 "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/contacts",
             ];
 
             const url = oauth2Client.generateAuthUrl({
