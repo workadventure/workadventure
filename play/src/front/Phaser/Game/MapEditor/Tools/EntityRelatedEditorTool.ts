@@ -62,10 +62,10 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
 
     public destroy(): void {
         this.cleanPreview();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorSelectedEntityStoreUnsubscriber();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
+        this.mapEditorSelectedEntityPrefabStoreUnsubscriber?.();
+        this.mapEntityEditorModeStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber?.();
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
