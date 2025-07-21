@@ -1,21 +1,19 @@
 <script lang="ts">
-    import { LL } from "../../../i18n/i18n-svelte";
     import { onMount } from "svelte";
+    import { Game } from "phaser";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import {
-        selectCharacterSceneVisibleStore,
-    } from "../../Stores/SelectCharacterStore";
+    import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
     import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
+    import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
-    import { Game } from "phaser";
-    import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
 
     export let game: Game;
     let wokaData: WokaData | null = null;
@@ -42,7 +40,7 @@
                 throw new Error("Failed to load Woka data");
             }
 
-            wokaData =  await response.json();
+            wokaData = await response.json();
             console.log("Woka data loaded:", wokaData);
 
             loadSavedTextures();
@@ -58,11 +56,18 @@
         try {
             const savedTextureIds = gameManager.getCharacterTextureIds();
             // find the collection used to select the Woka
-            const collectionIndex = wokaData?.["woka"]?.collections.findIndex((c: WokaCollection) => c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0]));
+            const collectionIndex = wokaData?.["woka"]?.collections.findIndex((c: WokaCollection) =>
+                c.textures.find((t: WokaTexture) => t.id === savedTextureIds?.[0])
+            );
             if (collectionIndex === undefined || collectionIndex < 0) {
                 throw new Error("No valid Woka collection found for the saved texture ID");
             }
-            selectTexture(collectionIndex, savedTextureIds != null ? savedTextureIds[0] : (wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || ""));
+            selectTexture(
+                collectionIndex,
+                savedTextureIds != null
+                    ? savedTextureIds[0]
+                    : wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || ""
+            );
 
             // Scroll to the selected collection
             setTimeout(() => {
@@ -70,13 +75,14 @@
                 if (element == undefined) return;
                 element.scrollIntoView({ behavior: "smooth", block: "end" });
             }, 800);
-            
         } catch (err) {
             console.warn("Cannot load previous WOKA textures:", err);
-            selectTexture(0,wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || "");
-        }finally {
+            selectTexture(0, wokaData?.["woka"]?.collections?.[0]?.textures?.[0]?.id || "");
+        } finally {
             // Find the collection used to select the Woka
-            currentWokaCollection = (wokaData as WokaData)["woka"].collections.find((c: WokaCollection) => c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"])) as WokaCollection
+            currentWokaCollection = (wokaData as WokaData)["woka"].collections.find((c: WokaCollection) =>
+                c.textures.find((t: WokaTexture) => t.id === selectedWokaTextureId["woka"])
+            ) as WokaCollection;
             selectCurrentCollection(currentWokaCollection.name);
         }
     }
@@ -114,7 +120,10 @@
     function randomizeOutfit() {
         if (!wokaData) return;
         const randomCollectionIndex = Math.floor(Math.random() * wokaData["woka"].collections.length);
-        const randomTexture = wokaData["woka"].collections[randomCollectionIndex].textures[Math.floor(Math.random() * wokaData["woka"].collections[randomCollectionIndex].textures.length)];
+        const randomTexture =
+            wokaData["woka"].collections[randomCollectionIndex].textures[
+                Math.floor(Math.random() * wokaData["woka"].collections[randomCollectionIndex].textures.length)
+            ];
         selectedWokaTextureId = { woka: randomTexture.id };
     }
 
@@ -174,7 +183,6 @@
             <div class="flex-1 flex flex-col lg:flex-row items-start gap-6 min-h-0 p-6">
                 <div class="flex flex-row gap-4 w-full lg:w-fit">
                     <div class="flex flex-col gap-2">
-
                         <WokaPreview
                             selectedTextures={selectedWokaTextureId}
                             {wokaData}
@@ -198,30 +206,29 @@
 
                 <div class="flex flex-col flex-1 h-full min-h-0 min-w-0">
                     <div class="rounded-lg flex flex-col flex-1 min-h-0 min-w-0">
-                        <h3 class="text-lg font-semibold capitalize">
-                            Woka
-                        </h3>
-                        <div class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[40px]">
-                            {#each (wokaData?.["woka"]?.collections || []) as collection, collectionIndex (collection.name)}
+                        <h3 class="text-lg font-semibold capitalize">Woka</h3>
+                        <div
+                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[40px]"
+                        >
+                            {#each wokaData?.["woka"]?.collections || [] as collection, collectionIndex (collection.name)}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
-                                <div
-                                    class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
-                                >
-                                    {#each (collection.textures || []) as texture (texture.id)}
+                                <div class="w-full flex flex-row flex-wrap items-start justify-start gap-3">
+                                    {#each collection.textures || [] as texture (texture.id)}
                                         <button
-                                            class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka === texture.id
+                                            class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka ===
+                                            texture.id
                                                 ? 'bg-white/50 border-white'
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                             id="woka-{texture.id}"
                                             on:click={() => selectTexture(collectionIndex, texture.id)}
                                         >
                                             <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                            <div
-                                                class="w-[64px] h-[64px] bg-no-repeat"
-                                                style="background-image: url('{getTextureUrl(
-                                                    texture.url
-                                                )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                            />
+                                                <div
+                                                    class="w-[64px] h-[64px] bg-no-repeat"
+                                                    style="background-image: url('{getTextureUrl(
+                                                        texture.url
+                                                    )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
+                                                />
                                             </div>
                                         </button>
                                     {/each}

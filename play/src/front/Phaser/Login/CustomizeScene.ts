@@ -25,7 +25,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public onResize(): void {
-        return
+        return;
     }
 
     public backToPreviousScene(): void {
@@ -34,5 +34,4 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.stop(CustomizeSceneName);
         this.scene.start(SelectCharacterSceneName);
     }
-
 }

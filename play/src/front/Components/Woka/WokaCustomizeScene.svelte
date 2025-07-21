@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { LL } from "../../../i18n/i18n-svelte";
     import { onMount } from "svelte";
+    import { Game } from "phaser";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import {
@@ -19,10 +20,9 @@
     import HatIcon from "../Icons/HatIcon.svelte";
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
+    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
-    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
-    import { Game } from "phaser";
 
     export let game: Game;
     let wokaData: WokaData | null = null;
@@ -139,12 +139,12 @@
         selectCustomizeScene.backToPreviousScene(); // Ensure the CustomizeScene is resumed
     }
 
-    function getAvailableTextures(bodyPart: WokaBodyPart): WokaTexture[] {
-        const textures = wokaData?.[bodyPart]?.collections?.[0]?.textures || [];
+    function getAvailableTextures(collectionIndex: number, bodyPart: WokaBodyPart): WokaTexture[] {
+        const textures = wokaData?.[bodyPart]?.collections?.[collectionIndex]?.textures || [];
         // If no body texture is selected, return the first texture by default
-        if (bodyPart === "body" && !textures.map((texture) => texture.id).includes(selectedTextures[bodyPart])) {
+        /*if (bodyPart === "body" && !textures.map((texture) => texture.id).includes(selectedTextures[bodyPart])) {
             selectTexture("body", textures[0].id);
-        }
+        }*/
 
         return textures;
     }
@@ -270,50 +270,53 @@
                         <h3 class="text-lg font-semibold capitalize">
                             {selectedBodyPart} Options
                         </h3>
-                        <div class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full">
-                            <div
-                                class="overflow-y-scroll overflow-x-auto w-full scroll-mask flex flex-row flex-wrap items-start justify-start gap-3 py-[40px]"
-                            >
-                                {#each getAvailableTextures(selectedBodyPart) as texture (texture.id)}
-                                    <button
-                                        class="rounded border border-solid box-border p-0 h-fit {selectedTextures[
-                                            selectedBodyPart
-                                        ] === texture.id
-                                            ? 'bg-white/50 border-white'
-                                            : 'bg-white/10 hover:bg-white/20 border-transparent'}"
-                                        on:click={() => selectTexture(selectedBodyPart, texture.id)}
-                                    >
-                                        <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                            {#if texture.url.includes("empty.png")}
-                                                <div class="w-[64px] h-[64px] flex items-center justify-center">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        width="32"
-                                                        height="32"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        stroke-width="2"
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
-                                                        ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                                                            d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
-                                                        /><path d="M9 9l6 6" /></svg
-                                                    >
-                                                </div>
-                                            {:else}
-                                                <div
-                                                    class="w-[64px] h-[64px] bg-no-repeat"
-                                                    style="background-image: url('{getTextureUrl(
-                                                        texture.url
-                                                    )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                                />
-                                            {/if}
-                                        </div>
-                                    </button>
-                                {/each}
-                            </div>
+                        <div
+                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[40px]"
+                        >
+                            {#each wokaData?.[selectedBodyPart]?.collections || [] as collection, collectionIndex (collection.name)}
+                                <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
+                                <div class="w-full flex flex-row flex-wrap items-start justify-start gap-3">
+                                    {#each getAvailableTextures(collectionIndex, selectedBodyPart) as texture (texture.id)}
+                                        <button
+                                            class="rounded border border-solid box-border p-0 h-fit {selectedTextures[
+                                                selectedBodyPart
+                                            ] === texture.id
+                                                ? 'bg-white/50 border-white'
+                                                : 'bg-white/10 hover:bg-white/20 border-transparent'}"
+                                            on:click={() => selectTexture(selectedBodyPart, texture.id)}
+                                        >
+                                            <div class="p-2 bg-white/10 rounded flex items-center justify-center">
+                                                {#if texture.url.includes("empty.png")}
+                                                    <div class="w-[64px] h-[64px] flex items-center justify-center">
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="32"
+                                                            height="32"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            stroke-width="2"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
+                                                            ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
+                                                                d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
+                                                            /><path d="M9 9l6 6" /></svg
+                                                        >
+                                                    </div>
+                                                {:else}
+                                                    <div
+                                                        class="w-[64px] h-[64px] bg-no-repeat"
+                                                        style="background-image: url('{getTextureUrl(
+                                                            texture.url
+                                                        )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
+                                                    />
+                                                {/if}
+                                            </div>
+                                        </button>
+                                    {/each}
+                                </div>
+                            {/each}
                         </div>
                     </div>
                 </div>

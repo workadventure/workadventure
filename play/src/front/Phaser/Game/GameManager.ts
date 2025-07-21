@@ -219,7 +219,7 @@ export class GameManager {
 
     /**
      * Tries to stop the current game scene.
-     * @param fallbackSceneName 
+     * @param fallbackSceneName
      */
     tryToStopGameScene(fallbackSceneName: string) {
         this.scenePlugin.stop(fallbackSceneName);
