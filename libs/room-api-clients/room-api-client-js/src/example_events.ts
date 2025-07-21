@@ -6,10 +6,15 @@ if (!apiKey) {
   throw new Error("No ROOM_API_SECRET_KEY defined on environment variables!");
 }
 
-const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost", 80);
+const client = createRoomApiClient(
+  apiKey,
+  "room-api.workadventure.localhost",
+  80
+);
 
 // URL of the room you wish to interact with
-const roomUrl = "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
+const roomUrl =
+  "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
 
 // Name of the event with which you want to interact
 const eventName = "my-event";
@@ -17,18 +22,20 @@ const eventName = "my-event";
 async function init() {
   // Send an event in 5 seconds
   setTimeout(() => {
-    console.log("Sending event: { foo: \"Default Value\" }");
+    console.log('Sending event: { foo: "Default Value" }');
 
-    client.broadcastEvent({
-      name: eventName,
-      room: roomUrl,
-      data: { foo: "Default Value" },
-    }).then(() => {
-      console.log("Event sent: { foo: \"Default Value\" }");
-    }).catch((e) => {
-      console.error("Error sending event:", e);
-    });
-
+    client
+      .broadcastEvent({
+        name: eventName,
+        room: roomUrl,
+        data: { foo: "Default Value" },
+      })
+      .then(() => {
+        console.log('Event sent: { foo: "Default Value" }');
+      })
+      .catch((e) => {
+        console.error("Error sending event:", e);
+      });
   }, 1000);
 
   // Listen a event
@@ -45,4 +52,4 @@ async function init() {
   }
 }
 
-init().catch(e => console.error(e));
+init().catch((e) => console.error(e));

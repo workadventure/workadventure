@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 30
-
 ---
 
 # Broadcasting / Presentation Zones

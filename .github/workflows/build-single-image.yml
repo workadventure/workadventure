@@ -75,10 +75,10 @@ jobs:
           cache-from: |
             type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ env.PREV_SHA }}
             type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#           type=gha
+          #           type=gha
           cache-to: |
             type=inline
-#           type=gha,mode=max
+          #           type=gha,mode=max
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             "SENTRY_PROJECT=${{ inputs.sentry_project }}"

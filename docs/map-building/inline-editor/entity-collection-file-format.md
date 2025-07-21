@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 50
-
 ---
 
 # Entity collections file format
@@ -19,37 +17,37 @@ There is currently no inline editor for entity collections (though this will com
 
 ```json
 {
-    "collectionName":"basic furniture",
-    "tags":["furniture","office"],
-    "collection":[
-        {
-            "name":"Basic Chair",
-            "tags":["seat","basic"],
-            "imagePath":"Furniture/Chair/ChairGreyDown.png",
-            "direction":"Down",
-            "color":"grey"
-        },
-        {
-            "name":"Basic Chair",
-            "tags":["seat","basic"],
-            "imagePath":"Furniture/Chair/ChairBlueDown.png",
-            "direction":"Down",
-            "color":"blue"
-        },
-        {
-            "name":"Basic Wood Table",
-            "tags":["basic", "table"],
-            "collisionGrid": [
-                [ 0, 0 ],
-                [ 1, 1 ],
-                [ 1, 1 ]
-            ],
-            "depthOffset": -64,
-            "imagePath":"Furniture/Table/TableBrown.png",
-            "direction":"Down",
-            "color":"orange"
-        }
-    ]
+  "collectionName": "basic furniture",
+  "tags": ["furniture", "office"],
+  "collection": [
+    {
+      "name": "Basic Chair",
+      "tags": ["seat", "basic"],
+      "imagePath": "Furniture/Chair/ChairGreyDown.png",
+      "direction": "Down",
+      "color": "grey"
+    },
+    {
+      "name": "Basic Chair",
+      "tags": ["seat", "basic"],
+      "imagePath": "Furniture/Chair/ChairBlueDown.png",
+      "direction": "Down",
+      "color": "blue"
+    },
+    {
+      "name": "Basic Wood Table",
+      "tags": ["basic", "table"],
+      "collisionGrid": [
+        [0, 0],
+        [1, 1],
+        [1, 1]
+      ],
+      "depthOffset": -64,
+      "imagePath": "Furniture/Table/TableBrown.png",
+      "direction": "Down",
+      "color": "orange"
+    }
+  ]
 }
 ```
 
@@ -77,7 +75,7 @@ However, if your entity is "collidable" (i.e. if it has a collision grid), then 
 Entities with the same name will be grouped together in the Map Editor UI. Each variant of the entity can have a different color
 and a different direction. Valid directions are `Up`, `Down`, `Left` and `Right`.
 
-The entity "color" field must be a valid [CSS color name](https://www.w3.org/wiki/CSS/Properties/color/keywords) (like 
+The entity "color" field must be a valid [CSS color name](https://www.w3.org/wiki/CSS/Properties/color/keywords) (like
 `red`, `blue`, `green`, `yellow`, `orange`, `purple`, `pink`, `grey`, `black`, `white`), or a valid CSS color code (like `#ff0000`).
 
 ## Collision grid
@@ -128,8 +126,8 @@ As of now, entity collections are registered in your map file (the `wam` file).
   // ...
   "entityCollections": [
     {
-        "url": "https://my-domain.com/collections/my-collection.json",
-        "type": "file"
+      "url": "https://my-domain.com/collections/my-collection.json",
+      "type": "file"
     }
   ]
 }

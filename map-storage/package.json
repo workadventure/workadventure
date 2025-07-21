@@ -1,134 +1,134 @@
 {
-  "private": true,
-  "name": "map-storage",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "contributors": [
-    {
-      "name": "Grégoire Parant",
-      "email": "gregoire@workadventu.re"
+    "private": true,
+    "name": "map-storage",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "contributors": [
+        {
+            "name": "Grégoire Parant",
+            "email": "gregoire@workadventu.re"
+        },
+        {
+            "name": "David Négrier",
+            "email": "david@workadventu.re"
+        },
+        {
+            "name": "Piotr Hanusiak",
+            "email": "p.hanusiak@workadventu.re"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thecodingmachine/workadventure.git"
     },
-    {
-      "name": "David Négrier",
-      "email": "david@workadventu.re"
+    "license": "SEE LICENSE IN LICENSE.txt",
+    "scripts": {
+        "prebuild": "rimraf dist",
+        "typecheck": "tsc --project tsconfig-node.json --noEmit",
+        "pretty": "prettier --write \"{src,src-ui}/**/*.{ts,svelte}\" vite.config.ts",
+        "pretty-check": "prettier --check '{src,src-ui}/**/*.{ts,svelte}' vite.config.ts",
+        "start": "if [ $PATH_PREFIX ]; then npm run front:build; fi && ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
+        "back:start:dev": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/index.ts",
+        "lint": "eslint \"{src,src-ui}/**/*.ts\" --fix",
+        "precommit": "lint-staged",
+        "test": "vitest",
+        "test:watch": "vitest --watch",
+        "test:cov": "vitest --coverage",
+        "upload-test-map": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' http://map-storage.workadventure.localhost/upload --basic -u john.doe:password",
+        "push-sentry-sourcemaps": "tsc --project tsconfig-node.json && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist && sentry-cli releases finalize $SENTRY_RELEASE",
+        "upload-test-map-single-domain": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -k -F 'file=@../assets.zip' https://play.workadventure.localhost/map-storage/upload --basic -u john.doe:password",
+        "start:dev": "cross-env concurrently --kill-others-on-fail \"npm:back:start:dev\" \"npm:front:dev\"",
+        "front:dev": "vite dev",
+        "front:build": "vite build",
+        "front:preview": "vite preview",
+        "front:check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+        "front:check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+        "front:test:unit": "vitest"
     },
-    {
-      "name": "Piotr Hanusiak",
-      "email": "p.hanusiak@workadventu.re"
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.817.0",
+        "@grpc/grpc-js": "^1.7.1",
+        "@grpc/proto-loader": "^0.7.8",
+        "@sentry/node": "^7.48.0",
+        "@workadventure/map-editor": "1.0.0",
+        "@workadventure/messages": "1.0.0",
+        "@workadventure/shared-utils": "1.0.0",
+        "@workadventure/tiled-map-type-guard": "^2.1.2",
+        "archiver": "^5.3.1",
+        "axios": "^1.6.6",
+        "axios-cache-interceptor": "^1.5.1",
+        "body-parser": "^1.20.3",
+        "busboy": "1.6.0",
+        "catch-unknown": "^2.0.0",
+        "concurrently": "^7.3.0",
+        "cors": "^2.8.5",
+        "express": "^4.20.0",
+        "fast-json-patch": "^3.1.1",
+        "fs-extra": "^11.1.0",
+        "google-protobuf": "^3.21.0",
+        "jsonwebtoken": "^9.0.2",
+        "lodash": "^4.17.21",
+        "mime": "^3.0.0",
+        "multer": "^1.4.5-lts.1",
+        "nodemon": "^3.0.1",
+        "npm-check-updates": "^16.0.5",
+        "p-limit": "^6.2.0",
+        "passport": "^0.6.0",
+        "passport-http": "^0.3.0",
+        "passport-http-bearer": "^1.0.1",
+        "reflect-metadata": "^0.1.13",
+        "rimraf": "^3.0.2",
+        "rxjs": "^7.2.0",
+        "tsx": "^4.7.1",
+        "unzipper": "^0.12.3",
+        "zod": "^3.23.8",
+        "zod-error": "^1.5.0",
+        "zod-to-json-schema": "^3.20.4"
+    },
+    "devDependencies": {
+        "@sentry/cli": "^2.17.2",
+        "@sveltejs/vite-plugin-svelte": "^1.4.0",
+        "@total-typescript/ts-reset": "^0.5.1",
+        "@tsconfig/svelte": "^3.0.0",
+        "@types/archiver": "^5.3.1",
+        "@types/cors": "^2.8.12",
+        "@types/express": "^4.17.13",
+        "@types/fs-extra": "^9.0.13",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/lodash": "^4.14.186",
+        "@types/multer": "^1.4.7",
+        "@types/node": "^18.11.18",
+        "@types/passport": "^1.0.11",
+        "@types/passport-http": "^0.3.9",
+        "@types/passport-http-bearer": "^1.0.37",
+        "@types/supertest": "^2.0.11",
+        "@types/unzipper": "^0.10.11",
+        "@workadventure/eslint-config": "1.0.0",
+        "eslint": "^9.25.1",
+        "lint-staged": "^13.0.1",
+        "prettier": "^2.8.1",
+        "prettier-plugin-svelte": "^2.8.1",
+        "source-map-support": "^0.5.20",
+        "supertest": "^6.1.3",
+        "svelte": "^3.59.1",
+        "svelte-check": "^2.10.3",
+        "svelte-preprocess": "^5.1.3",
+        "ts-loader": "^9.2.3",
+        "tsconfig-paths": "4.0.0",
+        "typescript": "^5.7.2",
+        "vite": "^3.2.8",
+        "vitest": "^2.1.2"
+    },
+    "nodemonConfig": {
+        "ignore": [
+            "public/*"
+        ]
+    },
+    "lint-staged": {
+        "*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ]
     }
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thecodingmachine/workadventure.git"
-  },
-  "license": "SEE LICENSE IN LICENSE.txt",
-  "scripts": {
-    "prebuild": "rimraf dist",
-    "typecheck": "tsc --project tsconfig-node.json --noEmit",
-    "pretty": "prettier --write \"{src,src-ui}/**/*.{ts,svelte}\" vite.config.ts",
-    "pretty-check": "prettier --check '{src,src-ui}/**/*.{ts,svelte}' vite.config.ts",
-    "start": "if [ $PATH_PREFIX ]; then npm run front:build; fi && ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
-    "back:start:dev": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/index.ts",
-    "lint": "eslint \"{src,src-ui}/**/*.ts\" --fix",
-    "precommit": "lint-staged",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:cov": "vitest --coverage",
-    "upload-test-map": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' http://map-storage.workadventure.localhost/upload --basic -u john.doe:password",
-    "push-sentry-sourcemaps": "tsc --project tsconfig-node.json && sentry-cli releases new $SENTRY_RELEASE && sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps dist && sentry-cli releases finalize $SENTRY_RELEASE",
-    "upload-test-map-single-domain": "rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -k -F 'file=@../assets.zip' https://play.workadventure.localhost/map-storage/upload --basic -u john.doe:password",
-    "start:dev": "cross-env concurrently --kill-others-on-fail \"npm:back:start:dev\" \"npm:front:dev\"",
-    "front:dev": "vite dev",
-    "front:build": "vite build",
-    "front:preview": "vite preview",
-    "front:check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "front:check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "front:test:unit": "vitest"
-  },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.817.0",
-    "@grpc/grpc-js": "^1.7.1",
-    "@grpc/proto-loader": "^0.7.8",
-    "@sentry/node": "^7.48.0",
-    "@workadventure/map-editor": "1.0.0",
-    "@workadventure/messages": "1.0.0",
-    "@workadventure/shared-utils": "1.0.0",
-    "@workadventure/tiled-map-type-guard": "^2.1.2",
-    "archiver": "^5.3.1",
-    "axios": "^1.6.6",
-    "axios-cache-interceptor": "^1.5.1",
-    "body-parser": "^1.20.3",
-    "busboy": "1.6.0",
-    "catch-unknown": "^2.0.0",
-    "concurrently": "^7.3.0",
-    "cors": "^2.8.5",
-    "express": "^4.20.0",
-    "fast-json-patch": "^3.1.1",
-    "fs-extra": "^11.1.0",
-    "google-protobuf": "^3.21.0",
-    "jsonwebtoken": "^9.0.2",
-    "lodash": "^4.17.21",
-    "mime": "^3.0.0",
-    "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.0.1",
-    "npm-check-updates": "^16.0.5",
-    "p-limit": "^6.2.0",
-    "passport": "^0.6.0",
-    "passport-http": "^0.3.0",
-    "passport-http-bearer": "^1.0.1",
-    "reflect-metadata": "^0.1.13",
-    "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0",
-    "tsx": "^4.7.1",
-    "unzipper": "^0.12.3",
-    "zod": "^3.23.8",
-    "zod-error": "^1.5.0",
-    "zod-to-json-schema": "^3.20.4"
-  },
-  "devDependencies": {
-    "@sentry/cli": "^2.17.2",
-    "@sveltejs/vite-plugin-svelte": "^1.4.0",
-    "@total-typescript/ts-reset": "^0.5.1",
-    "@tsconfig/svelte": "^3.0.0",
-    "@types/archiver": "^5.3.1",
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
-    "@types/fs-extra": "^9.0.13",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/lodash": "^4.14.186",
-    "@types/multer": "^1.4.7",
-    "@types/node": "^18.11.18",
-    "@types/passport": "^1.0.11",
-    "@types/passport-http": "^0.3.9",
-    "@types/passport-http-bearer": "^1.0.37",
-    "@types/supertest": "^2.0.11",
-    "@types/unzipper": "^0.10.11",
-    "@workadventure/eslint-config": "1.0.0",
-    "eslint": "^9.25.1",
-    "lint-staged": "^13.0.1",
-    "prettier": "^2.8.1",
-    "prettier-plugin-svelte": "^2.8.1",
-    "source-map-support": "^0.5.20",
-    "supertest": "^6.1.3",
-    "svelte": "^3.59.1",
-    "svelte-check": "^2.10.3",
-    "svelte-preprocess": "^5.1.3",
-    "ts-loader": "^9.2.3",
-    "tsconfig-paths": "4.0.0",
-    "typescript": "^5.7.2",
-    "vite": "^3.2.8",
-    "vitest": "^2.1.2"
-  },
-  "nodemonConfig": {
-    "ignore": [
-      "public/*"
-    ]
-  },
-  "lint-staged": {
-    "*.ts": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  }
 }

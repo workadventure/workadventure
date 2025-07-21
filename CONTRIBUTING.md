@@ -73,9 +73,9 @@ Nevertheless, if your code can be unit tested, please provide a unit test (we us
 If you are providing a new feature, you should setup a test map in the `maps/tests` directory. The test map should contain
 some description text describing how to test the feature.
 
-* if the features is meant to be manually tested, you should modify the `maps/tests/index.html` file to add a reference
+- if the features is meant to be manually tested, you should modify the `maps/tests/index.html` file to add a reference
   to your newly created test map
-* if the features can be automatically tested, please provide an end-to-end test
+- if the features can be automatically tested, please provide an end-to-end test
 
 #### Running end-to-end tests
 

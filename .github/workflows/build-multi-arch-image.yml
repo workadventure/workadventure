@@ -31,7 +31,6 @@ on:
         type: string
         default: ""
 
-
 jobs:
   build-amd-image:
     uses: ./.github/workflows/build-single-image.yml
@@ -94,7 +93,7 @@ jobs:
       - name: Install regctl
         uses: regclient/actions/regctl-installer@main
         with:
-          release: 'v0.8.1'
+          release: "v0.8.1"
 
       # Copy the image to GHCR
       - name: Copy image to GHCR

@@ -57,7 +57,7 @@ The `subscribe` method returns a `Subscription` object. You can use the `unsubsc
 
 ```typescript
 const subscription = WA.event.on("my-event").subscribe((event) => {
-    console.log("Event received", event.data);
+  console.log("Event received", event.data);
 });
 
 // ...

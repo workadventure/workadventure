@@ -6,8 +6,6 @@ module.exports = {
         "^.+\\.ts?$": "ts-jest",
     },
     transformIgnorePatterns: ["<rootDir>/node_modules/"],
-    roots: [
-      "./tests"
-    ],
+    roots: ["./tests"],
     //globalSetup: "<rootDir>/tests/globalTestSetup.ts"
 };

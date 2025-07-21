@@ -50,7 +50,7 @@ In order to host WorkAdventure you will need to host:
 
 ```mermaid
 flowchart LR
-  
+
     subgraph Servers
     WorkAdventure
     Jitsi

@@ -15,8 +15,8 @@ Open instantly the chat window.
 Example:
 
 ```ts
-WA.room.onEnterLayer('my_layer').subscribe(() => {
-    WA.chat.open();
+WA.room.onEnterLayer("my_layer").subscribe(() => {
+  WA.chat.open();
 });
 ```
 
@@ -31,8 +31,8 @@ Close instantly the chat window.
 Example:
 
 ```ts
-WA.room.onEnterLayer('my_layer').subscribe(() => {
-    WA.chat.close();
+WA.room.onEnterLayer("my_layer").subscribe(() => {
+  WA.chat.close();
 });
 ```
 
@@ -50,29 +50,31 @@ interface SendBubbleChatMessageOptions {
     scope: "bubble";
 }
 
-type SendChatMessageOptions = SendLocalChatMessageOptions | SendBubbleChatMessageOptions; 
+type SendChatMessageOptions = SendLocalChatMessageOptions | SendBubbleChatMessageOptions;
 ```
 
 Sends a message in the chat. Depending on the options, the message will be displayed only for the local user,
 or visible for all users in the same bubble.
 
-*   **message**: the message to be displayed in the chat
-*   **options**: 
-    * `{ scope: "local", author: "John Doe" }`: the message will be displayed only for the local user. You can pass an
+- **message**: the message to be displayed in the chat
+- **options**:
+  - `{ scope: "local", author: "John Doe" }`: the message will be displayed only for the local user. You can pass an
     optional author name that will be displayed in the chat.
-    * `{ scope: "bubble" }`: the message will be displayed for all users in the same bubble. It will seem to originate
+  - `{ scope: "bubble" }`: the message will be displayed for all users in the same bubble. It will seem to originate
     from the local user.
 
 Example:
 
 **Send a message to the local user only**
+
 ```ts
-WA.chat.sendChatMessage('Hello world', { scope: 'local', author: 'Mr Robot' });
+WA.chat.sendChatMessage("Hello world", { scope: "local", author: "Mr Robot" });
 ```
 
 **Send a message to all users in the same bubble**
+
 ```ts
-WA.chat.sendChatMessage('Hello world', { scope: 'bubble' });
+WA.chat.sendChatMessage("Hello world", { scope: "bubble" });
 ```
 
 :::note
@@ -93,10 +95,10 @@ export interface OnChatMessageOptions {
 Listens to messages coming from the chat. By default, this will listen only to messages coming from the local user.
 You can use the `scope` option to listen to messages coming from all users in the same bubble.
 
-*   **callback(message: string, event: { authorId: number|undefined, author: RemotePlayerInterface|undefined })**: the function that will be called when a message is received. It contains the message typed, and additional information from the author.
-*   **options**: 
-    * `{ scope: "local" }`: the callback will be called only when the local user types a message.
-    * `{ scope: "bubble" }`: the callback will be called when any user in the same bubble types a message.
+- **callback(message: string, event: { authorId: number|undefined, author: RemotePlayerInterface|undefined })**: the function that will be called when a message is received. It contains the message typed, and additional information from the author.
+- **options**:
+  - `{ scope: "local" }`: the callback will be called only when the local user types a message.
+  - `{ scope: "bubble" }`: the callback will be called when any user in the same bubble types a message.
 
 A note about the callback:
 
@@ -108,24 +110,27 @@ If `authorId` is undefined, the message comes from the local user. If `authorId`
 Example:
 
 ```ts
-WA.chat.onChatMessage((message => {
-    console.log('The local user typed a message', message);
-}));
+WA.chat.onChatMessage((message) => {
+  console.log("The local user typed a message", message);
+});
 ```
 
 ```ts
 // Let's configure player tracking to get additional data in the "author" field
 await WA.players.configureTracking({
-    players: true,
-    movement: false,
+  players: true,
+  movement: false,
 });
 
-WA.chat.onChatMessage(((message, event) => {
-    console.log('Message received: ', message);
-    console.log('Message author: ', event.author.name);
-}), {
-    scope: 'bubble'
-});
+WA.chat.onChatMessage(
+  (message, event) => {
+    console.log("Message received: ", message);
+    console.log("Message author: ", event.author.name);
+  },
+  {
+    scope: "bubble",
+  }
+);
 ```
 
 ### Emulating someone typing in the chat
@@ -147,12 +152,15 @@ If you want to display the "typing" indicator for the local user only, you can o
 
 ```ts
 // Let's pretend we start typing something
-WA.chat.startTyping({ scope: 'local', author: 'John Doe' });
+WA.chat.startTyping({ scope: "local", author: "John Doe" });
 
 // After a while, let's send a message
 setTimeout(() => {
-    WA.chat.sendChatMessage('Hello world', { scope: 'local', author: 'John Doe' });
-    WA.chat.stopTyping({ scope: 'local' });
+  WA.chat.sendChatMessage("Hello world", {
+    scope: "local",
+    author: "John Doe",
+  });
+  WA.chat.stopTyping({ scope: "local" });
 }, 2000);
 ```
 
@@ -163,11 +171,11 @@ If you want to display the "typing" indicator for all users in the same bubble, 
 
 ```ts
 // Let's pretend we start typing something
-WA.chat.startTyping({ scope: 'bubble' });
+WA.chat.startTyping({ scope: "bubble" });
 
 // After a while, let's send a message
 setTimeout(() => {
-    WA.chat.sendChatMessage('Hello world', { scope: 'bubble' });
-    WA.chat.stopTyping({ scope: 'bubble' });
+  WA.chat.sendChatMessage("Hello world", { scope: "bubble" });
+  WA.chat.stopTyping({ scope: "bubble" });
 }, 2000);
 ```

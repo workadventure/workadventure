@@ -18,16 +18,18 @@ When controls are disabled, the user cannot move anymore using keyboard input. T
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disablePlayerControls();
-    WA.ui.openPopup("popupRectangle", 'This is an imporant message!', [{
-        label: "Got it!",
-        className: "primary",
-        callback: (popup) => {
-            WA.controls.restorePlayerControls();
-            popup.close();
-        }
-    }]);
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disablePlayerControls();
+  WA.ui.openPopup("popupRectangle", "This is an imporant message!", [
+    {
+      label: "Got it!",
+      className: "primary",
+      callback: (popup) => {
+        WA.controls.restorePlayerControls();
+        popup.close();
+      },
+    },
+  ]);
 });
 ```
 
@@ -45,14 +47,14 @@ These methods can be used to completely disable player webcam or microphone and 
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableWebcam();
-    WA.controls.disableMicrophone();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableWebcam();
+  WA.controls.disableMicrophone();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreWebcam();
-    WA.controls.restoreMicrophone();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreWebcam();
+  WA.controls.restoreMicrophone();
 });
 ```
 
@@ -68,9 +70,9 @@ These methods can be used to turn off player webcam or microphone.
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.turnOffMicrophone();
-    WA.controls.turnOffWebcam();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.turnOffMicrophone();
+  WA.controls.turnOffWebcam();
 });
 ```
 
@@ -88,12 +90,12 @@ When proximity meeting are disabled, the user cannot speak with anyone.
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disablePlayerProximityMeeting();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disablePlayerProximityMeeting();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restorePlayerProximityMeeting();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restorePlayerProximityMeeting();
 });
 ```
 
@@ -111,12 +113,12 @@ When the map editor is disabled, the user cannot open the map editor and the too
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableMapEditor();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableMapEditor();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreMapEditor();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreMapEditor();
 });
 ```
 
@@ -134,12 +136,12 @@ When screen sharing is disabled, the user cannot share any screen in the meeting
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableScreenSharing();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableScreenSharing();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreScreenSharing();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreScreenSharing();
 });
 ```
 
@@ -157,16 +159,17 @@ To enable or disable the wheel zoom feature, you can use the following code:
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableWheelZoom();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableWheelZoom();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreWheelZoom();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreWheelZoom();
 });
 ```
 
 ### Disabling / restoring right click button
+
 ```
 WA.controls.disableWheelZoom(): void
 WA.controls.restoreWheelZoom(): void
@@ -180,12 +183,12 @@ moving with a "tap" on the screen in mobile mode.
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableRightClick();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableRightClick();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreRightClick();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreRightClick();
 });
 ```
 
@@ -201,12 +204,12 @@ These 2 methods can be used to completely disable invite button and to enable it
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableInviteButton();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableInviteButton();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreInviteButton();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreInviteButton();
 });
 ```
 
@@ -222,11 +225,11 @@ These 2 methods can be used to remove or restore the room list button in the act
 Example:
 
 ```ts
-WA.room.onEnterLayer('myZone').subscribe(() => {
-    WA.controls.disableRoomList();
+WA.room.onEnterLayer("myZone").subscribe(() => {
+  WA.controls.disableRoomList();
 });
 
-WA.room.onLeaveLayer('myZone').subscribe(() => {
-    WA.controls.restoreRoomList();
+WA.room.onLeaveLayer("myZone").subscribe(() => {
+  WA.controls.restoreRoomList();
 });
 ```

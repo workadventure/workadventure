@@ -18,8 +18,8 @@ You need to wait for the end of the initialization before accessing `WA.player.n
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Player name: ', WA.player.name);
-})
+  console.log("Player name: ", WA.player.name);
+});
 // Will display:
 // Player name: Alice
 ```
@@ -39,8 +39,8 @@ You need to wait for the end of the initialization before accessing `WA.player.i
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Player ID: ', WA.player.id);
-})
+  console.log("Player ID: ", WA.player.id);
+});
 // Will display:
 // Player ID: a293c901-4455-4b1e-cf39-f4c0420de6f5
 ```
@@ -59,8 +59,8 @@ You need to wait for the end of the initialization before accessing `WA.player.l
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Player language: ', WA.player.language);
-})
+  console.log("Player language: ", WA.player.language);
+});
 // Will display:
 // Player language: fr-FR
 ```
@@ -85,20 +85,22 @@ You need to wait for the end of the initialization before accessing `WA.player.t
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Tags: ', WA.player.tags);
-})
+  console.log("Tags: ", WA.player.tags);
+});
 ```
 
 ### Get the position of the player
+
 ```
 WA.player.getPosition(): Promise<Position>
 ```
+
 The player's current position is available using the `WA.player.getPosition()` function.
 
 `Position` has the following attributes :
-* **x (number) :** The coordinate x of the current player's position.
-* **y (number) :** The coordinate y of the current player's position.
 
+- **x (number) :** The coordinate x of the current player's position.
+- **y (number) :** The coordinate y of the current player's position.
 
 :::info
 You need to wait for the end of the initialization before calling `WA.player.getPosition()`
@@ -106,11 +108,12 @@ You need to wait for the end of the initialization before calling `WA.player.get
 
 ```typescript
 WA.onInit().then(async () => {
-    console.log('Position: ', await WA.player.getPosition());
-})
+  console.log("Position: ", await WA.player.getPosition());
+});
 ```
 
 ### Get the woka of the player
+
 ```
 WA.player.getWokaPicture(): Promise<string>
 ```
@@ -146,20 +149,22 @@ You need to wait for the end of the initialization before accessing `WA.player.u
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Token: ', WA.player.userRoomToken);
-})
+  console.log("Token: ", WA.player.userRoomToken);
+});
 ```
 
 ### Get the position of the player
+
 ```
 WA.player.getPosition(): Promise<Position>
 ```
+
 The player's current position is available using the `WA.player.getPosition()` function.
 
 `Position` has the following attributes :
-* **x (number) :** The coordinate x of the current player's position.
-* **y (number) :** The coordinate y of the current player's position.
 
+- **x (number) :** The coordinate x of the current player's position.
+- **y (number) :** The coordinate y of the current player's position.
 
 :::info
 You need to wait for the end of the initialization before calling `WA.player.getPosition()`
@@ -167,28 +172,31 @@ You need to wait for the end of the initialization before calling `WA.player.get
 
 ```typescript
 WA.onInit().then(async () => {
-    console.log('Position: ', await WA.player.getPosition());
-})
+  console.log("Position: ", await WA.player.getPosition());
+});
 ```
 
-
 ### Listen to player movement
+
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;
 ```
+
 Listens to the movement of the current user and calls the callback. Sends an event when the user stops moving, changes direction and every 200ms when moving in the same direction.
 
 The event has the following attributes :
-*   **moving (boolean):**  **true** when the current player is moving, **false** otherwise.
-*   **direction (string):** **"right"** | **"left"** | **"down"** | **"top"** the direction where the current player is moving.
-*   **x (number):** coordinate X of the current player.
-*   **y (number):** coordinate Y of the current player.
-*   **oldX (number):** old coordinate X of the current player.
-*   **oldY (number):** old coordinate Y of the current player.
+
+- **moving (boolean):** **true** when the current player is moving, **false** otherwise.
+- **direction (string):** **"right"** | **"left"** | **"down"** | **"top"** the direction where the current player is moving.
+- **x (number):** coordinate X of the current player.
+- **y (number):** coordinate Y of the current player.
+- **oldX (number):** old coordinate X of the current player.
+- **oldY (number):** old coordinate Y of the current player.
 
 **callback:** the function that will be called when the current player is moving. It contains the event.
 
 Example :
+
 ```javascript
 WA.player.onPlayerMove(console.log);
 ```
@@ -204,9 +212,10 @@ Here is what defines a player variable.
 **Visibility:**
 
 A player variable can be **public** or **private**.
+
 - Public variables are automatically shared to players around you. Players around you can view
-these variables using the `RemotePlayer.state` object (you can get a `RemotePlayer` object) using
-[`WA.players.list()`](api-players.md).
+  these variables using the `RemotePlayer.state` object (you can get a `RemotePlayer` object) using
+  [`WA.players.list()`](api-players.md).
 - Private variables are only accessible by the current user.
 
 **Persistence:**
@@ -249,15 +258,12 @@ A player variable can have 2 scopes:
 If you are using the SAAS version (online version) of WorkAdventure, you can create your worlds from the admin dashboard
 and put your rooms in those worlds.
 
-If you are using the self-hosted version of WorkAdventure (with no custom admin API configured), there is only one world, 
+If you are using the self-hosted version of WorkAdventure (with no custom admin API configured), there is only one world,
 and it is shared by all the rooms defined in the map-storage (i.e. by all URLs starting with `/~/`).
 
 In both cases, any URL starting with `/_/` is **not part** of any world. Trying to set a player variable with a scope
 "world" for URLs starting with `/_/` will be the same as setting the scope to "room".
 :::
-
-
-
 
 :::info
 Player variables can be stored in 2 different places. If the player is logged, the player variables are stored on
@@ -265,13 +271,14 @@ the WorkAdventure server. If the player is not logged, the player variables are 
 player's browser).
 :::
 
-
 ### Setting a player variable
+
 A player variable can be set simply by assigning a value.
 
 Example:
+
 ```javascript
-WA.player.state.foo = "value"
+WA.player.state.foo = "value";
 ```
 
 By **default**, variables saved are **persisted** and **private** in the **world** scope.
@@ -304,11 +311,13 @@ WA.player.state.saveVariable("foo", "value", {
 ```
 
 ### Reading a player variable
+
 A player variable can be read by calling its key from the player's state.
 
 Example:
+
 ```javascript
-WA.player.state.foo //will retrieve the variable
+WA.player.state.foo; //will retrieve the variable
 ```
 
 ### Listening to a player variable change
@@ -323,8 +332,8 @@ WA.player.state.onVariableChange(name: string): Observable<unknown>
 Usage:
 
 ```javascript
-WA.player.state.onVariableChange('config').subscribe((value) => {
-    console.log('Variable "config" changed. New value: ', value);
+WA.player.state.onVariableChange("config").subscribe((value) => {
+  console.log('Variable "config" changed. New value: ', value);
 });
 ```
 
@@ -338,9 +347,11 @@ If you want to stop tracking a player variable change, the `subscribe` method re
 **Example with unsubscription:**
 
 ```javascript
-const subscription = WA.player.state.onVariableChange('config').subscribe((value) => {
+const subscription = WA.player.state
+  .onVariableChange("config")
+  .subscribe((value) => {
     console.log('Variable "config" changed. New value: ', value);
-});
+  });
 // Later:
 subscription.unsubscribe();
 ```
@@ -360,21 +371,20 @@ changes using `WA.player.state.onVariableChange`. They will receive the new valu
 if they are in the same room. So far, there is a limitation preventing brothers from listening to variable changes if
 they are in different rooms in the same world.
 
-
 ### Typing player variables
 
 If you are using Typescript, by default, the type of player variables is `unknown`. This is for security purpose, as we don't know
 the type of the variable.
 
 Internally, we define two interfaces named `PublicPlayerState` and `PrivatePlayerState` that contains the type of all player variables.
-`PublicPlayerState` contains the state of all public variables (variables that are shared with other players) and `PrivatePlayerState` 
+`PublicPlayerState` contains the state of all public variables (variables that are shared with other players) and `PrivatePlayerState`
 contains the state of all private variables (variables that are only accessible by the current player).
 
 The default declaration of `PublicPlayerState` and `PrivatePlayerState` is:
 
 ```typescript
 interface PublicPlayerState {
-    [key: string]: unknown;
+  [key: string]: unknown;
 }
 
 interface PrivatePlayerState {
@@ -387,13 +397,13 @@ Typescript allows third party module to merge their own types with existing ones
 
 ```typescript
 declare module "@workadventure/iframe-api-typings" {
-    interface PublicPlayerState {
-        someVariable: string,
-        anotherVariable: number,
-    }
+  interface PublicPlayerState {
+    someVariable: string;
+    anotherVariable: number;
+  }
 
   interface PrivatePlayerState {
-    someSecret: string[],
+    someSecret: string[];
   }
 }
 ```
@@ -408,37 +418,44 @@ is a string, it could be a number at runtime. The only way to be sure of the typ
 using type guards or a type checking library like Zod.
 :::
 
-
-
 ## Move player to position
+
 ```typescript
 WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
 ```
+
 :::caution
 The parameters `x` and `y` are numbers of **pixels**, not tiles. So make sure to multiply them by 32 if you are counting tiles.
 :::
 
 Player will try to find shortest path to the destination point and proceed to move there.
+
 ```typescript
 // Let's move player to x: 250 y: 250 with speed of 10
 WA.player.moveTo(250, 250, 10);
 ```
+
 You can also chain movement like this:
+
 ```typescript
 // Player will move to the next point after reaching first one
 await WA.player.moveTo(250, 250, 10);
 await WA.player.moveTo(500, 0, 10);
 ```
+
 Or like this:
+
 ```typescript
 // Player will move to the next point after reaching first one or stop if the movement was cancelled
 WA.player.moveTo(250, 250, 10).then((result) => {
-    if (!result.cancelled) {
-        WA.player.moveTo(500, 0, 10);
-    }
+  if (!result.cancelled) {
+    WA.player.moveTo(500, 0, 10);
+  }
 });
 ```
+
 It is possible to get the information about current player's position on stop and if the movement was interrupted
+
 ```typescript
 // Result will store x and y of Player at the moment of movement's end and information if the movement was interrupted
 const result = await WA.player.moveTo(250, 250, 10);
@@ -450,6 +467,7 @@ const result = await WA.player.moveTo(250, 250, 10);
 ```typescript
 WA.player.teleport(x: number, y: number): Promise<void>;
 ```
+
 :::caution
 The parameters `x` and `y` are numbers of **pixels**, not tiles. So make sure to multiply them by 32 if you are counting tiles.
 :::
@@ -471,6 +489,7 @@ WA.nav.goToRoom("#my-entry-point");
 ```
 
 ## Set the outline color of the player
+
 ```
 WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
 WA.player.removeOutlineColor(): Promise<void>;
@@ -504,12 +523,14 @@ The event is triggered when the user enters or leaves a proximity meeting.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayerInterface[]) => {
+WA.player.proximityMeeting
+  .onJoin()
+  .subscribe(async (players: RemotePlayerInterface[]) => {
     WA.chat.sendChatMessage("You joined a proximity chat", "System");
-});
+  });
 
 WA.player.proximityMeeting.onLeave().subscribe(async () => {
-    WA.chat.sendChatMessage("You left the proximity chat", "System");
+  WA.chat.sendChatMessage("You left the proximity chat", "System");
 });
 ```
 
@@ -525,13 +546,23 @@ The event is triggered when a user enters or leaves a proximity meeting.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant joined the proximity chat", { scope: 'local', author: 'System' });
-});
+WA.player.proximityMeeting
+  .onParticipantJoin()
+  .subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage("A participant joined the proximity chat", {
+      scope: "local",
+      author: "System",
+    });
+  });
 
-WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant left the proximity chat", { scope: 'local', author: 'System' });
-});
+WA.player.proximityMeeting
+  .onParticipantLeave()
+  .subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage("A participant left the proximity chat", {
+      scope: "local",
+      author: "System",
+    });
+  });
 ```
 
 ## Playing a sound to players in the same meeting
@@ -561,7 +592,7 @@ The method returns a promise that resolves when the sound has been played.
 This feature is experimental. The signature of the function might change in the future.
 :::
 
-You can send a stream of audio to all the players in the same bubble. A typical use case for this feature is to create a 
+You can send a stream of audio to all the players in the same bubble. A typical use case for this feature is to create a
 voice chat in WorkAdventure. The sound can be generated on a server and streamed to the players in the bubble.
 
 ```ts
@@ -574,7 +605,7 @@ interface AudioStream {
 }
 ```
 
-The `startAudioStream` function starts an audio stream to all the players in the same bubble. The `sampleRate` parameter 
+The `startAudioStream` function starts an audio stream to all the players in the same bubble. The `sampleRate` parameter
 is the sample rate of the audio stream. For a 24kHz audio stream, you would use `24000`.
 
 The function returns an `AudioStream` object that you can use to send audio data to the players.
@@ -591,7 +622,6 @@ is played, the audio stream will buffer the data and play it at the correct spee
 You don't want to put an `await` in front of your call to `appendAudioData`. Indeed, you should put as much as possible
 in the audio buffer. If you wait for the sound to be played before emitting the next bit of sound, the sound will stutter.  
 :::
-
 
 :::note
 Please note the sound is played to all the players in the bubble except the player who called the function.
@@ -612,17 +642,19 @@ Then it stops the stream and waits for 5 seconds before closing the stream.
 ```ts
 const sampleRate = 24000;
 
-const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+const audioStream = await WA.player.proximityMeeting.startAudioStream(
+  sampleRate
+);
 
 // Generate a sine wave
-    
+
 const frequency = 440;
 const amplitude = 0.5;
 const duration = 10;
 const numSamples = duration * sampleRate;
 const samples = new Float32Array(numSamples);
 for (let i = 0; i < numSamples; i++) {
-    samples[i] = amplitude * Math.sin(2 * Math.PI * frequency * i / sampleRate);
+  samples[i] = amplitude * Math.sin((2 * Math.PI * frequency * i) / sampleRate);
 }
 
 audioStream.appendAudioData(samples);
@@ -665,10 +697,12 @@ Example:
 ```ts
 const sampleRate = 24000;
 
-const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+const subscription = WA.player.proximityMeeting
+  .listenToAudioStream(sampleRate)
+  .subscribe((data: Float32Array) => {
     // Process the audio data
     console.log(data);
-});
+  });
 
 // When you are done listening to the audio stream, you can unsubscribe from the observable.
 subscription.unsubscribe();
@@ -687,8 +721,6 @@ WA.player.proximityMeeting.followMe(): Promise<void>
 The `followMe` function asks all the players in the same bubble to follow the player who called the function.
 Unlike the "follow" button in the UI, all the players in the bubble will be forced to follow the player who called the function.
 They can still stop following the player by clicking on the "stop following" button in the UI.
-
-
 
 ## Stop leading users
 
@@ -729,11 +761,21 @@ You can be notified when a player starts following you or stops following you.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onFollowed().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage(`${player.name} is now following you`, { scope: 'local', author: 'System' });
-});
+WA.player.proximityMeeting
+  .onFollowed()
+  .subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage(`${player.name} is now following you`, {
+      scope: "local",
+      author: "System",
+    });
+  });
 
-WA.player.proximityMeeting.onUnfollowed().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage(`${player.name} stopped following you`, { scope: 'local', author: 'System' });
-});
+WA.player.proximityMeeting
+  .onUnfollowed()
+  .subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage(`${player.name} stopped following you`, {
+      scope: "local",
+      author: "System",
+    });
+  });
 ```

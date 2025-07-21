@@ -120,6 +120,6 @@ map and recreate it in the inline map editor.
 ## Special thanks
 
 :::info Sponsored feature ❤️
-This work has been supported by the French government in the context of the "Programme d'Investissements d'Avenir" 
+This work has been supported by the French government in the context of the "Programme d'Investissements d'Avenir"
 (Investments for the Future Program), managed by the National Research Agency (ANR) under the reference ANR-21-DMES-0001.
 :::

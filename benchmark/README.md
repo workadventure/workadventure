@@ -21,9 +21,9 @@ You can adapt the `socketio-load-test.yaml` file to increase/decrease load.
 Default settings are:
 
 ```yaml
-  phases:
-    - duration: 20
-      arrivalRate: 2
+phases:
+  - duration: 20
+    arrivalRate: 2
 ```
 
 which means: during 20 seconds, 2 users will be added every second (peaking at 40 simultaneous users).
@@ -66,4 +66,3 @@ While testing, you can check:
       command: yarn run profile
   ```
   Read https://nodejs.org/en/docs/guides/simple-profiling/ on how to generate a profile.
-

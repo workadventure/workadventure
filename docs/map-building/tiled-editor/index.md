@@ -27,7 +27,7 @@ It contains **a good default tileset** for building an office and it contains to
 or on GitHub Pages. It also comes with a local web server for testing purpose and with
 TypeScript support (if you are looking to use the [Map Scripting API](/developer/map-scripting/)).
 
-When designing your map with Tiled, there are a number of settings that [must absolutely be respected in order to be 
+When designing your map with Tiled, there are a number of settings that [must absolutely be respected in order to be
 compatible with WorkAdventure](wa-maps.md). The "map starter kit" is already configured with these settings.
 
 :::caution

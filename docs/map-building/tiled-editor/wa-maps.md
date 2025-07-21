@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 20
-
 ---
 
 # About WorkAdventure maps
@@ -16,12 +14,11 @@ Tiles may have transparent parts. Many tiles can be stored in a single PNG file.
 
 There are many tilesets available on the internet. Some examples of websites offering awesome tiles:
 
-*   [itch.io](https://itch.io/)
-*   [opengameart.org](https://opengameart.org/)
-*   [deviantart.com](https://www.deviantart.com/)
+- [itch.io](https://itch.io/)
+- [opengameart.org](https://opengameart.org/)
+- [deviantart.com](https://www.deviantart.com/)
 
 Keep in mind the size of tiles and do not forget to check the license of the tileset you are using!
-
 
 ## How to design "pixel" tiles
 
@@ -29,9 +26,9 @@ You can design your own tiles as well as change existing tiles, this is usually 
 
 If you are using Krita:
 
-*   Please double check that your tiles are 32x32 pixels in size. You can enable a grid under view -> show grid and under settings -> dockers -> grid you can select the grid size.
-*   Use transparency if you have to model transitions between different materials. This is more flexible and saves you time by not modeling every transition.
-*   You can follow the Pixel-Art Workshop by blinry: [media.ccc.de/v/34C3-jugend-hackt-1016-pixel_art_workshop](https://media.ccc.de/v/34C3-jugend-hackt-1016-pixel_art_workshop)
+- Please double check that your tiles are 32x32 pixels in size. You can enable a grid under view -> show grid and under settings -> dockers -> grid you can select the grid size.
+- Use transparency if you have to model transitions between different materials. This is more flexible and saves you time by not modeling every transition.
+- You can follow the Pixel-Art Workshop by blinry: [media.ccc.de/v/34C3-jugend-hackt-1016-pixel_art_workshop](https://media.ccc.de/v/34C3-jugend-hackt-1016-pixel_art_workshop)
 
 ## WorkAdventure Map Rules
 
@@ -39,18 +36,18 @@ In order to design a map that will be readable by WorkAdventure, you will have t
 
 In particular, you will need to:
 
-*   set a start position for the players
-*   configure the "floor layer" (so that WorkAdventure can correctly display characters above the floor, but under the ceiling)
-*   eventually, you can place exits that link to other maps
+- set a start position for the players
+- configure the "floor layer" (so that WorkAdventure can correctly display characters above the floor, but under the ceiling)
+- eventually, you can place exits that link to other maps
 
 A few things to notice:
 
-*   your map can have as many layers as you want
-*   your map MUST contain a layer named "floorLayer" of type "objectgroup" that represents the layer on which characters will be drawn. Every layer above the "floorLayer" will be displayed on top of the characters.
-*   the tilesets in your map MUST be embedded. You cannot refer to an external typeset in a TSX file. Click the "embed tileset" button in the tileset tab to embed tileset data.
-*   your map MUST be exported in JSON format. You need to use a recent version of Tiled to get JSON format export (1.3+)
-*   WorkAdventure doesn't support object layers and will ignore them
-*   If you are starting from a blank map, your map MUST be orthogonal and tiles size should be 32x32.
+- your map can have as many layers as you want
+- your map MUST contain a layer named "floorLayer" of type "objectgroup" that represents the layer on which characters will be drawn. Every layer above the "floorLayer" will be displayed on top of the characters.
+- the tilesets in your map MUST be embedded. You cannot refer to an external typeset in a TSX file. Click the "embed tileset" button in the tileset tab to embed tileset data.
+- your map MUST be exported in JSON format. You need to use a recent version of Tiled to get JSON format export (1.3+)
+- WorkAdventure doesn't support object layers and will ignore them
+- If you are starting from a blank map, your map MUST be orthogonal and tiles size should be 32x32.
 
 !["floorLayer" is compulsory](../images/tiled_screenshot_1.png)
 
@@ -97,13 +94,14 @@ The exception is the "collides" property that can only be set on tiles, but not 
 
 By setting properties on the map itself, you can help visitors know more about the creators of the map.
 
-The following *map* properties are supported:
-* `mapName` (string): The name of your map
-* `mapLink` (string): A link to your map, for example a repository
-* `mapDescription` (string): A short description of your map
-* `mapCopyright` (string): Copyright notice
+The following _map_ properties are supported:
 
-Each *tileset* can also have a property called `tilesetCopyright` (string).
+- `mapName` (string): The name of your map
+- `mapLink` (string): A link to your map, for example a repository
+- `mapDescription` (string): A short description of your map
+- `mapCopyright` (string): Copyright notice
+
+Each _tileset_ can also have a property called `tilesetCopyright` (string).
 If you are using audio files in your map, you can declare a layer property `audioCopyright` (string).
 
 Resulting in a "credit" page in the menu looking like this:

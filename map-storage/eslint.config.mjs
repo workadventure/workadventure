@@ -1,5 +1,5 @@
-import {generateConfig} from "@workadventure/eslint-config";
-import {globalIgnores} from "eslint/config";
+import { generateConfig } from "@workadventure/eslint-config";
+import { globalIgnores } from "eslint/config";
 
 export default [
     globalIgnores(["**/tests/assets/**"]),
@@ -7,7 +7,7 @@ export default [
     {
         rules: {
             // Custom rules for map-storage goes here.
-            '@typescript-eslint/interface-name-prefix': 'off',
-        }
-    }
+            "@typescript-eslint/interface-name-prefix": "off",
+        },
+    },
 ];

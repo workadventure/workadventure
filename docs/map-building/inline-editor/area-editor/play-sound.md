@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 90
-
 ---
 
 # Play sound property

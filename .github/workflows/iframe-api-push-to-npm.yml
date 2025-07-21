@@ -17,8 +17,8 @@ jobs:
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v2
         with:
-          node-version: '18.x'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Replace version number
         run: 'sed -i "s#VERSION_PLACEHOLDER#${{ github.ref_name }}#g" package.json'
@@ -32,7 +32,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci #--workspace=workadventure-play
@@ -56,10 +56,10 @@ jobs:
           ADMIN_URL: "//localhost:80"
         working-directory: "play"
 
-#      - name: Install dependencies in package
-#        run: npm ci
-#        working-directory: "play/packages/iframe-api-typings"
-#        if: ${{ github.event_name == 'release' }}
+      #      - name: Install dependencies in package
+      #        run: npm ci
+      #        working-directory: "play/packages/iframe-api-typings"
+      #        if: ${{ github.event_name == 'release' }}
 
       - name: Publish package
         run: npm publish

@@ -1,6 +1,7 @@
 # Desktop app
 
 The desktop component is an electron app inside `./electron/`. It uses a hybrid setup based of two main components:
+
 - A `local-app` bundled into the electron app with two main parts:
   - A sidebar to show the server list, with the currently selected server
   - A main page which is used to manage servers and to show other "local" pages like the desktop-app settings
@@ -26,7 +27,7 @@ TODO:
 
 ```ts
 if (window?.WorkAdventureDesktopApi?.desktop) {
-  alert('Yeah you are using the desktop app ;)');
+  alert("Yeah you are using the desktop app ;)");
 }
 
 let muted = false;

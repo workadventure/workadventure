@@ -41,7 +41,7 @@ Click on the link. You should be redirected directly to WorkAdventure, on your m
 ### Update your map on GH Pages
 
 :::caution Important
-Before your push on GitHub, you need to instruct the CI/CD pipeline you want to deploy to GitHub pages. To do this, 
+Before your push on GitHub, you need to instruct the CI/CD pipeline you want to deploy to GitHub pages. To do this,
 set up your environment variable in `.env` file like this : `UPLOAD_MODE=GH_PAGES`
 :::
 

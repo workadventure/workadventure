@@ -1,9 +1,6 @@
 ---
-
 sidebar_position: 100
-
 ---
-
 
 # Focusable property
 
@@ -17,7 +14,8 @@ the area. This allows zooming too much and can give a better rendering.
 ![](../../images/camera/0_focusable_zone.png)
 
 ## Setting focusable area :
+
 1. When editing an area, you can add the focusable property to it. You must click on the "focusable" icon.
-![](../../images/editor/focusable_property.png)
+   ![](../../images/editor/focusable_property.png)
 2. You can define the zoom level of the camera when the player enters the area.!
-![](../../images/editor/focusable.png)
+   ![](../../images/editor/focusable.png)

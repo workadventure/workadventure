@@ -33,7 +33,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=workadventure-play
@@ -98,12 +98,11 @@ jobs:
           node-version: 22
           cache: "npm"
 
-
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=workadventureback
@@ -147,7 +146,6 @@ jobs:
           node-version: 20
           cache: "npm"
 
-
       - name: "Install dependencies"
         run: npm ci --workspace=workadventureuploader
 
@@ -178,7 +176,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=@workadventure/map-editor
@@ -234,7 +232,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=@workadventure/store-utils
@@ -278,7 +276,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=@workadventure/shared-utils
@@ -322,12 +320,11 @@ jobs:
           node-version: 22
           cache: "npm"
 
-
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install dependencies"
         run: npm ci --workspace=map-storage
@@ -375,7 +372,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '3.x'
+          version: "3.x"
 
       - name: "Install ESLint config dependencies"
         run: npm ci --workspace=@workadventure/eslint-config
@@ -414,7 +411,7 @@ jobs:
         with:
           node-version: 16
           cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: "**/yarn.lock"
 
       - name: "Install dependencies"
         run: yarn install
@@ -454,8 +451,7 @@ jobs:
         with:
           node-version: 16
           cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
-
+          cache-dependency-path: "**/yarn.lock"
 
       - name: "Install dependencies"
         run: yarn install
@@ -495,7 +491,7 @@ jobs:
         with:
           node-version: 22
           cache: "npm"
-          cache-dependency-path: 'tests/package-lock.json'
+          cache-dependency-path: "tests/package-lock.json"
 
       - name: "Install dependencies"
         run: npm ci

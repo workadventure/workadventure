@@ -1,18 +1,15 @@
 {
-    "compilerOptions": {
-      "rootDir": "src",
-      "outDir": "dist",
-      "baseUrl": "./",
-      "target": "es2019",
-      "lib": [
-        "es2019",
-        "dom",
-      ],
-      "module": "CommonJS",
-      "moduleResolution": "Node",
-      "esModuleInterop": true,
-      "strict": true,
-      "declaration": true,
-      "sourceMap": true
-    }
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": "./",
+    "target": "es2019",
+    "lib": ["es2019", "dom"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "strict": true,
+    "declaration": true,
+    "sourceMap": true
   }
+}

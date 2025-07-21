@@ -4,7 +4,6 @@ sidebar_position: 20
 
 # Getting messages on your phone
 
-
 WorkAdventure's chat system runs on the Matrix protocol. Matrix is a decentralized protocol that allows users to communicate
 in real-time. It is similar to other chat systems like Slack or Discord, but it is decentralized and open-source.
 
@@ -50,7 +49,7 @@ import image8 from './images/element/8-sync.jpg';
 
 1. Open Element on your phone.
 2. Click on the "Sign in" button.
-3. On the login page, **do not try to enter your email and password**. Instead, in the "Where your conversations live" 
+3. On the login page, **do not try to enter your email and password**. Instead, in the "Where your conversations live"
    section, click the "Edit" button.
 4. On the "Select your server screen", be sure to type: **"chat.workadventu.re"**
 

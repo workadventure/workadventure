@@ -2,9 +2,9 @@
 
 The map-storage component is in charge of:
 
-- serving map files and assets to the game over HTTP
-- accepting uploads of new maps and assets (as a ZIP file)
-- editing the uploaded maps. The map-storage will receive edit messages from the back container directly.
+-   serving map files and assets to the game over HTTP
+-   accepting uploads of new maps and assets (as a ZIP file)
+-   editing the uploaded maps. The map-storage will receive edit messages from the back container directly.
 
 > **Note**
 > Maps do not have to be stored in the map-storage. They can be stored on any web server on the web and WorkAdventure
@@ -41,15 +41,15 @@ This test map is accessible at http://play.workadventure.localhost/~/maps/areas.
 
 The map-storage currently supports 2 backends:
 
-- "disk" backend to store maps on the hard-drive of the map-storage
-- "S3" to store the maps in any Amazon S3-compatible storage
+-   "disk" backend to store maps on the hard-drive of the map-storage
+-   "S3" to store the maps in any Amazon S3-compatible storage
 
 Configuration is done using environment variables.
 
 If S3 related environment variables are found, map-storage will default to S3.
 Otherwise, the `STORAGE_DIRECTORY` environment variable is used to find the root directory of the maps.
 
-Note: in the Docker image, the `STORAGE_DIRECTORY` defaults to `/maps` at the root of the container. 
+Note: in the Docker image, the `STORAGE_DIRECTORY` defaults to `/maps` at the root of the container.
 
 Take a look at `src/Enum/EnvironmentVariables.ts` for a complete list of supported configuration parameters.
 
@@ -59,9 +59,9 @@ The `/upload` endpoint MUST be protected by authentication.
 
 As of now, the map-storage supports 3 mechanisms for authentication basic enough (there is no integration with third party systems yet).
 
-- Basic auth (with environment variable `ENABLE_BASIC_AUTHENTICATION=true`)
-- Digest auth (with environment variable `ENABLE_DIGEST_AUTHENTICATION=true`)
-- Bearer token (with environment variable `ENABLE_BEARER_AUTHENTICATION=true`)
+-   Basic auth (with environment variable `ENABLE_BASIC_AUTHENTICATION=true`)
+-   Digest auth (with environment variable `ENABLE_DIGEST_AUTHENTICATION=true`)
+-   Bearer token (with environment variable `ENABLE_BEARER_AUTHENTICATION=true`)
 
 If "Basic" or "Digest", you must use the `AUTHENTICATION_USER` and `AUTHENTICATION_PASSWORD` environment variable to pass the (only) valid user.
 
@@ -93,8 +93,8 @@ Parameters in POST must be passed with the `multipart/form-data` encoding.
 
 Parameters:
 
-* **file** (compulsory): the uploaded ZIP file. Must not be encrypted.
-* **directory** (optional): the sub-directory we are performing the upload in.
+-   **file** (compulsory): the uploaded ZIP file. Must not be encrypted.
+-   **directory** (optional): the sub-directory we are performing the upload in.
 
 If `directory` is not passed, upload is performed at the root of the storage directory ("/").
 
@@ -103,18 +103,18 @@ If `directory` is not passed, upload is performed at the root of the storage dir
 
 **Response**:
 
-- 200: OK
-- 400: Validation error (for instance: invalid maps)
-  **Sample:**
-  ```json
-  {
-    'missing-image/MissingImage.tmj': [
-      {
-        type: 'error',
-        message: 'Image of the tileset "XXX": "xxx.png" is not loadable.',
-        details: '',
-        link: ''
-      }
-    ]
-  }
-  ```
+-   200: OK
+-   400: Validation error (for instance: invalid maps)
+    **Sample:**
+    ```json
+    {
+        "missing-image/MissingImage.tmj": [
+            {
+                "type": "error",
+                "message": "Image of the tileset \"XXX\": \"xxx.png\" is not loadable.",
+                "details": "",
+                "link": ""
+            }
+        ]
+    }
+    ```

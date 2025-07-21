@@ -29,23 +29,26 @@ We are in the process of fine-tuning variables, and we will eventually put limit
 :::
 
 Example :
+
 ```javascript
-WA.state.saveVariable('config', {
-    'bottomExitUrl': '/@/org/world/castle',
-    'topExitUrl': '/@/org/world/tower',
-    'enableBirdSound': true
-}).catch(e => console.error('Something went wrong while saving variable', e));
+WA.state
+  .saveVariable("config", {
+    bottomExitUrl: "/@/org/world/castle",
+    topExitUrl: "/@/org/world/tower",
+    enableBirdSound: true,
+  })
+  .catch((e) => console.error("Something went wrong while saving variable", e));
 //...
-let config = WA.state.loadVariable('config');
+let config = WA.state.loadVariable("config");
 ```
 
 You can use the shortcut properties to load and save variables. The code above is similar to:
 
 ```javascript
 WA.state.config = {
-    'bottomExitUrl': '/@/org/world/castle',
-    'topExitUrl': '/@/org/world/tower',
-    'enableBirdSound': true
+  bottomExitUrl: "/@/org/world/castle",
+  topExitUrl: "/@/org/world/tower",
+  enableBirdSound: true,
 };
 
 //...
@@ -69,7 +72,7 @@ Variables storage is subject to an authorization process. Read below to learn mo
 
 ## Defining a variable
 
-Out of the box, you cannot edit *any* variable. Variables MUST be declared in the map.
+Out of the box, you cannot edit _any_ variable. Variables MUST be declared in the map.
 
 Check the [dedicated variables page](../variables.md) to learn how to declare a variable in a map.
 
@@ -85,8 +88,8 @@ WA.state.onVariableChange(name: string): Observable<unknown>
 Usage:
 
 ```javascript
-WA.state.onVariableChange('config').subscribe((value) => {
-    console.log('Variable "config" changed. New value: ', value);
+WA.state.onVariableChange("config").subscribe((value) => {
+  console.log('Variable "config" changed. New value: ', value);
 });
 ```
 
@@ -100,8 +103,8 @@ If you want to stop tracking a variable change, the `subscribe` method returns a
 **Example with unsubscription:**
 
 ```javascript
-const subscription = WA.state.onVariableChange('config').subscribe((value) => {
-    console.log('Variable "config" changed. New value: ', value);
+const subscription = WA.state.onVariableChange("config").subscribe((value) => {
+  console.log('Variable "config" changed. New value: ', value);
 });
 // Later:
 subscription.unsubscribe();
@@ -118,7 +121,7 @@ The default declaration of `RoomState` is:
 
 ```typescript
 interface RoomState {
-    [key: string]: unknown;
+  [key: string]: unknown;
 }
 ```
 
@@ -127,10 +130,10 @@ However, Typescript allows third party module to merge their own types with exis
 
 ```typescript
 declare module "@workadventure/iframe-api-typings" {
-    interface RoomState {
-        someVariable: string,
-        anotherVariable: number,
-    }
+  interface RoomState {
+    someVariable: string;
+    anotherVariable: number;
+  }
 }
 ```
 

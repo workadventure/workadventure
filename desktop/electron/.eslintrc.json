@@ -20,9 +20,7 @@
         "sourceType": "module",
         "project": "./tsconfig.json"
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
+    "plugins": ["@typescript-eslint"],
     "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error"

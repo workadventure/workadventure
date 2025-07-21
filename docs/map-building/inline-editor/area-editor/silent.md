@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 80
-
 ---
 
 # Silent property
@@ -14,6 +12,6 @@ No-one can talk to this user, and this user cannot talk to anyone else until the
 ## Setting silent area
 
 1. When editing an area, you can add the silent property to it. You must click on the "silent" icon.
-That's it ! Every user that will enter this area will be muted and won't be able to talk to each others.
+   That's it ! Every user that will enter this area will be muted and won't be able to talk to each others.
 
 ![](../../images/editor/silent_property.png)

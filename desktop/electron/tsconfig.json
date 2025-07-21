@@ -1,21 +1,21 @@
 {
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "target": "es5",
-    "downlevelIteration": true,
-    "module": "commonjs",
-    "allowJs": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "strict": true,
-    "noImplicitThis": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    //"baseUrl": ".",
-    //"paths": {},
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
-  }
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "target": "es5",
+        "downlevelIteration": true,
+        "module": "commonjs",
+        "allowJs": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "strict": true,
+        "noImplicitThis": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        //"baseUrl": ".",
+        //"paths": {},
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
+    }
 }

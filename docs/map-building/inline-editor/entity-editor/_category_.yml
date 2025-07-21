@@ -1,4 +1,4 @@
 position: 1
-label: 'Placing Objects and Furniture'
+label: "Placing Objects and Furniture"
 collapsible: true # make the category collapsible
 collapsed: true # keep the category open by default

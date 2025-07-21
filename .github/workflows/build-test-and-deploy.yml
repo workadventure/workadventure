@@ -17,9 +17,9 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/play-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/play'
-      dockerio-image-name: 'thecodingmachine/workadventure-play'
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/play-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/play"
+      dockerio-image-name: "thecodingmachine/workadventure-play"
       # FIXME: Final build should only build on master or tags
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
       dockerfile: play/Dockerfile
@@ -32,9 +32,9 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/back-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/back'
-      dockerio-image-name: 'thecodingmachine/workadventure-back'
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/back-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/back"
+      dockerio-image-name: "thecodingmachine/workadventure-back"
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: back/Dockerfile
       sentry_project: back
@@ -46,9 +46,9 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/uploader'
-      dockerio-image-name: 'thecodingmachine/workadventure-uploader'
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/uploader-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/uploader"
+      dockerio-image-name: "thecodingmachine/workadventure-uploader"
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: uploader/Dockerfile
       sentry_project: uploader
@@ -60,9 +60,9 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/maps-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/maps'
-      dockerio-image-name: 'thecodingmachine/workadventure-maps'
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/maps-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/maps"
+      dockerio-image-name: "thecodingmachine/workadventure-maps"
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: maps/Dockerfile
       sentry_project: maps
@@ -74,9 +74,9 @@ jobs:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/map-storage-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/map-storage'
-      dockerio-image-name: 'thecodingmachine/workadventure-map-storage'
+      ghcr-dev-build-image-name: "ghcr.io/workadventure/map-storage-dev-build"
+      ghcr-image-name: "ghcr.io/workadventure/map-storage"
+      dockerio-image-name: "thecodingmachine/workadventure-map-storage"
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: map-storage/Dockerfile
       sentry_project: map-storage
@@ -89,30 +89,30 @@ jobs:
     #if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
     if: ${{ github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/master') }}
     needs:
-#      - build-play
+      #      - build-play
       - build-back
       - build-map-storage
     steps:
-#      - name: Sentry push play source maps
-#        continue-on-error: true
-#        env:
-#          SENTRY_URL: ${{ secrets.SENTRY_URL }}
-#          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-#          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-#          SENTRY_PROJECT: pusher
-#          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
-#          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
-#        run: |
-#          docker run --rm \
-#            --user 0       \
-#            -e SENTRY_URL \
-#            -e SENTRY_AUTH_TOKEN \
-#            -e SENTRY_ORG \
-#            -e SENTRY_PROJECT \
-#            -e SENTRY_RELEASE \
-#            -e SENTRY_ENVIRONMENT \
-#            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
-#            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
+      #      - name: Sentry push play source maps
+      #        continue-on-error: true
+      #        env:
+      #          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+      #          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      #          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      #          SENTRY_PROJECT: pusher
+      #          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+      #          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
+      #        run: |
+      #          docker run --rm \
+      #            --user 0       \
+      #            -e SENTRY_URL \
+      #            -e SENTRY_AUTH_TOKEN \
+      #            -e SENTRY_ORG \
+      #            -e SENTRY_PROJECT \
+      #            -e SENTRY_RELEASE \
+      #            -e SENTRY_ENVIRONMENT \
+      #            ghcr.io/workadventure/play-dev-build:amd64-${{ github.sha }} \
+      #            /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
       - name: Sentry push back source maps
         env:
@@ -263,7 +263,7 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps ${{ matrix.browser }}
         working-directory: tests
-      - name: 'Setup .env file'
+      - name: "Setup .env file"
         run: cp .env.template .env
       - uses: rlespinasse/github-slug-action@4.2.3
       - name: Display pulled version
@@ -419,7 +419,7 @@ jobs:
           message: "⏳ GitLab SaaS pipeline in progress... [Check status](${{ env.PIPELINE_URL }})"
           fail: false
           recreate: true
-          
+
       - name: Long poll GitLab pipeline until finished
         id: poll-pipeline
         run: |
@@ -529,7 +529,7 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
         working-directory: tests
-      - name: 'Setup .env file'
+      - name: "Setup .env file"
         run: cp .env.prod.template .env
         working-directory: contrib/docker
       - uses: rlespinasse/github-slug-action@4.2.3
@@ -627,43 +627,43 @@ jobs:
         run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}.test.workadventu.re" >> $GITHUB_ENV
         if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
-#      - name: Write certificate
-#        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
-#        env:
-#          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+      #      - name: Write certificate
+      #        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+      #        env:
+      #          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
 
-#      - name: Download certificate
-#        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+      #      - name: Download certificate
+      #        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
 
-#      - name: Create namespace
-#        uses: steebchen/kubectl@v1.0.0
-#        env:
-#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-#        with:
-#          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-#        continue-on-error: true
+      #      - name: Create namespace
+      #        uses: steebchen/kubectl@v1.0.0
+      #        env:
+      #          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+      #        with:
+      #          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      #        continue-on-error: true
 
-#      - name: Delete old certificates in namespace
-#        uses: steebchen/kubectl@v1.0.0
-#        env:
-#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-#        with:
-#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
-#        continue-on-error: true
-#
-#      - name: Install certificates in namespace
-#        uses: steebchen/kubectl@v1.0.0
-#        env:
-#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-#        with:
-#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+      #      - name: Delete old certificates in namespace
+      #        uses: steebchen/kubectl@v1.0.0
+      #        env:
+      #          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+      #        with:
+      #          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+      #        continue-on-error: true
+      #
+      #      - name: Install certificates in namespace
+      #        uses: steebchen/kubectl@v1.0.0
+      #        env:
+      #          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+      #        with:
+      #          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
       - uses: azure/setup-helm@v4.0.0
         with:
           #version: '<version>' # default is latest (stable)
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
-      
+
       - name: Add comment on PR
         if: github.event_name == 'pull_request'
         uses: hasura/comment-progress@v2.3.0
@@ -681,11 +681,11 @@ jobs:
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
 
-      - name: 'Dependencies install'
+      - name: "Dependencies install"
         run: "helm dependencies update"
         working-directory: contrib/helm
 
-      - name: 'Generate values file'
+      - name: "Generate values file"
         run: |
           echo "
           appVersion: \"${DEPLOY_REF}\"
@@ -754,10 +754,9 @@ jobs:
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
 
-
-#      - name: "Printing values file"
-#        working-directory: contrib/helm
-#        run: "cat values-cd.yaml"
+      #      - name: "Printing values file"
+      #        working-directory: contrib/helm
+      #        run: "cat values-cd.yaml"
       - name: "Delete stuck releases"
         run: |
           if [[ $(helm list -n ${NAMESPACE} --pending | grep pending-upgrade) ]]; then
@@ -771,7 +770,7 @@ jobs:
         env:
           NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
 
-      - name: 'Deploy'
+      - name: "Deploy"
         run: "helm upgrade --install --create-namespace -n ${NAMESPACE} --wait -f values.yaml -f values-cd.yaml test ."
         working-directory: contrib/helm
         env:
@@ -925,7 +924,6 @@ jobs:
           prune-untagged: true
           prune-tags-regexes: ".*"
 
-
       - name: Prune uploader
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
@@ -937,4 +935,3 @@ jobs:
           keep-last: 5
           prune-untagged: true
           prune-tags-regexes: ".*"
-

@@ -1,3 +1,3 @@
 WA.onInit().then(() => {
-    console.log('Scripting API initialized');
+    console.log("Scripting API initialized");
 });

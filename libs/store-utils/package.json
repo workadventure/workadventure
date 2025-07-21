@@ -1,36 +1,36 @@
 {
-  "name": "@workadventure/store-utils",
-  "version": "1.0.0",
-  "description": "Useful Svelte store-related utility Class",
-  "main": "./src/index.ts",
-  "scripts": {
-    "build": "tsc",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "svelte-check": "svelte-check",
-    "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "test:cov": "vitest run --coverage"
-  },
-  "author": "WorkAdventure",
-  "license": "ISC",
-  "devDependencies": {
-    "@tsconfig/svelte": "^1.0.10",
-    "@types/node": "^18.11.18",
-    "@types/debug": "^4.1.5",
-    "@workadventure/eslint-config": "1.0.0",
-    "eslint": "^9.25.1",
-    "svelte": "^3.53.1",
-    "svelte-check": "^2.9.2",
-    "prettier": "^2.8.2",
-    "typescript": "^5.7.2",
-    "rxjs": "^6.6.3",
-    "vitest": "^2.1.4"
-  },
-  "files": [
-    "src"
-  ]
+    "name": "@workadventure/store-utils",
+    "version": "1.0.0",
+    "description": "Useful Svelte store-related utility Class",
+    "main": "./src/index.ts",
+    "scripts": {
+        "build": "tsc",
+        "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
+        "lint-fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+        "svelte-check": "svelte-check",
+        "pretty": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+        "pretty-check": "prettier --check 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}'",
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest watch",
+        "test:cov": "vitest run --coverage"
+    },
+    "author": "WorkAdventure",
+    "license": "ISC",
+    "devDependencies": {
+        "@tsconfig/svelte": "^1.0.10",
+        "@types/node": "^18.11.18",
+        "@types/debug": "^4.1.5",
+        "@workadventure/eslint-config": "1.0.0",
+        "eslint": "^9.25.1",
+        "svelte": "^3.53.1",
+        "svelte-check": "^2.9.2",
+        "prettier": "^2.8.2",
+        "typescript": "^5.7.2",
+        "rxjs": "^6.6.3",
+        "vitest": "^2.1.4"
+    },
+    "files": [
+        "src"
+    ]
 }

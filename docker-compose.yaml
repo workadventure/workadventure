@@ -482,7 +482,6 @@ services:
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
       JWT_SECRET: "$SECRET_KEY"
-
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
