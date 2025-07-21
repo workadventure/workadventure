@@ -188,6 +188,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
             return;
         }
+        this.scene.stop(SelectCharacterSceneName);
         batchGetUserMediaStore.startBatch();
         myCameraStore.set(false);
         myMicrophoneStore.set(false);
