@@ -217,6 +217,14 @@ export class GameManager {
         }
     }
 
+    /**
+     * Tries to stop the current game scene.
+     * @param fallbackSceneName 
+     */
+    tryToStopGameScene(fallbackSceneName: string) {
+        this.scenePlugin.stop(fallbackSceneName);
+    }
+
     public getCurrentGameScene(): GameScene {
         const gameScene = this.scenePlugin.get(
             this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName

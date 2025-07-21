@@ -36,6 +36,7 @@
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import WokaCustomizeScene from "./Woka/WokaCustomizeScene.svelte";
+    import WokaSelectScene from "./Woka/WokaSelectScene.svelte";
 
     export let game: Game;
 
@@ -69,11 +70,11 @@
     </div>
 {:else if $selectCharacterSceneVisibleStore}
     <div>
-        <SelectCharacterScene {game} />
+        <WokaSelectScene {game} />
     </div>
 {:else if $selectCharacterCustomizeSceneVisibleStore}
     <div>
-        <WokaCustomizeScene />
+        <WokaCustomizeScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>

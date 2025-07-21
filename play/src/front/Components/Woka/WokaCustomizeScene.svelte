@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -20,7 +21,10 @@
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
+    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import { Game } from "phaser";
 
+    export let game: Game;
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = "body";
     let selectedTextures: Record<WokaBodyPart, string> = {
@@ -36,6 +40,8 @@
     let assetsDirection: number = 0;
 
     const bodyPartOrder: WokaBodyPart[] = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
+
+    const selectCustomizeScene = game.scene.getScene(CustomizeSceneName) as CustomizeScene;
 
     async function loadWokaData() {
         try {
@@ -130,6 +136,7 @@
     function goBack() {
         selectCharacterCustomizeSceneVisibleStore.set(false);
         selectCharacterSceneVisibleStore.set(true);
+        selectCustomizeScene.backToPreviousScene(); // Ensure the CustomizeScene is resumed
     }
 
     function getAvailableTextures(bodyPart: WokaBodyPart): WokaTexture[] {
@@ -319,13 +326,13 @@
                     class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
                     on:click={goBack}
                 >
-                    Cancel
+                    {$LL.woka.customWoka.navigation.back()}
                 </button>
                 <button
                     class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
                     on:click={saveAndContinue}
                 >
-                    Finish
+                    {$LL.woka.customWoka.navigation.finish()}
                 </button>
             </div>
         {/if}

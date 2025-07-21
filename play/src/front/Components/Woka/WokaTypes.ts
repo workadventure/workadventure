@@ -24,5 +24,6 @@ export interface WokaData {
     clothes: WokaLayer;
     hat: WokaLayer;
     accessory: WokaLayer;
+    woka: WokaLayer;
     [key: string]: WokaLayer;
 }

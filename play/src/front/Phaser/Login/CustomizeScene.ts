@@ -32,7 +32,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         selectCharacterCustomizeSceneVisibleStore.set(false);
 
         this.scene.stop(CustomizeSceneName);
-        this.scene.run(SelectCharacterSceneName);
+        this.scene.start(SelectCharacterSceneName);
     }
 
 }

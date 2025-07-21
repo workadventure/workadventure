@@ -8,7 +8,7 @@
     export let wokaData: WokaData | null = null;
     export let getTextureUrl: (url: string) => string = (url) => url;
 
-    const bodyPartOrder = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
+    const bodyPartOrder = ["body", "eyes", "hair", "clothes", "hat", "accessory", "woka"];
 
     // Directions correspond to the order of images in the sprite sheet:
     const directionsCoresp = [0, 1, 3, 2];
