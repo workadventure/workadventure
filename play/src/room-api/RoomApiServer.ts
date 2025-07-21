@@ -58,6 +58,8 @@ export default {
                     .then((apiClient) => {
                         const variableListener = apiClient.listenVariable(call.request);
 
+                        // Event listeners are valid for the lifetime of the listener
+                        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
                         variableListener.on("data", (response) => {
                             call.write(response);
                         });

@@ -6,6 +6,9 @@ import {
     AWS_DEFAULT_REGION,
     AWS_SECRET_ACCESS_KEY,
     AWS_URL,
+    S3_CONNECTION_TIMEOUT,
+    S3_MAX_PARALLEL_REQUESTS,
+    S3_REQUEST_TIMEOUT,
     S3_UPLOAD_CONCURRENCY_LIMIT,
 } from "../Enum/EnvironmentVariable";
 import { createS3ClientWithMD5 } from "../Upload/S3ClientWithMD5";
@@ -20,6 +23,11 @@ export function getS3Client(): S3 {
     const config: S3ClientConfig = {
         // ID and Secret are detected by default by the lib in the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env vars
         region: AWS_DEFAULT_REGION,
+        requestHandler: {
+            connectionTimeout: S3_CONNECTION_TIMEOUT,
+            requestTimeout: S3_REQUEST_TIMEOUT,
+            httpsAgent: { maxSockets: S3_MAX_PARALLEL_REQUESTS },
+        },
     };
 
     if (AWS_URL) {

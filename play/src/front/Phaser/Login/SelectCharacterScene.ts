@@ -30,6 +30,9 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 
+// Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
+/* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
 

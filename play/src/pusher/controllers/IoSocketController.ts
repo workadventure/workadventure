@@ -8,15 +8,14 @@ import {
     noUndefined,
     ServerToClientMessage as ServerToClientMessageTsProto,
     ServerToClientMessage,
-    SpaceFilterMessage,
-    SpaceUser,
     SubMessage,
     WokaDetail,
 } from "@workadventure/messages";
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
-import { Color } from "@workadventure/shared-utils";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
+import { asError } from "catch-unknown";
+import { Deferred } from "ts-deferred";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -28,7 +27,7 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { SocketData } from "../models/Websocket/SocketData";
+import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
@@ -54,6 +53,14 @@ export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidDat
 
 export class IoSocketController {
     constructor(private readonly app: TemplatedApp) {
+        // Global handler for unhandled Promises
+        // The listener never needs to be removed, because we are in a singleton that is never destroyed.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
+        process.on("unhandledRejection", (reason, promise) => {
+            console.error("Unhandled Rejection at:", promise, "reason:", reason);
+            Sentry.captureException(reason);
+        });
+
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();
@@ -471,27 +478,8 @@ export class IoSocketController {
                             activatedInviteUser: userData.activatedInviteUser ?? undefined,
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
-                            spaceUser: SpaceUser.fromPartial({
-                                spaceUserId: "",
-                                uuid: userData.userUuid,
-                                name,
-                                playUri: roomId,
-                                roomName: roomName === "" ? undefined : roomName,
-                                availabilityStatus,
-                                isLogged,
-                                color: Color.getColorByString(name),
-                                tags: memberTags,
-                                cameraState: false,
-                                screenSharingState: false,
-                                microphoneState: false,
-                                megaphoneState: false,
-                                characterTextures: characterTextures.map((characterTexture) => ({
-                                    url: characterTexture.url,
-                                    id: characterTexture.id,
-                                })),
-                                visitCardUrl: memberVisitCardUrl ?? undefined,
-                                chatID,
-                            }),
+                            spaceUserId: "",
+                            roomName: roomName,
                             emitInBatch: (payload: SubMessage): void => {},
                             batchedMessages: {
                                 event: "",
@@ -501,8 +489,8 @@ export class IoSocketController {
                             backConnection: undefined,
                             listenedZones: new Set<Zone>(),
                             pusherRoom: undefined,
-                            spaces: new Set<string>(),
-                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                            spaces: new Set<SpaceName>(),
+                            joinSpacesPromise: new Map<SpaceName, Deferred<void>>(),
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
@@ -687,8 +675,8 @@ export class IoSocketController {
                 });
             },
             message: (ws, arrayBuffer): void => {
+                const socket = ws as Socket;
                 (async () => {
-                    const socket = ws as Socket;
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
 
                     if (!message.message) {
@@ -718,20 +706,9 @@ export class IoSocketController {
                                 message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.addSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleAddSpaceFilterMessage(
+                            await socketManager.handleAddSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.addSpaceFilterMessage)
-                            );
-                            break;
-                        }
-                        case "updateSpaceFilterMessage": {
-                            if (message.message.updateSpaceFilterMessage.spaceFilterMessage !== undefined)
-                                message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName = `${
-                                    socket.getUserData().world
-                                }.${message.message.updateSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleUpdateSpaceFilterMessage(
-                                socket,
-                                noUndefined(message.message.updateSpaceFilterMessage)
                             );
                             break;
                         }
@@ -740,29 +717,17 @@ export class IoSocketController {
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            socketManager.handleRemoveSpaceFilterMessage(
+                            await socketManager.handleRemoveSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.removeSpaceFilterMessage)
                             );
                             break;
                         }
                         case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
+                            await socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
-                        case "joinSpaceMessage": {
-                            const localSpaceName = message.message.joinSpaceMessage.spaceName;
-                            message.message.joinSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.joinSpaceMessage.spaceName
-                            }`;
 
-                            await socketManager.handleJoinSpace(
-                                socket,
-                                message.message.joinSpaceMessage.spaceName,
-                                localSpaceName
-                            );
-                            break;
-                        }
                         case "updateSpaceMetadataMessage": {
                             const isMetadata = z
                                 .record(z.string(), z.unknown())
@@ -781,18 +746,12 @@ export class IoSocketController {
                             message.message.updateSpaceMetadataMessage.spaceName = `${socket.getUserData().world}.${
                                 message.message.updateSpaceMetadataMessage.spaceName
                             }`;
-                            await socketManager.handleUpdateSpaceMetadata(
+
+                            socketManager.handleUpdateSpaceMetadata(
                                 socket,
                                 message.message.updateSpaceMetadataMessage.spaceName,
                                 isMetadata.data
                             );
-                            break;
-                        }
-                        case "leaveSpaceMessage": {
-                            message.message.leaveSpaceMessage.spaceName = `${socket.getUserData().world}.${
-                                message.message.leaveSpaceMessage.spaceName
-                            }`;
-                            socketManager.handleLeaveSpace(socket, message.message.leaveSpaceMessage.spaceName);
                             break;
                         }
                         case "updateSpaceUserMessage": {
@@ -800,7 +759,7 @@ export class IoSocketController {
                                 message.message.updateSpaceUserMessage.spaceName
                             }`;
 
-                            socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
+                            await socketManager.handleUpdateSpaceUser(socket, message.message.updateSpaceUserMessage);
                             break;
                         }
                         case "updateChatIdMessage": {
@@ -913,6 +872,64 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "joinSpaceQuery": {
+                                        const localSpaceName =
+                                            message.message.queryMessage.query.joinSpaceQuery.spaceName;
+                                        message.message.queryMessage.query.joinSpaceQuery.spaceName = `${
+                                            socket.getUserData().world
+                                        }.${message.message.queryMessage.query.joinSpaceQuery.spaceName}`;
+                                        try {
+                                            await socketManager.handleJoinSpace(
+                                                socket,
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName,
+                                                localSpaceName,
+                                                message.message.queryMessage.query.joinSpaceQuery.filterType
+                                            );
+
+                                            answerMessage.answer = {
+                                                $case: "joinSpaceAnswer",
+                                                joinSpaceAnswer: {},
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                            );
+                                        } catch (e) {
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.joinSpaceQuery.spaceName
+                                            );
+                                            throw e;
+                                        }
+                                        break;
+                                    }
+                                    case "leaveSpaceQuery": {
+                                        message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
+                                            socket.getUserData().world
+                                        }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
+                                        try {
+                                            await socketManager.handleLeaveSpace(
+                                                socket,
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                            );
+
+                                            answerMessage.answer = {
+                                                $case: "leaveSpaceAnswer",
+                                                leaveSpaceAnswer: {},
+                                            };
+
+                                            this.sendAnswerMessage(socket, answerMessage);
+
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                            );
+                                        } catch (e) {
+                                            socketManager.deleteSpaceIfEmpty(
+                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                            );
+                                            throw e;
+                                        }
+                                        break;
+                                    }
                                     case "mapStorageJwtQuery": {
                                         answerMessage.answer = {
                                             $case: "mapStorageJwtAnswer",
@@ -928,23 +945,15 @@ export class IoSocketController {
                                     }
                                 }
                             } catch (error) {
-                                console.error("An error happened while answering a query:", error);
-                                Sentry.captureException(
-                                    `An error happened while answering a query: ${JSON.stringify(error)}`
-                                );
+                                const err = asError(error);
+                                Sentry.captureException(err);
                                 const answerMessage: AnswerMessage = {
                                     id: message.message.queryMessage.id,
                                 };
                                 answerMessage.answer = {
                                     $case: "error",
                                     error: {
-                                        message:
-                                            error !== null && typeof error === "object"
-                                                ? // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                                                  error.toString()
-                                                : typeof error === "string"
-                                                ? error
-                                                : "Unknown error",
+                                        message: err.message,
                                     },
                                 };
                                 this.sendAnswerMessage(socket, answerMessage);
@@ -1038,16 +1047,14 @@ export class IoSocketController {
                             message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.publicEvent.spaceName
                             }`;
-
-                            socketManager.handlePublicEvent(socket, message.message.publicEvent);
+                            await socketManager.handlePublicEvent(socket, message.message.publicEvent);
                             break;
                         }
                         case "privateEvent": {
                             message.message.privateEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.privateEvent.spaceName
                             }`;
-
-                            socketManager.handlePrivateEvent(socket, message.message.privateEvent);
+                            await socketManager.handlePrivateEvent(socket, message.message.privateEvent);
                             break;
                         }
                         default: {
@@ -1060,6 +1067,22 @@ export class IoSocketController {
                 })().catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
+
+                    try {
+                        socket.send(
+                            ServerToClientMessage.encode({
+                                message: {
+                                    $case: "errorMessage",
+                                    errorMessage: {
+                                        message: "An error occurred in pusher: " + asError(e).message,
+                                    },
+                                },
+                            }).finish()
+                        );
+                    } catch (error) {
+                        Sentry.captureException(error);
+                        console.error(error);
+                    }
                 });
             },
             drain: (ws) => {
@@ -1073,11 +1096,13 @@ export class IoSocketController {
                 }
 
                 const socket = ws as Socket;
-
                 try {
                     socketData.disconnecting = true;
                     socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket);
+                    socketManager.leaveSpaces(socket).catch((error) => {
+                        console.error(error);
+                        Sentry.captureException(error);
+                    });
                     socketManager.leaveChatRoomArea(socket).catch((error) => {
                         console.error(error);
                         Sentry.captureException(error);

@@ -64,7 +64,7 @@
 
 <div class="flex flex-col h-full">
     <ChatHeader />
-    <div>
+    <div class="max-h-full overflow-x-hidden overflow-y-auto">
         {#each roomsWithUsers as [roomName, userInRoom] (roomName)}
             <div class=" users flex flex-col shrink-0 relative first:pt-[72px]">
                 <button

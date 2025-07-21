@@ -149,6 +149,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public destroy(): void {
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
+        this.camera.off("followupdate", this.onFollowUpdate);
         this.unsubscribeMapEditorModeStore();
         super.destroy();
     }
@@ -449,6 +450,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
     }
 
+    private onFollowUpdate = () => {
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+    };
+
     private bindEventHandlers(): void {
         this.scene.game.events.on(
             WaScaleManagerEvent.RefreshFocusOnTarget,
@@ -463,9 +468,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             }
         );
 
-        this.camera.on("followupdate", () => {
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-        });
+        this.camera.on("followupdate", this.onFollowUpdate);
     }
 
     private getCameraUpdateEventData(): CameraManagerEventCameraUpdateData {

@@ -15,6 +15,8 @@ export class EnableCameraScene extends ResizableScene {
     preload() {}
 
     create() {
+        // Event listeners are valid for the lifetime of the Phaser svene and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         this.input.keyboard?.on("keyup-ENTER", () => {
             this.login();
         });

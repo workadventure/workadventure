@@ -6,5 +6,5 @@ export interface BroadcastSpace {
     readonly provider: string;
     readonly space: SpaceInterface;
     readonly tracks: Readable<Map<string, TrackWrapper>>;
-    destroy(): void;
+    destroy(): Promise<void>;
 }

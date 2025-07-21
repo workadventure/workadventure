@@ -13,11 +13,11 @@ import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
-import { SpaceFilterInterface } from "../Space/SpaceFilter/SpaceFilter";
 import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import { mediaManager } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
@@ -41,7 +41,7 @@ export class SimplePeer {
     private readonly rxJsUnsubscribers: Subscription[] = [];
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
-    private spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+    private spaceDeferred = new Deferred<SpaceInterface>();
 
     private pendingConnections: Map<number, AbortController> = new Map();
 
@@ -204,12 +204,16 @@ export class SimplePeer {
             user.initiator ? user.initiator : false,
             player,
             this.Connection,
-            this.spaceFilterDeferred.promise
+            this.spaceDeferred.promise
         );
 
         peer.toClose = false;
+
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
+
+        // Event listener is valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("connect", () => {
             const streamResult = get(screenSharingLocalStreamStore);
             if (streamResult.type === "success" && streamResult.stream !== undefined) {
@@ -271,7 +275,7 @@ export class SimplePeer {
             player,
             this.Connection,
             stream,
-            this.spaceFilterDeferred.promise
+            this.spaceDeferred.promise
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -547,11 +551,11 @@ export class SimplePeer {
         this.scriptingApiStream = mediaStream;
     }
 
-    setSpaceFilter(spaceFilter: SpaceFilterInterface | undefined) {
+    setSpace(spaceFilter: SpaceInterface | undefined) {
         if (spaceFilter) {
-            this.spaceFilterDeferred.resolve(spaceFilter);
+            this.spaceDeferred.resolve(spaceFilter);
         } else {
-            this.spaceFilterDeferred = new Deferred<SpaceFilterInterface>();
+            this.spaceDeferred = new Deferred<SpaceInterface>();
         }
     }
 }
