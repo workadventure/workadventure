@@ -95,6 +95,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         console.warn("JitsiBroadcastSpace => Subscribing to this.spaceFilter.usersStore");
         this.unsubscribes.push(
             this.space.usersStore.subscribe((users) => {
+                console.log("JitsiBroadcastSpace => Spacefilter usersStore", JitsiBroadcastSpace.numInstances, users);
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
                         limit(() => this.conference?.leave("Nobody is streaming anymore ..."))

@@ -35,6 +35,7 @@
 
     function handleIframeMessage(message: MessageEvent) {
         if (message.data.type === "cvIframeSize") {
+            console.log("visitCard message", message.data);
             // w = message.data.data.w + "px";
             h = message.data.data.h;
         }

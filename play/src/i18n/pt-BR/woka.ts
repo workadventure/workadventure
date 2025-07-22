@@ -5,16 +5,16 @@ const woka: DeepPartial<Translation["woka"]> = {
     customWoka: {
         title: "Personalize seu personagem",
         navigation: {
+            return: "Retornar",
+            back: "Voltar",
             finish: "Terminar",
-            backToDefaultWoka: "Voltar ao WOKA padrão",
+            next: "Próximo",
         },
-        randomize: "Losowy",
     },
     selectWoka: {
         title: "Selecionar seu personagem",
         continue: "Continuar",
         customize: "Customizar seu personagem",
-        randomize: "Losowy",
     },
     menu: {
         businessCard: "Cartão de visitas",

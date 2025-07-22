@@ -29,12 +29,14 @@
             audioManager.volumeReduced = reduceVolume;
             updateVolumeUI();
         });
+        console.log("MOUNTED");
     });
 
     onDestroy(() => {
         if (unsubscriberVolumeStore) {
             unsubscriberVolumeStore();
         }
+        console.log("UNMOUNTED");
     });
 
     function updateVolumeUI() {
