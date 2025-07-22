@@ -3,7 +3,7 @@
     import {
         backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
-        mapEditorActivated,
+        mapManagerActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
     } from "../../../Stores/MenuStore";
@@ -103,7 +103,7 @@
         </svg>
     </ActionBarButton>
 {/if}
-{#if $mapEditorActivated}
+{#if $mapManagerActivated}
     <ActionBarButton on:click={toggleMapExplorerMode} label={$LL.mapEditor.sideBar.exploreTheRoom()}>
         <svg
             xmlns="http://www.w3.org/2000/svg"

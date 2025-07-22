@@ -737,7 +737,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-     test("assert map explorer visible for guest", async ({ browser, request }) => {
+    test("Assert map explorer visible for guest", async ({ browser, request }) => {
         const page = await getPage(browser, 'Alice', Map.url("empty"));
 
         // Open the map editor
