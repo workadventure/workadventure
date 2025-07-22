@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -128,8 +128,44 @@
         return `${ABSOLUTE_PUSHER_URL}/${relativeUrl}`;
     }
 
+    // Function to validate character textures
+    function useKeyBoardNavigation(event: KeyboardEvent) {
+        if (!wokaData || !currentWokaCollection) return;
+        if (
+            event.key === "ArrowLeft" ||
+            event.key === "ArrowRight" ||
+            event.key === "ArrowUp" ||
+            event.key === "ArrowDown"
+        ) {
+            event.preventDefault();
+            const currentIndex = wokaData?.["woka"]?.collections.findIndex(
+                (c: WokaCollection) => c.name === currentWokaCollection?.name
+            );
+            if (currentIndex === undefined || currentIndex < 0) return;
+
+            const textures = wokaData["woka"].collections[currentIndex].textures;
+            const currentTextureIndex = textures.findIndex((t: WokaTexture) => t.id === selectedWokaTextureId["woka"]);
+
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+                const newIndex = (currentTextureIndex - 1 + textures.length) % textures.length;
+                selectTexture(currentIndex, textures[newIndex].id);
+            } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                const newIndex = (currentTextureIndex + 1) % textures.length;
+                selectTexture(currentIndex, textures[newIndex].id);
+            }
+        }
+        if (event.key === "Enter") {
+            saveAndContinue([selectedWokaTextureId["woka"]]); // Save and continue when Enter is pressed
+        }
+    }
+
     onMount(async () => {
         await loadWokaData();
+        document.addEventListener("keydown", useKeyBoardNavigation);
+    });
+
+    onDestroy(() => {
+        document.removeEventListener("keydown", useKeyBoardNavigation);
     });
 </script>
 
@@ -181,7 +217,10 @@
                         >
                             {#each wokaData?.["woka"]?.collections || [] as collection, collectionIndex (collection.name)}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
-                                <div class="w-full flex flex-row flex-wrap items-start justify-start gap-3">
+                                <div
+                                    id="woka-line-{collectionIndex}"
+                                    class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
+                                >
                                     {#each collection.textures || [] as texture (texture.id)}
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka ===

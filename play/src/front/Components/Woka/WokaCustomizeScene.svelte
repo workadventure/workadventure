@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -196,9 +196,50 @@
         }, 100); // Delay to ensure the DOM is updated
     }
 
+    // Function to handle keyboard navigation
+    function useKeyBoardNavigation(event: KeyboardEvent) {
+        if (!wokaData) return;
+        if (
+            event.key === "ArrowLeft" ||
+            event.key === "ArrowRight" ||
+            event.key === "ArrowUp" ||
+            event.key === "ArrowDown"
+        ) {
+            event.preventDefault();
+            const textures = [];
+            if (wokaData[selectedBodyPart]) {
+                textures.push(...wokaData[selectedBodyPart].collections.flatMap((collection) => collection.textures));
+            }
+            const currentIndex = textures.findIndex((texture) => texture.id === selectedTextures[selectedBodyPart]);
+            let newIndex = currentIndex;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+                newIndex = (currentIndex - 1 + textures.length) % textures.length; // Wrap around
+            } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                newIndex = (currentIndex + 1) % textures.length; // Wrap around
+            }
+            if (newIndex !== currentIndex) {
+                selectTexture(selectedBodyPart, textures[newIndex].id);
+                // Scroll to the newly selected texture
+                const element = document.getElementById(`texture-${selectedBodyPart}-${textures[newIndex].id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                }
+            }
+        } else if (event.key === "Enter") {
+            handlerSaveAndContinue();
+        }
+    }
+
     onMount(async () => {
         await loadWokaData();
         selectedBodyPart = bodyPartOrder[0];
+        // Document event listener for keyboard navigation
+        document.addEventListener("keydown", useKeyBoardNavigation);
+    });
+
+    onDestroy(() => {
+        // Remove keyboard navigation listener
+        document.removeEventListener("keydown", useKeyBoardNavigation);
     });
 </script>
 

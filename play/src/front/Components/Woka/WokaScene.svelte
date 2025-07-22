@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -33,12 +33,29 @@
         }
     }
 
+    // Function to handle keyboard navigation
+    function useKeyboardNavigation(event: KeyboardEvent) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            buildOwnWoka = false; // Go back to the selection scene
+        }
+    }
+
     onMount(() => {
         // Get the current textures
         const currentTextures = gameManager.getCharacterTextureIds();
         if (currentTextures && currentTextures.length > 1) {
             buildOwnWoka = true; // If there are textures, we assume the user wants to customize their Woka
         }
+        // Add keyboard navigation listener
+        window.addEventListener("keydown", useKeyboardNavigation);
+    });
+
+    onDestroy(() => {
+        // Clean up the scene visibility store when the component is destroyed
+        selectCharacterSceneVisibleStore.set(false);
+        // Remove keyboard navigation listener
+        window.removeEventListener("keydown", useKeyboardNavigation);
     });
 </script>
 
