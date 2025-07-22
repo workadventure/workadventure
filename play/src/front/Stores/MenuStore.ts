@@ -427,12 +427,10 @@ function createOpenedMenuStore() {
     return {
         subscribe,
         open(menu: Menus) {
-            console.log("open", menu);
             set(menu);
             activeSecondaryZoneActionBarStore.set(undefined);
         },
         close(menu: Menus) {
-            console.log("close", menu);
             if (get({ subscribe }) === menu) {
                 set(undefined);
             }
@@ -441,7 +439,6 @@ function createOpenedMenuStore() {
             set(undefined);
         },
         toggle(menu: Menus) {
-            console.log("toggle", menu);
             if (get({ subscribe }) === menu) {
                 set(undefined);
             } else {

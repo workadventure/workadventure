@@ -167,10 +167,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (isPopupJustClosed() || popupStore.hasPopup("say")) {
             return;
         }
-        popupStore.addPopup(SayPopUp, {type: this.controlKeyisPressed ? "think" : "say"}, "say");
-        if( this.controlKeyisPressed) {
+        popupStore.addPopup(SayPopUp, { type: this.controlKeyisPressed ? "think" : "say" }, "say");
+        if (this.controlKeyisPressed) {
             analyticsClient.openThinkBubble();
-        }else {
+        } else {
             analyticsClient.openSayBubble();
         }
     }

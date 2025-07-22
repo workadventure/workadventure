@@ -237,7 +237,7 @@
                         on:mouseenter={() => (showSayBubbleTooltip = true)}
                         on:mouseleave={() => (showSayBubbleTooltip = false)}
                         on:click={() => {
-                            popupStore.addPopup(SayPopUp, {type: "say"}, "say");
+                            popupStore.addPopup(SayPopUp, { type: "say" }, "say");
                             analyticsClient.openSayBubble();
                         }}
                         data-testid="say-bubble-button"
@@ -260,7 +260,7 @@
                         on:mouseenter={() => (showThinkBubbleTooltip = true)}
                         on:mouseleave={() => (showThinkBubbleTooltip = false)}
                         on:click={() => {
-                            popupStore.addPopup(SayPopUp, {type: "think"}, "say");
+                            popupStore.addPopup(SayPopUp, { type: "think" }, "say");
                             analyticsClient.openThinkBubble();
                         }}
                         data-testid="think-bubble-button"
