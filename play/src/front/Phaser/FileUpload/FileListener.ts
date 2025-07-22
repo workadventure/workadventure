@@ -2,10 +2,11 @@ import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
 import { draggingFile } from "../../Stores/FileUploadStore";
 import { popupStore } from "../../Stores/PopupStore";
 import PopupDropFileEntity from "../../Components/PopUp/PopupDropFileEntity.svelte";
+import { gameManager } from "../Game/GameManager";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 
 export class FileListener {
     private canvas: HTMLCanvasElement;
-    private dragCounter = 0;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -31,12 +32,21 @@ export class FileListener {
         event.preventDefault();
         event.stopPropagation();
 
-        // TODO: add a check to see if the user is allowed to drop files
+        const userIsAdmin = gameManager.getCurrentGameScene().connection?.isAdmin();
+        const userIsEditor = gameManager.getCurrentGameScene().connection?.hasTag("editor");
+
+        if (!userIsAdmin && !userIsEditor) {
+            warningMessageStore.addWarningMessage("You do not have the rights to upload files on this map", {
+                closable: true,
+            });
+            draggingFile.set(false);
+            return;
+        }
 
         const { files: filesFromDropEvent } = event.dataTransfer ?? {};
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
-                console.error("Only one file is permitted");
+                warningMessageStore.addWarningMessage("Only one file is permitted", { closable: true });
             } else {
                 const file = filesFromDropEvent.item(0);
                 if (this.isASupportedFormat(file?.type ?? "")) {
@@ -50,8 +60,8 @@ export class FileListener {
                         );
                     }
                 } else {
-                    console.log("File format not supported", file?.type);
-                    console.error("File format not supported");
+                    console.error("File format not supported", file?.type);
+                    warningMessageStore.addWarningMessage("File format not supported", { closable: true });
                 }
             }
         }
@@ -61,7 +71,6 @@ export class FileListener {
 
     private dragEnterHandler(event: DragEvent) {
         event.preventDefault();
-        this.dragCounter++;
 
         draggingFile.set(true);
     }
@@ -72,11 +81,8 @@ export class FileListener {
         draggingFile.set(true);
     }
 
-    private dragLeaveHandler() {
-        this.dragCounter--;
-        if (this.dragCounter === 0) {
-            draggingFile.set(false);
-        }
+    private dragLeaveHandler(event: DragEvent) {
+        event.preventDefault();
 
         draggingFile.set(false);
     }
