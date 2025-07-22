@@ -194,7 +194,6 @@
         };
 
         if (canvas) {
-            console.debug("Adding click listener to canvas");
             canvas.addEventListener("click", handleCanvasClick);
 
             const fileListener = new FileListener(canvas);

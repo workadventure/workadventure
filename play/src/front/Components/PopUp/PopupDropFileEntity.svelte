@@ -232,11 +232,11 @@
     //     return { x: 0, y: 0 };
     // }
 
-    function selectEntity(selctedEntityPrefab: EntityPrefab) {
-        entity.prefabRef.id = selctedEntityPrefab.id;
-        entity.prefabRef.collectionName = selctedEntityPrefab.collectionName;
+    function selectEntity(selectedEntityPrefab: EntityPrefab) {
+        entity.prefabRef.id = selectedEntityPrefab.id;
+        entity.prefabRef.collectionName = selectedEntityPrefab.collectionName;
 
-        entityPrefab = selctedEntityPrefab;
+        entityPrefab = selectedEntityPrefab;
 
         // showEntityPreviewAtPosition().catch((error) => {
         //     console.error("Error showing entity preview:", error);
@@ -278,7 +278,11 @@
     </div>
 
     <svelte:fragment slot="buttons">
-        <button class="btn btn-primary btn-sm w-full max-w-96 justify-center" on:click={onSave}>Save</button>
+        <button
+            class="btn btn-primary btn-sm w-full max-w-96 justify-center"
+            on:click={onSave}
+            data-test-id="dropFileSave">Save</button
+        >
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={removePopup}>Cancel</button>
     </svelte:fragment>
 </PopUpContainer>

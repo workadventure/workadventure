@@ -17,7 +17,6 @@ export class CreateEntityCommand extends Command {
     }
 
     public execute(): Promise<void> {
-        console.log("Executing CreateEntityCommand for entityId:", this.entityData);
         this.gameMap.getGameMapEntities()?.addEntity(this.entityId, this.entityData);
         return Promise.resolve();
     }

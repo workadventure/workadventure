@@ -9,12 +9,10 @@ export class GameMapEntities {
     }
 
     public addEntity(entityId: string, entityData: WAMEntityData): boolean {
-        console.log("Adding entity", entityId, entityData);
         if (this.wam.entities[entityId] !== undefined) {
             return false;
         }
         this.wam.entities[entityId] = entityData;
-        console.log("Entity added", this.wam.entities, entityData);
         return true;
     }
 
