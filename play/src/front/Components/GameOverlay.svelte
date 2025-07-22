@@ -36,6 +36,7 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
+    import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
 
     export let game: Game;
 
@@ -56,12 +57,8 @@
     </div>
 {/if}
 {#if $draggingFile}
-    <div class="bg-contrast pointer-events-none">
-        <div class="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
-            <div class="bg-white p-4 rounded shadow-lg">
-                <p class="text-center text-black">Drop your files here</p>
-            </div>
-        </div>
+    <div>
+        <DroppingFileScene />
     </div>
 {/if}
 {#if $errorScreenStore !== undefined}

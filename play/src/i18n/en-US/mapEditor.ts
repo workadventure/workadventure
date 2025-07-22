@@ -273,6 +273,7 @@ const mapEditor: BaseTranslation = {
         },
         title: "Put your object",
         editing: "Editing: {name}",
+        drop: "Drop your file anywhere",
         itemPicker: {
             searchPlaceholder: "Search",
             backToSelectObject: "Back to select object",
