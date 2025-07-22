@@ -42,6 +42,7 @@ export class LivekitConnection {
     private initialize() {
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
+                console.log(" 📩📩📩📩📩📩 LIVEKIT_INVITATION_MESSAGE", message);
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
                 const tokenType = message.livekitInvitationMessage.tokenType;
