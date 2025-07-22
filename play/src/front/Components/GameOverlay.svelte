@@ -4,10 +4,7 @@
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
-    import {
-        selectCharacterSceneVisibleStore,
-        selectCharacterCustomizeSceneVisibleStore,
-    } from "../Stores/SelectCharacterStore";
+    import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
@@ -34,8 +31,7 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
-    import WokaCustomizeScene from "./Woka/WokaCustomizeScene.svelte";
-    import WokaSelectScene from "./Woka/WokaSelectScene.svelte";
+    import WokaScene from "./Woka/WokaScene.svelte";
 
     export let game: Game;
 
@@ -69,11 +65,7 @@
     </div>
 {:else if $selectCharacterSceneVisibleStore}
     <div>
-        <WokaSelectScene {game} />
-    </div>
-{:else if $selectCharacterCustomizeSceneVisibleStore}
-    <div>
-        <WokaCustomizeScene {game} />
+        <WokaScene />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>
@@ -83,7 +75,7 @@
     <div class="h-dvh overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
-{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
+{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}

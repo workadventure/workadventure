@@ -1,18 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Game } from "phaser";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { connectionManager } from "../../Connection/ConnectionManager";
-    import {
-        selectCharacterCustomizeSceneVisibleStore,
-        selectCharacterSceneVisibleStore,
-    } from "../../Stores/SelectCharacterStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
     import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import BodyIcon from "../Icons/BodyIcon.svelte";
     import EyesIcon from "../Icons/EyesIcon.svelte";
     import HairIcon from "../Icons/HairIcon.svelte";
@@ -20,11 +12,12 @@
     import HatIcon from "../Icons/HatIcon.svelte";
     import SwordIcon from "../Icons/SwordIcon.svelte";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
-    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
 
-    export let game: Game;
+    export let back: () => void;
+    export let saveAndContinue: (texturesId: string[]) => void;
+
     let wokaData: WokaData | null = null;
     let selectedBodyPart: WokaBodyPart = "body";
     let selectedTextures: Record<WokaBodyPart, string> = {
@@ -40,8 +33,6 @@
     let assetsDirection: number = 0;
 
     const bodyPartOrder: WokaBodyPart[] = ["body", "eyes", "hair", "clothes", "hat", "accessory"];
-
-    const selectCustomizeScene = game.scene.getScene(CustomizeSceneName) as CustomizeScene;
 
     async function loadWokaData() {
         try {
@@ -59,6 +50,7 @@
             }
 
             const data = await response.json();
+            console.log("Woka data loaded:", data);
             wokaData = data;
 
             loadSavedTextures();
@@ -73,7 +65,25 @@
     function loadSavedTextures() {
         try {
             const savedTextureIds = gameManager.getCharacterTextureIds();
-            if (savedTextureIds && savedTextureIds.length > 0) {
+            // Check that textures exist in the Woka data
+            if (!wokaData) {
+                throw new Error("Woka data is not loaded");
+            }
+
+            // Check if current textures is in the collections list
+            const hasCustomizeTexture = [
+                ...wokaData.body.collections,
+                ...wokaData.eyes.collections,
+                ...wokaData.hair.collections,
+                ...wokaData.clothes.collections,
+                ...wokaData.hat.collections,
+                ...wokaData.accessory.collections,
+            ].find((collection) =>
+                collection.textures.find((texture) => savedTextureIds != null && savedTextureIds.includes(texture.id))
+            );
+
+            // Initialize textures of customize Woka scene
+            if (hasCustomizeTexture && savedTextureIds && savedTextureIds.length > 0) {
                 bodyPartOrder.forEach((bodyPart, index) => {
                     if (savedTextureIds[index]) {
                         selectedTextures[bodyPart] = savedTextureIds[index];
@@ -109,34 +119,19 @@
         selectedTextures = { ...selectedTextures }; // Trigger reactivity
     }
 
-    async function saveAndContinue() {
+    function handlerSaveAndContinue() {
         try {
             const textureIds = bodyPartOrder.map((bodyPart) => selectedTextures[bodyPart]).filter(Boolean);
-
             if (!areCharacterTexturesValid(textureIds)) {
                 error = "Invalid character textures";
                 return;
             }
 
-            analyticsClient.validationWoka("CustomizeWoka");
-
-            gameManager.setCharacterTextureIds(textureIds);
-
-            await connectionManager.saveTextures(textureIds);
-
-            selectCharacterCustomizeSceneVisibleStore.set(false);
-
-            gameManager.tryResumingGame(SelectCharacterSceneName);
+            saveAndContinue(textureIds);
         } catch (err) {
             console.error("Error saving textures:", err);
             error = "Failed to save character customization";
         }
-    }
-
-    function goBack() {
-        selectCharacterCustomizeSceneVisibleStore.set(false);
-        selectCharacterSceneVisibleStore.set(true);
-        selectCustomizeScene.backToPreviousScene(); // Ensure the CustomizeScene is resumed
     }
 
     function getAvailableTextures(collectionIndex: number, bodyPart: WokaBodyPart): WokaTexture[] {
@@ -174,6 +169,31 @@
             default:
                 return null;
         }
+    }
+
+    let timeOutToScroll: ReturnType<typeof setTimeout> | null = null;
+    function selectBodyPart(bodyPart: WokaBodyPart) {
+        selectedBodyPart = bodyPart;
+
+        // Clear previous timeout if it exists
+        if (timeOutToScroll) clearTimeout(timeOutToScroll);
+        timeOutToScroll = setTimeout(() => {
+            timeOutToScroll = null; // Reset timeout variable
+            // Check if texture to the body part selected is empty
+            if (selectedTextures[selectedBodyPart] === "") return;
+            // Get element by body part and texture id
+            let element = document.getElementById(`texture-${selectedBodyPart}-${selectedTextures[selectedBodyPart]}`);
+            // If element is not found, do nothing
+            if (!element) {
+                // Get the first texture of the body part element
+                element = document.querySelector(
+                    `#texture-${selectedBodyPart}-${wokaData?.[selectedBodyPart]?.collections?.[0]?.textures?.[0]?.id}`
+                );
+                if (!element) return; // If still not found, exit
+            }
+            // Scroll to the element
+            element.scrollIntoView({ behavior: "smooth", block: "end", inline: "end" });
+        }, 100); // Delay to ensure the DOM is updated
     }
 
     onMount(async () => {
@@ -216,7 +236,7 @@
                                 on:click={randomizeOutfit}
                             >
                                 <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
-                                <span> Randomize </span>
+                                <span>{$LL.woka.customWoka.randomize()}</span>
                             </button>
                         </div>
                     </div>
@@ -251,7 +271,7 @@
                                 bodyPart
                                     ? 'text-white border-white'
                                     : 'text-white/50 border-white/10'}"
-                                on:click={() => (selectedBodyPart = bodyPart)}
+                                on:click={() => selectBodyPart(bodyPart)}
                                 style="border-bottom-style: solid;"
                             >
                                 <svelte:component
@@ -271,7 +291,7 @@
                             {selectedBodyPart} Options
                         </h3>
                         <div
-                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[40px]"
+                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[20px]"
                         >
                             {#each wokaData?.[selectedBodyPart]?.collections || [] as collection, collectionIndex (collection.name)}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
@@ -284,6 +304,7 @@
                                                 ? 'bg-white/50 border-white'
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                             on:click={() => selectTexture(selectedBodyPart, texture.id)}
+                                            id={`texture-${selectedBodyPart}-${texture.id}`}
                                         >
                                             <div class="p-2 bg-white/10 rounded flex items-center justify-center">
                                                 {#if texture.url.includes("empty.png")}
@@ -327,13 +348,13 @@
             >
                 <button
                     class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
-                    on:click={goBack}
+                    on:click={back}
                 >
-                    {$LL.woka.customWoka.navigation.back()}
+                    {$LL.woka.customWoka.navigation.backToDefaultWoka()}
                 </button>
                 <button
                     class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
-                    on:click={saveAndContinue}
+                    on:click={handlerSaveAndContinue}
                 >
                     {$LL.woka.customWoka.navigation.finish()}
                 </button>

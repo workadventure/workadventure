@@ -1,29 +1,22 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { Game } from "phaser";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { connectionManager } from "../../Connection/ConnectionManager";
-    import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-    import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
-    import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
 
-    export let game: Game;
+    export let customize: () => void;
+    export let saveAndContinue: (texturesId: string[]) => void;
+
     let wokaData: WokaData | null = null;
     let currentWokaCollection: WokaCollection | null = null;
     let selectedWokaTextureId: Record<string, string>;
     let isLoading = true;
     let error = "";
     let assetsDirection: number = 0;
-
-    const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
 
     async function loadWokaData() {
         try {
@@ -135,30 +128,6 @@
         return `${ABSOLUTE_PUSHER_URL}/${relativeUrl}`;
     }
 
-    async function saveAndContinue() {
-        try {
-            const textureId = selectedWokaTextureId["woka"];
-            if (!areCharacterTexturesValid([textureId])) {
-                error = "Invalid character textures";
-                return;
-            }
-
-            analyticsClient.validationWoka("SelectWoka");
-            gameManager.setCharacterTextureIds([textureId]);
-            await connectionManager.saveTextures([textureId]);
-            selectCharacterSceneVisibleStore.set(false);
-            gameManager.tryToStopGameScene(SelectCharacterSceneName);
-            gameManager.tryResumingGame(EnableCameraSceneName);
-        } catch (err) {
-            console.error("Error saving textures:", err);
-            error = "Failed to save character customization";
-        }
-    }
-
-    function goCustomize() {
-        selectCharacterScene.nextSceneToCustomizeScene();
-    }
-
     onMount(async () => {
         await loadWokaData();
     });
@@ -198,7 +167,7 @@
                                 on:click={randomizeOutfit}
                             >
                                 <ShuffleIcon fillColor="white" width="w-4" height="h-4" />
-                                <span> Randomize </span>
+                                <span>{$LL.woka.selectWoka.randomize()}</span>
                             </button>
                         </div>
                     </div>
@@ -208,7 +177,7 @@
                     <div class="rounded-lg flex flex-col flex-1 min-h-0 min-w-0">
                         <h3 class="text-lg font-semibold capitalize">Woka</h3>
                         <div
-                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[40px]"
+                            class="flex-none lg:flex-1 flex flex-col items-start gap-0 min-h-0 min-w-0 max-h-full overflow-y-scroll overflow-x-auto scroll-mask py-[20px]"
                         >
                             {#each wokaData?.["woka"]?.collections || [] as collection, collectionIndex (collection.name)}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
@@ -244,13 +213,13 @@
             >
                 <button
                     class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
-                    on:click={goCustomize}
+                    on:click={customize}
                 >
                     {$LL.woka.selectWoka.customize()}
                 </button>
                 <button
                     class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
-                    on:click={saveAndContinue}
+                    on:click={() => saveAndContinue([selectedWokaTextureId["woka"]])}
                 >
                     {$LL.woka.selectWoka.continue()}
                 </button>

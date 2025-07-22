@@ -1,34 +1,24 @@
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "@workadventure/messages";
-import { get } from "svelte/store";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import {
-    selectCharacterCustomizeSceneVisibleStore,
-    selectCharacterSceneVisibleStore,
-} from "../../Stores/SelectCharacterStore";
+import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
 import {
     collectionsSizeStore,
     customizeAvailableStore,
     selectedCollection,
 } from "../../Stores/SelectCharacterSceneStore";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
-import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 import { gameManager } from "../Game/GameManager";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
-import { batchGetUserMediaStore } from "../../Stores/MediaStore";
-import { connectionManager } from "../../Connection/ConnectionManager";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
-import { EnableCameraSceneName } from "./EnableCameraScene";
 
 // Event listeners are valid for the lifetime of the Phaser scene and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
@@ -135,10 +125,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         this.onResize();
 
-        if (get(collectionsSizeStore) < 1) {
-            this.nextSceneToCustomizeScene();
-        }
-
         const characterTextures = gameManager.getCharacterTextureIds();
         if (characterTextures) {
             this.playerTextures.wokaCollections.forEach((collection, index) => {
@@ -163,38 +149,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 });
             });
         }
-    }
-
-    public async nextSceneToCameraScene(): Promise<void> {
-        if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
-            return;
-        }
-        if (!this.selectedWoka) {
-            return;
-        }
-
-        analyticsClient.validationWoka("SelectWoka");
-
-        gameManager.setCharacterTextureIds([this.selectedWoka.texture.key]);
-        await connectionManager.saveTextures([this.selectedWoka.texture.key]);
-        this.selectedWoka = null;
-        this.scene.stop(SelectCharacterSceneName);
-        gameManager.tryResumingGame(EnableCameraSceneName);
-        selectCharacterSceneVisibleStore.set(false);
-        this.events.removeListener("wake");
-    }
-
-    public nextSceneToCustomizeScene(): void {
-        if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
-            return;
-        }
-        this.scene.stop(SelectCharacterSceneName);
-        batchGetUserMediaStore.startBatch();
-        myCameraStore.set(false);
-        myMicrophoneStore.set(false);
-        batchGetUserMediaStore.commitChanges();
-        selectCharacterSceneVisibleStore.set(false);
-        selectCharacterCustomizeSceneVisibleStore.set(true);
     }
 
     public update(): void {
@@ -280,10 +234,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.bindKeyboardEventHandlers();
         this.events.addListener("wake", () => {
             selectCharacterSceneVisibleStore.set(true);
-        });
-
-        this.input.keyboard?.on("keyup-ENTER", () => {
-            return this.nextSceneToCameraScene();
         });
 
         this.charactersDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaSlot) => {
