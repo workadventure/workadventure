@@ -22,7 +22,7 @@
         try {
             isLoading = true;
             const roomUrl = gameManager.currentStartedRoom.href;
-            const response = await fetch(`${ABSOLUTE_PUSHER_URL}/woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
+            const response = await fetch(`${ABSOLUTE_PUSHER_URL}woka/list?roomUrl=${encodeURIComponent(roomUrl)}`, {
                 headers: {
                     Authorization: localUserStore.getAuthToken() || "",
                 },
@@ -125,7 +125,7 @@
             return relativeUrl;
         }
 
-        return `${ABSOLUTE_PUSHER_URL}/${relativeUrl}`;
+        return `${ABSOLUTE_PUSHER_URL}${relativeUrl}`;
     }
 
     // Function to validate character textures
