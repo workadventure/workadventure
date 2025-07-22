@@ -424,18 +424,17 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
         const entityId = uuidv4();
 
+        const properties = get(mapEditorCopiedEntityDataPropertiesStore);
+
         const entityData: WAMEntityData = {
             x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),
             y: Math.floor(y - this.entityPrefabPreview.displayHeight * 0.5),
             prefabRef: this.entityPrefab,
-            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
+            properties: properties ?? [],
+            name: properties?.find((p) => p.type === "openFile")?.name ?? undefined,
         };
 
-        console.log("entityPrefab", this.entityPrefab);
         const openEntity = new Entity(this.scene, entityId, entityData, this.entityPrefab);
-
-        console.log("entityPrefabPreview", this.entityPrefabPreview);
-        console.log("execute command", pointer.worldX, "=>", x, pointer.worldY, "=>", y);
 
         this.mapEditorModeManager
             .executeCommand(
