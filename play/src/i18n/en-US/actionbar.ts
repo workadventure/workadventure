@@ -26,7 +26,6 @@ const actionbar: BaseTranslation = {
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
-    mapExplorer: "Map explorer",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",
     app: "Third applications",

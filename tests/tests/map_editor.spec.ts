@@ -736,4 +736,11 @@ test.describe("Map editor @oidc", () => {
         await page.close();
         await page.context().close();
     });
+
+     test("assert map explorer visible for guest", async ({ browser, request }) => {
+        const page = await getPage(browser, 'Alice', Map.url("empty"));
+
+        // Open the map editor
+        await Menu.openMapExplorer(page);
+    });
 });

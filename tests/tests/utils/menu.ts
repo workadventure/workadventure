@@ -14,6 +14,12 @@ class Menu {
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
+    async openMapExplorer(page: Page) {
+        await page.getByTestId('map-menu').click({timeout: 30_000});
+        await page.getByRole('button', { name: 'Explore the room' }).click();
+        await expect(page.getByRole('button', { name: 'Explore the room' })).toBeHidden();
+    }
+
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
