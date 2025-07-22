@@ -34,7 +34,6 @@
             }
 
             wokaData = await response.json();
-            console.log("Woka data loaded:", wokaData);
 
             loadSavedTextures();
         } catch (err) {
@@ -92,7 +91,6 @@
             throw new Error(`Collection ${collectionName} does not exist in the Woka data`);
         }
         currentWokaCollection = collection;
-        console.log("Current Woka collection selected:", currentWokaCollection);
     }
 
     function selectTexture(collectionIndex: number, textureId: string) {
@@ -155,7 +153,12 @@
             }
         }
         if (event.key === "Enter") {
-            saveAndContinue([selectedWokaTextureId["woka"]]); // Save and continue when Enter is pressed
+            event.preventDefault();
+            // FIXME: We use setTimeout to return on the game
+            // It's a workaround to avoid the Enter key being captured by the game scene
+            setTimeout(() => {
+                saveAndContinue([selectedWokaTextureId["woka"]]); // Save and continue when Enter is pressed
+            }, 100);
         }
     }
 

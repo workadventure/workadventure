@@ -50,7 +50,6 @@
             }
 
             const data = await response.json();
-            console.log("Woka data loaded:", data);
             wokaData = data;
 
             loadSavedTextures();
@@ -226,7 +225,12 @@
                 }
             }
         } else if (event.key === "Enter") {
-            handlerSaveAndContinue();
+            event.preventDefault();
+            // FIXME: We use setTimeout to return on the game
+            // It's a workaround to avoid the Enter key being captured by the game scene
+            setTimeout(() => {
+                handlerSaveAndContinue();
+            }, 100);
         }
     }
 

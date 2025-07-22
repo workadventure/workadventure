@@ -301,8 +301,6 @@ export class AdminController extends BaseHttpController {
             for (const roomClient of roomClients) {
                 promises.push(
                     new Promise<void>((resolve, reject) => {
-                        console.log("dispatchGlobalEvent => body.name", body.name);
-                        console.log("dispatchGlobalEvent => body.data", body.data);
                         roomClient.dispatchGlobalEvent(
                             {
                                 name: body.name,
