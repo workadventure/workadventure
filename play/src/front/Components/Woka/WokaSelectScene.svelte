@@ -218,7 +218,7 @@
                     {$LL.woka.selectWoka.customize()}
                 </button>
                 <button
-                    class="w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
+                    class="selectCharacterSceneFormSubmit w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
                     on:click={() => saveAndContinue([selectedWokaTextureId["woka"]])}
                 >
                     {$LL.woka.selectWoka.continue()}
