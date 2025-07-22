@@ -4,17 +4,16 @@ const woka: BaseTranslation = {
     customWoka: {
         title: "Build your WOKA",
         navigation: {
-            return: "Return",
-            back: "Back",
             finish: "Finish",
-            next: "Next",
-            backTodefaultWoka: "Back to default WOKA",
+            backToDefaultWoka: "Back to default WOKA",
         },
+        randomize: "Randomize",
     },
     selectWoka: {
         title: "Select your WOKA",
         continue: "Continue",
         customize: "Build your WOKA",
+        randomize: "Select Randomly",
     },
     menu: {
         businessCard: "Business Card",
