@@ -3,6 +3,7 @@
     import {
         backOfficeMenuVisibleStore,
         globalMessageVisibleStore,
+        mapEditorActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
     } from "../../../Stores/MenuStore";
@@ -23,6 +24,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { ADMIN_BO_URL } from "../../../Enum/EnvironmentVariable";
     import ActionBarButton from "../ActionBarButton.svelte";
+    import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -64,6 +66,11 @@
         closeMapMenu();
     }
 
+    function toggleMapExplorerMode() {
+        toggleMapEditorMode();
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
+    }
+
     function openBo() {
         if (!ADMIN_BO_URL) {
             throw new Error("ADMIN_BO_URL not set");
@@ -94,6 +101,14 @@
                 stroke-linejoin="round"
             />
         </svg>
+    </ActionBarButton>
+{/if}
+{#if $mapEditorActivated}
+    <ActionBarButton
+        on:click={toggleMapExplorerMode}
+        label={$LL.actionbar.mapExplorer()}
+    >
+        <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>
     </ActionBarButton>
 {/if}
 {#if $backOfficeMenuVisibleStore}
