@@ -245,7 +245,7 @@
 
 <div class="bg-contrast w-screen h-screen absolute flex items-center justify-center">
     <div
-        class="rounded-lg flex flex-col max-w-4xl w-full mx-4 sm:h-[70vh] h-[80vh] relative bg-white/10 backdrop-blur-md"
+        class="rounded-lg flex flex-col max-w-4xl w-full mx-4 h-[98vh] sm:h-[70vh] relative bg-white/10 backdrop-blur-md"
     >
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
@@ -259,8 +259,8 @@
                 </button>
             </div>
         {:else}
-            <div class="flex-1 flex flex-col lg:flex-row items-start gap-6 min-h-0 p-6">
-                <div class="flex flex-row gap-4 w-full lg:w-fit">
+            <div class="flex-1 flex flex-col sm:flex-row items-start gap-6 min-h-0 p-6">
+                <div class="flex flex-row gap-4 w-full sm:w-fit">
                     <div class="flex flex-col gap-2">
                         <WokaPreview
                             {selectedTextures}
@@ -387,14 +387,11 @@
                 class="w-full p-3 flex flex-row items-center gap-2 border-t-2 border-t-white/10"
                 style="border-top-style: solid;"
             >
-                <button
-                    class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white text-lg rounded"
-                    on:click={back}
-                >
+                <button class="w-full px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded" on:click={back}>
                     {$LL.woka.customWoka.navigation.backToDefaultWoka()}
                 </button>
                 <button
-                    class="selectCharacterSceneFormSubmit w-full px-4 py-3 bg-secondary text-white text-lg rounded hover:bg-secondary-600"
+                    class="selectCharacterSceneFormSubmit w-full px-4 py-3 bg-secondary text-white rounded hover:bg-secondary-600"
                     on:click={handlerSaveAndContinue}
                 >
                     {$LL.woka.customWoka.navigation.finish()}
