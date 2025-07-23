@@ -42,13 +42,29 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
 
-        this.subscribeToStores();
+        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
+            if (!get(mapEditorModeStore)) {
+                return;
+            }
+            switch (mode) {
+                case "ADD": {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    break;
+                }
+                case "EDIT": {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    this.cleanPreview();
+                    break;
+                }
+            }
+        });
     }
 
     public update(time: number, dt: number): void {}
 
     public clear(): void {
         this.scene.input.topOnly = false;
+        console.trace("Entity deleted");
         mapEditorEntityModeStore.set("ADD");
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
@@ -59,6 +75,8 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         mapEditorVisibilityStore.set(true);
+
+        this.subscribeToStores();
     }
 
     public destroy(): void {
@@ -81,6 +99,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                         document.activeElement.blur();
                     }
                     mapEditorSelectedEntityStore.set(undefined);
+                    console.trace("Entity deleted");
                     mapEditorEntityModeStore.set("ADD");
                     return;
                 }
@@ -94,6 +113,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
             case "delete": {
                 get(mapEditorSelectedEntityStore)?.delete();
                 mapEditorSelectedEntityStore.set(undefined);
+                console.trace("Entity deleted");
                 mapEditorEntityModeStore.set("ADD");
                 break;
             }
@@ -147,23 +167,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 .image(entity.x, entity.y, entity.texture)
                 .setOrigin(0)
                 .setAlpha(0.5);
-        });
-
-        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
-            if (!get(mapEditorModeStore)) {
-                return;
-            }
-            switch (mode) {
-                case "ADD": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    break;
-                }
-                case "EDIT": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    this.cleanPreview();
-                    break;
-                }
-            }
         });
     }
 
