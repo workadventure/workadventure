@@ -63,7 +63,7 @@ export class LiveKitService {
 
     async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            identity: user.spaceUserId + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER"),
+            identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
@@ -98,13 +98,17 @@ export class LiveKitService {
         }
     }
 
-    async removeParticipant(roomName: string, participantName: string): Promise<void> {
+    private getParticipantIdentity(participantName: string, tokenType: LivekitTokenType): string {
+        return participantName + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER");
+    }
+
+    async removeParticipant(roomName: string, participantName: string , tokenType: LivekitTokenType): Promise<void> {
         try {
             const rooms = await this.roomServiceClient.listRooms([roomName]);
 
             if (rooms && rooms.length > 0) {
                 const participants = await this.roomServiceClient.listParticipants(roomName);
-                const participantExists = participants.some((p) => p.identity === participantName);
+                const participantExists = participants.some((p) => p.identity === this.getParticipantIdentity(participantName, tokenType));
 
                 if (!participantExists) {
                     console.warn(`Participant ${participantName} not found in room ${roomName}`);

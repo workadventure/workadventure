@@ -21,32 +21,42 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             Sentry.captureException(error);
         });
     }
-
-    deleteUser(user: SpaceUser): void {
-        this.livekitService
-            .removeParticipant(this.space.getSpaceName(), user.name)
-            .catch((error) => {
-                console.error(`Error removing participant ${user.name} from Livekit:`, error);
-                Sentry.captureException(error);
-            })
-            .finally(() => {
+    private async deleteUserFromLivekit(user: SpaceUser, tokenType: LivekitTokenType): Promise<void> {
                 try {
-                    this.space.dispatchPrivateEvent({
-                        spaceName: this.space.getSpaceName(),
-                        receiverUserId: user.spaceUserId,
-                        senderUserId: user.spaceUserId,
-                        spaceEvent: {
-                            event: {
-                                $case: "livekitDisconnectMessage",
-                                livekitDisconnectMessage: {},
-                            },
+                    await this.livekitService
+                        .removeParticipant(this.space.getSpaceName(), user.name, tokenType);
+                } catch (error) {
+                    console.error(`Error removing participant ${user.name} from Livekit:`, error);
+                    Sentry.captureException(error);
+                }
+
+                try {
+                        this.space.dispatchPrivateEvent({
+                            spaceName: this.space.getSpaceName(),
+                            receiverUserId: user.spaceUserId,
+                            senderUserId: user.spaceUserId,
+                            spaceEvent: {
+                                event: {
+                                    $case: "livekitDisconnectMessage",
+                                    livekitDisconnectMessage: {
+                                        tokenType: tokenType,
+                                    },
+                                },
                         },
                     });
+
                 } catch (error) {
                     console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
                     //  Sentry.captureException(error);
                 }
-            });
+
+            }
+
+    deleteUser(user: SpaceUser): void {
+        this.deleteUserFromLivekit(user, LivekitTokenType.STREAMER).catch((error) => {
+            console.error(`Error deleting user ${user.name} from Livekit:`, error);
+            Sentry.captureException(error);
+        });
     }
 
     updateUser(user: SpaceUser): void {}
@@ -85,7 +95,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     deleteUserFromNotify(user: SpaceUser): void {
-        this.deleteUser(user);
+        this.deleteUserFromLivekit(user, LivekitTokenType.WATCHER).catch((error) => {
+            console.error(`Error deleting user ${user.name} from Livekit:`, error);
+            Sentry.captureException(error);
+        });
     }
 
     private async sendLivekitInvitationMessage(

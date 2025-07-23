@@ -75,19 +75,28 @@ export class LivekitConnection {
             })
         );
         this.unsubscribers.push(
-            this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe(() => {
-                if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
-                    console.error("LivekitRoom not found");
-                    Sentry.captureException(new Error("LivekitRoom not found"));
-                    return;
-                }
+            this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_DISCONNECT_MESSAGE).subscribe((message) => {
+                const tokenType = message.livekitDisconnectMessage.tokenType;
 
-                this.livekitRoomStreamer?.leaveRoom();
-                this.livekitRoomWatcher?.leaveRoom();
-                this.livekitRoomStreamer?.destroy();
-                this.livekitRoomWatcher?.destroy();
-                this.livekitRoomStreamer = undefined;
-                this.livekitRoomWatcher = undefined;
+                if (tokenType === LivekitTokenType.STREAMER) {
+                    if (!this.livekitRoomStreamer) {
+                        console.error("LivekitRoom not found");
+                        Sentry.captureException(new Error("LivekitRoom not found"));
+                        return;
+                    }
+                    this.livekitRoomStreamer?.leaveRoom();
+                    this.livekitRoomStreamer?.destroy();
+                    this.livekitRoomStreamer = undefined;
+                } else if (tokenType === LivekitTokenType.WATCHER) {
+                    if (!this.livekitRoomWatcher) {
+                        console.error("LivekitRoom not found");
+                        Sentry.captureException(new Error("LivekitRoom not found"));
+                        return;
+                    }
+                    this.livekitRoomWatcher?.leaveRoom();
+                    this.livekitRoomWatcher?.destroy();
+                    this.livekitRoomWatcher = undefined;
+                }
             })
         );
     }
