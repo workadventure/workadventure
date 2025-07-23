@@ -166,6 +166,9 @@ export class Space implements CustomJsonReplacerInterface {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
 
+            const usersToNotifyList = this.usersListToNotify(sourceWatcher);
+            usersToNotifyList.delete(spaceUserId);
+
             if (!user) {
                 console.error("User not found in this space", spaceUserId);
                 Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
