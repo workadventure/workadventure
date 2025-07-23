@@ -41,6 +41,8 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
+
+        this.subscribeToStores();
     }
 
     public update(time: number, dt: number): void {}
@@ -54,7 +56,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     }
 
     public activate(): void {
-        this.subscribeToStores();
         this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         mapEditorVisibilityStore.set(true);
