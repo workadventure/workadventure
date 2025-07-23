@@ -520,7 +520,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     private unsubscribeStore() {
-        this.mapEntityEditorModeStoreUnsubscriber();
+        this.mapEntityEditorModeStoreUnsubscriber?.();
         this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
         this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
     }

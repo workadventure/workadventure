@@ -41,28 +41,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
-
-        // this.entitiesManager.makeAllEntitiesInteractive();
-
-        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
-            // console.trace("Entity mode changed to", mode);
-            // if (!get(mapEditorModeStore)) {
-            //     console.warn("Map editor mode is not active, ignoring entity mode change");
-            //     return;
-            // }
-            // alert("Entity mode changed to b,dfonbgf");
-            // switch (mode) {
-            //     case "ADD": {
-            //         this.entitiesManager.makeAllEntitiesInteractive();
-            //         break;
-            //     }
-            //     case "EDIT": {
-            //         this.entitiesManager.makeAllEntitiesInteractive();
-            //         this.cleanPreview();
-            //         break;
-            //     }
-            // }
-        });
     }
 
     public update(time: number, dt: number): void {}
@@ -175,7 +153,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         });
 
         this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
-            console.trace("Entity mode changed to", mode);
             if (!get(mapEditorModeStore)) {
                 return;
             }
