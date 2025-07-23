@@ -9,10 +9,22 @@ import {
     EgressInfo,
     S3Upload,
     EncodedFileType,
+    ImageOutput,
+    EncodedOutputs
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
-import { LIVEKIT_WS_URL, LIVEKIT_API_SECRET, LIVEKIT_API_KEY, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
+import {
+    LIVEKIT_WS_URL,
+    LIVEKIT_API_SECRET,
+    LIVEKIT_API_KEY,
+    LIVEKIT_HOST,
+    LIVEKIT_RECORDING_S3_ENDPOINT,
+    LIVEKIT_RECORDING_S3_BUCKET,
+    LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_SECRET_KEY,
+    LIVEKIT_RECORDING_S3_REGION
+} from "../../Enum/EnvironmentVariable";
 
 const debug = Debug("livekit");
 
@@ -131,44 +143,61 @@ export class LiveKitService {
         return this.livekitFrontendUrl;
     }
 
-    async startRecording(roomName: string, layout = "grid"): Promise<void> {
-        console.log("🤟🤟🤟Backend: Start recording for room : ", roomName);
+    async startRecording(roomName: string, user: SpaceUser, folderName: string, layout = "grid"): Promise<void> {
+        console.log("🤟🤟🤟Backend: Start recording for user : ", user);
         try {
 
             // throw new Error("Livekit recording is not implemented yet");
-            //TODO : use env variable / voir si on utilise toujours un S3
-            const endpoint = "http://minio-livekit:9000";
-            const accessKey = "minio-access-key";
-            const secret = "minio-secret-access-key";
-            const region = "eu-west-1";
-            const bucket = "livekit-recording";
+            const endpoint = LIVEKIT_RECORDING_S3_ENDPOINT;
+            const accessKey = LIVEKIT_RECORDING_S3_ACCESS_KEY;
+            const secret = LIVEKIT_RECORDING_S3_SECRET_KEY;
+            const region = LIVEKIT_RECORDING_S3_REGION;
+            const bucket = LIVEKIT_RECORDING_S3_BUCKET;
 
             //TODO : intégrer le nom de l'utilisateur dans le chemin de l'enregistrement pour pouvoir le retrouver plus tard (voir si on mets cette parttie dans une autre classe qui gere la recuperation des fichiers etc...)
+            const timestamp = new Date().toISOString().slice(0, 19);
 
-            const filepath = `out/test-${new Date().toISOString().slice(0, 19)}`;
+            const videoFilepath = `${folderName}/recording-${timestamp}`;
+            const thumbnailFilepath = `${folderName}/thumbnail-${timestamp}`;
 
-            const output = new EncodedFileOutput({
+            const s3Config = new S3Upload({
+                endpoint,
+                accessKey,
+                region,
+                secret,
+                bucket,
+                forcePathStyle: true,
+            });
+            // Sortie vidéo (existante)
+            const videoOutput = new EncodedFileOutput({
                 fileType: EncodedFileType.MP4,
-                filepath,
+                filepath: videoFilepath,
                 output: {
                     case: "s3",
-                    value: new S3Upload({
-                        endpoint,
-                        accessKey,
-                        region,
-                        secret,
-                        bucket,
-                        forcePathStyle: true,
-                    }),
+                    value: s3Config,
                 },
                 disableManifest: true,
             });
 
+            const thumbnailOutput = new ImageOutput({
+                captureInterval: 10,
+                width: 320,
+                height: 180,
+                filenamePrefix: thumbnailFilepath,
+                output: {
+                    case: "s3",
+                    value: s3Config,
+                },
+            });
+
+            const outputs: EncodedOutputs = {
+                file: videoOutput,
+                images: thumbnailOutput,
+            };
+
             const result = await this.egressClient.startRoomCompositeEgress(
                 roomName,
-                {
-                    file: output,
-                },
+                outputs,
                 {
                     layout,
                 }

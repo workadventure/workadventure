@@ -491,10 +491,10 @@ export class Space implements CustomJsonReplacerInterface {
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
     }
-    public async startRecording(user: SpaceUser) {
+    public async startRecording(user: SpaceUser, userUuid: string) {
         console.log('➡️ Space.ts => startRecording()', user);
         try {
-            await this.communicationManager.handleStartRecording(user);
+            await this.communicationManager.handleStartRecording(user, userUuid);
         }
         catch (error) {
             console.error("❌Space.ts => Error starting recording:", error);

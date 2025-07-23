@@ -91,9 +91,9 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             Sentry.captureException(error);
         });
     }
-    async startRecording(): Promise<void> {
+    async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
         try {
-            await this.livekitService.startRecording(this.space.getSpaceName());
+            await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
             console.log("🎇 LivekitCommunicationStrategy.ts => startRecording() called");
         } catch (e) {
             console.log("❌ LivekitCommunicationStrategy.ts => startRecording() - Error starting recording: ", e);

@@ -55,3 +55,4 @@ function createRecordingStore() {
 }
 
 export const recordingStore = createRecordingStore();
+export const showRecordingList = writable(false);

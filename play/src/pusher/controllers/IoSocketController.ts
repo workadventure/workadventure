@@ -855,6 +855,18 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "getRecordingsQuery": {
+                                        const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                            socket,
+                                        );
+                                        console.log("🌀🌀🌀 ioSocketController.ts => getRecordingsQuery", getRecordingsAnswer);
+                                        answerMessage.answer = {
+                                            $case: "getRecordingsAnswer",
+                                            getRecordingsAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     case "enterChatRoomAreaQuery": {
                                         await socketManager.handleEnterChatRoomAreaQuery(
                                             socket,

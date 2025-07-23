@@ -73,11 +73,11 @@ export class LivekitState extends CommunicationState implements IRecordableState
         this._currentStrategy.initialize(readyUsers);
     }
 
-    async handleStartRecording(): Promise<void> {
+    async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
         if (this.isRecordableStrategy(this._currentStrategy)) {
             console.log("➡️➡️➡️➡️LivekitState.ts => handleStartRecording()");
             try {
-                await this._currentStrategy.startRecording();
+                await this._currentStrategy.startRecording(user, userUuid);
             } catch (error) {
                 console.error("❌ LivekitState.ts => handleStartRecording() - Error starting recording: ", error);
                 throw error; // Re-throw the error to be handled by the caller

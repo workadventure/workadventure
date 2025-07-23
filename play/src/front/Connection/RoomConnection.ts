@@ -75,6 +75,8 @@ import {
     MapStorageJwtAnswer,
     StartRecordingMessage,
     StopRecordingMessage,
+    GetRecordingsQuery,
+    GetRecordingsAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -995,10 +997,7 @@ export class RoomConnection implements RoomConnection {
     public emitStartRecording(spaceName: string): void {
         this.emitPublicSpaceEvent(spaceName,{
             $case: "startRecordingMessage",
-            startRecordingMessage: {
-                spaceName,
-                spaceUserId: this.getSpaceUserId(),
-            },
+            startRecordingMessage: {},
         })
     }
 
@@ -1618,6 +1617,18 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.chatMembersAnswer;
+    }
+
+    public async queryRecordings(memberUUID: string): Promise<GetRecordingsAnswer> {
+        const answer = await this.query({
+            $case: "getRecordingsQuery",
+            getRecordingsQuery: {},
+        });
+        if (answer.$case !== "getRecordingsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        console.log("🐞🐞🐞 queryRecordings => answer", answer.getRecordingsAnswer);
+        return answer.getRecordingsAnswer;
     }
 
     public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {

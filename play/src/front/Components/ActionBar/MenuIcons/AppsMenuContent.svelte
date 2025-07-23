@@ -24,6 +24,8 @@
     import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
+    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import { showRecordingList } from "../../../Stores/RecordingStore";
 
     // The ActionBarButton component is displayed differently in the menu.
     // We use the context to decide how to render it.
@@ -76,6 +78,19 @@
         <WorldIcon />
     </ActionBarButton>
 {/if}
+
+<!--Recording-->
+<!--{#if $isRecordingStore}-->
+    <ActionBarButton
+        on:click={() => {
+            $showRecordingList = true;
+        }}
+        label="recording"
+        state="normal"
+    >
+        <StartRecordingIcon width="20" height="20" />
+    </ActionBarButton>
+<!--{/if}-->
 
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}

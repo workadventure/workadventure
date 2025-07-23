@@ -16,6 +16,8 @@ import {
     FilterType,
     GetMemberAnswer,
     GetMemberQuery,
+    GetRecordingsQuery,
+    GetRecordingsAnswer,
     JoinRoomMessage,
     MemberData,
     NonUndefinedFields,
@@ -63,6 +65,7 @@ import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
 import { matrixProvider } from "./MatrixProvider";
+import RecordingService from "./RecordingService";
 
 const debug = Debug("socket");
 
@@ -1282,6 +1285,23 @@ export class SocketManager implements ZoneEventListener {
         const userData = client.getUserData();
         userData.chatID = chatId;
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
+    }
+
+    async handleGetRecordingsQuery(
+        client: Socket,
+    ): Promise<GetRecordingsAnswer> {
+        const { userUuid } = client.getUserData();
+        const records = await RecordingService.getRecords(userUuid);
+        // if (!records) {
+        //     console.warn("SocketManager => handleGetRecordingsQuery => No recordings found for user", userUuid);
+        //     return {
+        //         recordings: [],
+        //     }
+        // }
+        console.log("🚀🚀🚀 SocketManager => handleGetRecordingsQuery => userUuid", JSON.stringify(records, null, 2));
+        return {
+            recordings: records,
+        };
     }
 
     async handleOauthRefreshTokenQuery(

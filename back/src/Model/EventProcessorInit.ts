@@ -74,11 +74,15 @@ eventProcessor.registerPublicEventProcessor(
             console.error("Could not find space user to start recording");
             throw new Error("Space user not found for start recording event");
         }
+        if(!event.startRecordingMessage.userUuid){
+            console.error("No userUuid provided in startRecordingMessage");
+            throw new Error("No userUuid provided in startRecordingMessage");
+        }
 
         console.log('🚀 🚀 🚀 User found for starting recording:', spaceUser);
 
         try{
-            await space.startRecording(spaceUser);
+            await space.startRecording(spaceUser, event.startRecordingMessage.userUuid);
 
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
