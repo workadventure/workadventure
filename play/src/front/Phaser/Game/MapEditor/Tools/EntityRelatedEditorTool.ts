@@ -26,10 +26,10 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
     protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    protected mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    protected mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityPrefabStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEntityEditorModeStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityDraggedStoreUnsubscriber: Unsubscriber | undefined;
 
     protected constructor(mapEditorModeManager: MapEditorModeManager) {
         super();

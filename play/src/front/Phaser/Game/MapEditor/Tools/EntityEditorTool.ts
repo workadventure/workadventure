@@ -42,9 +42,9 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => void;
 
-    protected mapEditorEntityUploadStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorModifyCustomEntityEventStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorDeleteCustomEntityEventStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorEntityUploadStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorModifyCustomEntityEventStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorDeleteCustomEntityEventStoreUnsubscriber: Unsubscriber | undefined;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super(mapEditorModeManager);
@@ -520,8 +520,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     private unsubscribeStore() {
-        this.mapEntityEditorModeStoreUnsubscriber?.();
-        this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
-        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
+        this.mapEditorEntityUploadStoreUnsubscriber?.();
+        this.mapEditorModifyCustomEntityEventStoreUnsubscriber?.();
+        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber?.();
     }
 }
