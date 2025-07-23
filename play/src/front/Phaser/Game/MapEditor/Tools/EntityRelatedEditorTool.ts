@@ -41,23 +41,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
-
-        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
-            if (!get(mapEditorModeStore)) {
-                return;
-            }
-            switch (mode) {
-                case "ADD": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    break;
-                }
-                case "EDIT": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    this.cleanPreview();
-                    break;
-                }
-            }
-        });
+        this.entitiesManager.makeAllEntitiesInteractive();
     }
 
     public update(time: number, dt: number): void {}
@@ -167,6 +151,24 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 .image(entity.x, entity.y, entity.texture)
                 .setOrigin(0)
                 .setAlpha(0.5);
+        });
+
+        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
+            console.trace("Entity mode changed to", mode);
+            if (!get(mapEditorModeStore)) {
+                return;
+            }
+            switch (mode) {
+                case "ADD": {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    break;
+                }
+                case "EDIT": {
+                    this.entitiesManager.makeAllEntitiesInteractive();
+                    this.cleanPreview();
+                    break;
+                }
+            }
         });
     }
 
