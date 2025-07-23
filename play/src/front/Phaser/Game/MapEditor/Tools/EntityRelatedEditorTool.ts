@@ -47,7 +47,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
 
     public clear(): void {
         this.scene.input.topOnly = false;
-        console.trace("Entity deleted");
         mapEditorEntityModeStore.set("ADD");
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
@@ -82,7 +81,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                         document.activeElement.blur();
                     }
                     mapEditorSelectedEntityStore.set(undefined);
-                    console.trace("Entity deleted");
                     mapEditorEntityModeStore.set("ADD");
                     return;
                 }
@@ -96,7 +94,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
             case "delete": {
                 get(mapEditorSelectedEntityStore)?.delete();
                 mapEditorSelectedEntityStore.set(undefined);
-                console.trace("Entity deleted");
                 mapEditorEntityModeStore.set("ADD");
                 break;
             }
