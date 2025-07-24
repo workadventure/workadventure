@@ -15,7 +15,7 @@ class ConnectionManager {
 
     removeConnection(user1Id: string, user2Id: string): void {
         this.connections.get(user1Id)?.delete(user2Id);
-       // this.connections.get(user2Id)?.delete(user1Id);
+        // this.connections.get(user2Id)?.delete(user1Id);
     }
 
     hasConnection(user1Id: string, user2Id: string): boolean {
@@ -23,7 +23,7 @@ class ConnectionManager {
     }
 
     removeUser(userId: string): void {
-       // const userConnections = this.connections.get(userId);
+        // const userConnections = this.connections.get(userId);
         // if (userConnections) {
         //     for (const connectedUserId of userConnections) {
         //         this.connections.get(connectedUserId)?.delete(userId);
@@ -77,15 +77,22 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
         console.log("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy addUser", newUser, existingUsers);
 
-
         existingUsers.forEach((existingUser) => {
             if (this.shouldEstablishConnection(newUser, existingUser)) {
-                //TODO : l'ordre va etre important ici on veut creer la connexion user dans le filtre ===> watcher 
-                //seulement dans ce sens 
-                console.log("✅✅✅✅✅✅ WebRTCCommunicationStrategy addUser establishConnection addUser", newUser, existingUser);
+                //TODO : l'ordre va etre important ici on veut creer la connexion user dans le filtre ===> watcher
+                //seulement dans ce sens
+                console.log(
+                    "✅✅✅✅✅✅ WebRTCCommunicationStrategy addUser establishConnection addUser",
+                    newUser,
+                    existingUser
+                );
                 this.establishConnection(newUser, existingUser);
-            }else{
-                console.log("❌❌❌❌❌❌❌ WebRTCCommunicationStrategy addUser shouldEstablishConnection", existingUser, newUser);
+            } else {
+                console.log(
+                    "❌❌❌❌❌❌❌ WebRTCCommunicationStrategy addUser shouldEstablishConnection",
+                    existingUser,
+                    newUser
+                );
             }
         });
     }
@@ -99,17 +106,24 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         console.log("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy addUserToNotify", user, usersInFilter);
         usersInFilter.forEach((existingUser) => {
             if (this.shouldEstablishConnection(existingUser, user)) {
-                console.log("✅✅✅✅✅✅ WebRTCCommunicationStrategy addUserToNotify establishConnection addUserToNotify", existingUser, user);
+                console.log(
+                    "✅✅✅✅✅✅ WebRTCCommunicationStrategy addUserToNotify establishConnection addUserToNotify",
+                    existingUser,
+                    user
+                );
                 this.establishConnection(existingUser, user);
-            }else{
-                console.log("❌❌❌❌❌❌❌ WebRTCCommunicationStrategy addUserToNotify shouldEstablishConnection", existingUser, user);
+            } else {
+                console.log(
+                    "❌❌❌❌❌❌❌ WebRTCCommunicationStrategy addUserToNotify shouldEstablishConnection",
+                    existingUser,
+                    user
+                );
             }
         });
     }
     public deleteUserFromNotify(user: SpaceUser): void {
         this.cleanupUserToNotifyMessages(user.spaceUserId);
     }
-
 
     public updateUser(user: SpaceUser): void {
         this.handleUserMediaUpdate(user);
@@ -119,7 +133,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this.sendWebRTCDisconnect(otherUser.spaceUserId, user.spaceUserId);
     }
 
-    //TODO : prendre en compte seulement les users dans le filtre / 1 personne en parametre plutot que les 2 
+    //TODO : prendre en compte seulement les users dans le filtre / 1 personne en parametre plutot que les 2
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
         return this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
     }
@@ -149,10 +163,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
         otherUsers.forEach((otherUser) => {
             if (!this.hasExistingConnection(user.spaceUserId, otherUser.spaceUserId)) {
-                console.log("✅✅✅✅✅✅✅ ConnectionManager hasExistingConnection handleUserMediaUpdate", user.spaceUserId, otherUser.spaceUserId);
+                console.log(
+                    "✅✅✅✅✅✅✅ ConnectionManager hasExistingConnection handleUserMediaUpdate",
+                    user.spaceUserId,
+                    otherUser.spaceUserId
+                );
                 this.establishConnection(user, otherUser);
-            }else{
-                console.log("❌❌❌❌❌❌❌ WebRTCCommunicationStrategy handleUserMediaUpdate hasExistingConnection", user, otherUser);
+            } else {
+                console.log(
+                    "❌❌❌❌❌❌❌ WebRTCCommunicationStrategy handleUserMediaUpdate hasExistingConnection",
+                    user,
+                    otherUser
+                );
                 return;
             }
 
@@ -175,7 +197,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         credentials: IWebRTCCredentials,
         isInitiator: boolean
     ): void {
-    
         this._connections.addConnection(senderId, receiverId);
 
         this._space.dispatchPrivateEvent({
@@ -196,7 +217,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private sendWebRTCDisconnect(senderId: string, receiverId: string): void {
-        //TODO : voir si on envoi le message tout le temps ou juste si il n'y a plus de connexion dans les 2 sens 
+        //TODO : voir si on envoi le message tout le temps ou juste si il n'y a plus de connexion dans les 2 sens
         this._connections.removeConnection(senderId, receiverId);
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
@@ -222,10 +243,18 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
                     return;
                 }
                 if (!this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId)) {
-                    console.log("✅✅✅✅✅✅✅ ConnectionManager hasExistingConnection initialize", user1.spaceUserId, user2.spaceUserId);
+                    console.log(
+                        "✅✅✅✅✅✅✅ ConnectionManager hasExistingConnection initialize",
+                        user1.spaceUserId,
+                        user2.spaceUserId
+                    );
                     this.establishConnection(user1, user2);
-                }else{
-                    console.log("❌❌❌❌❌❌❌ WebRTCCommunicationStrategy initialize hasExistingConnection", user1, user2);
+                } else {
+                    console.log(
+                        "❌❌❌❌❌❌❌ WebRTCCommunicationStrategy initialize hasExistingConnection",
+                        user1,
+                        user2
+                    );
                 }
             });
         });

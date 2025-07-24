@@ -114,15 +114,15 @@ export class LiveKitService {
         return participantName + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER");
     }
 
-    async removeParticipant(roomName: string, participantName: string , tokenType: LivekitTokenType): Promise<void> {
+    async removeParticipant(roomName: string, participantName: string, tokenType: LivekitTokenType): Promise<void> {
         try {
             const rooms = await this.roomServiceClient.listRooms([roomName]);
 
             if (rooms && rooms.length > 0) {
                 const participants = await this.roomServiceClient.listParticipants(roomName);
                 const participantExists = participants.some(
-                    (p: { identity: string }) => p.identity === this.getParticipantIdentity(participantName
-                , tokenType));
+                    (p: { identity: string }) => p.identity === this.getParticipantIdentity(participantName, tokenType)
+                );
 
                 if (!participantExists) {
                     console.warn(

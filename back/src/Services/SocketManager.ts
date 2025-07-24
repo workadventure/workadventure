@@ -1577,10 +1577,15 @@ export class SocketManager {
         space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
     }
 
-    handleDeleteSpaceUserToNotifyMessage(pusher: SpacesWatcher, deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage) {
+    handleDeleteSpaceUserToNotifyMessage(
+        pusher: SpacesWatcher,
+        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage
+    ) {
         const space = this.spaces.get(deleteSpaceUserToNotifyMessage.spaceName);
         if (!space) {
-            throw new Error(`Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`);
+            throw new Error(
+                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`
+            );
         }
         if (!deleteSpaceUserToNotifyMessage.user) {
             throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);

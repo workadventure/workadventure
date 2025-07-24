@@ -14,9 +14,9 @@ import {
 import { JsonWebTokenError } from "jsonwebtoken";
 import * as Sentry from "@sentry/node";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
-import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
+import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
