@@ -61,16 +61,16 @@ export class WebRTCState extends CommunicationState {
         return super.handleUserUpdated(user);
     }
 
-
-
-    handleUserToNotifyAdded(user: SpaceUser): void {
+    async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchToNextState()) {
             this.switchToNextState(user, "userToNotify");
             return;
         }
 
-        if (this.isSwitching()) {
-            this._nextState?.handleUserToNotifyAdded(user);
+        if (this._nextStatePromise) {
+            this._waitingList.add(user.spaceUserId);
+            const nextState = await this._nextStatePromise;
+            nextState.handleUserToNotifyAdded(user);
             return;
         }
 
@@ -78,14 +78,17 @@ export class WebRTCState extends CommunicationState {
         super.handleUserToNotifyAdded(user);
     }
 
-    handleUserToNotifyDeleted(user: SpaceUser): void {
+    async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
 
         if (this.isSwitching()) {
-            this._nextState?.handleUserToNotifyDeleted(user);
-            return;
+            if (this._nextStatePromise) {
+                this._waitingList.delete(user.spaceUserId);
+                const nextState = await this._nextStatePromise;
+                nextState.handleUserToNotifyDeleted(user);
+            }
         }
 
         console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
@@ -99,7 +102,7 @@ export class WebRTCState extends CommunicationState {
             let res;
             if (getCapability("api/livekit/credentials")) {
                 res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName(), user.playUri);
-                nextState = new LivekitState(this._space, this._communicationManager, res,this._readyUsers);
+                nextState = new LivekitState(this._space, this._communicationManager, res, this._readyUsers);
             } else {
                 res = LivekitCredentialsResponse.parse({
                     livekitHost: LIVEKIT_HOST,
@@ -107,7 +110,7 @@ export class WebRTCState extends CommunicationState {
                     livekitApiSecret: LIVEKIT_API_SECRET,
                 });
                 console.log("Default credentials", res);
-                nextState = new LivekitState(this._space, this._communicationManager, res,this._readyUsers); //fallback to default credentials
+                nextState = new LivekitState(this._space, this._communicationManager, res, this._readyUsers); //fallback to default credentials
             }
             this._readyUsers.add(user.spaceUserId);
             this._switchInitiatorUserId = user.spaceUserId;
@@ -125,7 +128,6 @@ export class WebRTCState extends CommunicationState {
                 ) {
                     await nextState.handleUserToNotifyAdded(user);
                 }
-
             } catch (e) {
                 console.error(
                     `WebRTCState.switchToNextState: Error adding user ${user.name} (${user.spaceUserId}) to Livekit state:`,
@@ -133,7 +135,6 @@ export class WebRTCState extends CommunicationState {
                 );
                 Sentry.captureException(e);
             }
-
 
             this.notifyAllUsersToPrepareSwitchToNextState();
             this.setupSwitchTimeout();

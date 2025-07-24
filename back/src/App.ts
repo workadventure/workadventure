@@ -14,9 +14,6 @@ import {
     ADMIN_API_URL,
 } from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
-import { App as uwsApp } from "./Server/sifrr.server";
-import { DebugController } from "./Controller/DebugController";
-import { PrometheusController } from "./Controller/PrometheusController";
 import { spaceManager } from "./SpaceManager";
 import { setCapabilities } from "./Services/Capabilities";
 

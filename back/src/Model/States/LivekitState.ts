@@ -94,16 +94,22 @@ export class LivekitState extends CommunicationState {
         //TODO : on pourrait avoir 2 messages/event differents et gere de maniere independante
     }
 
-    handleUserToNotifyDeleted(user: SpaceUser): void {
+    async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
 
         if (this.isSwitching()) {
-            this._nextState?.handleUserDeleted(user);
+            if (this._nextStatePromise) {
+                this._waitingList.delete(user.spaceUserId);
+                const nextState = await this._nextStatePromise;
+                await nextState.handleUserAdded(user);
+                // Don't call super.handleUserAdded if the user is already handled by the next state
+                return;
+            }
         }
 
-        super.handleUserDeleted(user);
+        await super.handleUserDeleted(user);
     }
 
     private switchToNextState(user: SpaceUser | undefined): void {
