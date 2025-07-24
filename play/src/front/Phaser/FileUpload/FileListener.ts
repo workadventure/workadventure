@@ -7,6 +7,7 @@ import { gameManager } from "../Game/GameManager";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { userIsConnected } from "../../Stores/MenuStore";
 import PopUpConnect from "../../Components/PopUp/PopUpConnect.svelte";
+import LL from "../../../i18n/i18n-svelte";
 
 export class FileListener {
     private canvas: HTMLCanvasElement;
@@ -52,7 +53,7 @@ export class FileListener {
             popupStore.addPopup(
                 PopUpConnect,
                 {
-                    message: "You can't upload files if you are not logged in and don't have the rights to do so.",
+                    message: get(LL).mapEditor.entityEditor.errors.dragNotConnected(),
                 },
                 "popupConnect"
             );
@@ -61,7 +62,7 @@ export class FileListener {
         }
 
         if (!userIsAdmin && !userIsEditor) {
-            warningMessageStore.addWarningMessage("You do not have the rights to upload files on this map", {
+            warningMessageStore.addWarningMessage(get(LL).mapEditor.entityEditor.errors.dragNotAllowed(), {
                 closable: true,
             });
             draggingFile.set(false);
@@ -71,7 +72,9 @@ export class FileListener {
         const { files: filesFromDropEvent } = event.dataTransfer ?? {};
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
-                warningMessageStore.addWarningMessage("Only one file is permitted", { closable: true });
+                warningMessageStore.addWarningMessage(get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileNumber(), {
+                    closable: true,
+                });
             } else {
                 const file = filesFromDropEvent.item(0);
                 if (this.isASupportedFormat(file?.type ?? "")) {
@@ -86,7 +89,10 @@ export class FileListener {
                     }
                 } else {
                     console.error("File format not supported", file?.type);
-                    warningMessageStore.addWarningMessage("File format not supported", { closable: true });
+                    warningMessageStore.addWarningMessage(
+                        get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileFormat(),
+                        { closable: true }
+                    );
                 }
             }
         }

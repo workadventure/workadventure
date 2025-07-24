@@ -323,6 +323,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "Enregister",
             upload: "Charger",
         },
+        errors: {
+            dragNotConnected:
+                "Vous ne pouvez pas télécharger de fichiers si vous n'êtes pas connecté et n'avez pas les droits pour le faire.",
+            dragNotAllowed: "Vous n'avez pas les droits pour télécharger des fichiers sur cette carte",
+        },
     },
     settings: {
         loading: "Chargement en cours",

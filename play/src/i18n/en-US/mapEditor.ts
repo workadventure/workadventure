@@ -326,6 +326,10 @@ const mapEditor: BaseTranslation = {
             save: "Save",
             upload: "Upload",
         },
+        errors: {
+            dragNotConnected: "You can't upload files if you are not logged in and don't have the rights to do so.",
+            dragNotAllowed: "You do not have the rights to upload files on this map",
+        },
     },
     settings: {
         loading: "Loading",
