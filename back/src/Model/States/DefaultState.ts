@@ -14,10 +14,12 @@ export class DefaultState implements ICommunicationState {
     handleUserReadyForSwitch(userId: string): Promise<void> {
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(user: SpaceUser): void {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         console.info("DefaultState handleUserToNotifyAdded", user);
+        return Promise.resolve();
     }
-    handleUserToNotifyDeleted(user: SpaceUser): void {
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
         console.info("DefaultState handleUserToNotifyDeleted", user);
+        return Promise.resolve();
     }
 }

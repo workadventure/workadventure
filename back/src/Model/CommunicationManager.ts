@@ -42,11 +42,17 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserToNotifyAdded(user: SpaceUser): void {
-        this._currentState.handleUserToNotifyAdded(user);
+        this._currentState.handleUserToNotifyAdded(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserToNotifyDeleted(user: SpaceUser): void {
-        this._currentState.handleUserToNotifyDeleted(user);
+        this._currentState.handleUserToNotifyDeleted(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
     public setState(state: ICommunicationState): void {
         this._currentState = state;

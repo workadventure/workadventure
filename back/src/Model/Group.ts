@@ -1,8 +1,8 @@
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import { PositionInterface } from "./PositionInterface";
 import { Movable } from "./Movable";
 import { PositionNotifier } from "./PositionNotifier";
 import type { Zone } from "./Zone";
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import { User } from "./User";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";

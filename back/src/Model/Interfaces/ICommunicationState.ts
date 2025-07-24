@@ -5,6 +5,6 @@ export interface ICommunicationState {
     handleUserDeleted(user: SpaceUser): Promise<void>;
     handleUserUpdated(user: SpaceUser): Promise<void>;
     handleUserReadyForSwitch(userId: string): Promise<void>;
-    handleUserToNotifyAdded(user: SpaceUser): void;
-    handleUserToNotifyDeleted(user: SpaceUser): void;
+    handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
+    handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
 }

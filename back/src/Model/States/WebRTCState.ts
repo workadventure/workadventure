@@ -70,12 +70,12 @@ export class WebRTCState extends CommunicationState {
         if (this._nextStatePromise) {
             this._waitingList.add(user.spaceUserId);
             const nextState = await this._nextStatePromise;
-            nextState.handleUserToNotifyAdded(user);
+            await nextState.handleUserToNotifyAdded(user);
             return;
         }
 
         console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyAdded", user);
-        super.handleUserToNotifyAdded(user);
+        await super.handleUserToNotifyAdded(user);
     }
 
     async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
@@ -87,12 +87,12 @@ export class WebRTCState extends CommunicationState {
             if (this._nextStatePromise) {
                 this._waitingList.delete(user.spaceUserId);
                 const nextState = await this._nextStatePromise;
-                nextState.handleUserToNotifyDeleted(user);
+                await nextState.handleUserToNotifyDeleted(user);
             }
         }
 
         console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
-        super.handleUserToNotifyDeleted(user);
+        await super.handleUserToNotifyDeleted(user);
     }
 
     //TODO : trouver un autre moyen de faire le switch

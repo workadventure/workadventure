@@ -1,10 +1,10 @@
 // lib/app.ts
 import express, { Express } from "express";
-import { PrometheusController } from "./Controller/PrometheusController";
-import { DebugController } from "./Controller/DebugController";
 import * as grpc from "@grpc/grpc-js";
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";
+import { DebugController } from "./Controller/DebugController";
+import { PrometheusController } from "./Controller/PrometheusController";
 import { roomManager } from "./RoomManager";
 import {
     HTTP_PORT,

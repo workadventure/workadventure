@@ -80,11 +80,11 @@ export class LivekitState extends CommunicationState {
         return super.handleUserReadyForSwitch(userId);
     }
 
-    handleUserToNotifyAdded(user: SpaceUser): void {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
         }
-        super.handleUserToNotifyAdded(user);
+        return super.handleUserToNotifyAdded(user);
 
         //TODO : voir si on sépare les token en 2
         //TODO : 1token pour les watcher qui donne seulement le droit de subscribe

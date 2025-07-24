@@ -1,9 +1,9 @@
 // lib/server.ts
 import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import { roomManager } from "./RoomManager";
-import { spaceManager } from "./SpaceManager";
 import * as grpc from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
+import { roomManager } from "./RoomManager";
+import { spaceManager } from "./SpaceManager";
 import App from "./App";
 import {
     GRPC_PORT,
@@ -15,7 +15,6 @@ import {
     GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
-
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
