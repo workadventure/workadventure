@@ -19,6 +19,7 @@
     } from "../../Stores/MapEditorStore";
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
@@ -49,6 +50,7 @@
         const scene = gameManager.getCurrentGameScene();
 
         if (!scene) {
+            warningMessageStore.addWarningMessage("No Game Scene found");
             console.error("No current game scene found.");
             return;
         }
@@ -72,7 +74,10 @@
         };
 
         const roomConnection = scene.connection;
-        if (!roomConnection) throw new Error("No room connection");
+        if (!roomConnection) {
+            warningMessageStore.addWarningMessage("No room connection");
+            throw new Error("No room connection");
+        }
 
         new UploadFileFrontCommand(fileToUpload).emitEvent(roomConnection);
 
@@ -95,7 +100,7 @@
             return newProperties;
         });
 
-        analyticsClient.toggleMapEditor(true);
+        analyticsClient.dragDropFile();
         mapEditorModeStore.switchMode(true);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");

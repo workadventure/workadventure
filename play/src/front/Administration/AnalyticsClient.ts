@@ -897,5 +897,12 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    dragDropFile() {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_drag_drop_file");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

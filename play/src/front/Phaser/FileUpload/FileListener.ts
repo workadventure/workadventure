@@ -8,24 +8,34 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 export class FileListener {
     private canvas: HTMLCanvasElement;
 
+    private boundDragOverHandler: (event: DragEvent) => void;
+    private boundDragLeaveHandler: (event: DragEvent) => void;
+    private boundDragEnterHandler: (event: DragEvent) => void;
+    private boundDropHandler: (event: DragEvent) => void;
+
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
+
+        this.boundDragOverHandler = this.dragOverHandler.bind(this);
+        this.boundDragLeaveHandler = this.dragLeaveHandler.bind(this);
+        this.boundDragEnterHandler = this.dragEnterHandler.bind(this);
+        this.boundDropHandler = this.dropHandler.bind(this);
     }
 
     public initDomListeners() {
-        this.canvas.addEventListener("dragover", this.dragOverHandler.bind(this));
-        this.canvas.addEventListener("dragleave", this.dragLeaveHandler.bind(this));
-        this.canvas.addEventListener("dragenter", this.dragEnterHandler.bind(this));
-        this.canvas.addEventListener("dragend", this.dragLeaveHandler.bind(this));
-        this.canvas.addEventListener("drop", this.dropHandler.bind(this));
+        this.canvas.addEventListener("dragover", this.boundDragOverHandler);
+        this.canvas.addEventListener("dragleave", this.boundDragLeaveHandler);
+        this.canvas.addEventListener("dragenter", this.boundDragEnterHandler);
+        this.canvas.addEventListener("dragend", this.boundDragLeaveHandler);
+        this.canvas.addEventListener("drop", this.boundDropHandler);
     }
 
     public close() {
-        this.canvas.removeEventListener("dragover", this.dragOverHandler.bind(this));
-        this.canvas.removeEventListener("dragleave", this.dragLeaveHandler.bind(this));
-        this.canvas.removeEventListener("dragenter", this.dragEnterHandler.bind(this));
-        this.canvas.removeEventListener("dragend", this.dragLeaveHandler.bind(this));
-        this.canvas.removeEventListener("drop", this.dropHandler.bind(this));
+        this.canvas.removeEventListener("dragover", this.boundDragOverHandler);
+        this.canvas.removeEventListener("dragleave", this.boundDragLeaveHandler);
+        this.canvas.removeEventListener("dragenter", this.boundDragEnterHandler);
+        this.canvas.removeEventListener("dragend", this.boundDragLeaveHandler);
+        this.canvas.removeEventListener("drop", this.boundDropHandler);
     }
 
     public dropHandler(event: DragEvent) {
