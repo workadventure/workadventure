@@ -1,9 +1,12 @@
 import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+import { get } from "svelte/store";
 import { draggingFile } from "../../Stores/FileUploadStore";
 import { popupStore } from "../../Stores/PopupStore";
-import PopupDropFileEntity from "../../Components/PopUp/PopupDropFileEntity.svelte";
+import PopUpDropFileEntity from "../../Components/PopUp/PopUpDropFileEntity.svelte";
 import { gameManager } from "../Game/GameManager";
 import { warningMessageStore } from "../../Stores/ErrorStore";
+import { userIsConnected } from "../../Stores/MenuStore";
+import PopUpConnect from "../../Components/PopUp/PopUpConnect.svelte";
 
 export class FileListener {
     private canvas: HTMLCanvasElement;
@@ -45,6 +48,18 @@ export class FileListener {
         const userIsAdmin = gameManager.getCurrentGameScene().connection?.isAdmin();
         const userIsEditor = gameManager.getCurrentGameScene().connection?.hasTag("editor");
 
+        if (!get(userIsConnected)) {
+            popupStore.addPopup(
+                PopUpConnect,
+                {
+                    message: "You can't upload files if you are not logged in and don't have the rights to do so.",
+                },
+                "popupConnect"
+            );
+            draggingFile.set(false);
+            return;
+        }
+
         if (!userIsAdmin && !userIsEditor) {
             warningMessageStore.addWarningMessage("You do not have the rights to upload files on this map", {
                 closable: true,
@@ -62,7 +77,7 @@ export class FileListener {
                 if (this.isASupportedFormat(file?.type ?? "")) {
                     if (file) {
                         popupStore.addPopup(
-                            PopupDropFileEntity,
+                            PopUpDropFileEntity,
                             {
                                 file: file,
                             },
