@@ -20,6 +20,7 @@ import {
 } from "@workadventure/messages";
 import { Jitsi } from "@workadventure/shared-utils";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
+import { asError } from "catch-unknown";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -250,6 +251,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.chatID,
             undefined
         );
+
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
@@ -291,6 +293,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
+
         const set = this.usersByUuid.get(user.uuid);
         if (set !== undefined) {
             set.delete(user);
@@ -321,7 +324,6 @@ export class GameRoom implements BrothersFinder {
 
     public updatePosition(user: User, userPosition: PointInterface): void {
         user.setPosition(userPosition);
-
         this.updateUserGroup(user);
     }
 
@@ -1090,85 +1092,90 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    private mapStorageLock: Promise<void> = Promise.resolve();
+
     forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
-        if (!this._wamUrl) {
-            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-            return;
-        }
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            {
-                mapKey: this._wamUrl,
-                editMapCommandMessage: message,
-                connectedUserTags: user.tags,
-                userCanEdit: user.canEdit,
-                userUUID: user.uuid,
-            },
-            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                if (err) {
-                    let message = "Unknown error";
-                    if (err instanceof Error) {
-                        message = err.message;
-                    } else if (typeof err === "string") {
-                        message = err;
-                    }
-                    emitError(user.socket, message);
+        this.mapStorageLock = this.mapStorageLock.then(() =>
+            new Promise<void>((resolve, reject) => {
+                if (!this._wamUrl) {
+                    emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
                     return;
                 }
-                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                    // Return the error message to the sender and don't dispatch it to the room
-                    user.socket.write({
-                        message: {
-                            $case: "batchMessage",
-                            batchMessage: {
-                                event: "",
-                                payload: [
-                                    {
-                                        message: {
-                                            $case: "editMapCommandMessage",
-                                            editMapCommandMessage,
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    });
-                    return;
-                }
-                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
-                    if (!this._wamSettings) {
-                        this._wamSettings = {};
-                    }
-                    if (
-                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
-                        "updateMegaphoneSettingMessage"
-                    ) {
-                        this._wamSettings.megaphone =
-                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
-                    }
-                }
-                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
-                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                    // We also check if the settings like jitsi admin tag have been modified.
-                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                    this.wamPromise = undefined;
-                    this.jitsiModeratorTagFinderPromise = undefined;
-                }
-                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
-                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
-                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
-                    // We also check if the settings like jitsi admin tag have been modified.
-                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
-                    this.wamPromise = undefined;
-                    this.jitsiModeratorTagFinderPromise = undefined;
-                }
-                this.dispatchRoomMessage({
-                    message: {
-                        $case: "editMapCommandMessage",
-                        editMapCommandMessage,
+
+                getMapStorageClient().handleEditMapCommandWithKeyMessage(
+                    {
+                        mapKey: this._wamUrl,
+                        editMapCommandMessage: message,
+                        connectedUserTags: user.tags,
+                        userCanEdit: user.canEdit,
+                        userUUID: user.uuid,
                     },
-                });
-            }
+                    (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                        if (err) {
+                            reject(asError(err));
+                            return;
+                        }
+                        if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                            // Return the error message to the sender and don't dispatch it to the room
+                            user.socket.write({
+                                message: {
+                                    $case: "batchMessage",
+                                    batchMessage: {
+                                        event: "",
+                                        payload: [
+                                            {
+                                                message: {
+                                                    $case: "editMapCommandMessage",
+                                                    editMapCommandMessage,
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            });
+                            return;
+                        }
+                        if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
+                            if (!this._wamSettings) {
+                                this._wamSettings = {};
+                            }
+                            if (
+                                editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
+                                "updateMegaphoneSettingMessage"
+                            ) {
+                                this._wamSettings.megaphone =
+                                    editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                            }
+                        }
+                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                            // We also check if the settings like jitsi admin tag have been modified.
+                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                            this.wamPromise = undefined;
+                            this.jitsiModeratorTagFinderPromise = undefined;
+                        }
+                        if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                            // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                            // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                            // We also check if the settings like jitsi admin tag have been modified.
+                            // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
+                            this.wamPromise = undefined;
+                            this.jitsiModeratorTagFinderPromise = undefined;
+                        }
+                        this.dispatchRoomMessage({
+                            message: {
+                                $case: "editMapCommandMessage",
+                                editMapCommandMessage,
+                            },
+                        });
+                        resolve();
+                    }
+                );
+            }).catch((err) => {
+                const error = asError(err);
+                emitError(user.socket, error.message);
+            })
         );
     }
 

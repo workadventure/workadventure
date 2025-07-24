@@ -7,6 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         reduce: "Diminuer le volume du lecteur audio dans les conversations",
         allow: "Autoriser l'audio",
         error: "Impossible de charger le son",
+        notAllowed: "▶️ L'audio n'est pas autorisé. Appuyez sur [ESPACE] ou cliquez ici pour écouter !",
     },
     message: "Message audio",
     disable: "Couper le microphone",

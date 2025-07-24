@@ -4,15 +4,14 @@ import type {
     ServerToClientMessage,
     BackToPusherSpaceMessage,
     PusherToBackSpaceMessage,
-    SpaceUser,
     ApplicationDefinitionInterface,
     AvailabilityStatus,
     CharacterTextureMessage,
     CompanionTextureMessage,
     BatchMessage,
-    SpaceFilterMessage,
     SubMessage,
 } from "@workadventure/messages";
+import { Deferred } from "ts-deferred";
 import { PusherRoom } from "../PusherRoom";
 import { Zone } from "../Zone";
 import { PointInterface } from "./PointInterface";
@@ -24,6 +23,8 @@ export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, 
 export interface BackSpaceConnection extends BackSpaceConnection_ {
     pingTimeout: NodeJS.Timeout | undefined;
 }
+
+export type SpaceName = string;
 
 export type SocketData = {
     rejected: false;
@@ -48,16 +49,19 @@ export type SocketData = {
     activatedInviteUser: boolean | undefined;
     applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
-    spaceUser: SpaceUser;
+    spaceUserId: string;
     emitInBatch: (payload: SubMessage) => void;
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout | null;
     backConnection?: BackConnection;
     listenedZones: Set<Zone>;
     pusherRoom: PusherRoom | undefined;
-    spaces: Set<string>;
-    spacesFilters: Map<string, SpaceFilterMessage[]>;
+    spaces: Set<SpaceName>;
+    joinSpacesPromise: Map<SpaceName, Deferred<void>>;
     chatID?: string;
     world: string;
     currentChatRoomArea: string[];
+    roomName: string;
+    microphoneState: boolean;
+    cameraState: boolean;
 };

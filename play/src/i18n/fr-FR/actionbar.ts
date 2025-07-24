@@ -24,7 +24,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Liste de tâches",
     test: "Tester",
     editCamMic: "Camera / micro",
-    otherSettings: "Autres paramètres",
+    allSettings: "Tous les paramètres",
     bo: "Back office",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditeur de carte",

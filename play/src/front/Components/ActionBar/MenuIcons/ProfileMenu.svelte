@@ -131,9 +131,11 @@
             {/if}
         </div>
         <div
-            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-2 pr-3 "
+            class="hidden @md/actions:flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded gap-2 pl-0 pr-3 "
         >
-            <Woka userId={-1} placeholderSrc="" customWidth="32px" />
+            <div class="overflow-hidden p-2 flex items-center justify-center rounded h-full aspect-square relative">
+                <Woka userId={-1} placeholderSrc="" customWidth="30px" />
+            </div>
             <div class="grow flex flex-row @xl/actions:flex-col justify-start text-start pr-2">
                 <div
                     class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base order-last @xl/actions:order-first flex items-center"
@@ -227,7 +229,7 @@
                     <CamSettingsIcon />
                 </ActionBarButton>
                 <ActionBarButton
-                    label={$LL.actionbar.otherSettings()}
+                    label={$LL.actionbar.allSettings()}
                     on:click={() => {
                         showMenuItem(SubMenusInterface.settings);
                         analyticsClient.openedMenu();

@@ -8,10 +8,8 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
-import { lookupUserById } from "../Space/Utils/UserLookup";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -54,9 +52,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private space: SpaceInterface,
         stream: MediaStream | undefined,
-        private spaceFilter: Promise<SpaceFilterInterface>,
+        private space: SpaceInterface,
+        private spaceUser: SpaceUserExtended,
         isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
@@ -74,6 +72,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
+
+        // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
         this.on("data", (chunk: Buffer) => {
             try {
@@ -191,7 +192,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 {
                     $case: "webRtcScreenSharingSignalToServerMessage",
                     webRtcScreenSharingSignalToServerMessage: {
-                        receiverId: this.userId,
+                        // receiverId: this.userId,
                         signal: JSON.stringify(data),
                     },
                 },
@@ -279,8 +280,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const spaceFilter = await this.spaceFilter;
-        return lookupUserById(this.userId, spaceFilter, 30_000);
+        return this.space.extendSpaceUser(this.spaceUser);
     }
 
     get media(): MediaStoreStreamable {

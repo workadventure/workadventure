@@ -1,4 +1,3 @@
-//TODO : move in a common file / à séparer en messageSwitch et messageLivekit ?
 export enum CommunicationMessageType {
     PREPARE_SWITCH_MESSAGE = "prepareSwitchMessage",
     EXECUTE_SWITCH_MESSAGE = "executeSwitchMessage",

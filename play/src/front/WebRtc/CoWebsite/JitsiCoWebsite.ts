@@ -130,16 +130,23 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         // FIXME: unused private variables.
         public roomName: string,
         private playerName: string,
-        private jwt: string | undefined,
+        private _jwt: string | undefined,
         public readonly jitsiConfig: JitsiRoomConfigData | undefined,
         public readonly jitsiInterfaceConfig: object | undefined,
-        private domain: string,
         public readonly jitsiRoomAdminTag: string | null
     ) {
         super(url, false, undefined, widthPercent, closable);
     }
 
-    getDomain(): string {
-        return this.domain;
+    public get jwt(): string | undefined {
+        return this._jwt;
+    }
+
+    public getJitsiDomain(): string {
+        return this.url.toString();
+    }
+
+    public getUrl(): URL {
+        return new URL(this.roomName, this.url);
     }
 }

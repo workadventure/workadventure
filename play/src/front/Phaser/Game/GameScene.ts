@@ -14,6 +14,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    FilterType,
     GroupUsersUpdateMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
@@ -74,7 +75,6 @@ import type {
     OnConnectInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
-    ViewportInterface,
 } from "../../Connection/ConnexionModels";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -143,6 +143,7 @@ import {
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
+import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -358,12 +359,15 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
     private worldUserProvider: WorldUserProvider | undefined;
     public extensionModule: ExtensionModule | undefined = undefined;
     public landingAreas: AreaData[] = [];
+    // Listeners for when the player finishes moving
+    private onPlayerMovementEndedCallbacks: Array<(event: HasPlayerMovedInterface) => void> = [];
 
     public _chatConnection: ChatConnectionInterface | undefined;
     private _proximityChatRoomDeferred: Deferred<ProximityChatRoom> = new Deferred();
@@ -576,9 +580,16 @@ export class GameScene extends DirtyScene {
                 details: error instanceof Error ? error.message : "Unknown error",
             })
         );
-        this.cleanupClosingScene();
-        this.scene.stop(this.scene.key);
-        this.scene.remove(this.scene.key);
+
+        this.cleanupClosingScene()
+            .catch((e) => {
+                console.error("Error while stopping scene", e);
+                Sentry.captureException(e);
+            })
+            .finally(() => {
+                this.scene.stop(this.scene.key);
+                this.scene.remove(this.scene.key);
+            });
     }
 
     public getCustomEntityCollectionUrl() {
@@ -791,6 +802,9 @@ export class GameScene extends DirtyScene {
         }
 
         this.animatedTiles.init(this.Map);
+
+        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         this.events.on("tileanimationupdate", () => (this.dirty = true));
         if (localUserStore.getDisableAnimations()) {
             this.animatedTiles.pause();
@@ -915,10 +929,19 @@ export class GameScene extends DirtyScene {
                 gameSceneIsLoadedStore.set(true);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
+            })
+            .catch((e: unknown) => {
+                console.error("Initialization failed", e);
+                Sentry.captureException(e);
+                errorScreenStore.setException(e);
+            });
 
+        gameManager
+            .getChatConnection()
+            .then(() => {
+                const connection = this.connection;
                 const chatId = localUserStore.getChatId();
                 const email: string | null = localUserStore.getLocalUser()?.email || null;
-                const connection = this.connection;
                 if (email && chatId && connection) {
                     connection.emitUpdateChatId(email, chatId);
                     connection.emitPlayerChatID(chatId);
@@ -990,11 +1013,17 @@ export class GameScene extends DirtyScene {
                 // The policy of room can to be updated during a session and not load before
                 await this.loadNextGameFromExitUrl(targetRoom.key);
             }
-            this.cleanupClosingScene();
-            this.scene.stop();
-            this.scene.start(targetRoom.key);
-            this.scene.remove(this.scene.key);
-            forceRefreshChatStore.forceRefresh();
+            this.cleanupClosingScene()
+                .catch((e) => {
+                    console.error("Error while loading next game", e);
+                    Sentry.captureException(e);
+                })
+                .finally(() => {
+                    this.scene.stop();
+                    this.scene.start(targetRoom.key);
+                    this.scene.remove(this.scene.key);
+                    forceRefreshChatStore.forceRefresh();
+                });
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
             this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
@@ -1025,7 +1054,7 @@ export class GameScene extends DirtyScene {
         });
     }
 
-    public cleanupClosingScene(): void {
+    public async cleanupClosingScene(): Promise<void> {
         // make sure we restart own medias
         mediaManager.disableMyCamera();
         mediaManager.disableMyMicrophone();
@@ -1046,9 +1075,13 @@ export class GameScene extends DirtyScene {
         audioManagerFileStore.unloadAudio();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        if (this.allUserSpace) {
-            this.spaceRegistry.leaveSpace(this.allUserSpace);
-        }
+        //TODO : on a deja un destroy du spaceRegistry qui fait la meme chose
+        // if (this.allUserSpace) {
+        //     await this.spaceRegistry?.leaveSpace(this.allUserSpace).catch((e) => {
+        //         console.error("Error while leaving space", e);
+        //         Sentry.captureException(e);
+        //     });
+        // }
 
         this.connection?.closeConnection();
         this.outlineManager?.clear();
@@ -1057,7 +1090,10 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
-        this._broadcastService?.destroy();
+        this._broadcastService?.destroy().catch((e) => {
+            console.error("Error while destroying broadcast service", e);
+            Sentry.captureException(e);
+        });
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.mapEditorModeStoreUnsubscriber?.();
@@ -1077,6 +1113,7 @@ export class GameScene extends DirtyScene {
             unsubscriber();
         }
         this.unsubscribers = [];
+        console.log("unregister answerer before ");
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -1087,15 +1124,23 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("removePlayerMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("closeCoWebsite");
+        iframeListener.unregisterAnswerer("closeCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
+        iframeListener.unregisterAnswerer("removePlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
         iframeListener.unregisterAnswerer("openUIWebsite");
         iframeListener.unregisterAnswerer("getUIWebsites");
         iframeListener.unregisterAnswerer("getUIWebsiteById");
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
+        iframeListener.unregisterAnswerer("getPlayerPosition");
+        iframeListener.unregisterAnswerer("movePlayerTo");
+        iframeListener.unregisterAnswerer("teleportPlayerTo");
+        iframeListener.unregisterAnswerer("getWoka");
         iframeListener.unregisterAnswerer("goToLogin");
         iframeListener.unregisterAnswerer("playSoundInBubble");
+        console.log("unregister answerer after ");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
@@ -1107,7 +1152,14 @@ export class GameScene extends DirtyScene {
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
         this.followManager?.close();
-        this.spaceRegistry.destroy();
+        this.spaceScriptingBridgeService?.destroy();
+
+        try {
+            await this._spaceRegistry?.destroy();
+        } catch (e) {
+            console.error("Error while destroying space registry", e);
+            Sentry.captureException(e);
+        }
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1244,8 +1296,8 @@ export class GameScene extends DirtyScene {
             player.updatePosition(moveEvent);
         });
         // If any of the users (including me) has moved, we need to recompute the shape of all bubbles
-        if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame) {
-            for (const group of this.groups.values()) {
+        for (const group of this.groups.values()) {
+            if (updatedPlayersPositions.size > 0 || this.hasMovedThisFrame || group.isAnimating) {
                 group.step();
             }
         }
@@ -1325,14 +1377,12 @@ export class GameScene extends DirtyScene {
         if (!camera) {
             return;
         }
-        this.connection?.setViewport(
-            this.validateViewport({
-                left: Math.max(0, camera.scrollX - margin),
-                top: Math.max(0, camera.scrollY - margin),
-                right: camera.scrollX + camera.width + margin,
-                bottom: camera.scrollY + camera.height + margin,
-            })
-        );
+        this.connection?.setViewport({
+            left: Math.max(0, camera.scrollX - margin),
+            top: Math.max(0, camera.scrollY - margin),
+            right: camera.scrollX + camera.width + margin,
+            bottom: camera.scrollY + camera.height + margin,
+        });
     }
 
     public reposition(instant = false): void {
@@ -1360,7 +1410,6 @@ export class GameScene extends DirtyScene {
         if (!autostart) {
             gameManager.gameSceneIsCreated(game);
         }
-
         this.scene.stop(this.scene.key);
         this.scene.remove(this.scene.key);
     }
@@ -1499,6 +1548,7 @@ export class GameScene extends DirtyScene {
             }
         }
 
+        // TODO: remove support for these objects. They have been superseded by variables and scripting and entities for a long time.
         for (const [itemType, objectsOfType] of this.objectsByType) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
@@ -1519,6 +1569,8 @@ export class GameScene extends DirtyScene {
             itemFactory.preload(this.load);
             this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
 
+            // Note: the code below is probably wrong, but not used anymore.
+            // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
             this.load.on("complete", () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
@@ -1611,15 +1663,20 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
-                this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this.spaceRegistry.joinSpace(WORLD_SPACE_NAME, ["availabilityStatus", "chatID"]);
-                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
+                const _spaceRegistry = new SpaceRegistry(this.connection);
+                this._spaceRegistry = _spaceRegistry;
+                this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
                 videoStreamStore.set(this._spaceRegistry.videoStreamStore);
                 screenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
+                this._spaceRegistry
+                    .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS, ["availabilityStatus", "chatID"])
+                    .then((space) => {
+                        this.allUserSpace = space;
+                        this.worldUserProvider = new WorldUserProvider(space);
 
-                gameManager
-                    .getChatConnection()
+                        return gameManager.getChatConnection();
+                    })
                     .then((chatConnection) => {
                         this._chatConnection = chatConnection;
                         const connection = this.connection;
@@ -1640,10 +1697,10 @@ export class GameScene extends DirtyScene {
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
                     })
-                    .catch(() => {
-                        const errorMessage = "Failed to get chatConnection from gameManager";
+                    .catch((e) => {
+                        const errorMessage = "Failed to get chatConnection from gameManager : " + e;
                         console.error(errorMessage);
-                        Sentry.captureMessage(errorMessage);
+                        Sentry.captureMessage(e);
                     });
 
                 this.initExtensionModule();
@@ -1765,8 +1822,15 @@ export class GameScene extends DirtyScene {
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
                     console.info("Player disconnected from server. Reloading scene.");
-                    this.cleanupClosingScene();
-                    this.createSuccessorGameScene(true, true);
+                    this.cleanupClosingScene()
+                        .catch((e) => {
+                            console.error("Error while stopping scene", e);
+                            Sentry.captureException(e);
+                        })
+                        .finally(() => {
+                            console.log("createSuccessorGameScene in finally");
+                            this.createSuccessorGameScene(true, true);
+                        });
                 });
                 hideConnectionIssueMessage();
 
@@ -1907,18 +1971,13 @@ export class GameScene extends DirtyScene {
                     this.connection,
                     (
                         connection: RoomConnection,
-                        spaceName: string,
+                        space: SpaceInterface,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(
-                            connection,
-                            spaceName,
-                            broadcastService,
-                            playSound,
-                            this.spaceRegistry
-                        );
-                    }
+                        return new JitsiBroadcastSpace(connection, space, broadcastService, playSound, _spaceRegistry);
+                    },
+                    _spaceRegistry
                 );
                 this._broadcastService = broadcastService;
 
@@ -1938,11 +1997,21 @@ export class GameScene extends DirtyScene {
                                 oldMegaphoneSpace &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
+                                    console.error("Error while leaving space", e);
+                                    Sentry.captureException(e);
+                                });
                             }
 
-                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneSpaceStore.set(broadcastStore.space);
+                            broadcastService
+                                .joinSpace(megaphoneSettingsMessage.url)
+                                .then((broadcastStore) => {
+                                    megaphoneSpaceStore.set(broadcastStore.space);
+                                })
+                                .catch((e) => {
+                                    console.error(e);
+                                    Sentry.captureException(e);
+                                });
                         }
                     }
                 });
@@ -2085,6 +2154,7 @@ export class GameScene extends DirtyScene {
                             errorScreenStore.setException(error);
                             gameManager.closeGameScene();
                         },
+                        onPlayerMovementEnded: this.onPlayerMovementEnded.bind(this),
                     });
 
                     if (defaultExtensionModule.calendarSynchronised) isCalendarActiveStore.set(true);
@@ -2994,13 +3064,22 @@ ${escapedMessage}
                     //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
                     newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
                 }
+
                 return new Promise((resolve, reject) => {
-                    this.load.on("filecomplete-json-" + eventTileset.url, () => {
+                    const errorHandler = (file: Phaser.Loader.File) => {
+                        if (file.src === eventTileset.url) {
+                            console.error("Error while loading " + eventTileset.url + ".");
+                            reject(new Error("Error while loading " + eventTileset.url + "."));
+                        }
+                        this.load.off("loaderror", errorHandler);
+                    };
+
+                    this.load.once("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
                         const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
 
                         this.load.image(imageUrl, imageUrl);
-                        this.load.on("filecomplete-image-" + imageUrl, () => {
+                        this.load.once("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
                             jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
                             this.mapFile.tilesets.push(jsonTileset);
@@ -3051,13 +3130,9 @@ ${escapedMessage}
                             new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
                             resolve(newFirstgid);
                         });
+                        this.load.off("loaderror", errorHandler);
                     });
-                    this.load.on("loaderror", (file: Phaser.Loader.File) => {
-                        if (file.src === eventTileset.url) {
-                            console.error("Error while loading " + eventTileset.url + ".");
-                            reject(new Error("Error while loading " + eventTileset.url + "."));
-                        }
-                    });
+                    this.load.on("loaderror", errorHandler);
 
                     this.load.json(eventTileset.url, eventTileset.url);
                     this.load.start();
@@ -3431,6 +3506,11 @@ ${escapedMessage}
             ...this.gameMapFrontWrapper.getActivatableEntities(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+
+        // Call movement ended callbacks if movement just ended
+        for (const cb of this.onPlayerMovementEndedCallbacks) {
+            cb(event);
+        }
         this.hasMovedThisFrame = true;
     }
 
@@ -3527,25 +3607,6 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    // We need to store the last valid viewport because in rare circumstances, Phaser can return an invalid camera.
-    private lastValidViewport: ViewportInterface = {
-        left: 0,
-        top: 0,
-        right: 100,
-        bottom: 100,
-    };
-    private validateViewport(viewport: ViewportInterface): ViewportInterface {
-        if (isNaN(viewport.left) || isNaN(viewport.top) || isNaN(viewport.right) || isNaN(viewport.bottom)) {
-            // If the viewport is invalid, we need to use the last valid one.
-            // This can happen when the camera is not yet initialized.
-            return this.lastValidViewport;
-        } else {
-            // If the viewport is valid, we need to store it for later use.
-            this.lastValidViewport = viewport;
-        }
-        return viewport;
-    }
-
     private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -3556,7 +3617,6 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         };
-        viewport = this.validateViewport(viewport);
         if (!this.scene.scene.renderer) {
             // In the very special case where we have no renderer, the viewport will not move along the Woka.
             // We need to adjust it manually. We set it to something very large to make sure the Woka sees
@@ -3795,31 +3855,44 @@ ${escapedMessage}
                 details: "If you want more information, you may contact us at: hello@workadventu.re",
             })
         );
-        this.cleanupClosingScene();
-        this.userInputManager.disableControls("errorScreen");
+
+        this.cleanupClosingScene()
+            .catch((e) => {
+                console.error("Error while stopping scene", e);
+                Sentry.captureException(e);
+            })
+            .finally(() => {
+                this.userInputManager.disableControls("errorScreen");
+            });
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
     private showWorldFullError(message: string | null): void {
-        this.cleanupClosingScene();
-        this.scene.stop(ReconnectingSceneName);
-        this.scene.remove(ReconnectingSceneName);
-        this.userInputManager.disableControls("errorScreen");
-        //FIX ME to use status code
-        if (message == undefined) {
-            this.scene.start(ErrorSceneName, {
-                title: "Connection rejected",
-                subTitle: "The world you are trying to join is full. Try again later.",
-                message: "If you want more information, you may contact us at: hello@workadventu.re",
+        this.cleanupClosingScene()
+            .catch((e) => {
+                console.error("Error while stopping scene", e);
+                Sentry.captureException(e);
+            })
+            .finally(() => {
+                this.scene.stop(ReconnectingSceneName);
+                this.scene.remove(ReconnectingSceneName);
+                this.userInputManager.disableControls("errorScreen");
+                //FIX ME to use status code
+                if (message == undefined) {
+                    this.scene.start(ErrorSceneName, {
+                        title: "Connection rejected",
+                        subTitle: "The world you are trying to join is full. Try again later.",
+                        message: "If you want more information, you may contact us at: hello@workadventu.re",
+                    });
+                } else {
+                    this.scene.start(ErrorSceneName, {
+                        title: "Connection rejected",
+                        subTitle: "You cannot join the World. Try again later. \n\r \n\r Error: " + message + ".",
+                        message:
+                            "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
+                    });
+                }
             });
-        } else {
-            this.scene.start(ErrorSceneName, {
-                title: "Connection rejected",
-                subTitle: "You cannot join the World. Try again later. \n\r \n\r Error: " + message + ".",
-                message:
-                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
-            });
-        }
     }
 
     private bindSceneEventHandlers(): void {
@@ -3975,5 +4048,10 @@ ${escapedMessage}
             throw new Error("_sayManager not yet initialized");
         }
         return this._sayManager;
+    }
+
+    // Register a callback that will be called when the player movement ends
+    public onPlayerMovementEnded(callback: (event: HasPlayerMovedInterface) => void): void {
+        this.onPlayerMovementEndedCallbacks.push(callback);
     }
 }

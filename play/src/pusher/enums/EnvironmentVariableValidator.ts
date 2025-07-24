@@ -92,7 +92,7 @@ export const EnvironmentVariables = z.object({
     JITSI_URL: z.string().optional(),
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional().transform((val) => toNumber(val, 10)),
-    MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
+    MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 4)),
     MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 16))
         .describe(
@@ -174,6 +174,10 @@ export const EnvironmentVariables = z.object({
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
     MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
+    GRPC_MAX_MESSAGE_SIZE: z
+        .number()
+        .optional()
+        .default(20 * 1024 * 1024),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -17,9 +17,12 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // ==== Tunables =========================================================
     private readonly R0 = 64; // resting radius (px)
     private readonly lambda = 40; // fall-off distance for influence (px)
-    private readonly k = 2; // angular sharpness of the bump
+    private readonly kInside = 2; // angular sharpness of the bump from players inside the bubble
+    private readonly kOutside = 20; // angular sharpness of the bump from players outside the bubble
     private readonly amp = 20; // max deformation per avatar (px)
     private readonly segments = 64; // angular samples (higher = smoother)
+    private readonly speed = 0.1; // If set to 1, the bubble size instantly matches the avatars position. Set between 0 and 1 to have a smooth transition.
+    private readonly stopAnimationThreshold = 0.1; // As long as one of the radii changes more than this value, the bubble is considered animating.
 
     // ==== Internal state ===================================================
     private center = new Phaser.Math.Vector2();
@@ -30,6 +33,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
 
     // Texture handling
     private generatedTextureKey: string | null = null;
+    // Whether the bubble is currently wobbling
+    private _isAnimating: boolean = true;
 
     constructor(scene: GameScene, x: number, y: number, locked: boolean, userIds: number[]) {
         super(scene, x, y, "");
@@ -107,6 +112,8 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     public step(): void {
         const avatars = this.getAvatarsList();
 
+        this._isAnimating = false; // reset animation state
+
         /* --- 1.  Update radius samples ----------------------------------- */
         for (let s = 0; s < this.segments; s++) {
             const θ = (s / this.segments) * Math.PI * 2;
@@ -124,11 +131,19 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
                 // ±amp depending on whether avatar is inside or out
                 const A = av.inside ? +this.amp : -this.amp;
 
-                targetR += A * Math.exp(-Math.abs(dBoundary) / this.lambda) * this.angularFalloff(θ - φ);
+                targetR +=
+                    ((A * Math.exp(-Math.abs(dBoundary) / this.lambda) * this.angularFalloff(θ - φ, av.inside)) /
+                        avatars.length) *
+                    2;
             }
 
             /* --- 2.  Dampen changes with simple lerp for a jelly feel ---- */
-            this.radii[s] = Phaser.Math.Linear(this.radii[s], targetR, 0.15);
+            const newRadius = Phaser.Math.Linear(this.radii[s], targetR, this.speed);
+            if (Math.abs(newRadius - this.radii[s]) > this.stopAnimationThreshold) {
+                this._isAnimating = true; // mark as animating if there's a significant change
+            }
+            this.radii[s] = newRadius;
+            //this.radii[s] = targetR;
         }
 
         /* --- 3.  Redraw -------------------------------------------------- */
@@ -141,9 +156,9 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
     // -----------------------------------------------------------------------
 
     /** Cosine lobe clamped to zero and sharpened by k. */
-    private angularFalloff(delta: number): number {
+    private angularFalloff(delta: number, isInside: boolean): number {
         const c = Math.cos(delta);
-        return c <= 0 ? 0 : Math.pow(c, this.k);
+        return c <= 0 ? 0 : Math.pow(c, isInside ? this.kInside : this.kOutside);
     }
 
     /**
@@ -250,5 +265,9 @@ export class ConversationBubble extends Phaser.GameObjects.Sprite {
             this.scene.textures.remove(this.generatedTextureKey);
         }
         super.destroy(fromScene);
+    }
+
+    public get isAnimating(): boolean {
+        return this._isAnimating;
     }
 }

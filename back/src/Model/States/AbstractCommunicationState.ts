@@ -8,17 +8,18 @@ import { CommunicationConfig } from "../CommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 export abstract class CommunicationState implements ICommunicationState {
     protected _switchTimeout: NodeJS.Timeout | null = null;
-    protected _readyUsers: Set<string> = new Set();
     protected SWITCH_TIMEOUT_MS = 0;
     protected _nextStatePromise: Promise<CommunicationState> | null = null;
     protected abstract _currentCommunicationType: CommunicationType;
     protected abstract _nextCommunicationType: CommunicationType;
     protected _waitingList: Set<string> = new Set<string>();
+    protected _switchInitiatorUserId: string | null = null;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager,
         protected readonly _currentStrategy: ICommunicationStrategy,
+        protected readonly _readyUsers: Set<string> = new Set(),
         protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC
     ) {
         this.preparedSwitchAction(this._readyUsers);
@@ -88,10 +89,16 @@ export abstract class CommunicationState implements ICommunicationState {
         }
 
         try {
-            const users = this._space.getAllUsers();
+            const users = new Set<string>([
+                ...this._space.getUsersInFilter().map((user) => user.spaceUserId),
+                ...this._space.getUsersToNotify().map((user) => user.spaceUserId),
+            ]);
+            if (this._switchInitiatorUserId) {
+                users.delete(this._switchInitiatorUserId);
+            }
 
-            users.forEach((user) => {
-                this.dispatchSwitchEvent(user.spaceUserId, "executeSwitchMessage", {
+            users.forEach((spaceUserId) => {
+                this.dispatchSwitchEvent(spaceUserId, "executeSwitchMessage", {
                     strategy: this._nextCommunicationType,
                 });
             });
@@ -100,6 +107,7 @@ export abstract class CommunicationState implements ICommunicationState {
             this._communicationManager.setState(nextState);
             nextState.afterSwitchAction();
             this._readyUsers.clear();
+            this._switchInitiatorUserId = null;
         }
     }
 
@@ -116,6 +124,13 @@ export abstract class CommunicationState implements ICommunicationState {
     handleUserUpdated(user: SpaceUser): Promise<void> {
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
+    }
+    handleUserToNotifyAdded(user: SpaceUser): void {
+        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
+        this._currentStrategy.addUserToNotify(user);
+    }
+    handleUserToNotifyDeleted(user: SpaceUser): void {
+        this._currentStrategy.deleteUserFromNotify(user);
     }
     handleUserReadyForSwitch(userId: string): Promise<void> {
         if (!this.isSwitching()) {
@@ -144,6 +159,7 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     protected notifyUserOfCurrentStrategy(user: SpaceUser, strategy: CommunicationType): void {
+        console.log("🚀🚀🚀🚀🚀🚀🚀 notifyUserOfCurrentStrategy", user.spaceUserId, strategy);
         this.dispatchSwitchEvent(user.spaceUserId, "communicationStrategyMessage", { strategy });
     }
     protected abstract shouldSwitchBackToCurrentState(): boolean;

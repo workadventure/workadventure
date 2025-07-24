@@ -16,10 +16,6 @@ export const defaultPeerFactory: PeerFactoryInterface = {
     create: (_space: SpaceInterface, _streamableSubjects: StreamableSubjects) => {
         const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
         const peer = new SimplePeer(_space, playerRepository, _streamableSubjects);
-        const spaceFilter = _space.getLastSpaceFilter();
-        if (spaceFilter) {
-            peer.setSpaceFilter(spaceFilter);
-        }
         return peer;
     },
 };
@@ -34,6 +30,7 @@ export class WebRTCState implements ICommunicationState {
         private _streamableSubjects: StreamableSubjects,
         private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
+        console.log("🚀🚀🚀🚀🚀🚀🚀 WebRTCState constructor");
         this._peer = this._peerFactory.create(this._space, this._streamableSubjects);
 
         this._rxJsUnsubscribers.push(
@@ -76,6 +73,7 @@ export class WebRTCState implements ICommunicationState {
     destroy() {
         this._peer.closeAllConnections(false);
         this._peer.unregister();
+        this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
     }
 
     getPeer(): SimplePeerConnectionInterface | undefined {

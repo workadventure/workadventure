@@ -11,6 +11,10 @@ export default [
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/restrict-template-expressions": "off",
             "@typescript-eslint/no-unsafe-argument": "off",
+
+            "listeners/no-missing-remove-event-listener": "error",
+            "listeners/matching-remove-event-listener": "error",
+            "listeners/no-inline-function-event-listener": "error",
         }
     }
 ];

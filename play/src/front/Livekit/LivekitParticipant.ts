@@ -10,8 +10,7 @@ import {
 } from "livekit-client";
 import * as Sentry from "@sentry/svelte";
 import { derived, Writable, writable } from "svelte/store";
-import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
-import { SpaceInterface } from "../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
@@ -157,14 +156,14 @@ export class LiveKitParticipant {
                 track.attach(videoElement);
             });
 
-            this.updateLivekitVideoStreamStore().catch(() => {
-                console.error("Error updating livekit video stream store");
+            this.updateLivekitVideoStreamStore().catch((e) => {
+                console.error("Error updating livekit video stream store", e);
             });
         } else if (publication.source === Track.Source.Microphone) {
             this._audioStreamStore.set(track.mediaStream);
             this._isMuted.set(track.isMuted);
-            this.updateLivekitVideoStreamStore().catch(() => {
-                console.error("Error updating livekit video stream store");
+            this.updateLivekitVideoStreamStore().catch((e) => {
+                console.error("Error updating livekit video stream store", e);
             });
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
@@ -205,7 +204,7 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldVideoStream = this.space.videoStreamStore.get(this._spaceUser.spaceUserId);
+            const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
             if (oldVideoStream) {
                 this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
             }
@@ -221,7 +220,7 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldScreenShareStream = this.space.screenShareStreamStore.get(this._spaceUser.spaceUserId);
+            const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
             if (oldScreenShareStream) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
             }
@@ -263,26 +262,26 @@ export class LiveKitParticipant {
 
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
-        const oldVideoStream = this.space.videoStreamStore.get(this._spaceUser.spaceUserId);
+        const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
 
         if (oldVideoStream) {
             this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
         }
 
-        this.space.videoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+        this.space.allVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
 
         this._streamableSubjects.videoPeerAdded.next(videoStream.media);
     }
 
     private async updateLivekitScreenShareStreamStore() {
         const screenShareStream = await this.getScreenShareStream();
-        const oldScreenShareStream = this.space.screenShareStreamStore.get(this._spaceUser.spaceUserId);
+        const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
 
         if (oldScreenShareStream) {
             this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
         }
 
-        this.space.screenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
+        this.space.allScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
 
         this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.media);
     }

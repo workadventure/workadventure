@@ -23,7 +23,7 @@ export class WebRTCState extends CommunicationState {
     }
     async handleUserAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(user);
+            this.switchToNextState(user, "user");
             return;
         }
 
@@ -61,13 +61,45 @@ export class WebRTCState extends CommunicationState {
         return super.handleUserUpdated(user);
     }
 
-    private switchToNextState(user: SpaceUser): void {
+
+
+    handleUserToNotifyAdded(user: SpaceUser): void {
+        if (this.shouldSwitchToNextState()) {
+            this.switchToNextState(user, "userToNotify");
+            return;
+        }
+
+        if (this.isSwitching()) {
+            this._nextState?.handleUserToNotifyAdded(user);
+            return;
+        }
+
+        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyAdded", user);
+        super.handleUserToNotifyAdded(user);
+    }
+
+    handleUserToNotifyDeleted(user: SpaceUser): void {
+        if (this.shouldSwitchBackToCurrentState()) {
+            this.cancelSwitch();
+        }
+
+        if (this.isSwitching()) {
+            this._nextState?.handleUserToNotifyDeleted(user);
+            return;
+        }
+
+        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
+        super.handleUserToNotifyDeleted(user);
+    }
+
+    //TODO : trouver un autre moyen de faire le switch
+    private switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): void {
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;
             let res;
             if (getCapability("api/livekit/credentials")) {
                 res = await adminApi.fetchLivekitCredentials(this._space.getSpaceName(), user.playUri);
-                nextState = new LivekitState(this._space, this._communicationManager, res);
+                nextState = new LivekitState(this._space, this._communicationManager, res,this._readyUsers);
             } else {
                 res = LivekitCredentialsResponse.parse({
                     livekitHost: LIVEKIT_HOST,
@@ -75,11 +107,25 @@ export class WebRTCState extends CommunicationState {
                     livekitApiSecret: LIVEKIT_API_SECRET,
                 });
                 console.log("Default credentials", res);
-                nextState = new LivekitState(this._space, this._communicationManager, res); //fallback to default credentials
+                nextState = new LivekitState(this._space, this._communicationManager, res,this._readyUsers); //fallback to default credentials
             }
             this._readyUsers.add(user.spaceUserId);
+            this._switchInitiatorUserId = user.spaceUserId;
             try {
-                await nextState.handleUserAdded(user);
+                if (
+                    typeOfSwitch === "user" &&
+                    this._space.getUsersInFilter().find((user) => user.spaceUserId === user.spaceUserId)
+                ) {
+                    await nextState.handleUserAdded(user);
+                }
+
+                if (
+                    typeOfSwitch === "userToNotify" &&
+                    this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)
+                ) {
+                    await nextState.handleUserToNotifyAdded(user);
+                }
+
             } catch (e) {
                 console.error(
                     `WebRTCState.switchToNextState: Error adding user ${user.name} (${user.spaceUserId}) to Livekit state:`,
@@ -87,6 +133,7 @@ export class WebRTCState extends CommunicationState {
                 );
                 Sentry.captureException(e);
             }
+
 
             this.notifyAllUsersToPrepareSwitchToNextState();
             this.setupSwitchTimeout();
@@ -99,6 +146,12 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
+        /**
+         * TODO : Trouver une regle qui se base sur les flux plutot que sur le nombres d'utilisateur
+         * pour eviter les switchs inutiles (ex: si on a 100 utilisateurs  1 personnes diffuse et 1 personne watch peut etre pas utile de switch
+         *  ou une personne stream pour 5/6 personnes )
+         **/
+
         return (
             this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC &&
             !this.isSwitching() &&

@@ -273,6 +273,7 @@ services:
       SENTRY_RELEASE: $SENTRY_RELEASE
       SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
       SENTRY_TRACES_SAMPLE_RATE: $SENTRY_TRACES_SAMPLE_RATE
+      SECRET_KEY: $SECRET_KEY
       PATH_PREFIX: "/map-storage"
       ENTITY_COLLECTION_URLS: "https://${DOMAIN}/collections/FurnitureCollection.json,https://${DOMAIN}/collections/OfficeCollection.json"
       MAP_STORAGE_API_TOKEN: "${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}"

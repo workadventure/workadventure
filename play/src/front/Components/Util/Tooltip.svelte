@@ -25,13 +25,13 @@
         } else if (rightPosition === "true") {
             toolTipPosition = "right-tooltip";
         }
-        tooltipElement?.parentElement?.addEventListener("mouseenter", () => show());
-        tooltipElement?.parentElement?.addEventListener("mouseleave", () => hide());
+        tooltipElement?.parentElement?.addEventListener("mouseenter", show);
+        tooltipElement?.parentElement?.addEventListener("mouseleave", hide);
     });
 
     onDestroy(() => {
-        tooltipElement?.parentElement?.removeEventListener("mouseenter", () => show());
-        tooltipElement?.parentElement?.removeEventListener("mouseleave", () => hide());
+        tooltipElement?.parentElement?.removeEventListener("mouseenter", show);
+        tooltipElement?.parentElement?.removeEventListener("mouseleave", hide);
     });
 </script>
 
