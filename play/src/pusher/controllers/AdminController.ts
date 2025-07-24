@@ -2,10 +2,13 @@ import { Metadata } from "@grpc/grpc-js";
 import type { Application, Request, Response } from "express";
 import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
 import { z } from "zod";
+import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class AdminController extends BaseHttpController {
     constructor(app: Application, private readonly GRPC_MAX_MESSAGE_SIZE: number) {
@@ -46,6 +49,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveRoomEditionPrompt(): void {
         this.app.post("/room/refresh", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             if (typeof body.roomId !== "string") {
@@ -114,6 +118,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveGlobalMessagePrompt(): void {
         this.app.post("/message", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             if (typeof body.text !== "string") {
@@ -197,6 +202,7 @@ export class AdminController extends BaseHttpController {
      */
     getRoomsList(): void {
         this.app.get("/rooms", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const roomClients = await apiClientRepository.getAllClients(this.GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<RoomsList>[] = [];
@@ -282,6 +288,7 @@ export class AdminController extends BaseHttpController {
      */
     dispatchGlobalEvent(): void {
         this.app.post("/global/event", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = validatePostQuery(
                 req,
                 res,
@@ -342,6 +349,7 @@ export class AdminController extends BaseHttpController {
 
     sendChatMessagePrompt(): void {
         this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             try {
@@ -410,6 +418,7 @@ export class AdminController extends BaseHttpController {
 
     dispatchExternalModuleEvent(): void {
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
             try {
                 if (typeof body.data.moduleId !== "string") {

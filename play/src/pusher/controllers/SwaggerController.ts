@@ -2,13 +2,17 @@ import fs from "fs";
 import path from "path";
 import swaggerJsdoc from "swagger-jsdoc";
 import * as cheerio from "cheerio";
+import Debug from "debug";
 import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
 import { BaseHttpController } from "./BaseHttpController";
 
+const debug = Debug("pusher:requests");
+
 export class SwaggerController extends BaseHttpController {
     routes(): void {
         this.app.get("/openapi/pusher", (req, res) => {
+            debug(`SwaggerController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const options = {
                 swaggerDefinition: {
                     openapi: "3.0.0",
@@ -24,6 +28,7 @@ export class SwaggerController extends BaseHttpController {
         });
 
         this.app.get("/openapi/admin", (req, res) => {
+            debug(`PrometheusController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const options: swaggerJsdoc.Options = {
                 swaggerDefinition: {
                     swagger: "2.0",
@@ -62,6 +67,11 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
+            debug(
+                `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
+                    request.ip
+                } — Time: ${Date.now()}`
+            );
             fs.readFile(process.cwd() + "/../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
                     return response.status(500).send(err.message);
@@ -99,6 +109,11 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve frontend assets
         this.app.get("/swagger-ui/{*splat}", (request, response) => {
+            debug(
+                `SwaggerController => [${request.method}] ${request.originalUrl} — IP: ${
+                    request.ip
+                } — Time: ${Date.now()}`
+            );
             const fileParsed = path.parse(request.path);
             // Filter files
             if (
