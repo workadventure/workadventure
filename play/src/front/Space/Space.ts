@@ -116,8 +116,6 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
             this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
-
-        // TODO: The public and private messages should be forwarded to a special method here from the Registry.
     }
 
     /**
@@ -399,6 +397,7 @@ export class Space implements SpaceInterface {
     }
 
     public requestFullSync() {
+        if (this._registerRefCount === 0) return;
         this._connection.emitRequestFullSync(this.name, this.getUsers());
     }
 

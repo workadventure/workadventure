@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
@@ -219,17 +220,17 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     }
 
     private setupThrottlingDetection(): void {
-        // Subscribe to the recovery signal via the subjects
-        const recoverySubscription = this.throttlingDetector.recoveryTriggered$.subscribe(() => {
-            console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
+        const recoverySubscription = this.throttlingDetector.recoveryTriggered$
+            .pipe(debounceTime(1000), distinctUntilChanged())
+            .subscribe(() => {
+                console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
 
-            // Resynchronize all active Spaces
-            const spaces = this.getAll();
-            spaces.forEach((space) => {
-                console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
-                space.requestFullSync();
+                const spaces = this.getAll();
+                spaces.forEach((space) => {
+                    console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
+                    space.requestFullSync();
+                });
             });
-        });
 
         // Optionally: Subscribe to all events for debugging purposes
         const eventsSubscription = this.throttlingDetector.events$.subscribe((event) => {

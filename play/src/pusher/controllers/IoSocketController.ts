@@ -1054,7 +1054,12 @@ export class IoSocketController {
                         }
 
                         case "requestFullSyncMessage": {
+                            message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.requestFullSyncMessage.spaceName
+                            }`;
+
                             await socketManager.handleRequestFullSync(socket, message.message.requestFullSyncMessage);
+
                             break;
                         }
                         case "publicEvent": {
