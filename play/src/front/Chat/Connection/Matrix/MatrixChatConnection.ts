@@ -983,7 +983,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                             }
                         })
                         .map((chunkRoom) => {
-                            console.debug(chunkRoom);
                             return {
                                 id: chunkRoom.room_id,
                                 name: chunkRoom.name,

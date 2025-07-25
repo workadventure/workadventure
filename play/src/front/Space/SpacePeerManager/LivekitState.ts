@@ -11,7 +11,6 @@ export class LivekitState implements ICommunicationState {
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;
     constructor(private _space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
-        console.log("🚀🚀🚀🚀🚀🚀🚀 LivekitState constructor");
         this.livekitConnection = new LivekitConnection(this._space, this._streamableSubjects);
 
         this.rxJsUnsubscribers.push(
