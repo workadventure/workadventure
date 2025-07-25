@@ -1052,6 +1052,11 @@ export class IoSocketController {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;
                         }
+
+                        case "requestFullSyncMessage": {
+                            await socketManager.handleRequestFullSync(socket, message.message.requestFullSyncMessage);
+                            break;
+                        }
                         case "publicEvent": {
                             message.message.publicEvent.spaceName = `${socket.getUserData().world}.${
                                 message.message.publicEvent.spaceName

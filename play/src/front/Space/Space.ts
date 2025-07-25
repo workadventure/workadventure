@@ -1,7 +1,7 @@
 import { get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Observable, Subject, Subscriber } from "rxjs";
+import { Observable, Subject, Subscriber, Subscription } from "rxjs";
 import { merge } from "lodash";
 import {
     PrivateEvent,
@@ -42,6 +42,10 @@ export class Space implements SpaceInterface {
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
+
+    private readonly observeSyncUserAdded: Subscription;
+    private readonly observeSyncUserUpdated: Subscription;
+    private readonly observeSyncUserRemoved: Subscription;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -93,6 +97,24 @@ export class Space implements SpaceInterface {
             return () => {
                 this.unregisterSpaceFilter();
             };
+        });
+
+        this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
+            if (!message.addSpaceUserMessage.user) {
+                console.error("addSpaceUserMessage is missing a user");
+                return;
+            }
+            this.addUser(message.addSpaceUserMessage.user).catch((e) => console.error(e));
+        });
+        this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
+            if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
+                console.error("updateSpaceUserMessage is missing a user or an updateMask");
+                return;
+            }
+            this.updateUserData(message.updateSpaceUserMessage.user, message.updateSpaceUserMessage.updateMask);
+        });
+        this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
+            this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
 
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
@@ -238,6 +260,9 @@ export class Space implements SpaceInterface {
         }
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
+        this.observeSyncUserAdded.unsubscribe();
+        this.observeSyncUserUpdated.unsubscribe();
+        this.observeSyncUserRemoved.unsubscribe();
     }
 
     /**
@@ -371,6 +396,10 @@ export class Space implements SpaceInterface {
         );
 
         return extendedUser;
+    }
+
+    public requestFullSync() {
+        this._connection.emitRequestFullSync(this.name, this.getUsers());
     }
 
     private unregisterSpaceFilter() {
