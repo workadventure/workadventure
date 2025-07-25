@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
 import Mustache from "mustache";
 import { Application } from "express";
+import Debug from "debug";
 import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
@@ -14,6 +15,8 @@ import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class AuthenticateController extends BaseHttpController {
     private readonly redirectToMatrixFile: string;
@@ -95,6 +98,7 @@ export class AuthenticateController extends BaseHttpController {
          */
 
         this.app.get("/login-screen", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
                 res,
@@ -175,6 +179,7 @@ export class AuthenticateController extends BaseHttpController {
          */
 
         this.app.get("/me", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const IPAddress = req.header("x-forwarded-for") ?? "";
             const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
@@ -285,6 +290,7 @@ export class AuthenticateController extends BaseHttpController {
          */
 
         this.app.get("/openid-callback", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const playUri = req.cookies.playUri;
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
@@ -365,6 +371,7 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects to play once authentication is done.
          */
         this.app.get("/matrix-callback", (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const playUri = req.cookies.playUri;
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
@@ -448,6 +455,7 @@ export class AuthenticateController extends BaseHttpController {
         });
 
         this.app.post("/register", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const param = req.body;
 
             //todo: what to do if the organizationMemberToken is already used?
@@ -510,6 +518,7 @@ export class AuthenticateController extends BaseHttpController {
      */
     private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             if (DISABLE_ANONYMOUS) {
                 res.status(403).send("");
                 return;
@@ -547,6 +556,7 @@ export class AuthenticateController extends BaseHttpController {
      */
     private profileCallback(): void {
         this.app.get("/profile-callback", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
                 res,
@@ -592,6 +602,7 @@ export class AuthenticateController extends BaseHttpController {
          *
          */
         this.app.get("/logout-callback", (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             // if no playUri, redirect to front
             if (!req.cookies.playUri) {
                 res.redirect(FRONT_URL);
@@ -617,6 +628,7 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects the user to the OpenID logout screen
          */
         this.app.get("/logout", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
                 res,

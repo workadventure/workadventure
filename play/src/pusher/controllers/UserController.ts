@@ -1,10 +1,13 @@
 import { z } from "zod";
 import type { Request } from "express";
 import { Response } from "express";
+import Debug from "debug";
 import { adminService } from "../services/AdminService";
 import { validatePostQuery } from "../services/QueryValidator";
 import { authenticated, ResponseWithUserIdentifier } from "../middlewares/Authenticated";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class UserController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -56,6 +59,7 @@ export class UserController extends BaseHttpController {
         });
 
         this.app.post("/save-name", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
+            debug(`UserController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = validatePostQuery(
                 req,
                 res,
@@ -128,6 +132,7 @@ export class UserController extends BaseHttpController {
         });
 
         this.app.post("/save-textures", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
+            debug(`UserController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = validatePostQuery(
                 req,
                 res,
@@ -201,6 +206,7 @@ export class UserController extends BaseHttpController {
             "/save-companion-texture",
             [authenticated],
             async (req: Request, res: ResponseWithUserIdentifier) => {
+                debug(`UserController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
                 const body = validatePostQuery(
                     req,
                     res,
