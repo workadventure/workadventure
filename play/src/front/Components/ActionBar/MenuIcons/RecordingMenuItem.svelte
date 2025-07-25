@@ -10,16 +10,18 @@
     import { IconAlertTriangle } from "@wa-icons";
     import { isRoomMetadataData, RoomMetadataData } from "@workadventure/messages/src/JsonMessages/RoomMetadata";
     import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
 
     const currentGameScene = gameManager.getCurrentGameScene();
+    console.log("🚀🚀🚀 metadata", gameManager.currentStartedRoom.metadata);
     const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
     if (!roomMetadataChecking.success) {
         throw new Error("Invalid room metadata data");
     }
     const roomMetadata: RoomMetadataData = roomMetadataChecking.data;
+    const roomEnabledRecording = roomMetadata.room.enableRecord;
     const isPremium = roomMetadata.room.isPremium;
-
-
 
     function requestRecording(): void {
         console.log("Recording started");
@@ -38,6 +40,12 @@
         }
     }
 
+    $: buttonState = ((): "disabled" | "normal" | "active" => {
+        if (!localUserStore.isLogged() || !$userIsAdminStore || !isPremium || !roomEnabledRecording) return "disabled";
+        if (!$recordingStore.isRecording) return "normal";
+        if ($recordingStore.isCurrentUserRecorder) return "active";
+        return "disabled";
+    })();
 
 </script>
 
@@ -50,11 +58,10 @@
         $recordingStore.isCurrentUserRecorder ? "Stop recording" : "A recording is in progress"
         : "Start a recording"
     }
-    state={ localUserStore.isLogged() ? (isPremium ? ($recordingStore.isRecording ? ($recordingStore.isCurrentUserRecorder ? "active" : "disabled") : "normal") : "disabled") : "disabled" }
+    state={ buttonState }
     dataTestId="recordingButton"
     tooltipDelay={0}
 >
-
     {#if $recordingStore.isRecording && $recordingStore.isCurrentUserRecorder }
         <StopRecordingIcon/>
     {:else}
@@ -66,34 +73,42 @@
             {#if !localUserStore.isLogged()}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        You need to be logged to record.
+                        {$LL.actionbar.help.recording.desc.needLogin()}
                     </span>
                 </div>
             {:else if !isPremium}
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
                     <span>
-                        You need to be premium to record.
+                        {$LL.actionbar.help.recording.desc.needPremium()}
+                    </span>
+                </div>
+            {:else if !roomEnabledRecording}
+                <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
+                    <span>
+                        {$LL.actionbar.help.recording.desc.notEnabled()}
                     </span>
                 </div>
             {:else if !$recordingStore.isRecording }
                 <div class="text-sm text-white bg-white/10 rounded px-2 py-1 backdrop-blur">
-                    <IconAlertTriangle />
+                    <span class="mr-2 -translate-y-1">
+                        <IconAlertTriangle />
+                    </span>
                     <span>
-                        All participants will be notified that you are starting a recording.
+                        {$LL.actionbar.help.recording.desc.advert()}
                     </span>
                 </div>
             {:else if $recordingStore.isCurrentUserRecorder}
                 <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1 ">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse"></div>
                     <div>
-                        Your recording is in progress. Click to stop it.
+                        {$LL.actionbar.help.recording.desc.yourRecordInProgress()}
                     </div>
                 </div>
             {:else}
                 <div class="text-sm text-white px-2 py-1 flex flex-rox gap-2 items-center">
                     <div class="bg-red-500 rounded-full w-4 h-4 max-w-4 max-h-4 animate-pulse"></div>
                     <div>
-                        A recording is in progress.
+                        {$LL.actionbar.help.recording.inProgress()}
                     </div>
                 </div>
             {/if}

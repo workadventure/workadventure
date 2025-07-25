@@ -4,6 +4,7 @@ export const isRoomMetadataData = z.object({
   // Add here all the metadata from admin you want
   room: z.object({
     isPremium: z.boolean(),
+    enableRecord: z.boolean().optional().default(false),
   })
 });
 

@@ -205,8 +205,6 @@ export class LiveKitService {
 
             this.currentRecordingInformation = result;
 
-            console.log("🎇🎇 LivekitService.ts => Recording started successfully:", result);
-
             // Stop recording after 60 seconds
             // setTimeout(async () => {
             //     try {
