@@ -1359,4 +1359,630 @@ describe("Space with filter", () => {
             });
         });
     });
+
+    describe("syncAndDiff", () => {
+        let space: Space;
+        let watcher: SpacesWatcher;
+
+        beforeEach(() => {
+            space = new Space("test", FilterType.ALL_USERS);
+            watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: vi.fn(),
+            });
+        });
+
+        describe("when client is missing users (ADD events)", () => {
+            it("should generate ADD BackToPusherSpaceMessage for missing user", () => {
+                const localUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    uuid: "uuid-1",
+                    name: "Local User",
+                    microphoneState: true,
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([["user_1", localUser]])
+                );
+
+                const providedUsers: SpaceUser[] = [];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(1);
+                expect(events[0].message?.$case).toBe("addSpaceUserMessage");
+
+                if (events[0].message?.$case === "addSpaceUserMessage") {
+                    const addMessage = events[0].message.addSpaceUserMessage;
+                    expect(addMessage.spaceName).toBe("test");
+                    expect(addMessage.user?.spaceUserId).toBe("user_1");
+                    expect(addMessage.filterType).toBe(FilterType.ALL_USERS);
+                }
+            });
+
+            it("should generate ADD events for multiple missing users", () => {
+                const user1: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "User 1",
+                    megaphoneState: false,
+                });
+
+                const user2: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_2",
+                    name: "User 2",
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([
+                        ["user_1", user1],
+                        ["user_2", user2],
+                    ])
+                );
+
+                const providedUsers: SpaceUser[] = [];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(2);
+                events.forEach((event) => {
+                    expect(event.message?.$case).toBe("addSpaceUserMessage");
+                });
+            });
+        });
+
+        describe("when client has extra users (REMOVE events)", () => {
+            it("should generate REMOVE BackToPusherSpaceMessage for extra user", () => {
+                const extraUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "extra_user",
+                    name: "Extra User",
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map()
+                );
+
+                const providedUsers: SpaceUser[] = [extraUser];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(1);
+                expect(events[0].message?.$case).toBe("removeSpaceUserMessage");
+
+                if (events[0].message?.$case === "removeSpaceUserMessage") {
+                    const removeMessage = events[0].message.removeSpaceUserMessage;
+                    expect(removeMessage.spaceName).toBe("test");
+                    expect(removeMessage.spaceUserId).toBe("extra_user");
+                }
+            });
+        });
+
+        describe("when users differ (UPDATE events)", () => {
+            it("should generate UPDATE BackToPusherSpaceMessage when user data differs", () => {
+                const localUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "Updated Name",
+                    microphoneState: true,
+                    megaphoneState: false,
+                });
+
+                const providedUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "Old Name",
+                    microphoneState: false,
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([["user_1", localUser]])
+                );
+
+                const providedUsers: SpaceUser[] = [providedUser];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(1);
+                expect(events[0].message?.$case).toBe("updateSpaceUserMessage");
+
+                if (events[0].message?.$case === "updateSpaceUserMessage") {
+                    const updateMessage = events[0].message.updateSpaceUserMessage;
+                    expect(updateMessage.spaceName).toBe("test");
+                    expect(updateMessage.user?.spaceUserId).toBe("user_1");
+                    expect(updateMessage.updateMask).toContain("name");
+                    expect(updateMessage.updateMask).toContain("microphoneState");
+                }
+            });
+        });
+
+        describe("filter transitions", () => {
+            it("should handle filter transitions from invisible to visible", () => {
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+
+                const localUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    megaphoneState: true, // Now visible
+                });
+
+                const providedUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    megaphoneState: false, // Was not visible
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([["user_1", localUser]])
+                );
+
+                const providedUsers: SpaceUser[] = [providedUser];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(1);
+                expect(events[0].message?.$case).toBe("addSpaceUserMessage");
+            });
+
+            it("should handle filter transitions from visible to invisible", () => {
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+
+                const localUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    megaphoneState: false, // No longer visible
+                });
+
+                const providedUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    megaphoneState: true, // Was visible
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([["user_1", localUser]])
+                );
+
+                const providedUsers: SpaceUser[] = [providedUser];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(1);
+                expect(events[0].message?.$case).toBe("removeSpaceUserMessage");
+            });
+        });
+
+        describe("complex scenarios", () => {
+            it("should handle mixed operations in one sync", () => {
+                const localUser1: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "Updated User 1",
+                    megaphoneState: false,
+                });
+
+                const localUser2: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_2",
+                    name: "User 2",
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([
+                        ["user_1", localUser1],
+                        ["user_2", localUser2],
+                    ])
+                );
+
+                const providedUser1: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "Old User 1",
+                    megaphoneState: false,
+                });
+
+                const providedUser3: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_3",
+                    name: "Extra User 3",
+                    megaphoneState: false,
+                });
+
+                const providedUsers: SpaceUser[] = [providedUser1, providedUser3];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(3);
+
+                const eventTypes = events.map((event) => event.message?.$case);
+                expect(eventTypes).toContain("updateSpaceUserMessage");
+                expect(eventTypes).toContain("addSpaceUserMessage");
+                expect(eventTypes).toContain("removeSpaceUserMessage");
+            });
+        });
+
+        describe("when everything is synchronized", () => {
+            it("should generate no events when client and server are identical", () => {
+                const user: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: "user_1",
+                    name: "Same User",
+                    microphoneState: true,
+                    megaphoneState: false,
+                });
+
+                (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                    watcher,
+                    new Map([["user_1", user]])
+                );
+
+                const providedUsers: SpaceUser[] = [user];
+                const events = space.syncAndDiff(watcher, providedUsers);
+
+                expect(events).toHaveLength(0);
+            });
+        });
+    });
+
+    describe("sendDiffEvents", () => {
+        let space: Space;
+        let watcher: SpacesWatcher;
+        let mockWriteFunction: ReturnType<typeof vi.fn>;
+
+        beforeEach(() => {
+            space = new Space("test", FilterType.ALL_USERS);
+            mockWriteFunction = vi.fn();
+            watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+        });
+
+        it("should send all provided events to the watcher", () => {
+            const events: BackToPusherSpaceMessage[] = [
+                {
+                    message: {
+                        $case: "addSpaceUserMessage",
+                        addSpaceUserMessage: {
+                            spaceName: "test",
+                            user: SpaceUser.fromPartial({
+                                spaceUserId: "user_1",
+                                name: "User 1",
+                            }),
+                            filterType: FilterType.ALL_USERS,
+                        },
+                    },
+                },
+                {
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "user_2",
+                        },
+                    },
+                },
+            ];
+
+            space.sendDiffEvents(watcher, events);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(2);
+            expect(mockWriteFunction).toHaveBeenNthCalledWith(1, events[0]);
+            expect(mockWriteFunction).toHaveBeenNthCalledWith(2, events[1]);
+        });
+
+        it("should handle empty events array", () => {
+            space.sendDiffEvents(watcher, []);
+
+            expect(mockWriteFunction).not.toHaveBeenCalled();
+        });
+
+        it("should send events in correct order", () => {
+            const event1: BackToPusherSpaceMessage = {
+                message: {
+                    $case: "addSpaceUserMessage",
+                    addSpaceUserMessage: {
+                        spaceName: "test",
+                        user: SpaceUser.fromPartial({ spaceUserId: "user_1" }),
+                        filterType: FilterType.ALL_USERS,
+                    },
+                },
+            };
+
+            const event2: BackToPusherSpaceMessage = {
+                message: {
+                    $case: "updateSpaceUserMessage",
+                    updateSpaceUserMessage: {
+                        spaceName: "test",
+                        user: SpaceUser.fromPartial({ spaceUserId: "user_1" }),
+                        updateMask: ["name"],
+                    },
+                },
+            };
+
+            space.sendDiffEvents(watcher, [event1, event2]);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(2);
+            expect(mockWriteFunction).toHaveBeenNthCalledWith(1, event1);
+            expect(mockWriteFunction).toHaveBeenNthCalledWith(2, event2);
+        });
+    });
+
+    describe("syncUsersAndNotify", () => {
+        let space: Space;
+        let watcher: SpacesWatcher;
+        let mockWriteFunction: ReturnType<typeof vi.fn>;
+        const senderUserId = "test_sender_123";
+
+        beforeEach(() => {
+            space = new Space("test", FilterType.ALL_USERS);
+            mockWriteFunction = vi.fn();
+            watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+        });
+
+        it("should synchronize and send PrivateEvents to watcher", () => {
+            const localUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Local User",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser]])
+            );
+
+            const providedUsers: SpaceUser[] = [];
+
+            space.syncUsersAndNotify(watcher, providedUsers, senderUserId);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+
+            const sentEvent = mockWriteFunction.mock.calls[0][0] as BackToPusherSpaceMessage;
+            expect(sentEvent.message?.$case).toBe("privateEvent");
+
+            if (sentEvent.message?.$case === "privateEvent") {
+                const privateEvent = sentEvent.message.privateEvent;
+                expect(privateEvent.receiverUserId).toBe(senderUserId);
+                expect(privateEvent.senderUserId).toBe(senderUserId);
+                expect(privateEvent.spaceName).toBe("test");
+                expect(privateEvent.spaceEvent?.event?.$case).toBe("addSpaceUserMessage");
+            }
+        });
+
+        it("should handle multiple sync operations", () => {
+            const localUser1: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Updated User",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser1]])
+            );
+
+            const providedUser1: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Old User",
+                megaphoneState: false,
+            });
+
+            const providedUser2: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_2",
+                name: "Extra User",
+                megaphoneState: false,
+            });
+
+            const providedUsers: SpaceUser[] = [providedUser1, providedUser2];
+
+            space.syncUsersAndNotify(watcher, providedUsers, senderUserId);
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(2);
+
+            // Verify all events are PrivateEvents
+            mockWriteFunction.mock.calls.forEach((call) => {
+                const event = call[0] as BackToPusherSpaceMessage;
+                expect(event.message?.$case).toBe("privateEvent");
+            });
+        });
+
+        it("should not send events when users are synchronized", () => {
+            const user: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Same User",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", user]])
+            );
+
+            const providedUsers: SpaceUser[] = [user];
+
+            space.syncUsersAndNotify(watcher, providedUsers, senderUserId);
+
+            expect(mockWriteFunction).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("getUserDifferences (via syncAndDiff testing)", () => {
+        let space: Space;
+        let watcher: SpacesWatcher;
+
+        beforeEach(() => {
+            space = new Space("test", FilterType.ALL_USERS);
+            watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: vi.fn(),
+            });
+        });
+
+        it("should detect differences in primitive fields", () => {
+            const localUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "New Name",
+                microphoneState: true,
+                cameraState: false,
+                megaphoneState: false,
+            });
+
+            const providedUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Old Name",
+                microphoneState: false,
+                cameraState: false,
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser]])
+            );
+
+            const events = space.syncAndDiff(watcher, [providedUser]);
+
+            expect(events).toHaveLength(1);
+            if (events[0].message?.$case === "updateSpaceUserMessage") {
+                const updateMask = events[0].message.updateSpaceUserMessage.updateMask;
+                expect(updateMask).toContain("name");
+                expect(updateMask).toContain("microphoneState");
+                expect(updateMask).not.toContain("cameraState"); // Should be the same
+            }
+        });
+
+        it("should detect differences in complex fields (characterTextures)", () => {
+            const localUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                characterTextures: [
+                    { id: "texture1", url: "new_url1" },
+                    { id: "texture2", url: "url2" },
+                ],
+                megaphoneState: false,
+            });
+
+            const providedUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                characterTextures: [
+                    { id: "texture1", url: "old_url1" },
+                    { id: "texture2", url: "url2" },
+                ],
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser]])
+            );
+
+            const events = space.syncAndDiff(watcher, [providedUser]);
+
+            expect(events).toHaveLength(1);
+            if (events[0].message?.$case === "updateSpaceUserMessage") {
+                const updateMask = events[0].message.updateSpaceUserMessage.updateMask;
+                expect(updateMask).toContain("characterTextures");
+            }
+        });
+
+        it("should handle undefined vs defined field differences", () => {
+            const localUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                chatID: "chat_123",
+                visitCardUrl: undefined,
+                megaphoneState: false,
+            });
+
+            const providedUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                chatID: undefined,
+                visitCardUrl: "http://visit.card",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser]])
+            );
+
+            const events = space.syncAndDiff(watcher, [providedUser]);
+
+            expect(events).toHaveLength(1);
+            if (events[0].message?.$case === "updateSpaceUserMessage") {
+                const updateMask = events[0].message.updateSpaceUserMessage.updateMask;
+                expect(updateMask).toContain("chatID");
+                expect(updateMask).toContain("visitCardUrl");
+            }
+        });
+
+        it("should not detect differences when fields are identical", () => {
+            const identicalUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1",
+                name: "Same Name",
+                microphoneState: true,
+                characterTextures: [{ id: "texture1", url: "same_url" }],
+                chatID: "same_chat",
+                megaphoneState: false,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", identicalUser]])
+            );
+
+            const events = space.syncAndDiff(watcher, [identicalUser]);
+
+            expect(events).toHaveLength(0);
+        });
+
+        it("should handle all USER_COMPARISON_FIELDS correctly", () => {
+            // Test that all fields from USER_COMPARISON_FIELDS are properly compared
+            const localUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1", // Will differ but spaceUserId shouldn't change
+                name: "New Name",
+                microphoneState: true,
+                cameraState: true,
+                screenSharingState: true,
+                megaphoneState: true,
+                chatID: "new_chat",
+                availabilityStatus: 1,
+                visitCardUrl: "new_url",
+                characterTextures: [{ id: "new_texture", url: "new_texture_url" }],
+            });
+
+            const providedUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "user_1", // Same ID (as it should be)
+                name: "Old Name",
+                microphoneState: false,
+                cameraState: false,
+                screenSharingState: false,
+                megaphoneState: false,
+                chatID: "old_chat",
+                availabilityStatus: 0,
+                visitCardUrl: "old_url",
+                characterTextures: [{ id: "old_texture", url: "old_texture_url" }],
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map([["user_1", localUser]])
+            );
+
+            const events = space.syncAndDiff(watcher, [providedUser]);
+
+            expect(events).toHaveLength(1);
+            if (events[0].message?.$case === "updateSpaceUserMessage") {
+                const updateMask = events[0].message.updateSpaceUserMessage.updateMask;
+
+                // Should contain all different fields except spaceUserId (which is the same)
+                expect(updateMask).toContain("name");
+                expect(updateMask).toContain("microphoneState");
+                expect(updateMask).toContain("cameraState");
+                expect(updateMask).toContain("screenSharingState");
+                expect(updateMask).toContain("megaphoneState");
+                expect(updateMask).toContain("chatID");
+                expect(updateMask).toContain("availabilityStatus");
+                expect(updateMask).toContain("visitCardUrl");
+                expect(updateMask).toContain("characterTextures");
+
+                // spaceUserId should not be in the update mask as it's the same
+                expect(updateMask).not.toContain("spaceUserId");
+            }
+        });
+    });
 });

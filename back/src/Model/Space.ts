@@ -613,73 +613,49 @@ export class Space implements CustomJsonReplacerInterface {
                     const newFilter = this.filterOneUser(localUser);
 
                     if (!oldFilter && newFilter) {
-                        backEvents.push({
-                            message: {
-                                $case: "privateEvent",
-                                privateEvent: {
-                                    spaceName: this.name,
-                                    receiverUserId: senderUserId,
-                                    senderUserId: senderUserId,
-                                    spaceEvent: {
-                                        event: {
-                                            $case: "addSpaceUserMessage",
-                                            addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                                                spaceName: this.name,
-                                                user: localUser,
-                                                filterType: this._filterType,
-                                            }),
-                                        },
-                                    },
+                        backEvents.push(
+                            this.createPrivateEvent(senderUserId, {
+                                event: {
+                                    $case: "addSpaceUserMessage",
+                                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                                        spaceName: this.name,
+                                        user: localUser,
+                                        filterType: this._filterType,
+                                    }),
                                 },
-                            },
-                        });
+                            })
+                        );
                         debug(
                             `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} now visible, sending ADD as PrivateEvent`
                         );
                     } else if (oldFilter && !newFilter) {
-                        backEvents.push({
-                            message: {
-                                $case: "privateEvent",
-                                privateEvent: {
-                                    spaceName: this.name,
-                                    receiverUserId: senderUserId,
-                                    senderUserId: senderUserId,
-                                    spaceEvent: {
-                                        event: {
-                                            $case: "removeSpaceUserMessage",
-                                            removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
-                                                spaceName: this.name,
-                                                spaceUserId: providedUserId,
-                                            }),
-                                        },
-                                    },
+                        backEvents.push(
+                            this.createPrivateEvent(senderUserId, {
+                                event: {
+                                    $case: "removeSpaceUserMessage",
+                                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                                        spaceName: this.name,
+                                        spaceUserId: providedUserId,
+                                    }),
                                 },
-                            },
-                        });
+                            })
+                        );
                         debug(
                             `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} no longer visible, sending REMOVE as PrivateEvent`
                         );
                     } else if (oldFilter && newFilter) {
-                        backEvents.push({
-                            message: {
-                                $case: "privateEvent",
-                                privateEvent: {
-                                    spaceName: this.name,
-                                    receiverUserId: senderUserId,
-                                    senderUserId: senderUserId,
-                                    spaceEvent: {
-                                        event: {
-                                            $case: "updateSpaceUserMessage",
-                                            updateSpaceUserMessage: {
-                                                spaceName: this.name,
-                                                user: localUser,
-                                                updateMask: differences,
-                                            },
-                                        },
+                        backEvents.push(
+                            this.createPrivateEvent(senderUserId, {
+                                event: {
+                                    $case: "updateSpaceUserMessage",
+                                    updateSpaceUserMessage: {
+                                        spaceName: this.name,
+                                        user: localUser,
+                                        updateMask: differences,
                                     },
                                 },
-                            },
-                        });
+                            })
+                        );
                         debug(
                             `${
                                 this.name
@@ -738,5 +714,19 @@ export class Space implements CustomJsonReplacerInterface {
         debug(
             `${this.name} : syncUsersAndNotify => processed sync for watcher ${watcher.id}, sent ${diffEvents.length} PrivateEvents`
         );
+    }
+
+    private createPrivateEvent(senderUserId: string, spaceEvent: PrivateEvent["spaceEvent"]): BackToPusherSpaceMessage {
+        return {
+            message: {
+                $case: "privateEvent",
+                privateEvent: {
+                    spaceName: this.name,
+                    receiverUserId: senderUserId,
+                    senderUserId: senderUserId,
+                    spaceEvent,
+                },
+            },
+        };
     }
 }

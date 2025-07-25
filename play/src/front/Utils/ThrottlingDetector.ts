@@ -11,7 +11,7 @@ export interface ThrottlingEvent {
  * Simple throttling detector using RxJS subjects.
  * Emits events when throttling is detected or when recovery occurs.
  */
-class ThrottlingDetector {
+export class ThrottlingDetector {
     // Public subjects - main API
     public readonly events$ = new Subject<ThrottlingEvent>();
     public readonly isThrottled$ = new BehaviorSubject<boolean>(false);
@@ -23,7 +23,7 @@ class ThrottlingDetector {
     private checkInterval: NodeJS.Timeout | null = null;
     private visibilityUnsubscribe: (() => void) | null = null;
 
-    constructor() {
+    constructor(private _visibilityStore = visibilityStore) {
         this.startDetection();
         this.setupVisibilityListener();
     }
@@ -54,7 +54,7 @@ class ThrottlingDetector {
 
     private setupVisibilityListener(): void {
         // Listen for when the page becomes visible again
-        this.visibilityUnsubscribe = visibilityStore.subscribe((isVisible) => {
+        this.visibilityUnsubscribe = this._visibilityStore.subscribe((isVisible) => {
             if (isVisible && this.wasThrottled) {
                 console.log("[ThrottlingDetector] 🎯 Recovery triggered - Page visible after throttling");
                 this.wasThrottled = false;
