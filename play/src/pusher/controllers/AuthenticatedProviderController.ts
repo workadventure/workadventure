@@ -1,9 +1,12 @@
 import type { Request, Response, Application } from "express";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
+import Debug from "debug";
 import { validateQuery } from "../services/QueryValidator";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 /*
  * Base class to expose authenticated pusher endpoints that will provide data based on room url
@@ -23,6 +26,11 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
         });
 
         this.app.get(endpoint, async (req, res) => {
+            debug(
+                `AuthenticatedProviderController => [${req.method}] ${req.originalUrl} — IP: ${
+                    req.ip
+                } — Time: ${Date.now()}`
+            );
             const token = req.header("Authorization");
 
             if (!token) {

@@ -4,6 +4,7 @@ import Mustache from "mustache";
 import { uuid } from "stanza/Utils";
 import * as Sentry from "@sentry/node";
 import { z } from "zod";
+import Debug from "debug";
 import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import { adminService } from "../services/AdminService";
 import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
@@ -18,6 +19,8 @@ import {
 } from "../enums/EnvironmentVariable";
 import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class FrontController extends BaseHttpController {
     private indexFile: string;
@@ -85,12 +88,14 @@ export class FrontController extends BaseHttpController {
 
     front(): void {
         this.app.get("/_/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
         this.app.post("/_/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from map file details
              */
@@ -111,12 +116,14 @@ export class FrontController extends BaseHttpController {
         // });
 
         this.app.get("/@/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from admin else map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
         this.app.post("/@/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from admin else map file details
              */
@@ -124,12 +131,14 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/~/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from map file details
              */
             return this.displayFront(req, res, this.getFullUrl(req));
         });
         this.app.post("/~/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             /**
              * get infos from map file details
              */
@@ -137,15 +146,18 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
         this.app.get("/index.html", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(303).redirect("/");
             return;
         });
 
         this.app.get("/static/images/favicons/manifest.json", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
                 res,
@@ -160,16 +172,19 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/login", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
         // @deprecated
         this.app.get("/jwt", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
         // @deprecated
         this.app.get("/register/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             return this.displayFront(req, res, this.getFullUrl(req));
         });
 
@@ -177,6 +192,7 @@ export class FrontController extends BaseHttpController {
             "/.well-known/cf-custom-hostname-challenge/{*splat}",
             [notWaHost],
             async (req: Request, res: Response) => {
+                debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
                 try {
                     const response = await adminService.fetchWellKnownChallenge(req.hostname);
                     res.status(200).send(response);
@@ -191,6 +207,7 @@ export class FrontController extends BaseHttpController {
         );
 
         this.app.get("/server.json", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.json({
                 domain: process.env.PUSHER_URL,
                 name: process.env.SERVER_NAME || "WorkAdventure Server",
@@ -202,14 +219,17 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/src/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
         });
 
         this.app.get("/node_modules/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
         });
 
         this.app.get("/@fs/{*splat}", (req: Request, res: Response) => {
+            debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
         });
     }
