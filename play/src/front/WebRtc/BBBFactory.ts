@@ -10,7 +10,11 @@ class BBBFactory {
             return;
         }
 
-        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, undefined);
+        const coWebsite = new BBBCoWebsite(
+            new URL(clientURL),
+            false,
+            "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *;"
+        );
         coWebsites.add(coWebsite);
     }
 
