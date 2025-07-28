@@ -34,15 +34,24 @@ describe("Space", () => {
             });
 
             const mockUsers = [
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_1",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_2",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_3",
-                }),
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
             ];
 
             const mockSyncLocalUsersWithServer = vi.fn();
@@ -122,15 +131,24 @@ describe("Space", () => {
             });
 
             const mockUsers = [
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_1",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_2",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_3",
-                }),
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
             ];
 
             const mockSyncLocalUsersWithServer = vi.fn();
@@ -209,15 +227,24 @@ describe("Space", () => {
             });
 
             const mockUsers = [
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_1",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_2",
-                }),
-                SpaceUser.fromPartial({
-                    spaceUserId: "foo_3",
-                }),
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
             ];
 
             const mockSyncLocalUsersWithServer = vi.fn();

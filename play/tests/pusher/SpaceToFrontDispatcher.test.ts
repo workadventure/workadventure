@@ -666,7 +666,6 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "publicEvent",
                         publicEvent: {
                             spaceName: "test",
-                            senderUserId: "foo_1",
                             spaceEvent: {
                                 event: {
                                     $case: "spaceMessage",
@@ -718,7 +717,10 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            senderUserId: "foo_1",
+                            sender: SpaceUser.fromPartial({
+                                spaceUserId: "foo_1",
+                                uuid: "uuid-foo-1",
+                            }),
                             receiverUserId: "foo_2",
                             spaceEvent: {
                                 event: undefined,
@@ -768,7 +770,10 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            senderUserId: "foo_1",
+                            sender: SpaceUser.fromPartial({
+                                spaceUserId: "foo_1",
+                                uuid: "uuid-foo-1",
+                            }),
                             receiverUserId: "falseReceiverId",
                             spaceEvent: {
                                 event: {
@@ -833,7 +838,10 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            senderUserId: "falseSenderId",
+                            sender: SpaceUser.fromPartial({
+                                spaceUserId: "foo_1",
+                                uuid: "uuid-foo-1",
+                            }),
                             receiverUserId: "foo_2",
                             spaceEvent: {
                                 event: {
@@ -928,7 +936,10 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            senderUserId: "foo_1",
+                            sender: SpaceUser.fromPartial({
+                                spaceUserId: "foo_1",
+                                uuid: "uuid-foo-1",
+                            }),
                             receiverUserId: "foo_2",
                             spaceEvent: {
                                 event: {
@@ -947,7 +958,10 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            senderUserId: "foo_1",
+                            sender: SpaceUser.fromPartial({
+                                spaceUserId: "foo_1",
+                                uuid: "uuid-foo-1",
+                            }),
                             receiverUserId: "foo_2",
                             spaceEvent: {
                                 event: {
@@ -1037,7 +1051,6 @@ describe("SpaceToFrontDispatcher", () => {
                     $case: "publicEvent",
                     publicEvent: {
                         spaceName: "test",
-                        senderUserId: "foo_1",
                         spaceEvent: {
                             event: {
                                 $case: "spaceMessage",

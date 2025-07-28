@@ -2,7 +2,7 @@ import {
     UpdateSpaceMetadataMessage,
     SpaceUser,
     PublicEvent,
-    PrivateEvent,
+    PrivateEventPusherToFront,
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
@@ -35,7 +35,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
-    public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent(
         spaceName: string,
@@ -431,7 +431,10 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: "foo_1",
+            sender: SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+            }),
             receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
