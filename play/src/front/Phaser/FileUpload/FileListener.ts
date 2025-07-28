@@ -50,13 +50,7 @@ export class FileListener {
         const userIsEditor = gameManager.getCurrentGameScene().connection?.hasTag("editor");
 
         if (!get(userIsConnected)) {
-            popupStore.addPopup(
-                PopUpConnect,
-                {
-                    message: get(LL).mapEditor.entityEditor.errors.dragNotConnected(),
-                },
-                "popupConnect"
-            );
+            popupStore.addPopup(PopUpConnect, {}, "popupConnect");
             draggingFile.set(false);
             return;
         }

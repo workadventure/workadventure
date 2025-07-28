@@ -4,8 +4,6 @@
     import { popupStore } from "../../Stores/PopupStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
-    export let message: string;
-
     function goToLogin() {
         analyticsClient.login();
         window.location.href = "/login";
@@ -14,7 +12,7 @@
 </script>
 
 <PopUpContainer reduceOnSmallScreen={true}>
-    {message}
+    {$LL.mapEditor.entityEditor.errors.dragNotConnected()}
     <svelte:fragment slot="buttons">
         <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={goToLogin}>
             {$LL.actionbar.login()}
