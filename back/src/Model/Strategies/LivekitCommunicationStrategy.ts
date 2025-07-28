@@ -18,39 +18,36 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         //TODO : passer en async
         this.sendLivekitInvitationMessage(user, LivekitTokenType.STREAMER, switchInProgress).catch((error) => {
             console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
-            Sentry.captureException(error); 
+            Sentry.captureException(error);
         });
     }
     private async deleteUserFromLivekit(user: SpaceUser, tokenType: LivekitTokenType): Promise<void> {
-                try {
-                    await this.livekitService
-                        .removeParticipant(this.space.getSpaceName(), user.name, tokenType);
-                } catch (error) {
-                    console.error(`Error removing participant ${user.name} from Livekit:`, error);
-                    Sentry.captureException(error);
-                }
+        try {
+            await this.livekitService.removeParticipant(this.space.getSpaceName(), user.name, tokenType);
+        } catch (error) {
+            console.error(`Error removing participant ${user.name} from Livekit:`, error);
+            Sentry.captureException(error);
+        }
 
-                try {
-                        this.space.dispatchPrivateEvent({
-                            spaceName: this.space.getSpaceName(),
-                            receiverUserId: user.spaceUserId,
-                            senderUserId: user.spaceUserId,
-                            spaceEvent: {
-                                event: {
-                                    $case: "livekitDisconnectMessage",
-                                    livekitDisconnectMessage: {
-                                        tokenType: tokenType,
-                                    },
-                                },
+        try {
+            this.space.dispatchPrivateEvent({
+                spaceName: this.space.getSpaceName(),
+                receiverUserId: user.spaceUserId,
+                senderUserId: user.spaceUserId,
+                spaceEvent: {
+                    event: {
+                        $case: "livekitDisconnectMessage",
+                        livekitDisconnectMessage: {
+                            tokenType: tokenType,
                         },
-                    });
-
-                } catch (error) {
-                    console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
-                    //  Sentry.captureException(error);
-                }
-
-            }
+                    },
+                },
+            });
+        } catch (error) {
+            console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
+            //  Sentry.captureException(error);
+        }
+    }
 
     deleteUser(user: SpaceUser): void {
         this.deleteUserFromLivekit(user, LivekitTokenType.STREAMER).catch((error) => {

@@ -70,11 +70,17 @@ const spaceManager = {
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {
-                        socketManager.handleAddSpaceUserToNotifyMessage(pusher, message.message.addSpaceUserToNotifyMessage);
+                        socketManager.handleAddSpaceUserToNotifyMessage(
+                            pusher,
+                            message.message.addSpaceUserToNotifyMessage
+                        );
                         break;
                     }
                     case "deleteSpaceUserToNotifyMessage": {
-                        socketManager.handleDeleteSpaceUserToNotifyMessage(pusher, message.message.deleteSpaceUserToNotifyMessage);
+                        socketManager.handleDeleteSpaceUserToNotifyMessage(
+                            pusher,
+                            message.message.deleteSpaceUserToNotifyMessage
+                        );
                         break;
                     }
                     default: {
