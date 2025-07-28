@@ -23,6 +23,7 @@
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
+    import { FileListener } from "../Phaser/FileUpload/FileListener";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -194,6 +195,9 @@
 
         if (canvas) {
             canvas.addEventListener("click", handleCanvasClick);
+
+            const fileListener = new FileListener(canvas);
+            fileListener.initDomListeners();
         }
 
         //updateScreenSize();

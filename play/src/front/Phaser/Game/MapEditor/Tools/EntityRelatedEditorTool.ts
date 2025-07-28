@@ -26,10 +26,10 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
     protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    protected mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    protected mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityPrefabStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEntityEditorModeStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityDraggedStoreUnsubscriber: Unsubscriber | undefined;
 
     protected constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -41,8 +41,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
-
-        this.subscribeToStores();
     }
 
     public update(time: number, dt: number): void {}
@@ -59,14 +57,16 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         mapEditorVisibilityStore.set(true);
+
+        this.subscribeToStores();
     }
 
     public destroy(): void {
         this.cleanPreview();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorSelectedEntityStoreUnsubscriber();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
+        this.mapEditorSelectedEntityPrefabStoreUnsubscriber?.();
+        this.mapEntityEditorModeStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber?.();
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
