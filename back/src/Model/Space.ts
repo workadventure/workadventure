@@ -417,7 +417,9 @@ export class Space implements CustomJsonReplacerInterface {
                         message: {
                             $case: "privateEvent",
                             privateEvent: {
-                                ...privateEvent,
+                                spaceName: privateEvent.spaceName,
+                                receiverUserId: privateEvent.receiverUserId,
+                                spaceEvent: privateEvent.spaceEvent,
                                 sender,
                             },
                         },
