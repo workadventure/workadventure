@@ -59,6 +59,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
@@ -156,6 +157,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockNotifyMeAddUser = vi.fn();
@@ -252,6 +254,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockNotifyMeAddUser = vi.fn();

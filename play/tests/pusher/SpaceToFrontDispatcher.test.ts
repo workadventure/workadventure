@@ -666,6 +666,7 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "publicEvent",
                         publicEvent: {
                             spaceName: "test",
+                            senderUserId: "foo_1",
                             spaceEvent: {
                                 event: {
                                     $case: "spaceMessage",
@@ -958,10 +959,13 @@ describe("SpaceToFrontDispatcher", () => {
                         $case: "privateEvent",
                         privateEvent: {
                             spaceName: "test",
-                            sender: SpaceUser.fromPartial({
-                                spaceUserId: "foo_1",
-                                uuid: "uuid-foo-1",
-                            }),
+                            sender: {
+                                ...SpaceUser.fromPartial({
+                                    spaceUserId: "foo_1",
+                                    uuid: "uuid-foo-1",
+                                }),
+                                lowercaseName: "",
+                            },
                             receiverUserId: "foo_2",
                             spaceEvent: {
                                 event: {
@@ -1051,6 +1055,7 @@ describe("SpaceToFrontDispatcher", () => {
                     $case: "publicEvent",
                     publicEvent: {
                         spaceName: "test",
+                        senderUserId: "foo_1",
                         spaceEvent: {
                             event: {
                                 $case: "spaceMessage",

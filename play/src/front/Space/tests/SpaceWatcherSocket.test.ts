@@ -15,7 +15,16 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 });
 
 vi.mock("../../Phaser/Game/GameManager", () => {
-    return {};
+    return {
+        gameManager: {
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
+            }),
+        },
+    };
 });
 
 vi.mock("../../Connection/ConnectionManager", () => {

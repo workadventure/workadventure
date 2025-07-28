@@ -75,7 +75,10 @@ vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
             getCurrentGameScene: () => ({
-                getRemotePlayersRepository: vi.fn(),
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
             }),
         },
     };
@@ -451,7 +454,26 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: "foo_1",
+            sender: {
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+                name: "",
+                playUri: "",
+                roomName: undefined,
+                availabilityStatus: 0,
+                isLogged: false,
+                characterTextures: [],
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                showVoiceIndicator: false,
+                color: "",
+                visitCardUrl: undefined,
+                chatID: undefined,
+                tags: [],
+                jitsiParticipantId: undefined,
+            },
             $case: "muteVideo",
             muteVideo: {
                 force: true,
