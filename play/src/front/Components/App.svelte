@@ -15,7 +15,6 @@
     import { EnableCameraScene } from "../Phaser/Login/EnableCameraScene";
     import { ReconnectingScene } from "../Phaser/Reconnecting/ReconnectingScene";
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
-    import { CustomizeScene } from "../Phaser/Login/CustomizeScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -23,6 +22,7 @@
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
+    import { FileListener } from "../Phaser/FileUpload/FileListener";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -132,7 +132,6 @@
                 EnableCameraScene,
                 ReconnectingScene,
                 ErrorScene,
-                CustomizeScene,
             ],
             //resolution: window.devicePixelRatio / 2,
             fps: fps,
@@ -194,6 +193,9 @@
 
         if (canvas) {
             canvas.addEventListener("click", handleCanvasClick);
+
+            const fileListener = new FileListener(canvas);
+            fileListener.initDomListeners();
         }
 
         //updateScreenSize();

@@ -12,9 +12,9 @@
     import PopUpContainer from "./PopUpContainer.svelte";
     import { IconSend } from "@wa-icons";
 
+    export let type: "say" | "think" = "say";
     let message = "";
     let messageInput: Input;
-    let type: "say" | "think" = "say";
 
     const dispatch = createEventDispatcher<{ close: void }>();
 
@@ -24,6 +24,7 @@
 
     onMount(() => {
         messageInput.focusInput();
+        console.debug("SayPopUp mounted, focusing input", type);
     });
 
     $: {
@@ -45,7 +46,6 @@
             }
             default: {
                 console.warn("Say: unknown status ", $availabilityStatusStore);
-                type = "say";
                 break;
             }
         }
@@ -64,16 +64,6 @@
     const onKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
             closeBanner();
-        } else if (e.key === "Control") {
-            // Let's invert the type of the message when the user presses Ctrl.
-            type = type === "say" ? "think" : "say";
-        }
-    };
-
-    const onKeyUp = (e: KeyboardEvent) => {
-        if (e.key === "Control") {
-            // Let's invert the type of the message when the user presses Ctrl.
-            type = type === "say" ? "think" : "say";
         }
     };
 
@@ -110,10 +100,16 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
+<svelte:window on:keydown={onKeyDown} />
 <PopUpContainer reduceOnSmallScreen={true} fullContent={true}>
-    <div class="flex flex-row w-full items-center gap-2 min-w-80">
-        <ButtonClose on:click={closeBanner} bgColor="bg-constrast" hoverColor="bg-white/20" size="md" />
+    <div class="flex flex-row w-full items-center gap-2 min-w-80" data-testid="say-popup">
+        <ButtonClose
+            on:click={closeBanner}
+            bgColor="bg-constrast"
+            hoverColor="bg-white/20"
+            size="md"
+            dataTestId="btn-close-say-popup"
+        />
         <div class="flex-none w-24">
             <Select
                 bind:value={type}

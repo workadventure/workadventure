@@ -1191,6 +1191,7 @@ export class RoomConnection implements RoomConnection {
                                 collectionName: config.prefabRef.collectionName,
                                 prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
+                                name: config.name,
                                 width: entityDimensions.width,
                                 height: entityDimensions.height,
                             },
