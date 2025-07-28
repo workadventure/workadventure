@@ -64,9 +64,7 @@
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
-    <div>
-        <WokaScene />
-    </div>
+    <WokaScene />
 {:else if $selectCompanionSceneVisibleStore}
     <div>
         <SelectCompanionScene {game} />
