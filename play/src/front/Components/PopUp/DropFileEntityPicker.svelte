@@ -6,6 +6,7 @@
     import { EntityVariant } from "../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import EntityItem from "../MapEditor/EntityEditor/EntityItem/EntityItem.svelte";
     import Input from "../Input/Input.svelte";
+    import EntityToolImg from "../images/icon-tool-entity.svg";
 
     let searchTerm = "book";
     let pickedEntity: EntityPrefab | undefined = undefined;
@@ -38,7 +39,7 @@
 
 <div class="flex flex-col gap-2 my-2">
     <div class="flex justify-center items-center my-2">
-        <img class="w-6 mr-1" src="/src/front/Components/images/icon-tool-entity.svg" alt="Start icon" />
+        <img class="w-6 mr-1" src={EntityToolImg} alt="Start icon" />
         <span class="font-semibold">{$LL.mapEditor.entityEditor.header.choose()}</span>
     </div>
 
