@@ -54,7 +54,6 @@ import {
     WorldConnectionMessage,
     TurnCredentialsAnswer,
     PublicEvent,
-    PrivateEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
     SpaceEvent,
@@ -863,10 +862,6 @@ export class RoomConnection implements RoomConnection {
                 viewportMessage: this.toViewportMessage(viewport),
             },
         });
-    }
-
-    public onConnectError(callback: (error: Event) => void): void {
-        this.socket.addEventListener("error", callback);
     }
 
     public getUserId(): number {
