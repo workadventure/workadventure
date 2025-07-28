@@ -8,7 +8,6 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
@@ -55,6 +54,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         public readonly player: RemotePlayerData,
         stream: MediaStream | undefined,
         private space: SpaceInterface,
+        private spaceUser: SpaceUserExtended,
         isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
@@ -280,7 +280,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return lookupUserById(this.userId, this.space, 30_000);
+        return this.space.extendSpaceUser(this.spaceUser);
     }
 
     get media(): MediaStoreStreamable {

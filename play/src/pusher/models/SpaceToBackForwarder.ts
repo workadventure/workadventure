@@ -5,10 +5,9 @@ import { Color } from "@workadventure/shared-utils";
 
 import { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
-import { PartialSpaceUser, Space } from "./Space";
+import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
 import { EventProcessor } from "./EventProcessor";
 import { SocketData } from "./Websocket/SocketData";
-
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -19,6 +18,8 @@ export interface SpaceToBackForwarderInterface {
     updateMetadata(metadata: { [key: string]: unknown }): void;
     forwardMessageToSpaceBack(pusherToBackSpaceMessage: PusherToBackSpaceMessage["message"]): void;
     syncLocalUsersWithServer(localUsers: SpaceUser[]): void;
+    addUserToNotify(user: SpaceUser): void;
+    deleteUserFromNotify(user: SpaceUser): void;
     leaveSpace(): void;
     sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void;
     sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void;
@@ -42,27 +43,33 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
         );
 
-        const spaceUser: SpaceUser = SpaceUser.fromPartial({
-            spaceUserId,
-            uuid: socketData.userUuid,
-            name: socketData.name,
-            playUri: socketData.roomId,
-            roomName: socketData.roomName === "" ? undefined : socketData.roomName,
-            availabilityStatus: socketData.availabilityStatus,
-            isLogged: socketData.isLogged,
-            color: Color.getColorByString(socketData.name),
-            tags: socketData.tags,
-            cameraState: false,
-            screenSharingState: false,
-            microphoneState: false,
-            megaphoneState: false,
-            characterTextures: socketData.characterTextures,
-            visitCardUrl: socketData.visitCardUrl ?? undefined,
-            chatID: socketData.chatID ?? undefined,
-        });
+        const spaceUser: SpaceUserExtended = {
+            ...SpaceUser.fromPartial({
+                spaceUserId,
+                uuid: socketData.userUuid,
+                name: socketData.name,
+                playUri: socketData.roomId,
+                roomName: socketData.roomName === "" ? undefined : socketData.roomName,
+                availabilityStatus: socketData.availabilityStatus,
+                isLogged: socketData.isLogged,
+                color: Color.getColorByString(socketData.name),
+                tags: socketData.tags,
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                characterTextures: socketData.characterTextures,
+                visitCardUrl: socketData.visitCardUrl ?? undefined,
+                chatID: socketData.chatID ?? undefined,
+            }),
+            lowercaseName: socketData.name.toLowerCase(),
+        };
 
         try {
-            this._space._localConnectedUserWithSpaceUser.set(client, spaceUser);
+            this._space._localConnectedUserWithSpaceUser.set(client, {
+                ...spaceUser,
+                lowercaseName: socketData.name.toLowerCase(),
+            });
             this._space._localConnectedUser.set(spaceUserId, client);
             this._clientEventsEmitter.emitClientJoinSpace(socketData.userUuid, this._space.name);
 
@@ -92,6 +99,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             }
         } catch (e) {
             this._space._localConnectedUser.delete(spaceUser.spaceUserId);
+            this._space._localWatchers.delete(spaceUser.spaceUserId);
             this._space._localConnectedUserWithSpaceUser.delete(client);
             this._clientEventsEmitter.emitClientLeaveSpace(socketData.userUuid, this._space.name);
             throw e;
@@ -200,6 +208,26 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             },
         });
     }
+
+    addUserToNotify(user: SpaceUser): void {
+        this.forwardMessageToSpaceBack({
+            $case: "addSpaceUserToNotifyMessage",
+            addSpaceUserToNotifyMessage: {
+                spaceName: this._space.name,
+                user,
+            },
+        });
+    }
+
+    deleteUserFromNotify(user: SpaceUser): void {
+        this.forwardMessageToSpaceBack({
+            $case: "deleteSpaceUserToNotifyMessage",
+            deleteSpaceUserToNotifyMessage: {
+                spaceName: this._space.name,
+                user,
+            },
+        });
+    }
     leaveSpace(): void {
         this.forwardMessageToSpaceBack({
             $case: "leaveSpaceMessage",
@@ -207,6 +235,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 spaceName: this._space.name,
             },
         });
+    }
+
+    private getSpaceUserFromSocket(user: SpaceUser): SpaceUserExtended {
+        return {
+            ...user,
+            lowercaseName: user.name.toLowerCase(),
+        };
     }
 
     sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void {

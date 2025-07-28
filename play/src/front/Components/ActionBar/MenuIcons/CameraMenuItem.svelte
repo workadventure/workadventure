@@ -18,6 +18,7 @@
         [availabilityStatusStore, requestedCameraState],
         ([$availabilityStatusStore, $requestedCameraState]) => {
             if (
+                $availabilityStatusStore === AvailabilityStatus.BUSY ||
                 $availabilityStatusStore === AvailabilityStatus.AWAY ||
                 $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
                 $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
@@ -46,7 +47,10 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
     dataTestId="camera-button"
-    on:mouseenter={() => mouseIsHoveringCameraButton.set(true)}
+    on:mouseenter={() => {
+        if ($availabilityStatusStore == AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
+        else mouseIsHoveringCameraButton.set(false);
+    }}
     on:mouseleave={() => mouseIsHoveringCameraButton.set(false)}
 >
     {#if $requestedCameraState && !$silentStore}

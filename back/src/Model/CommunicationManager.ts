@@ -36,6 +36,13 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
+    public handleUserToNotifyAdded(user: SpaceUser): void {
+        this._currentState.handleUserToNotifyAdded(user);
+    }
+
+    public handleUserToNotifyDeleted(user: SpaceUser): void {
+        this._currentState.handleUserToNotifyDeleted(user);
+    }
     public async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
         console.log("➡️➡️ CommunicationManager.ts => handleStartRecording()", user);
         await this._recordingManager.startRecording(user, userUuid);

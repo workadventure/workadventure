@@ -4,10 +4,7 @@
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
-    import {
-        selectCharacterSceneVisibleStore,
-        selectCharacterCustomizeSceneVisibleStore,
-    } from "../Stores/SelectCharacterStore";
+    import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
@@ -17,10 +14,10 @@
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
+    import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
-    import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
@@ -35,6 +32,8 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
+    import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
+    import WokaScene from "./Woka/WokaScene.svelte";
 
     export let game: Game;
 
@@ -54,6 +53,11 @@
         <LoaderScene />
     </div>
 {/if}
+{#if $draggingFile}
+    <div>
+        <DroppingFileScene />
+    </div>
+{/if}
 {#if $errorScreenStore !== undefined}
     <div class="bg-contrast">
         <ErrorScreen />
@@ -68,7 +72,7 @@
     </div>
 {:else if $selectCharacterSceneVisibleStore}
     <div>
-        <SelectCharacterScene {game} />
+        <WokaScene />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>
@@ -78,7 +82,7 @@
     <div class="h-dvh overflow-y-auto">
         <EnableCameraScene {game} />
     </div>
-{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
+{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore}
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}

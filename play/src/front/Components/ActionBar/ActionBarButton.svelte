@@ -112,14 +112,14 @@
     </div>
 {:else}
     <button
-        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
+        class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
                     {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
-                    {isGradient ? 'justify-center relative' : ''}"
+                    {isGradient ? 'relative' : ''}"
         use:action
         on:click={() => handleClick()}
         style={styleVars}

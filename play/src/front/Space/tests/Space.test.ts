@@ -7,7 +7,12 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 // Mock the entire GameManager module
 vi.mock("../../Phaser/Game/GameManager", () => ({
     gameManager: {
-        getCurrentGameScene: vi.fn(() => ({})),
+        getCurrentGameScene: vi.fn(() => ({
+            getRemotePlayersRepository: () => ({
+                getPlayer: vi.fn(),
+            }),
+            roomUrl: "test-room",
+        })),
     },
 }));
 

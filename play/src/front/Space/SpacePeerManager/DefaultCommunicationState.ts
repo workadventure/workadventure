@@ -28,7 +28,9 @@ export class DefaultCommunicationState implements ICommunicationState {
 
     completeSwitch() {}
 
-    destroy() {}
+    destroy() {
+        this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
+    }
 
     getPeer(): SimplePeerConnectionInterface | undefined {
         return undefined;

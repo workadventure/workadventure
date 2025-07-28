@@ -37,6 +37,8 @@ export class LivekitState implements ICommunicationState {
             })
         );
 
+        //TODO : voir si on ajoute les event pour gerer les 2 tokens ici
+
         this.rxJsUnsubscribers.push(
             this._space
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)

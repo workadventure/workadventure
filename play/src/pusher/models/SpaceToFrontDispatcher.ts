@@ -2,7 +2,7 @@ import {
     BackToPusherSpaceMessage,
     NonUndefinedFields,
     noUndefined,
-    PrivateEvent,
+    PrivateEventBackToPusher,
     PublicEvent,
     SpaceUser,
     SubMessage,
@@ -287,18 +287,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         );
     }
 
-    private sendPrivateEvent(message: NonUndefinedFields<PrivateEvent>) {
-        // [...this.clientWatchers.values()].forEach((watcher) => {
-        //     const socketData = watcher.getUserData();
-        //     if (socketData.userId === message.receiverUserId) {
-        //         socketData.emitInBatch({
-        //             message: {
-        //                 $case: "privateEvent",
-        //                 privateEvent: message,
-        //             },
-        //         });
-        //     }
-        // });
+    private sendPrivateEvent(message: NonUndefinedFields<PrivateEventBackToPusher>) {
         const spaceEvent = noUndefined(message.spaceEvent);
 
         // FIXME: this should be unnecessary because of the noUndefined call above
@@ -307,7 +296,8 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const receiver = this._space.users.get(message.receiverUserId);
+        //TODO : voir si on cherche dans les users ou dans tout les users connnectes plutot / meme chose pour les private event
+        const receiver = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiver) {
             throw new Error(
@@ -315,10 +305,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             );
         }
 
-        const sender = this._space.users.get(message.senderUserId);
-
-        if (!sender) {
-            throw new Error(`Private message sender ${message.senderUserId} not found in space ${this._space.name}`);
+        const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
+        if (!receiverSpaceUser) {
+            throw new Error(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}`
+            );
         }
 
         const receiverSocket = this._space._localConnectedUser.get(message.receiverUserId);
@@ -327,14 +318,23 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error(`Private message receiver ${message.receiverUserId} not connected to this pusher`);
         }
 
+        const extendedSender = {
+            ...message.sender,
+            lowercaseName: message.sender.name.toLowerCase(),
+        };
+
         receiverSocket.getUserData().emitInBatch({
             message: {
                 $case: "privateEvent",
                 privateEvent: {
-                    senderUserId: message.senderUserId,
+                    sender: extendedSender,
                     receiverUserId: message.receiverUserId,
                     spaceEvent: {
-                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, sender, receiver),
+                        event: this.eventProcessor.processPrivateEvent(
+                            spaceEvent.event,
+                            extendedSender,
+                            receiverSpaceUser
+                        ),
                     },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this._space.localName,

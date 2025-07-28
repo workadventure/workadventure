@@ -102,9 +102,6 @@
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
-        //console.log("calculateOptimalLayout");
-        //console.log("containerWidth", containerWidth);
-        //console.log("containerHeight", containerHeight);
         if (!containerWidth || !containerHeight) {
             return {
                 videoWidth: minMediaBoxWidth,
@@ -121,10 +118,8 @@
 
         // Start with maximum possible videos per row and work backwards
         for (let vpr = maxVideosPerRow; vpr >= 1; vpr--) {
-            //console.log('Attempting to fit', vpr, 'videos per row');
             // Calculate video width based on container width and gap
             const width = (containerWidth - gap * (vpr - 1)) / vpr;
-            //console.log("width", width);
 
             // Calculate video height maintaining aspect ratio
             const height = (width * 9) / 16;
@@ -205,7 +200,6 @@
                     };
                 }
                 //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
-                //console.log('adjustedWidth', adjustedWidth, 'adjustedHeight', adjustedHeight);
                 return {
                     videoWidth: adjustedWidth,
                     videoHeight: adjustedHeight,

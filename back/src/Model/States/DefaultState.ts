@@ -14,6 +14,12 @@ export class DefaultState implements ICommunicationState {
     handleUserReadyForSwitch(userId: string): void {
         console.info("DefaultState handleUserReadyForSwitch", userId);
     }
+    handleUserToNotifyAdded(user: SpaceUser): void {
+        console.info("DefaultState handleUserToNotifyAdded", user);
+    }
+    handleUserToNotifyDeleted(user: SpaceUser): void {
+        console.info("DefaultState handleUserToNotifyDeleted", user);
+    }
     handleStartRecording(): void {
         console.info("DefaultState handleStartRecording");
     }

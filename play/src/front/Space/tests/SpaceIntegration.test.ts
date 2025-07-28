@@ -2,7 +2,7 @@ import {
     UpdateSpaceMetadataMessage,
     SpaceUser,
     PublicEvent,
-    PrivateEvent,
+    PrivateEventPusherToFront,
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
@@ -35,7 +35,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
-    public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent(
         spaceName: string,
@@ -75,7 +75,10 @@ vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
             getCurrentGameScene: () => ({
-                getRemotePlayersRepository: vi.fn(),
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
             }),
         },
     };
@@ -431,7 +434,10 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: "foo_1",
+            sender: SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+            }),
             receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
@@ -448,7 +454,26 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: "foo_1",
+            sender: {
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+                name: "",
+                playUri: "",
+                roomName: undefined,
+                availabilityStatus: 0,
+                isLogged: false,
+                characterTextures: [],
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                showVoiceIndicator: false,
+                color: "",
+                visitCardUrl: undefined,
+                chatID: undefined,
+                tags: [],
+                jitsiParticipantId: undefined,
+            },
             $case: "muteVideo",
             muteVideo: {
                 force: true,

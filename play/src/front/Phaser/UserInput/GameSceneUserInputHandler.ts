@@ -18,6 +18,7 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
+    private controlKeyisPressed: boolean = false;
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
@@ -144,6 +145,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
         }
+
+        switch (event.key) {
+            case "Control": {
+                this.controlKeyisPressed = true;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
         return event;
     }
 
@@ -155,7 +167,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (isPopupJustClosed() || popupStore.hasPopup("say")) {
             return;
         }
-        popupStore.addPopup(SayPopUp, {}, "say");
+        popupStore.addPopup(SayPopUp, { type: this.controlKeyisPressed ? "think" : "say" }, "say");
+        if (this.controlKeyisPressed) {
+            analyticsClient.openThinkBubble();
+        } else {
+            analyticsClient.openSayBubble();
+        }
     }
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
@@ -165,8 +182,13 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 this.handleActivableEntity();
                 break;
             }
+            case "Control": {
+                this.controlKeyisPressed = false;
+                break;
+            }
             case "Enter": {
                 this.openSayPopup();
+                this.controlKeyisPressed = false;
                 break;
             }
             default: {

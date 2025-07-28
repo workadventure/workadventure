@@ -54,7 +54,6 @@ import {
     WorldConnectionMessage,
     TurnCredentialsAnswer,
     PublicEvent,
-    PrivateEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
     SpaceEvent,
@@ -77,6 +76,7 @@ import {
     StopRecordingMessage,
     GetRecordingsQuery,
     GetRecordingsAnswer,
+    PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -220,7 +220,7 @@ export class RoomConnection implements RoomConnection {
     public readonly startRecordingMessage = this._startRecordingMessage.asObservable();
     private readonly _stopRecordingMessage = new Subject<StopRecordingMessage>();
     public readonly stopRecordingMessage = this._stopRecordingMessage.asObservable();
-    private readonly _spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
     public readonly spacePublicMessageEvent = this._spacePublicMessageEvent.asObservable();
@@ -872,10 +872,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public onConnectError(callback: (error: Event) => void): void {
-        this.socket.addEventListener("error", callback);
-    }
-
     public getUserId(): number {
         if (this.userId === null) throw new Error("UserId cannot be null!");
         return this.userId;
@@ -1220,6 +1216,7 @@ export class RoomConnection implements RoomConnection {
                                 collectionName: config.prefabRef.collectionName,
                                 prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
+                                name: config.name,
                                 width: entityDimensions.width,
                                 height: entityDimensions.height,
                             },

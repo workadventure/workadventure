@@ -200,7 +200,12 @@ export class GameManager {
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
-        gameScene.cleanupClosingScene();
+
+        //TODO : voir si utile de le passer en async
+        gameScene.cleanupClosingScene().catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
     }
@@ -215,6 +220,14 @@ export class GameManager {
         } else {
             this.scenePlugin.run(fallbackSceneName);
         }
+    }
+
+    /**
+     * Tries to stop the current game scene.
+     * @param fallbackSceneName
+     */
+    tryToStopGameScene(fallbackSceneName: string) {
+        this.scenePlugin.stop(fallbackSceneName);
     }
 
     public getCurrentGameScene(): GameScene {

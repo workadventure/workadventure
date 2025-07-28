@@ -47,6 +47,8 @@ import {
     FilterType,
     SyncSpaceUsersMessage,
     SpaceQueryMessage,
+    AddSpaceUserToNotifyMessage,
+    DeleteSpaceUserToNotifyMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1565,6 +1567,33 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
+        const space = this.spaces.get(addSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${addSpaceUserToNotifyMessage.spaceName} to add user to notify`);
+        }
+        if (!addSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to add to notify is undefined in AddSpaceUserToNotifyMessage`);
+        }
+        space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
+    }
+
+    handleDeleteSpaceUserToNotifyMessage(
+        pusher: SpacesWatcher,
+        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage
+    ) {
+        const space = this.spaces.get(deleteSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(
+                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`
+            );
+        }
+        if (!deleteSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);
+        }
+        space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
     }
 }
 
