@@ -2,10 +2,13 @@ import { isMapDetailsData } from "@workadventure/messages";
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { JsonWebTokenError } from "jsonwebtoken";
+import Debug from "debug";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -50,6 +53,7 @@ export class MapController extends BaseHttpController {
          *
          */
         this.app.get("/map", async (req: Request, res: Response) => {
+            debug(`MapController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const query = validateQuery(
                 req,
                 res,

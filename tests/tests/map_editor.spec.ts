@@ -652,6 +652,12 @@ test.describe("Map editor @oidc", () => {
         await page.locator(".map-editor .sidebar .entities").click();
         expect(await page.locator(".map-editor .sidebar .entity-items .item").count()).toBe(1);
 
+        // Click on the entity and check that Title and description are correct
+        await page.locator(".map-editor .sidebar .entity-items .item").first().click();
+        await expect(page.locator(".object-menu h1")).toContainText("MY JITSI ENTITY");
+        await expect(page.locator(".object-menu p"))
+            .toContainText("This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable.");
+
         // Test if the area is searchable
         await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
         await page.locator(".map-editor .sidebar .areas").click();
@@ -791,5 +797,12 @@ test.describe("Map editor @oidc", () => {
 
         await expect(page.getByText('Books (Variant 5)')).toBeVisible();
         await expect(page.getByText('lorem-ipsum.pdf')).toBeVisible();
+    });
+    
+    test("Assert map explorer visible for guest", async ({ browser, request }) => {
+        const page = await getPage(browser, 'Alice', Map.url("empty"));
+
+        // Open the map editor
+        await Menu.openMapExplorer(page);
     });
 });

@@ -132,7 +132,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            this.reconnect(connection).catch((e) => console.error(e));
+            // this.reconnect(connection).catch((e) => console.error(e));
         });
     }
 

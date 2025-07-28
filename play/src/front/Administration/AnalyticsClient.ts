@@ -904,5 +904,19 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    openSayBubble(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_say_bubble_open");
+            })
+            .catch((e) => console.error(e));
+    }
+    openThinkBubble(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_think_bubble_open");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

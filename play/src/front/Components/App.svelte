@@ -15,7 +15,6 @@
     import { EnableCameraScene } from "../Phaser/Login/EnableCameraScene";
     import { ReconnectingScene } from "../Phaser/Reconnecting/ReconnectingScene";
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
-    import { CustomizeScene } from "../Phaser/Login/CustomizeScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -133,7 +132,6 @@
                 EnableCameraScene,
                 ReconnectingScene,
                 ErrorScene,
-                CustomizeScene,
             ],
             //resolution: window.devicePixelRatio / 2,
             fps: fps,
