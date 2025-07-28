@@ -78,6 +78,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "publicEvent": {
                     debug("[space] publicEvent received");
+                    console.trace("[space] ❤️❤️❤️ publicEvent received", message.message.publicEvent);
                     this.sendPublicEvent(noUndefined(message.message.publicEvent));
                     break;
                 }

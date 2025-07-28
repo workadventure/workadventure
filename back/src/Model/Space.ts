@@ -168,6 +168,7 @@ export class Space implements CustomJsonReplacerInterface {
                 return;
             }
             this.communicationManager.handleUserDeleted(user);
+
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);

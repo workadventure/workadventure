@@ -228,6 +228,6 @@ export class LiveKitService {
         }
         await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
         this.currentRecordingInformation = null;
-        console.log("🤟🤟🤟LivekitService.ts => Stop recording");
+        console.trace("🤟🤟🤟LivekitService.ts => Stop recording");
     }
 }

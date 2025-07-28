@@ -131,12 +131,12 @@ eventProcessor.registerPublicEventProcessor(
         }
         const spaceUser = space.getUser(senderId);
         if (!spaceUser) {
-            console.error("Could not find space user to stop recording");
+            console.trace("Could not find space user to stop recording");
             throw new Error("Space user not found for stop recording event");
         }
 
         try{
-            await space.stopRecording(spaceUser);
+            space.stopRecording(spaceUser);
             space.dispatchPrivateEvent({
                 spaceName : space.getSpaceName(),
                 senderUserId : senderId,

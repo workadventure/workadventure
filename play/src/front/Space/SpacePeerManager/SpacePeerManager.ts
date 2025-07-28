@@ -84,6 +84,7 @@ export class SpacePeerManager {
         })
 
         this.space.observePrivateEvent('stopRecordingResultMessage').subscribe((message)=>{
+            console.log(">>>> stopRecordingResultMessage", message);
             recordingStore.stopRecord()
             notificationPlayingStore.playNotification('Recording stopped');
         })
