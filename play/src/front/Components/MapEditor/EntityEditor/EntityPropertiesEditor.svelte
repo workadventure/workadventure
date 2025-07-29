@@ -3,7 +3,6 @@
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
-    import { get } from "svelte/store";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -21,6 +20,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
+    import { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -28,6 +28,7 @@
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
     let showDescriptionField = false;
+    let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -46,6 +47,7 @@
                 entityDescription = descriptionProperty.description ?? "";
                 entitySearchable = descriptionProperty.searchable ?? false;
             }
+            selectedEntity = currentEntity;
         }
     });
 
@@ -253,11 +255,6 @@
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
     }
-
-    let selectedEntity;
-    const selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((value) => {
-        selectedEntity = value;
-    });
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
