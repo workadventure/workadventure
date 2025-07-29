@@ -39,26 +39,27 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             `${this._space.name} : watcher added ${socketData.name}. Watcher count ${this._space._localConnectedUser.size}`
         );
 
-        const spaceUser: SpaceUserExtended = SpaceUser.fromPartial({
-            spaceUserId,
-            uuid: socketData.userUuid,
-            name: socketData.name,
-            playUri: socketData.roomId,
-            roomName: socketData.roomName === "" ? undefined : socketData.roomName,
-            availabilityStatus: socketData.availabilityStatus,
-            isLogged: socketData.isLogged,
-            color: Color.getColorByString(socketData.name),
-            tags: socketData.tags,
-            cameraState: false,
-            screenSharingState: false,
-            microphoneState: false,
-            megaphoneState: false,
-            characterTextures: socketData.characterTextures,
-            visitCardUrl: socketData.visitCardUrl ?? undefined,
-            chatID: socketData.chatID ?? undefined,
-        });
-
-        spaceUser.lowercaseName = socketData.name.toLowerCase();
+        const spaceUser: SpaceUserExtended = {
+            ...SpaceUser.fromPartial({
+                spaceUserId,
+                uuid: socketData.userUuid,
+                name: socketData.name,
+                playUri: socketData.roomId,
+                roomName: socketData.roomName === "" ? undefined : socketData.roomName,
+                availabilityStatus: socketData.availabilityStatus,
+                isLogged: socketData.isLogged,
+                color: Color.getColorByString(socketData.name),
+                tags: socketData.tags,
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                characterTextures: socketData.characterTextures,
+                visitCardUrl: socketData.visitCardUrl ?? undefined,
+                chatID: socketData.chatID ?? undefined,
+            }),
+            lowercaseName: socketData.name.toLowerCase(),
+        };
 
         try {
             this._space._localConnectedUserWithSpaceUser.set(client, {
@@ -149,7 +150,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this._space._localConnectedUserWithSpaceUser.delete(socket);
             this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
 
-            
             debug(
                 `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
             );
@@ -181,7 +181,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
-
                 spaceStreamToBack.write({
                     message: pusherToBackSpaceMessage,
                 });
@@ -238,6 +237,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         return {
             ...user,
             lowercaseName: user.name.toLowerCase(),
-        }
+        };
     }
 }

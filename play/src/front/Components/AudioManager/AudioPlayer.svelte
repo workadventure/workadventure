@@ -92,7 +92,6 @@
                 audioManagerPlayerState.set("playing");
                 audioManagerVisibilityStore.set("visible");
                 activeSecondaryZoneActionBarStore.set("audio-manager");
-                console.log("Audio is playing", $audioManagerVisibilityStore);
             })
             .catch((e) => {
                 if (e instanceof DOMException && e.name === "NotAllowedError") {

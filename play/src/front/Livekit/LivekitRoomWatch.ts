@@ -59,7 +59,6 @@ export class LiveKitRoomWatch implements LiveKitRoom {
                     }
 
                     const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
-                    console.log("🚀🚀🚀🚀🚀🚀🚀 joinRoom", id, spaceUser);
                     if (!spaceUser) {
                         console.error("spaceUser not found for participant", id);
                         return;

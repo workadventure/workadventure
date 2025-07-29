@@ -5,7 +5,6 @@ import { Observable, Subject, Subscriber } from "rxjs";
 import { merge } from "lodash";
 import { MapStore } from "@workadventure/store-utils";
 import {
-    PrivateEvent,
     PublicEvent,
     SpaceEvent,
     UpdateSpaceMetadataMessage,
@@ -43,7 +42,7 @@ export class Space implements SpaceInterface {
     private _peerManager: SpacePeerManager | undefined;
     public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
     public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public videoStreamStore: Readable<Map<string, ExtendedStreamable>> ;
+    public videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
     public screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
@@ -121,26 +120,31 @@ export class Space implements SpaceInterface {
             };
         });
 
-        this.videoStreamStore = derived([this.allVideoStreamStore, this.usersStore], ([videoStreamStore, usersStore]) => {
-            const newVideoStreamStore = new Map<string, ExtendedStreamable>();
-            for (const [key, value] of videoStreamStore.entries()) {
-                if (usersStore.has(key)) {
-                    newVideoStreamStore.set(key, value);
+        this.videoStreamStore = derived(
+            [this.allVideoStreamStore, this.usersStore],
+            ([videoStreamStore, usersStore]) => {
+                const newVideoStreamStore = new Map<string, ExtendedStreamable>();
+                for (const [key, value] of videoStreamStore.entries()) {
+                    if (usersStore.has(key)) {
+                        newVideoStreamStore.set(key, value);
+                    }
                 }
+                return newVideoStreamStore;
             }
-            return newVideoStreamStore;
-        });
+        );
 
-        this.screenShareStreamStore = derived([this.allScreenShareStreamStore, this.usersStore], ([screenShareStreamStore, usersStore]) => {
-
-            const newScreenShareStreamStore = new Map<string, ExtendedStreamable>();
-            for (const [key, value] of screenShareStreamStore.entries()) {
-                if (usersStore.has(key)) {
-                    newScreenShareStreamStore.set(key, value);
+        this.screenShareStreamStore = derived(
+            [this.allScreenShareStreamStore, this.usersStore],
+            ([screenShareStreamStore, usersStore]) => {
+                const newScreenShareStreamStore = new Map<string, ExtendedStreamable>();
+                for (const [key, value] of screenShareStreamStore.entries()) {
+                    if (usersStore.has(key)) {
+                        newScreenShareStreamStore.set(key, value);
+                    }
                 }
+                return newScreenShareStreamStore;
             }
-            return newScreenShareStreamStore;
-        });
+        );
 
         this._peerManager = new SpacePeerManager(this);
         // TODO: The public and private messages should be forwarded to a special method here from the Registry.
@@ -283,24 +287,24 @@ export class Space implements SpaceInterface {
         }
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
-        
+
         if (this._peerManager) {
             this._peerManager.destroy();
         }
-        
+
         this.allVideoStreamStore.forEach((peer) => {
             if (peer instanceof VideoPeer) {
                 peer.destroy();
             }
         });
-        
+
         this.allScreenShareStreamStore.forEach((peer) => {
             if (peer instanceof ScreenSharingPeer) {
                 peer.destroy();
             }
         });
 
-        if(this._registerRefCount > 0) {
+        if (this._registerRefCount > 0) {
             this.unregisterSpaceFilter();
         }
 
@@ -459,8 +463,6 @@ export class Space implements SpaceInterface {
 
         return extendedUser;
     }
-
-
 
     private extractUserIdFromSpaceId(spaceId: string): number {
         const lastUnderscoreIndex = spaceId.lastIndexOf("_");

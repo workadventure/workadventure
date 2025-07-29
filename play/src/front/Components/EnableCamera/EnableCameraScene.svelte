@@ -189,7 +189,7 @@
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" on:submit|preventDefault={submit}>
     <section class="flex  min-h-dvh ">
         <div
-            class="text-white justify-center items-center overflow-hidden  w-[100vw] container  flex flex-col min-h-dvh pb-24 pt-8 lg:pt-0 relative "
+            class="text-white justify-center items-center overflow-hidden  w-[100vw] container  flex flex-col min-h-dvh pb-36 pt-8 lg:pt-0 relative "
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>

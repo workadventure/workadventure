@@ -170,7 +170,6 @@ export class SimplePeer {
                     webRtcPassword: webRtcStartMessage.webRtcPassword,
                 };
 
-                console.log("👌👌👌👌👌👌👌 receiveWebrtcStart", user);
                 //TODO : voir si on peut avoir le spaceUser directement dans le userSimplePeerInterface
                 this.receiveWebrtcStart(user, message.sender).catch((e) => {
                     console.error("Error while receiving WebRTC signal", e);

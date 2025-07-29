@@ -30,7 +30,6 @@ export class WebRTCState implements ICommunicationState {
         private _streamableSubjects: StreamableSubjects,
         private _peerFactory: PeerFactoryInterface = defaultPeerFactory
     ) {
-        console.log("🚀🚀🚀🚀🚀🚀🚀 WebRTCState constructor");
         this._peer = this._peerFactory.create(this._space, this._streamableSubjects);
 
         this._rxJsUnsubscribers.push(

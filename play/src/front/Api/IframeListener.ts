@@ -196,9 +196,6 @@ class IframeListener {
     private readonly _openInviteMenuStream: Subject<void> = new Subject();
     public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
 
-    private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
-    public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
-
     private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
     public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
 

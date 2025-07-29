@@ -1301,7 +1301,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-        
+
         space.forwarder.forwardMessageToSpaceBack({
             $case: "publicEvent",
             publicEvent: {

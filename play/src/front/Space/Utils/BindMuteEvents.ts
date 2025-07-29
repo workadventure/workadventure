@@ -75,7 +75,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
             requestedMicrophoneState.disableMicrophone();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
-            displayMuteDialog(event, space);
+            displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
         }
     });
 
@@ -87,7 +87,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface): void {
             requestedCameraState.disableWebcam();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-            displayMuteDialog(event, space);
+            displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
         }
     });
 

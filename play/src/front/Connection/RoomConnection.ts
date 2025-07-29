@@ -54,7 +54,6 @@ import {
     WorldConnectionMessage,
     TurnCredentialsAnswer,
     PublicEvent,
-    PrivateEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
     SpaceEvent,
@@ -865,10 +864,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public onConnectError(callback: (error: Event) => void): void {
-        this.socket.addEventListener("error", callback);
-    }
-
     public getUserId(): number {
         if (this.userId === null) throw new Error("UserId cannot be null!");
         return this.userId;
@@ -1196,6 +1191,7 @@ export class RoomConnection implements RoomConnection {
                                 collectionName: config.prefabRef.collectionName,
                                 prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
+                                name: config.name,
                                 width: entityDimensions.width,
                                 height: entityDimensions.height,
                             },

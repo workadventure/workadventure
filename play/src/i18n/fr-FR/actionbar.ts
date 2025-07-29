@@ -27,7 +27,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     allSettings: "Tous les paramètres",
     bo: "Back office",
     globalMessage: "Envoyer un message global",
-    mapEditor: "Éditeur de carte",
+    mapEditor: "Éditer la carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Applications",

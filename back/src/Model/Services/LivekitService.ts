@@ -124,7 +124,7 @@ export class LiveKitService {
                 );
                 const participants = await this.roomServiceClient.listParticipants(roomName);
                 const participantExists = participants.some(
-                    (p: { identity: string }) => p.identity === this.getParticipantIdentity(participantName, tokenType)
+                    (p) => p.identity === this.getParticipantIdentity(participantName, tokenType)
                 );
 
                 if (!participantExists) {

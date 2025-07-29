@@ -2,7 +2,6 @@ import {
     BackToPusherSpaceMessage,
     NonUndefinedFields,
     noUndefined,
-    PrivateEvent,
     PrivateEventBackToPusher,
     PublicEvent,
     SpaceUser,
@@ -288,7 +287,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
     }
 
     private sendPrivateEvent(message: NonUndefinedFields<PrivateEventBackToPusher>) {
-
         const spaceEvent = noUndefined(message.spaceEvent);
 
         // FIXME: this should be unnecessary because of the noUndefined call above
@@ -297,7 +295,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        //TODO : voir si on cherche dans les users ou dans tout les users connnectes plutot / meme chose pour les private event 
+        //TODO : voir si on cherche dans les users ou dans tout les users connnectes plutot / meme chose pour les private event
         const receiver = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiver) {
@@ -308,9 +306,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
         const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
         if (!receiverSpaceUser) {
-            throw new Error(`Private message receiver ${message.receiverUserId} not found in space ${this._space.name}`);
+            throw new Error(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}`
+            );
         }
-        
+
         const receiverSocket = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiverSocket) {
@@ -320,8 +320,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         const extendedSender = {
             ...message.sender,
             lowercaseName: message.sender.name.toLowerCase(),
-        }
-
+        };
 
         receiverSocket.getUserData().emitInBatch({
             message: {
@@ -330,7 +329,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     sender: extendedSender,
                     receiverUserId: message.receiverUserId,
                     spaceEvent: {
-                        event: this.eventProcessor.processPrivateEvent(spaceEvent.event, extendedSender, receiverSpaceUser),
+                        event: this.eventProcessor.processPrivateEvent(
+                            spaceEvent.event,
+                            extendedSender,
+                            receiverSpaceUser
+                        ),
                     },
                     // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                     spaceName: this._space.localName,

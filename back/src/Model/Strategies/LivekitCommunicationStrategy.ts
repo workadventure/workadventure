@@ -15,7 +15,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
-        console.log("🎥🎥🎥🎥🎥 send Streamer token", user.name, switchInProgress);
+        //TODO : passer en async
         this.sendLivekitInvitationMessage(user, LivekitTokenType.STREAMER, switchInProgress).catch((error) => {
             console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);
             Sentry.captureException(error);
