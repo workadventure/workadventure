@@ -146,19 +146,20 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             actionIcon: banIcon,
             iconColor: "#EF4444",
         });
-        if(!blackListManager.isBlackListed(this.userUuid)){
+        if (!blackListManager.isBlackListed(this.userUuid)) {
             actions.push({
                 actionName: get(LL).chat.userList.TalkTo(),
                 protected: false,
                 priority: 1,
                 style: "bg-white/10 hover:bg-white/30",
                 callback: () => {
-                    if (this.scene.connection != undefined) this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
+                    if (this.scene.connection != undefined)
+                        this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
                 },
                 actionIcon: walk,
                 iconColor: "#FFFFFF",
             });
-            if(this.chatID != undefined){
+            if (this.chatID != undefined) {
                 actions.push({
                     actionName: get(LL).chat.userList.sendMessage(),
                     protected: false,
