@@ -33,18 +33,10 @@
         name: file.name,
     };
 
-    let entityPrefab: EntityPrefab = {
-        collectionName: "basic office decoration",
-        collisionGrid: undefined,
-        color: "black",
-        depthOffset: 0,
-        direction: "Down" as "Down" | "Left" | "Up" | "Right",
-        id: "basic office decoration:Books (Variant 5):black:Down",
-        imagePath: "http://play.workadventure.localhost/collections/Office/Props/Book5.png",
-        name: "Books (Variant 5)",
-        tags: ["furniture", "book", "furniture", "office", "basic"],
-        type: "Default" as "Default" | "Custom",
-    };
+    let entityPrefab: EntityPrefab | undefined = undefined;
+
+    const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
+    const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
     async function onSave() {
         const scene = gameManager.getCurrentGameScene();
@@ -53,6 +45,20 @@
             warningMessageStore.addWarningMessage("No Game Scene found");
             console.error("No current game scene found.");
             return;
+        }
+
+        let defaultEntityPrefab = entityPrefab;
+
+        if (!defaultEntityPrefab) {
+            defaultEntityPrefab = await entitiesCollectionsManager.getEntityPrefab(
+                "All Object Collection",
+                "basic office decoration:Books (Variant 5):black:Down"
+            );
+        }
+
+        if (!defaultEntityPrefab) {
+            const variant = get(entitiesPrefabsVariants)[0];
+            defaultEntityPrefab = variant.defaultPrefab;
         }
 
         const propertyId = uuidv4();
@@ -104,7 +110,7 @@
         mapEditorModeStore.switchMode(true);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");
-        mapEditorSelectedEntityPrefabStore.set(entityPrefab);
+        mapEditorSelectedEntityPrefabStore.set(entityPrefab || defaultEntityPrefab);
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
 
@@ -125,7 +131,7 @@
 
 <PopUpContainer reduceOnSmallScreen={true}>
     <div class="flex flex-col gap-4 p-2 max-h-[80vh] overflow-y-auto">
-        <DropFileEntityPicker on:select={(event) => selectEntity(event.detail)} />
+        <DropFileEntityPicker {entitiesPrefabsVariants} on:select={(event) => selectEntity(event.detail)} />
 
         <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" type="text" bind:value={entity.name} />
     </div>
