@@ -3,6 +3,7 @@
     import { onDestroy } from "svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
+    import { get } from "svelte/store";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -255,6 +256,7 @@
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
+        get(mapEditorSelectedEntityStore)?.removeEditColor();
     });
 
     function toggleDescriptionField() {
