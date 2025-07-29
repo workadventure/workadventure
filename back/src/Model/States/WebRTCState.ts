@@ -118,6 +118,7 @@ export class WebRTCState extends CommunicationState {
          *  ou une personne stream pour 5/6 personnes )
          **/
 
+        console.log(this.MAX_USERS_FOR_WEBRTC);
         return this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC && !this.isSwitching();
     }
 
