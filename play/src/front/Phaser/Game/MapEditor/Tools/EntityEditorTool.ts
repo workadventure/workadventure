@@ -403,8 +403,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
         if (get(mapEditorEntityFileDroppedStore)) {
             mapEditorEntityFileDroppedStore.set(false);
-            mapEditorSelectedEntityStore.set(openEntity);
             mapEditorEntityModeStore.set("EDIT");
+            mapEditorSelectedEntityStore.set(openEntity);
         }
     }
 
