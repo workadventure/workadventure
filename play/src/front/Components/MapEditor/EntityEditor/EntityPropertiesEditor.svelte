@@ -254,9 +254,14 @@
         mapEditorEntityModeStore.set("ADD");
     }
 
+    let selectedEntity;
+    const selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((value) => {
+        selectedEntity = value;
+    });
+
     onDestroy(() => {
         selectedEntityUnsubscriber();
-        get(mapEditorSelectedEntityStore)?.removeEditColor();
+        selectedEntity?.removeEditColor();
     });
 
     function toggleDescriptionField() {
