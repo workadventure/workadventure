@@ -1,19 +1,18 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
+    import { Readable } from "svelte/store";
     import LL from "../../../i18n/i18n-svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EntityVariant } from "../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import EntityItem from "../MapEditor/EntityEditor/EntityItem/EntityItem.svelte";
     import Input from "../Input/Input.svelte";
     import EntityToolImg from "../images/icon-tool-entity.svg";
 
+    export let entitiesPrefabsVariants: Readable<EntityVariant[]>;
+
     let searchTerm = "book";
     let pickedEntity: EntityPrefab | undefined = undefined;
     let currentSelectedEntityId: string | undefined = undefined;
-
-    const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
-    const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
     const dispatch = createEventDispatcher<{
         select: EntityPrefab;
