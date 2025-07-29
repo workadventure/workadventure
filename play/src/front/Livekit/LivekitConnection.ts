@@ -108,7 +108,7 @@ export class LivekitConnection {
 
         try {
             await this.livekitRoomStreamer?.joinRoom();
-        await this.livekitRoomWatcher?.joinRoom();
+            await this.livekitRoomWatcher?.joinRoom();
         } catch (err) {
             console.error("Error joining Livekit room:", err);
             Sentry.captureException(err);
@@ -153,7 +153,7 @@ export class LivekitConnection {
 
         try {
             this.livekitRoomStreamer?.destroy();
-        this.livekitRoomWatcher?.destroy();
+            this.livekitRoomWatcher?.destroy();
         } catch (err) {
             console.error("Error destroying Livekit room:", err);
             Sentry.captureException(err);
