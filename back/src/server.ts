@@ -1,9 +1,10 @@
 // lib/server.ts
+import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
 import * as grpc from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
-import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
-import App from "./App";
 import { roomManager } from "./RoomManager";
+import { spaceManager } from "./SpaceManager";
+import App from "./App";
 import {
     GRPC_PORT,
     ENABLE_TELEMETRY,
@@ -11,14 +12,13 @@ import {
     SENTRY_RELEASE,
     SENTRY_ENVIRONMENT,
     SENTRY_TRACES_SAMPLE_RATE,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 import { telemetryService } from "./Services/TelemetryService";
-import { spaceManager } from "./SpaceManager";
 
 if (ENABLE_TELEMETRY) {
     telemetryService.startTelemetry().catch((e) => console.error(e));
 }
-App.listen();
 
 // Sentry integration
 if (SENTRY_DSN != undefined) {
@@ -37,7 +37,10 @@ if (SENTRY_DSN != undefined) {
     }
 }
 
-const server = new grpc.Server();
+const server = new grpc.Server({
+    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+});
 server.addService(RoomManagerService, roomManager);
 server.addService(SpaceManagerService, spaceManager);
 
@@ -47,4 +50,13 @@ server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure()
     }
     console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
     server.start();
+});
+
+(async () => {
+    await App.init();
+    App.listen();
+    App.grpcListen();
+})().catch((e) => {
+    console.error(e);
+    Sentry.captureException(e);
 });

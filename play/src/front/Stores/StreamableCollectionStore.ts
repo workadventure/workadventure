@@ -7,7 +7,7 @@ import { TrackWrapper } from "../Streaming/Common/TrackWrapper";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
-import { SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../Space/SpaceInterface";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
@@ -80,7 +80,6 @@ export interface Streamable {
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
 }
 
-//TODO : revoir le nom
 export type ExtendedStreamable = Streamable & {
     player: RemotePlayerData | undefined;
     userId: number;

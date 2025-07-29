@@ -1,7 +1,7 @@
 .warning-toast {
-  @apply rounded px-2 py-1 z-10;
+  @apply rounded px-2 py-1 z-20;
   position: absolute;
-  top: 1%;
+  top: 21%;
   max-height: clamp(150px, 10vh, 15vh); /*replace @media for small screen*/
   width: fit-content;
   max-width: 80%;

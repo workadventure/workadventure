@@ -31,6 +31,7 @@ export const PLAY_URL = env.PLAY_URL;
 export const MINIMUM_DISTANCE = env.MINIMUM_DISTANCE;
 export const GROUP_RADIUS = env.GROUP_RADIUS;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
+export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY || "500");
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const JITSI_URL = env.JITSI_URL;
@@ -64,6 +65,8 @@ export const SENTRY_DSN = env.SENTRY_DSN;
 export const SENTRY_ENVIRONMENT = env.SENTRY_ENVIRONMENT;
 export const SENTRY_RELEASE = env.SENTRY_RELEASE;
 export const SENTRY_TRACES_SAMPLE_RATE = env.SENTRY_TRACES_SAMPLE_RATE;
+
+export const GRPC_MAX_MESSAGE_SIZE = env.GRPC_MAX_MESSAGE_SIZE;
 
 export const LIVEKIT_HOST = env.LIVEKIT_HOST;
 export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY;

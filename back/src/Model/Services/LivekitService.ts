@@ -1,4 +1,4 @@
-import { SpaceUser } from "@workadventure/messages";
+import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
     AccessToken,
@@ -11,6 +11,9 @@ import {
     EncodedFileType,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
+import Debug from "debug";
+
+const debug = Debug("LivekitService");
 
 const defaultRoomServiceClient = (livekitHost: string, livekitApiKey: string, livekitApiSecret: string) =>
     new RoomServiceClient(livekitHost, livekitApiKey, livekitApiSecret);
@@ -35,6 +38,10 @@ export class LiveKitService {
             livekitApiSecret: string
         ) => EgressClient = defaultEgressClient
     ) {
+        if (!this.livekitHost || !this.livekitApiKey || !this.livekitApiSecret) {
+            debug("Livekit host, api key or secret is not set");
+            throw new Error("Livekit host, api key or secret is not set");
+        }
         this.roomServiceClient = createRoomServiceClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
         this.egressClient = createEgressClient(this.livekitHost, this.livekitApiKey, this.livekitApiSecret);
     }
@@ -42,27 +49,22 @@ export class LiveKitService {
     private currentRecordingInformation: EgressInfo | null = null;
 
     async createRoom(roomName: string): Promise<void> {
-        console.log(`LivekitService.createRoom: Ensuring room ${roomName} exists`);
         try {
             // First check if the room already exists
             const rooms = await this.roomServiceClient.listRooms([roomName]);
             if (rooms && rooms.length > 0) {
-                console.log(`LivekitService.createRoom: Room ${roomName} already exists, skipping creation`);
                 return;
             }
 
             // Room doesn't exist, create it
-            console.log(`LivekitService.createRoom: Room ${roomName} not found, creating it`);
             const createOptions: CreateOptions = {
                 name: roomName,
                 emptyTimeout: 5 * 60 * 1000,
-                maxParticipants: 1000,
+                //maxParticipants: 1000,
                 departureTimeout: 5 * 60 * 1000,
             };
 
             await this.roomServiceClient.createRoom(createOptions);
-            console.log(`LivekitService.createRoom: Successfully created room ${roomName}`);
-            //this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
         } catch (error) {
             console.error(`LivekitService.createRoom: Error creating room ${roomName}:`, error);
             Sentry.captureException(error);
@@ -71,9 +73,9 @@ export class LiveKitService {
         }
     }
 
-    async generateToken(roomName: string, user: SpaceUser): Promise<string> {
+    async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            identity: user.spaceUserId,
+            identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
@@ -83,8 +85,8 @@ export class LiveKitService {
 
         token.addGrant({
             room: roomName,
-            canPublish: true,
-            canSubscribe: true,
+            canPublish: tokenType === LivekitTokenType.STREAMER,
+            canSubscribe: tokenType === LivekitTokenType.WATCHER,
             roomJoin: true,
             canPublishSources: [
                 TrackSource.CAMERA,
@@ -108,10 +110,11 @@ export class LiveKitService {
         }
     }
 
-    async removeParticipant(roomName: string, participantName: string): Promise<void> {
-        console.log(
-            `LivekitService.removeParticipant: Attempting to remove participant ${participantName} from room ${roomName}`
-        );
+    private getParticipantIdentity(participantName: string, tokenType: LivekitTokenType): string {
+        return participantName + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER");
+    }
+
+    async removeParticipant(roomName: string, participantName: string, tokenType: LivekitTokenType): Promise<void> {
         try {
             const rooms = await this.roomServiceClient.listRooms([roomName]);
 
@@ -120,12 +123,8 @@ export class LiveKitService {
                     `LivekitService.removeParticipant: Room ${roomName} found, checking for participant ${participantName}`
                 );
                 const participants = await this.roomServiceClient.listParticipants(roomName);
-                console.log(
-                    `LivekitService.removeParticipant: Room ${roomName} has ${participants.length} participants`
-                );
-
                 const participantExists = participants.some(
-                    (p: { identity: string }) => p.identity === participantName
+                    (p: { identity: string }) => p.identity === this.getParticipantIdentity(participantName, tokenType)
                 );
 
                 if (!participantExists) {
@@ -162,7 +161,6 @@ export class LiveKitService {
         return this.livekitFrontendUrl;
     }
 
-    //TODO : voir si on autorise plusieurs enregistrements en même temps
     async startRecording(roomName: string, layout = "grid"): Promise<void> {
         try {
             //TODO : use env variable / voir si on utilise toujours un S3

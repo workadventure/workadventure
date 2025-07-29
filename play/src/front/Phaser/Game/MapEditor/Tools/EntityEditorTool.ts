@@ -273,6 +273,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     protected subscribeToEntityUpload() {
         this.mapEditorEntityUploadStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
             (uploadEntityMessage) => {
+                const isAdmin = this.scene.connection?.isAdmin();
+                const isEditor = this.scene.connection?.hasTag("editor");
+                if (!isAdmin && !isEditor) {
+                    return;
+                }
                 if (uploadEntityMessage) {
                     (async () => {
                         await this.mapEditorModeManager.executeCommand(

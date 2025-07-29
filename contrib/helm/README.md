@@ -48,6 +48,38 @@ If you don't provide a `secretKey` (used to encode JWT tokens), the image will g
 
 Please use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more information about the available variables.
 
+### Minimal sample configuration file
+
+Assuming you are using the nginx ingress controller, and CertManager for the SSL certificates (with a cluster issuer named `letsencrypt-prod`), here is a minimal configuration file:
+
+**values.yaml**
+```yaml
+domainName: example.com
+
+singleDomain: true
+
+ingress:
+  enabled: true
+  className: "nginx"
+  tls: true
+  secretName: "workadventure-cert"
+  annotationsRoot:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  annotationsPath:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+commonSecretEnv:
+  # Secret token to connect to the map storage API.
+  MAP_STORAGE_API_TOKEN: "123"
+
+mapstorage:
+  env:
+    # Enable Bearer authentication for the map storage API so that we can connect using "npm run upload" in the map-starter-kit
+    ENABLE_BEARER_AUTHENTICATION: "true"
+  secretEnv:
+    AUTHENTICATION_PASSWORD: "my-password"
+```
+
 ## Upload your map
 
 Before starting using WorkAdventure, you will need to upload your first map.
@@ -56,6 +88,12 @@ Before starting using WorkAdventure, you will need to upload your first map.
 
 Design your own map using the [map starter kit](https://github.com/workadventure/map-starter-kit).
 When you are happy with the result, [follow the steps in the "upload your map documentation"](https://docs.workadventu.re/map-building/tiled-editor/publish/wa-hosted)
+
+With the sample installation above, the command to upload your map will look like this:
+
+```bash
+npm run upload -- -u https://example.com/map-storage/ -k 123
+```
 
 #### Checking everything worked
 

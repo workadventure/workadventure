@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import * as Sentry from "@sentry/node";
 import cors from "cors";
 import uWebsockets from "uWebSockets.js";
+import { adminApi } from "./services/AdminApi";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -13,12 +14,16 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import { ALLOWED_CORS_ORIGIN, ENABLE_OPENAPI_ENDPOINT, PROMETHEUS_PORT } from "./enums/EnvironmentVariable";
+import {
+    ALLOWED_CORS_ORIGIN,
+    ENABLE_OPENAPI_ENDPOINT,
+    PROMETHEUS_PORT,
+    GRPC_MAX_MESSAGE_SIZE,
+} from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
-import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
@@ -85,7 +90,7 @@ class App {
             new PrometheusController(this.app);
         }
         new DebugController(this.app);
-        new AdminController(this.app);
+        new AdminController(this.app, GRPC_MAX_MESSAGE_SIZE);
         new OpenIdProfileController(this.app);
         new PingController(this.app);
 

@@ -11,9 +11,6 @@ export const LivekitCredentialsResponse = z.object({
     livekitApiSecret: extendApi(z.string(), {
         description: "The Api secret to be used in admin",
     }),
-    livekitWSurl: extendApi(z.string(), {
-        description: "The web socket url",
-    }),
 });
 
 export type LivekitCredentialsResponse = z.infer<typeof LivekitCredentialsResponse>;
