@@ -9,7 +9,7 @@ export interface IRecordingManager {
     startRecording(user: SpaceUser, userUuid: string): Promise<void>;
     stopRecording(user: SpaceUser): Promise<void>;
     handleAddUser(user: SpaceUser): void;
-    handleRemoveUser(user: SpaceUser): void;
+    handleRemoveUser(user: SpaceUser): Promise<void>;
     isRecording: boolean;
     destroy(): void;
 }
@@ -17,7 +17,7 @@ export interface IRecordingManager {
 export class RecordingManager implements IRecordingManager {
     private _isRecording: boolean = false;
     private _user: SpaceUser | undefined;
-    private _pendingRecording: boolean = false;
+    // private _pendingRecording: boolean = false;
 
 
     constructor(private readonly communicationManager: ICommunicationManager, private readonly space: ICommunicationSpace) {}
@@ -78,17 +78,15 @@ export class RecordingManager implements IRecordingManager {
         console.log("🍪🍪🍪 Switching to LivekitState for recording");
 
         // Marquer qu'on a un enregistrement en attente
-        this._pendingRecording = true;
+        // this._pendingRecording = true;
 
-        // Créer et définir le nouvel état LiveKit
-        const livekitState = new LivekitState(this.space, this.communicationManager);
+
+        const livekitState = await LivekitState.create(this.space, this.communicationManager) // await is for roomcreation
+        // const livekitState = new LivekitState(this.space, this.communicationManager);
         this.communicationManager.setState(livekitState);
 
-        // Utiliser le mécanisme existant de LivekitState pour gérer le switch
-        // handleUserAdded va déclencher le processus de switch automatiquement
         livekitState.handleUserAdded(user);
 
-        // Ajouter tous les autres utilisateurs pour déclencher le switch complet
         const allUsers = this.space.getAllUsers();
         allUsers.forEach(spaceUser => {
             if (spaceUser.spaceUserId !== user.spaceUserId) {
@@ -96,25 +94,29 @@ export class RecordingManager implements IRecordingManager {
             }
         });
 
+
+        await this.executeRecording(livekitState, user, userUuid);
+
         // Attendre la fin du switch et lancer l'enregistrement
-        setTimeout(async () => {
-            if (this._pendingRecording && this._user) {
-                try {
-                    await this.executeRecording(livekitState, user, userUuid);
-                } catch (error) {
-                    console.error("❌ Error starting recording after switch: ", error);
-                    throw error;
-                } finally {
-                    this._pendingRecording = false;
-                }
-            }
-        }, 6000); // Délai légèrement supérieur au timeout du switch
+        // setTimeout(async () => {
+        //     if (this._pendingRecording && this._user) {
+        //         try {
+        //             await this.executeRecording(livekitState, user, userUuid);
+        //         } catch (error) {
+        //             console.error("❌ Error starting recording after switch: ", error);
+        //             throw error;
+        //         } finally {
+        //             this._pendingRecording = false;
+        //         }
+        //     }
+        // }, 6000);
+        // Délai légèrement supérieur au timeout du switch
     }
 
     public async stopRecording(user: SpaceUser): Promise<void> {
         if (!this._isRecording) {
             console.warn("No recording is currently active.");
-            this._pendingRecording = false; // Reset pending recording state
+            // this._pendingRecording = false;
             // throw new Error("No recording to stop");
         }
 
@@ -131,7 +133,7 @@ export class RecordingManager implements IRecordingManager {
 
         this._isRecording = false;
         this._user = undefined;
-        this._pendingRecording = false;
+        // this._pendingRecording = false;
     }
 
     public handleAddUser(user: SpaceUser): void {
@@ -144,7 +146,7 @@ export class RecordingManager implements IRecordingManager {
         //      )
     }
 
-    public  handleRemoveUser(user: SpaceUser): void {
+    public async handleRemoveUser(user: SpaceUser): Promise<void> {
         if (!this._isRecording) {
             return;
         }
@@ -152,10 +154,7 @@ export class RecordingManager implements IRecordingManager {
         if (this._user === user) {
             console.log("🐞🐞🐞 User left the recording, stopping recording for user:", user);
             //TODO : stop recording if the user is the one recording
-            this.stopRecording(user).catch((error) => {
-                console.error("Error stopping recording when user left:", error);
-                Sentry.captureException(error);
-            });
+            await this.stopRecording(user);
             this.space.dispatchPrivateEvent({
                 spaceName: this.space.getSpaceName(),
                 senderUserId: user.spaceUserId,
@@ -173,7 +172,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    public get isRecording(): boolean {
+    public get isRecording(): boolezrean {
         return this._isRecording;
     }
 

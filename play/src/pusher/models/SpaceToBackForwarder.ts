@@ -273,13 +273,13 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
         const receiverSpaceUser = this._space.users.get(event.receiverUserId);
 
-        if (!senderSpaceUser) {
-            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
-        }
-
-        if (!receiverSpaceUser) {
-            throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
-        }
+        // if (!senderSpaceUser) {
+        //     throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
+        // }
+        //
+        // if (!receiverSpaceUser) {
+        //     throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
+        // }
 
         if (!event.spaceEvent?.event) {
             throw new Error("Event is required in spaceEvent");

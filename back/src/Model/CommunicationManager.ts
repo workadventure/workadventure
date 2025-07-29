@@ -21,10 +21,11 @@ export class CommunicationManager implements ICommunicationManager {
         this._recordingManager.handleAddUser(user);
     }
 
-    public handleUserDeleted(user: SpaceUser): void {
-        //TODO : race condition possible ??
-        this._recordingManager.handleRemoveUser(user);
+    public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean = true): Promise<void> {
         this._currentState.handleUserDeleted(user);
+        if (shouldStopRecording){
+            await this._recordingManager.handleRemoveUser(user);
+        }
     }
 
     public handleUserUpdated(user: SpaceUser): void {

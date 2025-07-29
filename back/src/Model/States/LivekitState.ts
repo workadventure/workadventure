@@ -15,12 +15,23 @@ export class LivekitState extends CommunicationState implements IRecordableState
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager,
+        protected readonly _currentStrategy: IRecordableStrategy,
         protected readonly _readyUsers: Set<string> = new Set()
     ) {
         //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
-        super(_space, _communicationManager, new LivekitCommunicationStrategy(_space), _readyUsers);
+        super(_space, _communicationManager, _currentStrategy, _readyUsers);
         this.SWITCH_TIMEOUT_MS = 5000;
     }
+
+    public static async create(
+        _space: ICommunicationSpace,
+        _communicationManager: ICommunicationManager,
+        _readyUsers: Set<string> = new Set()
+    ) {
+        const strategy = await LivekitCommunicationStrategy.create(_space);
+        return new LivekitState(_space, _communicationManager, strategy, _readyUsers);
+    }
+
     handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();

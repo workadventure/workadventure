@@ -82,11 +82,12 @@ export class WebRTCState extends CommunicationState {
     }
 
     //TODO : trouver un autre moyen de faire le switch
-    private switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): void {
+    private async switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): Promise<void> {
         this._readyUsers.add(user.spaceUserId);
         this._switchInitiatorUserId = user.spaceUserId;
 
-        this._nextState = new LivekitState(this._space, this._communicationManager, this._readyUsers);
+        this._nextState = await LivekitState.create(this._space, this._communicationManager, this._readyUsers)
+        // this._nextState = new LivekitState(this._space, this._communicationManager, this._readyUsers);
 
         if (
             typeOfSwitch === "user" &&

@@ -18,6 +18,14 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
+    public static async create( space: ICommunicationSpace, livekitService = new LiveKitService()) {
+        await livekitService.createRoom(space.getSpaceName())
+        return new LivekitCommunicationStrategy(space, livekitService);
+        // this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
+        //     console.error(`Error creating room ${this.space.getSpaceName()} on Livekit:`, error);
+        //     Sentry.captureException(error);
+        // });
+    }
     addUser(user: SpaceUser, switchInProgress = false): void {
         //TODO : passer en async
         this.sendLivekitInvitationMessage(user, LivekitTokenType.STREAMER, switchInProgress).catch((error) => {

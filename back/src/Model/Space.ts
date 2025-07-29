@@ -49,7 +49,7 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${name} => created`);
     }
 
-    public addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+    public async addUser(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         try {
             const usersList = this.usersList(sourceWatcher);
             usersList.set(spaceUser.spaceUserId, spaceUser);
@@ -77,7 +77,10 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
+            this.removeUser(sourceWatcher, spaceUser.spaceUserId).catch((error) => {
+                console.error("Error while removing user after add error", error);
+                Sentry.captureException(error);
+            });
             throw e;
         }
     }
@@ -129,7 +132,10 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
 
-                this.communicationManager.handleUserDeleted(user);
+                this.communicationManager.handleUserDeleted(user, false).catch((e) => {
+                    console.error("Error while handling user deleted", e);
+                    Sentry.captureException(e);
+                });
             } else if (oldFilter !== false && newFilter !== false) {
                 debug(
                     `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(
@@ -146,8 +152,7 @@ export class Space implements CustomJsonReplacerInterface {
                         },
                     },
                 });
-
-                this.communicationManager.handleUserUpdated(spaceUser);
+                // this.communicationManager.handleUserUpdated(spaceUser);
             }
             this.communicationManager.handleUserUpdated(spaceUser);
         } catch (e) {
@@ -156,24 +161,22 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while updating user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId);
-            this.communicationManager.handleUserDeleted(spaceUser);
+            this.removeUser(sourceWatcher, spaceUser.spaceUserId).catch((error) => {
+                console.error("Error while removing user after update error", error);
+                Sentry.captureException(error);
+            });
+            // this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
+            //     console.error("Error while handling user deleted", e);
+            //     Sentry.captureException(e);
+            // });
         }
     }
 
-    public removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
+    public async removeUser(sourceWatcher: SpacesWatcher, spaceUserId: string) {
+        let user: SpaceUser | undefined;
         try {
             const usersList = this.usersList(sourceWatcher);
-            const user = usersList.get(spaceUserId);
-
-            usersList.delete(spaceUserId);
-            this._clientEventsEmitter.emitSpaceLeave(this.name);
-            debug(`${this.name} : user => removed ${spaceUserId}`);
-
-            if (usersList.size === 0) {
-                debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
-                this.users.delete(sourceWatcher);
-            }
+            user = usersList.get(spaceUserId);
 
             const usersToNotifyList = this.usersListToNotify(sourceWatcher);
             usersToNotifyList.delete(spaceUserId);
@@ -183,7 +186,7 @@ export class Space implements CustomJsonReplacerInterface {
                 Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
                 return;
             }
-            this.communicationManager.handleUserDeleted(user);
+            await this.communicationManager.handleUserDeleted(user, true)
 
             usersList.delete(spaceUserId);
             this._clientEventsEmitter.emitSpaceLeave(this.name);
@@ -407,6 +410,10 @@ export class Space implements CustomJsonReplacerInterface {
         });
     }
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
+        const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
+        if (!sender) {
+            throw new Error(`Sender ${privateEvent.senderUserId} not found in space ${this.name}`);
+        }
 
         // Let's notify the watcher that contains the user
         if (!privateEvent.spaceEvent?.event) {
@@ -416,7 +423,12 @@ export class Space implements CustomJsonReplacerInterface {
                     watcher.write({
                         message: {
                             $case: "privateEvent",
-                            privateEvent,
+                            privateEvent: {
+                                spaceName: privateEvent.spaceName,
+                                receiverUserId: privateEvent.receiverUserId,
+                                spaceEvent: privateEvent.spaceEvent,
+                                sender,
+                            },
                         },
                     });
                 }
@@ -450,7 +462,10 @@ export class Space implements CustomJsonReplacerInterface {
                 watcher.write({
                     message: {
                         $case: "privateEvent",
-                        privateEvent: processedPrivateEvent,
+                        privateEvent: {
+                            ...processedPrivateEvent,
+                            sender,
+                        },
                     },
                 });
             }
@@ -461,13 +476,13 @@ export class Space implements CustomJsonReplacerInterface {
         this.users.set(watcher, new Map<string, SpaceUser>(users.map((user) => [user.spaceUserId, user])));
     }
 
-    public handleQuery(
+    public async handleQuery(
         watcher: SpacesWatcher,
         spaceQueryMessage: SpaceQueryMessage
-    ): Pick<SpaceAnswerMessage, "answer"> {
+    ): Promise<Pick<SpaceAnswerMessage, "answer">> {
         try {
             if (!spaceQueryMessage.query) {
-                throw new Error("SpaceQueryMessage has no query");
+                return Promise.reject(new Error("SpaceQueryMessage has no query"));
             }
 
             const queryCase = spaceQueryMessage.query.$case;
@@ -475,14 +490,14 @@ export class Space implements CustomJsonReplacerInterface {
             switch (queryCase) {
                 case "addSpaceUserQuery": {
                     if (!spaceQueryMessage.query.addSpaceUserQuery.user) {
-                        throw new Error("SpaceQueryMessage has no user");
+                        return Promise.reject(new Error("SpaceQueryMessage has no user"));
                     }
 
                     if (this.filterType !== spaceQueryMessage.query.addSpaceUserQuery.filterType) {
-                        throw new Error("Filter type mismatch when adding user to space");
+                        return Promise.reject(new Error("Filter type mismatch when adding user to space"));
                     }
 
-                    this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
+                    await this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
                     this._clientEventsEmitter.emitSpaceJoin(this.name);
                     return {
                         answer: {
@@ -495,7 +510,7 @@ export class Space implements CustomJsonReplacerInterface {
                     };
                 }
                 case "removeSpaceUserQuery": {
-                    this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
+                    await this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
                     this._clientEventsEmitter.emitSpaceLeave(this.name);
                     return {
                         answer: {
@@ -510,7 +525,7 @@ export class Space implements CustomJsonReplacerInterface {
 
                 default: {
                     const _exhaustiveCheck: never = queryCase;
-                    throw new Error("Unknown query");
+                    return Promise.reject(new Error("Unknown query"));
                 }
             }
         } catch (e) {
