@@ -172,7 +172,7 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
-    public get isRecording(): boolezrean {
+    public get isRecording(): boolean {
         return this._isRecording;
     }
 
