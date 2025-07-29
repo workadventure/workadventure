@@ -1,4 +1,4 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage, PublicEvent, PrivateEvent, PublicEventFrontToPusher, PrivateEventFrontToPusher } from "@workadventure/messages";
+import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage, PublicEventFrontToPusher, PrivateEventFrontToPusher } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
@@ -248,10 +248,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
 
         if (!senderSpaceUser) {
+            console.trace("🚨🚨🚨 Sender not found in space, ignoring event", senderSocket.spaceUserId, this._space.name);
             throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
         }
 
         if (!event.spaceEvent?.event) {
+            console.trace("🚨🚨🚨 Event is required in spaceEvent, ignoring event", event);
             throw new Error("Event is required in spaceEvent");
         }
 
@@ -273,13 +275,15 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
         const receiverSpaceUser = this._space.users.get(event.receiverUserId);
 
-        // if (!senderSpaceUser) {
-        //     throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
-        // }
-        //
-        // if (!receiverSpaceUser) {
-        //     throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
-        // }
+        console.log("🚀🚀🚀 Sending private event", Array.from(this._space.users.keys()), "Event type: " ,event.spaceEvent?.event?.$case);
+
+        if (!senderSpaceUser) {
+            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
+        }
+
+        if (!receiverSpaceUser) {
+            throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
+        }
 
         if (!event.spaceEvent?.event) {
             throw new Error("Event is required in spaceEvent");

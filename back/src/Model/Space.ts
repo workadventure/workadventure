@@ -567,6 +567,12 @@ export class Space implements CustomJsonReplacerInterface {
         return Array.from(this.usersToNotify.values()).flatMap((users) => Array.from(users.values()));
     }
 
+    public getUser(spaceUserId: string): SpaceUser | undefined {
+        return Array.from(this.users.values())
+            .flatMap((users: Map<string, SpaceUser>) => Array.from(users.values()))
+            .find((user: SpaceUser) => user.spaceUserId === spaceUserId);
+    }
+
     public getSpaceName(): string {
         return this.name;
     }

@@ -74,7 +74,6 @@ import {
     MapStorageJwtAnswer,
     StartRecordingMessage,
     StopRecordingMessage,
-    GetRecordingsQuery,
     GetRecordingsAnswer,
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
@@ -991,6 +990,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitStartRecording(spaceName: string): void {
+        console.log('⛺️⛺️⛺️ emitStartRecording', spaceName, this.getSpaceUserId());
         this.emitPublicSpaceEvent(spaceName,{
             $case: "startRecordingMessage",
             startRecordingMessage: {},

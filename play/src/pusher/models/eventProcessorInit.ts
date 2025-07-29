@@ -41,7 +41,7 @@ eventProcessor.registerPrivateEventProcessor("muteVideo", (event, sender, receiv
 });
 
 eventProcessor.registerPublicEventProcessor("startRecordingMessage", (event, sender, senderSocketData) => {
-    console.log(" 🍪 🍪 🍪 startRecordingMessage processor", event, sender, senderSocketData);
+    console.log(" 🍪 🍪 🍪 startRecordingMessage processor");
     if (event.$case !== "startRecordingMessage") {
         throw new Error("Invalid event type");
     }

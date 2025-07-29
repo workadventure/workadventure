@@ -8,6 +8,7 @@
     import { showRecordingList } from "../../Stores/RecordingStore";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
     const connection = gameManager.getCurrentGameScene().connection;
 
@@ -120,8 +121,8 @@
                     {:else if recordings.length === 0}
                         <p>{$LL.recording.noRecordings()}</p>
                     {:else }
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-scroll max-h-[50vh]">
-                            {#each recordings as record, index}
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 overflow-y-scroll max-h-[50vh]">
+                            {#each recordings as record, index (record.videoFile.filename)}
                                 <div class="flex flex-col flex-wrap items-center justify-between gap-0 w-full h-52 lg:h-36 relative rounded-md bg-gradient-to-t to-50% group-hover:to-10% to-transparent from-secondary-900 group"
                                      on:mouseenter={() => startThumbnailCycle(index, record.thumbnails)}
                                      on:mouseleave={stopThumbnailCycle}
@@ -129,13 +130,15 @@
                                     <img class="absolute w-full h-full top-0 left-0 object-cover rounded-md z-[-1]"
                                          src={hoveredRecordIndex === index ? record.thumbnails[thumbnailIndex]?.url : record.thumbnails[1]?.url}
                                          alt="Recording thumbnail"/>
-                                    <div class="w-full flex flex-row items-center justify-between p-2">
-                                        <div class="text-xs text-black bg-white/80 rounded px-2 py-1">
-                                            {$LL.recording.expireIn({
-                                                days: getDaysUntilExpiration(record.videoFile.filename),
-                                                s: getDaysUntilExpiration(record.videoFile.filename) !== 1 ? 's' : ''
-                                            })}
-                                        </div>
+                                    <div class="w-full flex flex-row items-end justify-between p-2">
+                                        {#if ADMIN_URL}
+                                            <div class="text-xs text-black bg-white/80 rounded px-2 py-1">
+                                                {$LL.recording.expireIn({
+                                                    days: getDaysUntilExpiration(record.videoFile.filename),
+                                                    s: getDaysUntilExpiration(record.videoFile.filename) !== 1 ? 's' : ''
+                                                })}
+                                            </div>
+                                        {/if}
                                         <button
                                                 class="btn btn-secondary hover:bg-secondary btn-sm cursor-pointer hover:!opacity-100 group-hover:opacity-40"
                                                 on:click={() => downloadFile(record.videoFile.url, record.videoFile.filename)}
