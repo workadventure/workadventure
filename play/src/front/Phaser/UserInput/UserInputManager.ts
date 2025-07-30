@@ -166,38 +166,38 @@ export class UserInputManager {
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
-                key: "UP",
+                key: "Up",
                 description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
-                key: "LEFT",
+                key: "Left",
                 description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
-                key: "DOWN",
+                key: "Down",
                 description: get(LL).menu.shortcuts.moveDown(),
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
-                key: "RIGHT",
+                key: "Right",
                 description: get(LL).menu.shortcuts.moveRight(),
             },
 
             {
                 event: UserInputEvent.SpeedUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
-                key: "SHIFT",
+                key: "Shift",
                 description: get(LL).menu.shortcuts.speedUp(),
             },
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
-                key: "SPACE",
+                key: "Space",
                 description: get(LL).menu.shortcuts.interact(),
             },
             {

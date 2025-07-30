@@ -37,8 +37,8 @@
 
 <div class="customize-main">
     <div class="submenu p-4">
-        <h2 class="text-white text-lg font-semibold mb-4">{$LL.menu.shortcuts.title}</h2>
-        <table class="w-full table-auto rounded overflow-hidden">
+        <h2 class="text-white text-lg font-semibold mb-4">{$LL.menu.shortcuts.title()}</h2>
+        <table class="w-full table-auto rounded overflow-hidden border-none">
             <thead>
                 <tr class="text-left uppercase text-gray-300 text-sm tracking-wider">
                     <th class="p-3 font-semibold">{$LL.menu.shortcuts.keys()}</th>
