@@ -1,56 +1,57 @@
 import type { BaseTranslation } from "../i18n-types";
+
+import actionbar from "./actionbar";
+import area from "./area";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
 import companion from "./companion";
-import woka from "./woka";
-import error from "./error";
-import follow from "./follow";
-import login from "./login";
-import menu from "./menu";
-import report from "./report";
-import refreshPrompt from "./refreshPrompt";
-import warning from "./warning";
-import trigger from "./trigger";
-import notification from "./notification";
 import cowebsite from "./cowebsite";
-import actionbar from "./actionbar";
+import error from "./error";
+import externalModule from "./externalModule";
+import follow from "./follow";
+import form from "./form";
+import login from "./login";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
-import video from "./video";
+import menu from "./menu";
+import messageScreen from "./messageScreen";
+import notification from "./notification";
+import refreshPrompt from "./refreshPrompt";
+import report from "./report";
 import say from "./say";
 import statusModal from "./statusModal";
-import area from "./area";
-import externalModule from "./externalModule";
-import form from "./form";
-import messageScreen from "./messageScreen";
+import trigger from "./trigger";
+import video from "./video";
+import warning from "./warning";
+import woka from "./woka";
 
 const en_US: BaseTranslation = {
+    actionbar,
     area,
     audio,
     camera,
     chat,
     companion,
-    woka,
-    error,
-    follow,
-    login,
-    menu,
-    report,
-    refreshPrompt,
-    warning,
-    trigger,
-    notification,
     cowebsite,
-    actionbar,
+    error,
+    externalModule,
+    follow,
+    form,
+    login,
     mapEditor,
     megaphone,
-    video,
+    menu,
+    messageScreen,
+    notification,
+    refreshPrompt,
+    report,
     say,
     statusModal,
-    externalModule,
-    form,
-    messageScreen,
+    trigger,
+    video,
+    warning,
+    woka,
 };
 
 export default en_US;
