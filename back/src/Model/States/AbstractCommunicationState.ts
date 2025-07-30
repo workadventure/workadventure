@@ -18,8 +18,8 @@ export abstract class CommunicationState implements ICommunicationState {
         protected readonly _communicationManager: ICommunicationManager,
         protected readonly _currentStrategy: ICommunicationStrategy,
         protected readonly _readyUsers: Set<string> = new Set(),
-        protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC,
-        protected readonly MAX_STREAMING_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_STREAMING_USERS_FOR_WEBRTC
+        protected readonly MAX_STREAMERS_FOR_PEER: number = CommunicationConfig.MAX_STREAMERS_FOR_PEER,
+        protected readonly MAX_WATCHERS_FOR_PEER: number = CommunicationConfig.MAX_WATCHERS_FOR_PEER
     ) {
         this.preparedSwitchAction(this._readyUsers);
     }

@@ -112,35 +112,37 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
-        /**
-         * TODO : Trouver une regle qui se base sur les flux plutot que sur le nombres d'utilisateur
-         * pour eviter les switchs inutiles (ex: si on a 100 utilisateurs  1 personnes diffuse et 1 personne watch peut etre pas utile de switch
-         *  ou une personne stream pour 5/6 personnes )
-         **/
+        const activeStreamers = this._space.getUsersInFilter().length;
+        const activeWatchers = this._space.getUsersToNotify().length;
 
-        const totalUsers = this._space.getAllUsers().length;
-        const streamingUsers = this._space.getUsersInFilter().length;
+        // Thresholds (tweak these values as needed)
+        const MAX_PEER_STREAMERS = this.MAX_STREAMERS_FOR_PEER || 5;
+        const MAX_PEER_WATCHERS = this.MAX_WATCHERS_FOR_PEER || 10;
 
-        const tooManyUsers = totalUsers > this.MAX_USERS_FOR_WEBRTC;
-        const tooManyStreamers = streamingUsers >= this.MAX_STREAMING_USERS_FOR_WEBRTC;
-        const oneStreamLargeAudience = streamingUsers > 0 && totalUsers > 8;
+        // Rule 1: Too many concurrent streamers for P2P to handle efficiently
+        const isStreamerOverload = activeStreamers > MAX_PEER_STREAMERS;
 
-        if (tooManyUsers || tooManyStreamers || oneStreamLargeAudience) {
-            console.log(
-                "Should switch to livekit:",
-                "tooManyUsers:",
-                tooManyUsers,
-                "tooManyStreamers:",
-                tooManyStreamers,
-                "oneStreamLargeAudience:",
-                oneStreamLargeAudience
-            );
-            return !this.isSwitching();
+        // Rule 2: Too many total watchers (watchers = incoming video connections)
+        const isWatcherOverload = activeWatchers > MAX_PEER_WATCHERS;
+
+        // Rule 3: Even 1 stream with a large audience (e.g., presentation mode)
+        const isOneStreamBigAudience = activeStreamers > 0 && activeWatchers > 8;
+
+        const shouldSwitch = (isStreamerOverload || isWatcherOverload || isOneStreamBigAudience) && !this.isSwitching();
+
+        if (shouldSwitch) {
+            console.log("Switching to LiveKit due to:", {
+                activeStreamers,
+                activeWatchers,
+                isStreamerOverload,
+                isWatcherOverload,
+                isOneStreamBigAudience,
+            });
+        } else {
+            console.log("Staying in Peer-to-Peer:", { activeStreamers, activeWatchers });
         }
 
-        //huge network load or poor performance? switch
-        console.log("Shouldn't switch to livekit");
-        return false;
+        return shouldSwitch;
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
@@ -149,8 +151,8 @@ export class WebRTCState extends CommunicationState {
         const totalUsers = this._space.getAllUsers().length;
         const streamingUsers = this._space.getUsersInFilter().length;
 
-        const lowUserCount = totalUsers < this.MAX_USERS_FOR_WEBRTC - 2; // hysteresis buffer (e.g., if MAX_USERS_FOR_WEBRTC=10, switch back at <8)
-        const lowStreamerCount = streamingUsers <= this.MAX_STREAMING_USERS_FOR_WEBRTC - 2; // e.g., from 4 to ≤2
+        const lowUserCount = totalUsers < this.MAX_STREAMERS_FOR_PEER - 2; // hysteresis buffer (e.g., if MAX_USERS_FOR_WEBRTC=10, switch back at <8)
+        const lowStreamerCount = streamingUsers <= this.MAX_WATCHERS_FOR_PEER - 2; // e.g., from 4 to ≤2
         const smallAudienceOrNoStream = streamingUsers === 0 || totalUsers <= 8;
 
         return lowUserCount && lowStreamerCount && smallAudienceOrNoStream;

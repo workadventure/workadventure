@@ -81,12 +81,12 @@ export class LivekitState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length <= this.MAX_USERS_FOR_WEBRTC;
+        const isMaxUsersReached = this._space.getAllUsers().length <= this.MAX_STREAMERS_FOR_PEER;
         return !this.isSwitching() && isMaxUsersReached;
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC;
+        const isMaxUsersReached = this._space.getAllUsers().length > this.MAX_STREAMERS_FOR_PEER;
         return this.isSwitching() && isMaxUsersReached;
     }
 
