@@ -59,7 +59,11 @@
                         },
                         "trigger": {
                           "type": "string",
-                          "enum": ["onenter", "onaction", "onicon"]
+                          "enum": [
+                            "onenter",
+                            "onaction",
+                            "onicon"
+                          ]
                         },
                         "triggerMessage": {
                           "type": "string"
@@ -89,7 +93,12 @@
                           "additionalProperties": false
                         }
                       },
-                      "required": ["id", "type", "roomName", "jitsiRoomConfig"],
+                      "required": [
+                        "id",
+                        "type",
+                        "roomName",
+                        "jitsiRoomConfig"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -125,7 +134,11 @@
                           "type": "string"
                         }
                       },
-                      "required": ["id", "type", "audioLink"],
+                      "required": [
+                        "id",
+                        "type",
+                        "audioLink"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -151,7 +164,10 @@
                           "const": "openWebsite"
                         },
                         "link": {
-                          "type": ["string", "null"],
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "default": "https://workadventu.re"
                         },
                         "newTab": {
@@ -166,7 +182,11 @@
                         },
                         "trigger": {
                           "type": "string",
-                          "enum": ["onenter", "onaction", "onicon"]
+                          "enum": [
+                            "onenter",
+                            "onaction",
+                            "onicon"
+                          ]
                         },
                         "triggerMessage": {
                           "type": "string"
@@ -211,7 +231,10 @@
                           "default": false
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -237,11 +260,17 @@
                           "const": "openFile"
                         },
                         "link": {
-                          "type": ["string", "null"],
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "default": "https://workadventu.re"
                         },
                         "name": {
-                          "type": ["string", "null"]
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         },
                         "newTab": {
                           "type": "boolean",
@@ -252,7 +281,11 @@
                         },
                         "trigger": {
                           "type": "string",
-                          "enum": ["onenter", "onaction", "onicon"]
+                          "enum": [
+                            "onenter",
+                            "onaction",
+                            "onicon"
+                          ]
                         },
                         "triggerMessage": {
                           "type": "string"
@@ -271,7 +304,11 @@
                           "type": "number"
                         }
                       },
-                      "required": ["id", "type", "name"],
+                      "required": [
+                        "id",
+                        "type",
+                        "name"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -304,7 +341,10 @@
                           "default": false
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     }
                   ]
@@ -320,11 +360,18 @@
                     "type": "string"
                   }
                 },
-                "required": ["collectionName", "id"],
+                "required": [
+                  "collectionName",
+                  "id"
+                ],
                 "additionalProperties": false
               }
             },
-            "required": ["x", "y", "prefabRef"],
+            "required": [
+              "x",
+              "y",
+              "prefabRef"
+            ],
             "additionalProperties": false
           }
         },
@@ -384,7 +431,10 @@
                           "type": "boolean"
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -416,7 +466,12 @@
                           "type": "string"
                         }
                       },
-                      "required": ["id", "type", "url", "areaName"],
+                      "required": [
+                        "id",
+                        "type",
+                        "url",
+                        "areaName"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -445,7 +500,10 @@
                           "type": "number"
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -471,7 +529,10 @@
                           "const": "silent"
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -516,7 +577,11 @@
                           "default": false
                         }
                       },
-                      "required": ["id", "type", "name"],
+                      "required": [
+                        "id",
+                        "type",
+                        "name"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -549,7 +614,11 @@
                           "default": false
                         }
                       },
-                      "required": ["id", "type", "speakerZoneName"],
+                      "required": [
+                        "id",
+                        "type",
+                        "speakerZoneName"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -582,7 +651,10 @@
                           "default": false
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -622,7 +694,10 @@
                           "default": []
                         }
                       },
-                      "required": ["id", "type"],
+                      "required": [
+                        "id",
+                        "type"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -649,7 +724,10 @@
                         },
                         "accessClaimMode": {
                           "type": "string",
-                          "enum": ["dynamic", "static"]
+                          "enum": [
+                            "dynamic",
+                            "static"
+                          ]
                         },
                         "allowedTags": {
                           "type": "array",
@@ -659,10 +737,18 @@
                           "default": []
                         },
                         "ownerId": {
-                          "type": ["string", "null"]
+                          "type": [
+                            "string",
+                            "null"
+                          ]
                         }
                       },
-                      "required": ["id", "type", "accessClaimMode", "ownerId"],
+                      "required": [
+                        "id",
+                        "type",
+                        "accessClaimMode",
+                        "ownerId"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -692,7 +778,11 @@
                         },
                         "data": {}
                       },
-                      "required": ["id", "type", "subtype"],
+                      "required": [
+                        "id",
+                        "type",
+                        "subtype"
+                      ],
                       "additionalProperties": false
                     },
                     {
@@ -768,7 +858,11 @@
                           "default": 5000
                         }
                       },
-                      "required": ["id", "type", "content"],
+                      "required": [
+                        "id",
+                        "type",
+                        "content"
+                      ],
                       "additionalProperties": false
                     }
                   ]
@@ -798,10 +892,16 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["file", "marketplace"]
+                "enum": [
+                  "file",
+                  "marketplace"
+                ]
               }
             },
-            "required": ["url", "type"],
+            "required": [
+              "url",
+              "type"
+            ],
             "additionalProperties": false
           }
         },
@@ -830,7 +930,9 @@
                   }
                 }
               },
-              "required": ["enabled"],
+              "required": [
+                "enabled"
+              ],
               "additionalProperties": false
             }
           },
