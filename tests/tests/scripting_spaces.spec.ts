@@ -233,7 +233,7 @@ test.describe('Scripting space-related functions', () => {
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
-            await WA.spaces.joinSpace("some-test-space", "everyone");
+            await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
