@@ -52,7 +52,7 @@
                             {#each shortcut.keys as key, i (i)}
                                 {#if i % 2 === 0}
                                     <span
-                                        class="bg-gray-700 text-white px-2 py-1 rounded border border-gray-500 text-sm font-mono shadow-sm"
+                                        class="bg-gray-700 text-white px-4 py-3 rounded text-sm font-mono shadow-sm border-2 border-solid border-black p-2 border-b-4 hover:border-b-2"
                                     >
                                         {key}
                                     </span>
