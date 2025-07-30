@@ -118,24 +118,20 @@ export class WebRTCState extends CommunicationState {
          *  ou une personne stream pour 5/6 personnes )
          **/
 
-        //too many total users? switch
         const totalUsers = this._space.getAllUsers().length;
+        const streamingUsers = this._space.getUsersInFilter().length;
 
+        const tooManyUsers = totalUsers > this.MAX_USERS_FOR_WEBRTC;
+        const tooManyStreamers = streamingUsers >= this.MAX_STREAMING_USERS_FOR_WEBRTC;
+        const oneStreamLargeAudience = streamingUsers > 0 && totalUsers > 8;
 
-        //too many streamers? switch
-        const streamingUsers = this._space.getAllUsers().filter(user => user/*.isStreamingMedia()*/).length;
-
-
-        //a single stream bit with large audience? switch
-
-
+        if (tooManyUsers || tooManyStreamers || oneStreamLargeAudience) {
+            return !this.isSwitching();
+        }
 
         //huge network load or poor performance? switch
 
-
-
-        console.log(this.MAX_USERS_FOR_WEBRTC);
-        return this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC && !this.isSwitching();
+        return false;
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
