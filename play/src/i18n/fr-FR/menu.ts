@@ -140,6 +140,8 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     shortcuts: {
         title: "Raccourcis clavier",
+        keys: "Raccourci",
+        actions: "Action",
         moveUp: "Aller en haut",
         moveDown: "Aller en bas",
         moveLeft: "Aller à gauche",

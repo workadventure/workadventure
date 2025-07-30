@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Shortcut, shortcutStore } from "../../Stores/ShortcutStore";
+    import LL from "../../../i18n/i18n-svelte";
 
     const shortcuts = shortcutStore.getShortcuts();
 
@@ -15,12 +16,12 @@
 
 <div class="customize-main">
     <div class="submenu p-4">
-        <h2 class="text-white text-lg font-semibold mb-4">Keyboard Shortcuts</h2>
+        <h2 class="text-white text-lg font-semibold mb-4">{$LL.menu.shortcuts.title}</h2>
         <table class="w-full table-auto rounded overflow-hidden">
             <thead>
                 <tr class="text-left uppercase text-gray-300 text-sm tracking-wider">
-                    <th class="p-3 font-semibold">Keys</th>
-                    <th class="p-3 font-semibold">Action</th>
+                    <th class="p-3 font-semibold">{$LL.menu.shortcuts.keys()}</th>
+                    <th class="p-3 font-semibold">{$LL.menu.shortcuts.actions()}</th>
                 </tr>
             </thead>
             <tbody>

@@ -143,6 +143,8 @@ const menu: BaseTranslation = {
     },
     shortcuts: {
         title: "Keyboard Shortcuts",
+        keys: "Shortcut",
+        actions: "Action",
         moveUp: "Move Up",
         moveDown: "Move Down",
         moveLeft: "Move Left",
