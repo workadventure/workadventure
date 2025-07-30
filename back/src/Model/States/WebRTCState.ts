@@ -135,8 +135,16 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length <= this.MAX_USERS_FOR_WEBRTC;
-        return this.isSwitching() && isMaxUsersReached;
+        if (!this.isSwitching()) return false;
+
+        const totalUsers = this._space.getAllUsers().length;
+        const streamingUsers = this._space.getUsersInFilter().length;
+
+        const lowUserCount = totalUsers < this.MAX_USERS_FOR_WEBRTC - 2; // hysteresis buffer (e.g., if MAX=10, switch back at <8)
+        const lowStreamerCount = streamingUsers <= this.MAX_STREAMING_USERS_FOR_WEBRTC - 2; // e.g., from 4 to ≤2
+        const smallAudienceOrNoStream = streamingUsers === 0 || totalUsers <= 8;
+
+        return lowUserCount && lowStreamerCount && smallAudienceOrNoStream;
     }
 
     protected afterSwitchAction(): void {
