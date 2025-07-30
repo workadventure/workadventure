@@ -15,7 +15,7 @@
                 </tr>
             </thead>
             <tbody>
-                {#each shortcuts as shortcut (shortcut.key)}
+                {#each shortcuts as shortcut, i (i)}
                     <tr class="hover:bg-white/5 border-t-4 border-white">
                         <td class="p-3 font-mono text-white">{shortcut.key}</td>
                         <td class="p-3 text-white">{shortcut.description}</td>

@@ -194,13 +194,6 @@ export class UserInputManager {
                 key: "SHIFT",
                 description: "Speed Up",
             },
-
-            {
-                event: UserInputEvent.Interact,
-                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
-                key: "E",
-                description: "Interact",
-            },
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
@@ -212,12 +205,6 @@ export class UserInputManager {
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
                 key: "F",
                 description: "Follow",
-            },
-            {
-                event: UserInputEvent.Shout,
-                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
-                key: "F",
-                description: "Shout",
             },
         ];
         this.keysCode.forEach((keyCode) => {

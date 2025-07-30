@@ -15,6 +15,7 @@ import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
+import { shortcutStore } from "../../Stores/ShortcutStore";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -22,6 +23,64 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+
+        this.initShortcutStore();
+    }
+
+    public initShortcutStore() {
+        shortcutStore.addShortcut({
+            key: "C",
+            description: "Open chat",
+        });
+        shortcutStore.addShortcut({
+            key: "U",
+            description: "Open user list",
+        });
+        shortcutStore.addShortcut({
+            key: "E",
+            description: "Toggle map editor mode",
+        });
+        shortcutStore.addShortcut({
+            key: "R",
+            description: "Rotate player",
+        });
+        shortcutStore.addShortcut({
+            key: "1",
+            description: "Emote 1",
+        });
+        shortcutStore.addShortcut({
+            key: "2",
+            description: "Emote 2",
+        });
+        shortcutStore.addShortcut({
+            key: "3",
+            description: "Emote 3",
+        });
+        shortcutStore.addShortcut({
+            key: "4",
+            description: "Emote 4",
+        });
+        shortcutStore.addShortcut({
+            key: "5",
+            description: "Emote 5",
+        });
+        shortcutStore.addShortcut({
+            key: "6",
+            description: "Emote 6",
+        });
+        shortcutStore.addShortcut({
+            key: "Space",
+            description: "Activate entity",
+        });
+        shortcutStore.addShortcut({
+            key: "Enter",
+            description: "Open say popup",
+        });
+        shortcutStore.addShortcut({
+            key: "Enter",
+            description: "Open think popup",
+            ctrlKey: true,
+        });
     }
 
     public handleMouseWheelEvent(
