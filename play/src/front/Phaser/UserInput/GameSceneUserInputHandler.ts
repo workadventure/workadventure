@@ -16,6 +16,7 @@ import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
 import { shortcutStore } from "../../Stores/ShortcutStore";
+import LL from "../../../i18n/i18n-svelte";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -30,55 +31,51 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public initShortcutStore() {
         shortcutStore.addShortcut({
             key: "C",
-            description: "Open chat",
+            description: get(LL).menu.shortcuts.openChat(),
         });
         shortcutStore.addShortcut({
             key: "U",
-            description: "Open user list",
+            description: get(LL).menu.shortcuts.openUserList(),
         });
         shortcutStore.addShortcut({
             key: "E",
-            description: "Toggle map editor mode",
+            description: get(LL).menu.shortcuts.toggleMapEditor(),
         });
         shortcutStore.addShortcut({
             key: "R",
-            description: "Rotate player",
+            description: get(LL).menu.shortcuts.rotatePlayer(),
         });
         shortcutStore.addShortcut({
             key: "1",
-            description: "Emote 1",
+            description: get(LL).menu.shortcuts.emote1(),
         });
         shortcutStore.addShortcut({
             key: "2",
-            description: "Emote 2",
+            description: get(LL).menu.shortcuts.emote2(),
         });
         shortcutStore.addShortcut({
             key: "3",
-            description: "Emote 3",
+            description: get(LL).menu.shortcuts.emote3(),
         });
         shortcutStore.addShortcut({
             key: "4",
-            description: "Emote 4",
+            description: get(LL).menu.shortcuts.emote4(),
         });
         shortcutStore.addShortcut({
             key: "5",
-            description: "Emote 5",
+            description: get(LL).menu.shortcuts.emote5(),
         });
         shortcutStore.addShortcut({
             key: "6",
-            description: "Emote 6",
-        });
-        shortcutStore.addShortcut({
-            key: "Space",
-            description: "Activate entity",
+            description: get(LL).menu.shortcuts.emote6(),
         });
         shortcutStore.addShortcut({
             key: "Enter",
-            description: "Open say popup",
+            description: get(LL).menu.shortcuts.openSayPopup(),
         });
         shortcutStore.addShortcut({
             key: "Enter",
-            description: "Open think popup",
+            description: get(LL).menu.shortcuts.openSayPopup(),
             ctrlKey: true,
         });
     }

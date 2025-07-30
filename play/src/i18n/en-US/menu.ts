@@ -141,6 +141,28 @@ const menu: BaseTranslation = {
         contextualActions: "Contextual actions",
         shortcuts: "Shortcuts",
     },
+    shortcuts: {
+        title: "Keyboard Shortcuts",
+        moveUp: "Move Up",
+        moveDown: "Move Down",
+        moveLeft: "Move Left",
+        moveRight: "Move Right",
+        speedUp: "Run",
+        interact: "Interact",
+        follow: "Follow",
+        openChat: "Open Chat",
+        openUserList: "Open User List",
+        toggleMapEditor: "Show/Hide Map Editor",
+        rotatePlayer: "Rotate Player",
+        emote1: "Emote 1",
+        emote2: "Emote 2",
+        emote3: "Emote 3",
+        emote4: "Emote 4",
+        emote5: "Emote 5",
+        emote6: "Emote 6",
+        openSayPopup: "Open Say Popup",
+        openThinkPopup: "Open Think Popup",
+    },
 };
 
 export default menu;
