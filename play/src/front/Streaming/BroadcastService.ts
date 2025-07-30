@@ -41,7 +41,7 @@ export class BroadcastService {
         playSound = true,
         broadcastSpaceFactory?: BroadcastSpaceFactory
     ): Promise<SpaceInterface> {
-         const spaceNameSlugify = slugify(spaceName);
+        const spaceNameSlugify = slugify(spaceName);
 
         //TODO : verifier que ce sont les bonnes propriétés à sync et le bon type de filtre
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, FilterType.LIVE_STREAMING_USERS, [
@@ -70,7 +70,11 @@ export class BroadcastService {
     public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.getName() === spaceName);
-        console.log("leaveSpace => space: ", space , this.broadcastSpaces.map((space) => space.getName()));
+        console.log(
+            "leaveSpace => space: ",
+            space,
+            this.broadcastSpaces.map((space) => space.getName())
+        );
         if (space) {
             //await space.destroy();
             await this.spaceRegistry.leaveSpace(space);
@@ -129,7 +133,7 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public async destroy(): Promise<void> {
-        await Promise.all(this.broadcastSpaces.map((space) => space.destroy()));
+        await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
     }
 
     /**
