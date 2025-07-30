@@ -126,11 +126,20 @@ export class WebRTCState extends CommunicationState {
         const oneStreamLargeAudience = streamingUsers > 0 && totalUsers > 8;
 
         if (tooManyUsers || tooManyStreamers || oneStreamLargeAudience) {
+            console.log(
+                "Should switch to livekit:",
+                "tooManyUsers:",
+                tooManyUsers,
+                "tooManyStreamers:",
+                tooManyStreamers,
+                "oneStreamLargeAudience:",
+                oneStreamLargeAudience
+            );
             return !this.isSwitching();
         }
 
         //huge network load or poor performance? switch
-
+        console.log("Shouldn't switch to livekit");
         return false;
     }
 
@@ -140,7 +149,7 @@ export class WebRTCState extends CommunicationState {
         const totalUsers = this._space.getAllUsers().length;
         const streamingUsers = this._space.getUsersInFilter().length;
 
-        const lowUserCount = totalUsers < this.MAX_USERS_FOR_WEBRTC - 2; // hysteresis buffer (e.g., if MAX=10, switch back at <8)
+        const lowUserCount = totalUsers < this.MAX_USERS_FOR_WEBRTC - 2; // hysteresis buffer (e.g., if MAX_USERS_FOR_WEBRTC=10, switch back at <8)
         const lowStreamerCount = streamingUsers <= this.MAX_STREAMING_USERS_FOR_WEBRTC - 2; // e.g., from 4 to ≤2
         const smallAudienceOrNoStream = streamingUsers === 0 || totalUsers <= 8;
 
