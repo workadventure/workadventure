@@ -16,6 +16,7 @@ import * as Sentry from "@sentry/node";
 import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
+import Debug from "debug";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -29,6 +30,8 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData, SpaceName } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+
+const debug = Debug("pusher:requests");
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -260,6 +263,12 @@ export class IoSocketController {
                     if (query === undefined) {
                         return;
                     }
+
+                    debug(
+                        `FrontController => [${req.getMethod()}] ${req.getUrl()} — IP: ${req.getHeader(
+                            "x-forwarded-for"
+                        )} — Time: ${Date.now()}`
+                    );
 
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -555,6 +564,7 @@ export class IoSocketController {
             open: (ws) => {
                 (async () => {
                     const socketData = ws.getUserData();
+                    debug("WebSocket connection established");
                     if (socketData.rejected === true) {
                         const socket = ws as SocketUpgradeFailed;
                         // If there is a room in the error, let's check if we need to clean it.
@@ -678,7 +688,6 @@ export class IoSocketController {
                 const socket = ws as Socket;
                 (async () => {
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
-
                     if (!message.message) {
                         console.warn("Empty message received.");
                         return;
@@ -1041,6 +1050,16 @@ export class IoSocketController {
                         // }
                         case "banPlayerMessage": {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
+                            break;
+                        }
+
+                        case "requestFullSyncMessage": {
+                            message.message.requestFullSyncMessage.spaceName = `${socket.getUserData().world}.${
+                                message.message.requestFullSyncMessage.spaceName
+                            }`;
+
+                            await socketManager.handleRequestFullSync(socket, message.message.requestFullSyncMessage);
+
                             break;
                         }
                         case "publicEvent": {

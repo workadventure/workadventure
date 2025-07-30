@@ -50,6 +50,7 @@ export interface SpaceInterface {
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    requestFullSync(): void;
     readonly onLeaveSpace: Observable<void>;
     //userExist(userId: number): boolean;
     //addUser(user: SpaceUser): Promise<SpaceUserExtended>;

@@ -102,7 +102,7 @@
         on:introend={reposition}
         on:outroend={reposition}
         style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class=" chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
+        class=" chatWindow !min-w-[360px] max-sm:!min-w-[250px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
         {#if $hideActionBarStoreBecauseOfChatBar}
             <div class="close-window absolute end-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
@@ -133,21 +133,6 @@
     @include media-breakpoint-up(sm) {
         .chatWindow {
             width: 100% !important;
-        }
-    }
-
-    .chatWindow {
-        color: white;
-        position: absolute !important;
-        top: 0;
-        min-width: 335px !important;
-        width: 335px;
-        pointer-events: auto;
-        height: 100dvh !important;
-        z-index: 2000;
-        .close-window {
-            cursor: pointer;
-            align-self: end;
         }
     }
 </style>
