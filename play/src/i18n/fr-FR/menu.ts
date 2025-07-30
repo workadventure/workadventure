@@ -136,6 +136,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         chat: "Chat",
         help: "Besoin d'aide ?",
         contextualActions: "Actions contextuelles",
+        shortcuts: "Raccourcis",
     },
 };
 

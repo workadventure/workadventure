@@ -5,6 +5,7 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { shortcutStore } from "../../Stores/ShortcutStore";
 
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
@@ -12,6 +13,8 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 interface UserInputManagerDatum {
     keyInstance?: Phaser.Input.Keyboard.Key;
     event: UserInputEvent;
+    key: string;
+    description: string;
 }
 
 export enum UserInputEvent {
@@ -126,67 +129,100 @@ export class UserInputManager {
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
+                key: "Z",
+                description: "Move Up",
             },
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+                key: "W",
+                description: "Move Up",
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
+                key: "Q",
+                description: "Move Left",
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+                key: "A",
+                description: "Move Left",
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+                key: "S",
+                description: "Move Down",
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+                key: "D",
+                description: "Move Right",
             },
 
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
+                key: "UP",
+                description: "Move Up",
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
+                key: "LEFT",
+                description: "Move Left",
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
+                key: "DOWN",
+                description: "Move Down",
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
+                key: "RIGHT",
+                description: "Move Right",
             },
 
             {
                 event: UserInputEvent.SpeedUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
+                key: "SHIFT",
+                description: "Speed Up",
             },
 
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+                key: "E",
+                description: "Interact",
             },
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
+                key: "SPACE",
+                description: "Interact",
             },
             {
                 event: UserInputEvent.Follow,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                key: "F",
+                description: "Follow",
             },
             {
                 event: UserInputEvent.Shout,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                key: "F",
+                description: "Shout",
             },
         ];
+        this.keysCode.forEach((keyCode) => {
+            shortcutStore.addShortcut(keyCode);
+        });
     }
 
     /**
