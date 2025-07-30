@@ -33,6 +33,8 @@ const jitsiBroadcastSpaceLogger = debug("JitsiBroadcastSpace");
  * - listening for a signal we should join a broadcast
  * - keep track of the Jitsi connection / room and restart it if connection is lost
  */
+
+//TODO : delete ?
 export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private conference: JitsiConferenceWrapper | undefined;
     private unsubscribes: Unsubscriber[] = [];

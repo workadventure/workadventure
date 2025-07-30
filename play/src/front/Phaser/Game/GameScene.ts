@@ -151,7 +151,6 @@ import { megaphoneCanBeUsedStore, megaphoneSpaceStore } from "../../Stores/Megap
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -1967,18 +1966,7 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
-                const broadcastService = new BroadcastService(
-                    this.connection,
-                    (
-                        connection: RoomConnection,
-                        space: SpaceInterface,
-                        broadcastService: BroadcastService,
-                        playSound: boolean
-                    ) => {
-                        return new JitsiBroadcastSpace(connection, space, broadcastService, playSound, _spaceRegistry);
-                    },
-                    _spaceRegistry
-                );
+                const broadcastService = new BroadcastService(this._spaceRegistry);
                 this._broadcastService = broadcastService;
 
                 // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.

@@ -23,11 +23,7 @@ export class BroadcastService {
     private broadcastSpaces: SpaceInterface[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
 
-    constructor(
-        private roomConnection: RoomConnection,
-        private defaultBroadcastSpaceFactory: BroadcastSpaceFactory,
-        private spaceRegistry: SpaceRegistryInterface
-    ) {}
+    constructor(private spaceRegistry: SpaceRegistryInterface) {}
 
     /**
      * Join a broadcast space
@@ -36,11 +32,7 @@ export class BroadcastService {
      * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
      * @returns The broadcast space
      */
-    public async joinSpace(
-        spaceName: string,
-        playSound = true,
-        broadcastSpaceFactory?: BroadcastSpaceFactory
-    ): Promise<SpaceInterface> {
+    public async joinSpace(spaceName: string): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
         //TODO : verifier que ce sont les bonnes propriétés à sync et le bon type de filtre
