@@ -75,7 +75,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         });
         shortcutStore.addShortcut({
             key: "Enter",
-            description: get(LL).menu.shortcuts.openSayPopup(),
+            description: get(LL).menu.shortcuts.openThinkPopup(),
             ctrlKey: true,
         });
     }

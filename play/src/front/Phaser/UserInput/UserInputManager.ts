@@ -192,7 +192,7 @@ export class UserInputManager {
                 event: UserInputEvent.SpeedUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
                 key: "SHIFT",
-                description: "get(LL).menu.shortcuts.speedUp()",
+                description: get(LL).menu.shortcuts.speedUp(),
             },
             {
                 event: UserInputEvent.Interact,

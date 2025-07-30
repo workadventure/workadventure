@@ -159,7 +159,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote5: "Émoticône 5",
         emote6: "Émoticône 6",
         openSayPopup: "Ouvrir la popup en mode dire",
-        openThinkPopup: "Ouvrir la popup en mode think",
+        openThinkPopup: "Ouvrir la popup en mode pense",
     },
 };
 
