@@ -160,7 +160,7 @@
 
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
-                                class="menu-item-container group flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
+                                class="menu-item-container group text-white flex items-center @md/main-layout:justify-start justify-center h-full py-3.5 px-2 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-4 hover:opacity-100 cursor-pointer rounded-md @md/main-layout:rounded-lg overflow-hidden {activeSubMenu ===
                                 submenu
                                     ? 'active opacity-100 bg-contrast/50 text-white'
                                     : 'opacity-60 hover:bg-white/10'}"
@@ -169,7 +169,8 @@
                             >
                                 <button
                                     type="button"
-                                    class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap"
+                                    class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap text-white !text-white [color:white] [-webkit-text-fill-color:white]"
+                                    style="color: white !important; -webkit-text-fill-color: white !important;"
                                 >
                                     {subMenuTranslations[i]}
                                 </button>
