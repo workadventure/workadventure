@@ -15,5 +15,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ]
+  ],
+  "dependencies": {
+    "@playwright/test": "^1.41.2"
+  }
 }
