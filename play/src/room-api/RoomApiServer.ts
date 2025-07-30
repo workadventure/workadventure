@@ -2,6 +2,7 @@ import { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages
 import { Status } from "@grpc/grpc-js/build/src/constants";
 import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../pusher/services/ApiClientRepository";
+import { GRPC_MAX_MESSAGE_SIZE } from "./../pusher/enums/EnvironmentVariable";
 import AuthenticationGuard from "./guards/AuthenticationGuard";
 import { GuardError } from "./types/GuardError";
 
@@ -10,7 +11,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository
-                    .getClient(call.request.room)
+                    .getClient(call.request.room, GRPC_MAX_MESSAGE_SIZE)
                     .then((apiClient) => {
                         apiClient.readVariable(call.request, (error, response) => {
                             if (error) {
@@ -53,10 +54,12 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository
-                    .getClient(call.request.room)
+                    .getClient(call.request.room, GRPC_MAX_MESSAGE_SIZE)
                     .then((apiClient) => {
                         const variableListener = apiClient.listenVariable(call.request);
 
+                        // Event listeners are valid for the lifetime of the listener
+                        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
                         variableListener.on("data", (response) => {
                             call.write(response);
                         });
@@ -95,7 +98,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then((authentication) => {
                 apiClientRepository
-                    .getClient(call.request.room)
+                    .getClient(call.request.room, GRPC_MAX_MESSAGE_SIZE)
                     .then((apiClient) => {
                         apiClient.saveVariable(call.request, (error, response) => {
                             if (error) {
@@ -139,7 +142,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then((authentication) => {
                 apiClientRepository
-                    .getClient(call.request.room)
+                    .getClient(call.request.room, GRPC_MAX_MESSAGE_SIZE)
                     .then((apiClient) => {
                         apiClient.dispatchEvent(call.request, (error, response) => {
                             if (error) {
@@ -183,7 +186,7 @@ export default {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository
-                    .getClient(call.request.room)
+                    .getClient(call.request.room, GRPC_MAX_MESSAGE_SIZE)
                     .then((apiClient) => {
                         const eventListener = apiClient.listenEvent(call.request);
 

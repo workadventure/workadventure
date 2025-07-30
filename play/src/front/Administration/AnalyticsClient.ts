@@ -349,6 +349,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuCustom(name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_custom", { name });
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -886,6 +894,20 @@ class AnalyticsClient {
                     externalModuleName,
                     action,
                 });
+            })
+            .catch((e) => console.error(e));
+    }
+    openSayBubble(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_say_bubble_open");
+            })
+            .catch((e) => console.error(e));
+    }
+    openThinkBubble(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_think_bubble_open");
             })
             .catch((e) => console.error(e));
     }

@@ -57,6 +57,23 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
 
     const pc = new RTCPeerConnection({ iceServers });
 
+    const handleIceGatheringStateChange = (ev: Event) => {
+        debug("icegatheringstatechange => pc.iceGatheringState: %s", pc.iceGatheringState);
+        switch (pc.iceGatheringState) {
+            case "new":
+                debug("icegatheringstatechange => status is new");
+                break;
+            case "gathering":
+                debug("icegatheringstatechange => status is gathering");
+                break;
+            case "complete":
+                debug("icegatheringstatechange => status is complete");
+                pc.removeEventListener("icegatheringstatechange", handleIceGatheringStateChange);
+                pc.close();
+                break;
+        }
+    };
+
     pc.onicecandidate = (e) => {
         turnServerReached = false;
 
@@ -105,21 +122,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         debug("onicecandidateerror => %O", e);
     };
 
-    pc.addEventListener("icegatheringstatechange", (ev) => {
-        debug("icegatheringstatechange => pc.iceGatheringState: %s", pc.iceGatheringState);
-        switch (pc.iceGatheringState) {
-            case "new":
-                debug("icegatheringstatechange => status is new");
-                break;
-            case "gathering":
-                debug("icegatheringstatechange => status is gathering");
-                break;
-            case "complete":
-                debug("icegatheringstatechange => status is complete");
-                pc.close();
-                break;
-        }
-    });
+    pc.addEventListener("icegatheringstatechange", handleIceGatheringStateChange);
 
     pc.createDataChannel("workadventure-peerconnection-test");
     pc.createOffer()

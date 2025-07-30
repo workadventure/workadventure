@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
     AreaData,
     AreaDataProperties,
@@ -7,6 +8,7 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
+    OpenFilePropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
@@ -25,7 +27,7 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
@@ -65,6 +67,7 @@ import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import PopupFile from "../../../Components/PopUp/PopupFile.svelte";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -201,11 +204,17 @@ export class AreasPropertiesListener {
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property);
+                this.handleSpeakerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnEnter(property);
+                this.handleListenerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -236,6 +245,11 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(property);
                 break;
             }
+            case "openFile": {
+                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
+                break;
+            }
+
             default: {
                 break;
             }
@@ -273,13 +287,19 @@ export class AreasPropertiesListener {
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty);
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleListenerMegaphonePropertyOnLeave(oldProperty);
-                this.handleListenerMegaphonePropertyOnEnter(newProperty);
+                this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -307,6 +327,12 @@ export class AreasPropertiesListener {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleTooltipPropertyOnLeave(oldProperty);
                 this.handleTooltipPropertyOnEnter(newProperty);
+                break;
+            }
+            case "openFile": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleOpenFileOnLeave(oldProperty);
+                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
                 break;
             }
             case "silent":
@@ -362,6 +388,10 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnLeave(property);
                 break;
             }
+            case "openFile": {
+                this.handleOpenFileOnLeave(property);
+                break;
+            }
             default: {
                 break;
             }
@@ -379,7 +409,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+        const actionId = "openWebsite-" + uuidv4();
 
         if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
@@ -550,27 +580,21 @@ export class AreasPropertiesListener {
                 jitsiUrl = answer.url;
             }
 
-            let domain = jitsiUrl || JITSI_URL;
-            if (domain === undefined) {
+            jitsiUrl = jitsiUrl || JITSI_URL;
+            if (jitsiUrl === undefined) {
                 throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
 
-            let domainWithoutProtocol = domain;
-            if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                domainWithoutProtocol = domain;
-                domain = `${location.protocol}//${domain}`;
-            } else {
-                if (domain.startsWith("http://")) {
-                    domainWithoutProtocol = domain.substring(7);
-                } else {
-                    domainWithoutProtocol = domain.substring(8);
-                }
+            if (!jitsiUrl.startsWith("http://") && !jitsiUrl.startsWith("https://")) {
+                jitsiUrl = `https://${jitsiUrl}`;
             }
+
+            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(domain),
+                new URL(jitsiUrl),
                 property.width,
                 property.closable,
                 roomName,
@@ -578,7 +602,6 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                domainWithoutProtocol,
                 property.jitsiRoomAdminTag ?? null
             );
 
@@ -696,18 +719,21 @@ export class AreasPropertiesListener {
         if (connectedUserUUID != ownerId) {
             const connection = this.scene.connection;
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
-                connection
-                    .queryMember(ownerId)
-                    .then((member: Member) => {
-                        if (get(canRequestVisitCardsStore) === false) return;
-                        if (member?.visitCardUrl) {
-                            requestVisitCardsStore.set(member.visitCardUrl);
-                        }
-                        if (member?.chatID) {
-                            selectedChatIDRemotePlayerStore.set(member?.chatID);
-                        }
-                    })
-                    .catch((error) => console.error(error));
+                if (ADMIN_URL) {
+                    connection
+                        .queryMember(ownerId)
+                        .then((member: Member) => {
+                            if (get(canRequestVisitCardsStore) === false) return;
+                            if (member?.visitCardUrl) {
+                                requestVisitCardsStore.set(member.visitCardUrl);
+                            }
+                            if (member?.chatID) {
+                                selectedChatIDRemotePlayerStore.set(member?.chatID);
+                            }
+                        })
+                        .catch((error) => console.error(error));
+                }
+
                 area?.highLightArea(true);
             }
         }
@@ -917,7 +943,7 @@ export class AreasPropertiesListener {
     }
 
     private openCoWebsiteFunction(
-        property: OpenWebsitePropertyData,
+        property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
@@ -931,13 +957,7 @@ export class AreasPropertiesListener {
 
         // Create the co-website to be opened
         const url = new URL(urlStr, this.scene.mapUrlFile);
-        const coWebsite = new SimpleCoWebsite(
-            url,
-            property.allowAPI,
-            property.policy,
-            property.width,
-            property.closable
-        );
+        const coWebsite = new SimpleCoWebsite(url, false, property.policy, property.width, property.closable);
 
         coWebsiteOpen.coWebsite = coWebsite;
 
@@ -977,10 +997,10 @@ export class AreasPropertiesListener {
         popupStore.removePopup(actionId);
     }
 
-    private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
+    private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
             currentLiveStreamingSpaceStore.set(broadcastSpace.space);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
@@ -995,14 +1015,17 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(uniqRoomName);
+            this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
 
-    private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
+    private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),
@@ -1010,7 +1033,7 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
+                const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 currentLiveStreamingSpaceStore.set(broadcastSpace.space);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(uniqRoomName, "live");
@@ -1028,7 +1051,10 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(uniqRoomName);
+                this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(uniqRoomName);
                 }
@@ -1068,5 +1094,174 @@ export class AreasPropertiesListener {
     private handleTooltipPropertyOnLeave(property: TooltipPropertyData): void {
         // Implement the logic to hide the info bulle
         this.scene.CurrentPlayer.destroyText(property.id);
+    }
+
+    private async handleOpenFileOnEnter(initialProperty: OpenFilePropertyData): Promise<void> {
+        if (!initialProperty.link) {
+            return;
+        }
+
+        if (!this.scene.connection) {
+            console.info("Cannot open file. No connection to Pusher server.");
+            return;
+        }
+
+        const property = {
+            ...initialProperty,
+        };
+
+        const answer = await this.scene.connection?.queryMapStorageJwtToken();
+
+        const url = new URL(initialProperty.link);
+        url.searchParams.set("token", answer.jwt);
+
+        property.link = url.toString();
+
+        const actionId = "openWebsite-" + uuidv4();
+
+        if (property.newTab) {
+            const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+            if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+                this.coWebsitesActionTriggers.set(property.id, actionId);
+                let message = property.triggerMessage;
+                if (message === undefined) {
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
+                }
+
+                popupStore.addPopup(
+                    PopUpTab,
+                    {
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(url.toString());
+                        },
+                        userInputManager: this.scene.userInputManager,
+                    },
+                    actionId
+                );
+            } else {
+                scriptUtils.openTab(url.toString());
+            }
+            return;
+        }
+
+        if (this.openedCoWebsites.has(property.id)) {
+            return;
+        }
+
+        const coWebsiteOpen: OpenCoWebsite = {
+            actionId: actionId,
+        };
+
+        this.openedCoWebsites.set(property.id, coWebsiteOpen);
+
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            let message = property.triggerMessage;
+            if (!message) {
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
+            }
+
+            this.coWebsitesActionTriggers.set(property.id, actionId);
+
+            popupStore.addPopup(
+                PopupFile,
+                {
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId
+            );
+        } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
+            let cowebsiteUrl = url.toString() ?? "";
+            try {
+                cowebsiteUrl = scriptUtils.getWebsiteUrl(url.toString() ?? "");
+            } catch (e) {
+                console.error("Error on getWebsiteUrl: ", e);
+            }
+            const coWebsite = new SimpleCoWebsite(
+                new URL(cowebsiteUrl, this.scene.mapUrlFile),
+                false,
+                property.policy,
+                property.width,
+                property.closable
+            );
+
+            coWebsiteOpen.coWebsite = coWebsite;
+
+            coWebsites.add(coWebsite);
+
+            //user in zone to open cowesite with only icon
+            inOpenWebsite.set(true);
+        }
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+        }
+    }
+
+    private handleOpenFileOnLeave(property: OpenFilePropertyData): void {
+        const openWebsiteProperty: string | null = property.link;
+
+        if (!openWebsiteProperty) {
+            return;
+        }
+
+        const coWebsiteOpen = this.openedCoWebsites.get(property.id);
+
+        if (coWebsiteOpen) {
+            const coWebsite = coWebsiteOpen.coWebsite;
+
+            if (coWebsite) {
+                coWebsites.remove(coWebsite);
+            }
+        }
+
+        this.openedCoWebsites.delete(property.id);
+
+        inOpenWebsite.set(false);
+
+        if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
+            return;
+        }
+
+        const actionStore = get(popupStore);
+        const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
+        if (!actionTriggerUuid) {
+            return;
+        }
+
+        const action =
+            actionStore && actionStore.length > 0
+                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                : undefined;
+
+        if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+        }
+
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+         const actionStore = get(layoutManagerActionStore);
+         const action =
+         actionStore && actionStore.length > 0
+         ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+         : undefined;
+
+         if (action) {
+            popupStore.removePopup(actionTriggerUuid);
+         }
+         */
+
+        this.coWebsitesActionTriggers.delete(property.id);
     }
 }

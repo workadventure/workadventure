@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import type { PositionMessage, PositionMessage_Direction, SayMessage } from "@workadventure/messages";
@@ -11,6 +12,8 @@ import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { iframeListener } from "../../Api/IframeListener";
 import banIcon from "../../Components/images/ban-icon.svg";
+import walk from "../../Chat/images/walk.svg";
+import { openDirectChatRoom } from "../../Chat/Utils";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -143,6 +146,43 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             actionIcon: banIcon,
             iconColor: "#EF4444",
         });
+        if (!blackListManager.isBlackListed(this.userUuid)) {
+            actions.push({
+                actionName: get(LL).chat.userList.TalkTo(),
+                protected: false,
+                priority: 1,
+                style: "bg-white/10 hover:bg-white/30",
+                callback: () => {
+                    if (this.scene.connection != undefined)
+                        this.scene.connection.emitAskPosition(this.userUuid, this.scene.roomUrl);
+                },
+                actionIcon: walk,
+                iconColor: "#FFFFFF",
+            });
+            if (this.chatID != undefined) {
+                actions.push({
+                    actionName: get(LL).chat.userList.sendMessage(),
+                    protected: false,
+                    priority: 2,
+                    style: "bg-white/10 hover:bg-white/30",
+                    callback: () => {
+                        openDirectChatRoom(this.chatID!).catch((error) => {
+                            console.error("Error opening direct chat room:", error);
+                            Sentry.captureException(error, {
+                                extra: {
+                                    userId: this.userUuid,
+                                    chatId: this.chatID!,
+                                    playUri: this.scene.roomUrl,
+                                    username: this.playerName,
+                                },
+                            });
+                        });
+                    },
+                    actionIcon: "fa-solid fa-location-arrow",
+                    iconColor: "#FFFFFF",
+                });
+            }
+        }
 
         return actions;
     }

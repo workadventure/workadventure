@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -31,6 +32,7 @@
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -59,7 +61,6 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
-    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
@@ -98,8 +99,15 @@
         }
     };
 
-    document.addEventListener("focusin", handleFocusInEvent);
-    document.addEventListener("focusout", handleFocusOutEvent);
+    onMount(() => {
+        document.addEventListener("focusin", handleFocusInEvent);
+        document.addEventListener("focusout", handleFocusOutEvent);
+    });
+
+    onDestroy(() => {
+        document.removeEventListener("focusin", handleFocusInEvent);
+        document.removeEventListener("focusout", handleFocusOutEvent);
+    });
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
     $: marginRight =
@@ -111,7 +119,8 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout absolute h-full w-full pointer-events-none z-10 {[...$coWebsites.values()].length ===
+    0
         ? 'not-cowebsite'
         : ''}"
     style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "

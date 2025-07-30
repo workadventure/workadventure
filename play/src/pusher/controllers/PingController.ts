@@ -1,7 +1,11 @@
 import { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
+import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";
+import { GRPC_MAX_MESSAGE_SIZE } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 export class PingController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -24,6 +28,7 @@ export class PingController extends BaseHttpController {
          *
          */
         this.app.get("/ping", (req, res) => {
+            debug(`PingController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             res.status(200).send("pong");
             return;
         });
@@ -53,7 +58,8 @@ export class PingController extends BaseHttpController {
          *
          */
         this.app.get("/ping-backs", async (req, res) => {
-            const clients = await apiClientRepository.getAllClients();
+            debug(`PingController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            const clients = await apiClientRepository.getAllClients(GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<PingMessage>[] = [];
             for (const client of clients) {

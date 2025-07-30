@@ -9,9 +9,9 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { SpaceFilterInterface, SpaceUserExtended } from "../Space/SpaceFilter/SpaceFilter";
 import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import {
@@ -55,7 +55,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         public readonly player: RemotePlayerData,
         private connection: RoomConnection,
         stream: MediaStream | undefined,
-        private spaceFilter: Promise<SpaceFilterInterface>
+        private space: Promise<SpaceInterface>
     ) {
         const bandwidth = get(screenShareBandwidthStore);
         super({
@@ -72,6 +72,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
+
+        // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
         this.on("data", (chunk: Buffer) => {
             try {
@@ -268,8 +271,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const spaceFilter = await this.spaceFilter;
-        return lookupUserById(this.userId, spaceFilter, 30_000);
+        const space = await this.space;
+        return lookupUserById(this.userId, space, 30_000);
     }
 
     get media(): MediaStoreStreamable {

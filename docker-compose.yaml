@@ -202,7 +202,7 @@ services:
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: thecodingmachine/nodejs:v2-22-bullseye
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
@@ -277,6 +277,7 @@ services:
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       PUSHER_URL: http://play.workadventure.localhost
       WHITELISTED_RESOURCE_URLS: ""
+      SECRET_KEY: "$SECRET_KEY"
     volumes:
       - .:/usr/src/app
     tmpfs: /tmp
@@ -460,7 +461,7 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:v1.115.0
+    image: matrixdotorg/synapse:v1.132.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"

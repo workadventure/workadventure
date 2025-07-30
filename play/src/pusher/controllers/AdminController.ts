@@ -1,13 +1,20 @@
 import { Metadata } from "@grpc/grpc-js";
-import type { Request, Response } from "express";
+import type { Application, Request, Response } from "express";
 import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
 import { z } from "zod";
+import Debug from "debug";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
+const debug = Debug("pusher:requests");
+
 export class AdminController extends BaseHttpController {
+    constructor(app: Application, private readonly GRPC_MAX_MESSAGE_SIZE: number) {
+        super(app);
+    }
+
     routes(): void {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
@@ -42,6 +49,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveRoomEditionPrompt(): void {
         this.app.post("/room/refresh", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             if (typeof body.roomId !== "string") {
@@ -49,7 +57,7 @@ export class AdminController extends BaseHttpController {
             }
             const roomId: string = body.roomId;
 
-            await apiClientRepository.getClient(roomId).then((roomClient) => {
+            await apiClientRepository.getClient(roomId, this.GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                 return new Promise<void>((res, rej) => {
                     roomClient.sendRefreshRoomPrompt(
                         {
@@ -110,6 +118,7 @@ export class AdminController extends BaseHttpController {
      */
     receiveGlobalMessagePrompt(): void {
         this.app.post("/message", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             if (typeof body.text !== "string") {
@@ -127,7 +136,7 @@ export class AdminController extends BaseHttpController {
 
             await Promise.all(
                 targets.map((roomId) => {
-                    return apiClientRepository.getClient(roomId).then((roomClient) => {
+                    return apiClientRepository.getClient(roomId, this.GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                         return new Promise<void>((res, rej) => {
                             if (type === "message") {
                                 roomClient.sendAdminMessageToRoom(
@@ -193,7 +202,8 @@ export class AdminController extends BaseHttpController {
      */
     getRoomsList(): void {
         this.app.get("/rooms", [adminToken], async (req: Request, res: Response) => {
-            const roomClients = await apiClientRepository.getAllClients();
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            const roomClients = await apiClientRepository.getAllClients(this.GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<RoomsList>[] = [];
             for (const roomClient of roomClients) {
@@ -278,6 +288,7 @@ export class AdminController extends BaseHttpController {
      */
     dispatchGlobalEvent(): void {
         this.app.post("/global/event", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = validatePostQuery(
                 req,
                 res,
@@ -291,14 +302,12 @@ export class AdminController extends BaseHttpController {
                 return;
             }
 
-            const roomClients = await apiClientRepository.getAllClients();
+            const roomClients = await apiClientRepository.getAllClients(this.GRPC_MAX_MESSAGE_SIZE);
 
             const promises: Promise<void>[] = [];
             for (const roomClient of roomClients) {
                 promises.push(
                     new Promise<void>((resolve, reject) => {
-                        console.log("dispatchGlobalEvent => body.name", body.name);
-                        console.log("dispatchGlobalEvent => body.data", body.data);
                         roomClient.dispatchGlobalEvent(
                             {
                                 name: body.name,
@@ -340,6 +349,7 @@ export class AdminController extends BaseHttpController {
 
     sendChatMessagePrompt(): void {
         this.app.post("/chat/message", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
 
             try {
@@ -386,7 +396,7 @@ export class AdminController extends BaseHttpController {
                     throw new Error("Incorrect type parameter value");
                 }
 
-                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                await apiClientRepository.getClient(roomId, this.GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.sendChatMessagePrompt(chatMessagePrompt, (err) => {
                             if (err) {
@@ -408,6 +418,7 @@ export class AdminController extends BaseHttpController {
 
     dispatchExternalModuleEvent(): void {
         this.app.post("/external-module/event", [adminToken], async (req: Request, res: Response) => {
+            debug(`AdminController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             const body = req.body;
             try {
                 if (typeof body.data.moduleId !== "string") {
@@ -428,7 +439,7 @@ export class AdminController extends BaseHttpController {
                 const recipientUuid: string = body.data.recipientUuid;
                 const message: unknown = body.data.message;
 
-                await apiClientRepository.getClient(roomId).then((roomClient) => {
+                await apiClientRepository.getClient(roomId, this.GRPC_MAX_MESSAGE_SIZE).then((roomClient) => {
                     return new Promise<void>((res, rej) => {
                         roomClient.dispatchExternalModuleMessage(
                             {

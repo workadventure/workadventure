@@ -237,6 +237,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private bindEventHandlers(): void {
+        // Phaser unsubscribes from the keyboard events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         this.ctrlKey?.on("down", () => {
             if (!this.scene.input.activePointer.leftButtonDown()) {
                 return;
@@ -247,9 +249,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
             this.scene.input.setDefaultCursor("copy");
         });
+        // Phaser unsubscribes from the keyboard events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         this.ctrlKey?.on("up", () => {
             this.scene.input.setDefaultCursor("auto");
         });
+
+        // Phaser unsubscribes from the keyboard events when the scene is destroyed, so we don't need to unsubscribe here
 
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             const entity = get(mapEditorSelectedEntityStore);
@@ -258,6 +264,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
             this.changeEntityTint(entity);
         });
+
+        // Phaser unsubscribes from the keyboard events when the scene is destroyed, so we don't need to unsubscribe here
 
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             const entity = get(mapEditorSelectedEntityStore);

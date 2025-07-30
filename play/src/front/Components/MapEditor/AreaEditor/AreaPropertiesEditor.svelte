@@ -24,6 +24,7 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
     import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
     import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
@@ -246,6 +247,19 @@
                     content: "",
                     duration: 2,
                 };
+            case "openFile":
+                return {
+                    id,
+                    type,
+                    link: "",
+                    name: "",
+                    closable: true,
+                    newTab: false,
+                    hideButtonLabel: true,
+                    policy,
+                    width: 50,
+                    trigger: ON_ACTION_TRIGGER_ENTER,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -345,7 +359,6 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
-        console.log("mapEditorSelectedAreaPreviewStore", $mapEditorSelectedAreaPreviewStore);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
@@ -511,6 +524,12 @@
                     }}
                 />
             {/if}
+            <AddPropertyButtonWrapper
+                property="openFile"
+                on:click={() => {
+                    onAddProperty("openFile");
+                }}
+            />
         </div>
         {#if extensionModulesAreaMapEditor.length > 0}
             <div class="properties-buttons flex flex-row flex-wrap mt-2">
@@ -759,6 +778,15 @@
                     {:else if property.type === "tooltipPropertyData"}
                         <TooltipPropertyButton
                             {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "openFile"}
+                        <OpenFilePropertyEditor
+                            {property}
+                            isArea={true}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

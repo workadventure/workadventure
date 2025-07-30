@@ -31,7 +31,7 @@
     classList="group/btn-emoji"
     tooltipTitle={$LL.actionbar.help.emoji.title()}
     state={$activeSecondaryZoneActionBarStore === "emote" ? "active" : "normal"}
-    dataTestId={undefined}
+    dataTestId="emoji-btn"
     action={floatingUiRef}
     media="./static/Videos/Smileys.mp4"
     desc={$LL.actionbar.help.emoji.desc()}

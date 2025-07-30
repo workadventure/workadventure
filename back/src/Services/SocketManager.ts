@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import {
-    AddSpaceUserMessage,
     AnswerMessage,
     AskPositionMessage,
     BanUserMessage,
@@ -25,7 +24,6 @@ import {
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
-    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
@@ -50,6 +48,10 @@ import {
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
+    FilterType,
+    SyncSpaceUsersMessage,
+    SpaceQueryMessage,
+    RequestFullSyncMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -105,6 +107,18 @@ export class SocketManager {
         });
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
+        });
+        clientEventsEmitter.registerToSpaceJoin((spaceName: string) => {
+            gaugeManager.incNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToSpaceLeave((spaceName: string) => {
+            gaugeManager.decNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToCreateSpace(() => {
+            gaugeManager.incNbSpaces();
+        });
+        clientEventsEmitter.registerToDeleteSpace(() => {
+            gaugeManager.decNbSpaces();
         });
     }
 
@@ -354,7 +368,6 @@ export class SocketManager {
             this.cleanupRoomIfEmpty(room);
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
-            console.log("A user left");
         }
     }
 
@@ -415,7 +428,7 @@ export class SocketManager {
         const user = await room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " A user joined");
+
         return { room, user };
     }
 
@@ -801,6 +814,9 @@ export class SocketManager {
                 case "searchTagsQuery":
                 case "chatMembersQuery":
                 case "oauthRefreshTokenQuery":
+                case "joinSpaceQuery":
+                case "leaveSpaceQuery":
+                case "mapStorageJwtQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -943,7 +959,7 @@ export class SocketManager {
             userID: user.id,
             joinViaHtml5: true,
         });
-        console.log(
+        debug(
             `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
                 isAdmin ? "Admin" : "Participant"
             }.`
@@ -1387,11 +1403,23 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            if (joinSpaceMessage.filterType === FilterType.UNRECOGNIZED) {
+                throw new Error("Unrecognized filter type when joining space");
+            }
+            space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
             this.spaces.set(joinSpaceMessage.spaceName, space);
+            clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
         }
+
+        if (space.filterType !== joinSpaceMessage.filterType) {
+            throw new Error("Filter type mismatch when joining space");
+        }
+
         pusher.watchSpace(space.name);
-        space.addWatcher(pusher);
+
+        if (!joinSpaceMessage.isRetry) {
+            space.addWatcher(pusher);
+        }
     }
 
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
@@ -1400,6 +1428,7 @@ export class SocketManager {
             throw new Error("Cant unwatch space, space not found");
         }
         this.removeSpaceWatcher(pusher, space);
+        clientEventsEmitter.emitSpaceLeave(space.name);
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
@@ -1420,13 +1449,7 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
-        }
-    }
-
-    handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
-        const space = this.spaces.get(addSpaceUserMessage.spaceName);
-        if (space && addSpaceUserMessage.user) {
-            space.addUser(pusher, addSpaceUserMessage.user);
+            clientEventsEmitter.emitDeleteSpace(space.name);
         }
     }
 
@@ -1446,18 +1469,6 @@ export class SocketManager {
         }
 
         space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
-    }
-
-    handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
-        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-        if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
-            if (space.canBeDeleted()) {
-                debug("[space] Space %s => deleted", space.name);
-                this.spaces.delete(space.name);
-                pusher.unwatchSpace(space.name);
-            }
-        }
     }
 
     handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
@@ -1483,10 +1494,20 @@ export class SocketManager {
                 kickOffMessage: {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
-                    filterName: kickUserMessage.filterName,
                 },
             },
         });
+    }
+
+    handleSyncSpaceUsersMessage(pusher: SpacesWatcher, syncSpaceUsersMessage: SyncSpaceUsersMessage) {
+        const { spaceName, users } = syncSpaceUsersMessage;
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            console.error("Could not find space to sync users in SyncSpaceUsersMessage");
+            Sentry.captureException("Could not find space to sync users in SyncSpaceUsersMessage");
+            return;
+        }
+        space.syncUsersFromPusher(pusher, users);
     }
 
     handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
@@ -1626,6 +1647,59 @@ export class SocketManager {
                 },
             });
         }
+    }
+
+    /*
+     * This function is used to close the connection of the space. for testing purpose.
+     */
+    closeSpaceConnection(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Space ${spaceName} not found`);
+        }
+        space.closeAllWatcherConnections();
+        this.spaces.delete(spaceName);
+        clientEventsEmitter.emitDeleteSpace(spaceName);
+    }
+
+    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+        const space = this.spaces.get(spaceQueryMessage.spaceName);
+
+        if (!space) {
+            throw new Error(`Could not find space ${spaceQueryMessage.spaceName} to handle query`);
+        }
+
+        if (!spaceQueryMessage.query) {
+            console.error("SpaceQueryMessage has no query");
+            Sentry.captureException("SpaceQueryMessage has no query");
+            return;
+        }
+
+        try {
+            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            pusher.write({
+                message: {
+                    $case: "spaceAnswerMessage",
+                    spaceAnswerMessage: {
+                        id: spaceQueryMessage.id,
+                        answer: answer.answer,
+                        spaceName: spaceQueryMessage.spaceName,
+                    },
+                },
+            });
+        } catch (e) {
+            console.error("Error while handling space query", e);
+            Sentry.captureException("Error while handling space query");
+            return;
+        }
+    }
+
+    handleRequestFullSyncMessage(pusher: SpacesWatcher, { spaceName, users, senderUserId }: RequestFullSyncMessage) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${spaceName} to handle request full sync`);
+        }
+        space.syncUsersAndNotify(pusher, users, senderUserId);
     }
 }
 

@@ -14,6 +14,12 @@ class Menu {
         // await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
+    async openMapExplorer(page: Page) {
+        await page.getByTestId('map-menu').click({timeout: 30_000});
+        await page.getByRole('button', { name: 'Explore the room' }).click();
+        await expect(page.getByRole('button', { name: 'Explore the room' })).toBeHidden();
+    }
+
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
@@ -179,6 +185,33 @@ class Menu {
 
     async closeMapEditorConfigureMyRoomPopUp(page:Page){
         await page.locator('.configure-my-room button.close-window').click();
+    }
+
+    async openEmoji(page: Page) {
+        await page.getByTestId('emoji-btn').click({timeout: 30_000});
+        await expect(page.getByTestId('say-bubble-button')).toBeVisible();
+        await expect(page.getByTestId('think-bubble-button')).toBeVisible();
+    }
+
+    async clickOnSayBubble(page: Page) {
+        await page.getByTestId('say-bubble-button').click();
+        await expect(page.getByTestId('say-popup')).toBeVisible();
+        // Check that select is set to "say"
+        const select = page.getByTestId('say-popup').locator('select');
+        await expect(select).toHaveValue('say');
+    }
+
+    async clickOnThinkBubble(page: Page) {
+        await page.getByTestId('think-bubble-button').click();
+        await expect(page.getByTestId('say-popup')).toBeVisible();
+        // Check that select is set to "think"
+        const select = page.getByTestId('say-popup').locator('select');
+        await expect(select).toHaveValue('think');
+    }
+
+    async closeSayPopup(page: Page) {
+        await page.getByTestId('btn-close-say-popup').click();
+        await expect(page.getByTestId('say-popup')).toBeHidden();
     }
 }
 
