@@ -41,9 +41,9 @@ export class Space implements CustomJsonReplacerInterface {
         private _clientEventsEmitter = clientEventsEmitter
     ) {
         this.name = name;
-        this.users = new Map<SpacesWatcher, Map<string, SpaceUser>>();
+        this.users = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
         //equivalent of watchers in the pusher
-        this.usersToNotify = new Map<SpacesWatcher, Map<string, SpaceUser>>();
+        this.usersToNotify = new Map<SpacesWatcher, Map<SpaceUser["spaceUserId"], SpaceUser>>();
         this.metadata = new Map<string, unknown>();
         this.communicationManager = new CommunicationManager(this);
         debug(`${name} => created`);

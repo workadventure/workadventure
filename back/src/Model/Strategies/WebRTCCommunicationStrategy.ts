@@ -8,7 +8,6 @@ class ConnectionManager {
     private connections: Map<string, Set<string>> = new Map();
 
     addConnection(user1Id: string, user2Id: string): void {
-        console.log("1️⃣1️⃣1️⃣1️⃣ ConnectionManager addConnection", user1Id, user2Id);
         this.getOrCreateUserConnections(user1Id).add(user2Id);
         this.getOrCreateUserConnections(user2Id).add(user1Id);
     }

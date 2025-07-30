@@ -2005,8 +2005,8 @@ export class GameScene extends DirtyScene {
 
                             broadcastService
                                 .joinSpace(megaphoneSettingsMessage.url)
-                                .then((broadcastStore) => {
-                                    megaphoneSpaceStore.set(broadcastStore.space);
+                                .then((space) => {
+                                    megaphoneSpaceStore.set(space);
                                 })
                                 .catch((e) => {
                                     console.error(e);

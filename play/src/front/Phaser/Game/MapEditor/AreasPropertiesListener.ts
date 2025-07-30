@@ -34,7 +34,7 @@ import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStor
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore, streamingMegaphoneStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -68,6 +68,7 @@ import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
 import PopUpFile from "../../../Components/PopUp/PopUpFile.svelte";
+import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -997,12 +998,22 @@ export class AreasPropertiesListener {
     private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
-            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+            const space = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
+            currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
-            //requestedMegaphoneStore.set(true);
+            streamingMegaphoneStore.set(true);
+            console.log("handleSpeakerMegaphonePropertyOnEnter => space : ", space);
+            //TODO : remove this or replace by matrix room
+
+            space.emitUpdateUser({
+                megaphoneState: true,
+            });
+
+            bindMuteEventsToSpace(space);
+
+
             if (property.chatEnabled) {
-                this.handleJoinMucRoom(uniqRoomName, "live");
+                //this.handleJoinMucRoom(uniqRoomName, "live");
             }
         }
     }
@@ -1012,12 +1023,15 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
+            console.log("handleSpeakerMegaphonePropertyOnLeave => uniqRoomName before leave: ", uniqRoomName);
             this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
                 console.error("Error while leaving space", e);
                 Sentry.captureException(e);
             });
+
+            streamingMegaphoneStore.set(false);
             if (property.chatEnabled) {
-                this.handleLeaveMucRoom(uniqRoomName);
+                //this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
@@ -1030,10 +1044,13 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                const broadcastSpace = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
-                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+                const space = await this.scene.broadcastService.joinSpace(uniqRoomName, false);
+
+                console.log("handleListenerMegaphonePropertyOnEnter => space : ", space);
+                currentLiveStreamingSpaceStore.set(space);
                 if (property.chatEnabled) {
-                    this.handleJoinMucRoom(uniqRoomName, "live");
+                    //TODO : remove this or replace by matrix room
+                    //this.handleJoinMucRoom(uniqRoomName, "live");
                 }
             }
         }
@@ -1053,7 +1070,7 @@ export class AreasPropertiesListener {
                     Sentry.captureException(e);
                 });
                 if (property.chatEnabled) {
-                    this.handleLeaveMucRoom(uniqRoomName);
+                    //this.handleLeaveMucRoom(uniqRoomName);
                 }
             }
         }
