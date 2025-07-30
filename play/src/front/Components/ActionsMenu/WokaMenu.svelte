@@ -1,17 +1,25 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
+    import { openModal } from "svelte-modals";
     import { wokaMenuStore } from "../../Stores/WokaMenuStore";
+    import { openDirectChatRoom } from "../../Chat/Utils";
+    import { userIsConnected } from "../../Stores/MenuStore";
+    import RequiresLoginForChatModal from "../../Chat/Components/RequiresLoginForChatModal.svelte";
+    import chat from "../images/chat.png";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import VisitCard from "../VisitCard/VisitCard.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
-
-    import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+
+    import type { WokaMenuAction, WokaMenuData } from "../../Stores/WokaMenuStore";
 
     let wokaMenuData: WokaMenuData | undefined;
     let sortedActions: WokaMenuAction[] | undefined;
+    let remotePlayer: { chatID?: string } | undefined;
 
     let wokaMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -27,9 +35,30 @@
 
     let buttonsLayout: "row" | "column" = "row";
 
+    async function openChat(chatID: string) {
+        if (!get(userIsConnected)) {
+            openModal(RequiresLoginForChatModal);
+            return;
+        }
+
+        try {
+            closeActionsMenu();
+
+            await openDirectChatRoom(chatID);
+            analyticsClient.openedChat();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     wokaMenuStoreUnsubscriber = wokaMenuStore.subscribe((value) => {
         wokaMenuData = value;
         if (wokaMenuData) {
+            remotePlayer = gameManager
+                .getCurrentGameScene()
+                .getRemotePlayersRepository()
+                .getPlayers()
+                .get(wokaMenuData.userId);
             sortedActions = [...wokaMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
                 const bp = b.priority ?? 0;
@@ -76,7 +105,7 @@
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl ">
                             <div
                                 id="woka"
-                                class=" bt-3 overflow-hidden mt-3 border w-fit h-fit rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
+                                class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
                             >
                                 <WokaFromUserId
                                     userId={wokaMenuData.userId}
@@ -103,7 +132,7 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast px-2"
+                class="flex items-center bg-contrast  w-full"
                 class:margin-close={!wokaMenuData.wokaName}
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
@@ -111,7 +140,8 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 flex-1 min-w-0 {action.style ??
+                            ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
                         on:click|preventDefault={() => {
@@ -131,6 +161,21 @@
                         </span>
                     </button>
                 {/each}
+
+                {#if remotePlayer?.chatID}
+                    <button
+                        type="button"
+                        class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                        data-testid="sendMessagefromVisitCardButton"
+                        on:click={() => openChat(remotePlayer?.chatID ?? "")}
+                    >
+                        <img src={chat} alt="chat" class="w-6 h-6" />
+                        <span class="flex flex-row gap-2 items-center justify-center">
+                            {$LL.menu.visitCard.sendMessage()}
+                        </span>
+                    </button>
+                {/if}
+
                 {#if !wokaMenuData.wokaName}
                     <button
                         type="button"

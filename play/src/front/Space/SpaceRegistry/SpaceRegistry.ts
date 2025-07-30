@@ -1,11 +1,14 @@
 import * as Sentry from "@sentry/svelte";
+import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 
 /**
@@ -24,12 +27,12 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitPublicSpaceEvent"
     | "emitRemoveSpaceFilter"
     | "emitAddSpaceFilter"
-    | "emitUpdateSpaceFilter"
     | "emitLeaveSpace"
     | "emitJoinSpace"
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
+    | "emitRequestFullSync"
 >;
 
 /**
@@ -48,41 +51,38 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private roomConnectionStreamSubscription: Subscription;
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private connectStream = connectionManager.roomConnectionStream
+        private connectStream = connectionManager.roomConnectionStream,
+        private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
-            if (!message.user || !message.filterName) {
+            if (!message.user) {
                 console.error(message);
-                throw new Error("addSpaceUserMessage is missing a user or a filterName");
+                throw new Error("addSpaceUserMessage is missing a user");
             }
 
             this.spaces
                 .get(message.spaceName)
-                ?.getSpaceFilter(message.filterName)
-                .addUser(message.user)
+                ?.addUser(message.user)
                 .catch((e) => console.error(e));
         });
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.user || !message.filterName || !message.updateMask) {
-                    throw new Error("updateSpaceUserMessage is missing a user or a filterName or an updateMask");
+                if (!message.user || !message.updateMask) {
+                    throw new Error("updateSpaceUserMessage is missing a user or an updateMask");
                 }
 
-                this.spaces
-                    .get(message.spaceName)
-                    ?.getSpaceFilter(message.filterName)
-                    .updateUserData(message.user, message.updateMask);
+                this.spaces.get(message.spaceName)?.updateUserData(message.user, message.updateMask);
             }
         );
 
         this.removeSpaceUserMessageStreamSubscription = roomConnection.removeSpaceUserMessageStream.subscribe(
             (message) => {
-                if (!message.spaceUserId || !message.filterName) {
-                    throw new Error("removeSpaceUserMessage is missing a spaceUserId or a filterName");
+                if (!message.spaceUserId) {
+                    throw new Error("removeSpaceUserMessage is missing a spaceUserId");
                 }
 
-                this.spaces.get(message.spaceName)?.getSpaceFilter(message.filterName).removeUser(message.spaceUserId);
+                this.spaces.get(message.spaceName)?.removeUser(message.spaceUserId);
             }
         );
 
@@ -136,26 +136,32 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
-            this.reconnect(connection);
+            // this.reconnect(connection).catch((e) => console.error(e));
         });
+
+        this.setupThrottlingDetection();
     }
 
-    joinSpace(spaceName: string, metadata: Map<string, unknown> = new Map<string, unknown>()): SpaceInterface {
+    async joinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        metadata: Map<string, unknown> = new Map<string, unknown>()
+    ): Promise<SpaceInterface> {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = new Space(spaceName, metadata, this.roomConnection);
+        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
     exist(spaceName: string): boolean {
         return this.spaces.has(spaceName);
     }
-    leaveSpace(space: SpaceInterface): void {
+    async leaveSpace(space: SpaceInterface): Promise<void> {
         const spaceName = space.getName();
         const spaceInRegistry = this.spaces.get(spaceName);
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        spaceInRegistry.destroy();
+        await spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
@@ -169,16 +175,24 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return space;
     }
 
-    reconnect(connection: RoomConnectionForSpacesInterface) {
+    async reconnect(connection: RoomConnectionForSpacesInterface) {
         this.roomConnection = connection;
-        this.spaces.forEach((space) => {
-            this.leaveSpace(space);
-            const newSpace = new Space(space.getName(), space.getMetadata(), this.roomConnection);
-            this.spaces.set(newSpace.getName(), newSpace);
-        });
+        const spacesArray = Array.from(this.spaces.values());
+        await Promise.all(
+            spacesArray.map(async (space) => {
+                await this.leaveSpace(space);
+                const newSpace = await Space.create(
+                    space.getName(),
+                    space.filterType,
+                    this.roomConnection,
+                    space.getMetadata()
+                );
+                this.spaces.set(newSpace.getName(), newSpace);
+            })
+        );
     }
 
-    destroy() {
+    async destroy() {
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
@@ -190,11 +204,41 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         // Technically, all spaces should have been destroyed by now.
         // If a space is not destroyed, it means that there is a bug in the code.
-        for (const space of this.spaces.values()) {
-            space.destroy();
-            console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-            Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
-        }
+        await Promise.all(
+            Array.from(this.spaces.values()).map(async (space) => {
+                await space.destroy();
+                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+            })
+        );
+
+        // Clear all spaces from the registry
         this.spaces.clear();
+
+        // Stop throttling detection and clean up resources
+        this.throttlingDetector.destroy();
+    }
+
+    private setupThrottlingDetection(): void {
+        const recoverySubscription = this.throttlingDetector.recoveryTriggered$
+            .pipe(debounceTime(1000), distinctUntilChanged())
+            .subscribe(() => {
+                console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
+
+                const spaces = this.getAll();
+                spaces.forEach((space) => {
+                    console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
+                    space.requestFullSync();
+                });
+            });
+
+        // Optionally: Subscribe to all events for debugging purposes
+        const eventsSubscription = this.throttlingDetector.events$.subscribe((event) => {
+            console.debug(`[SpaceRegistry] Throttling event: ${event.type}`, event);
+        });
+
+        // Store subscriptions for cleanup
+        this.roomConnectionStreamSubscription.add(recoverySubscription);
+        this.roomConnectionStreamSubscription.add(eventsSubscription);
     }
 }

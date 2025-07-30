@@ -16,6 +16,7 @@
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import { activeSecondaryZoneActionBarStore } from "../../Stores/MenuStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let unsubscriberFileStore: Unsubscriber | null = null;
@@ -76,7 +77,6 @@
     });
 
     function tryPlay() {
-        console.trace("tryPlay");
         HTMLAudioPlayer.onended = () => {
             // Fixme: this is a hack to close menu when audio is ends without cut the sound
             actionsMenuStore.clear();
@@ -90,6 +90,8 @@
         HTMLAudioPlayer.play()
             .then(() => {
                 audioManagerPlayerState.set("playing");
+                audioManagerVisibilityStore.set("visible");
+                activeSecondaryZoneActionBarStore.set("audio-manager");
             })
             .catch((e) => {
                 if (e instanceof DOMException && e.name === "NotAllowedError") {
@@ -97,6 +99,22 @@
                     // Let's ask the user to interact with the page first.
                     audioManagerPlayerState.set("not_allowed");
                     console.warn("The audio could not be played: ", e.name, e);
+
+                    // Show the message to user the audio player
+                    const gameScene = gameManager.getCurrentGameScene();
+                    if (gameScene) {
+                        gameScene.CurrentPlayer.playText(
+                            "audio-not-allowed",
+                            $LL.audio.manager.notAllowed(),
+                            10000,
+                            () => {
+                                // When user click, the message could be removed
+                                gameScene.CurrentPlayer.destroyText("audio-not-allowed");
+                                // When the user clicks on the message, we try to play the audio again
+                                tryPlay();
+                            }
+                        );
+                    }
                 } else {
                     audioManagerPlayerState.set("error");
                     warningMessageStore.addWarningMessage($LL.audio.manager.error());

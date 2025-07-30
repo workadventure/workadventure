@@ -33,10 +33,6 @@ const spaceManager = {
                         socketManager.handleLeaveSpaceMessage(pusher, message.message.leaveSpaceMessage);
                         break;
                     }
-                    case "addSpaceUserMessage": {
-                        socketManager.handleAddSpaceUserMessage(pusher, message.message.addSpaceUserMessage);
-                        break;
-                    }
                     case "updateSpaceUserMessage": {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
@@ -46,10 +42,6 @@ const spaceManager = {
                             pusher,
                             message.message.updateSpaceMetadataMessage
                         );
-                        break;
-                    }
-                    case "removeSpaceUserMessage": {
-                        socketManager.handleRemoveSpaceUserMessage(pusher, message.message.removeSpaceUserMessage);
                         break;
                     }
                     case "pongMessage": {
@@ -69,6 +61,18 @@ const spaceManager = {
                         socketManager.handlePrivateEvent(pusher, message.message.privateEvent);
                         break;
                     }
+                    case "syncSpaceUsersMessage": {
+                        socketManager.handleSyncSpaceUsersMessage(pusher, message.message.syncSpaceUsersMessage);
+                        break;
+                    }
+                    case "spaceQueryMessage": {
+                        socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
+                        break;
+                    }
+                    case "requestFullSyncMessage": {
+                        socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }
@@ -84,7 +88,11 @@ const spaceManager = {
                         message.message.$case +
                         JSON.stringify(e)
                 );
-                call.end();
+                // Note: We do not close the back connection on every error to avoid excessive reconnections.
+                // When 'end' is triggered, the callback below will handle cleanup.
+                // 'error' and 'end' events may not always be triggered together; handle both cases.
+                // Consider revising the reconnection logic in pusher to avoid reconnecting to the same back repeatedly.
+                //call.end();
             }
         })
             .on("error", (e) => {

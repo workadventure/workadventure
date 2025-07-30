@@ -14,6 +14,7 @@ import {
     AvailabilityStatus,
     availabilityStatusToJSON,
     ErrorScreenMessage,
+    FilterType,
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { z } from "zod";
@@ -142,6 +143,7 @@ import {
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { SpaceRegistry } from "../../Space/SpaceRegistry/SpaceRegistry";
+import { SpaceScriptingBridgeService } from "../../Space/Utils/SpaceScriptingBridgeService";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
@@ -352,6 +354,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureReject = reject;
     });
     private _spaceRegistry: SpaceRegistryInterface | undefined;
+    private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
@@ -1060,7 +1063,10 @@ export class GameScene extends DirtyScene {
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if (this.allUserSpace) {
-            this.spaceRegistry?.leaveSpace(this.allUserSpace);
+            this.spaceRegistry?.leaveSpace(this.allUserSpace).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
         }
 
         this.connection?.closeConnection();
@@ -1072,7 +1078,10 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
-        this._broadcastService?.destroy();
+        this._broadcastService?.destroy().catch((e) => {
+            console.error("Error while destroying broadcast service", e);
+            Sentry.captureException(e);
+        });
         this.proximitySpaceManager?.destroy();
         this._proximityChatRoom?.destroy();
         this.peerStoreUnsubscriber?.();
@@ -1124,7 +1133,11 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.scriptingOutputAudioStreamManager?.close();
         this.scriptingInputAudioStreamManager?.close();
-        this._spaceRegistry?.destroy();
+        this.spaceScriptingBridgeService?.destroy();
+        this._spaceRegistry?.destroy().catch((e) => {
+            console.error("Error while destroying space registry", e);
+            Sentry.captureException(e);
+        });
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1610,11 +1623,16 @@ export class GameScene extends DirtyScene {
                 }
 
                 this._spaceRegistry = new SpaceRegistry(this.connection);
-                this.allUserSpace = this._spaceRegistry.joinSpace(WORLD_SPACE_NAME);
-                this.worldUserProvider = new WorldUserProvider(this.allUserSpace);
+                this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
-                gameManager
-                    .getChatConnection()
+                this._spaceRegistry
+                    .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS)
+                    .then((space) => {
+                        this.allUserSpace = space;
+                        this.worldUserProvider = new WorldUserProvider(space);
+
+                        return gameManager.getChatConnection();
+                    })
                     .then((chatConnection) => {
                         this._chatConnection = chatConnection;
                         const connection = this.connection;
@@ -1635,10 +1653,10 @@ export class GameScene extends DirtyScene {
 
                         this._userProviderMergerDeferred.resolve(new UserProviderMerger(userProviders));
                     })
-                    .catch(() => {
-                        const errorMessage = "Failed to get chatConnection from gameManager";
+                    .catch((e) => {
+                        const errorMessage = "Failed to get chatConnection from gameManager : " + e;
                         console.error(errorMessage);
-                        Sentry.captureMessage(errorMessage);
+                        Sentry.captureMessage(e);
                     });
 
                 this.initExtensionModule();
@@ -1900,18 +1918,19 @@ export class GameScene extends DirtyScene {
                     this.connection,
                     (
                         connection: RoomConnection,
-                        spaceName: string,
+                        space: SpaceInterface,
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
                         return new JitsiBroadcastSpace(
                             connection,
-                            spaceName,
+                            space,
                             broadcastService,
                             playSound,
                             this.spaceRegistry
                         );
-                    }
+                    },
+                    this._spaceRegistry
                 );
                 this._broadcastService = broadcastService;
 
@@ -1931,11 +1950,21 @@ export class GameScene extends DirtyScene {
                                 oldMegaphoneSpace &&
                                 megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
                             ) {
-                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace);
+                                this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
+                                    console.error("Error while leaving space", e);
+                                    Sentry.captureException(e);
+                                });
                             }
 
-                            const broadcastStore = broadcastService.joinSpace(megaphoneSettingsMessage.url);
-                            megaphoneSpaceStore.set(broadcastStore.space);
+                            broadcastService
+                                .joinSpace(megaphoneSettingsMessage.url)
+                                .then((broadcastStore) => {
+                                    megaphoneSpaceStore.set(broadcastStore.space);
+                                })
+                                .catch((e) => {
+                                    console.error(e);
+                                    Sentry.captureException(e);
+                                });
                         }
                     }
                 });

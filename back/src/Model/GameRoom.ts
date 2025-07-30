@@ -246,6 +246,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.chatID,
             undefined
         );
+
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {
@@ -287,6 +288,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         this.users.delete(user.id);
+
         const set = this.usersByUuid.get(user.uuid);
         if (set !== undefined) {
             set.delete(user);
@@ -317,7 +319,6 @@ export class GameRoom implements BrothersFinder {
 
     public updatePosition(user: User, userPosition: PointInterface): void {
         user.setPosition(userPosition);
-
         this.updateUserGroup(user);
     }
 
