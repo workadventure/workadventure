@@ -168,6 +168,9 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
+        $megaphoneSpaceStore.emitUpdateUser({
+            megaphoneState: true,
+        });
         //close();
     }
 
@@ -175,6 +178,9 @@
         analyticsClient.stopMegaphone();
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
+        $megaphoneSpaceStore.emitUpdateUser({
+            megaphoneState: false,
+        });
         close();
     }
 </script>
