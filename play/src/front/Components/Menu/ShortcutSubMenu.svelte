@@ -1,7 +1,16 @@
 <script lang="ts">
-    import { shortcutStore } from "../../Stores/ShortcutStore";
+    import { Shortcut, shortcutStore } from "../../Stores/ShortcutStore";
 
     const shortcuts = shortcutStore.getShortcuts();
+
+    function displayKey(shortcut: Shortcut) {
+        const keys = [];
+        if (shortcut.ctrlKey) keys.push("Ctrl");
+        if (shortcut.shiftKey) keys.push("Shift");
+        if (shortcut.altKey) keys.push("Alt");
+        keys.push(shortcut.key);
+        return keys.join(" + ");
+    }
 </script>
 
 <div class="customize-main">
@@ -17,7 +26,7 @@
             <tbody>
                 {#each shortcuts as shortcut, i (i)}
                     <tr class="hover:bg-white/5 border-t-4 border-white">
-                        <td class="p-3 font-mono text-white">{shortcut.key}</td>
+                        <td class="p-3 font-mono text-white">{displayKey(shortcut)}</td>
                         <td class="p-3 text-white">{shortcut.description}</td>
                     </tr>
                 {/each}
