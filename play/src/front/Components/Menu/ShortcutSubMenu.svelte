@@ -28,7 +28,7 @@
 
         const existing = groupedShortcuts.find((item) => item.description === description);
         if (existing) {
-            existing.keys = existing.keys.concat([" , ", ...keys]);
+            existing.keys = existing.keys.concat([",", ...keys]);
         } else {
             groupedShortcuts.push({ description, keys: keys });
         }

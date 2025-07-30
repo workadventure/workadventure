@@ -69,10 +69,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             key: "6",
             description: get(LL).menu.shortcuts.emote6(),
         });
+        // Enter
         shortcutStore.addShortcut({
             key: "Enter",
             description: get(LL).menu.shortcuts.openSayPopup(),
         });
+        // Ctrl + Enter
         shortcutStore.addShortcut({
             key: "Enter",
             description: get(LL).menu.shortcuts.openThinkPopup(),

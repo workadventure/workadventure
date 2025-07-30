@@ -6,7 +6,6 @@
     import Explorer from "../Exploration/Explorer.svelte";
     import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
     import { windowSize } from "../../Stores/CoWebsiteStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
@@ -37,10 +36,6 @@
     }
 
     onMount(() => {
-        const gameScene = gameManager.getCurrentGameScene();
-        const ee = gameScene.events;
-        console.log("MapEditor mounted, eventNames:", ee.eventNames());
-        console.log("MapEditor mounted, ee:", ee);
         const width = Math.min($windowSize.width / 2, Math.max(200, $mapEditorSideBarWidthStore));
         mapEditor.style.width = `${width}px`;
     });
