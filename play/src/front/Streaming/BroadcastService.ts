@@ -61,7 +61,7 @@ export class BroadcastService {
      */
     public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
-        const space = this.broadcastSpaces.find((space) => space.getName() === spaceName);
+        const space = this.broadcastSpaces.find((space) => space.getName() === spaceNameSlugify);
         console.log(
             "leaveSpace => space: ",
             space,
