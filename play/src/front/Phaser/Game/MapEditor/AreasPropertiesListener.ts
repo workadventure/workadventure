@@ -34,7 +34,13 @@ import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStor
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore, streamingMegaphoneStore } from "../../../Stores/MediaStore";
+import {
+    inJitsiStore,
+    inOpenWebsite,
+    isSpeakerStore,
+    silentStore,
+    streamingMegaphoneStore,
+} from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -1010,7 +1016,6 @@ export class AreasPropertiesListener {
             });
 
             bindMuteEventsToSpace(space);
-
 
             if (property.chatEnabled) {
                 //this.handleJoinMucRoom(uniqRoomName, "live");
