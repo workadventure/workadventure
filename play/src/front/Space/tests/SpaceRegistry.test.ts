@@ -199,5 +199,42 @@ describe("SpaceProviderInterface implementation", () => {
                 expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledTimes(3);
             });
         });
+        describe("SpaceRegistry race condition handling", () => {
+            it("should handle race condition when leaving and joining the same space immediately", async () => {
+                const roomConnectionMock = new MockRoomConnectionForSpaces();
+                const spaceRegistry: SpaceRegistryInterface = new SpaceRegistry(roomConnectionMock, new Subject());
+
+                // Join a space first
+                const initialSpace = await spaceRegistry.joinSpace("race-condition-test", FilterType.ALL_USERS, []);
+                expect(spaceRegistry.exist("race-condition-test")).toBeTruthy();
+
+                // Add a delay to emitLeaveSpace to simulate async operation
+                let leaveSpaceResolve: () => void;
+                const leaveSpacePromise = new Promise<void>((resolve) => {
+                    leaveSpaceResolve = resolve;
+                });
+                roomConnectionMock.emitLeaveSpace.mockImplementation(() => {
+                    return leaveSpacePromise;
+                });
+
+                // Start leaving the space (this will be async)
+                const leavePromise = spaceRegistry.leaveSpace(initialSpace);
+
+                // Immediately try to join the same space again
+                // This should wait for the leave operation to complete
+                const rejoinPromise = spaceRegistry.joinSpace("race-condition-test", FilterType.ALL_USERS, []);
+
+                // Complete the leave operation
+                leaveSpaceResolve!();
+                await leavePromise;
+
+                // The rejoin should succeed without throwing an error
+                const newSpace = await rejoinPromise;
+                expect(newSpace.getName()).toBe("race-condition-test");
+                expect(spaceRegistry.exist("race-condition-test")).toBeTruthy();
+                expect(roomConnectionMock.emitLeaveSpace).toHaveBeenCalledOnce();
+                expect(roomConnectionMock.emitJoinSpace).toHaveBeenCalledTimes(2);
+            });
+        });
     });
 });

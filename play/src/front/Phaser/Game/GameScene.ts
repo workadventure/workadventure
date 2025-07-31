@@ -31,6 +31,7 @@ import {
     WAMFileFormat,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
@@ -1979,12 +1980,20 @@ export class GameScene extends DirtyScene {
                             get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
                         ) {
                             const oldMegaphoneSpace = get(megaphoneSpaceStore);
+                            const spaceName = slugify(megaphoneSettingsMessage.url);
 
-                            if (
-                                this._spaceRegistry &&
-                                oldMegaphoneSpace &&
-                                megaphoneSettingsMessage.url !== oldMegaphoneSpace.getName()
-                            ) {
+                            // Early return if no space registry available
+                            if (!this._spaceRegistry) {
+                                console.warn("No space registry available for megaphone space management");
+                                return;
+                            }
+
+                            // Handle existing megaphone space
+                            if (oldMegaphoneSpace) {
+                                if (oldMegaphoneSpace.getName() === spaceName) {
+                                    return;
+                                }
+                                // Different space, leave the old one
                                 this._spaceRegistry.leaveSpace(oldMegaphoneSpace).catch((e) => {
                                     console.error("Error while leaving space", e);
                                     Sentry.captureException(e);
@@ -1992,7 +2001,7 @@ export class GameScene extends DirtyScene {
                             }
 
                             broadcastService
-                                .joinSpace(megaphoneSettingsMessage.url)
+                                .joinSpace(spaceName)
                                 .then((space) => {
                                     megaphoneSpaceStore.set(space);
                                 })
