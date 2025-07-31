@@ -357,6 +357,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    menuShortcuts(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_shortcuts");
+            })
+            .catch((e) => console.error(e));
+    }
+
     globalMessage(): void {
         this.posthogPromise
             ?.then((posthog) => {

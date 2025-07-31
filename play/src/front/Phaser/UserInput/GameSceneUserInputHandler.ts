@@ -15,13 +15,74 @@ import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
+import LL from "../../../i18n/i18n-svelte";
+import { Shortcut } from "./UserInputManager";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+
+        this.initShortcuts();
+    }
+
+    public initShortcuts() {
+        this.shortcuts = [
+            {
+                key: "C",
+                description: get(LL).menu.shortcuts.openChat(),
+            },
+            {
+                key: "U",
+                description: get(LL).menu.shortcuts.openUserList(),
+            },
+            {
+                key: "E",
+                description: get(LL).menu.shortcuts.toggleMapEditor(),
+            },
+            {
+                key: "R",
+                description: get(LL).menu.shortcuts.rotatePlayer(),
+            },
+            {
+                key: "1",
+                description: get(LL).menu.shortcuts.emote1(),
+            },
+            {
+                key: "2",
+                description: get(LL).menu.shortcuts.emote2(),
+            },
+            {
+                key: "3",
+                description: get(LL).menu.shortcuts.emote3(),
+            },
+            {
+                key: "4",
+                description: get(LL).menu.shortcuts.emote4(),
+            },
+            {
+                key: "5",
+                description: get(LL).menu.shortcuts.emote5(),
+            },
+            {
+                key: "6",
+                description: get(LL).menu.shortcuts.emote6(),
+            },
+            // Enter
+            {
+                key: "Enter",
+                description: get(LL).menu.shortcuts.openSayPopup(),
+            },
+            // Ctrl + Enter
+            {
+                key: "Enter",
+                description: get(LL).menu.shortcuts.openThinkPopup(),
+                ctrlKey: true,
+            },
+        ];
     }
 
     public handleMouseWheelEvent(
