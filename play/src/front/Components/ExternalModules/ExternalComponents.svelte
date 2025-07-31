@@ -19,7 +19,7 @@
             in:fly={{ x: direction * 100, duration: 500 }}
             out:fly={{ x: -direction * 100, duration: 500 }}
             class="absolute w-11/12 md:max-w-3xl transition-all"
-            style={`margin-top: ${-index * 20}px; opacity: ${1 - index * 0.1}; z-index: ${100 - index};`}
+            style={`margin-top: ${-index * 20}px; opacity: ${1 - index * 0.1}; z-index: ${400 - index};`}
         >
             <svelte:component this={value.componentType} {...$$restProps} {...valueProps} />
         </div>
