@@ -115,17 +115,8 @@ export class WebRTCState extends CommunicationState {
         const activeStreamers = this._space.getUsersInFilter().length;
         const activeWatchers = this._space.getUsersToNotify().length;
 
-        // Thresholds (tweak these values as needed)
-        const MAX_PEER_STREAMERS = this.MAX_STREAMERS_FOR_PEER || 5;
-        const MAX_PEER_WATCHERS = this.MAX_WATCHERS_FOR_PEER || 10;
-
-        // Rule 1: Too many concurrent streamers for P2P to handle efficiently
-        const isStreamerOverload = activeStreamers > MAX_PEER_STREAMERS;
-
-        // Rule 2: Too many total watchers (watchers = incoming video connections)
-        const isWatcherOverload = activeWatchers > MAX_PEER_WATCHERS;
-
-        // Rule 3: Even 1 stream with a large audience (e.g., presentation mode)
+        const isStreamerOverload = activeStreamers > this.MAX_STREAMERS_FOR_PEER;
+        const isWatcherOverload = activeWatchers > this.MAX_WATCHERS_FOR_PEER;
         const isOneStreamBigAudience = activeStreamers > 0 && activeWatchers > 8;
 
         const shouldSwitch = (isStreamerOverload || isWatcherOverload || isOneStreamBigAudience) && !this.isSwitching();
@@ -149,23 +140,17 @@ export class WebRTCState extends CommunicationState {
         const activeStreamers = this._space.getUsersInFilter().length;
         const activeWatchers = this._space.getUsersToNotify().length;
 
-        // Hysteresis thresholds (stricter than switch-to-LiveKit to avoid flapping)
-        const SWITCH_BACK_STREAMERS_THRESHOLD = this.MAX_STREAMERS_FOR_PEER - 2; // e.g. 8 if max is 10
-        const SWITCH_BACK_WATCHERS_THRESHOLD = this.MAX_WATCHERS_FOR_PEER - 3; // e.g. 7 if max is 10
-
-        const isStreamerLoadLow = activeStreamers <= SWITCH_BACK_STREAMERS_THRESHOLD;
-        const isWatcherLoadLow = activeWatchers <= SWITCH_BACK_WATCHERS_THRESHOLD;
-
-        // Hysteresis for 'one stream large audience' case
+        const isStreamerLoadLow = activeStreamers <= this.MAX_STREAMERS_FOR_PEER - 2;
+        const isWatcherLoadLow = activeWatchers <= this.MAX_WATCHERS_FOR_PEER - 3;
         const isOneStreamSmallAudience = activeStreamers === 1 && activeWatchers <= 6;
 
         const shouldSwitchBack =
             this.isSwitching() && isStreamerLoadLow && isWatcherLoadLow && isOneStreamSmallAudience;
 
         if (shouldSwitchBack) {
-            console.log("✅ Switching back to Peer-to-Peer:", { activeStreamers, activeWatchers });
+            console.log("Switching back to Peer-to-Peer:", { activeStreamers, activeWatchers });
         } else {
-            console.log("⛔ Staying on LiveKit:", {
+            console.log("Staying on LiveKit:", {
                 reason: {
                     streamersLow: isStreamerLoadLow,
                     watchersLow: isWatcherLoadLow,

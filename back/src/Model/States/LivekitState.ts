@@ -81,13 +81,55 @@ export class LivekitState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length <= this.MAX_STREAMERS_FOR_PEER;
-        return !this.isSwitching() && isMaxUsersReached;
+        const activeStreamers = this._space.getUsersInFilter().length;
+        const activeWatchers = this._space.getUsersToNotify().length;
+
+        const fewStreamers = activeStreamers <= this.MAX_STREAMERS_FOR_PEER;
+        const fewWatchers = activeWatchers <= this.MAX_WATCHERS_FOR_PEER;
+        const smallAudience = activeStreamers === 1 && activeWatchers <= 8;
+
+        const shouldSwitchBack = fewStreamers && fewWatchers && smallAudience;
+
+        if (shouldSwitchBack && !this.isSwitching()) {
+            console.log(
+                "Switching back to P2P:",
+                "fewStreamers:",
+                fewStreamers,
+                "fewWatchers:",
+                fewWatchers,
+                "smallAudience:",
+                smallAudience
+            );
+            return true;
+        }
+
+        return false;
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
-        const isMaxUsersReached = this._space.getAllUsers().length > this.MAX_STREAMERS_FOR_PEER;
-        return this.isSwitching() && isMaxUsersReached;
+        const activeStreamers = this._space.getUsersInFilter().length;
+        const activeWatchers = this._space.getUsersToNotify().length;
+
+        const tooManyStreamers = activeStreamers > this.MAX_STREAMERS_FOR_PEER;
+        const tooManyWatchers = activeWatchers > this.MAX_WATCHERS_FOR_PEER;
+        const oneStreamBigAudience = activeStreamers === 1 && activeWatchers > 8;
+
+        const shouldCancelSwitch = tooManyStreamers || tooManyWatchers || oneStreamBigAudience;
+
+        if (this.isSwitching() && shouldCancelSwitch) {
+            console.log(
+                "Cancelling switch back to P2P:",
+                "tooManyStreamers:",
+                tooManyStreamers,
+                "tooManyWatchers:",
+                tooManyWatchers,
+                "oneStreamBigAudience:",
+                oneStreamBigAudience
+            );
+            return true;
+        }
+
+        return false;
     }
 
     protected areAllUsersReady(): boolean {
