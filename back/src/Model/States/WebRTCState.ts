@@ -146,16 +146,37 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchBackToCurrentState(): boolean {
-        if (!this.isSwitching()) return false;
+        const activeStreamers = this._space.getUsersInFilter().length;
+        const activeWatchers = this._space.getUsersToNotify().length;
 
-        const totalUsers = this._space.getAllUsers().length;
-        const streamingUsers = this._space.getUsersInFilter().length;
+        // Hysteresis thresholds (stricter than switch-to-LiveKit to avoid flapping)
+        const SWITCH_BACK_STREAMERS_THRESHOLD = this.MAX_STREAMERS_FOR_PEER - 2; // e.g. 8 if max is 10
+        const SWITCH_BACK_WATCHERS_THRESHOLD = this.MAX_WATCHERS_FOR_PEER - 3; // e.g. 7 if max is 10
 
-        const lowUserCount = totalUsers < this.MAX_STREAMERS_FOR_PEER - 2; // hysteresis buffer (e.g., if MAX_USERS_FOR_WEBRTC=10, switch back at <8)
-        const lowStreamerCount = streamingUsers <= this.MAX_WATCHERS_FOR_PEER - 2; // e.g., from 4 to ≤2
-        const smallAudienceOrNoStream = streamingUsers === 0 || totalUsers <= 8;
+        const isStreamerLoadLow = activeStreamers <= SWITCH_BACK_STREAMERS_THRESHOLD;
+        const isWatcherLoadLow = activeWatchers <= SWITCH_BACK_WATCHERS_THRESHOLD;
 
-        return lowUserCount && lowStreamerCount && smallAudienceOrNoStream;
+        // Hysteresis for 'one stream large audience' case
+        const isOneStreamSmallAudience = activeStreamers === 1 && activeWatchers <= 6;
+
+        const shouldSwitchBack =
+            this.isSwitching() && isStreamerLoadLow && isWatcherLoadLow && isOneStreamSmallAudience;
+
+        if (shouldSwitchBack) {
+            console.log("✅ Switching back to Peer-to-Peer:", { activeStreamers, activeWatchers });
+        } else {
+            console.log("⛔ Staying on LiveKit:", {
+                reason: {
+                    streamersLow: isStreamerLoadLow,
+                    watchersLow: isWatcherLoadLow,
+                    oneStreamSmallAudience: isOneStreamSmallAudience,
+                },
+                activeStreamers,
+                activeWatchers,
+            });
+        }
+
+        return shouldSwitchBack;
     }
 
     protected afterSwitchAction(): void {
