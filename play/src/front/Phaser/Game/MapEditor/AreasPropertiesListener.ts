@@ -18,7 +18,6 @@ import {
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { get } from "svelte/store";
 import { Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
@@ -1079,20 +1078,6 @@ export class AreasPropertiesListener {
                 }
             }
         }
-    }
-
-    private handleJoinMucRoom(name: string, type: string) {
-        iframeListener
-            .sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false)
-            .catch((error) => console.error(error));
-        chatZoneLiveStore.set(true);
-    }
-
-    private handleLeaveMucRoom(name: string) {
-        iframeListener
-            .sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`)
-            .catch((error) => console.error(error));
-        chatZoneLiveStore.set(false);
     }
 
     private handleExitPropertyOnEnter(url: string): void {

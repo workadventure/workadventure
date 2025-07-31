@@ -201,11 +201,7 @@ export class GameManager {
             throw new Error("Not the Game Scene");
         }
 
-        //TODO : voir si utile de le passer en async
-        gameScene.cleanupClosingScene().catch((e) => {
-            console.error(e);
-            Sentry.captureException(e);
-        });
+        gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
     }

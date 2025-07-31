@@ -581,15 +581,9 @@ export class GameScene extends DirtyScene {
             })
         );
 
-        this.cleanupClosingScene()
-            .catch((e) => {
-                console.error("Error while stopping scene", e);
-                Sentry.captureException(e);
-            })
-            .finally(() => {
-                this.scene.stop(this.scene.key);
-                this.scene.remove(this.scene.key);
-            });
+        this.cleanupClosingScene();
+        this.scene.stop(this.scene.key);
+        this.scene.remove(this.scene.key);
     }
 
     public getCustomEntityCollectionUrl() {
@@ -1013,17 +1007,12 @@ export class GameScene extends DirtyScene {
                 // The policy of room can to be updated during a session and not load before
                 await this.loadNextGameFromExitUrl(targetRoom.key);
             }
-            this.cleanupClosingScene()
-                .catch((e) => {
-                    console.error("Error while loading next game", e);
-                    Sentry.captureException(e);
-                })
-                .finally(() => {
-                    this.scene.stop();
-                    this.scene.start(targetRoom.key);
-                    this.scene.remove(this.scene.key);
-                    forceRefreshChatStore.forceRefresh();
-                });
+            this.cleanupClosingScene();
+
+            this.scene.stop();
+            this.scene.start(targetRoom.key);
+            this.scene.remove(this.scene.key);
+            forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
             this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
@@ -1054,7 +1043,7 @@ export class GameScene extends DirtyScene {
         });
     }
 
-    public async cleanupClosingScene(): Promise<void> {
+    public cleanupClosingScene(): void {
         // make sure we restart own medias
         mediaManager.disableMyCamera();
         mediaManager.disableMyMicrophone();
@@ -1073,15 +1062,6 @@ export class GameScene extends DirtyScene {
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-
-        // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        //TODO : on a deja un destroy du spaceRegistry qui fait la meme chose
-        // if (this.allUserSpace) {
-        //     await this.spaceRegistry?.leaveSpace(this.allUserSpace).catch((e) => {
-        //         console.error("Error while leaving space", e);
-        //         Sentry.captureException(e);
-        //     });
-        // }
 
         this.connection?.closeConnection();
         this.outlineManager?.clear();
@@ -1154,12 +1134,11 @@ export class GameScene extends DirtyScene {
         this.followManager?.close();
         this.spaceScriptingBridgeService?.destroy();
 
-        try {
-            await this._spaceRegistry?.destroy();
-        } catch (e) {
+        this._spaceRegistry?.destroy().catch((e) => {
             console.error("Error while destroying space registry", e);
             Sentry.captureException(e);
-        }
+        });
+
         // We need to destroy all the entities
         get(extensionModuleStore).forEach((extensionModule) => {
             extensionModule.destroy();
@@ -1822,15 +1801,10 @@ export class GameScene extends DirtyScene {
                 this.connection.serverDisconnected.subscribe(() => {
                     showConnectionIssueMessage();
                     console.info("Player disconnected from server. Reloading scene.");
-                    this.cleanupClosingScene()
-                        .catch((e) => {
-                            console.error("Error while stopping scene", e);
-                            Sentry.captureException(e);
-                        })
-                        .finally(() => {
-                            console.log("createSuccessorGameScene in finally");
-                            this.createSuccessorGameScene(true, true);
-                        });
+                    this.cleanupClosingScene();
+
+                    console.log("createSuccessorGameScene in finally");
+                    this.createSuccessorGameScene(true, true);
                 });
                 hideConnectionIssueMessage();
 
@@ -3853,43 +3827,33 @@ ${escapedMessage}
             })
         );
 
-        this.cleanupClosingScene()
-            .catch((e) => {
-                console.error("Error while stopping scene", e);
-                Sentry.captureException(e);
-            })
-            .finally(() => {
-                this.userInputManager.disableControls("errorScreen");
-            });
+        this.cleanupClosingScene();
+
+        this.userInputManager.disableControls("errorScreen");
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
     private showWorldFullError(message: string | null): void {
-        this.cleanupClosingScene()
-            .catch((e) => {
-                console.error("Error while stopping scene", e);
-                Sentry.captureException(e);
-            })
-            .finally(() => {
-                this.scene.stop(ReconnectingSceneName);
-                this.scene.remove(ReconnectingSceneName);
-                this.userInputManager.disableControls("errorScreen");
-                //FIX ME to use status code
-                if (message == undefined) {
-                    this.scene.start(ErrorSceneName, {
-                        title: "Connection rejected",
-                        subTitle: "The world you are trying to join is full. Try again later.",
-                        message: "If you want more information, you may contact us at: hello@workadventu.re",
-                    });
-                } else {
-                    this.scene.start(ErrorSceneName, {
-                        title: "Connection rejected",
-                        subTitle: "You cannot join the World. Try again later. \n\r \n\r Error: " + message + ".",
-                        message:
-                            "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
-                    });
-                }
+        this.cleanupClosingScene();
+
+        this.scene.stop(ReconnectingSceneName);
+        this.scene.remove(ReconnectingSceneName);
+        this.userInputManager.disableControls("errorScreen");
+        //FIX ME to use status code
+        if (message == undefined) {
+            this.scene.start(ErrorSceneName, {
+                title: "Connection rejected",
+                subTitle: "The world you are trying to join is full. Try again later.",
+                message: "If you want more information, you may contact us at: hello@workadventu.re",
             });
+        } else {
+            this.scene.start(ErrorSceneName, {
+                title: "Connection rejected",
+                subTitle: "You cannot join the World. Try again later. \n\r \n\r Error: " + message + ".",
+                message:
+                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
+            });
+        }
     }
 
     private bindSceneEventHandlers(): void {
