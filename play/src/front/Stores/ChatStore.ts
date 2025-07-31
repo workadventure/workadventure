@@ -21,4 +21,5 @@ export const forceRefreshChatStore = createForceRefreshChatStore();
 export const isMatrixChatEnabledStore = writable(false);
 
 export const INITIAL_SIDEBAR_WIDTH = 335;
+export const INITIAL_SIDEBAR_WIDTH_MOBILE = 250;
 export const loginTokenErrorStore = writable(false);

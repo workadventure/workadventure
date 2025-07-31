@@ -1,7 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
+    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
@@ -19,6 +20,7 @@
     }
 
     let sideBarWidth: number = $chatSidebarWidthStore;
+    console.log("sideBarWidth", sideBarWidth);
 
     const isRTL: boolean = document.documentElement.dir === "rtl";
 
@@ -101,7 +103,11 @@
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
         on:introend={reposition}
         on:outroend={reposition}
-        style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
+        style="width: {sideBarWidth}px; max-width: {Math.min(
+            sideBarWidth,
+            document.documentElement.clientWidth,
+            isMediaBreakpointUp('md') ? INITIAL_SIDEBAR_WIDTH_MOBILE : INITIAL_SIDEBAR_WIDTH
+        )}px;"
         class=" chatWindow !min-w-[360px] max-sm:!min-w-[250px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
         {#if $hideActionBarStoreBecauseOfChatBar}
