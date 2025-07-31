@@ -1,37 +1,50 @@
 <script lang="ts">
-    import { shortcutStore } from "../../Stores/ShortcutStore";
+    import { onMount } from "svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     type GroupedShortcut = {
         description: string;
         keys: string[];
     };
 
-    const rawShortcuts = shortcutStore.getShortcuts();
-    const groupedShortcuts: GroupedShortcut[] = [];
+    let groupedShortcuts: GroupedShortcut[] = [];
 
-    rawShortcuts.forEach(({ description, key, ctrlKey, shiftKey, altKey }) => {
-        let keys: string[] = [];
+    onMount(() => {
+        const userInputManager = gameManager.getCurrentGameScene().userInputManager;
 
-        if (ctrlKey || shiftKey || altKey) {
-            if (ctrlKey) {
-                keys = ["Ctrl", "+"];
-            }
-            if (shiftKey) {
-                keys.push("Shift", "+");
-            }
-            if (altKey) {
-                keys.push("Alt", "+");
-            }
-        }
-        keys.push(key);
+        const shortcut1 = userInputManager.keysCodeList;
+        const shortcut2 = userInputManager.userInputHandler.shortcuts;
 
-        const existing = groupedShortcuts.find((item) => item.description === description);
-        if (existing) {
-            existing.keys = existing.keys.concat([",", ...keys]);
-        } else {
-            groupedShortcuts.push({ description, keys: keys });
-        }
+        const rawShortcuts = shortcut1.concat(shortcut2);
+
+        const newGroupedShortcuts: GroupedShortcut[] = [];
+
+        rawShortcuts.forEach(({ description, key, ctrlKey, shiftKey, altKey }) => {
+            let keys: string[] = [];
+
+            if (ctrlKey || shiftKey || altKey) {
+                if (ctrlKey) {
+                    keys = ["Ctrl", "+"];
+                }
+                if (shiftKey) {
+                    keys.push("Shift", "+");
+                }
+                if (altKey) {
+                    keys.push("Alt", "+");
+                }
+            }
+            keys.push(key);
+
+            const existing = newGroupedShortcuts.find((item) => item.description === description);
+            if (existing) {
+                existing.keys = existing.keys.concat([",", ...keys]);
+            } else {
+                newGroupedShortcuts.push({ description, keys: keys });
+            }
+        });
+
+        groupedShortcuts = newGroupedShortcuts;
     });
 </script>
 

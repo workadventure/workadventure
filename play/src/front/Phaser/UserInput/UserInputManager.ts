@@ -5,17 +5,14 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { shortcutStore } from "../../Stores/ShortcutStore";
 import LL from "../../../i18n/i18n-svelte";
 
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
-interface UserInputManagerDatum {
+interface UserInputManagerDatum extends Shortcut {
     keyInstance?: Phaser.Input.Keyboard.Key;
     event: UserInputEvent;
-    key: string;
-    description: string;
 }
 
 export enum UserInputEvent {
@@ -32,6 +29,14 @@ export enum UserInputEvent {
 // The reason why the controls are disabled
 // The MessageEventSource type means the controls where disabled by the scripting API in the related iframe
 type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | "textField" | MessageEventSource;
+
+export interface Shortcut {
+    key: string;
+    description: string;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    shiftKey?: boolean;
+}
 
 //we cannot use a map structure so we have to create a replacement
 export class ActiveEventList {
@@ -73,7 +78,7 @@ export class UserInputManager {
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
 
-    private userInputHandler: UserInputHandlerInterface;
+    public userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
     private readonly disableControlsReasons: Set<DisableControlsReason> = new Set();
 
@@ -207,9 +212,6 @@ export class UserInputManager {
                 description: get(LL).menu.shortcuts.follow(),
             },
         ];
-        this.keysCode.forEach((keyCode) => {
-            shortcutStore.addShortcut(keyCode);
-        });
     }
 
     /**
@@ -243,6 +245,10 @@ export class UserInputManager {
             console.warn(e);
         }
         this.isInputDisabled = false;
+    }
+
+    get keysCodeList(): Shortcut[] {
+        return this.keysCode;
     }
 
     get isControlsEnabled() {
