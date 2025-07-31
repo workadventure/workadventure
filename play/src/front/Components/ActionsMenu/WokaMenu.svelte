@@ -42,6 +42,18 @@
                     return 0;
                 }
             });
+
+            // Remove actions with same actionName
+            const uniqueActions: string[] = [];
+
+            sortedActions = sortedActions.filter((action) => {
+                if (uniqueActions.includes(action.actionName)) {
+                    return false;
+                }
+                uniqueActions.push(action.actionName);
+                return true;
+            });
+
             const nbButtons = sortedActions.length + (wokaMenuData.wokaName ? 0 : 1);
             if (nbButtons > 2) {
                 buttonsLayout = "column";
