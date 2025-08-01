@@ -72,12 +72,10 @@
                 }
             });
             const nbButtons = sortedActions.length + (wokaMenuData.wokaName ? 0 : 1) + (remotePlayer?.chatID ? 1 : 0);
-            if (nbButtons > 2 && nbButtons < 4) {
-                buttonsLayout = "wrap";
-            } else if (nbButtons < 2) {
-                buttonsLayout = "column";
-            } else {
+            if (nbButtons < 4) {
                 buttonsLayout = "row";
+            } else {
+                buttonsLayout = "wrap";
             }
         }
     });
