@@ -122,12 +122,12 @@ export class GameMapAreas {
         if (floating) {
             validAreas = areas.filter((area) => {
                 if (
-                    !MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) ||
-                    !MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
+                    MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) &&
+                    MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
                 ) {
-                    return false;
+                    return true;
                 }
-                return true;
+                return false;
             });
         }
 
