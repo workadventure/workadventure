@@ -119,21 +119,17 @@ export class GameMapAreas {
 
         let validAreas: AreaData[] = areas;
 
-        if (floating) {
-            validAreas = areas.filter((area) => {
-                if (
-                    MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) &&
-                    MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
-                ) {
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        if (validAreas?.length === 0) {
+        validAreas = areas.filter((area) => {
+            if (
+                MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) &&
+                MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
+            ) {
+                return true;
+            }
             return false;
-        }
+        });
+
+        if (validAreas?.length === 0) return false;
         return (
             validAreas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
             validAreas.some((area) => this.isAreaOwner(area, userUUID))
