@@ -46,7 +46,7 @@ if (ENV_VARS.ENABLE_BEARER_AUTHENTICATION) {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         done: (error: any, user?: any, options?: any) => void
     ) => {
-        console.log(`[${new Date().toISOString()}] Bearer authentication received:`, token);
+        console.info(`[${new Date().toISOString()}] Bearer authentication received:`, token);
         if (authToken && token === authToken) {
             return done(null, {}, { scope: "all" });
         }

@@ -50,7 +50,6 @@
             }
 
             const data = await response.json();
-            console.log("Woka data loaded:", data);
             wokaData = data;
 
             loadSavedTextures();

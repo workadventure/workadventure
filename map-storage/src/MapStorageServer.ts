@@ -177,7 +177,7 @@ const mapStorageServer: MapStorageServer = {
                                 };
                             }
                         } else {
-                            console.log(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
+                            console.info(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
                         }
                         break;
                     }
@@ -245,7 +245,7 @@ const mapStorageServer: MapStorageServer = {
                                 )
                             );
                         } else {
-                            console.log(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
+                            console.info(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
                         }
                         break;
                     }

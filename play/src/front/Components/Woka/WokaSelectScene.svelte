@@ -34,7 +34,6 @@
             }
 
             wokaData = await response.json();
-            console.log("Woka data loaded:", wokaData);
 
             loadSavedTextures();
         } catch (err) {
@@ -92,7 +91,6 @@
             throw new Error(`Collection ${collectionName} does not exist in the Woka data`);
         }
         currentWokaCollection = collection;
-        console.log("Current Woka collection selected:", currentWokaCollection);
     }
 
     function selectTexture(collectionIndex: number, textureId: string) {

@@ -45,7 +45,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 }
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
-    console.log("Verifying WAM URL:", jwt.wamUrl);
+    console.info("Verifying WAM URL:", jwt.wamUrl);
     const parsedUrl = new URL(jwt.wamUrl);
     const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
 
