@@ -46,8 +46,9 @@ const chat: BaseTranslation = {
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
-    joinableRooms: "Salons rejoignables",
-    availableRooms: "Available rooms",
+    joinableRooms: "Available discussions",
+    joinableRoomsError: "Error loading discussions click to retry",
+    availableRooms: "Available discussions", // used in the search bar for results
     proximity: "Proximity Chat",
     role: {
         adminShort: "Admin",

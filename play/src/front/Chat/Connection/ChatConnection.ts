@@ -1,4 +1,4 @@
-import { Readable } from "svelte/store";
+import { Readable, Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { StateEvents } from "matrix-js-sdk";
@@ -130,6 +130,7 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    hasChildRoomsError: Writable<boolean>;
 }
 
 export interface CreateRoomOptions {
@@ -182,6 +183,7 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
+    refreshFolderJoinableRooms: (folderId: string) => Promise<void>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

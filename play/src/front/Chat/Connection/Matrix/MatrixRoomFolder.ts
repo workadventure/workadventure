@@ -19,6 +19,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
     readonly allChildRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
+    readonly hasChildRoomsError: Writable<boolean> = writable(false);
     readonly allSuggestedRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
     readonly suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
     readonly joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
@@ -94,8 +95,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     console.error("Failed to refresh suggested rooms:", error);
                     Sentry.captureException(error);
                 });
+                this.hasChildRoomsError.set(false);
                 this.refreshAllChildRooms().catch((error) => {
                     console.error("Failed to refresh all child rooms:", error);
+                    this.hasChildRoomsError.set(true);
                     Sentry.captureException(error);
                 });
             }
@@ -268,8 +271,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     }
 
     async refreshAllChildRooms() {
+
         const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
         const allMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
+
 
         rooms.forEach((room) => {
             const roomId = room.room_id;
