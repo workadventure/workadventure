@@ -102,15 +102,41 @@ export class GameMapAreas {
     public isUserHasWriteAccessOnAreaForEntityCoordinates(
         entityCenterCoordinates: EntityCoordinates,
         userConnectedTags: string[],
-        userUUID = ""
+        userUUID = "",
+        width: number,
+        height: number,
+        floating: boolean
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
-        if (areas?.length === 0) {
+        const topLeftCoordinates = {
+            x: entityCenterCoordinates.x - width / 2,
+            y: entityCenterCoordinates.y - height / 2,
+        };
+        const bottomRightCoordinates = {
+            x: entityCenterCoordinates.x + width / 2,
+            y: entityCenterCoordinates.y + height / 2,
+        };
+
+        let validAreas: AreaData[] = areas;
+
+        if (floating) {
+            validAreas = areas.filter((area) => {
+                if (
+                    !MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) ||
+                    !MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
+                ) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        if (validAreas?.length === 0) {
             return false;
         }
         return (
-            areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
-            areas.some((area) => this.isAreaOwner(area, userUUID))
+            validAreas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
+            validAreas.some((area) => this.isAreaOwner(area, userUUID))
         );
     }
 
