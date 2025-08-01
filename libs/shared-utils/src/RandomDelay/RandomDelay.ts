@@ -22,7 +22,7 @@ export function randomDelay(lowLimit = 100, highLimit = 2000): Promise<void> {
 
     return new Promise<void>((resolve) => {
         setTimeout(() => {
-            console.log("Introduced random delay. Resolving after ", waitTime);
+            console.info("Introduced random delay. Resolving after ", waitTime);
             resolve();
         }, waitTime);
     });

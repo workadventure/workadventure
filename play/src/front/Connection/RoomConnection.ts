@@ -1784,6 +1784,19 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitRequestFullSync(spaceName: string, users: SpaceUser[]): void {
+        this.send({
+            message: {
+                $case: "requestFullSyncMessage",
+                requestFullSyncMessage: {
+                    spaceName,
+                    users,
+                    senderUserId: "",
+                },
+            },
+        });
+    }
+
     private toPositionMessage(
         x: number,
         y: number,

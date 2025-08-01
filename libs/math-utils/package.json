@@ -2,10 +2,10 @@
   "name": "@workadventure/math-utils",
   "version": "1.0.0",
   "description": "Useful math-related utility functions",
+  "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "WorkAdventure",
   "license": "ISC",

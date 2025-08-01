@@ -1,7 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
+    import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
     import { IconX } from "@wa-icons";
@@ -101,8 +102,12 @@
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
         on:introend={reposition}
         on:outroend={reposition}
-        style="width: {sideBarWidth}px; max-width: {Math.min(sideBarWidth, document.documentElement.clientWidth)}px;"
-        class=" chatWindow !min-w-full sm:!min-w-[360px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
+        style="width: {sideBarWidth}px; max-width: {Math.min(
+            sideBarWidth,
+            document.documentElement.clientWidth,
+            isMediaBreakpointUp('md') ? INITIAL_SIDEBAR_WIDTH_MOBILE : INITIAL_SIDEBAR_WIDTH
+        )}px;"
+        class=" chatWindow !min-w-[360px] max-sm:!min-w-[250px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
         {#if $hideActionBarStoreBecauseOfChatBar}
             <div class="close-window absolute end-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
@@ -133,21 +138,6 @@
     @include media-breakpoint-up(sm) {
         .chatWindow {
             width: 100% !important;
-        }
-    }
-
-    .chatWindow {
-        color: white;
-        position: absolute !important;
-        top: 0;
-        min-width: 335px !important;
-        width: 335px;
-        pointer-events: auto;
-        height: 100dvh !important;
-        z-index: 2000;
-        .close-window {
-            cursor: pointer;
-            align-self: end;
         }
     }
 </style>

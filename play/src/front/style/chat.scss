@@ -238,12 +238,12 @@
 
 .chatWindow {
     color: white;
-    position: absolute !important;
+    position: absolute;
     top: 0;
-    min-width: 335px !important;
+    min-width: 335px;
     width: 335px;
     pointer-events: auto;
-    height: 100dvh !important;
+    height: 100dvh;
     z-index: 2000;
     .close-window {
         cursor: pointer;
