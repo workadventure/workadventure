@@ -117,7 +117,7 @@ export class WebRTCState extends CommunicationState {
 
         const isStreamerOverload = activeStreamers > this.MAX_STREAMERS_FOR_PEER;
         const isWatcherOverload = activeWatchers > this.MAX_WATCHERS_FOR_PEER;
-        const isOneStreamBigAudience = activeStreamers > 0 && activeWatchers > 8;
+        const isOneStreamBigAudience = activeStreamers > 0 && activeWatchers > 6;
 
         const shouldSwitch = (isStreamerOverload || isWatcherOverload || isOneStreamBigAudience) && !this.isSwitching();
 
