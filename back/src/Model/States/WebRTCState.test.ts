@@ -116,7 +116,7 @@ describe("WebRTCState - switching logic ", () => {
             mock<ICommunicationSpace>({
                 //Streamers
                 getUsersInFilter: () => {
-                    return [];
+                    return [spaceUser];
                 },
                 //Watchers
                 getUsersToNotify: () => {

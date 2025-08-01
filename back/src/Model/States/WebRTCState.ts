@@ -142,7 +142,7 @@ export class WebRTCState extends CommunicationState {
 
         const isStreamerLoadLow = activeStreamers <= this.MAX_STREAMERS_FOR_PEER - 2;
         const isWatcherLoadLow = activeWatchers <= this.MAX_WATCHERS_FOR_PEER - 3;
-        const isOneStreamSmallAudience = activeStreamers === 1 && activeWatchers <= 6;
+        const isOneStreamSmallAudience = activeStreamers <= 1 && activeWatchers <= 6;
 
         const shouldSwitchBack =
             this.isSwitching() && isStreamerLoadLow && isWatcherLoadLow && isOneStreamSmallAudience;
