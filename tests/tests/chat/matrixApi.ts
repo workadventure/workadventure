@@ -130,23 +130,24 @@ class MatrixApi {
     }
   }
 
-  public async getMemberPowerLevel(roomAlias: string): Promise<number> {
-    try {
-      const publicRoomsResponse = await axios.get(
-        `${matrix_server_url}/_matrix/client/r0/publicRooms`,
-        this.getAuthenticatedHeader()
-      );
-
-      const room = publicRoomsResponse.data.chunk.find(
-        (room) => room.name === roomAlias
-      );
-
-      if (!room) {
-        throw new Error(`Room ${roomAlias} not found`);
+  public async acceptRoomInvitations(roomId : string) {
+      if (roomId) {
+        try {
+          await axios.post(
+              `${matrix_server_url}/_matrix/client/r0/join/${roomId}`,
+              {},
+              this.getAuthenticatedHeader()
+          );
+        } catch (error) {
+          throw new Error(error);
+        }
       }
+  }
 
+  public async getMemberPowerLevel(roomId: string): Promise<number> {
+    try {
       const powerLevelsResponse = await axios.get(
-        `${matrix_server_url}/_matrix/client/r0/rooms/${room.room_id}/state/m.room.power_levels/`,
+        `${matrix_server_url}/_matrix/client/r0/rooms/${roomId}/state/m.room.power_levels/`,
         this.getAuthenticatedHeader()
       );
 

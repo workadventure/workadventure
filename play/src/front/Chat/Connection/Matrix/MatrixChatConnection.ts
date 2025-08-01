@@ -508,7 +508,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return false;
             }
 
-            this.addRoomToParentFolder(room, parentFolder);
+            await this.addRoomToParentFolder(room, parentFolder);
+            await parentFolder.refreshAllChildRooms();
             return true;
         } catch (e) {
             console.error("Error in tryAddRoomToParentFolder:", e);
@@ -530,13 +531,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return null;
     }
 
-    private addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder): void {
+    private async addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder): Promise<void> {
         const isSpaceRoom = room.isSpaceRoom();
         const roomId = room.roomId;
 
         // Add room/folder to parent's lists
         if (isSpaceRoom) {
-            parentFolder.folderList.set(roomId, new MatrixRoomFolder(room));
+            const roomFolder = new MatrixRoomFolder(room);
+            await roomFolder.refreshAllChildRooms();
+            await roomFolder.refreshSuggestedRooms();
+            parentFolder.folderList.set(roomId, roomFolder);
         } else {
             parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
         }
@@ -550,6 +554,22 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const rootList = isSpaceRoom ? this.roomFolders : this.roomList;
         const RoomClass = isSpaceRoom ? MatrixRoomFolder : MatrixChatRoom;
         rootList.set(roomId, new RoomClass(room));
+    }
+
+    public async refreshFolderJoinableRooms(folderId: string): Promise<void> {
+        // randomly throw an error
+        const randomError = Math.random() < 0.1;
+        if (randomError) {
+            throw new Error("Random error occurred");
+        }
+
+        const folder = this.roomFolders.get(folderId);
+        if (!folder) {
+            console.warn("Folder not found for ID:", folderId, "folders : ", this.roomFolders);
+            return;
+        }
+        console.log("🏎️🏎️🏎️ Joinable rooms refreshed for folder:", folderId);
+        await folder.refreshAllChildRooms();
     }
 
     private handleOrphanRoom(room: Room): void {
@@ -637,7 +657,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
 
-    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
         const { roomId } = room;
 
         if (membership !== prevMembership && membership === KnownMembership.Join) {
@@ -686,6 +706,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.deleteRoom(roomId).catch((e) => {
                 console.error("Failed to delete room : ", e);
             });
+            //get room parent folder and refresh his child rooms
+            const parentsFolderIds = this.getParentRoomID(room);
+            void (async () => {
+                const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
+                await parentFolder?.refreshAllChildRooms();
+            })();
             return;
         }
     }
