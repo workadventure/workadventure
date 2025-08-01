@@ -176,6 +176,7 @@ export class Room {
                 this._backgroundColor = data.backgroundColor ?? undefined;
                 this._primaryColor = data.primaryColor ?? undefined;
                 this._metadata = data.metadata ?? undefined;
+                console.log("✨✨✨ Room metadata:", data);
 
                 this._roomName = data.roomName ?? undefined;
 

@@ -74,8 +74,11 @@ import {
     MapStorageJwtAnswer,
     StartRecordingMessage,
     StopRecordingMessage,
-    GetRecordingsAnswer,
+    DeleteRecordingAnswer,
     PrivateEventPusherToFront,
+    NonUndefinedFields,
+    Recording,
+    noUndefined,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -990,15 +993,14 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitStartRecording(spaceName: string): void {
-        console.log('⛺️⛺️⛺️ emitStartRecording', spaceName, this.getSpaceUserId());
-        this.emitPublicSpaceEvent(spaceName,{
+        this.emitPublicSpaceEvent(spaceName, {
             $case: "startRecordingMessage",
             startRecordingMessage: {},
-        })
+        });
     }
 
     public emitStopRecording(spaceName: string): void {
-        this.emitPublicSpaceEvent(spaceName,{
+        this.emitPublicSpaceEvent(spaceName, {
             $case: "stopRecordingMessage",
             stopRecordingMessage: {
                 spaceName,
@@ -1616,7 +1618,7 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
-    public async queryRecordings(memberUUID: string): Promise<GetRecordingsAnswer> {
+    public async queryRecordings(): Promise<NonUndefinedFields<Recording>[]> {
         const answer = await this.query({
             $case: "getRecordingsQuery",
             getRecordingsQuery: {},
@@ -1624,8 +1626,31 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "getRecordingsAnswer") {
             throw new Error("Unexpected answer");
         }
-        console.log("🐞🐞🐞 queryRecordings => answer", answer.getRecordingsAnswer);
-        return answer.getRecordingsAnswer;
+        const nonUndefinedRecordingsAnswer: NonUndefinedFields<Recording>[] =
+            answer.getRecordingsAnswer.recordings.reduce((acc, cur) => {
+                try {
+                    const noUndefinedCurr = noUndefined(cur);
+                    acc.push(noUndefinedCurr);
+                } catch (e) {
+                    console.error("Error while removing undefined fields from recording", cur, e);
+                }
+                return acc;
+            }, [] as NonUndefinedFields<Recording>[]);
+
+        return nonUndefinedRecordingsAnswer;
+    }
+
+    public async deleteRecording(recordingFileName: string): Promise<DeleteRecordingAnswer> {
+        const answer = await this.query({
+            $case: "deleteRecordingQuery",
+            deleteRecordingQuery: {
+                recordingId: recordingFileName,
+            },
+        });
+        if (answer.$case !== "deleteRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.deleteRecordingAnswer;
     }
 
     public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
@@ -1873,7 +1898,7 @@ export class RoomConnection implements RoomConnection {
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
-        this._startRecordingMessage.complete()
+        this._startRecordingMessage.complete();
         this._stopRecordingMessage.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();

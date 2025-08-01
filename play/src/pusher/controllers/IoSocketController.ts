@@ -866,12 +866,23 @@ export class IoSocketController {
                                     }
                                     case "getRecordingsQuery": {
                                         const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
-                                            socket,
+                                            socket
                                         );
-                                        console.log("🌀🌀🌀 ioSocketController.ts => getRecordingsQuery", getRecordingsAnswer);
                                         answerMessage.answer = {
                                             $case: "getRecordingsAnswer",
                                             getRecordingsAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "deleteRecordingQuery": {
+                                        const deleteRecordingAnswer = await socketManager.handleDeleteRecordingQuery(
+                                            socket,
+                                            message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "deleteRecordingAnswer",
+                                            deleteRecordingAnswer,
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;

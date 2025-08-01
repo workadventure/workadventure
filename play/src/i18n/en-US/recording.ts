@@ -7,6 +7,15 @@ const recording: BaseTranslation = {
     expireIn: "Expires in {days} day{s}",
     download: "Download",
     close: "Close",
-}
+    contextMenu: {
+        openInNewTab: "Open in new tab",
+        copyLink: "Copy link",
+        delete: "Delete",
+    },
+    notification: {
+        deleteNotification: "Recording deleted successfully",
+        deleteFailedNotification: "Failed to delete recording",
+    },
+};
 
 export default recording;

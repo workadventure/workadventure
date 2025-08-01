@@ -198,8 +198,6 @@ class LocalAdmin implements AdminInterface {
         }
         // TODO: Make a better check for the livekit and S3 configuration
         canRecord = true;
-        // if(LIVEKIT_API_KEY && LIVEKIT_API_KEY !== "") {
-        // }
 
         return {
             status: "ok",
@@ -217,7 +215,7 @@ class LocalAdmin implements AdminInterface {
             canEdit,
             world: "localWorld",
             applications,
-            canRecord
+            canRecord,
         };
     }
 
@@ -289,6 +287,12 @@ class LocalAdmin implements AdminInterface {
             ),
             metatags: {
                 ...MetaTagsDefaultValue,
+            },
+            metadata: {
+                room: {
+                    isPremium: true,
+                    enableRecord: true,
+                },
             },
         });
     }

@@ -17,7 +17,7 @@ const spaceManager = {
         const pusherUuid = uuid();
         const pusher = new SpacesWatcher(pusherUuid, call);
 
-        call.on("data", async (message: PusherToBackSpaceMessage) => {
+        call.on("data", (message: PusherToBackSpaceMessage) => {
             if (!message.message) {
                 console.error("Empty message received");
                 Sentry.captureException("Empty message received");
@@ -70,7 +70,7 @@ const spaceManager = {
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {
-                        socketManager.handleAddSpaceUserToNotifyMessage(
+                        await socketManager.handleAddSpaceUserToNotifyMessage(
                             pusher,
                             message.message.addSpaceUserToNotifyMessage
                         );

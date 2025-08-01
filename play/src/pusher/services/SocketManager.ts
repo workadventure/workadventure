@@ -16,8 +16,8 @@ import {
     FilterType,
     GetMemberAnswer,
     GetMemberQuery,
-    GetRecordingsQuery,
     GetRecordingsAnswer,
+    DeleteRecordingAnswer,
     JoinRoomMessage,
     MemberData,
     NonUndefinedFields,
@@ -1287,20 +1287,19 @@ export class SocketManager implements ZoneEventListener {
         return adminService.updateChatId(email, chatId, client.getUserData().roomId);
     }
 
-    async handleGetRecordingsQuery(
-        client: Socket,
-    ): Promise<GetRecordingsAnswer> {
+    async handleGetRecordingsQuery(client: Socket): Promise<GetRecordingsAnswer> {
         const { userUuid } = client.getUserData();
         const records = await RecordingService.getRecords(userUuid);
-        // if (!records) {
-        //     console.warn("SocketManager => handleGetRecordingsQuery => No recordings found for user", userUuid);
-        //     return {
-        //         recordings: [],
-        //     }
-        // }
-        console.log("🚀🚀🚀 SocketManager => handleGetRecordingsQuery => userUuid", JSON.stringify(records, null, 2));
         return {
             recordings: records,
+        };
+    }
+
+    async handleDeleteRecordingQuery(client: Socket, recordingId: string): Promise<DeleteRecordingAnswer> {
+        const { userUuid } = client.getUserData();
+        const result = await RecordingService.deleteRecord(userUuid, recordingId);
+        return {
+            success: result,
         };
     }
 
@@ -1311,7 +1310,6 @@ export class SocketManager implements ZoneEventListener {
         return { message, token };
     }
 
-    // handle the public event for proximity message
     async handlePublicEvent(client: Socket, publicEvent: PublicEventFrontToPusher) {
         const socketData = client.getUserData();
 
@@ -1325,14 +1323,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-        // space.forwarder.forwardMessageToSpaceBack({
-        //     $case: "publicEvent",
-        //     publicEvent: {
-        //         ...publicEvent,
-        //         senderUserId: socketData.spaceUserId,
-        //     },
-        // });
-        space.forwarder.sendPublicEvent(publicEvent, socketData)
+        space.forwarder.sendPublicEvent(publicEvent, socketData);
     }
 
     async handlePrivateEvent(client: Socket, privateEvent: PrivateEventFrontToPusher) {
@@ -1348,14 +1339,6 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
-
-        // space.forwarder.forwardMessageToSpaceBack({
-        //     $case: "privateEvent",
-        //     privateEvent: {
-        //         ...privateEvent,
-        //         senderUserId: socketData.spaceUserId,
-        //     },
-        // });
         space.forwarder.sendPrivateEvent(privateEvent, socketData);
     }
 

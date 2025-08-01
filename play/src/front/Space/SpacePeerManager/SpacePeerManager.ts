@@ -1,14 +1,14 @@
 // -------------------- Default Implementations --------------------x
 
-import { Subject } from "rxjs";
-import {Readable, Unsubscriber, writable, Writable, get} from "svelte/store";
+import { Subject, Subscription } from "rxjs";
+import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { recordingStore } from "../../Stores/RecordingStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
-import {notificationPlayingStore} from "../../Stores/NotificationStore";
 
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
@@ -66,42 +66,36 @@ export class SpacePeerManager {
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
 
+    private startRecordingResultMessage: Subscription;
+    private stopRecordingResultMessage: Subscription;
+    private stopRecordingMessage: Subscription;
+
     constructor(
         private space: SpaceInterface,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
-        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState,
+        private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
         this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
 
-        this.space.observePrivateEvent("startRecordingResultMessage").subscribe((message)=>{
-            if (!message.startRecordingResultMessage.success) {
-                notificationPlayingStore.playNotification('Recording failed to start');
-                return;
-            }
-            recordingStore.startRecord(true);
-            console.log("startRecordingResultMessage" , message);
-        })
+        this.startRecordingResultMessage = this.space
+            .observePrivateEvent("startRecordingResultMessage")
+            .subscribe((message) => {
+                if (!message.startRecordingResultMessage.success) {
+                    notificationPlayingStore.playNotification("Recording failed to start");
+                } else {
+                    recordingStore.startRecord(true);
+                }
+            });
 
-        this.space.observePrivateEvent('stopRecordingResultMessage').subscribe((message)=>{
-            console.log(">>>> stopRecordingResultMessage", message);
-            recordingStore.stopRecord()
-            notificationPlayingStore.playNotification('Recording stopped');
-        })
+        this.stopRecordingResultMessage = this.space.observePrivateEvent("stopRecordingResultMessage").subscribe(() => {
+            recordingStore.stopRecord();
+            notificationPlayingStore.playNotification("Recording stopped");
+        });
 
-        this.space.observePublicEvent("startRecordingMessage").subscribe(async (message)=>{
-           // const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
-           //  const spaceUser = await  this.space.getSpaceUserBySpaceUserId(message.sender)
-            recordingStore.startRecord()
-            console.trace("startRecordingMessage", message , message.sender);
-        })
-
-        this.space.observePublicEvent("stopRecordingMessage").subscribe(async (message)=>{
-            // const spaceUser =  await this.space.getLastSpaceFilter()?.getUserBySpaceUserId(message.sender);
-            recordingStore.stopRecord()
-            console.log("stopRecordingMessage", message , message.sender);
-        })
-
+        this.stopRecordingMessage = this.space.observePublicEvent("stopRecordingMessage").subscribe(() => {
+            recordingStore.stopRecord();
+        });
     }
 
     private synchronizeMediaState(): void {
@@ -148,6 +142,9 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
+        this.stopRecordingMessage.unsubscribe();
+        this.startRecordingResultMessage.unsubscribe();
+        this.stopRecordingResultMessage.unsubscribe();
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
@@ -180,6 +177,4 @@ export class SpacePeerManager {
     dispatchStream(mediaStream: MediaStream): void {
         this._communicationState.dispatchStream(mediaStream);
     }
-
-
 }

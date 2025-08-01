@@ -4,12 +4,8 @@ import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
 
-// export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-//     private usersReady: string[] = [];
-
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
-    // private usersReady: string[] = [];
 
     constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
@@ -18,13 +14,9 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
-    public static async create( space: ICommunicationSpace, livekitService = new LiveKitService()) {
-        await livekitService.createRoom(space.getSpaceName())
+    public static async create(space: ICommunicationSpace, livekitService = new LiveKitService()) {
+        await livekitService.createRoom(space.getSpaceName());
         return new LivekitCommunicationStrategy(space, livekitService);
-        // this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
-        //     console.error(`Error creating room ${this.space.getSpaceName()} on Livekit:`, error);
-        //     Sentry.captureException(error);
-        // });
     }
     addUser(user: SpaceUser, switchInProgress = false): void {
         //TODO : passer en async
@@ -57,7 +49,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             });
         } catch (error) {
             console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
-            //  Sentry.captureException(error);
+            Sentry.captureException(error);
         }
     }
 
@@ -148,10 +140,8 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
         try {
             await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
-            console.log("🎇 LivekitCommunicationStrategy.ts => startRecording() called");
         } catch (e) {
-            console.log("❌ LivekitCommunicationStrategy.ts => startRecording() - Error starting recording: ", e);
-            throw "An error occurred while starting the recording: " + e;
+            throw new Error(e);
         }
     }
     async stopRecording(): Promise<void> {

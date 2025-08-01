@@ -1569,7 +1569,10 @@ export class SocketManager {
         }
     }
 
-    handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
+    async handleAddSpaceUserToNotifyMessage(
+        pusher: SpacesWatcher,
+        addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage
+    ) {
         const space = this.spaces.get(addSpaceUserToNotifyMessage.spaceName);
         if (!space) {
             throw new Error(`Could not find space ${addSpaceUserToNotifyMessage.spaceName} to add user to notify`);
@@ -1577,7 +1580,7 @@ export class SocketManager {
         if (!addSpaceUserToNotifyMessage.user) {
             throw new Error(`User to add to notify is undefined in AddSpaceUserToNotifyMessage`);
         }
-        space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
+        await space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
     }
 
     handleDeleteSpaceUserToNotifyMessage(

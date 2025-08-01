@@ -6,7 +6,7 @@
 </script>
 
 <div
-    class="bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive z-20 {extraClasses}"
+    class="popup-container bg-contrast/80 flex flex-col backdrop-blur-md text-white min-w-60 min-h-20 rounded-lg overflow-hidden transition-all animation responsive z-20 {extraClasses}"
     class:responsive={reduceOnSmallScreen}
 >
     <div class="flex items-center p-4 pointer-events-auto justify-center grow">

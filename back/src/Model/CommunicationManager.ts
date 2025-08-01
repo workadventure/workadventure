@@ -17,13 +17,13 @@ export class CommunicationManager implements ICommunicationManager {
 
     public handleUserAdded(user: SpaceUser): void {
         //TODO : race condition possible ??
-        this._currentState.handleUserAdded(user);
         this._recordingManager.handleAddUser(user);
+        this._currentState.handleUserAdded(user);
     }
 
     public async handleUserDeleted(user: SpaceUser, shouldStopRecording: boolean = true): Promise<void> {
         this._currentState.handleUserDeleted(user);
-        if (shouldStopRecording){
+        if (shouldStopRecording) {
             await this._recordingManager.handleRemoveUser(user);
         }
     }
@@ -37,20 +37,20 @@ export class CommunicationManager implements ICommunicationManager {
         this._currentState.handleUserReadyForSwitch(userId);
     }
 
-    public handleUserToNotifyAdded(user: SpaceUser): void {
-        this._currentState.handleUserToNotifyAdded(user);
+    public async handleUserToNotifyAdded(user: SpaceUser): void {
+        await this._currentState.handleUserToNotifyAdded(user);
     }
 
     public handleUserToNotifyDeleted(user: SpaceUser): void {
         this._currentState.handleUserToNotifyDeleted(user);
     }
     public async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
-        console.log("➡️➡️ CommunicationManager.ts => handleStartRecording()", user);
         await this._recordingManager.startRecording(user, userUuid);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
         await this._recordingManager.stopRecording(user);
+        return;
     }
 
     get currentState(): ICommunicationState {

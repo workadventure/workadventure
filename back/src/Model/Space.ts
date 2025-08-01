@@ -77,7 +77,7 @@ export class Space implements CustomJsonReplacerInterface {
             debug("Error while adding user", e);
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
-            this.removeUser(sourceWatcher, spaceUser.spaceUserId).catch((error) => {
+            await this.removeUser(sourceWatcher, spaceUser.spaceUserId).catch((error) => {
                 console.error("Error while removing user after add error", error);
                 Sentry.captureException(error);
             });
@@ -152,7 +152,6 @@ export class Space implements CustomJsonReplacerInterface {
                         },
                     },
                 });
-                // this.communicationManager.handleUserUpdated(spaceUser);
             }
             this.communicationManager.handleUserUpdated(spaceUser);
         } catch (e) {
@@ -165,10 +164,6 @@ export class Space implements CustomJsonReplacerInterface {
                 console.error("Error while removing user after update error", error);
                 Sentry.captureException(error);
             });
-            // this.communicationManager.handleUserDeleted(spaceUser).catch((e) => {
-            //     console.error("Error while handling user deleted", e);
-            //     Sentry.captureException(e);
-            // });
         }
     }
 
@@ -178,15 +173,15 @@ export class Space implements CustomJsonReplacerInterface {
             const usersList = this.usersList(sourceWatcher);
             user = usersList.get(spaceUserId);
 
-            const usersToNotifyList = this.usersListToNotify(sourceWatcher);
-            usersToNotifyList.delete(spaceUserId);
-
             if (!user) {
                 console.error("User not found in this space", spaceUserId);
                 Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
                 return;
             }
-            await this.communicationManager.handleUserDeleted(user, true)
+            await this.communicationManager.handleUserDeleted(user, true);
+
+            const usersToNotifyList = this.usersListToNotify(sourceWatcher);
+            usersToNotifyList.delete(spaceUserId);
 
             usersList.delete(spaceUserId);
             this._clientEventsEmitter.emitSpaceLeave(this.name);
@@ -196,8 +191,6 @@ export class Space implements CustomJsonReplacerInterface {
                 debug(`${this.name} : users list => deleted ${sourceWatcher.id}`);
                 this.users.delete(sourceWatcher);
             }
-
-            // this.communicationManager.handleUserDeleted(user);
         } catch (e) {
             console.error("Error while removing user", e);
             Sentry.captureException(e);
@@ -317,11 +310,11 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
-    public addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+    public async addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
 
-        this.communicationManager.handleUserToNotifyAdded(spaceUser);
+        await this.communicationManager.handleUserToNotifyAdded(spaceUser);
         debug(`${this.name} : user to notify => added ${spaceUser.spaceUserId}`);
     }
 
@@ -375,7 +368,7 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    public async  dispatchPublicEvent(publicEvent: PublicEvent) {
+    public async dispatchPublicEvent(publicEvent: PublicEvent) {
         if (!publicEvent.spaceEvent?.event) {
             // If there is no event, just forward the public event as-is
             this.notifyWatchers({
@@ -581,19 +574,15 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public async startRecording(user: SpaceUser, userUuid: string) {
-        console.log('➡️ Space.ts => startRecording()', user);
         try {
             await this.communicationManager.handleStartRecording(user, userUuid);
-        }
-        catch (error) {
-            console.error("❌Space.ts => Error starting recording:", error);
+        } catch (error) {
             Sentry.captureException(error);
             throw error; // Re-throw the error to be handled by the caller
         }
     }
-    public stopRecording(user: SpaceUser) {
-        console.log('➡️ Space.ts => stopRecording()', user);
-        this.communicationManager.handleStopRecording(user);
+    public async stopRecording(user: SpaceUser) {
+        await this.communicationManager.handleStopRecording(user);
     }
     public destroy() {
         // this.users.clear();

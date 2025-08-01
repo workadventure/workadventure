@@ -11,6 +11,7 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 // import { recordingStore } from "../../Stores/RecordingStore";
+import { recordingStore } from "../../Stores/RecordingStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -33,8 +34,6 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
-    | "startRecordingMessage"
-    | "stopRecordingMessage"
 >;
 
 /**
@@ -48,8 +47,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceMetadataMessageStreamSubscription: Subscription;
-    // private startRecordingMessageSubscription: Subscription;
-    // private stopRecordingMessageSubscription: Subscription;
     private proximityPublicMessageEventSubscription: Subscription;
     private proximityPrivateMessageEventSubscription: Subscription;
     private spaceDestroyedMessageSubscription: Subscription;
@@ -125,39 +122,38 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream
     ) {
-        this.spacesWithRecording = derived(
-                this.spaces,
-                ($spaces, set) => {
-                    const spacesWithRecordingMap: Set<Space> = new Set();
-                    const unsubscribers: (() => void)[] = [];
+        this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
+            const spacesWithRecordingMap: Set<Space> = new Set();
+            const unsubscribers: (() => void)[] = [];
 
-                    const updatePeers = () => {
-                        spacesWithRecordingMap.clear();
-                        if ($spaces.size === 0) {
-                            set(Array.from(spacesWithRecordingMap));
-                            return;
-                        }
-                        $spaces.forEach((space) => {
-                            const aggregatedDisplayRecordButtonStores = space.spacePeerManager.shouldDisplayRecordButton;
-                            const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe((shouldDisplayRecordButtonStore) => {
-                                if (shouldDisplayRecordButtonStore) {
-                                    spacesWithRecordingMap.add(space)
-                                } else {
-                                    spacesWithRecordingMap.delete(space);
-                                }
-                                set(Array.from(spacesWithRecordingMap));
-                            });
-                            unsubscribers.push(unsubscribeAggregated);
-                        });
-                    };
-
-                    updatePeers();
-
-                    return () => {
-                        unsubscribers.forEach((unsub) => unsub());
-                    };
+            const updatePeers = () => {
+                spacesWithRecordingMap.clear();
+                if ($spaces.size === 0) {
+                    set(Array.from(spacesWithRecordingMap));
+                    return;
                 }
-            );
+                $spaces.forEach((space) => {
+                    const aggregatedDisplayRecordButtonStores = space.spacePeerManager.shouldDisplayRecordButton;
+                    const unsubscribeAggregated = aggregatedDisplayRecordButtonStores.subscribe(
+                        (shouldDisplayRecordButtonStore) => {
+                            if (shouldDisplayRecordButtonStore) {
+                                spacesWithRecordingMap.add(space);
+                            } else {
+                                spacesWithRecordingMap.delete(space);
+                            }
+                            set(Array.from(spacesWithRecordingMap));
+                        }
+                    );
+                    unsubscribers.push(unsubscribeAggregated);
+                });
+            };
+
+            updatePeers();
+
+            return () => {
+                unsubscribers.forEach((unsub) => unsub());
+            };
+        });
 
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
@@ -209,28 +205,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             }
         );
 
-        // this.startRecordingMessageSubscription = roomConnection.startRecordingMessage.subscribe((message) => {
-        //     // const space = this.spaces.get(message.spaceName);
-        //     // if (!space) {
-        //     //     console.warn(
-        //     //         `Received a start recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-        //     //     );
-        //     //     return;
-        //     // }
-        //     recordingStore.startRecord()
-        // });
-        //
-        // this.stopRecordingMessageSubscription = roomConnection.stopRecordingMessage.subscribe((message) => {
-        //     // const space = this.spaces.get(message.spaceName);
-        //     // if (!space) {
-        //     //     console.warn(
-        //     //         `Received a stop recording message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-        //     //     );
-        //     //     return;
-        //     // }
-        //     recordingStore.stopRecord()
-        // });
-
         this.proximityPublicMessageEventSubscription = roomConnection.spacePublicMessageEvent.subscribe((message) => {
             const space = this.spaces.get(message.spaceName);
             if (!space) {
@@ -243,14 +217,19 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         });
 
         this.proximityPrivateMessageEventSubscription = roomConnection.spacePrivateMessageEvent.subscribe((message) => {
-            const space = this.spaces.get(message.spaceName);
-            if (!space) {
-                console.warn(
-                    `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
-                );
-                return;
+            // We handle the stop recording message here, otherwise we catch it after the user leaves.
+            if (message.spaceEvent?.event?.$case === "stopRecordingResultMessage") {
+                recordingStore.stopRecord();
+            } else {
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.warn(
+                        `Received a private message for a space that does not exist: "${message.spaceName}". This should not happen unless the space was left a few milliseconds before.`
+                    );
+                    return;
+                }
+                space.dispatchPrivateMessage(message);
             }
-            space.dispatchPrivateMessage(message);
         });
 
         this.spaceDestroyedMessageSubscription = roomConnection.spaceDestroyedMessage.subscribe((message) => {
@@ -270,7 +249,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     async joinSpace(
         spaceName: string,
         filterType: FilterType,
-        propertiesToSync: string[],
+        propertiesToSync: string[] = [],
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
@@ -324,8 +303,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceMetadataMessageStreamSubscription.unsubscribe();
-        // this.startRecordingMessageSubscription.unsubscribe();
-        // this.stopRecordingMessageSubscription.unsubscribe();
         this.proximityPublicMessageEventSubscription.unsubscribe();
         this.proximityPrivateMessageEventSubscription.unsubscribe();
         this.spaceDestroyedMessageSubscription.unsubscribe();

@@ -19,7 +19,7 @@ export class WebRTCState extends CommunicationState {
     }
     handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(user, "user");
+            await this.switchToNextState(user, "user");
             return;
         }
 
@@ -54,7 +54,7 @@ export class WebRTCState extends CommunicationState {
 
     handleUserToNotifyAdded(user: SpaceUser): void {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(user, "userToNotify");
+            await this.switchToNextState(user, "userToNotify");
             return;
         }
 
@@ -63,7 +63,6 @@ export class WebRTCState extends CommunicationState {
             return;
         }
 
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyAdded", user);
         super.handleUserToNotifyAdded(user);
     }
 
@@ -77,7 +76,6 @@ export class WebRTCState extends CommunicationState {
             return;
         }
 
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
         super.handleUserToNotifyDeleted(user);
     }
 
@@ -86,8 +84,7 @@ export class WebRTCState extends CommunicationState {
         this._readyUsers.add(user.spaceUserId);
         this._switchInitiatorUserId = user.spaceUserId;
 
-        this._nextState = await LivekitState.create(this._space, this._communicationManager, this._readyUsers)
-        // this._nextState = new LivekitState(this._space, this._communicationManager, this._readyUsers);
+        this._nextState = await LivekitState.create(this._space, this._communicationManager, this._readyUsers);
 
         if (
             typeOfSwitch === "user" &&

@@ -10,7 +10,7 @@ import {
     S3Upload,
     EncodedFileType,
     ImageOutput,
-    EncodedOutputs
+    EncodedOutputs,
 } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
@@ -23,7 +23,7 @@ import {
     LIVEKIT_RECORDING_S3_BUCKET,
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
-    LIVEKIT_RECORDING_S3_REGION
+    LIVEKIT_RECORDING_S3_REGION,
 } from "../../Enum/EnvironmentVariable";
 
 const debug = Debug("livekit");
@@ -71,9 +71,7 @@ export class LiveKitService {
             departureTimeout: 5 * 60 * 1000,
         };
 
-        const room = await this.roomServiceClient.createRoom(createOptions);
-        console.log("☎️☎️☎️ Livekit service: Room created successfully:", room.name);
-        // this.startRecording(roomName).catch((error) => console.error(">>>> startRecording error", error));
+        await this.roomServiceClient.createRoom(createOptions);
     }
 
     async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
@@ -104,9 +102,6 @@ export class LiveKitService {
     async deleteRoom(roomName: string): Promise<void> {
         try {
             await this.roomServiceClient.deleteRoom(roomName);
-            // if(this.currentRecordingInformation) {
-            //     this.stopRecording();
-            // }
         } catch (error) {
             console.error(`Error deleting room ${roomName}:`, error);
             Sentry.captureException(error);
@@ -150,17 +145,13 @@ export class LiveKitService {
     }
 
     async startRecording(roomName: string, user: SpaceUser, folderName: string, layout = "grid"): Promise<void> {
-        console.log("🤟🤟🤟Backend: Start recording for user : ", user);
         try {
-
-            // throw new Error("Livekit recording is not implemented yet");
             const endpoint = LIVEKIT_RECORDING_S3_ENDPOINT;
             const accessKey = LIVEKIT_RECORDING_S3_ACCESS_KEY;
             const secret = LIVEKIT_RECORDING_S3_SECRET_KEY;
             const region = LIVEKIT_RECORDING_S3_REGION;
             const bucket = LIVEKIT_RECORDING_S3_BUCKET;
 
-            //TODO : intégrer le nom de l'utilisateur dans le chemin de l'enregistrement pour pouvoir le retrouver plus tard (voir si on mets cette parttie dans une autre classe qui gere la recuperation des fichiers etc...)
             const timestamp = new Date().toISOString().slice(0, 19);
 
             const videoFilepath = `${folderName}/recording-${timestamp}`;
@@ -174,7 +165,6 @@ export class LiveKitService {
                 bucket,
                 forcePathStyle: true,
             });
-            // Sortie vidéo (existante)
             const videoOutput = new EncodedFileOutput({
                 fileType: EncodedFileType.MP4,
                 filepath: videoFilepath,
@@ -201,27 +191,12 @@ export class LiveKitService {
                 images: thumbnailOutput,
             };
 
-            const result = await this.egressClient.startRoomCompositeEgress(
-                roomName,
-                outputs,
-                {
-                    layout,
-                }
-            );
+            const result = await this.egressClient.startRoomCompositeEgress(roomName, outputs, {
+                layout,
+            });
 
             this.currentRecordingInformation = result;
-
-            // Stop recording after 60 seconds
-            // setTimeout(async () => {
-            //     try {
-            //          await this.stopRecording();
-            //     } catch (error) {
-            //         console.error('Failed to auto-stop recording after 10 seconds:', error);
-            //         Sentry.captureException(error);
-            //     }
-            // }, 60000);
         } catch (error) {
-            console.error("LivekitService.ts => Failed to start recording:", error);
             Sentry.captureException(error);
             throw new Error("Failed to start recording");
         }
@@ -234,6 +209,5 @@ export class LiveKitService {
         }
         await this.egressClient.stopEgress(this.currentRecordingInformation.egressId);
         this.currentRecordingInformation = null;
-        console.trace("🤟🤟🤟LivekitService.ts => Stop recording");
     }
 }

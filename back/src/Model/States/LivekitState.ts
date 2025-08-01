@@ -3,10 +3,10 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { IRecordableState } from "../Interfaces/ICommunicationState";
+import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
-import { IRecordableState } from "../Interfaces/ICommunicationState";
-import { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 
 export class LivekitState extends CommunicationState implements IRecordableState {
     protected _currentCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
@@ -18,7 +18,6 @@ export class LivekitState extends CommunicationState implements IRecordableState
         protected readonly _currentStrategy: IRecordableStrategy,
         protected readonly _readyUsers: Set<string> = new Set()
     ) {
-        //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
         super(_space, _communicationManager, _currentStrategy, _readyUsers);
         this.SWITCH_TIMEOUT_MS = 5000;
     }
@@ -113,16 +112,10 @@ export class LivekitState extends CommunicationState implements IRecordableState
 
     async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
         if (this.isRecordableStrategy(this._currentStrategy)) {
-            console.log("➡️➡️➡️➡️LivekitState.ts => handleStartRecording()");
-            try {
-                await this._currentStrategy.startRecording(user, userUuid);
-            } catch (error) {
-                console.error("❌ LivekitState.ts => handleStartRecording() - Error starting recording: ", error);
-                throw error; // Re-throw the error to be handled by the caller
-            }
-        }
-        else {
-            console.log("❌ LivekitState.ts => handleStartRecording() - Not a recordable strategy: ", this._currentStrategy);
+            await this._currentStrategy.startRecording(user, userUuid).catch((error) => {
+                console.error("Error starting recording:", error);
+                throw new Error("Failed to start recording");
+            });
         }
     }
 
@@ -131,9 +124,4 @@ export class LivekitState extends CommunicationState implements IRecordableState
             await this._currentStrategy.stopRecording();
         }
     }
-
-    //TODO : voir si on a pas un moyen plus simple de faire ça
-    // private isRecordableStrategy(strategy: ICommunicationStrategy): strategy is IRecordableStrategy {
-    //     return 'handleStartRecording' in strategy && 'handleStopRecording' in strategy;
-    // }
 }
