@@ -116,7 +116,7 @@ describe("WebRTCState - switching logic ", () => {
             mock<ICommunicationSpace>({
                 //Streamers
                 getUsersInFilter: () => {
-                    return [spaceUser];
+                    return [];
                 },
                 //Watchers
                 getUsersToNotify: () => {
@@ -126,7 +126,8 @@ describe("WebRTCState - switching logic ", () => {
             mock<CommunicationManager>()
         );
 
-        // simulate switching in progress
+        console.log(state["MAX_WATCHERS_FOR_PEER"], state["MAX_STREAMERS_FOR_PEER"]);
+
         state["isSwitching"] = () => true;
 
         expect(state["shouldSwitchBackToCurrentState"]()).toBe(true);
