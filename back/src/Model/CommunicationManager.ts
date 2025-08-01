@@ -77,5 +77,5 @@ export class CommunicationManager implements ICommunicationManager {
 
 export const CommunicationConfig = {
     //TODO : switch back to 4
-    MAX_USERS_FOR_WEBRTC: 2,
+    MAX_USERS_FOR_WEBRTC: 4,
 };

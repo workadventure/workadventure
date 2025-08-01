@@ -134,7 +134,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
 
-        await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
+        await expect(page.locator('#cameras-container').getByText('You')).toBeVisible();
 
         // Second browser
         const page2 = await getPage(browser, "Admin2", Map.url("empty"));

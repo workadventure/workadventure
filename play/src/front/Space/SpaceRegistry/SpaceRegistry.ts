@@ -43,6 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     public spacesWithRecording: Readable<Space[]>;
+    private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -252,6 +253,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         propertiesToSync: string[] = [],
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
+        const leavingPromise = this.leavingSpacesPromises.get(spaceName);
+        if (leavingPromise) {
+            await leavingPromise;
+        }
+
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
         const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
@@ -266,6 +272,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
+
+        const leavingPromise = this.performLeaveSpace(spaceInRegistry, spaceName);
+        this.leavingSpacesPromises.set(spaceName, leavingPromise);
+
+        try {
+            await leavingPromise;
+        } finally {
+            this.leavingSpacesPromises.delete(spaceName);
+        }
+    }
+
+    private async performLeaveSpace(spaceInRegistry: Space, spaceName: string): Promise<void> {
         await spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
@@ -308,8 +326,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.spaceDestroyedMessageSubscription.unsubscribe();
         this.roomConnectionStreamSubscription.unsubscribe();
 
-        // Technically, all spaces should have been destroyed by now.
-        // If a space is not destroyed, it means that there is a bug in the code.
+        await Promise.all(Array.from(this.leavingSpacesPromises.values()));
+        this.leavingSpacesPromises.clear();
+
         await Promise.all(
             Array.from(this.spaces.values()).map(async (space) => {
                 await space.destroy();
