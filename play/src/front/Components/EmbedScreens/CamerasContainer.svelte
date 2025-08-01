@@ -41,15 +41,18 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
 
     export let oneLineMaxHeight: number;
-    // Note: the correct gap should be 16px (gap-4 in Tailwind). But if we put 16px, it leads to instabilities.
-    // Those are likely due to negative margins in the MediaBox component.
-    // To prevent this, we use a slightly wider gap for our computations.
-    const gap = 22; // Configurable gap between videos
+    const gap = 16; // Configurable gap between videos in pixels
+
+    // The "maximum" number of videos we want to display.
+    // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
+    // will be maximumVideosPerPage + nbVideos % vpr
+    const maximumVideosPerPage = MAX_DISPLAYED_VIDEOS;
 
     export let isOnOneLine: boolean;
     export let oneLineMode: "vertical" | "horizontal" = "horizontal";
@@ -60,11 +63,15 @@
     let videoHeight: number | undefined;
 
     // The minimum width of a media box in pixels
-    const minMediaBoxWidth = 120;
+    const minMediaBoxWidth = 160;
 
     const gameScene = gameManager.getCurrentGameScene();
 
     onMount(() => {});
+
+    onDestroy(() => {
+        gameScene.reposition();
+    });
 
     $: maxMediaBoxWidth = (oneLineMaxHeight * 16) / 9;
 
@@ -121,18 +128,30 @@
             //if (height <= containerHeight) {
             // Calculate how many complete rows we can fit
             const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
-            const visibleVideos = rowsPerPage * vpr;
+            const maxVisibleVideos = rowsPerPage * vpr;
+
+            //console.log("maxVisibleVideos", maxVisibleVideos);
+            //console.log('vpr', vpr, 'rowsPerPage', rowsPerPage, 'maxVisibleVideos', maxVisibleVideos);
+
+            // The "maximum" number of videos we want to display. This is either the number of videos we have
+            // or the maximumVideosPerPage constant.
+            // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
+            // will be maximumVideosPerPage + nbVideos % vpr
+            const maxNbVideos = Math.min($streamableCollectionStore.size, maximumVideosPerPage);
 
             // If we need scrolling, calculate the maximum height that would fit
-            if (visibleVideos < $streamableCollectionStore.size) {
+            if (maxVisibleVideos < maxNbVideos) {
+                //console.log("max width for vpr", width);
+                //console.log('vpr', vpr);
                 // Calculate total number of rows needed
-                const totalRows = Math.ceil($streamableCollectionStore.size / vpr);
+                const totalRows = Math.ceil(maxNbVideos / vpr);
+                //console.log('totalRows', totalRows);
 
                 // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
                 if (totalRows === 1) {
                     const adjustedWidth = (containerHeight * 16) / 9;
                     return {
-                        videoWidth: adjustedWidth,
+                        videoWidth: Math.max(adjustedWidth, minMediaBoxWidth),
                     };
                 }
 
@@ -150,20 +169,35 @@
 
                 // Solution 2: let's increase the number of videos per row (only possible if we have enough videos)
                 const adjustedWidthWithOneMoreVpr =
-                    $streamableCollectionStore.size >= vpr + 1 ? (containerWidth - gap * vpr) / (vpr + 1) : 0;
+                    maxNbVideos >= vpr + 1 ? (containerWidth - gap * vpr) / (vpr + 1) : 0;
 
                 // Check which solution is better
                 let adjustedWidth: number;
                 let adjustedHeight: number | undefined;
                 if (adjustedWidthWithReducedHeight > adjustedWidthWithOneMoreVpr) {
+                    const adjustedVpr = Math.floor((containerWidth + gap) / (adjustedWidthWithReducedHeight + gap));
+                    if (adjustedVpr !== vpr) {
+                        console.warn("problem");
+                    }
                     // if solution 1 is better
                     adjustedWidth = adjustedWidthWithReducedHeight;
+                    //console.log("Solution 1, total row", totalRows, "vpr", vpr, "adjustedVpr", adjustedVpr, "adjustedWidth", adjustedWidth, "maxHeightPerVideo", maxHeightPerVideo, "containerHeight", containerHeight, "totalRows", totalRows, "containerWidth", containerWidth);
                 } else {
+                    //console.log("Solution 2, vpr", vpr+1);
                     // if solution 2 is better, the videos will not occupy all vertical space.
                     // We can fix this by breaking the aspect ratio.
                     adjustedWidth = adjustedWidthWithOneMoreVpr;
-                    const adjustedTotalRows = Math.ceil($streamableCollectionStore.size / (vpr + 1));
+                    const adjustedTotalRows = Math.ceil(maxNbVideos / (vpr + 1));
                     adjustedHeight = (containerHeight - gap * (adjustedTotalRows - 1)) / adjustedTotalRows;
+                    if (adjustedHeight < adjustedWidth * (9 / 16)) {
+                        adjustedHeight = adjustedWidth * (9 / 16);
+                    }
+                }
+
+                if (adjustedWidth < minMediaBoxWidth) {
+                    return {
+                        videoWidth: minMediaBoxWidth,
+                    };
                 }
                 //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
                 return {
@@ -204,7 +238,9 @@
 >
     <div
         bind:clientWidth={containerWidth}
-        class="pointer-events-none gap-4"
+        class="pointer-events-auto"
+        style={`gap: ${gap}px; ` +
+            (!isOnOneLine || (isOnOneLine && oneLineMode === "vertical") ? "height: " + containerHeight + "px;" : "")}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -229,6 +265,7 @@
         class:mt-0={!isOnOneLine}
         class:h-full={isOnOneLine && oneLineMode === "vertical"}
         id="cameras-container"
+        data-testid="cameras-container"
     >
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
@@ -253,6 +290,7 @@
         {#if isOnOneLine && oneLineMode === "vertical"}
             <div class="fixed bottom-20 right-0 z-50">
                 <div
+                    data-unique-id="my-camera"
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                     }`}
@@ -271,6 +309,7 @@
             currentHeight={containerHeight}
             onResize={onResizeHandler}
             onResizeEnd={() => analyticsClient.resizeCameraLayout()}
+            dataTestid="resize-handle"
         />
     {/if}
 </div>

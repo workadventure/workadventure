@@ -487,7 +487,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    addNewParticipant(peerId: string, userId: number, uuid: string): void {
+    addNewParticipant(peerId: string, userId: string, uuid: string): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_spontaneous_discussion", { peerId, userId, uuid });

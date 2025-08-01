@@ -225,6 +225,7 @@ export class SpaceConnection {
                             spaceName: space.name,
                             filterType: space.filterType,
                             isRetry,
+                            propertiesToSync: space.getPropertiesToSync(),
                         },
                     },
                 });

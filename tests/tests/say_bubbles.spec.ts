@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { publicTestMapUrl } from "./utils/urls";
 import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map";
 import menu from "./utils/menu";
 
 test.describe("Say bubbles", () => {
@@ -22,6 +23,9 @@ test.describe("Say bubbles", () => {
         const alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
+
+        await Map.teleportToPosition(alicePage, 0, 0);
+
         const bobPage = await getPage(browser, 'Bob',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
@@ -29,6 +33,8 @@ test.describe("Say bubbles", () => {
         // Wait for both users to be connected
         await alicePage.waitForTimeout(2000);
         await bobPage.waitForTimeout(2000);
+
+        
 
         // Alice sends a message
         await alicePage.keyboard.press("Enter");
@@ -48,7 +54,9 @@ test.describe("Say bubbles", () => {
 
         // Close both pages
         await alicePage.close();
+        await alicePage.context().close();
         await bobPage.close();
+        await bobPage.context().close();
     });
 
     test("should display a thinking bubble and be received by other users", async ({ browser }) => {
@@ -56,6 +64,9 @@ test.describe("Say bubbles", () => {
         const alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
+        
+        await Map.teleportToPosition(alicePage, 0, 0);
+
         const bobPage = await getPage(browser, 'Bob',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
@@ -84,7 +95,9 @@ test.describe("Say bubbles", () => {
 
         // Close both pages
         await alicePage.close();
+        await alicePage.context().close();
         await bobPage.close();
+        await bobPage.context().close();
     });
 
     test("should display a Say and Think bubble via action menu", async ({ browser }) => {
@@ -104,5 +117,9 @@ test.describe("Say bubbles", () => {
         await menu.closeSayPopup(alicePage);
         // Open think popup
         await menu.clickOnThinkBubble(alicePage);
+
+                // Close both pages
+        await alicePage.close();
+        await alicePage.context().close();
     });
 });

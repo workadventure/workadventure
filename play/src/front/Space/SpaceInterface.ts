@@ -1,5 +1,4 @@
 import { Observable, Subject } from "rxjs";
-import { Readable } from "svelte/store";
 import {
     FilterType,
     PrivateSpaceEvent,
@@ -7,6 +6,13 @@ import {
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import { MapStore } from "@workadventure/store-utils";
+import { Readable } from "svelte/store";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -27,7 +33,7 @@ export type PrivateEvents = {
 
 export type PrivateEventsObservables = {
     [K in InnerPrivateSpaceEvent["$case"]]?: Subject<
-        Extract<InnerPrivateSpaceEvent, { $case: K }> & { spaceName: string; sender: string }
+        Extract<InnerPrivateSpaceEvent, { $case: K }> & { spaceName: string; sender: SpaceUserExtended }
     >;
 };
 
@@ -47,10 +53,28 @@ export interface SpaceInterface {
     observePublicEvent<K extends keyof PublicEventsObservables>(key: K): NonNullable<PublicEventsObservables[K]>;
     observePrivateEvent<K extends keyof PrivateEventsObservables>(key: K): NonNullable<PrivateEventsObservables[K]>;
     emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void;
+    emitPrivateMessage(
+        message: NonNullable<PrivateSpaceEvent["event"]>,
+        receiverUserId: SpaceUser["spaceUserId"]
+    ): void;
     emitUpdateUser(spaceUser: SpaceUserUpdate): void;
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
+    videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+
+    //TODO : faire une interface pour les personnes qui utilisent les stream en interne ?
+    allVideoStreamStore: MapStore<string, ExtendedStreamable>;
+    allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
+
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
+    getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
+    extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended>;
+    simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
+    //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
+    get spacePeerManager(): SpacePeerManager;
+    dispatchSound(url: URL): Promise<void>;
     //userExist(userId: number): boolean;
     //addUser(user: SpaceUser): Promise<SpaceUserExtended>;
     readonly usersStore: Readable<Map<string, SpaceUserExtended>>;
@@ -95,4 +119,8 @@ export type SpaceUserExtended = SpaceUser & {
     //emitter: JitsiEventEmitter | undefined;
     space: SpaceInterface;
     reactiveUser: ReactiveSpaceUser;
+    getPeerStore: () => Readable<VideoPeer> | undefined;
+    getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
+    getPlayer: () => Promise<RemotePlayerData> | undefined;
+    userId: number;
 };

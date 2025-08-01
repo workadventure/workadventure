@@ -62,4 +62,6 @@ export type SocketData = {
     world: string;
     currentChatRoomArea: string[];
     roomName: string;
+    microphoneState: boolean;
+    cameraState: boolean;
 };

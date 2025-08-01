@@ -1,8 +1,8 @@
 import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
-import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import { User } from "./User";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -166,6 +166,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         this.users.add(user);
         user.group = this;
         this.connectCallback(user, this);
+        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
     }
 
     leave(user: User): void {
@@ -181,6 +182,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
+        this.positionNotifier.emitGroupUsersUpdatedEvent(this);
     }
 
     lock(lock = true): void {

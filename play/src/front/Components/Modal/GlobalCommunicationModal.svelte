@@ -168,11 +168,17 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
+        $megaphoneSpaceStore?.emitUpdateUser({
+            megaphoneState: true,
+        });
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
+        $megaphoneSpaceStore?.emitUpdateUser({
+            megaphoneState: false,
+        });
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();
