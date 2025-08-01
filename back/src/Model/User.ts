@@ -240,10 +240,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
         const setVariable = details.setVariable;
         if (setVariable) {
-            /*console.log(
-                "Variable '" + setVariable.getName() + "' for user '" + this.name + "' updated. New value: '",
-                setVariable.getValue() + "'"
-            );*/
             const scope = setVariable.scope;
             if (scope === SetPlayerVariableMessage_Scope.WORLD) {
                 this.variables

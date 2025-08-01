@@ -20,7 +20,6 @@
     }
 
     let sideBarWidth: number = $chatSidebarWidthStore;
-    console.log("sideBarWidth", sideBarWidth);
 
     const isRTL: boolean = document.documentElement.dir === "rtl";
 

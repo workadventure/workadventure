@@ -132,9 +132,8 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast w-full"
+                class="flex items-center bg-contrast w-full justify-center"
                 class:margin-close={!wokaMenuData.wokaName}
-                class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
                 class:flex-wrap={buttonsLayout === "wrap"}
             >

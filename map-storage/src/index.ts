@@ -72,8 +72,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
     if (err) {
         throw err;
     }
-    console.log(`[${new Date().toISOString()}] Application is running`);
-    console.log(`[${new Date().toISOString()}] gRPC port is 50053`);
+    console.info(`[${new Date().toISOString()}] Application is running`);
+    console.info(`[${new Date().toISOString()}] gRPC port is 50053`);
     server.start();
 });
 
@@ -150,5 +150,5 @@ if (fs.existsSync("dist-ui")) {
 }
 
 app.listen(3000, () => {
-    console.log(`[${new Date().toISOString()}] Application is running on port 3000`);
+    console.info(`[${new Date().toISOString()}] Application is running on port 3000`);
 });
