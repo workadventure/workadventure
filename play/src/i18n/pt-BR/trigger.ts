@@ -2,9 +2,17 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const trigger: DeepPartial<Translation["trigger"]> = {
-    cowebsite: "Pressione ESPAÇO ou toque aqui para abrir o site",
-    jitsiRoom: "Pressione ESPAÇO ou toque aqui para entrar na sala do Jitsi Meet",
-    newTab: "Pressione ESPAÇO ou toque aqui para abrir o site em uma nova guia",
+    cowebsite: "[ESPAÇO] para abrir site 👀",
+    jitsiRoom: "[ESPAÇO] para entrar no Jitsi 👀",
+    newTab: "[ESPAÇO] para abrir nova aba 👀",
+    object: "[ESPAÇO] para interagir com ele 👀",
+    spaceKeyboard: "[ESPAÇO]",
+    mobile: {
+        cowebsite: "👆 para abrir site 👀",
+        jitsiRoom: "👆 para entrar no Jitsi 👀",
+        newTab: "👆 para abrir nova aba 👀",
+        object: "👆 para interagir com ele 👀",
+    },
 };
 
 export default trigger;

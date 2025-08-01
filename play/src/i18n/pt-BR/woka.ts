@@ -9,6 +9,7 @@ const woka: DeepPartial<Translation["woka"]> = {
             back: "Voltar",
             finish: "Terminar",
             next: "Próximo",
+            backTodefaultWoka: "Voltar ao personagem padrão",
         },
     },
     selectWoka: {
