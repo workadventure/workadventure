@@ -1,12 +1,11 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import { BaseTranslation } from "../i18n-types";
 
-const woka: DeepPartial<Translation["woka"]> = {
+const woka: BaseTranslation = {
     customWoka: {
         title: "Personalize seu personagem",
         navigation: {
             finish: "Terminar",
-            backToDefaultWoka: "Voltar ao WOKA padrão",
+            backToDefaultWoka: "Voltar ao personagem padrão",
         },
         randomize: "Losowy",
     },
