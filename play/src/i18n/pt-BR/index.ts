@@ -24,6 +24,7 @@ import mapEditor from "./mapEditor";
 import messageScreen from "./messageScreen";
 import refreshPrompt from "./refreshPrompt";
 import statusModal from "./statusModal";
+import say from "./say";
 
 const pt_BR = merge(en_US, {
     audio,
@@ -50,6 +51,7 @@ const pt_BR = merge(en_US, {
     messageScreen,
     refreshPrompt,
     statusModal,
+    say,
 });
 
 export default pt_BR;

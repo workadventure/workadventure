@@ -1,7 +1,6 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
-const companion: DeepPartial<Translation["companion"]> = {
+const companion: BaseTranslation = {
     select: {
         title: "Selecione seu companheiro",
         any: "Sem companheiro",
