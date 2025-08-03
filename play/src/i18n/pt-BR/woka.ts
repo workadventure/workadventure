@@ -4,17 +4,16 @@ const woka: BaseTranslation = {
     customWoka: {
         title: "Personalize seu personagem",
         navigation: {
-            return: "Retornar",
-            back: "Voltar",
             finish: "Terminar",
-            next: "Próximo",
             backToDefaultWoka: "Voltar ao personagem padrão",
         },
+        randomize: "Randomizar",
     },
     selectWoka: {
         title: "Selecionar seu personagem",
         continue: "Continuar",
         customize: "Customizar seu personagem",
+        randomize: "Selecionar aleatoriamente",
     },
     menu: {
         businessCard: "Cartão de visitas",
