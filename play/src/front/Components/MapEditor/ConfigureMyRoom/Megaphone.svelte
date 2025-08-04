@@ -130,7 +130,10 @@
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}
-            <p class="help-text">{error}</p>
+            <p class="help-text text-danger-800">
+                <IconInfoCircle font-size="18" />
+                {error}
+            </p>
         {/await}
     </div>
 {/if}

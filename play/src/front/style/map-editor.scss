@@ -7,11 +7,11 @@
 p.help-text{
   @apply text-sm text-white/50 grid grid-cols-[20px,1fr] gap-2 items-start cursor-default;
   svg{
-    @apply transition-all hover:rotate-[360deg];
+    @apply transition-all duration-300;
   }
   &:hover {
     svg {
-      @apply rotate-[360deg];
+      @apply rotate-180;
     }
   }
   &.success {
