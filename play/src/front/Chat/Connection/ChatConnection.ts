@@ -183,7 +183,6 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
-    refreshFolderJoinableRooms: (folderId: string) => Promise<void>;
 }
 
 export type Connection = Pick<RoomConnection, "queryChatMembers" | "emitPlayerChatID" | "emitBanPlayerMessage">;

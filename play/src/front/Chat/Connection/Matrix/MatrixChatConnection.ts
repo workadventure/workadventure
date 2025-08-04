@@ -509,7 +509,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
 
             await this.addRoomToParentFolder(room, parentFolder);
-            await parentFolder.refreshAllChildRooms();
+            // await parentFolder.refreshAllChildRooms();
             return true;
         } catch (e) {
             console.error("Error in tryAddRoomToParentFolder:", e);
@@ -556,21 +556,21 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         rootList.set(roomId, new RoomClass(room));
     }
 
-    public async refreshFolderJoinableRooms(folderId: string): Promise<void> {
-        // randomly throw an error
-        const randomError = Math.random() < 0.1;
-        if (randomError) {
-            throw new Error("Random error occurred");
-        }
-
-        const folder = this.roomFolders.get(folderId);
-        if (!folder) {
-            console.warn("Folder not found for ID:", folderId, "folders : ", this.roomFolders);
-            return;
-        }
-        console.log("🏎️🏎️🏎️ Joinable rooms refreshed for folder:", folderId);
-        await folder.refreshAllChildRooms();
-    }
+    // public async refreshFolderJoinableRooms(folderId: string): Promise<void> {
+    //     // randomly throw an error
+    //     // const randomError = Math.random() < 0.1;
+    //     // if (randomError) {
+    //     //     throw new Error("Random error occurred");
+    //     // }
+    //
+    //     const folder = this.roomFolders.get(folderId);
+    //     if (!folder) {
+    //         console.warn("Folder not found for ID:", folderId, "folders : ", this.roomFolders);
+    //         return;
+    //     }
+    //     console.log("🏎️🏎️🏎️ Joinable rooms refreshed for folder:", folderId);
+    //     // await folder.refreshAllChildRooms();
+    // }
 
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
@@ -707,10 +707,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 console.error("Failed to delete room : ", e);
             });
             //get room parent folder and refresh his child rooms
-            const parentsFolderIds = this.getParentRoomID(room);
+            // const parentsFolderIds = this.getParentRoomID(room);
             void (async () => {
-                const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
-                await parentFolder?.refreshAllChildRooms();
+                // const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
+                //await parentFolder?.refreshAllChildRooms();
             })();
             return;
         }
