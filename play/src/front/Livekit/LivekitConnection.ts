@@ -4,6 +4,7 @@ import { LivekitTokenType } from "@workadventure/messages";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
+import { streamingMegaphoneStore } from "../Stores/MediaStore";
 import { LiveKitRoom } from "./LiveKitRoom";
 import { LiveKitRoomWatch } from "./LivekitRoomWatch";
 import { LiveKitRoomStream } from "./LivekitRoomStream";
@@ -19,7 +20,11 @@ export class LivekitConnection {
     private readonly unsubscribers: Subscription[] = [];
     private livekitRoomStreamer: LiveKitRoomStream | undefined;
     private livekitRoomWatcher: LiveKitRoomWatch | undefined;
-    constructor(private space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
+    constructor(
+        private space: SpaceInterface,
+        private _streamableSubjects: StreamableSubjects,
+        private _streamingMegaphoneStore = streamingMegaphoneStore
+    ) {
         this.initialize();
     }
 
@@ -29,6 +34,7 @@ export class LivekitConnection {
         if (tokenType === LivekitTokenType.STREAMER) {
             this.livekitRoomStreamer = new LiveKitRoomStream(serverUrl, token);
             room = this.livekitRoomStreamer;
+            this._streamingMegaphoneStore.set(true);
         } else if (tokenType === LivekitTokenType.WATCHER) {
             this.livekitRoomWatcher = new LiveKitRoomWatch(serverUrl, token, this.space, this._streamableSubjects);
             room = this.livekitRoomWatcher;
@@ -78,6 +84,7 @@ export class LivekitConnection {
                 const tokenType = message.livekitDisconnectMessage.tokenType;
 
                 if (tokenType === LivekitTokenType.STREAMER) {
+                    this._streamingMegaphoneStore.set(false);
                     if (!this.livekitRoomStreamer) {
                         console.error("LivekitRoom not found");
                         Sentry.captureException(new Error("LivekitRoom not found"));
@@ -140,7 +147,7 @@ export class LivekitConnection {
 
         this.livekitRoomStreamer?.destroy();
         this.livekitRoomWatcher?.destroy();
-
+        this._streamingMegaphoneStore.set(false);
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();
         }
