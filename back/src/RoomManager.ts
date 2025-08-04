@@ -59,8 +59,6 @@ const PING_INTERVAL = 80000;
 
 const roomManager = {
     joinRoom: (call: UserSocket): void => {
-        console.log("joinRoom called");
-
         let room: GameRoom | null = null;
         let user: User | null = null;
         let pongTimeoutId: NodeJS.Timeout | undefined;
@@ -274,7 +272,7 @@ const roomManager = {
             }
             const today = new Date();
             pongTimeoutId = setTimeout(() => {
-                console.log(
+                console.info(
                     "Connection lost with user ",
                     user?.uuid,
                     user?.name,
@@ -375,8 +373,6 @@ const roomManager = {
     },
 
     adminRoom(call: AdminSocket): void {
-        console.log("adminRoom called");
-
         const admin = new Admin(call);
         let room: GameRoom | null = null;
 

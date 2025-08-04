@@ -39,7 +39,7 @@ async function createUser(
     await page.goto(targetUrl);
 
     // login
-    await page.fill('input[name="loginSceneName"]', name);
+    await page.getByTestId('loginSceneNameInput').fill(name);
     await page.click('button.loginSceneFormSubmit');
     await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
     for (let i = 0; i < selectWoka(name); i++) {

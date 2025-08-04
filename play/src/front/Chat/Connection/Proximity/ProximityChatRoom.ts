@@ -28,6 +28,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
+import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 
@@ -440,7 +441,11 @@ export class ProximityChatRoom implements ChatRoom {
                 !get(requestedCameraState) &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
-                chatVisibilityStore.set(true);
+                // If the user is not on the mobile, open the chat
+                // The user experience is disrupted by the chat on mobile
+                if (!isMediaBreakpointUp("md")) {
+                    chatVisibilityStore.set(true);
+                }
             }
         }
     }

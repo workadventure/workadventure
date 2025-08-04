@@ -24,7 +24,7 @@ test.describe('Error pages', () => {
         publicTestMapUrl("does/not/exist", "error_pages")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");
@@ -37,7 +37,7 @@ test.describe('Error pages', () => {
         Map.url("not-found")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");
@@ -51,7 +51,7 @@ test.describe('Error pages', () => {
         publicTestMapUrl("tests/MapWithError/error.json", "error_pages")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");
