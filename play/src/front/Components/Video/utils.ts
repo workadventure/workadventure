@@ -5,6 +5,11 @@ import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/E
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 
+// Extended RTCIceServer interface for Firefox compatibility
+interface ExtendedRTCIceServer extends RTCIceServer {
+    credentialType?: "password" | "oauth";
+}
+
 export const debug = Debug("CheckTurn");
 
 export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | undefined) {
@@ -20,18 +25,33 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
 
 export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[] {
     const config: RTCIceServer[] = [];
+    const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+
     if (STUN_SERVER) {
+        const stunUrls = STUN_SERVER.split(",").map((url) => url.trim());
         config.push({
-            urls: STUN_SERVER.split(","),
+            urls: stunUrls,
         });
     }
+
     if (TURN_SERVER) {
-        config.push({
-            urls: TURN_SERVER.split(","),
+        const turnUrls = TURN_SERVER.split(",").map((url) => url.trim());
+        const turnConfig: ExtendedRTCIceServer = {
+            urls: turnUrls,
             username: user.webRtcUser || TURN_USER,
             credential: user.webRtcPassword || TURN_PASSWORD,
-        });
+        };
+
+        // Firefox-specific optimizations
+        if (isFirefox) {
+            // Firefox prefers credentialType to be explicitly set
+            turnConfig.credentialType = "password";
+        }
+
+        config.push(turnConfig);
     }
+
+    debug("ICE servers configuration", { config, isFirefox });
     return config;
 }
 

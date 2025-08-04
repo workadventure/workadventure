@@ -156,7 +156,6 @@ export class Space implements CustomJsonReplacerInterface {
             // If we have an error, it means that the user list is not initialized
             // So we need to remove user from the source watcher
             this.removeUser(sourceWatcher, spaceUser.spaceUserId);
-            this.communicationManager.handleUserDeleted(spaceUser);
         }
     }
 

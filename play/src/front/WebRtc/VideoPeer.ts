@@ -59,7 +59,10 @@ export class VideoPeer extends Peer implements Streamable {
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
-        this.sendWebrtcSignal(data);
+        // Filter ICE candidates for Firefox compatibility
+        if (this.isValidCandidateForFirefox(data)) {
+            this.sendWebrtcSignal(data);
+        }
 
         const ZodCandidate = z.object({
             type: z.literal("candidate"),
@@ -74,6 +77,39 @@ export class VideoPeer extends Peer implements Streamable {
             }, CONNECTION_TIMEOUT);
         }
     };
+
+    private isValidCandidateForFirefox(data: unknown): boolean {
+        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+
+        // Always allow non-candidate signals
+        if (!data || typeof data !== "object" || !("type" in data) || data.type !== "candidate") {
+            return true;
+        }
+
+        // Allow all candidates for non-Firefox browsers
+        if (!isFirefox) {
+            return true;
+        }
+
+        // Firefox-specific candidate filtering
+        if ("candidate" in data && typeof data.candidate === "object" && data.candidate) {
+            const candidate = data.candidate as { type?: string; tcpType?: string; address?: string };
+
+            // Filter out problematic candidate types for Firefox
+            if (candidate.type === "tcp" && candidate.tcpType === "active") {
+                console.debug("Filtering TCP active candidate for Firefox compatibility");
+                return false;
+            }
+
+            // Filter out IPv6 candidates if they cause issues
+            if (candidate.address && candidate.address.includes(":")) {
+                console.debug("Filtering IPv6 candidate for Firefox compatibility");
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     private readonly streamHandler = (stream: MediaStream) => this.stream(stream);
 
@@ -195,10 +231,18 @@ export class VideoPeer extends Peer implements Streamable {
         private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
+        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox-specific optimizations
+                ...(isFirefox && {
+                    iceCandidatePoolSize: 0, // Firefox handles candidate pooling differently
+                    iceTransportPolicy: "all", // Allow all transport types
+                    bundlePolicy: "balanced", // Better compatibility
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
