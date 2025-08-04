@@ -20,6 +20,7 @@
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
@@ -106,8 +107,11 @@
             return newProperties;
         });
 
+        const mapEditorModeManager = scene.getMapEditorModeManager();
+
         analyticsClient.dragDropFile();
         mapEditorModeStore.switchMode(true);
+        mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");
         mapEditorSelectedEntityPrefabStore.set(entityPrefab || defaultEntityPrefab);

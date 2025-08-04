@@ -70,6 +70,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.deleteAreaPreview();
         this.unbindEventHandlers();
         this.unsubscribeStore();
+        this.unbindEntitiesManagerEventHandlers();
     }
 
     /**
@@ -402,6 +403,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             .catch((e) => console.error(e));
 
         if (get(mapEditorEntityFileDroppedStore)) {
+            this.cleanPreview();
             mapEditorEntityFileDroppedStore.set(false);
             mapEditorEntityModeStore.set("EDIT");
             mapEditorSelectedEntityStore.set(openEntity);

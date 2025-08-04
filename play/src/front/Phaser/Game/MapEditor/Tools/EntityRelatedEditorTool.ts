@@ -51,6 +51,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
+        this.unsubscribeToStores();
     }
 
     public activate(): void {
@@ -63,10 +64,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
 
     public destroy(): void {
         this.cleanPreview();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber?.();
-        this.mapEntityEditorModeStoreUnsubscriber?.();
-        this.mapEditorSelectedEntityStoreUnsubscriber?.();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber?.();
+        this.unsubscribeToStores();
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
@@ -98,6 +96,13 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 break;
             }
         }
+    }
+
+    protected unsubscribeToStores(): void {
+        this.mapEditorSelectedEntityPrefabStoreUnsubscriber?.();
+        this.mapEntityEditorModeStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber?.();
     }
 
     protected subscribeToStores(): void {
