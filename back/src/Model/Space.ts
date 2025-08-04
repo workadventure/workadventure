@@ -702,12 +702,21 @@ export class Space implements CustomJsonReplacerInterface {
         const localUsers = this.usersList(watcher);
 
         const providedUsersMap = new Map(providedUsers.map((user) => [user.spaceUserId, user]));
+        const sender = this.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        if (!sender) {
+            throw new Error(`Sender ${senderUserId} not found in space ${this.name}`);
+        }
 
         debug(
             `${this.name} : syncAndDiffAsPrivateEvents => comparing ${providedUsers.length} provided users with ${localUsers.size} local users`
         );
 
         for (const [localUserId, localUser] of localUsers.entries()) {
+            // Skip the sender user - they don't need to be synced to themselves
+            if (localUserId === senderUserId) {
+                continue;
+            }
+
             if (!providedUsersMap.has(localUserId)) {
                 if (this.filterOneUser(localUser)) {
                     backEvents.push({
@@ -716,7 +725,7 @@ export class Space implements CustomJsonReplacerInterface {
                             privateEvent: {
                                 spaceName: this.name,
                                 receiverUserId: senderUserId,
-                                senderUserId: senderUserId,
+                                sender,
                                 spaceEvent: {
                                     event: {
                                         $case: "addSpaceUserMessage",
@@ -738,6 +747,11 @@ export class Space implements CustomJsonReplacerInterface {
         }
 
         for (const [providedUserId, providedUser] of providedUsersMap.entries()) {
+            // Skip the sender user - they don't need to be synced to themselves
+            if (providedUserId === senderUserId) {
+                continue;
+            }
+
             const localUser = localUsers.get(providedUserId);
 
             if (!localUser) {
@@ -748,7 +762,7 @@ export class Space implements CustomJsonReplacerInterface {
                             privateEvent: {
                                 spaceName: this.name,
                                 receiverUserId: senderUserId,
-                                senderUserId: senderUserId,
+                                sender,
                                 spaceEvent: {
                                     event: {
                                         $case: "removeSpaceUserMessage",
@@ -774,7 +788,7 @@ export class Space implements CustomJsonReplacerInterface {
 
                     if (!oldFilter && newFilter) {
                         backEvents.push(
-                            this.createPrivateEvent(senderUserId, {
+                            this.createPrivateEvent(sender, {
                                 event: {
                                     $case: "addSpaceUserMessage",
                                     addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
@@ -790,7 +804,7 @@ export class Space implements CustomJsonReplacerInterface {
                         );
                     } else if (oldFilter && !newFilter) {
                         backEvents.push(
-                            this.createPrivateEvent(senderUserId, {
+                            this.createPrivateEvent(sender, {
                                 event: {
                                     $case: "removeSpaceUserMessage",
                                     removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
@@ -805,7 +819,7 @@ export class Space implements CustomJsonReplacerInterface {
                         );
                     } else if (oldFilter && newFilter) {
                         backEvents.push(
-                            this.createPrivateEvent(senderUserId, {
+                            this.createPrivateEvent(sender, {
                                 event: {
                                     $case: "updateSpaceUserMessage",
                                     updateSpaceUserMessage: {
@@ -876,14 +890,14 @@ export class Space implements CustomJsonReplacerInterface {
         );
     }
 
-    private createPrivateEvent(senderUserId: string, spaceEvent: PrivateEvent["spaceEvent"]): BackToPusherSpaceMessage {
+    private createPrivateEvent(sender: SpaceUser, spaceEvent: PrivateEvent["spaceEvent"]): BackToPusherSpaceMessage {
         return {
             message: {
                 $case: "privateEvent",
                 privateEvent: {
                     spaceName: this.name,
-                    receiverUserId: senderUserId,
-                    senderUserId: senderUserId,
+                    receiverUserId: sender.spaceUserId,
+                    sender,
                     spaceEvent,
                 },
             },
