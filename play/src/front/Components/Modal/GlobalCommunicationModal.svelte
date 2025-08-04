@@ -36,7 +36,6 @@
     } from "../../Stores/MegaphoneStore";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import Tooltip from "../Util/Tooltip.svelte";
-    import Alert from "../UI/Alert.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";

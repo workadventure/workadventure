@@ -2,7 +2,6 @@
     import { fly } from "svelte/transition";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
-    import Alert from "../UI/Alert.svelte";
     import { popupStore } from "../../Stores/PopupStore";
     import { IconInfoCircle } from "@wa-icons";
 
