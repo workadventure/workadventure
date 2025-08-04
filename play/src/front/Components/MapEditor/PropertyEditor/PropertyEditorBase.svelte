@@ -23,7 +23,7 @@
             size="xs"
         />
     </div>
-    <div class="content p-2">
+    <div class="content">
         <slot name="content">No content</slot>
     </div>
 </div>

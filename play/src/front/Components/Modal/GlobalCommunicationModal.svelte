@@ -251,12 +251,10 @@
                         </button>
 
                         {#if !$megaphoneCanBeUsedStore}
-                            <Alert>
-                                <p class="help-text flex items-center">
-                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="20" />
-                                    {$LL.megaphone.modal.audioMessage.noAccess()}
-                                </p>
-                            </Alert>
+                            <p class="help-text !text-danger-800">
+                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
                         {/if}
 
                         <p class="text-white text-sm whitespace-pre-line">
@@ -298,12 +296,10 @@
                         </button>
 
                         {#if !$userIsAdminStore}
-                            <Alert>
-                                <p class="help-text flex items-center">
-                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                    {$LL.megaphone.modal.textMessage.noAccess()}
-                                </p>
-                            </Alert>
+                            <p class="help-text !text-danger-800">
+                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
+                                {$LL.megaphone.modal.textMessage.noAccess()}
+                            </p>
                         {/if}
 
                         <p class="text-white text-sm whitespace-pre-line">
@@ -345,12 +341,10 @@
                         </button>
 
                         {#if !$userIsAdminStore}
-                            <Alert>
-                                <p class="help-text flex items-center">
-                                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                    {$LL.megaphone.modal.audioMessage.noAccess()}
-                                </p>
-                            </Alert>
+                            <p class="help-text !text-danger-800">
+                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
+                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                            </p>
                         {/if}
 
                         <p class="text-white text-sm whitespace-pre-line">
