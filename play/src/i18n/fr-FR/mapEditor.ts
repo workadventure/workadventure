@@ -239,7 +239,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
             },
         },
-        nameHelpText: "Le nom de la zone sera affiché aux utilisateurs lorsqu'ils entreront dans la zone.",
+        noProperties: "Aucune propriété définie",
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
@@ -258,6 +258,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
             },
         },
+        nameHelpText: "Le nom de la zone sera affiché aux utilisateurs lorsqu'ils entreront dans la zone.",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",

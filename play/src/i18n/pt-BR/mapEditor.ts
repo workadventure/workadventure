@@ -244,7 +244,7 @@ const mapEditor: BaseTranslation = {
                 errorOnFileNumber: "Soltar múltiplos arquivos não é suportado",
             },
         },
-        nameHelpText: "Esta entrada será mostrada ao usuário quando ele entrar na área.",
+        noProperties: "Nenhuma propriedade definida",
     },
     areaEditor: {
         editInstructions: "Clique em uma área para modificar suas propriedades.",
@@ -263,6 +263,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancelar",
             },
         },
+        nameHelpText: "Esta entrada será mostrada ao usuário quando ele entrar na área.",
     },
     areaEditorInstructions: {
         title: "Como funciona?",

@@ -635,7 +635,7 @@
         />
         <p class="help-text">
             <IconInfoCircle font-size="18" />
-            {$LL.mapEditor.properties.nameHelpText()}
+            {$LL.mapEditor.areaEditor.nameHelpText()}
         </p>
 
         <div class="area-name-container">
