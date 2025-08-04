@@ -366,6 +366,9 @@ export class Space implements SpaceInterface {
             if (this._leftUserSubscriber) {
                 this._leftUserSubscriber.next(user);
             }
+
+            this.allVideoStreamStore.delete(spaceUserId);
+            this.allScreenShareStreamStore.delete(spaceUserId);
         }
     }
 
