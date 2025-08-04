@@ -115,8 +115,11 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
-            // transform sdp to force to use h264 codec
-            this.sendWebrtcScreenSharingSignal(data);
+            // Filter ICE candidates for browser compatibility
+            if (this.isValidCandidate(data)) {
+                // transform sdp to force to use h264 codec
+                this.sendWebrtcScreenSharingSignal(data);
+            }
 
             const ZodCandidate = z.object({
                 type: z.literal("candidate"),
@@ -184,6 +187,98 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 console.error("Error while getting extended space user", e);
                 Sentry.captureException(e);
             });
+    }
+
+    private isValidCandidate(data: unknown): boolean {
+        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+        const isChrome = navigator.userAgent.toLowerCase().includes("chrome");
+        const isSafari = navigator.userAgent.toLowerCase().includes("safari") && !isChrome;
+
+        // Always allow non-candidate signals
+        if (!data || typeof data !== "object" || !("type" in data) || data.type !== "candidate") {
+            return true;
+        }
+
+        // Enhanced candidate filtering for all browsers
+        if ("candidate" in data && data.candidate) {
+            // Handle the candidate as an object with parsed properties
+            if (typeof data.candidate === "object") {
+                const candidate = data.candidate as {
+                    type?: string;
+                    tcpType?: string;
+                    address?: string;
+                    protocol?: string;
+                    foundation?: string;
+                    component?: number;
+                    priority?: number;
+                };
+
+                // Universal candidate filtering
+                if (!candidate.type || !candidate.address) {
+                    console.debug("Filtering invalid screen sharing candidate (missing type or address)");
+                    return false;
+                }
+
+                // Firefox-specific candidate filtering
+                if (isFirefox) {
+                    // Filter out problematic candidate types for Firefox
+                    if (candidate.type === "tcp" && candidate.tcpType === "active") {
+                        console.debug("Filtering TCP active screen sharing candidate for Firefox compatibility");
+                        return false;
+                    }
+
+                    // Filter out IPv6 candidates that cause issues in Firefox
+                    if (candidate.address && candidate.address.includes(":")) {
+                        console.debug("Filtering IPv6 screen sharing candidate for Firefox compatibility");
+                        return false;
+                    }
+
+                    // Filter out candidates with very low priority that Firefox struggles with
+                    if (candidate.priority && candidate.priority < 1000) {
+                        console.debug("Filtering low priority screen sharing candidate for Firefox compatibility");
+                        return false;
+                    }
+                }
+
+                // Chrome-specific filtering
+                if (isChrome) {
+                    // Filter out malformed TCP candidates that Chrome might reject
+                    if (candidate.type === "tcp" && !candidate.tcpType) {
+                        console.debug(
+                            "Filtering TCP screen sharing candidate without tcpType for Chrome compatibility"
+                        );
+                        return false;
+                    }
+                }
+
+                // Safari-specific filtering
+                if (isSafari) {
+                    // Safari has issues with certain relay candidates
+                    if (candidate.type === "relay" && candidate.protocol === "tcp") {
+                        console.debug("Filtering TCP relay screen sharing candidate for Safari compatibility");
+                        return false;
+                    }
+                }
+
+                // Filter out candidates with invalid addresses
+                if (candidate.address === "0.0.0.0" || candidate.address === "::") {
+                    console.debug("Filtering screen sharing candidate with invalid address:", candidate.address);
+                    return false;
+                }
+            }
+
+            // Handle the candidate as a string (SDP format)
+            if (typeof data.candidate === "string") {
+                const portMatch = data.candidate.match(/\s(\d+)\s/);
+                const port = portMatch ? parseInt(portMatch[1], 10) : null;
+                if (port && (port < 1 || port > 65535)) {
+                    console.debug("Filtering screen sharing candidate with invalid port:", port);
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private close() {

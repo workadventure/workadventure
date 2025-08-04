@@ -59,8 +59,8 @@ export class VideoPeer extends Peer implements Streamable {
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
-        // Filter ICE candidates for Firefox compatibility
-        if (this.isValidCandidateForFirefox(data)) {
+        // Filter ICE candidates for browser compatibility
+        if (this.isValidCandidate(data)) {
             this.sendWebrtcSignal(data);
         }
 
@@ -78,33 +78,90 @@ export class VideoPeer extends Peer implements Streamable {
         }
     };
 
-    private isValidCandidateForFirefox(data: unknown): boolean {
+    private isValidCandidate(data: unknown): boolean {
         const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+        const isChrome = navigator.userAgent.toLowerCase().includes("chrome");
+        const isSafari = navigator.userAgent.toLowerCase().includes("safari") && !isChrome;
 
         // Always allow non-candidate signals
         if (!data || typeof data !== "object" || !("type" in data) || data.type !== "candidate") {
             return true;
         }
 
-        // Allow all candidates for non-Firefox browsers
-        if (!isFirefox) {
-            return true;
-        }
+        // Enhanced candidate filtering for all browsers
+        if ("candidate" in data && data.candidate) {
+            // Handle the candidate as an object with parsed properties
+            if (typeof data.candidate === "object") {
+                const candidate = data.candidate as {
+                    type?: string;
+                    tcpType?: string;
+                    address?: string;
+                    protocol?: string;
+                    foundation?: string;
+                    component?: number;
+                    priority?: number;
+                };
 
-        // Firefox-specific candidate filtering
-        if ("candidate" in data && typeof data.candidate === "object" && data.candidate) {
-            const candidate = data.candidate as { type?: string; tcpType?: string; address?: string };
+                // Universal candidate filtering
+                if (!candidate.type || !candidate.address) {
+                    console.debug("Filtering invalid candidate (missing type or address)");
+                    return false;
+                }
 
-            // Filter out problematic candidate types for Firefox
-            if (candidate.type === "tcp" && candidate.tcpType === "active") {
-                console.debug("Filtering TCP active candidate for Firefox compatibility");
-                return false;
+                // Firefox-specific candidate filtering
+                if (isFirefox) {
+                    // Filter out problematic candidate types for Firefox
+                    if (candidate.type === "tcp" && candidate.tcpType === "active") {
+                        console.debug("Filtering TCP active candidate for Firefox compatibility");
+                        return false;
+                    }
+
+                    // Filter out IPv6 candidates that cause issues in Firefox
+                    if (candidate.address && candidate.address.includes(":")) {
+                        console.debug("Filtering IPv6 candidate for Firefox compatibility");
+                        return false;
+                    }
+
+                    // Filter out candidates with very low priority that Firefox struggles with
+                    if (candidate.priority && candidate.priority < 1000) {
+                        console.debug("Filtering low priority candidate for Firefox compatibility");
+                        return false;
+                    }
+                }
+
+                // Chrome-specific filtering
+                if (isChrome) {
+                    // Filter out malformed TCP candidates that Chrome might reject
+                    if (candidate.type === "tcp" && !candidate.tcpType) {
+                        console.debug("Filtering TCP candidate without tcpType for Chrome compatibility");
+                        return false;
+                    }
+                }
+
+                // Safari-specific filtering
+                if (isSafari) {
+                    // Safari has issues with certain relay candidates
+                    if (candidate.type === "relay" && candidate.protocol === "tcp") {
+                        console.debug("Filtering TCP relay candidate for Safari compatibility");
+                        return false;
+                    }
+                }
+
+                // Filter out candidates with invalid addresses
+                if (candidate.address === "0.0.0.0" || candidate.address === "::") {
+                    console.debug("Filtering candidate with invalid address:", candidate.address);
+                    return false;
+                }
             }
 
-            // Filter out IPv6 candidates if they cause issues
-            if (candidate.address && candidate.address.includes(":")) {
-                console.debug("Filtering IPv6 candidate for Firefox compatibility");
-                return false;
+            // Handle the candidate as a string (SDP format)
+            if (typeof data.candidate === "string") {
+                const portMatch = data.candidate.match(/\s(\d+)\s/);
+                const port = portMatch ? parseInt(portMatch[1], 10) : null;
+                if (port && (port < 1 || port > 65535)) {
+                    console.debug("Filtering candidate with invalid port:", port);
+                    return false;
+                }
             }
         }
 

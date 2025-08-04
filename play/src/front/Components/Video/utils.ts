@@ -135,11 +135,51 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         }
     };
 
-    // Log errors:
+    // Enhanced ICE candidate error logging
     // Remember that in most of the cases, even if its working, you will find a STUN host lookup received error
     // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
     pc.onicecandidateerror = (e) => {
-        debug("onicecandidateerror => %O", e);
+        const event = e as RTCPeerConnectionIceErrorEvent;
+
+        // Categorize error types for better debugging
+        if (event.errorCode) {
+            switch (event.errorCode) {
+                case 701: // STUN host lookup error
+                    debug(
+                        "ICE candidate error: STUN host lookup failed for %s (IPv6 DNS issue, usually harmless)",
+                        event.url || "unknown"
+                    );
+                    break;
+                case 300: // STUN allocation failure
+                    debug("ICE candidate error: STUN allocation failure for %s", event.url || "unknown");
+                    break;
+                case 400: // TURN allocation failure
+                    debug("ICE candidate error: TURN allocation failure for %s", event.url || "unknown");
+                    console.warn(
+                        "TURN server allocation failed - this may affect connectivity for users behind restrictive firewalls"
+                    );
+                    break;
+                default:
+                    debug(
+                        "ICE candidate error: Code %d for %s - %s",
+                        event.errorCode,
+                        event.url || "unknown",
+                        event.errorText || "no details"
+                    );
+                    break;
+            }
+        } else {
+            debug("ICE candidate error (no error code): %O", e);
+        }
+
+        // Don't show help dialog for common/harmless errors
+        if (event.errorCode !== 701 && !turnServerReached) {
+            // Only show help after multiple errors or serious errors
+            const seriousErrors = [300, 400, 403, 500];
+            if (seriousErrors.includes(event.errorCode || 0)) {
+                console.warn("Serious ICE connectivity issue detected. Please check network configuration.");
+            }
+        }
     };
 
     pc.addEventListener("icegatheringstatechange", handleIceGatheringStateChange);
