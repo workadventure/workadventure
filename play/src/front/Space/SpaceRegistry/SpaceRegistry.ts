@@ -56,66 +56,60 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, ExtendedStreamable> = new Map();
-            const unsubscribers: (() => void)[] = [];
+            if ($spaces.size === 0) {
+                set(new Map());
+                return () => {};
+            }
 
-            const updatePeers = () => {
-                allPeers.clear();
-                if ($spaces.size === 0) {
-                    set(new Map());
-                    return;
-                }
-                $spaces.forEach((space) => {
-                    const aggregatedPeerStores = space.videoStreamStore;
-                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
-                        allPeers.clear();
-                        peerStores.forEach((streamable, userId) => {
-                            allPeers.set(userId, streamable);
-                        });
-                        set(new Map(allPeers));
+            const spaceStores = Array.from($spaces.values()).map((space) => space.videoStreamStore);
+
+            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+
+                allSpaceStreams.forEach((spaceStreams) => {
+                    spaceStreams.forEach((streamable, userId) => {
+                        aggregatedPeers.set(userId, streamable);
                     });
-                    unsubscribers.push(unsubscribeAggregated);
                 });
-            };
 
-            updatePeers();
+                return aggregatedPeers;
+            });
 
-            return () => {
-                unsubscribers.forEach((unsub) => unsub());
-            };
+            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+                set(new Map(aggregatedPeers));
+            });
+
+            return unsubscribe;
         }
     );
 
     public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, ExtendedStreamable> = new Map();
-            const unsubscribers: (() => void)[] = [];
+            if ($spaces.size === 0) {
+                set(new Map());
+                return () => {};
+            }
 
-            const updatePeers = () => {
-                allPeers.clear();
-                if ($spaces.size === 0) {
-                    set(new Map());
-                    return;
-                }
-                $spaces.forEach((space) => {
-                    const aggregatedPeerStores = space.screenShareStreamStore;
-                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
-                        allPeers.clear();
-                        peerStores.forEach((streamable, userId) => {
-                            allPeers.set(userId, streamable);
-                        });
-                        set(new Map(allPeers));
+            const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
+
+            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+
+                allSpaceStreams.forEach((spaceStreams) => {
+                    spaceStreams.forEach((streamable, userId) => {
+                        aggregatedPeers.set(userId, streamable);
                     });
-                    unsubscribers.push(unsubscribeAggregated);
                 });
-            };
 
-            updatePeers();
+                return aggregatedPeers;
+            });
 
-            return () => {
-                unsubscribers.forEach((unsub) => unsub());
-            };
+            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+                set(new Map(aggregatedPeers));
+            });
+
+            return unsubscribe;
         }
     );
 
