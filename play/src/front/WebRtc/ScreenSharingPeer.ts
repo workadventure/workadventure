@@ -58,18 +58,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
-        const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
-
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
-                // Firefox-specific optimizations
-                ...(isFirefox && {
-                    iceCandidatePoolSize: 0, // Firefox handles candidate pooling differently
-                    iceTransportPolicy: "all", // Allow all transport types
-                    bundlePolicy: "balanced", // Better compatibility
-                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
