@@ -19,7 +19,7 @@ export class WebRTCState extends CommunicationState {
     }
     handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchToNextState()) {
-            await this.switchToNextState(user, "user");
+            this.switchToNextState(user, "user").catch((e) => console.error("Switched to next state with user:", e));
             return;
         }
 
@@ -54,7 +54,9 @@ export class WebRTCState extends CommunicationState {
 
     handleUserToNotifyAdded(user: SpaceUser): void {
         if (this.shouldSwitchToNextState()) {
-            await this.switchToNextState(user, "userToNotify");
+            this.switchToNextState(user, "userToNotify").catch((e) =>
+                console.log("Switched to next state with user to notify:", e)
+            );
             return;
         }
 

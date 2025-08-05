@@ -66,14 +66,15 @@ const spaceManager = {
                         break;
                     }
                     case "spaceQueryMessage": {
-                        await socketManager.handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage);
+                        socketManager
+                            .handleSpaceQueryMessage(pusher, message.message.spaceQueryMessage)
+                            .catch((e) => console.error("Error handling spaceQueryMessage:", e));
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {
-                        await socketManager.handleAddSpaceUserToNotifyMessage(
-                            pusher,
-                            message.message.addSpaceUserToNotifyMessage
-                        );
+                        socketManager
+                            .handleAddSpaceUserToNotifyMessage(pusher, message.message.addSpaceUserToNotifyMessage)
+                            .catch((e) => console.error("Error handling addSpaceUserToNotifyMessage:", e));
                         break;
                     }
                     case "deleteSpaceUserToNotifyMessage": {
