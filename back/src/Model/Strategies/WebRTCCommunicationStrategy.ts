@@ -72,11 +72,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     public addUser(newUser: SpaceUser): void {
         const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
-        console.log(
-            "👌👌👌👌👌👌👌 WebRTCCommunicationStrategy addUser",
-            newUser.spaceUserId,
-            existingUsers.map((user) => user.spaceUserId)
-        );
 
         existingUsers.forEach((existingUser) => {
             if (this.shouldEstablishConnection(newUser, existingUser)) {
@@ -91,7 +86,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
         if (!watchers.includes(user.spaceUserId)) {
             this.shutdownAllConnections(user);
-            return;
+            //this.cleanupUserMessages(user.spaceUserId);
+            //return;
         }
         const streamer = this._space.getUsersInFilter().map((user) => user.spaceUserId);
 
@@ -107,7 +103,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private shutdownAllConnections(user: SpaceUser): void {
         const connections = this._connections.getConnections(user.spaceUserId);
         connections.forEach((connection) => {
-            if (!this._connections.hasConnection(connection, user.spaceUserId)) {
+            if (this._connections.hasConnection(connection, user.spaceUserId)) {
                 this.shutdownConnection(user.spaceUserId, connection);
             }
         });
@@ -123,6 +119,21 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
     public deleteUserFromNotify(user: SpaceUser): void {
+        const streamers = this._space.getUsersInFilter().map((user) => user.spaceUserId);
+
+        if (!streamers.includes(user.spaceUserId)) {
+            this.shutdownAllConnections(user);
+            //return;
+        }
+
+        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
+
+        streamers.forEach((streamer) => {
+            if (!watchers.includes(streamer)) {
+                this.shutdownConnection(user.spaceUserId, streamer);
+            }
+        });
+
         this.cleanupUserToNotifyMessages(user.spaceUserId);
     }
 
@@ -130,15 +141,22 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this.handleUserMediaUpdate(user);
     }
     private shutdownConnection(user: string, otherUser: string): void {
-        this.sendWebRTCDisconnect(user, otherUser);
-        this.sendWebRTCDisconnect(otherUser, user);
+        try {
+            this.sendWebRTCDisconnect(user, otherUser);
+        } catch (error) {
+            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 1", user, otherUser, error);
+        }
+        try {
+            this.sendWebRTCDisconnect(otherUser, user);
+        } catch (error) {
+            console.error("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy shutdownConnection 2", otherUser, user, error);
+        }
     }
 
     //TODO : prendre en compte seulement les users dans le filtre / 1 personne en parametre plutot que les 2
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
         const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
-
         // Only establish if we need media connection AND don't already have one
         return hasMedia && !hasExisting;
     }
@@ -165,13 +183,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private handleUserMediaUpdate(user: SpaceUser): void {
         const otherUsers = this._space
-            .getUsersInFilter()
+            .getUsersToNotify()
             .filter((otherUser) => otherUser.spaceUserId !== user.spaceUserId);
 
         otherUsers.forEach((otherUser) => {
             const hasExistingConnection = this.hasExistingConnection(user.spaceUserId, otherUser.spaceUserId);
 
-            if (hasExistingConnection && !this.hasActiveMediaState(otherUser) && !this.hasActiveMediaState(user)) {
+            if (
+                hasExistingConnection /* && !this.hasActiveMediaState(otherUser) */ &&
+                !this.hasActiveMediaState(user)
+            ) {
                 this.shutdownConnection(user.spaceUserId, otherUser.spaceUserId);
                 return;
             }
@@ -216,7 +237,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private sendWebRTCDisconnect(senderId: string, receiverId: string): void {
         this._connections.removeConnection(senderId, receiverId);
-        console.log("👌👌👌👌👌👌👌 WebRTCCommunicationStrategy sendWebRTCDisconnect", senderId, receiverId);
         this._space.dispatchPrivateEvent({
             spaceName: this._space.getSpaceName(),
             receiverUserId: receiverId,
