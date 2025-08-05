@@ -46,8 +46,14 @@ export class FileListener {
         event.preventDefault();
         event.stopPropagation();
 
-        const userIsAdmin = gameManager.getCurrentGameScene().connection?.isAdmin();
-        const userIsEditor = gameManager.getCurrentGameScene().connection?.hasTag("editor");
+        const gameScene = gameManager.getCurrentGameScene();
+
+        const userIsAdmin = gameScene.connection?.isAdmin();
+        const userIsEditor = gameScene.connection?.hasTag("editor");
+
+        const gameMapAreas = gameScene.getGameMap().getGameMapAreas();
+        const userId = gameScene.connection?.getUserId();
+        const userTags = gameScene.connection?.getAllTags() ?? [];
 
         if (!get(userIsConnected)) {
             popupStore.addPopup(PopUpConnect, {}, "popupConnect");
@@ -55,7 +61,11 @@ export class FileListener {
             return;
         }
 
-        if (!userIsAdmin && !userIsEditor) {
+        if (
+            !userIsAdmin &&
+            !userIsEditor &&
+            !gameMapAreas?.isGameMapContainsSpecificAreas(userId?.toString(), userTags)
+        ) {
             warningMessageStore.addWarningMessage(get(LL).mapEditor.entityEditor.errors.dragNotAllowed(), {
                 closable: true,
             });
