@@ -137,7 +137,7 @@
     <div class="flex flex-col gap-4 p-2 max-h-[80vh] overflow-y-auto">
         <DropFileEntityPicker {entitiesPrefabsVariants} on:select={(event) => selectEntity(event.detail)} />
 
-        <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" type="text" bind:value={entity.name} />
+        <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" bind:value={entity.name} />
     </div>
 
     <svelte:fragment slot="buttons">
