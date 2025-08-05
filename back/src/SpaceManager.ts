@@ -84,6 +84,10 @@ const spaceManager = {
                         );
                         break;
                     }
+                    case "requestFullSyncMessage": {
+                        socketManager.handleRequestFullSyncMessage(pusher, message.message.requestFullSyncMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

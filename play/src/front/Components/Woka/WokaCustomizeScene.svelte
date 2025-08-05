@@ -50,7 +50,6 @@
             }
 
             const data = await response.json();
-            console.log("Woka data loaded:", data);
             wokaData = data;
 
             loadSavedTextures();
@@ -243,9 +242,9 @@
     });
 </script>
 
-<div class="bg-contrast w-screen h-screen absolute flex items-center justify-center">
+<div class="mobile-webkit bg-contrast w-screen md:!mt-[15vh] h-full md:!h-[70vh] flex items-center justify-center">
     <div
-        class="rounded-lg flex flex-col max-w-4xl w-full mx-4 h-[98vh] sm:h-[70vh] relative bg-white/10 backdrop-blur-md"
+        class="mobile-webkit rounded-lg flex flex-col max-w-4xl w-full h-full m-4 relative bg-white/10 backdrop-blur-md"
     >
         {#if isLoading}
             <div class="flex items-center justify-center h-64">
@@ -402,6 +401,9 @@
 </div>
 
 <style>
+    .mobile-webkit {
+        max-height: -webkit-fill-available !important;
+    }
     .scroll-mask {
         mask-image: linear-gradient(to bottom, transparent 0px, black 40px, black calc(100% - 40px), transparent 100%);
         -webkit-mask-image: linear-gradient(

@@ -209,7 +209,7 @@ export class SimplePeer {
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
-        this.closeConnection(user.userId, false);
+        this.closeConnection(user.userId, true);
     }
 
     /**

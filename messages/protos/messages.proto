@@ -351,6 +351,7 @@ message ClientToServerMessage {
     PublicEventFrontToPusher publicEvent = 43;
     PrivateEventFrontToPusher privateEvent = 44;
     LeaveChatRoomAreaMessage leaveChatRoomAreaMessage = 45;
+    RequestFullSyncMessage requestFullSyncMessage = 46;
   }
 }
 
@@ -948,6 +949,12 @@ message MuteVideoForEverybodyPublicMessage {
 message KickOffUserPrivateMessage {
 }
 
+message RequestFullSyncMessage {
+  string spaceName = 1;
+  repeated SpaceUser users = 2;
+  string senderUserId = 3;
+}
+
 message PublicEventFrontToPusher {
   string spaceName = 1;
   SpaceEvent spaceEvent = 2;
@@ -987,6 +994,9 @@ message PrivateSpaceEvent {
     LivekitInvitationMessage livekitInvitationMessage = 13;
     LivekitDisconnectMessage livekitDisconnectMessage = 14;
     UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 17;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     StartRecordingResultMessage startRecordingResultMessage = 16;
     StartRecordingMessage startRecordingMessage = 17;
     StopRecordingResultMessage stopRecordingResultMessage = 18;
@@ -1213,6 +1223,7 @@ message PusherToBackMessage {
   }
 }
 
+
 message BatchToPusherMessage {
   repeated SubToPusherMessage payload = 2;
 }
@@ -1414,6 +1425,7 @@ message PusherToBackSpaceMessage{
     SpaceQueryMessage spaceQueryMessage = 18;
     AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
     DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
+    RequestFullSyncMessage requestFullSyncMessage = 21;
   }
 }
 

@@ -309,6 +309,7 @@
             currentHeight={containerHeight}
             onResize={onResizeHandler}
             onResizeEnd={() => analyticsClient.resizeCameraLayout()}
+            dataTestid="resize-handle"
         />
     {/if}
 </div>

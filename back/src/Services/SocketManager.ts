@@ -49,6 +49,7 @@ import {
     SpaceQueryMessage,
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
+    RequestFullSyncMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1597,6 +1598,14 @@ export class SocketManager {
             throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);
         }
         space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
+    }
+
+    handleRequestFullSyncMessage(pusher: SpacesWatcher, { spaceName, users, senderUserId }: RequestFullSyncMessage) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${spaceName} to handle request full sync`);
+        }
+        space.syncUsersAndNotify(pusher, users, senderUserId);
     }
 }
 

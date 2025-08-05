@@ -602,7 +602,7 @@ export class GameRoom implements BrothersFinder {
                 }
                 const lastLoaded = new Date().getTime() - this.variableManagerLastLoad.getTime();
                 if (lastLoaded < 10000) {
-                    console.log(
+                    console.error(
                         'An error occurred while setting the "' +
                             name +
                             "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
@@ -615,7 +615,7 @@ export class GameRoom implements BrothersFinder {
                 this.variableManagerPromise = undefined;
                 this.mapPromise = undefined;
 
-                console.log(
+                console.error(
                     'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again"
                 );
                 // Try to set the variable again!

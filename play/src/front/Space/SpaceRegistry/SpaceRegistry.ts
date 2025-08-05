@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { MapStore } from "@workadventure/store-utils";
 import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
@@ -9,6 +10,7 @@ import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceE
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
 import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 // import { recordingStore } from "../../Stores/RecordingStore";
 import { recordingStore } from "../../Stores/RecordingStore";
@@ -34,6 +36,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
+    | "emitRequestFullSync"
 >;
 
 /**
@@ -121,7 +124,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private connectStream = connectionManager.roomConnectionStream
+        private connectStream = connectionManager.roomConnectionStream,
+        private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
     ) {
         this.spacesWithRecording = derived(this.spaces, ($spaces, set) => {
             const spacesWithRecordingMap: Set<Space> = new Set();
@@ -245,6 +249,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
             // this.reconnect(connection).catch((e) => console.error(e));
         });
+
+        this.setupThrottlingDetection();
     }
 
     async joinSpace(
@@ -337,6 +343,33 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             })
         );
 
+        // Clear all spaces from the registry
         this.spaces.clear();
+
+        // Stop throttling detection and clean up resources
+        this.throttlingDetector.destroy();
+    }
+
+    private setupThrottlingDetection(): void {
+        const recoverySubscription = this.throttlingDetector.recoveryTriggered$
+            .pipe(debounceTime(1000), distinctUntilChanged())
+            .subscribe(() => {
+                console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
+
+                const spaces = this.getAll();
+                spaces.forEach((space) => {
+                    console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
+                    space.requestFullSync();
+                });
+            });
+
+        // Optionally: Subscribe to all events for debugging purposes
+        const eventsSubscription = this.throttlingDetector.events$.subscribe((event) => {
+            console.debug(`[SpaceRegistry] Throttling event: ${event.type}`, event);
+        });
+
+        // Store subscriptions for cleanup
+        this.roomConnectionStreamSubscription.add(recoverySubscription);
+        this.roomConnectionStreamSubscription.add(eventsSubscription);
     }
 }

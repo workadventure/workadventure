@@ -1,5 +1,5 @@
 import { applyFieldMask } from "protobuf-fieldmask";
-import merge from "lodash/merge";
+import { merge, isEqual } from "lodash";
 import * as Sentry from "@sentry/node";
 import {
     AddSpaceUserMessage,
@@ -571,6 +571,344 @@ export class Space implements CustomJsonReplacerInterface {
     }
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+
+    /**
+     * Synchronizes the provided user list with the local user list and returns diff events
+     * This is useful for resynchronization after network issues or throttling
+     *
+     * @param watcher The watcher requesting the sync
+     * @param providedUsers The user list from the client
+     * @returns Array of events representing the differences
+     */
+    public syncAndDiff(watcher: SpacesWatcher, providedUsers: SpaceUser[]): BackToPusherSpaceMessage[] {
+        const events: BackToPusherSpaceMessage[] = [];
+        const localUsers = this.usersList(watcher);
+
+        // Convert provided users to a Map for easier comparison
+        const providedUsersMap = new Map(providedUsers.map((user) => [user.spaceUserId, user]));
+
+        debug(
+            `${this.name} : syncAndDiff => comparing ${providedUsers.length} provided users with ${localUsers.size} local users`
+        );
+
+        // 1. Check for users that exist locally but not in provided list (client missing users)
+        for (const [localUserId, localUser] of localUsers.entries()) {
+            if (!providedUsersMap.has(localUserId)) {
+                // User exists locally but client doesn't have it -> ADD event
+                if (this.filterOneUser(localUser)) {
+                    events.push({
+                        message: {
+                            $case: "addSpaceUserMessage",
+                            addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                                spaceName: this.name,
+                                user: localUser,
+                                filterType: this._filterType,
+                            }),
+                        },
+                    });
+                    debug(`${this.name} : syncAndDiff => client missing user ${localUserId}, sending ADD`);
+                }
+            }
+        }
+
+        // 2. Check for users in provided list
+        for (const [providedUserId, providedUser] of providedUsersMap.entries()) {
+            const localUser = localUsers.get(providedUserId);
+
+            if (!localUser) {
+                // User exists in client but not locally -> REMOVE event
+                if (this.filterOneUser(providedUser)) {
+                    events.push({
+                        message: {
+                            $case: "removeSpaceUserMessage",
+                            removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                                spaceName: this.name,
+                                spaceUserId: providedUserId,
+                            }),
+                        },
+                    });
+                    debug(`${this.name} : syncAndDiff => client has extra user ${providedUserId}, sending REMOVE`);
+                }
+            } else {
+                // User exists in both, check for differences
+                const differences = this.getUserDifferences(localUser, providedUser);
+
+                if (differences.length > 0) {
+                    const oldFilter = this.filterOneUser(providedUser);
+                    const newFilter = this.filterOneUser(localUser);
+
+                    if (!oldFilter && newFilter) {
+                        // User now passes filter -> ADD event
+                        events.push({
+                            message: {
+                                $case: "addSpaceUserMessage",
+                                addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                                    spaceName: this.name,
+                                    user: localUser,
+                                    filterType: this._filterType,
+                                }),
+                            },
+                        });
+                        debug(`${this.name} : syncAndDiff => user ${providedUserId} now visible, sending ADD`);
+                    } else if (oldFilter && !newFilter) {
+                        // User no longer passes filter -> REMOVE event
+                        events.push({
+                            message: {
+                                $case: "removeSpaceUserMessage",
+                                removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                                    spaceName: this.name,
+                                    spaceUserId: providedUserId,
+                                }),
+                            },
+                        });
+                        debug(`${this.name} : syncAndDiff => user ${providedUserId} no longer visible, sending REMOVE`);
+                    } else if (oldFilter && newFilter) {
+                        // User still passes filter but has changes -> UPDATE event
+                        events.push({
+                            message: {
+                                $case: "updateSpaceUserMessage",
+                                updateSpaceUserMessage: {
+                                    spaceName: this.name,
+                                    user: localUser,
+                                    updateMask: differences,
+                                },
+                            },
+                        });
+                        debug(
+                            `${
+                                this.name
+                            } : syncAndDiff => user ${providedUserId} updated, sending UPDATE with mask: ${differences.join(
+                                ", "
+                            )}`
+                        );
+                    }
+                }
+            }
+        }
+
+        debug(`${this.name} : syncAndDiff => generated ${events.length} diff events`);
+        return events;
+    }
+
+    /**
+     * Synchronizes the provided user list with the local user list and returns diff events as PrivateEvents
+     * This is useful for resynchronization after network issues or throttling
+     *
+     * @param watcher The watcher requesting the sync
+     * @param providedUsers The user list from the client
+     * @param senderUserId The user requesting the synchronization
+     * @returns Array of PrivateEvents representing the differences
+     */
+    public syncAndDiffAsPrivateEvents(
+        watcher: SpacesWatcher,
+        providedUsers: SpaceUser[],
+        senderUserId: string
+    ): BackToPusherSpaceMessage[] {
+        const backEvents: BackToPusherSpaceMessage[] = [];
+        const localUsers = this.usersList(watcher);
+
+        const providedUsersMap = new Map(providedUsers.map((user) => [user.spaceUserId, user]));
+        const sender = this.getAllUsers().find((user) => user.spaceUserId === senderUserId);
+        if (!sender) {
+            throw new Error(`Sender ${senderUserId} not found in space ${this.name}`);
+        }
+
+        debug(
+            `${this.name} : syncAndDiffAsPrivateEvents => comparing ${providedUsers.length} provided users with ${localUsers.size} local users`
+        );
+
+        for (const [localUserId, localUser] of localUsers.entries()) {
+            // Skip the sender user - they don't need to be synced to themselves
+            if (localUserId === senderUserId) {
+                continue;
+            }
+
+            if (!providedUsersMap.has(localUserId)) {
+                if (this.filterOneUser(localUser)) {
+                    backEvents.push({
+                        message: {
+                            $case: "privateEvent",
+                            privateEvent: {
+                                spaceName: this.name,
+                                receiverUserId: senderUserId,
+                                sender,
+                                spaceEvent: {
+                                    event: {
+                                        $case: "addSpaceUserMessage",
+                                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                                            spaceName: this.name,
+                                            user: localUser,
+                                            filterType: this._filterType,
+                                        }),
+                                    },
+                                },
+                            },
+                        },
+                    });
+                    debug(
+                        `${this.name} : syncAndDiffAsPrivateEvents => client missing user ${localUserId}, sending ADD as PrivateEvent`
+                    );
+                }
+            }
+        }
+
+        for (const [providedUserId, providedUser] of providedUsersMap.entries()) {
+            // Skip the sender user - they don't need to be synced to themselves
+            if (providedUserId === senderUserId) {
+                continue;
+            }
+
+            const localUser = localUsers.get(providedUserId);
+
+            if (!localUser) {
+                if (this.filterOneUser(providedUser)) {
+                    backEvents.push({
+                        message: {
+                            $case: "privateEvent",
+                            privateEvent: {
+                                spaceName: this.name,
+                                receiverUserId: senderUserId,
+                                sender,
+                                spaceEvent: {
+                                    event: {
+                                        $case: "removeSpaceUserMessage",
+                                        removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                                            spaceName: this.name,
+                                            spaceUserId: providedUserId,
+                                        }),
+                                    },
+                                },
+                            },
+                        },
+                    });
+                    debug(
+                        `${this.name} : syncAndDiffAsPrivateEvents => client has extra user ${providedUserId}, sending REMOVE as PrivateEvent`
+                    );
+                }
+            } else {
+                const differences = this.getUserDifferences(localUser, providedUser);
+
+                if (differences.length > 0) {
+                    const oldFilter = this.filterOneUser(providedUser);
+                    const newFilter = this.filterOneUser(localUser);
+
+                    if (!oldFilter && newFilter) {
+                        backEvents.push(
+                            this.createPrivateEvent(sender, {
+                                event: {
+                                    $case: "addSpaceUserMessage",
+                                    addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
+                                        spaceName: this.name,
+                                        user: localUser,
+                                        filterType: this._filterType,
+                                    }),
+                                },
+                            })
+                        );
+                        debug(
+                            `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} now visible, sending ADD as PrivateEvent`
+                        );
+                    } else if (oldFilter && !newFilter) {
+                        backEvents.push(
+                            this.createPrivateEvent(sender, {
+                                event: {
+                                    $case: "removeSpaceUserMessage",
+                                    removeSpaceUserMessage: RemoveSpaceUserMessage.fromPartial({
+                                        spaceName: this.name,
+                                        spaceUserId: providedUserId,
+                                    }),
+                                },
+                            })
+                        );
+                        debug(
+                            `${this.name} : syncAndDiffAsPrivateEvents => user ${providedUserId} no longer visible, sending REMOVE as PrivateEvent`
+                        );
+                    } else if (oldFilter && newFilter) {
+                        backEvents.push(
+                            this.createPrivateEvent(sender, {
+                                event: {
+                                    $case: "updateSpaceUserMessage",
+                                    updateSpaceUserMessage: {
+                                        spaceName: this.name,
+                                        user: localUser,
+                                        updateMask: differences,
+                                    },
+                                },
+                            })
+                        );
+                        debug(
+                            `${
+                                this.name
+                            } : syncAndDiffAsPrivateEvents => user ${providedUserId} updated, sending UPDATE as PrivateEvent with mask: ${differences.join(
+                                ", "
+                            )}`
+                        );
+                    }
+                }
+            }
+        }
+
+        debug(`${this.name} : syncAndDiffAsPrivateEvents => generated ${backEvents.length} PrivateEvent messages`);
+        return backEvents;
+    }
+
+    /**
+     * Configuration of SpaceUser fields for comparison
+     */
+    private static readonly USER_COMPARISON_FIELDS = [
+        "spaceUserId",
+        "name",
+        "microphoneState",
+        "cameraState",
+        "screenSharingState",
+        "megaphoneState",
+        "chatID",
+        "availabilityStatus",
+        "visitCardUrl",
+        "characterTextures",
+    ] as const;
+
+    private getUserDifferences(localUser: SpaceUser, providedUser: SpaceUser): string[] {
+        const differences: string[] = [];
+
+        for (const field of Space.USER_COMPARISON_FIELDS) {
+            if (!isEqual(localUser[field], providedUser[field])) {
+                differences.push(field);
+            }
+        }
+
+        return differences;
+    }
+
+    public sendDiffEvents(watcher: SpacesWatcher, events: BackToPusherSpaceMessage[]): void {
+        events.forEach((event) => {
+            watcher.write(event);
+        });
+
+        debug(`${this.name} : sendDiffEvents => sent ${events.length} events to watcher ${watcher.id}`);
+    }
+
+    public syncUsersAndNotify(watcher: SpacesWatcher, providedUsers: SpaceUser[], senderUserId: string) {
+        const diffEvents = this.syncAndDiffAsPrivateEvents(watcher, providedUsers, senderUserId);
+        this.sendDiffEvents(watcher, diffEvents);
+        debug(
+            `${this.name} : syncUsersAndNotify => processed sync for watcher ${watcher.id}, sent ${diffEvents.length} PrivateEvents`
+        );
+    }
+
+    private createPrivateEvent(sender: SpaceUser, spaceEvent: PrivateEvent["spaceEvent"]): BackToPusherSpaceMessage {
+        return {
+            message: {
+                $case: "privateEvent",
+                privateEvent: {
+                    spaceName: this.name,
+                    receiverUserId: sender.spaceUserId,
+                    sender,
+                    spaceEvent,
+                },
+            },
+        };
     }
 
     public async startRecording(user: SpaceUser, userUuid: string) {
