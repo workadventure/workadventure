@@ -24,6 +24,7 @@ import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
 import messageScreen from "./messageScreen";
+import recording from "./recording";
 
 const en_US: BaseTranslation = {
     area,
@@ -51,6 +52,7 @@ const en_US: BaseTranslation = {
     externalModule,
     form,
     messageScreen,
+    recording
 };
 
 export default en_US;

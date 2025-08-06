@@ -125,6 +125,13 @@ export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWO
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
 export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+
+export const LIVEKIT_RECORDING_S3_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_ENDPOINT;
+export const LIVEKIT_RECORDING_S3_CDN_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_CDN_ENDPOINT;
+export const LIVEKIT_RECORDING_S3_ACCESS_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_ACCESS_KEY;
+export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_RECORDING_S3_SECRET_KEY;
+export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
+export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,

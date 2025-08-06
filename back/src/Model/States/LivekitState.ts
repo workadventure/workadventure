@@ -3,22 +3,34 @@ import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import { ICommunicationManager } from "../Interfaces/ICommunicationManager";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
+import { IRecordableState } from "../Interfaces/ICommunicationState";
+import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
 
-export class LivekitState extends CommunicationState {
+export class LivekitState extends CommunicationState implements IRecordableState {
     protected _currentCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
 
     constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager,
+        protected readonly _currentStrategy: IRecordableStrategy,
         protected readonly _readyUsers: Set<string> = new Set()
     ) {
-        //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
-        super(_space, _communicationManager, new LivekitCommunicationStrategy(_space), _readyUsers);
+        super(_space, _communicationManager, _currentStrategy, _readyUsers);
         this.SWITCH_TIMEOUT_MS = 5000;
     }
+
+    public static async create(
+        _space: ICommunicationSpace,
+        _communicationManager: ICommunicationManager,
+        _readyUsers: Set<string> = new Set()
+    ) {
+        const strategy = await LivekitCommunicationStrategy.create(_space);
+        return new LivekitState(_space, _communicationManager, strategy, _readyUsers);
+    }
+
     handleUserAdded(user: SpaceUser): void {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
@@ -96,5 +108,20 @@ export class LivekitState extends CommunicationState {
 
     protected preparedSwitchAction(readyUsers: Set<string>): void {
         this._currentStrategy.initialize(readyUsers);
+    }
+
+    async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
+        if (this.isRecordableStrategy(this._currentStrategy)) {
+            await this._currentStrategy.startRecording(user, userUuid).catch((error) => {
+                console.error("Error starting recording:", error);
+                throw new Error("Failed to start recording");
+            });
+        }
+    }
+
+    async handleStopRecording(): Promise<void> {
+        if (this.isRecordableStrategy(this._currentStrategy)) {
+            await this._currentStrategy.stopRecording();
+        }
     }
 }

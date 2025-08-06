@@ -90,6 +90,16 @@ services:
       LIVEKIT_API_SECRET: "12345678901234567890123456789012"
       LIVEKIT_WS_URL: "ws://livekit.workadventure.localhost"
       EGRESS_HOST: "http://egress.workadventure.localhost"
-
-
-
+      LIVEKIT_RECORDING_S3_ENDPOINT: "http://minio-livekit:9000"
+      LIVEKIT_RECORDING_S3_ACCESS_KEY: "minio-access-key"
+      LIVEKIT_RECORDING_S3_SECRET_KEY: "minio-secret-access-key"
+      LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
+      LIVEKIT_RECORDING_S3_BUCKET: "livekit-recording"
+  play:
+    environment:
+      LIVEKIT_RECORDING_S3_ENDPOINT: "http://minio-livekit:9000"
+      LIVEKIT_RECORDING_S3_CDN_ENDPOINT: "http://cdn-livekit.workadventure.localhost"
+      LIVEKIT_RECORDING_S3_ACCESS_KEY: "minio-access-key"
+      LIVEKIT_RECORDING_S3_SECRET_KEY: "minio-secret-access-key"
+      LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
+      LIVEKIT_RECORDING_S3_BUCKET: "livekit-recording"

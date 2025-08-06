@@ -124,6 +124,22 @@ const actionbar: BaseTranslation = {
             title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        recording: {
+            title: {
+                start: "Start recording",
+                stop: "Stop recording",
+                inpProgress: "A recording is in progress"
+            },
+            desc:{
+                needLogin: "You need to be logged to record.",
+                needPremium: "You need to be premium to record.",
+                advert: "All participants will be notified that you are starting a recording.",
+                yourRecordInProgress: "Recording in progress, click to stop it.",
+                inProgress: "A recording is in progress",
+                notEnabled:" Recording is not enabled for this world."
+            }
+        }
+
     },
     listStatusTitle: {
         enable: "Change your status",

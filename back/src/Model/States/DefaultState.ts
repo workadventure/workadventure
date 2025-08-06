@@ -20,4 +20,10 @@ export class DefaultState implements ICommunicationState {
     handleUserToNotifyDeleted(user: SpaceUser): void {
         console.info("DefaultState handleUserToNotifyDeleted", user);
     }
+    handleStartRecording(): void {
+        console.info("DefaultState handleStartRecording");
+    }
+    handleStopRecording(): void {
+        console.info("DefaultState handleStopRecording");
+    }
 }

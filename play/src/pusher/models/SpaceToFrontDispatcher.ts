@@ -78,6 +78,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "publicEvent": {
                     debug("[space] publicEvent received");
+                    console.trace("[space] ❤️❤️❤️ publicEvent received", message.message.publicEvent);
                     this.sendPublicEvent(noUndefined(message.message.publicEvent));
                     break;
                 }
@@ -275,7 +276,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                     publicEvent: {
                         senderUserId: message.senderUserId,
                         spaceEvent: {
-                            event: this.eventProcessor.processPublicEvent(spaceEvent.event, sender),
+                            event: spaceEvent.event,
                         },
                         // The name of the space in the browser is the local name (i.e. the name without the "world" prefix)
                         spaceName: this._space.localName,

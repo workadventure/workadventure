@@ -178,6 +178,12 @@ export const EnvironmentVariables = z.object({
         .number()
         .optional()
         .default(20 * 1024 * 1024),
+    LIVEKIT_RECORDING_S3_ENDPOINT: z.string().url().optional(),
+    LIVEKIT_RECORDING_S3_ACCESS_KEY: z.string().optional(),
+    LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional(),
+    LIVEKIT_RECORDING_S3_BUCKET: z.string().optional(),
+    LIVEKIT_RECORDING_S3_REGION: z.string().optional(),
+    LIVEKIT_RECORDING_S3_CDN_ENDPOINT: z.string().url().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

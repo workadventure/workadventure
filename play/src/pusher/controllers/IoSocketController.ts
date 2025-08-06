@@ -367,6 +367,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -509,6 +510,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            canRecord: userData.canRecord ?? false,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -862,6 +864,29 @@ export class IoSocketController {
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;
                                     }
+                                    case "getRecordingsQuery": {
+                                        const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                            socket
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "getRecordingsAnswer",
+                                            getRecordingsAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "deleteRecordingQuery": {
+                                        const deleteRecordingAnswer = await socketManager.handleDeleteRecordingQuery(
+                                            socket,
+                                            message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "deleteRecordingAnswer",
+                                            deleteRecordingAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
                                     case "enterChatRoomAreaQuery": {
                                         await socketManager.handleEnterChatRoomAreaQuery(
                                             socket,
@@ -923,28 +948,22 @@ export class IoSocketController {
                                         message.message.queryMessage.query.leaveSpaceQuery.spaceName = `${
                                             socket.getUserData().world
                                         }.${message.message.queryMessage.query.leaveSpaceQuery.spaceName}`;
-                                        try {
-                                            await socketManager.handleLeaveSpace(
-                                                socket,
-                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                            );
 
-                                            answerMessage.answer = {
-                                                $case: "leaveSpaceAnswer",
-                                                leaveSpaceAnswer: {},
-                                            };
+                                        await socketManager.handleLeaveSpace(
+                                            socket,
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                        );
 
-                                            this.sendAnswerMessage(socket, answerMessage);
+                                        answerMessage.answer = {
+                                            $case: "leaveSpaceAnswer",
+                                            leaveSpaceAnswer: {},
+                                        };
 
-                                            socketManager.deleteSpaceIfEmpty(
-                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                            );
-                                        } catch (e) {
-                                            socketManager.deleteSpaceIfEmpty(
-                                                message.message.queryMessage.query.leaveSpaceQuery.spaceName
-                                            );
-                                            throw e;
-                                        }
+                                        this.sendAnswerMessage(socket, answerMessage);
+
+                                        socketManager.deleteSpaceIfEmpty(
+                                            message.message.queryMessage.query.leaveSpaceQuery.spaceName
+                                        );
                                         break;
                                     }
                                     case "mapStorageJwtQuery": {
@@ -993,6 +1012,7 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+
                         // case "muteParticipantIdMessage": {
                         //     message.message.muteParticipantIdMessage.spaceName = `${socket.getUserData().world}.${
                         //         message.message.muteParticipantIdMessage.spaceName
@@ -1054,6 +1074,7 @@ export class IoSocketController {
                         //     );
                         //     break;
                         // }
+
                         case "banPlayerMessage": {
                             await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
                             break;

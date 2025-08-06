@@ -1,11 +1,13 @@
 // -------------------- Default Implementations --------------------x
 
-import { Subject } from "rxjs";
-import { Readable, Unsubscriber } from "svelte/store";
+import { Subject, Subscription } from "rxjs";
+import { Readable, Unsubscriber, writable, Writable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { recordingStore } from "../../Stores/RecordingStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
 export interface ICommunicationState {
@@ -15,6 +17,7 @@ export interface ICommunicationState {
     shouldSynchronizeMediaState(): boolean;
     dispatchSound(url: URL): Promise<void>;
     dispatchStream(mediaStream: MediaStream): void;
+    shouldDisplayRecordButton: boolean;
 }
 
 export interface StreamableSubjects {
@@ -55,12 +58,18 @@ export class SpacePeerManager {
     private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
+    public shouldDisplayRecordButton: Writable<boolean> = writable(false);
     private readonly _streamableSubjects = {
         videoPeerAdded: this._videoPeerAdded,
         videoPeerRemoved: this._videoPeerRemoved,
         screenSharingPeerAdded: this._screenSharingPeerAdded,
         screenSharingPeerRemoved: this._screenSharingPeerRemoved,
     };
+
+    private startRecordingResultMessage: Subscription;
+    private stopRecordingResultMessage: Subscription;
+    private stopRecordingMessage: Subscription;
+    private startedRecordingResultMessage: Subscription;
 
     constructor(
         private space: SpaceInterface,
@@ -69,6 +78,29 @@ export class SpacePeerManager {
         private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
         this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
+
+        this.startRecordingResultMessage = this.space
+            .observePrivateEvent("startRecordingResultMessage")
+            .subscribe((message) => {
+                if (!message.startRecordingResultMessage.success) {
+                    notificationPlayingStore.playNotification("Recording failed to start");
+                } else {
+                    recordingStore.startRecord(true);
+                }
+            });
+
+        this.startedRecordingResultMessage = this.space.observePublicEvent("startRecordingMessage").subscribe(() => {
+            recordingStore.startRecord(false);
+        });
+
+        this.stopRecordingResultMessage = this.space.observePrivateEvent("stopRecordingResultMessage").subscribe(() => {
+            recordingStore.stopRecord();
+            notificationPlayingStore.playNotification("Recording stopped");
+        });
+
+        this.stopRecordingMessage = this.space.observePublicEvent("stopRecordingMessage").subscribe(() => {
+            recordingStore.stopRecord();
+        });
     }
 
     private synchronizeMediaState(): void {
@@ -115,6 +147,10 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
+        this.stopRecordingMessage.unsubscribe();
+        this.startRecordingResultMessage.unsubscribe();
+        this.stopRecordingResultMessage.unsubscribe();
+        this.startedRecordingResultMessage.unsubscribe();
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
@@ -137,6 +173,7 @@ export class SpacePeerManager {
 
         state.completeSwitch();
         this._communicationState = state;
+        this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
     }
 
     dispatchSound(url: URL): Promise<void> {
