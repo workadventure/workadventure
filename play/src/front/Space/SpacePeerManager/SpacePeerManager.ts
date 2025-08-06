@@ -69,6 +69,7 @@ export class SpacePeerManager {
     private startRecordingResultMessage: Subscription;
     private stopRecordingResultMessage: Subscription;
     private stopRecordingMessage: Subscription;
+    private startedRecordingResultMessage: Subscription;
 
     constructor(
         private space: SpaceInterface,
@@ -87,6 +88,10 @@ export class SpacePeerManager {
                     recordingStore.startRecord(true);
                 }
             });
+
+        this.startedRecordingResultMessage = this.space.observePublicEvent("startRecordingMessage").subscribe(() => {
+            recordingStore.startRecord(false);
+        });
 
         this.stopRecordingResultMessage = this.space.observePrivateEvent("stopRecordingResultMessage").subscribe(() => {
             recordingStore.stopRecord();
@@ -145,6 +150,7 @@ export class SpacePeerManager {
         this.stopRecordingMessage.unsubscribe();
         this.startRecordingResultMessage.unsubscribe();
         this.stopRecordingResultMessage.unsubscribe();
+        this.startedRecordingResultMessage.unsubscribe();
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }

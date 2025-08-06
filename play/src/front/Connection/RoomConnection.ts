@@ -993,7 +993,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitStartRecording(spaceName: string): void {
-        console.log('🍗🍗🍗 start recording')
         this.emitPublicSpaceEvent(spaceName, {
             $case: "startRecordingMessage",
             startRecordingMessage: {},

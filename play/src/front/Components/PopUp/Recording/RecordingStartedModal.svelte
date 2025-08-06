@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import { recordingStore } from "../../Stores/RecordingStore";
-    import StartRecordingIcon from "../Icons/StartRecordingIcon.svelte";
-    import PopUpContainer from "./PopUpContainer.svelte";
+    import { recordingStore } from "../../../Stores/RecordingStore";
+    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import PopUpContainer from "../PopUpContainer.svelte";
 
     let progress = 0;
     let interval: ReturnType<typeof setInterval>;

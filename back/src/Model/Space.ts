@@ -310,11 +310,11 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} => watcher removed ${watcher.id}`);
     }
 
-    public async addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
+    public addUserToNotify(sourceWatcher: SpacesWatcher, spaceUser: SpaceUser) {
         const usersList = this.usersListToNotify(sourceWatcher);
         usersList.set(spaceUser.spaceUserId, spaceUser);
 
-        await this.communicationManager.handleUserToNotifyAdded(spaceUser);
+        this.communicationManager.handleUserToNotifyAdded(spaceUser);
         debug(`${this.name} : user to notify => added ${spaceUser.spaceUserId}`);
     }
 
@@ -394,7 +394,7 @@ export class Space implements CustomJsonReplacerInterface {
                 event: processedEvent,
             },
         };
-
+        console.log("🧑‍⚖️🧑‍⚖️🧑‍⚖️Process Event : ", processedPublicEvent.spaceEvent?.event?.$case);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",

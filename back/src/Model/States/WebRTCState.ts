@@ -55,7 +55,7 @@ export class WebRTCState extends CommunicationState {
     handleUserToNotifyAdded(user: SpaceUser): void {
         if (this.shouldSwitchToNextState()) {
             this.switchToNextState(user, "userToNotify").catch((e) =>
-                console.log("Switched to next state with user to notify:", e)
+                console.info("Switched to next state with user to notify:", e)
             );
             return;
         }

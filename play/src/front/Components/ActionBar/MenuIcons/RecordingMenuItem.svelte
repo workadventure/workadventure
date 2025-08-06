@@ -33,7 +33,6 @@
             } else {
                 gameManager.getCurrentGameScene().connection?.emitStartRecording(space.getName());
             }
-            console.log("🐞🐞🐞 Requesting recording for space:");
         }
     }
 

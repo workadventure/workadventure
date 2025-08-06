@@ -62,7 +62,7 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
-    import IsRecordingInfoModal from "./PopUp/IsRecordingInfoModal.svelte";
+    import RecordingStartedModal from "./PopUp/Recording/RecordingStartedModal.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     let keyboardEventIsDisable = false;
 
@@ -215,7 +215,7 @@
                 <LimitRoomModal />
             {/if}
             {#if $recordingStore.shouldShowInfoPopup}
-                <IsRecordingInfoModal />
+                <RecordingStartedModal />
             {/if}
 
             {#if $showRecordingList}

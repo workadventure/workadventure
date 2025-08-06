@@ -61,7 +61,6 @@
 
     $: if (show) {
         document.addEventListener("click", handleClickOutside);
-        console.log("Context menu opened at", x, y, "for record", currentRecord);
     } else {
         document.removeEventListener("click", handleClickOutside);
     }
