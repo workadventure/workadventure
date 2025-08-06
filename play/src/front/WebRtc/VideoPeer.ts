@@ -16,13 +16,15 @@ import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
+import { isFirefox } from "./DeviceUtils";
 import { P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -91,6 +93,16 @@ export class VideoPeer extends Peer implements Streamable {
         console.error(`error for user ${this.userId}`, err);
         if ("code" in err) {
             console.error(`error code => ${err.code}`);
+        }
+
+        // Firefox-specific error handling
+        if (isFirefox() && err.message) {
+            // Log Firefox-specific errors for better debugging
+            if (err.message.includes("ICE")) {
+                console.warn("Firefox ICE connection error - this may be temporary");
+            } else if (err.message.includes("DTLS")) {
+                console.warn("Firefox DTLS handshake error - checking TURN configuration");
+            }
         }
     };
 
@@ -195,13 +207,26 @@ export class VideoPeer extends Peer implements Streamable {
         private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 10,
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled
+            ...(firefoxBrowser && { trickle: true }),
+        };
+
+        super(peerConfig);
 
         this.userId = player.userId;
         this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
