@@ -380,7 +380,12 @@ export type EntityDimensions = z.infer<typeof EntityDimensions>;
 export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openFile" | "livekitRoomProperty";
+export type EntityDataPropertiesKeys =
+    | "jitsiRoomProperty"
+    | "playAudio"
+    | "openWebsite"
+    | "openFile"
+    | "livekitRoomProperty";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
