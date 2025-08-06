@@ -237,6 +237,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annulla",
             },
         },
+        nameHelpText: "Questo nome verrà mostrato agli utenti quando entreranno nell'area.",
     },
     areaEditorInstructions: {
         title: "Come funziona?",

@@ -728,7 +728,7 @@
             </Select>
         {/if}
 
-        <div class="value-input flex flex-col">
+        <div class="flex flex-col">
             <label for="tabLink" class="px-3 pb-[0.375rem] grow font-light"
                 >{$LL.mapEditor.properties.linkProperties.linkLabel()}</label
             >
@@ -815,7 +815,7 @@
             bind:value={optionAdvancedActivated}
         />
 
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option">
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
@@ -862,10 +862,6 @@
             {/if}
             {#if !property.newTab}
                 <div class="mt-3 mb-3">
-                    <!-- <label for="websiteWidth"
-                        >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
-                    > -->
-
                     <RangeSlider
                         id="websiteWidth"
                         min={15}

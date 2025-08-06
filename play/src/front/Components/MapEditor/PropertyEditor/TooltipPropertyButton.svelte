@@ -56,20 +56,18 @@
             />
         </div>
         {#if !infinity}
-            <div class="value-input">
-                <label for="durationTooltip">{$LL.mapEditor.properties.tooltipProperties.duration()}</label>
-                <Input
-                    id="durationTooltip"
-                    type="number"
-                    min={1}
-                    step={1}
-                    max={20}
-                    disabled={infinity}
-                    bind:value={property.duration}
-                    on:change={onValueChange}
-                    onInput={onValueChange}
-                />
-            </div>
+            <Input
+                id="durationTooltip"
+                type="number"
+                label={$LL.mapEditor.properties.tooltipProperties.duration()}
+                min={1}
+                step={1}
+                max={20}
+                disabled={infinity}
+                bind:value={property.duration}
+                on:change={onValueChange}
+                onInput={onValueChange}
+            />
         {/if}
     </span>
 </PropertyEditorBase>
