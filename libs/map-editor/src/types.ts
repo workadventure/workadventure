@@ -170,6 +170,13 @@ export const TooltipPropertyData = PropertyBase.extend({
     content: z.string(),
     duration: z.number().optional().default(5000),
 });
+
+export const LivekitRoomPropertyData = PropertyBase.extend({
+    type: z.literal("livekitRoomProperty"),
+    roomName: z.string(),
+    triggerMessage: z.string().optional(),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -187,6 +194,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     ExtensionModuleAreaProperty,
     MatrixRoomPropertyData,
     TooltipPropertyData,
+    LivekitRoomPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -215,6 +223,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     OpenWebsitePropertyData,
     OpenFilePropertyData,
     EntityDescriptionPropertyData,
+    LivekitRoomPropertyData,
 ]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
@@ -371,7 +380,7 @@ export type EntityDimensions = z.infer<typeof EntityDimensions>;
 export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openFile";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openFile" | "livekitRoomProperty";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
@@ -384,6 +393,7 @@ export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;
 export type JitsiRoomConfigData = z.infer<typeof JitsiRoomConfigData>;
 export type JitsiRoomPropertyData = z.infer<typeof JitsiRoomPropertyData>;
+export type LivekitRoomPropertyData = z.infer<typeof LivekitRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
 export type OpenFilePropertyData = z.infer<typeof OpenFilePropertyData>;

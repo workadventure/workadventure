@@ -14,12 +14,13 @@ import {
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
+    LivekitRoomPropertyData,
 } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
 import { get } from "svelte/store";
-import { Member } from "@workadventure/messages";
+import { FilterType, Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
@@ -205,6 +206,13 @@ export class AreasPropertiesListener {
                 this.handleJitsiRoomPropertyOnEnter(property);
                 break;
             }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
+                break;
+            }
             case "silent": {
                 this.handleSilentPropertyOnEnter();
                 break;
@@ -290,6 +298,18 @@ export class AreasPropertiesListener {
                 this.handleJitsiRoomPropertyOnEnter(newProperty);
                 break;
             }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnLeave(oldProperty)
+                    .then(() => {
+                        newProperty = newProperty as typeof oldProperty;
+                        return this.handleLivekitRoomPropertyOnEnter(newProperty);
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                break;
+            }
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
@@ -364,6 +384,13 @@ export class AreasPropertiesListener {
             }
             case "jitsiRoomProperty": {
                 this.handleJitsiRoomPropertyOnLeave(property);
+                break;
+            }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnLeave(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "silent": {
@@ -677,6 +704,16 @@ export class AreasPropertiesListener {
         }
     }
 
+    private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
+        const spaceRegistry = this.scene.spaceRegistry;
+        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+        await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
+            "cameraState",
+            "microphoneState",
+            "screenShareState",
+        ]);
+    }
+
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
         const isConnected = get(userIsConnected);
         if (this.scene.connection && property.serverData?.matrixRoomId && isConnected) {
@@ -896,6 +933,15 @@ export class AreasPropertiesListener {
             requestVisitCardsStore.set(null);
         }
         area?.unHighLightArea();
+    }
+
+    private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
+        const spaceRegistry = this.scene.spaceRegistry;
+        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+        const space = spaceRegistry.get(roomName);
+        if (space) {
+            await spaceRegistry.leaveSpace(space);
+        }
     }
 
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
