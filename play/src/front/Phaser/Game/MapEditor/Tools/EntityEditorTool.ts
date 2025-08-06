@@ -12,7 +12,6 @@ import {
     mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
-import { Entity } from "../../../ECS/Entity";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
@@ -26,6 +25,8 @@ import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
+    private handleUpdateEntity: (entityData: EntityData) => void;
+    private handleCopyEntity: (data: CopyEntityEventData) => void;
     /**
      * Visual representations of map Areas objects
      */
@@ -50,6 +51,9 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         super(mapEditorModeManager);
         this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+
+        this.handleUpdateEntity = this.updateEntity.bind(this);
+        this.handleCopyEntity = this.copyEntity.bind(this);
     }
 
     public activate(): void {
@@ -203,9 +207,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     protected bindEntitiesManagerEventHandlers(): void {
-        this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, this.deleteEntity.bind(this));
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, this.updateEntity.bind(this));
-        this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, this.copyEntity.bind(this));
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, this.handleUpdateEntity);
+        this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, this.handleCopyEntity);
     }
 
     protected bindEventHandlers() {
@@ -382,8 +385,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             name: properties?.find((p) => p.type === "openFile")?.name ?? undefined,
         };
 
-        const openEntity = new Entity(this.scene, entityId, entityData, this.entityPrefab);
-
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
@@ -395,14 +396,16 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height }
                 )
             )
+            .then(() => {
+                const openEntity = this.entitiesManager.getEntities().get(entityId);
+                if (get(mapEditorEntityFileDroppedStore)) {
+                    this.cleanPreview();
+                    mapEditorEntityFileDroppedStore.set(false);
+                    mapEditorEntityModeStore.set("EDIT");
+                    mapEditorSelectedEntityStore.set(openEntity);
+                }
+            })
             .catch((e) => console.error(e));
-
-        if (get(mapEditorEntityFileDroppedStore)) {
-            this.cleanPreview();
-            mapEditorEntityFileDroppedStore.set(false);
-            mapEditorEntityModeStore.set("EDIT");
-            mapEditorSelectedEntityStore.set(openEntity);
-        }
     }
 
     protected unbindEventHandlers(): void {
@@ -413,9 +416,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     protected unbindEntitiesManagerEventHandlers(): void {
-        this.entitiesManager.off(EntitiesManagerEvent.DeleteEntity, this.deleteEntity.bind(this));
-        this.entitiesManager.off(EntitiesManagerEvent.UpdateEntity, this.updateEntity.bind(this));
-        this.entitiesManager.off(EntitiesManagerEvent.CopyEntity, this.copyEntity.bind(this));
+        this.entitiesManager.off(EntitiesManagerEvent.UpdateEntity, this.handleUpdateEntity);
+        this.entitiesManager.off(EntitiesManagerEvent.CopyEntity, this.handleCopyEntity);
     }
 
     protected createAreaPreviews(): AreaPreview[] {
@@ -472,14 +474,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             undefined,
             this.shiftKey?.isDown
         );
-    }
-
-    private deleteEntity(entity: Entity) {
-        this.mapEditorModeManager
-            .executeCommand(
-                new DeleteEntityFrontCommand(this.scene.getGameMap(), entity.entityId, undefined, this.entitiesManager)
-            )
-            .catch((e) => console.error(e));
     }
 
     private updateEntity(entityData: EntityData) {
