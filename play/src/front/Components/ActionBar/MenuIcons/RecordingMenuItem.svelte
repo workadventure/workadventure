@@ -13,7 +13,6 @@
     import { IconAlertTriangle } from "@wa-icons";
 
     const currentGameScene = gameManager.getCurrentGameScene();
-    console.log("🚀🚀🚀 metadata", gameManager.currentStartedRoom.metadata);
     const roomMetadataChecking = isRoomMetadataData.safeParse(gameManager.currentStartedRoom.metadata);
     if (!roomMetadataChecking.success) {
         console.error("Invalid room metadata data", roomMetadataChecking.error, roomMetadataChecking.data);
@@ -34,6 +33,7 @@
             } else {
                 gameManager.getCurrentGameScene().connection?.emitStartRecording(space.getName());
             }
+            console.log("🐞🐞🐞 Requesting recording for space:");
         }
     }
 

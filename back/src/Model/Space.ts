@@ -153,7 +153,7 @@ export class Space implements CustomJsonReplacerInterface {
                     },
                 });
             }
-            this.communicationManager.handleUserUpdated(spaceUser);
+            this.communicationManager.handleUserUpdated(user);
         } catch (e) {
             console.error("Error while updating user", e);
             Sentry.captureException(e);
