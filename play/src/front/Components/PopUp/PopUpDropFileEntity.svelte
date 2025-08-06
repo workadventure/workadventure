@@ -101,12 +101,6 @@
             width: 50,
         };
 
-        mapEditorCopiedEntityDataPropertiesStore.update((properties) => {
-            const newProperties = properties ? [...properties] : [];
-            newProperties.push(property);
-            return newProperties;
-        });
-
         const mapEditorModeManager = scene.getMapEditorModeManager();
 
         analyticsClient.dragDropFile();
@@ -117,6 +111,12 @@
         mapEditorSelectedEntityPrefabStore.set(entityPrefab || defaultEntityPrefab);
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
+
+        mapEditorCopiedEntityDataPropertiesStore.update((properties) => {
+            const newProperties = properties ? [...properties] : [];
+            newProperties.push(property);
+            return newProperties;
+        });
 
         removePopup();
     }
