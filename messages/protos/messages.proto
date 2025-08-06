@@ -997,9 +997,9 @@ message PrivateSpaceEvent {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
-    StartRecordingResultMessage startRecordingResultMessage = 16;
-    StartRecordingMessage startRecordingMessage = 17;
-    StopRecordingResultMessage stopRecordingResultMessage = 18;
+    StartRecordingResultMessage startRecordingResultMessage = 19;
+    StartRecordingMessage startRecordingMessage = 20;
+    StopRecordingResultMessage stopRecordingResultMessage = 21;
   }
 }
 

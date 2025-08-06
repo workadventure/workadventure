@@ -84,6 +84,13 @@ export class LiveKitService {
             }),
         });
 
+        console.log(
+            "🎇🎇🎇 Identity >>> ",
+            this.getParticipantIdentity(user.spaceUserId, tokenType),
+            "------",
+            user.spaceUserId
+        );
+
         token.addGrant({
             room: roomName,
             canPublish: tokenType === LivekitTokenType.STREAMER,

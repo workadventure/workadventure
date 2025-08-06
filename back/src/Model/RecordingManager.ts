@@ -56,7 +56,7 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private async switchToLivekitAndRecord(user: SpaceUser, userUuid: string): Promise<void> {
-        const livekitState = await LivekitState.create(this.space, this.communicationManager); // await is for roomcreation
+        const livekitState = await LivekitState.create(this.space, this.communicationManager); // await is for room creation
         this.communicationManager.setState(livekitState);
 
         livekitState.handleUserAdded(user);
