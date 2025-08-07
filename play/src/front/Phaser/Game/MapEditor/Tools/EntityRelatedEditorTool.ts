@@ -115,7 +115,6 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     protected subscribeToStores(): void {
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
             (entityPrefab: EntityPrefab | undefined): void => {
-                console.log("EntityEditorTool subscribeToStores: mapEditorSelectedEntityPrefabStore", entityPrefab);
                 this.entityPrefab = entityPrefab;
                 if (!entityPrefab) {
                     this.entityPrefabPreview?.destroy();
