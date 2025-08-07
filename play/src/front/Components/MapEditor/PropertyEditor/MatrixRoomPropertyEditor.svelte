@@ -44,15 +44,13 @@
                     onChange={onValueChange}
                 />
             </div>
-            <div class="value-input">
-                <InputCheckbox
-                    id="openAutomaticallyChatLabel"
-                    label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
-                    dataTestId="shouldOpenAutomaticallyCheckbox"
-                    bind:value={property.shouldOpenAutomatically}
-                    onChange={onValueChange}
-                />
-            </div>
+            <InputCheckbox
+                id="openAutomaticallyChatLabel"
+                label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
+                dataTestId="shouldOpenAutomaticallyCheckbox"
+                bind:value={property.shouldOpenAutomatically}
+                onChange={onValueChange}
+            />
         {:else if isCreatingRoom && !creationRoomError}
             <ChatLoader label={$LL.chat.createRoom.loadingCreation()} />
         {:else}

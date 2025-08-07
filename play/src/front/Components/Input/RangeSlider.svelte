@@ -16,12 +16,12 @@
 </script>
 
 {#if label}
-    <label for={uniqueId} class=""> {label} <slot />: {value} {unit}</label>
+    <label for={uniqueId} class="px-3"> {label} <slot />: {value} {unit}</label>
 {/if}
 
 <div class="mx-2.5">
     <div
-        class="input-range input-range  "
+        class="input-range"
         class:input-range-light={variant === "light"}
         class:input-range-secondary={variant === "secondary"}
         class:input-range-square={buttonShape === "square"}

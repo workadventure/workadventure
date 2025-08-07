@@ -220,6 +220,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "إلغاء", // Cancel
             },
         },
+        nameHelpText: "سيتم عرض هذا الاسم للمستخدمين عند دخولهم المنطقة.", // This name will be shown to users when they enter the area.
     },
     areaEditorInstructions: {
         title: "كيف يعمل؟", // How does it work?
