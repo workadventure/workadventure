@@ -5,6 +5,7 @@ import { GameScene } from "../../GameScene";
 import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorEntityFileDroppedStore,
     mapEditorEntityModeStore,
     mapEditorModeStore,
     mapEditorSelectedEntityDraggedStore,
@@ -185,6 +186,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         mapEditorCopiedEntityDataPropertiesStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
+        mapEditorEntityFileDroppedStore.set(false);
         this.scene.markDirty();
     }
 
