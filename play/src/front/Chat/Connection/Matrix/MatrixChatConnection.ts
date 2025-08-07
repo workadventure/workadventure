@@ -46,6 +46,7 @@ import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
 import { chatUserFactory, mapMatrixPresenceToAvailabilityStatus } from "./MatrixChatUser";
+import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 
 const CLIENT_NOT_INITIALIZED_ERROR_MSG = "MatrixClient not yet initialized";
 export const defaultWoka =
@@ -67,6 +68,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
+    private matrixRateLimiter: MatrixRateLimiter;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -100,7 +102,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-
+        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -538,8 +540,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         // Add room/folder to parent's lists
         if (isSpaceRoom) {
             const roomFolder = new MatrixRoomFolder(room);
-            await roomFolder.refreshAllChildRooms();
-            await roomFolder.refreshSuggestedRooms();
+            await roomFolder.refreshRooms();
+            // await roomFolder.refreshAllChildRooms();
+            // await roomFolder.refreshSuggestedRooms();
             parentFolder.folderList.set(roomId, roomFolder);
         } else {
             parentFolder.roomList.set(roomId, new MatrixChatRoom(room));

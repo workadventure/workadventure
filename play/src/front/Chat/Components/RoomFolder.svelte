@@ -50,20 +50,6 @@
         joinableRoomsOpen = !joinableRoomsOpen;
     }
 
-
-    async function handleRefreshJoinableRooms() {
-        console.log("Refreshing joinable rooms for folder:", folder.id);
-        refreshSpinner = true;
-        try{
-            await chat.refreshFolderJoinableRooms(folder.id);
-
-        } catch (error) {
-            console.error("Error refreshing joinable rooms for folder:", folder.id, error);
-        }
-        refreshSpinner = false;
-        console.log("Joinable rooms refreshed for folder:", folder.id);
-    }
-
 </script>
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
@@ -124,23 +110,6 @@
                                 />
                             </button>
                         </div>
-                        {#if $hasChildRoomsError}
-                        <div class="{joinableRoomsOpen ? 'pb-2 px-3' : ''}">
-                            <button 
-                            class="p-2 w-full rounded-md hover:bg-white/10 text-white/75 hover:text-white"
-                            on:click={handleRefreshJoinableRooms}
-                            title="Retry loading joinable rooms"
-                                >
-                                {#if refreshSpinner}
-                                    <div class="w-full flex flex-row justify-center items-center">
-                                        <Spinner size="xs" />
-                                    </div>
-                                {:else}
-                                    <span>{$LL.chat.joinableRoomsError()}</span>
-                                {/if}
-                            </button>
-                        </div>
-                        {/if}
                         {#if joinableRoomsOpen}
                             <div class="flex flex-col overflow-auto ps-3 pe-4 pb-3">
                                 {#if $suggestedRooms.length > 0}

@@ -1,6 +1,7 @@
 import { Room, EventType, EventTimeline } from "matrix-js-sdk";
 import { derived, get, Readable, writable, Writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
+import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
@@ -90,15 +91,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     init() {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
-                console.log("🚀🚀🚀 GetChildren");
+                console.log("🚀🚀🚀 Initializing room folder");
                 this.getChildren();
-                this.refreshSuggestedRooms().catch((error) => {
-                    console.error("Failed to refresh suggested rooms:", error);
-                    Sentry.captureException(error);
-                });
                 this.hasChildRoomsError.set(false);
-                this.refreshAllChildRooms().catch((error) => {
-                    console.error("Failed to refresh all child rooms:", error);
+                this.refreshRooms().catch((error: Error) => {
+                    console.error("Failed to refresh rooms:", error);
                     this.hasChildRoomsError.set(true);
                     Sentry.captureException(error);
                 });
@@ -249,75 +246,74 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         });
     }
 
-    async refreshSuggestedRooms() {
-        const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, true);
+    async refreshRooms() {
+        try {
+            const { rooms: allRooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
 
-        const allRooms = this.room.client.getRooms();
+            const { rooms: suggestedRoomsData } = await this.room.client.getRoomHierarchy(this.id, 100, 2, true);
 
-        const suggestedMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
+            const hierarchy = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
 
-        rooms.forEach((room) => {
-            const roomId = room.room_id;
+            console.log("⛺️Hierarchy: ", hierarchy);
 
-            if (this.id === roomId) return;
+            const localRooms = this.room.client.getRooms();
 
-            const chatRoom = allRooms.find((r) => r.roomId === roomId);
+            const suggestedRooms: { name: string; id: string; avatarUrl: string }[] = [];
+            const availableRooms: { name: string; id: string; avatarUrl: string }[] = [];
 
-            if (!chatRoom) return;
+            suggestedRoomsData.forEach((room) => {
+                const roomId = room.room_id;
+                if (this.id === roomId) return;
 
-            const avatarUrl = chatRoom?.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
+                const chatRoom = localRooms.find((r) => r.roomId === roomId);
+                if (!chatRoom) return;
 
-            if (!this.roomList.has(roomId) && !this.folderList.has(roomId)) {
-                suggestedMatrixChatRooms.push({ name: room.name ?? "", id: roomId, avatarUrl: avatarUrl ?? "" });
-            }
-        });
+                const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                suggestedRooms.push({
+                    name: room.name ?? "",
+                    id: roomId,
+                    avatarUrl
+                });
+                console.log("📬📬📬 Suggested room:", room.name, room.room_id, "Avatar URL:", avatarUrl);
+            });
 
-        this.allSuggestedRooms.set(suggestedMatrixChatRooms);
-    }
+            allRooms.forEach((room) => {
+                console.log("Refreshing room:", room.name, room.room_id, "Is suggested: ", room.children_state);
+                const roomId = room.room_id;
+                if (this.id === roomId) return;
 
-    async refreshAllChildRooms() {
-        const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
+                const chatRoom = localRooms.find((r) => r.roomId === roomId);
+                if (!chatRoom) return;
 
-        const allRooms = this.room.client.getRooms();
-
-        console.trace("🚀🚀🚀 All rooms", rooms);
-
-        const allMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
-
-        rooms.forEach((room) => {
-            const roomId = room.room_id;
-            if (this.id === roomId) return;
-
-            const chatRoom = allRooms.find((r) => r.roomId === roomId);
-            let isJoinOrInvite = false;
-            if (chatRoom) {
                 const membership = chatRoom.getMyMembership();
-                if (membership === "join" || membership === "invite" || membership === "ban") {
-                    isJoinOrInvite = true;
-                }
-            }
-            if (!isJoinOrInvite) {
-                const avatarUrl = chatRoom?.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
-                allMatrixChatRooms.push({ name: room.name ?? "", id: roomId, avatarUrl });
-            }
-        });
 
-        this.availableRooms.set(allMatrixChatRooms);
+                if (membership !== "join" && membership !== "invite" && membership !== "ban") {
+                    const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                    availableRooms.push({
+                        name: room.name ?? "",
+                        id: roomId,
+                        avatarUrl
+                    });
+                }
+            });
+
+            this.allSuggestedRooms.set(suggestedRooms);
+            this.availableRooms.set(availableRooms);
+        } catch (error) {
+            console.error("Failed to refresh rooms:", error);
+            this.hasChildRoomsError.set(true);
+            Sentry.captureException(error);
+        }
     }
 
     protected override onRoomMyMembership(room: Room) {
         if (room.getMyMembership() === KnownMembership.Join) {
             this.joinRoomDeferred.resolve();
             this.getChildren();
-            this.refreshSuggestedRooms().catch((error) => {
-                console.error("Failed to refresh suggested rooms:", error);
+            this.refreshRooms().catch((error: Error) => {
+                console.error("Failed to refresh rooms:", error);
                 Sentry.captureException(error);
             });
-            console.log("❄️❄️❄️ Call in onRoomMyMembership() ");
-            // this.refreshAllChildRooms().catch((error) => {
-            //     console.error("Failed to refresh all child rooms:", error);
-            //     Sentry.captureException(error);
-            // });
         }
         super.onRoomMyMembership(room);
     }
