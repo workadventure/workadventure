@@ -229,6 +229,22 @@ const mapEditor: BaseTranslation = {
             duration: "Duração (em segundos) ⏱️",
             infinityDuration: "Duração infinita ⏱️",
         },
+        openFileProperties: {
+            label: "Abrir arquivo",
+            description: "Abrir arquivo dentro do WorkAdventure.",
+            error: "Por favor, insira um arquivo válido",
+            disabled: "A integração de arquivos está desabilitada.",
+            fileUrlLabel: "URL do arquivo",
+            uploadFile: {
+                title: "Adicionar seu arquivo",
+                description: "Arraste e solte ou escolha seu arquivo",
+                dragDrop: "Arrastar e Soltar ou",
+                chooseFile: "Escolher arquivo",
+                errorOnFileFormat: "Formato do arquivo não suportado",
+                errorOnFileNumber: "Soltar múltiplos arquivos não é suportado",
+            },
+        },
+        noProperties: "Nenhuma propriedade definida",
     },
     areaEditor: {
         editInstructions: "Clique em uma área para modificar suas propriedades.",
@@ -247,6 +263,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancelar",
             },
         },
+        nameHelpText: "Esta entrada será mostrada ao usuário quando ele entrar na área.",
     },
     areaEditorInstructions: {
         title: "Como funciona?",

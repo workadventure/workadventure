@@ -204,6 +204,44 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Bitte geben Sie eine gültige Excalidraw-URL ein",
             disabled: "Excalidraw-Integration ist deaktiviert.",
         },
+        cardsProperties: {
+            label: "Karten öffnen",
+            description:
+                "Die schnellste und einfachste Lösung, um dein Wissen sofort zu teilen – online, in MS Teams und auf dem Handy.",
+            error: "Bitte gib eine gültige Karten-URL ein.",
+            disabled: "Die Karten-Integration ist deaktiviert.",
+        },
+        matrixProperties: {
+            label: "Matrix-Raum verlinken",
+            description: "Verknüpfe einen Matrix-Raum mit deinem Bereich.",
+            openAutomaticallyChatLabel: "Chat automatisch öffnen",
+            roomNameLabel: "Anzeigename des Raums",
+            roomNameLabelPlaceholder: "Mein Raum",
+            defaultChatRoomAreaName: "Raumbereich",
+        },
+        tooltipProperties: {
+            label: "Infobubble",
+            description: "Füge deinem Bereich eine Infobubble hinzu ℹ️",
+            contentPlaceholder: "Hier Inhalt schreiben ✍️",
+            duration: "Dauer (in Sekunden) ⏱️",
+            infinityDuration: "Unbegrenzte Dauer ⏱️",
+        },
+        openFileProperties: {
+            label: "Datei öffnen",
+            description: "Datei in WorkAdventure öffnen.",
+            error: "Bitte gib eine gültige Datei ein.",
+            disabled: "Datei-Integration ist deaktiviert.",
+            fileUrlLabel: "Datei-URL",
+            uploadFile: {
+                title: "Datei hinzufügen",
+                description: "Datei hierhin ziehen oder auswählen",
+                dragDrop: "Ziehen und ablegen oder",
+                chooseFile: "Datei auswählen",
+                errorOnFileFormat: "Dateiformat wird nicht unterstützt.",
+                errorOnFileNumber: "Mehrere Dateien werden nicht unterstützt.",
+            },
+        },
+        noProperties: "Keine Eigenschaften definiert",
     },
     areaEditor: {
         editInstructions: "Klicken Sie auf eine Fläche, um ihre Eigenschaften zu ändern.",
@@ -222,6 +260,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Abbrechen",
             },
         },
+        nameHelpText: "Dieser Text wird dem Benutzer angezeigt, wenn er den Bereich betritt.",
     },
     areaEditorInstructions: {
         title: "Wie funktioniert das?",

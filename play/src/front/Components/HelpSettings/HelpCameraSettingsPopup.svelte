@@ -2,8 +2,8 @@
     import { fly } from "svelte/transition";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import { LL } from "../../../i18n/i18n-svelte";
-    import Alert from "../UI/Alert.svelte";
     import { popupStore } from "../../Stores/PopupStore";
+    import { IconInfoCircle } from "@wa-icons";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -30,9 +30,10 @@
         </div>
         {#if showDetails}
             <div class="px-4 mt-4">
-                <Alert>
+                <p class="help-text !text-danger-800">
+                    <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
                     {$LL.camera.help.permissionDenied()}
-                </Alert>
+                </p>
             </div>
             <div class="p-4 italic opacity-50 text-sm leading-4">
                 {$LL.camera.help.content()}
