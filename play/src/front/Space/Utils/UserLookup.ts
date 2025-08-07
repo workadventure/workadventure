@@ -35,27 +35,29 @@ export function lookupUserById(id: number, space: SpaceInterface, timeout?: numb
     }
 
     const timeoutPromise = new Promise<SpaceUserExtended>((resolve, reject) => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
+        setTimeout(() => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
 
-        const errorMessage = `Promise timed out while waiting for user with id ${id} to be present in the space.`;
+            const errorMessage = `Promise timed out while waiting for user with id ${id} to be present in the space.`;
 
-        const popupId = `user-lookup-timeout-${id}`;
-        popupStore.addPopup(
-            PopUpError,
-            {
-                message: "",
-                click: () => {
-                    popupStore.removePopup(popupId);
+            const popupId = `user-lookup-timeout-${id}`;
+            popupStore.addPopup(
+                PopUpError,
+                {
+                    message: "",
+                    click: () => {
+                        popupStore.removePopup(popupId);
+                    },
+                    userInputManager: gameManager.getCurrentGameScene().userInputManager,
                 },
-                userInputManager: gameManager.getCurrentGameScene().userInputManager,
-            },
-            popupId
-        );
+                popupId
+            );
 
-        console.error(errorMessage);
-        reject(new Error(errorMessage));
+            console.error(errorMessage);
+            reject(new Error(errorMessage));
+        }, timeout);
     });
 
     return Promise.race([promise, timeoutPromise]);
