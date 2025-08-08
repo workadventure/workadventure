@@ -85,7 +85,6 @@ export class LivekitState extends CommunicationState {
             this.cancelSwitch();
         }
         return super.handleUserToNotifyAdded(user);
-
     }
 
     async handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {
