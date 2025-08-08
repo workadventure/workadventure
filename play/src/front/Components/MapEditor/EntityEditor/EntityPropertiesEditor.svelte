@@ -12,6 +12,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -20,13 +21,16 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
+    import { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
     let entityDescription = "";
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
+    let hasLivekitRoomProperty: boolean;
     let showDescriptionField = false;
+    let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -45,6 +49,7 @@
                 entityDescription = descriptionProperty.description ?? "";
                 entitySearchable = descriptionProperty.searchable ?? false;
             }
+            selectedEntity = currentEntity;
         }
     });
 
@@ -139,6 +144,13 @@
                     closable: true,
                     roomName: "JITSI ROOM",
                     buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
+                };
+            case "livekitRoomProperty":
+                return {
+                    id,
+                    type,
+                    roomName: "LIVEKIT ROOM",
+                    buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
                 };
             case "openFile":
                 return {
@@ -242,6 +254,7 @@
 
     function refreshFlags(): void {
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
     }
     function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
         return properties.find((property) => property.type === propertyType) !== undefined;
@@ -255,6 +268,7 @@
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
+        selectedEntity?.removeEditColor();
     });
 
     function toggleDescriptionField() {
@@ -280,6 +294,14 @@
                     property="jitsiRoomProperty"
                     on:click={() => {
                         onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
+            {#if !hasLivekitRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="livekitRoomProperty"
+                    on:click={() => {
+                        onAddProperty("livekitRoomProperty");
                     }}
                 />
             {/if}
@@ -443,6 +465,14 @@
                         />
                     {:else if property.type === "openFile"}
                         <OpenFilePropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "livekitRoomProperty"}
+                        <LivekitRoomPropertyEditor
                             {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);

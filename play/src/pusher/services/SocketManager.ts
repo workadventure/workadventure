@@ -30,6 +30,7 @@ import {
     QueryMessage,
     RemoveSpaceFilterMessage,
     ReportPlayerMessage,
+    RequestFullSyncMessage,
     SearchMemberAnswer,
     SearchMemberQuery,
     SearchTagsAnswer,
@@ -1406,6 +1407,26 @@ export class SocketManager implements ZoneEventListener {
             expiresIn: "1h",
         });
         return jwtToken;
+    }
+
+    async handleRequestFullSync(socket: Socket, requestFullSyncMessage: RequestFullSyncMessage) {
+        const socketData = socket.getUserData();
+
+        await this.checkClientIsPartOfSpace(socket, requestFullSyncMessage.spaceName);
+        const space = this.spaces.get(requestFullSyncMessage.spaceName);
+        if (!space) {
+            throw new Error(
+                `Trying to send a public event to a space that does not exist: "${requestFullSyncMessage.spaceName}".`
+            );
+        }
+
+        space.forwarder.forwardMessageToSpaceBack({
+            $case: "requestFullSyncMessage",
+            requestFullSyncMessage: {
+                ...requestFullSyncMessage,
+                senderUserId: socketData.spaceUserId,
+            },
+        });
     }
 
     deleteSpaceIfEmpty(spaceName: string) {

@@ -1,7 +1,7 @@
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Observable, Subject, Subscriber } from "rxjs";
+import { Observable, Subject, Subscriber, Subscription } from "rxjs";
 import { merge } from "lodash";
 import { MapStore } from "@workadventure/store-utils";
 import {
@@ -57,6 +57,10 @@ export class Space implements SpaceInterface {
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
 
+    private readonly observeSyncUserAdded: Subscription;
+    private readonly observeSyncUserUpdated: Subscription;
+    private readonly observeSyncUserRemoved: Subscription;
+
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
@@ -67,7 +71,6 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
-        //TODO : mock dans les tests
         private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         if (name === "") {
@@ -120,6 +123,7 @@ export class Space implements SpaceInterface {
             };
         });
 
+        //TODO : voir si utile avec les nvx roles
         this.videoStreamStore = derived(
             [this.allVideoStreamStore, this.usersStore],
             ([videoStreamStore, usersStore]) => {
@@ -132,7 +136,7 @@ export class Space implements SpaceInterface {
                 return newVideoStreamStore;
             }
         );
-
+        //TODO : voir si utile avec les nvx roles
         this.screenShareStreamStore = derived(
             [this.allScreenShareStreamStore, this.usersStore],
             ([screenShareStreamStore, usersStore]) => {
@@ -147,7 +151,23 @@ export class Space implements SpaceInterface {
         );
 
         this._peerManager = new SpacePeerManager(this);
-        // TODO: The public and private messages should be forwarded to a special method here from the Registry.
+        this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
+            if (!message.addSpaceUserMessage.user) {
+                console.error("addSpaceUserMessage is missing a user");
+                return;
+            }
+            this.addUser(message.addSpaceUserMessage.user).catch((e) => console.error(e));
+        });
+        this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
+            if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
+                console.error("updateSpaceUserMessage is missing a user or an updateMask");
+                return;
+            }
+            this.updateUserData(message.updateSpaceUserMessage.user, message.updateSpaceUserMessage.updateMask);
+        });
+        this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
+            this.removeUser(message.removeSpaceUserMessage.spaceUserId);
+        });
     }
 
     /**,
@@ -287,6 +307,9 @@ export class Space implements SpaceInterface {
         }
         this._onLeaveSpace.next();
         this._onLeaveSpace.complete();
+        this.observeSyncUserAdded.unsubscribe();
+        this.observeSyncUserUpdated.unsubscribe();
+        this.observeSyncUserRemoved.unsubscribe();
 
         if (this._peerManager) {
             this._peerManager.destroy();
@@ -366,6 +389,9 @@ export class Space implements SpaceInterface {
             if (this._leftUserSubscriber) {
                 this._leftUserSubscriber.next(user);
             }
+
+            this.allVideoStreamStore.delete(spaceUserId);
+            this.allScreenShareStreamStore.delete(spaceUserId);
         }
     }
 
@@ -464,6 +490,11 @@ export class Space implements SpaceInterface {
         return extendedUser;
     }
 
+    public requestFullSync() {
+        if (this._registerRefCount === 0) return;
+        this._connection.emitRequestFullSync(this.name, this.getUsers());
+    }
+
     private extractUserIdFromSpaceId(spaceId: string): number {
         const lastUnderscoreIndex = spaceId.lastIndexOf("_");
         if (lastUnderscoreIndex === -1) {
@@ -498,12 +529,10 @@ export class Space implements SpaceInterface {
         this._registerRefCount++;
     }
 
-    //TODO : partie a modifier car plus de spacefilter
     public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
         return lookupUserById(this.extractUserIdFromSpaceId(id), this, 30_000);
     }
 
-    //TODO : reimplementer
     public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
         return lookupUserById(id, this, 30_000);
     }

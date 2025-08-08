@@ -239,6 +239,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
             },
         },
+        livekitProperties: {
+            label: "Livekit Room",
+            description: "Start Livekit meeting on enter.",
+            roomNameLabel: "Room Name",
+            livekitUrl: "Livekit URL",
+            roomNamePlaceholder: "Nom de la salle",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

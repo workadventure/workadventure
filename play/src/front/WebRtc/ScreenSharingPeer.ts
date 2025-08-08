@@ -20,8 +20,10 @@ import {
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { isFirefox } from "./DeviceUtils";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation in screen sharing
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000;
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -58,13 +60,26 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration for screen sharing
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings for screen sharing
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 15, // Higher pool for screen sharing
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled for screen sharing
+            ...(firefoxBrowser && { trickle: true }),
+        };
+
+        super(peerConfig);
 
         this.userId = player.userId;
         this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
@@ -143,6 +158,18 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
             this._statusStore.set("error");
+
+            // Firefox-specific error handling for screen sharing
+            if (isFirefox() && err.message) {
+                // Log Firefox-specific screen sharing errors for better debugging
+                if (err.message.includes("ICE")) {
+                    console.warn("Firefox screen sharing ICE connection error - this may be temporary");
+                } else if (err.message.includes("DTLS")) {
+                    console.warn("Firefox screen sharing DTLS handshake error - checking TURN configuration");
+                } else if (err.message.includes("getDisplayMedia")) {
+                    console.warn("Firefox screen sharing capture error - check permissions");
+                }
+            }
         });
 
         this.on("connect", () => {

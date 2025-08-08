@@ -36,6 +36,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
     public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
+    public emitRequestFullSync = vi.fn();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent(
         spaceName: string,

@@ -54,12 +54,7 @@ export class SimplePeer {
         private _blackListManager = blackListManager
     ) {
         //we make sure we don't get any old peer.
-        //TODO: no longer useful ?
-        // peerStore.cleanupStore(this.space.getName());
-        // screenSharingPeerStore.cleanupStore(this.space.getName());
         let localScreenCapture: MediaStream | undefined = undefined;
-        // this.videoPeerStore = this.space.livekitVideoStreamStore
-        // this.screenSharingPeerStore = this.space.screenSharingPeerStore
 
         this._unsubscribers.push(
             this._screenSharingLocalStreamStore.subscribe((streamResult) => {
@@ -159,7 +154,6 @@ export class SimplePeer {
 
         //receive message start
         this._rxJsUnsubscribers.push(
-            //TODO : changer directement le message pour avoir le spaceUser directement ....
             this._space.observePrivateEvent("webRtcStartMessage").subscribe((message) => {
                 const webRtcStartMessage = message.webRtcStartMessage;
 
@@ -170,7 +164,6 @@ export class SimplePeer {
                     webRtcPassword: webRtcStartMessage.webRtcPassword,
                 };
 
-                //TODO : voir si on peut avoir le spaceUser directement dans le userSimplePeerInterface
                 this.receiveWebrtcStart(user, message.sender).catch((e) => {
                     console.error("Error while receiving WebRTC signal", e);
                     Sentry.captureException(e);
@@ -209,7 +202,7 @@ export class SimplePeer {
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
-        this.closeConnection(user.userId, false);
+        this.closeConnection(user.userId, true);
     }
 
     /**
@@ -370,7 +363,6 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     public closeConnection(userId: string, shouldCloseStream = true) {
-        //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         const controller = this._pendingConnections.get(userId);
         if (controller) {
             controller.abort();
@@ -421,7 +413,6 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     private closeScreenSharingConnection(userId: string, shouldCloseStream = true) {
-        //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         try {
             const peer = this._space.allScreenShareStreamStore.get(userId);
             if (!peer) {
@@ -449,7 +440,6 @@ export class SimplePeer {
         }
     }
 
-    //TODO : voir si on fait 2 fonctions / 1 pour close complet et l'autre pour la transition (sans close le stream et delete dans le store)
     public closeAllConnections(needToDelete?: boolean) {
         for (const userId of this._space.allVideoStreamStore.keys()) {
             this.closeConnection(userId, needToDelete);
@@ -471,22 +461,22 @@ export class SimplePeer {
             subscription.unsubscribe();
         }
 
-        this.cleanupStore();
+        // can be reused for livekit
+        //this.cleanupStore();
     }
 
     public cleanupStore() {
-        //TODO : voir comment adapter cette partie pour le switch (flag ou fonction spécifique pour le switch)
         this._space.allVideoStreamStore.forEach((peer) => {
             if (peer instanceof VideoPeer) {
-                //peer.destroy();
-                //this.space.livekitVideoStreamStore.delete(peer.user.userId);
+                peer.destroy();
+                this._space.allVideoStreamStore.delete(peer.user.userId);
             }
         });
 
         this._space.allScreenShareStreamStore.forEach((peer) => {
             if (peer instanceof ScreenSharingPeer) {
-                //peer.destroy();
-                ///this.space.screenSharingPeerStore.delete(peer.user.userId);
+                peer.destroy();
+                this._space.allScreenShareStreamStore.delete(peer.user.userId);
             }
         });
     }
@@ -518,7 +508,6 @@ export class SimplePeer {
         }
     }
 
-    //TODO : repasser dans les fonctions et bien faire la différence entre les userID et le spaceUserId
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
         const spaceUser = await this._space.getSpaceUserBySpaceUserId(data.userId);
 
@@ -628,6 +617,7 @@ export class SimplePeer {
             screenSharingUser,
             localScreenCapture
         );
+
         if (!PeerConnectionScreenSharing) {
             return;
         }

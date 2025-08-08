@@ -100,7 +100,6 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        //TODO : voir si on doit exposer les videoPeerAdded et videoPeerRemoved dans le spacePeerManager
         this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
                 if (media.type === "mediaStore") {

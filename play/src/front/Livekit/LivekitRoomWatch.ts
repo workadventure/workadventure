@@ -2,10 +2,18 @@ import { MapStore } from "@workadventure/store-utils";
 import { Participant, VideoPresets, Room, RoomEvent } from "livekit-client";
 import { Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
+import { z } from "zod";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoom } from "./LiveKitRoom";
+
+const ParticipantMetadataSchema = z.object({
+    userId: z.string(),
+});
+
+type ParticipantMetadata = z.infer<typeof ParticipantMetadataSchema>;
+
 export class LiveKitRoomWatch implements LiveKitRoom {
     private room: Room | undefined;
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
@@ -52,7 +60,7 @@ export class LiveKitRoomWatch implements LiveKitRoom {
             await Promise.all(
                 Array.from(room.remoteParticipants.values()).map(async (participant) => {
                     const id = this.getParticipantId(participant);
-
+                    console.log("😱😱😱 Joining participant", id);
                     if (!participant.permissions?.canPublish) {
                         console.info("participant has no publish permission", id);
                         return;
@@ -88,8 +96,23 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
     }
 
-    private getParticipantId(participant: Participant) {
-        return participant.identity.split("@")[0];
+    private parseParticipantMetadata(participant: Participant): ParticipantMetadata {
+        if (!participant.metadata) {
+            throw new Error("Participant metadata is undefined");
+        }
+        try {
+            const rawMetadata = JSON.parse(participant.metadata);
+            return ParticipantMetadataSchema.parse(rawMetadata);
+        } catch (error) {
+            console.error("Failed to parse participant metadata:", error);
+            Sentry.captureException(error);
+            throw new Error("Invalid participant metadata");
+        }
+    }
+
+    private getParticipantId(participant: Participant): string {
+        const metadata = this.parseParticipantMetadata(participant);
+        return metadata.userId;
     }
 
     public leaveRoom() {
@@ -132,7 +155,6 @@ export class LiveKitRoomWatch implements LiveKitRoom {
     }
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
-        //TODO : revoir impl iteration sur tout les participants a chaque fois
         this.participants.forEach((participant) => {
             if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
                 participant.setActiveSpeaker(true);

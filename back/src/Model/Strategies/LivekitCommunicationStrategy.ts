@@ -78,12 +78,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         return this.usersReady.length === this.space.getAllUsers().length;
     }
 
-    //TODO : voir comment on gere le fait de pouvoir juste watch sur livekit
-    //TODO : voir les video mais ne pas avoir le droit de streamer
-    //TODO : est ce qu'on peut mettre a jour le token ou renvoyer un nouveau token ?
-    //TODO : voir comment on gere plus tard faire fonctionner le webrtc deja
-    //TODO : sinon solution avec 2 token / 1 pour publier la video et 1 pour recuperer la video des autres
-    // permet de virer un token et de garder l'autre
     addUserToNotify(user: SpaceUser, switchInProgress = false): void {
         this.sendLivekitInvitationMessage(user, LivekitTokenType.WATCHER, switchInProgress).catch((error) => {
             console.error(`Error generating token for user ${user.spaceUserId} in Livekit:`, error);

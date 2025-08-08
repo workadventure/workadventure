@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
 import { Subscription } from "rxjs";
 import { z } from "zod";
+import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { MapStore } from "@workadventure/store-utils";
 import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
@@ -9,6 +10,7 @@ import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceE
 import { Space } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
+import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
 import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
@@ -32,6 +34,7 @@ export type RoomConnectionForSpacesInterface = Pick<
     | "emitUpdateSpaceMetadata"
     | "emitUpdateSpaceUserMessage"
     | "spaceDestroyedMessage"
+    | "emitRequestFullSync"
 >;
 
 /**
@@ -40,6 +43,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
+    private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -52,72 +56,67 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, ExtendedStreamable> = new Map();
-            const unsubscribers: (() => void)[] = [];
+            if ($spaces.size === 0) {
+                set(new Map());
+                return () => {};
+            }
 
-            const updatePeers = () => {
-                allPeers.clear();
-                if ($spaces.size === 0) {
-                    set(new Map());
-                    return;
-                }
-                $spaces.forEach((space) => {
-                    const aggregatedPeerStores = space.videoStreamStore;
-                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
-                        allPeers.clear();
-                        peerStores.forEach((streamable, userId) => {
-                            allPeers.set(userId, streamable);
-                        });
-                        set(new Map(allPeers));
+            const spaceStores = Array.from($spaces.values()).map((space) => space.videoStreamStore);
+
+            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+
+                allSpaceStreams.forEach((spaceStreams) => {
+                    spaceStreams.forEach((streamable, userId) => {
+                        aggregatedPeers.set(userId, streamable);
                     });
-                    unsubscribers.push(unsubscribeAggregated);
                 });
-            };
 
-            updatePeers();
+                return aggregatedPeers;
+            });
 
-            return () => {
-                unsubscribers.forEach((unsub) => unsub());
-            };
+            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+                set(new Map(aggregatedPeers));
+            });
+
+            return unsubscribe;
         }
     );
 
     public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
         this.spaces,
         ($spaces, set) => {
-            const allPeers: Map<string, ExtendedStreamable> = new Map();
-            const unsubscribers: (() => void)[] = [];
+            if ($spaces.size === 0) {
+                set(new Map());
+                return () => {};
+            }
 
-            const updatePeers = () => {
-                allPeers.clear();
-                if ($spaces.size === 0) {
-                    set(new Map());
-                    return;
-                }
-                $spaces.forEach((space) => {
-                    const aggregatedPeerStores = space.screenShareStreamStore;
-                    const unsubscribeAggregated = aggregatedPeerStores.subscribe((peerStores) => {
-                        allPeers.clear();
-                        peerStores.forEach((streamable, userId) => {
-                            allPeers.set(userId, streamable);
-                        });
-                        set(new Map(allPeers));
+            const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
+
+            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+
+                allSpaceStreams.forEach((spaceStreams) => {
+                    spaceStreams.forEach((streamable, userId) => {
+                        aggregatedPeers.set(userId, streamable);
                     });
-                    unsubscribers.push(unsubscribeAggregated);
                 });
-            };
 
-            updatePeers();
+                return aggregatedPeers;
+            });
 
-            return () => {
-                unsubscribers.forEach((unsub) => unsub());
-            };
+            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+                set(new Map(aggregatedPeers));
+            });
+
+            return unsubscribe;
         }
     );
 
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
-        private connectStream = connectionManager.roomConnectionStream
+        private connectStream = connectionManager.roomConnectionStream,
+        private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
     ) {
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
@@ -203,6 +202,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.roomConnectionStreamSubscription = this.connectStream.subscribe((connection) => {
             // this.reconnect(connection).catch((e) => console.error(e));
         });
+
+        this.setupThrottlingDetection();
     }
 
     async joinSpace(
@@ -211,6 +212,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         propertiesToSync: string[],
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
+        const leavingPromise = this.leavingSpacesPromises.get(spaceName);
+        if (leavingPromise) {
+            await leavingPromise;
+        }
+
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
         const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
@@ -225,6 +231,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
+
+        const leavingPromise = this.performLeaveSpace(spaceInRegistry, spaceName);
+        this.leavingSpacesPromises.set(spaceName, leavingPromise);
+
+        try {
+            await leavingPromise;
+        } finally {
+            this.leavingSpacesPromises.delete(spaceName);
+        }
+    }
+
+    private async performLeaveSpace(spaceInRegistry: Space, spaceName: string): Promise<void> {
         await spaceInRegistry.destroy();
         this.spaces.delete(spaceName);
     }
@@ -267,8 +285,9 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         this.spaceDestroyedMessageSubscription.unsubscribe();
         this.roomConnectionStreamSubscription.unsubscribe();
 
-        // Technically, all spaces should have been destroyed by now.
-        // If a space is not destroyed, it means that there is a bug in the code.
+        await Promise.all(Array.from(this.leavingSpacesPromises.values()));
+        this.leavingSpacesPromises.clear();
+
         await Promise.all(
             Array.from(this.spaces.values()).map(async (space) => {
                 await space.destroy();
@@ -277,6 +296,33 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             })
         );
 
+        // Clear all spaces from the registry
         this.spaces.clear();
+
+        // Stop throttling detection and clean up resources
+        this.throttlingDetector.destroy();
+    }
+
+    private setupThrottlingDetection(): void {
+        const recoverySubscription = this.throttlingDetector.recoveryTriggered$
+            .pipe(debounceTime(1000), distinctUntilChanged())
+            .subscribe(() => {
+                console.info("[SpaceRegistry] 🎯 Recovery after throttling - resynchronizing Spaces");
+
+                const spaces = this.getAll();
+                spaces.forEach((space) => {
+                    console.debug(`[SpaceRegistry] Resync space: ${space.getName()}`);
+                    space.requestFullSync();
+                });
+            });
+
+        // Optionally: Subscribe to all events for debugging purposes
+        const eventsSubscription = this.throttlingDetector.events$.subscribe((event) => {
+            console.debug(`[SpaceRegistry] Throttling event: ${event.type}`, event);
+        });
+
+        // Store subscriptions for cleanup
+        this.roomConnectionStreamSubscription.add(recoverySubscription);
+        this.roomConnectionStreamSubscription.add(eventsSubscription);
     }
 }

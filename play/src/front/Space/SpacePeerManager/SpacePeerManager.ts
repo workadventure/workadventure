@@ -138,11 +138,11 @@ export class SpacePeerManager {
         state.completeSwitch();
         this._communicationState = state;
     }
-
+    //TODO : a tester
     dispatchSound(url: URL): Promise<void> {
         return this._communicationState.dispatchSound(url);
     }
-
+    //TODO : a tester
     dispatchStream(mediaStream: MediaStream): void {
         this._communicationState.dispatchStream(mediaStream);
     }

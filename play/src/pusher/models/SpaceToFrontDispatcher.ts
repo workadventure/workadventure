@@ -295,7 +295,6 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        //TODO : voir si on cherche dans les users ou dans tout les users connnectes plutot / meme chose pour les private event
         const receiver = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiver) {

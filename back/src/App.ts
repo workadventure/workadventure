@@ -46,11 +46,11 @@ class App {
     }
 
     public listen(): void {
-        this.app.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port ${HTTP_PORT}!`));
+        this.app.listen(HTTP_PORT, () => console.info(`WorkAdventure HTTP API starting on port ${HTTP_PORT}!`));
 
         if (PROMETHEUS_PORT && this.prometheusApp) {
             this.prometheusApp.listen(PROMETHEUS_PORT, () =>
-                console.log(`WorkAdventure Prometheus API starting on port ${PROMETHEUS_PORT}!`)
+                console.info(`WorkAdventure Prometheus API starting on port ${PROMETHEUS_PORT}!`)
             );
         }
     }

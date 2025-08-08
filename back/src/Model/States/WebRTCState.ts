@@ -95,7 +95,6 @@ export class WebRTCState extends CommunicationState {
         await super.handleUserToNotifyDeleted(user);
     }
 
-    //TODO : trouver un autre moyen de faire le switch
     private switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): void {
         this._nextStatePromise = (async () => {
             let nextState: LivekitState | undefined;

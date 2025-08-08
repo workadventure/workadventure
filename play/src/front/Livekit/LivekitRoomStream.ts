@@ -271,7 +271,6 @@ export class LiveKitRoomStream implements LiveKitRoom {
         }
 
         const localTrack = await this.localParticipant.publishTrack(destination.stream.getAudioTracks()[0], {
-            //TODO : unknown ou screenshareAudio ??
             source: Track.Source.Unknown,
         });
 

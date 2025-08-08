@@ -183,7 +183,6 @@ export class LiveKitParticipant {
                 console.error("Error updating livekit screen share stream store");
             });
         } else if (publication.source === Track.Source.ScreenShareAudio) {
-            //TODO : tester les screenShareAudio
             this._audioScreenShareStreamStore.set(track.mediaStream);
             this.updateLivekitScreenShareStreamStore().catch(() => {
                 console.error("Error updating livekit screen share stream store");

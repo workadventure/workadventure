@@ -161,7 +161,6 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     protected notifyUserOfCurrentStrategy(user: SpaceUser, strategy: CommunicationType): void {
-        console.log("🚀🚀🚀🚀🚀🚀🚀 notifyUserOfCurrentStrategy", user.spaceUserId, strategy);
         this.dispatchSwitchEvent(user.spaceUserId, "communicationStrategyMessage", { strategy });
     }
     protected abstract shouldSwitchBackToCurrentState(): boolean;

@@ -285,7 +285,7 @@ export class RoomConnection implements RoomConnection {
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
         params.set("cameraState", get(requestedCameraState) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
-        //TODO : voir si on utilise la variable screenSharingState
+        // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 
         const url = urlObj.toString();
@@ -1706,6 +1706,19 @@ export class RoomConnection implements RoomConnection {
                         event: spaceEvent,
                     },
                 } satisfies PrivateEventFrontToPusher,
+            },
+        });
+    }
+
+    public emitRequestFullSync(spaceName: string, users: SpaceUser[]): void {
+        this.send({
+            message: {
+                $case: "requestFullSyncMessage",
+                requestFullSyncMessage: {
+                    spaceName,
+                    users,
+                    senderUserId: "",
+                },
             },
         });
     }
