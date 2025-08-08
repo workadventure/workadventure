@@ -71,3 +71,5 @@ export const LIVEKIT_HOST = env.LIVEKIT_HOST;
 export const LIVEKIT_API_KEY = env.LIVEKIT_API_KEY;
 export const LIVEKIT_API_SECRET = env.LIVEKIT_API_SECRET;
 export const LIVEKIT_WS_URL = env.LIVEKIT_WS_URL;
+
+export const MAX_USERS_FOR_WEBRTC = env.MAX_USERS_FOR_WEBRTC;
