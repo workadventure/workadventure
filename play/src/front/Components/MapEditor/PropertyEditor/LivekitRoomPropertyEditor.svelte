@@ -2,8 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import { LivekitRoomPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import Input from "../../Input/Input.svelte";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: LivekitRoomPropertyData;
 
