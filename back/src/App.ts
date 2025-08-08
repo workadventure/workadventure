@@ -12,6 +12,7 @@ import {
     GRPC_PORT,
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_URL,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
 import { spaceManager } from "./SpaceManager";
@@ -60,7 +61,10 @@ class App {
     }
 
     public grpcListen(): void {
-        const server = new grpc.Server();
+        const server = new grpc.Server({
+            "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+            "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+        });
         server.addService(RoomManagerService, roomManager);
         server.addService(SpaceManagerService, spaceManager);
 
@@ -69,6 +73,7 @@ class App {
                 throw err;
             }
             console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
+            server.start();
         });
     }
 }
