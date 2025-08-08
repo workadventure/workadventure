@@ -465,21 +465,21 @@ export class SimplePeer {
         //this.cleanupStore();
     }
 
-    // private cleanupStore() {
-    //     this._space.allVideoStreamStore.forEach((peer) => {
-    //         if (peer instanceof VideoPeer) {
-    //             //peer.destroy();
-    //             //this.space.livekitVideoStreamStore.delete(peer.user.userId);
-    //         }
-    //     });
+    public cleanupStore() {
+        this._space.allVideoStreamStore.forEach((peer) => {
+            if (peer instanceof VideoPeer) {
+                peer.destroy();
+                this._space.allVideoStreamStore.delete(peer.user.userId);
+            }
+        });
 
-    //     this._space.allScreenShareStreamStore.forEach((peer) => {
-    //         if (peer instanceof ScreenSharingPeer) {
-    //             //peer.destroy();
-    //             ///this.space.screenSharingPeerStore.delete(peer.user.userId);
-    //         }
-    //     });
-    // }
+        this._space.allScreenShareStreamStore.forEach((peer) => {
+            if (peer instanceof ScreenSharingPeer) {
+                peer.destroy();
+                this._space.allScreenShareStreamStore.delete(peer.user.userId);
+            }
+        });
+    }
 
     private async receiveWebrtcSignal(
         data: WebRtcSignalReceivedMessageInterface,
