@@ -14,7 +14,7 @@ services:
       - "traefik.udp.routers.livekit-udp.service=livekit-udp"
       - "traefik.udp.services.livekit-udp.loadbalancer.server.port=7881"
     volumes:
-      - ./workadventure/livekit-config.yaml/:/etc/livekit/config.yaml
+      - ./livekit-config.yaml/:/etc/livekit/config.yaml
     depends_on:
       redis:
         condition: service_started
@@ -40,7 +40,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./workadventure/egress-config.yaml:/etc/egress/config.yaml
+      - ./egress-config.yaml:/etc/egress/config.yaml
       - ./out:/out:rw
       - /tmp:/tmp:rw
     cap_add:

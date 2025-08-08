@@ -23,12 +23,6 @@ export class LivekitState extends CommunicationState {
         },
         protected readonly _readyUsers: Set<string> = new Set()
     ) {
-        //super(_space, _communicationManager, new LivekitCommunicationStrategy(_space,this._readyUsers));
-        console.log(
-            _livekitServerCredentials.livekitHost,
-            _livekitServerCredentials.livekitApiKey,
-            _livekitServerCredentials.livekitApiSecret
-        );
         super(
             _space,
             _communicationManager,

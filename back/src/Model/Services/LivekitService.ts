@@ -49,28 +49,21 @@ export class LiveKitService {
     private currentRecordingInformation: EgressInfo | null = null;
 
     async createRoom(roomName: string): Promise<void> {
-        try {
-            // First check if the room already exists
-            const rooms = await this.roomServiceClient.listRooms([roomName]);
-            if (rooms && rooms.length > 0) {
-                return;
-            }
-
-            // Room doesn't exist, create it
-            const createOptions: CreateOptions = {
-                name: roomName,
-                emptyTimeout: 5 * 60 * 1000,
-                //maxParticipants: 1000,
-                departureTimeout: 5 * 60 * 1000,
-            };
-
-            await this.roomServiceClient.createRoom(createOptions);
-        } catch (error) {
-            console.error(`LivekitService.createRoom: Error creating room ${roomName}:`, error);
-            Sentry.captureException(error);
-            // Re-throw the error to be handled by the caller
-            throw error;
+        // First check if the room already exists
+        const rooms = await this.roomServiceClient.listRooms([roomName]);
+        if (rooms && rooms.length > 0) {
+            return;
         }
+
+        // Room doesn't exist, create it
+        const createOptions: CreateOptions = {
+            name: roomName,
+            emptyTimeout: 5 * 60 * 1000,
+            //maxParticipants: 1000,
+            departureTimeout: 5 * 60 * 1000,
+        };
+
+        await this.roomServiceClient.createRoom(createOptions);
     }
 
     async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
@@ -119,32 +112,19 @@ export class LiveKitService {
             const rooms = await this.roomServiceClient.listRooms([roomName]);
 
             if (rooms && rooms.length > 0) {
-                console.log(
-                    `LivekitService.removeParticipant: Room ${roomName} found, checking for participant ${participantName}`
-                );
                 const participants = await this.roomServiceClient.listParticipants(roomName);
                 const participantExists = participants.some(
                     (p) => p.identity === this.getParticipantIdentity(participantName, tokenType)
                 );
 
                 if (!participantExists) {
-                    console.warn(
-                        `LivekitService.removeParticipant: Participant ${participantName} not found in room ${roomName}`
-                    );
                     return;
                 }
-
-                console.log(
-                    `LivekitService.removeParticipant: Participant ${participantName} found in room ${roomName}, removing...`
-                );
             } else {
                 console.warn(`LivekitService.removeParticipant: Room ${roomName} not found`);
                 return;
             }
             await this.roomServiceClient.removeParticipant(roomName, participantName);
-            console.log(
-                `LivekitService.removeParticipant: Successfully removed participant ${participantName} from room ${roomName}`
-            );
         } catch (error) {
             console.error(
                 `LivekitService.removeParticipant: Error removing participant ${participantName} from room ${roomName}:`,
