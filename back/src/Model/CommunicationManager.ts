@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { SpaceUser } from "@workadventure/messages";
 import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
@@ -14,27 +15,45 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     public handleUserAdded(user: SpaceUser): void {
-        this._currentState.handleUserAdded(user);
+        this._currentState.handleUserAdded(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserDeleted(user: SpaceUser): void {
-        this._currentState.handleUserDeleted(user);
+        this._currentState.handleUserDeleted(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserUpdated(user: SpaceUser): void {
-        this._currentState.handleUserUpdated(user);
+        this._currentState.handleUserUpdated(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserReadyForSwitch(userId: string): void {
-        this._currentState.handleUserReadyForSwitch(userId);
+        this._currentState.handleUserReadyForSwitch(userId).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserToNotifyAdded(user: SpaceUser): void {
-        this._currentState.handleUserToNotifyAdded(user);
+        this._currentState.handleUserToNotifyAdded(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
 
     public handleUserToNotifyDeleted(user: SpaceUser): void {
-        this._currentState.handleUserToNotifyDeleted(user);
+        this._currentState.handleUserToNotifyDeleted(user).catch((e) => {
+            Sentry.captureException(e);
+            console.error(e);
+        });
     }
     public setState(state: ICommunicationState): void {
         this._currentState = state;

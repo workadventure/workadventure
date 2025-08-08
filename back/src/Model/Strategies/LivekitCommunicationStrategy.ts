@@ -7,7 +7,7 @@ import { LiveKitService } from "../Services/LivekitService";
 export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     private usersReady: string[] = [];
 
-    constructor(private space: ICommunicationSpace, private livekitService = new LiveKitService()) {
+    constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
             console.error(`Error creating room ${this.space.getSpaceName()} on Livekit:`, error);
             Sentry.captureException(error);
