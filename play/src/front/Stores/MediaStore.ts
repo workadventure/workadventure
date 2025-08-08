@@ -14,13 +14,12 @@ import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
-import { peerStore } from "./PeerStore";
 import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
-
+import { videoStreamElementsStore } from "./PeerStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -269,7 +268,7 @@ export const cameraEnergySavingStore = derived(
     [
         deviceChanged10SecondsAgoStore,
         userMoved5SecondsAgoStore,
-        peerStore,
+        videoStreamElementsStore,
         enabledWebCam10secondsAgoStore,
         mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
@@ -279,7 +278,7 @@ export const cameraEnergySavingStore = derived(
     ([
         $deviceChanged10SecondsAgoStore,
         $userMoved5SecondsAgoStore,
-        $peerStore,
+        $videoStreamElementsStore,
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
@@ -290,7 +289,7 @@ export const cameraEnergySavingStore = derived(
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             !$deviceChanged10SecondsAgoStore &&
-            $peerStore.size === 0 &&
+            $videoStreamElementsStore.length === 0 &&
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
@@ -450,7 +449,7 @@ export const mediaStreamConstraintsStore = derived(
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.SPEAKER ||
+            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
             $availabilityStatusStore === AvailabilityStatus.BUSY

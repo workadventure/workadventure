@@ -4,6 +4,7 @@ import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isFirefox } from "../../WebRtc/DeviceUtils";
 
 export const debug = Debug("CheckTurn");
 
@@ -20,18 +21,38 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
 
 export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[] {
     const config: RTCIceServer[] = [];
+    const firefoxBrowser = isFirefox();
+
     if (STUN_SERVER) {
         config.push({
             urls: STUN_SERVER.split(","),
         });
     }
+
     if (TURN_SERVER) {
-        config.push({
+        const turnConfig: RTCIceServer = {
             urls: TURN_SERVER.split(","),
             username: user.webRtcUser || TURN_USER,
             credential: user.webRtcPassword || TURN_PASSWORD,
-        });
+        };
+
+        // Firefox-specific TURN configuration improvements
+        if (firefoxBrowser) {
+            // Add credentialType for better Firefox compatibility
+            (turnConfig as RTCIceServer & { credentialType?: string }).credentialType = "password";
+        }
+
+        config.push(turnConfig);
     }
+
+    // Add Google's public STUN servers as fallback for Firefox
+    // if (firefoxBrowser && config.length === 0) {
+    //     config.push(
+    //         { urls: "stun:stun.l.google.com:19302" },
+    //         { urls: "stun:stun1.l.google.com:19302" }
+    //     );
+    // }
+
     return config;
 }
 
@@ -48,9 +69,10 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         return;
     }
 
-    if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-        debug("RTC Peer Connection detection is not available for Firefox browser!");
-        return;
+    // Firefox TURN detection is less reliable but still functional
+    if (isFirefox()) {
+        debug("Firefox detected - using adapted TURN server detection");
+        // Continue with TURN test for Firefox but with different handling
     }
 
     const iceServers = getIceServersConfig(user);
@@ -129,6 +151,9 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         .then((offer) => pc.setLocalDescription(offer))
         .catch((err) => debug("Check coturn server error => %O", err));
 
+    // Firefox needs more time for TURN server detection
+    const turnTestTimeout = isFirefox() ? 10000 : 5000;
+
     checkPeerConnexionStatusTimeOut = setTimeout(() => {
         if (!turnServerReached) {
             helpWebRtcSettingsVisibleStore.set("pending");
@@ -138,7 +163,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             clearTimeout(checkPeerConnexionStatusTimeOut);
             checkPeerConnexionStatusTimeOut = null;
         }
-    }, 5000);
+    }, turnTestTimeout);
 }
 
 export function getSdpTransform(videoBandwidth = 0) {

@@ -4,12 +4,10 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { lookupUserById } from "../Space/Utils/UserLookup";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
@@ -22,8 +20,10 @@ import {
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { isFirefox } from "./DeviceUtils";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation in screen sharing
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000;
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -49,25 +49,40 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "fit";
     public readonly displayInPictureInPictureMode = true;
+    public readonly usePresentationMode = true;
     constructor(
-        user: UserSimplePeerInterface,
+        public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
         stream: MediaStream | undefined,
-        private space: Promise<SpaceInterface>
+        private space: SpaceInterface,
+        private spaceUser: SpaceUserExtended,
+        isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration for screen sharing
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings for screen sharing
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 15, // Higher pool for screen sharing
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled for screen sharing
+            ...(firefoxBrowser && { trickle: true }),
+        };
 
-        this.userId = user.userId;
-        this.uniqueId = "screensharing_" + this.userId;
+        super(peerConfig);
+
+        this.userId = player.userId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
 
         let connectTimeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -143,6 +158,18 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
             this._statusStore.set("error");
+
+            // Firefox-specific error handling for screen sharing
+            if (isFirefox() && err.message) {
+                // Log Firefox-specific screen sharing errors for better debugging
+                if (err.message.includes("ICE")) {
+                    console.warn("Firefox screen sharing ICE connection error - this may be temporary");
+                } else if (err.message.includes("DTLS")) {
+                    console.warn("Firefox screen sharing DTLS handshake error - checking TURN configuration");
+                } else if (err.message.includes("getDisplayMedia")) {
+                    console.warn("Firefox screen sharing capture error - check permissions");
+                }
+            }
         });
 
         this.on("connect", () => {
@@ -188,7 +215,16 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcScreenSharingSignalToServerMessage",
+                    webRtcScreenSharingSignalToServerMessage: {
+                        // receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.user.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }
@@ -271,14 +307,30 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const space = await this.space;
-        return lookupUserById(this.userId, space, 30_000);
+        return this.space.extendSpaceUser(this.spaceUser);
     }
 
     get media(): MediaStoreStreamable {
+        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
+            attach: (container: HTMLVideoElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        container.srcObject = stream;
+                    }
+                });
+                videoElementUnsubscribers.set(container, unsubscribe);
+            },
+            detach: (container: HTMLVideoElement) => {
+                container.srcObject = null;
+                const unsubscribe = videoElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    videoElementUnsubscribers.delete(container);
+                }
+            },
         };
     }
 
