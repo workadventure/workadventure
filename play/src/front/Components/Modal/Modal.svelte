@@ -38,9 +38,12 @@
     });
 
     onDestroy(() => {
-        if ($modalIframeStore?.allowApi) {
-            iframeListener.unregisterIframe(modalIframe);
-        }
+        // Note: we are running unregisterIframe every time and not only when allowApi is true,
+        // because of a possible race condition where the $modalIframeStore store is emptied before onDestroy is called,
+        // which would lead to an error in unregisterIframe.
+        //if ($modalIframeStore?.allowApi) {
+        iframeListener.unregisterIframe(modalIframe);
+        //}
     });
 
     let modalUrl = $modalIframeStore
