@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { SpaceUser } from "@workadventure/messages";
+import { MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import { WebRTCState } from "./States/WebRTCState";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
@@ -69,5 +70,5 @@ export class CommunicationManager implements ICommunicationManager {
 }
 
 export const CommunicationConfig = {
-    MAX_USERS_FOR_WEBRTC: 4,
+    MAX_USERS_FOR_WEBRTC,
 };
