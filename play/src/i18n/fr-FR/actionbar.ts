@@ -34,6 +34,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
+        setBackground: "Définir le fond",
+        blurEffects: "Effets de flou",
+        disableBackgroundEffects: "Désactiver les effets de fond",
+        close: "Fermer",
     },
     microphone: {
         disabled: "Votre micro est désactivé",

@@ -58,7 +58,7 @@ export class SimplePeer {
 
         this._unsubscribers.push(
             this._screenSharingLocalStreamStore.subscribe((streamResult) => {
-                if (streamResult.type === "error") {
+                if (streamResult && streamResult.type === "error") {
                     // Let's ignore screen sharing errors, we will deal with those in a different way.
                     return;
                 }
@@ -259,7 +259,7 @@ export class SimplePeer {
         // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("connect", () => {
             const streamResult = get(this._screenSharingLocalStreamStore);
-            if (streamResult.type === "success" && streamResult.stream !== undefined) {
+            if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
                 this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream).catch((e) => {
                     console.error("Error while sending local screen sharing stream to user", e);
                     Sentry.captureException(e);
@@ -530,7 +530,7 @@ export class SimplePeer {
         if (this._blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(this._screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
-        if (streamResult.type === "success" && streamResult.stream !== undefined) {
+        if (streamResult && streamResult.type === "success" && streamResult.stream !== undefined) {
             stream = streamResult.stream;
         }
 

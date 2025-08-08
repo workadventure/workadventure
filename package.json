@@ -15,5 +15,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ]
+  ],
+  "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747"
+  }
 }

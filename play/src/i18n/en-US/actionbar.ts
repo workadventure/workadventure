@@ -32,6 +32,10 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
+        setBackground: "Set background",
+        blurEffects: "Blur effects",
+        disableBackgroundEffects: "Disable background effects",
+        close: "Close",
     },
     microphone: {
         disabled: "Your microphone is disabled",

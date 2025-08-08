@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Effect Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            border: 2px solid #333;
+            margin: 10px 0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .status {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Background Effect Test</h1>
+    
+    <div class="status" id="status">
+        <h3>Status:</h3>
+        <div id="statusText">Click "Start Camera" to begin</div>
+    </div>
+    
+    <div class="controls">
+        <button id="startCamera">Start Camera</button>
+        <button id="stopCamera" disabled>Stop Camera</button>
+        <br><br>
+        <label>
+            Background Mode:
+            <select id="modeSelect">
+                <option value="none">None</option>
+                <option value="blur" selected>Blur</option>
+            </select>
+        </label>
+        <label>
+            Blur Amount:
+            <input type="range" id="blurAmount" min="5" max="50" value="15">
+            <span id="blurValue">15</span>
+        </label>
+    </div>
+    
+    <div>
+        <h3>Original Video:</h3>
+        <video id="originalVideo" autoplay muted></video>
+        
+        <h3>Processed Video:</h3>
+        <video id="processedVideo" autoplay muted></video>
+    </div>
+    
+    <!-- Load TensorFlow.js and BodyPix from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.1/dist/body-pix.min.js"></script>
+    
+    <script>
+        // Simple inline transformer implementation for testing
+        class SimpleBackgroundTransformer {
+            constructor(inputTrack, config) {
+                console.log('[SimpleBackgroundTransformer] Creating transformer with config:', config);
+                
+                this.config = config;
+                this.inputTrack = inputTrack;
+                this.frameCount = 0;
+                this.segmentationSkipCounter = 0;
+                this.lastSegmentationMask = null;
+                this.model = null;
+                this.closed = false;
+                this.initialized = false;
+                
+                if (typeof MediaStreamTrackProcessor === 'undefined') {
+                    throw new Error('MediaStreamTrackProcessor not supported. Please use Chrome 94+');
+                }
+                
+                this.processor = new MediaStreamTrackProcessor({ track: this.inputTrack });
+                this.generator = new MediaStreamTrackGenerator({ kind: "video" });
+                // The track might be on the generator itself or as a property
+                this.outputTrack = this.generator.track || this.generator;
+                
+                const { width, height } = this.inputTrack.getSettings();
+                this.canvas = new OffscreenCanvas(width || 640, height || 480);
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.initializationPromise = this.init();
+            }
+            
+            async waitForInitialization() {
+                await this.initializationPromise;
+            }
+            
+            get track() {
+                return this.outputTrack;
+            }
+            
+            async init() {
+                try {
+                    console.log('[SimpleBackgroundTransformer] Initializing...');
+                    
+                    // TensorFlow.js is already loaded from CDN
+                    await tf.setBackend('webgl');
+                    await tf.ready();
+                    console.log('[SimpleBackgroundTransformer] TensorFlow.js ready');
+                    
+                    if (this.config.mode !== 'none') {
+                        console.log('[SimpleBackgroundTransformer] Loading BodyPix model...');
+                        this.model = await bodyPix.load({
+                            architecture: 'MobileNetV1',
+                            outputStride: 16,
+                            multiplier: 0.75,
+                            quantBytes: 2
+                        });
+                        console.log('[SimpleBackgroundTransformer] Model loaded');
+                    }
+                    
+                    this.initialized = true;
+                    this.processFrames();
+                } catch (error) {
+                    console.error('[SimpleBackgroundTransformer] Init failed:', error);
+                    this.config.mode = 'none';
+                    this.initialized = true;
+                    this.processFrames();
+                }
+            }
+            
+            async processFrames() {
+                if (this.closed) {
+                    console.log('[SimpleBackgroundTransformer] Skipping processFrames - already closed');
+                    return;
+                }
+                
+                const reader = this.processor.readable.getReader();
+                const writer = this.generator.writable.getWriter();
+                
+                try {
+                    while (!this.closed) {
+                        const result = await reader.read();
+                        if (result.done || !result.value) break;
+                        
+                        const frame = result.value;
+                        await this.processFrame(frame, writer);
+                    }
+                } finally {
+                    reader.releaseLock();
+                    writer.releaseLock();
+                    
+                    if (this.generator && this.generator.writable && !this.closed) {
+                        try {
+                            await this.generator.writable.close();
+                        } catch (error) {
+                            if (!error.message?.includes('CLOSED')) {
+                                console.warn('[SimpleBackgroundTransformer] Error closing writable:', error);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            async processFrame(frame, writer) {
+                try {
+                    if (this.frameCount < 3) {
+                        console.log(`[SimpleBackgroundTransformer] Processing frame ${this.frameCount}`);
+                    }
+                    
+                    // Run segmentation every 3 frames
+                    this.segmentationSkipCounter++;
+                    if (this.segmentationSkipCounter >= 3 && this.model && this.config.mode !== 'none') {
+                        this.segmentationSkipCounter = 0;
+                        
+                        const tempCanvas = new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(frame, 0, 0);
+                        
+                        const segmentation = await this.model.segmentPerson(tempCanvas);
+                        this.lastSegmentationMask = segmentation.data;
+                    }
+                    
+                    // Apply effect
+                    if (this.config.mode === 'blur' && this.lastSegmentationMask) {
+                        // Draw blurred background
+                        this.ctx.filter = `blur(${this.config.blurAmount || 10}px)`;
+                        this.ctx.drawImage(frame, 0, 0);
+                        this.ctx.filter = 'none';
+                        
+                        // Draw sharp person
+                        const tempCanvas = new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.drawImage(frame, 0, 0);
+                        
+                        const imageData = tempCtx.getImageData(0, 0, frame.displayWidth, frame.displayHeight);
+                        const pixels = imageData.data;
+                        
+                        for (let i = 0; i < this.lastSegmentationMask.length; i++) {
+                            const alpha = this.lastSegmentationMask[i] ? 255 : 0;
+                            pixels[i * 4 + 3] = alpha;
+                        }
+                        
+                        tempCtx.putImageData(imageData, 0, 0);
+                        this.ctx.drawImage(tempCanvas, 0, 0);
+                    } else {
+                        this.ctx.drawImage(frame, 0, 0);
+                    }
+                    
+                    const processedFrame = new VideoFrame(this.canvas, {
+                        timestamp: frame.timestamp,
+                    });
+                    
+                    await writer.write(processedFrame);
+                    frame.close();
+                    processedFrame.close();
+                    
+                    this.frameCount++;
+                } catch (err) {
+                    console.error('[SimpleBackgroundTransformer] Frame processing failed:', err);
+                    frame.close();
+                }
+            }
+            
+            updateConfig(newConfig) {
+                this.config = { ...this.config, ...newConfig };
+                console.log('[SimpleBackgroundTransformer] Config updated:', this.config);
+            }
+            
+            getPerformanceStats() {
+                return {
+                    frameCount: this.frameCount,
+                    hasSegmentation: !!this.lastSegmentationMask
+                };
+            }
+            
+            close() {
+                this.closed = true;
+                if (this.model && this.model.dispose) {
+                    this.model.dispose();
+                }
+                this.inputTrack.stop();
+                this.outputTrack.stop();
+            }
+        }
+        
+        // Test implementation
+        let stream = null;
+        let transformer = null;
+        
+        const statusDiv = document.getElementById('statusText');
+        const originalVideo = document.getElementById('originalVideo');
+        const processedVideo = document.getElementById('processedVideo');
+        const startBtn = document.getElementById('startCamera');
+        const stopBtn = document.getElementById('stopCamera');
+        const modeSelect = document.getElementById('modeSelect');
+        const blurAmountInput = document.getElementById('blurAmount');
+        const blurValueSpan = document.getElementById('blurValue');
+        
+        function updateStatus(message, isError = false) {
+            statusDiv.innerHTML = message;
+            statusDiv.className = isError ? 'error' : 'success';
+        }
+        
+        blurAmountInput.addEventListener('input', (e) => {
+            blurValueSpan.textContent = e.target.value;
+            updateConfig();
+        });
+        
+        modeSelect.addEventListener('change', updateConfig);
+        
+        function updateConfig() {
+            if (transformer) {
+                const config = {
+                    mode: modeSelect.value,
+                    blurAmount: parseInt(blurAmountInput.value)
+                };
+                transformer.updateConfig(config);
+                updateStatus(`Updated config: mode=${config.mode}, blur=${config.blurAmount}`);
+            }
+        }
+        
+        startBtn.addEventListener('click', async () => {
+            try {
+                updateStatus('Requesting camera access...');
+                
+                // Get user media
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }, 
+                    audio: false 
+                });
+                
+                // Show original video
+                originalVideo.srcObject = stream;
+                
+                updateStatus('Camera started. Creating background processor...');
+                
+                // Create transformer
+                const videoTrack = stream.getVideoTracks()[0];
+                transformer = new SimpleBackgroundTransformer(
+                    videoTrack,
+                    {
+                        mode: modeSelect.value,
+                        blurAmount: parseInt(blurAmountInput.value)
+                    }
+                );
+                
+                // Wait for initialization
+                await transformer.waitForInitialization();
+                
+                // Create processed stream
+                const processedStream = new MediaStream([transformer.track]);
+                processedVideo.srcObject = processedStream;
+                
+                updateStatus('Background processor active! Try changing the mode and blur amount.');
+                
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                // Monitor performance
+                setInterval(() => {
+                    if (transformer) {
+                        const stats = transformer.getPerformanceStats();
+                        console.log('Performance stats:', stats);
+                        
+                        // Show if using fallback
+                        if (stats.isFallback) {
+                            updateStatus('Using fallback mode (no effects) - browser may not support required APIs');
+                        }
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            if (transformer) {
+                transformer.close();
+                transformer = null;
+            }
+            
+            originalVideo.srcObject = null;
+            processedVideo.srcObject = null;
+            
+            updateStatus('Camera stopped');
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+        
+        // Check browser support
+        if (typeof MediaStreamTrackProcessor === 'undefined') {
+            updateStatus('⚠️ Your browser does not support MediaStreamTrackProcessor API. Please use Chrome 94+ or Edge 94+', true);
+            startBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>

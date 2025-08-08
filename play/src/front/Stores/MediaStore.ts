@@ -9,6 +9,11 @@ import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/Constraint
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
+import { MediaPipeBackgroundTransformer } from "../WebRtc/BackgroundProcessor/MediaPipeBackgroundTransformer";
+import { MediaPipeBackgroundTransformerSimple } from "../WebRtc/BackgroundProcessor/MediaPipeBackgroundTransformerSimple";
+import { OptimizedBackgroundTransformer } from "../WebRtc/BackgroundProcessor/OptimizedBackgroundTransformer";
+import { SimplifiedBackgroundTransformer } from "../WebRtc/BackgroundProcessor/SimplifiedBackgroundTransformer";
+import { createBackgroundTransformer, type BackgroundTransformer } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -20,6 +25,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { videoStreamElementsStore } from "./PeerStore";
+import { backgroundConfigStore, backgroundProcessingEnabledStore } from "./BackgroundTransformStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -499,6 +505,54 @@ interface StreamErrorValue {
 
 let currentStream: MediaStream | undefined = undefined;
 let oldConstraints = { video: false, audio: false };
+// Use the factory to create the appropriate transformer
+let backgroundTransformer: BackgroundTransformer | undefined = undefined;
+
+/**
+ * Update background processor configuration
+ */
+export function updateBackgroundProcessor(config: { blurAmount?: number; backgroundImage?: string; backgroundVideo?: string; mode?: string; segmenterOptions?: unknown }) {
+    if (backgroundTransformer) {
+        try {
+            console.log('Updating background transformer configuration...');
+            backgroundTransformer.updateConfig({
+                mode: config.mode as "none" | "blur" | "image" | "video",
+                blurAmount: config.blurAmount,
+                backgroundImage: config.backgroundImage,
+                backgroundVideo: config.backgroundVideo
+            });
+            console.info('Background transformer configuration updated successfully');
+        } catch (error) {
+            console.warn('Failed to update background transformer configuration:', error);
+        }
+    }
+}
+
+/**
+ * Toggle mask inversion if person is being blurred instead of background
+ */
+export function toggleBackgroundMaskInversion() {
+    if (backgroundTransformer) {
+        // OptimizedBackgroundTransformer uses standard person segmentation
+        // Mask inversion is not needed as it properly segments the person
+        console.info('OptimizedBackgroundTransformer uses standard person segmentation');
+    } else {
+        console.warn('No background transformer available to toggle mask inversion');
+    }
+}
+
+/**
+ * Force CPU mode if GPU is causing OpenGL issues
+ */
+export async function forceBackgroundCPUMode() {
+    if (backgroundTransformer) {
+        // OptimizedBackgroundTransformer can switch between WebGL and CPU rendering
+        // The TensorFlow.js backend is already optimized
+        console.info('OptimizedBackgroundTransformer uses optimized WebGL/WASM backend');
+    } else {
+        console.warn('No background transformer available to force CPU mode');
+    }
+}
 
 // This promise is important to queue the calls to "getUserMedia"
 // Otherwise, this can happen:
@@ -509,27 +563,111 @@ let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resol
 
 /**
  * A store containing the MediaStream object (or undefined if nothing requested, or Error if an error occurred)
+ * This stream includes background transformations when enabled
  */
-export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalStreamStoreValue>(
-    mediaStreamConstraintsStore,
-    ($mediaStreamConstraintsStore, set) => {
+export const localStreamStore = derived<
+    [Readable<MediaStreamConstraints>, typeof backgroundConfigStore, typeof backgroundProcessingEnabledStore],
+    LocalStreamStoreValue
+>(
+    [mediaStreamConstraintsStore, backgroundConfigStore, backgroundProcessingEnabledStore],
+    ([$mediaStreamConstraintsStore, $backgroundConfig, $backgroundProcessingEnabled], set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
 
         function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
             currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
-                    .then((stream) => {
+                    .then(async (stream) => {
                         // Close old stream
                         if (currentStream) {
                             //we need stop all tracks to make sure the old stream will be garbage collected
                             currentStream.getTracks().forEach((t) => t.stop());
                         }
 
-                        currentStream = stream;
+                        // Clean up previous transformer
+                        if (backgroundTransformer) {
+                            try {
+                                backgroundTransformer.close();
+                            } catch (error) {
+                                console.warn('Error closing previous transformer:', error);
+                            }
+                            backgroundTransformer = undefined;
+                        }
+
+                        let finalStream = stream;
+
+                        // Apply background transformation if enabled and video is present
+                        if ($backgroundProcessingEnabled && constraints.video && stream.getVideoTracks().length > 0) {
+                            try {
+                                // Get the video track for transformation
+                                const videoTrack = stream.getVideoTracks()[0];
+                                if (!videoTrack) {
+                                    throw new Error("No video track found");
+                                }
+                                
+                                // Create background transformer using factory
+                                backgroundTransformer = await createBackgroundTransformer(
+                                    videoTrack,
+                                    {
+                                        mode: $backgroundConfig.mode as "none" | "blur" | "image" | "video",
+                                        blurAmount: $backgroundConfig.blurAmount,
+                                        backgroundImage: $backgroundConfig.backgroundImage,
+                                        backgroundVideo: $backgroundConfig.backgroundVideo
+                                    },
+                                    {
+                                        engine: 'mediapipe',  // Use Tasks Vision for best quality
+                                        targetFPS: 24,
+                                        highQuality: true     // Enable high quality mode
+                                    }
+                                );
+                                
+                                // Transform the stream using the new approach
+                                if (backgroundTransformer.transform) {
+                                    // Use the new transform method
+                                    finalStream = await backgroundTransformer.transform(stream);
+                                } else {
+                                    // Fallback to old approach
+                                    const transformedTrack = backgroundTransformer.track;
+                                    finalStream = new MediaStream();
+                                    finalStream.addTrack(transformedTrack);
+                                    
+                                    // Add audio tracks if any
+                                    stream.getAudioTracks().forEach(track => {
+                                        finalStream.addTrack(track);
+                                    });
+                                }
+                                
+                                // Log status for debugging
+                                console.info("Background transformation applied:", {
+                                    success: true,
+                                    mode: $backgroundConfig.mode,
+                                    performance: backgroundTransformer.getPerformanceStats()
+                                });
+                                
+                            } catch (error) {
+                                console.warn(
+                                    "Failed to apply background transformation, using original stream:",
+                                    error
+                                );
+                                // Clean up failed transformer
+                                if (backgroundTransformer) {
+                                    try {
+                                        backgroundTransformer.close();
+                                    } catch (closeError) {
+                                        console.warn('Error closing failed transformer:', closeError);
+                                    }
+                                    backgroundTransformer = undefined;
+                                }
+                                finalStream = stream;
+                            }
+                        }
+
+                        // Use a const to avoid race condition warning
+                        const streamToSet = finalStream;
+                        currentStream = streamToSet;
                         set({
                             type: "success",
-                            stream: currentStream,
+                            stream: streamToSet,
                         });
                         if (currentStream.getVideoTracks().length > 0) {
                             usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);

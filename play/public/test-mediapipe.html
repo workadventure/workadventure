@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaPipe Background Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .video-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            background: #000;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        select, input, button {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+            font-size: 14px;
+        }
+        select, input {
+            width: 200px;
+        }
+        button {
+            cursor: pointer;
+            background: #0066cc;
+            border: none;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status.success { background: #1a4d1a; }
+        .status.error { background: #4d1a1a; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #333;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 MediaPipe Background Transformer Test</h1>
+        
+        <div class="controls">
+            <h3>Controls</h3>
+            <div class="control-group">
+                <label>Background Mode:</label>
+                <select id="modeSelect">
+                    <option value="none">None</option>
+                    <option value="blur" selected>Blur</option>
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Engine:</label>
+                <select id="engineSelect">
+                    <option value="mediapipe" selected>MediaPipe (Better Quality)</option>
+                    <option value="bodypix">BodyPix (Legacy)</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Blur Amount: <span id="blurValue">15</span></label>
+                <input type="range" id="blurAmount" min="1" max="30" value="15">
+            </div>
+            
+            <div class="control-group">
+                <label>Quality Mode:</label>
+                <input type="checkbox" id="highQuality" checked> High Quality
+            </div>
+            
+            <div class="control-group">
+                <button id="startBtn">Start Camera</button>
+                <button id="stopBtn" disabled>Stop Camera</button>
+                <button id="switchEngineBtn" disabled>Switch Engine</button>
+            </div>
+        </div>
+        
+        <div id="status" class="status">Ready to start...</div>
+        
+        <div class="video-container">
+            <div>
+                <h3>Original</h3>
+                <video id="originalVideo" autoplay muted playsinline></video>
+            </div>
+            <div>
+                <h3>Processed</h3>
+                <video id="processedVideo" autoplay muted playsinline></video>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats"></div>
+    </div>
+
+    <script type="module">
+        // Import the transformer modules directly
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = `
+            import { createBackgroundTransformer } from '/src/front/WebRtc/BackgroundProcessor/createBackgroundTransformer.ts';
+            
+            let stream = null;
+            let transformer = null;
+            let statsInterval = null;
+            
+            const originalVideo = document.getElementById('originalVideo');
+            const processedVideo = document.getElementById('processedVideo');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const switchEngineBtn = document.getElementById('switchEngineBtn');
+            const modeSelect = document.getElementById('modeSelect');
+            const engineSelect = document.getElementById('engineSelect');
+            const blurAmountInput = document.getElementById('blurAmount');
+            const blurValue = document.getElementById('blurValue');
+            const highQualityCheck = document.getElementById('highQuality');
+            const statusDiv = document.getElementById('status');
+            const statsDiv = document.getElementById('stats');
+            
+            function updateStatus(message, type = 'info') {
+                statusDiv.textContent = \`[\${new Date().toLocaleTimeString()}] \${message}\`;
+                statusDiv.className = \`status \${type}\`;
+                console.log(message);
+            }
+            
+            function updateStats() {
+                if (!transformer) return;
+                
+                const stats = transformer.getPerformanceStats();
+                statsDiv.innerHTML = \`
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.engine || 'N/A'}</div>
+                        <div class="stat-label">Engine</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.mode}</div>
+                        <div class="stat-label">Mode</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.hasSegmentation ? '✅' : '❌'}</div>
+                        <div class="stat-label">Segmentation</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">\${stats.highQuality ? 'High' : 'Normal'}</div>
+                        <div class="stat-label">Quality</div>
+                    </div>
+                \`;
+            }
+            
+            blurAmountInput.addEventListener('input', (e) => {
+                blurValue.textContent = e.target.value;
+                if (transformer) {
+                    transformer.updateConfig({ blurAmount: parseInt(e.target.value) });
+                }
+            });
+            
+            modeSelect.addEventListener('change', () => {
+                if (transformer) {
+                    transformer.updateConfig({ mode: modeSelect.value });
+                    updateStats();
+                }
+            });
+            
+            async function startCamera() {
+                try {
+                    updateStatus('Requesting camera access...');
+                    
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: 'user'
+                        }
+                    });
+                    
+                    originalVideo.srcObject = stream;
+                    updateStatus('Camera started. Creating background processor...', 'success');
+                    
+                    const videoTrack = stream.getVideoTracks()[0];
+                    const engine = engineSelect.value;
+                    
+                    updateStatus(\`Creating \${engine} transformer...\`);
+                    
+                    transformer = await createBackgroundTransformer(
+                        videoTrack,
+                        {
+                            mode: modeSelect.value,
+                            blurAmount: parseInt(blurAmountInput.value),
+                            backgroundImage: './static/images/logo-wa-2.png',
+                            backgroundVideo: './static/Videos/Chat.mp4'
+                        },
+                        {
+                            engine: engine,
+                            highQuality: highQualityCheck.checked
+                        }
+                    );
+                    
+                    const processedStream = new MediaStream([transformer.track]);
+                    processedVideo.srcObject = processedStream;
+                    
+                    updateStatus(\`\${engine} transformer active!`, 'success');
+                    
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    switchEngineBtn.disabled = false;
+                    
+                    // Start stats update
+                    statsInterval = setInterval(updateStats, 1000);
+                    updateStats();
+                    
+                } catch (error) {
+                    updateStatus(\`Error: \${error.message}\`, 'error');
+                    console.error(error);
+                }
+            }
+            
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                
+                if (transformer) {
+                    transformer.close();
+                    transformer = null;
+                }
+                
+                if (statsInterval) {
+                    clearInterval(statsInterval);
+                    statsInterval = null;
+                }
+                
+                originalVideo.srcObject = null;
+                processedVideo.srcObject = null;
+                
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                switchEngineBtn.disabled = true;
+                
+                updateStatus('Camera stopped');
+                statsDiv.innerHTML = '';
+            }
+            
+            async function switchEngine() {
+                const currentEngine = engineSelect.value;
+                engineSelect.value = currentEngine === 'mediapipe' ? 'bodypix' : 'mediapipe';
+                stopCamera();
+                await startCamera();
+            }
+            
+            startBtn.addEventListener('click', startCamera);
+            stopBtn.addEventListener('click', stopCamera);
+            switchEngineBtn.addEventListener('click', switchEngine);
+            
+            // Initial status
+            updateStatus('Click "Start Camera" to begin');
+        `;
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
