@@ -71,7 +71,6 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
-        //TODO : mock dans les tests
         private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         if (name === "") {
@@ -124,6 +123,7 @@ export class Space implements SpaceInterface {
             };
         });
 
+        //TODO : voir si utile avec les nvx roles
         this.videoStreamStore = derived(
             [this.allVideoStreamStore, this.usersStore],
             ([videoStreamStore, usersStore]) => {
@@ -136,7 +136,7 @@ export class Space implements SpaceInterface {
                 return newVideoStreamStore;
             }
         );
-
+        //TODO : voir si utile avec les nvx roles
         this.screenShareStreamStore = derived(
             [this.allScreenShareStreamStore, this.usersStore],
             ([screenShareStreamStore, usersStore]) => {
@@ -529,12 +529,10 @@ export class Space implements SpaceInterface {
         this._registerRefCount++;
     }
 
-    //TODO : partie a modifier car plus de spacefilter
     public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
         return lookupUserById(this.extractUserIdFromSpaceId(id), this, 30_000);
     }
 
-    //TODO : reimplementer
     public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
         return lookupUserById(id, this, 30_000);
     }

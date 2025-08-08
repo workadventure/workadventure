@@ -155,7 +155,6 @@ export class LiveKitRoomWatch implements LiveKitRoom {
     }
 
     private handleActiveSpeakersChanged(speakers: Participant[]) {
-        //TODO : revoir impl iteration sur tout les participants a chaque fois
         this.participants.forEach((participant) => {
             if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
                 participant.setActiveSpeaker(true);

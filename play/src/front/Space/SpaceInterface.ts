@@ -64,7 +64,6 @@ export interface SpaceInterface {
     videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
     screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 
-    //TODO : faire une interface pour les personnes qui utilisent les stream en interne ?
     allVideoStreamStore: MapStore<string, ExtendedStreamable>;
     allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
 
@@ -73,7 +72,6 @@ export interface SpaceInterface {
     extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
-    //TODO : voir si on a une meilleur maniere de faire pour avoir le spacefilter coté peer pour chercher les users
     get spacePeerManager(): SpacePeerManager;
     dispatchSound(url: URL): Promise<void>;
     //userExist(userId: number): boolean;

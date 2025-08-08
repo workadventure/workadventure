@@ -112,7 +112,6 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
-                //TODO : voir si on peut séparer la logique qui watch et qui peut etre watch / pour l'instant on a un probleme les videos ne sont envoyées que a tout les personnes qu'on peut watcher pas aux autres
 
                 this.communicationManager.handleUserAdded(user);
             } else if (oldFilter && !newFilter) {

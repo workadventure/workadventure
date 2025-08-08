@@ -1057,7 +1057,6 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(true);
             streamingMegaphoneStore.set(true);
             console.log("handleSpeakerMegaphonePropertyOnEnter => space : ", space);
-            //TODO : remove this or replace by matrix room
 
             space.emitUpdateUser({
                 megaphoneState: true,
@@ -1065,6 +1064,7 @@ export class AreasPropertiesListener {
 
             bindMuteEventsToSpace(space);
 
+            //TODO : remove this or replace by matrix room
             if (property.chatEnabled) {
                 //this.handleJoinMucRoom(uniqRoomName, "live");
             }
@@ -1090,6 +1090,7 @@ export class AreasPropertiesListener {
     }
 
     private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
+        // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),

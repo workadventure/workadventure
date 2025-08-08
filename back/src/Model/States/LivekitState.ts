@@ -48,13 +48,6 @@ export class LivekitState extends CommunicationState {
             this.cancelSwitch();
         }
         super.handleUserToNotifyAdded(user);
-
-        //TODO : voir si on sépare les token en 2
-        //TODO : 1token pour les watcher qui donne seulement le droit de subscribe
-        //TODO : 1token pour les users qui donne le droit de streamer et de subscribe
-
-        //TODO : voir le meilleur moyen de gerer ça dans le front
-        //TODO : on pourrait avoir 2 messages/event differents et gere de maniere independante
     }
 
     handleUserToNotifyDeleted(user: SpaceUser): void {

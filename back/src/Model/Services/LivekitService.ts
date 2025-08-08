@@ -136,7 +136,6 @@ export class LiveKitService {
 
     async startRecording(roomName: string, layout = "grid"): Promise<void> {
         try {
-            //TODO : use env variable / voir si on utilise toujours un S3
             const endpoint = "http://minio-livekit:9000";
             const accessKey = "minio-access-key";
             const secret = "minio-secret-access-key";

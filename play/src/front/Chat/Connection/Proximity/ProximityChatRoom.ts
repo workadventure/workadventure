@@ -426,10 +426,6 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        //TODO : suite au changmeent sur le space on n'a surement plus besoin de ça , a verifier
-        // this.simplePeer.setSpaceFilter(this._spaceWatcher);
-        // this._space.simplePeer?.setSpaceFilter(this._spaceWatcher);
-
         this.saveChatState();
 
         const actualStatus = get(availabilityStatusStore);

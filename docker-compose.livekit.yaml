@@ -1,4 +1,3 @@
-#TODO : revoir le docker compose peut etre le simplifier
 services:
   livekit:
     image: livekit/livekit-server:v1.8.4

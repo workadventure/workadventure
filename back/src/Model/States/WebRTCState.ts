@@ -81,7 +81,6 @@ export class WebRTCState extends CommunicationState {
         super.handleUserToNotifyDeleted(user);
     }
 
-    //TODO : trouver un autre moyen de faire le switch
     private switchToNextState(user: SpaceUser, typeOfSwitch: "user" | "userToNotify"): void {
         this._readyUsers.add(user.spaceUserId);
         this._switchInitiatorUserId = user.spaceUserId;
@@ -112,12 +111,6 @@ export class WebRTCState extends CommunicationState {
     }
 
     protected shouldSwitchToNextState(): boolean {
-        /**
-         * TODO : Trouver une regle qui se base sur les flux plutot que sur le nombres d'utilisateur
-         * pour eviter les switchs inutiles (ex: si on a 100 utilisateurs  1 personnes diffuse et 1 personne watch peut etre pas utile de switch
-         *  ou une personne stream pour 5/6 personnes )
-         **/
-
         return this._space.getAllUsers().length > this.MAX_USERS_FOR_WEBRTC && !this.isSwitching();
     }
 

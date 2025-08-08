@@ -9,7 +9,6 @@ import { LiveKitRoom } from "./LiveKitRoom";
 import { LiveKitRoomWatch } from "./LivekitRoomWatch";
 import { LiveKitRoomStream } from "./LivekitRoomStream";
 
-//TODO : trouver le moyen de l'avoir coté front et back , message.proto ?
 export enum CommunicationType {
     NONE = "NONE",
     WEBRTC = "WEBRTC",
