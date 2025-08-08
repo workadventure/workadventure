@@ -541,7 +541,9 @@ class IframeListener {
         this.iframes.set(iframe, id);
         iframe.addEventListener("load", () => {
             if (iframe.contentWindow) {
-                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                if (!this.iframeCloseCallbacks.has(iframe.contentWindow)) {
+                    this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                }
             } else {
                 console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
             }
