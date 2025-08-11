@@ -239,8 +239,7 @@
     <div
         bind:clientWidth={containerWidth}
         class="pointer-events-auto"
-        style={`gap: ${gap}px; ` +
-            (!isOnOneLine || (isOnOneLine && oneLineMode === "vertical") ? "height: " + containerHeight + "px;" : "")}
+        style={`gap: ${gap}px; ` + (!isOnOneLine ? "height: " + containerHeight + "px;" : "")}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
