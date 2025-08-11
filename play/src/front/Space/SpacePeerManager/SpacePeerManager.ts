@@ -40,8 +40,10 @@ export interface PeerFactoryInterface {
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
-    public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
-    public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private audioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
+    private screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private screenShareAudioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
 
     private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -145,5 +147,85 @@ export class SpacePeerManager {
     //TODO : a tester
     dispatchStream(mediaStream: MediaStream): void {
         this._communicationState.dispatchStream(mediaStream);
+    }
+
+    public registerVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        const videoElements = this.videoContainerMap.get(spaceUserId) || [];
+        videoElements.push(videoElement);
+        this.videoContainerMap.set(spaceUserId, videoElements);
+    }
+
+    public registerAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        const audioElements = this.audioContainerMap.get(spaceUserId) || [];
+        audioElements.push(audioElement);
+        this.audioContainerMap.set(spaceUserId, audioElements);
+    }
+
+    public registerScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        const videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
+        videoElements.push(videoElement);
+        this.screenShareContainerMap.set(spaceUserId, videoElements);
+    }
+
+    public registerScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        const audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
+        audioElements.push(audioElement);
+        this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
+    }
+
+    public unregisterVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        let videoElements = this.videoContainerMap.get(spaceUserId) || [];
+        videoElements = videoElements.filter((element) => element !== videoElement);
+        if (videoElements.length === 0) {
+            this.videoContainerMap.delete(spaceUserId);
+        } else {
+            this.videoContainerMap.set(spaceUserId, videoElements);
+        }
+    }
+
+    public unregisterAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        let audioElements = this.audioContainerMap.get(spaceUserId) || [];
+        audioElements = audioElements.filter((element) => element !== audioElement);
+        if (audioElements.length === 0) {
+            this.audioContainerMap.delete(spaceUserId);
+        } else {
+            this.audioContainerMap.set(spaceUserId, audioElements);
+        }
+    }
+
+    public unregisterScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        let videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
+        videoElements = videoElements.filter((element) => element !== videoElement);
+        if (videoElements.length === 0) {
+            this.screenShareContainerMap.delete(spaceUserId);
+        } else {
+            this.screenShareContainerMap.set(spaceUserId, videoElements);
+        }
+    }
+
+    public unregisterScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        let audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
+        audioElements = audioElements.filter((element) => element !== audioElement);
+        if (audioElements.length === 0) {
+            this.screenShareAudioContainerMap.delete(spaceUserId);
+        } else {
+            this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
+        }
+    }
+
+    public getVideoContainers(spaceUserId: string): HTMLVideoElement[] {
+        return this.videoContainerMap.get(spaceUserId) || [];
+    }
+
+    public getAudioContainers(spaceUserId: string): HTMLAudioElement[] {
+        return this.audioContainerMap.get(spaceUserId) || [];
+    }
+
+    public getScreenShareContainers(spaceUserId: string): HTMLVideoElement[] {
+        return this.screenShareContainerMap.get(spaceUserId) || [];
+    }
+
+    public getScreenShareAudioContainers(spaceUserId: string): HTMLAudioElement[] {
+        return this.screenShareAudioContainerMap.get(spaceUserId) || [];
     }
 }

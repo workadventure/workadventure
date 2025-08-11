@@ -35,9 +35,12 @@ import { screenShareStreamElementsStore, videoStreamElementsStore } from "./Peer
 
 export interface MediaStoreStreamable {
     type: "mediaStore";
+    // TODO: split this into two stores, one for video and one for audio
     readonly streamStore: Readable<MediaStream | undefined>;
-    readonly attach: (container: HTMLVideoElement) => void;
-    readonly detach: (container: HTMLVideoElement) => void;
+    readonly attachVideo: (container: HTMLVideoElement) => void;
+    readonly detachVideo: (container: HTMLVideoElement) => void;
+    readonly attachAudio: (container: HTMLAudioElement) => void;
+    readonly detachAudio: (container: HTMLAudioElement) => void;
 }
 
 export interface JitsiTrackStreamable {
@@ -124,30 +127,41 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 });
 
 export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+    const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
     const media = {
         type: "mediaStore" as const,
         streamStore: localstreamStoreValue,
-        videoElementUnsubscribers: new Map<HTMLVideoElement, () => void>(),
-        attach: (container: HTMLVideoElement) => {
+        attachVideo: (container: HTMLVideoElement) => {
             const unsubscribe = localstreamStoreValue.subscribe((stream) => {
                 if (stream) {
-                    container.srcObject = stream;
+                    const videoTracks = stream.getVideoTracks();
+                    if (videoTracks.length > 0) {
+                        container.srcObject = new MediaStream(videoTracks);
+                    } else {
+                        container.srcObject = null;
+                    }
                 }
             });
             // Store the unsubscribe function in our Map
-            media.videoElementUnsubscribers.set(container, unsubscribe);
+            videoElementUnsubscribers.set(container, unsubscribe);
         },
-        detach: (container: HTMLVideoElement) => {
+        detachVideo: (container: HTMLVideoElement) => {
             // Clean up the stream
             container.srcObject = null;
             // Call the unsubscribe function if it exists and remove it from the Map
-            const unsubscribe = media.videoElementUnsubscribers.get(container);
+            const unsubscribe = videoElementUnsubscribers.get(container);
             if (unsubscribe) {
                 unsubscribe();
-                media.videoElementUnsubscribers.delete(container);
+                videoElementUnsubscribers.delete(container);
             }
         },
-    };
+        attachAudio: (container: HTMLAudioElement) => {
+            // Never attach audio for the local camera, as we don't want audio feedback loop
+        },
+        detachAudio: (container: HTMLAudioElement) => {
+            // Never attach audio for the local camera, as we don't want audio feedback loop
+        },
+    } satisfies MediaStoreStreamable;
 
     return {
         uniqueId: "-1",

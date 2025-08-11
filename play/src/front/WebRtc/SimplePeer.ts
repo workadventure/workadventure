@@ -376,20 +376,23 @@ export class SimplePeer {
             }
             this._streamableSubjects.videoPeerRemoved.next(peer.media);
 
-            const videoElements = this._space.spacePeerManager.videoContainerMap.get(userId);
+            const videoElements = this._space.spacePeerManager.getVideoContainers(userId);
 
-            if (videoElements) {
-                videoElements.forEach((videoElement) => {
-                    peer.media.detach(videoElement);
-                });
-            }
+            videoElements.forEach((videoElement) => {
+                peer.media.detachVideo(videoElement);
+            });
+
+            const audioElements = this._space.spacePeerManager.getAudioContainers(userId);
+
+            audioElements.forEach((audioElement) => {
+                peer.media.detachAudio(audioElement);
+            });
 
             //create temp peer to close
             if (shouldCloseStream) {
                 peer.toClose = true;
                 peer.destroy();
                 this._space.allVideoStreamStore.delete(userId);
-                this._space.spacePeerManager.videoContainerMap.delete(userId);
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
@@ -426,9 +429,14 @@ export class SimplePeer {
             if (shouldCloseStream && peer instanceof ScreenSharingPeer) {
                 peer.destroy();
 
-                const screenShareElements = this._space.spacePeerManager.screenShareContainerMap.get(userId) || [];
+                const screenShareElements = this._space.spacePeerManager.getScreenShareContainers(userId);
                 screenShareElements.forEach((screenShareElement) => {
-                    peer.media.detach(screenShareElement);
+                    peer.media.detachVideo(screenShareElement);
+                });
+
+                const screenShareAudioElements = this._space.spacePeerManager.getScreenShareAudioContainers(userId);
+                screenShareAudioElements.forEach((screenShareAudioElement) => {
+                    peer.media.detachAudio(screenShareAudioElement);
                 });
             }
         } catch (err) {

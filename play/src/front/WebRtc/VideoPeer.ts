@@ -459,30 +459,54 @@ export class VideoPeer extends Peer implements Streamable {
 
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
                     }
                 });
-                const videoElements =
-                    this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements.push(container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            detachVideo: (container: HTMLVideoElement) => {
                 container.srcObject = null;
-                let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements = videoElements.filter((element) => element !== container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.unregisterVideoContainer(this.spaceUser.spaceUserId, container);
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
             },
         };

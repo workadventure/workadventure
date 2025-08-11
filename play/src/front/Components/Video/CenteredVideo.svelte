@@ -28,8 +28,8 @@
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
-    export let attach: ((container: HTMLVideoElement) => void) | undefined = undefined;
-    export let detach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    export let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    export let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
     export let videoUrl: string | undefined = undefined;
     export let videoConfig: VideoConfig | undefined = undefined;
 
@@ -270,8 +270,8 @@
             displayNoVideoWarning = false;
         });
 
-        if (attach) {
-            attach(videoElement);
+        if (attachVideo) {
+            attachVideo(videoElement);
         }
 
         return () => {
@@ -285,8 +285,8 @@
             noVideoTimeout = undefined;
         }
 
-        if (detach) {
-            detach(videoElement);
+        if (detachVideo) {
+            detachVideo(videoElement);
         }
         sinkIdPromise.cancel();
     });

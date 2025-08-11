@@ -120,31 +120,59 @@ export class JitsiTrackStreamWrapper implements Streamable {
 
         // Use a closure to keep the videoElementUnsubscribers map private to this getter call
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 // If already attached, detach first to avoid leaks
                 if (videoElementUnsubscribers.has(container)) {
                     const prevUnsub = videoElementUnsubscribers.get(container);
                     if (prevUnsub) prevUnsub();
                     videoElementUnsubscribers.delete(container);
                 }
-                const unsubscribe = streamStore.subscribe((stream) => {
+                const unsubscribe = this._videoTrackStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        container.srcObject = new MediaStream([stream.getTrack()]);
                     } else {
                         container.srcObject = null;
                     }
                 });
+                // FIXME: in case of switch, we should be able to register the spaceUserId. Since we never switch to Jitsi though, we can do without.
+                //this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            attachAudio: (container: HTMLAudioElement) => {
+                // If already attached, detach first to avoid leaks
+                if (audioElementUnsubscribers.has(container)) {
+                    const prevUnsub = audioElementUnsubscribers.get(container);
+                    if (prevUnsub) prevUnsub();
+                    audioElementUnsubscribers.delete(container);
+                }
+                const unsubscribe = this._audioTrackStore.subscribe((stream) => {
+                    if (stream) {
+                        container.srcObject = new MediaStream([stream.getTrack()]);
+                    } else {
+                        container.srcObject = null;
+                    }
+                });
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachVideo: (container: HTMLVideoElement) => {
                 // Call the unsubscribe function if it exists and remove it from the Map
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+                container.srcObject = null;
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                // Call the unsubscribe function if it exists and remove it from the Map
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
                 container.srcObject = null;
             },

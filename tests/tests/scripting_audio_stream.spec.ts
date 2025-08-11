@@ -4,6 +4,7 @@ import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import Menu from "./utils/menu";
 
 test.describe("Scripting audio streams", () => {
   test.beforeEach(async ({ browserName, page }) => {
@@ -25,6 +26,7 @@ test.describe("Scripting audio streams", () => {
 
     // Open new page for alice
     const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(alice);
 
     // Move alice to the same position as bob
     await Map.teleportToPosition(alice, 32, 32);
@@ -69,6 +71,33 @@ test.describe("Scripting audio streams", () => {
 
     await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(undefined);
 
+    // Now, let's add more users to test the switch to Livekit
+    const alice2 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(alice2);
+    await Map.teleportToPosition(alice2, 32, 32);
+    const alice3 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(alice3);
+    await Map.teleportToPosition(alice3, 32, 32);
+    const alice4 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(alice4);
+    await Map.teleportToPosition(alice4, 32, 32);
+
+    // alice4 entered last. She should receive sound only through Livekit.
+    // Let's wait for the audio stream to be ready
+    await evaluateScript(alice4, async () => {
+      const sampleRate = 24000;
+
+      return new Promise((resolve) => {
+        WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+          // At some point, the volume of the sound should be high enough to be noticed in the sample
+          if (data.some((sample) => Math.abs(sample) > 0.7)) {
+            resolve();
+          }
+        });
+      });
+    });
+
+
     // Now, let's reset the audio buffer
     await evaluateScript(page, async () => {
       window.audioStream.resetAudioBuffer();
@@ -78,6 +107,12 @@ test.describe("Scripting audio streams", () => {
 
     await alice.close();
     await alice.context().close();
+    await alice2.close();
+    await alice2.context().close();
+    await alice3.close();
+    await alice3.context().close();
+    await alice4.close();
+    await alice4.context().close();
     await page.close();
     await page.context().close();
   });

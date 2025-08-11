@@ -6,7 +6,7 @@ import { SpaceUserExtended } from "../Space/SpaceInterface";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
-import { Streamable } from "./StreamableCollectionStore";
+import { MediaStoreStreamable, Streamable } from "./StreamableCollectionStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 
@@ -248,30 +248,42 @@ export interface ScreenSharingLocalMedia {
  */
 export const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, function start(set) {
     const localMediaStreamStore = writable<MediaStream | undefined>(undefined);
+    const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
     const media = {
         type: "mediaStore" as const,
         streamStore: localMediaStreamStore,
-        videoElementUnsubscribers: new Map<HTMLVideoElement, () => void>(),
-        attach: (container: HTMLVideoElement) => {
+        attachVideo: (container: HTMLVideoElement) => {
             const unsubscribe = localMediaStreamStore.subscribe((stream) => {
                 if (stream) {
-                    container.srcObject = stream;
+                    const videoTracks = stream.getVideoTracks();
+                    if (videoTracks.length === 0) {
+                        container.srcObject = null;
+                    } else {
+                        container.srcObject = new MediaStream(videoTracks);
+                    }
                 }
             });
+
             // Store the unsubscribe function in our Map
-            media.videoElementUnsubscribers.set(container, unsubscribe);
+            videoElementUnsubscribers.set(container, unsubscribe);
         },
-        detach: (container: HTMLVideoElement) => {
+        detachVideo: (container: HTMLVideoElement) => {
             // Clean up the stream
             container.srcObject = null;
             // Call the unsubscribe function if it exists and remove it from the Map
-            const unsubscribe = media.videoElementUnsubscribers.get(container);
+            const unsubscribe = videoElementUnsubscribers.get(container);
             if (unsubscribe) {
                 unsubscribe();
-                media.videoElementUnsubscribers.delete(container);
+                videoElementUnsubscribers.delete(container);
             }
         },
-    };
+        attachAudio: (container: HTMLAudioElement) => {
+            // Never attach audio for the local screenshare, as we don't want audio feedback loop
+        },
+        detachAudio: (container: HTMLAudioElement) => {
+            // Never detach audio for the local screenshare, as we don't attach audio
+        },
+    } satisfies MediaStoreStreamable;
 
     const localMedia = {
         uniqueId: "localScreenSharingStream",

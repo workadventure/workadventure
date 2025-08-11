@@ -312,23 +312,54 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
                     }
                 });
+                this.space.spacePeerManager.registerScreenShareContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            detachVideo: (container: HTMLVideoElement) => {
                 container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareContainer(this.spaceUser.spaceUserId, container);
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
             },
         };

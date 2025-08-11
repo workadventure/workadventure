@@ -1,23 +1,25 @@
 <script lang="ts">
-    export let stream: MediaStream;
+    import { onDestroy, onMount } from "svelte";
+
+    export let attach: (container: HTMLAudioElement) => void;
+    export let detach: (container: HTMLAudioElement) => void;
+
     export let volume: number | undefined = undefined;
     let audioElement: HTMLAudioElement;
-    function srcObject(node: HTMLAudioElement, stream: MediaStream) {
-        node.srcObject = stream;
-        return {
-            update(newStream: MediaStream) {
-                if (node.srcObject != newStream) {
-                    node.srcObject = newStream;
-                }
-            },
-        };
-    }
 
     $: {
         if (volume !== undefined && audioElement) {
             audioElement.volume = volume;
         }
     }
+
+    onMount(() => {
+        attach(audioElement);
+    });
+
+    onDestroy(() => {
+        detach(audioElement);
+    });
 </script>
 
-<audio bind:this={audioElement} autoplay={true} use:srcObject={stream} />
+<audio bind:this={audioElement} autoplay={true} />
