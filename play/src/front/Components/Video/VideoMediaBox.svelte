@@ -8,12 +8,11 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
@@ -198,8 +197,6 @@
                 {detachVideo}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
-                outputDeviceId={$speakerSelectedStore}
-                volume={$volumeProximityDiscussionStore}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
