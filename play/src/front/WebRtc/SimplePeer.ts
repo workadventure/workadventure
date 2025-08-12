@@ -40,6 +40,9 @@ export class SimplePeer {
 
     private _pendingConnections: Map<string, AbortController> = new Map();
 
+    // A map of all screen sharing peers, indexed by spaceUserId
+    private screenSharePeers: Map<string, ScreenSharingPeer> = new Map();
+
     constructor(
         private _space: SpaceInterface,
         private _remotePlayersRepository: RemotePlayersRepository,
@@ -293,9 +296,9 @@ export class SimplePeer {
         stream: MediaStream | undefined
     ): Promise<ScreenSharingPeer | null> {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
-        const peerScreenSharingConnection = this._space.allScreenShareStreamStore.get(user.userId);
+        const peerScreenSharingConnection = this.screenSharePeers.get(user.userId);
 
-        if (peerScreenSharingConnection && peerScreenSharingConnection instanceof ScreenSharingPeer) {
+        if (peerScreenSharingConnection) {
             if (peerScreenSharingConnection.destroyed) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(peerScreenSharingConnection.media);
                 //peerScreenSharingConnection.toClose = true;
@@ -351,9 +354,16 @@ export class SimplePeer {
         );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
+        //if (!user.initiator) {
 
-        this._space.allScreenShareStreamStore.set(user.userId, peer);
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
+        peer.on("stream", (stream) => {
+            this._space.allScreenShareStreamStore.set(user.userId, peer);
+        });
+
+        this.screenSharePeers.set(user.userId, peer);
         this._streamableSubjects.screenSharingPeerAdded.next(peer.media);
+        //}
         return peer;
     }
 
@@ -405,8 +415,8 @@ export class SimplePeer {
         }
 
         //if the user left the discussion, clear screen sharing.
-        if (this._space.allVideoStreamStore.size === 0) {
-            for (const userId of this._space.allScreenShareStreamStore.keys()) {
+        if (this.screenSharePeers.size === 0) {
+            for (const userId of this.screenSharePeers.keys()) {
                 this.closeScreenSharingConnection(userId);
             }
         }
@@ -419,7 +429,7 @@ export class SimplePeer {
      */
     private closeScreenSharingConnection(userId: string, shouldCloseStream = true) {
         try {
-            const peer = this._space.allScreenShareStreamStore.get(userId);
+            const peer = this.screenSharePeers.get(userId);
             if (!peer) {
                 return;
             }
@@ -447,6 +457,7 @@ export class SimplePeer {
 
         if (shouldCloseStream) {
             this._space.allScreenShareStreamStore.delete(userId);
+            this.screenSharePeers.delete(userId);
         }
     }
 
@@ -455,7 +466,7 @@ export class SimplePeer {
             this.closeConnection(userId, needToDelete);
         }
 
-        for (const userId of this._space.allScreenShareStreamStore.keys()) {
+        for (const userId of this.screenSharePeers.keys()) {
             this.closeScreenSharingConnection(userId, needToDelete);
         }
     }
@@ -483,11 +494,10 @@ export class SimplePeer {
             }
         });
 
-        this._space.allScreenShareStreamStore.forEach((peer) => {
-            if (peer instanceof ScreenSharingPeer) {
-                peer.destroy();
-                this._space.allScreenShareStreamStore.delete(peer.user.userId);
-            }
+        this.screenSharePeers.forEach((peer) => {
+            peer.destroy();
+            this.screenSharePeers.delete(peer.user.userId);
+            this._space.allScreenShareStreamStore.delete(peer.user.userId);
         });
     }
 
@@ -549,8 +559,8 @@ export class SimplePeer {
             if (data.signal.type === "offer") {
                 await this.createPeerScreenSharingConnection(data, stream);
             }
-            const peer = this._space.allScreenShareStreamStore.get(data.userId);
-            if (peer !== undefined && peer instanceof ScreenSharingPeer) {
+            const peer = this.screenSharePeers.get(data.userId);
+            if (peer !== undefined) {
                 peer.signal(data.signal);
             } else {
                 console.error(
@@ -569,12 +579,8 @@ export class SimplePeer {
     }
 
     private pushScreenSharingToRemoteUser(userId: string, localScreenCapture: MediaStream) {
-        const PeerConnection = this._space.allScreenShareStreamStore.get(userId);
+        const PeerConnection = this.screenSharePeers.get(userId);
         if (!PeerConnection) {
-            throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
-        }
-
-        if (!(PeerConnection instanceof ScreenSharingPeer)) {
             throw new Error("While pushing screen sharing, cannot find user with ID " + userId);
         }
 
@@ -613,7 +619,7 @@ export class SimplePeer {
         const uuid = spaceUser.uuid;
         if (this._blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
-        if (this._space.allScreenShareStreamStore.has(userId)) {
+        if (this.screenSharePeers.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId, localScreenCapture);
             return;
         }
@@ -633,8 +639,8 @@ export class SimplePeer {
     }
 
     private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
-        const PeerConnectionScreenSharing = this._space.allScreenShareStreamStore.get(userId);
-        if (!PeerConnectionScreenSharing || !(PeerConnectionScreenSharing instanceof ScreenSharingPeer)) {
+        const PeerConnectionScreenSharing = this.screenSharePeers.get(userId);
+        if (!PeerConnectionScreenSharing) {
             return;
         }
 

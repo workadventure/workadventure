@@ -1,7 +1,6 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Readable } from "svelte/store";
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -34,12 +33,10 @@
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
-    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
     let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
     let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
 
     if (peer.media.type === "mediaStore") {
-        streamStore = peer.media.streamStore;
         attachVideo = peer.media.attachVideo;
         detachVideo = peer.media.detachVideo;
     }
@@ -192,7 +189,6 @@
         {#if showAfterDelay}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
-                mediaStream={$streamStore}
                 {attachVideo}
                 {detachVideo}
                 {videoEnabled}

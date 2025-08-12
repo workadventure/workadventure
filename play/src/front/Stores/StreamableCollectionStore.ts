@@ -15,7 +15,7 @@ import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
-import { embedScreenLayoutStore } from "./EmbedScreensStore";
+import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
 import { highlightFullScreen } from "./ActionsCamStore";
 import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
@@ -35,7 +35,8 @@ import { screenShareStreamElementsStore, videoStreamElementsStore } from "./Peer
 
 export interface MediaStoreStreamable {
     type: "mediaStore";
-    // TODO: split this into two stores, one for video and one for audio
+    // TODO: split this into two stores, one for video and one for audio. Only the audio one might be useful for the scripting API actually.
+    /** @deprecated */
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly attachVideo: (container: HTMLVideoElement) => void;
     readonly detachVideo: (container: HTMLVideoElement) => void;
@@ -257,11 +258,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 }
             });
 
-            if (
-                $screenSharingLocalMedia &&
-                $screenSharingLocalMedia.media.type === "mediaStore" &&
-                get($screenSharingLocalMedia.media.streamStore)
-            ) {
+            if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "mediaStore") {
                 addPeer($screenSharingLocalMedia);
             }
 

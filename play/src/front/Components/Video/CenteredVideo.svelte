@@ -17,7 +17,6 @@
      */
 
     export let videoEnabled = false;
-    export let mediaStream: MediaStream | undefined = undefined;
     export let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
     export let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
     export let videoUrl: string | undefined = undefined;
@@ -56,7 +55,7 @@
 
     function onLoadVideoElement() {}
 
-    $: if (mediaStream && videoElement) {
+    $: if (attachVideo && videoElement) {
         if (navigator.userActivation && !navigator.userActivation.hasBeenActive && !muted) {
             console.warn("User has not interacted with the browser yet. The video will be muted.");
             missingUserActivation = true;
@@ -132,7 +131,7 @@
     let displayNoVideoWarning = false;
 
     $: {
-        if (expectVideoOutput && videoElement && mediaStream) {
+        if (expectVideoOutput && videoElement && attachVideo) {
             expectVideoWithin3Seconds();
         }
     }

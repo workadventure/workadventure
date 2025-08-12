@@ -138,7 +138,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
                         container.srcObject = null;
                     }
                 });
-                // FIXME: in case of switch, we should be able to register the spaceUserId. Since we never switch to Jitsi though, we can do without.
+                // In case of switch, we should be able to register the spaceUserId. Since we never switch to Jitsi though, we can do without.
                 //this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },

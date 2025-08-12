@@ -33,6 +33,7 @@ export class VideoPeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
+    /** @deprecated */
     public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;

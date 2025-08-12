@@ -313,10 +313,15 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         localMedia.name = writable(get(LL).camera.my.nameTag());
         if (screenSharingLocalStream.type === "success") {
             localMediaStreamStore.set(screenSharingLocalStream.stream);
+            if (screenSharingLocalStream.stream === undefined) {
+                set(undefined);
+            } else {
+                set(localMedia);
+            }
         } else {
             localMediaStreamStore.set(undefined);
+            set(localMedia);
         }
-        set(localMedia);
     });
 
     return function stop() {
