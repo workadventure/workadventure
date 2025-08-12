@@ -54,6 +54,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     public clear(): void {
         this.scene.input.topOnly = false;
         mapEditorEntityModeStore.set("ADD");
+        mapEditorSelectedEntityStore.set(undefined);
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
