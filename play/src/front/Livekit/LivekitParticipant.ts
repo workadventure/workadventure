@@ -27,11 +27,9 @@ export class LiveKitParticipant {
             const tracks = [];
             if ($videoStreamStore) {
                 tracks.push(...$videoStreamStore.getTracks());
-                console.warn("Streaming video screen share tracks");
             }
             if ($audioStreamStore) {
                 tracks.push(...$audioStreamStore.getTracks());
-                console.warn("Streaming audio screen share tracks");
             }
 
             if (tracks.length === 0) {
@@ -153,6 +151,7 @@ export class LiveKitParticipant {
                         Sentry.captureException(e);
                     });
                 } else if (publication.source === Track.Source.ScreenShare) {
+                    console.warn("LivekitParticipant: ScreenShare track subscribed", publication.trackSid);
                     this._videoScreenShareStreamStore.set(track.mediaStream);
                     const screenElements =
                         this.space.spacePeerManager.getScreenShareContainers(this._spaceUser.spaceUserId) || [];
@@ -167,6 +166,7 @@ export class LiveKitParticipant {
                         Sentry.captureException(e);
                     });
                 } else if (publication.source === Track.Source.ScreenShareAudio) {
+                    console.warn("LivekitParticipant: ScreenShareAudio track subscribed", publication.trackSid);
                     this._audioScreenShareStreamStore.set(track.mediaStream);
 
                     const audioElements = this.space.spacePeerManager.getScreenShareAudioContainers(
@@ -231,8 +231,8 @@ export class LiveKitParticipant {
                 track.attach(screenElement);
             });
 
-            this.updateLivekitScreenShareStreamStore().catch(() => {
-                console.error("Error updating livekit screen share stream store");
+            this.updateLivekitScreenShareStreamStore().catch((e) => {
+                console.error("Error updating livekit screen share stream store", e);
             });
         } else if (publication.source === Track.Source.ScreenShareAudio) {
             this._audioScreenShareStreamStore.set(track.mediaStream);
