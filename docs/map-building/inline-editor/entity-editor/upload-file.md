@@ -7,7 +7,7 @@ sidebar_position: 80
 # Drag and drop files
 
 :::warning
-This will create an entity to open the document you want to drop. If you want the entity to be the image you dropped here is where you can do it: [custom entity](./index.md#uploading-an-object)
+This will create an entity to open the document you want to drop. If you want the entity to be the image you dropped, here is where you can do it: [custom entity](./index.md#uploading-an-object)
 :::
 
 You can create entities with a simple drag and drop of a file on the map.
