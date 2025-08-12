@@ -6,7 +6,6 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
-import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
@@ -138,8 +137,11 @@ export class VideoPeer extends Peer implements Streamable {
                         break;
                     }
                     case "blocked": {
-                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                        // Find a way to block A's output stream in A's js client
+                        // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
+                        // The "block" message should go through the space.
+
+                        ////FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                        //// Find a way to block A's output stream in A's js client
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
@@ -229,7 +231,7 @@ export class VideoPeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.userId = player.userId;
-        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
+        this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + this.userId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {

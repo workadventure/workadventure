@@ -320,9 +320,11 @@ export class SimplePeer {
             );
             return null;
         }
-        const userId = spaceUser.userId;
-
-        const player = await this._remotePlayersRepository.getPlayer(userId);
+        const player = await spaceUser.getPlayer();
+        if (!player) {
+            console.error("While creating peer connection, cannot find player with ID " + user.userId);
+            return null;
+        }
 
         const peer = new ScreenSharingPeer(
             user,
@@ -608,8 +610,7 @@ export class SimplePeer {
             console.error("While sending local screen sharing, cannot find user with ID " + userId);
             return;
         }
-        const userIdNumber = spaceUser.userId;
-        const uuid = (await this._remotePlayersRepository.getPlayer(userIdNumber)).userUuid;
+        const uuid = spaceUser.uuid;
         if (this._blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this._space.allScreenShareStreamStore.has(userId)) {

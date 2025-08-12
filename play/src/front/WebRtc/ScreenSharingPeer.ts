@@ -120,6 +120,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._statusStore = writable<PeerStatus>("connecting");
 
+        // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
             // transform sdp to force to use h264 codec
@@ -378,7 +379,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.player.name);
+        return writable(this.spaceUser.name);
     }
 
     get showVoiceIndicator(): Readable<boolean> {
