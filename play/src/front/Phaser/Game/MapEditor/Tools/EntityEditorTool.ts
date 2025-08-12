@@ -399,7 +399,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             .then(() => {
                 const openEntity = this.entitiesManager.getEntities().get(entityId);
                 if (get(mapEditorEntityFileDroppedStore)) {
-                    this.cleanPreview();
                     mapEditorEntityFileDroppedStore.set(false);
                     mapEditorEntityModeStore.set("EDIT");
                     mapEditorSelectedEntityStore.set(openEntity);
