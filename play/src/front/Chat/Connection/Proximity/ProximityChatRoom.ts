@@ -376,6 +376,7 @@ export class ProximityChatRoom implements ChatRoom {
     public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
         this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync);
 
+        // TODO: we need to move that elsewhere.
         // Set up manager of audio streams received by the scripting API (useful for bots)
         this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(this._space.spacePeerManager);
         this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);

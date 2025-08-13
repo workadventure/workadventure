@@ -68,10 +68,6 @@ export class LivekitState implements ICommunicationState {
         return true;
     }
 
-    dispatchSound(url: URL): Promise<void> {
-        return this.livekitConnection.dispatchSound(url);
-    }
-
     dispatchStream(mediaStream: MediaStream): void {
         this.livekitConnection.dispatchStream(mediaStream).catch((err) => {
             console.error("An error occurred in dispatchStream", err);

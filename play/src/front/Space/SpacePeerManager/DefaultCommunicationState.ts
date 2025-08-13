@@ -39,9 +39,5 @@ export class DefaultCommunicationState implements ICommunicationState {
         return false;
     }
 
-    dispatchSound(url: URL): Promise<void> {
-        return Promise.resolve();
-    }
-
     dispatchStream(mediaStream: MediaStream): void {}
 }

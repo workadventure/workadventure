@@ -1,19 +1,17 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Readable } from "svelte/store";
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
@@ -35,14 +33,12 @@
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
-    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
-    let attach: ((container: HTMLVideoElement) => void) | undefined = undefined;
-    let detach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
 
     if (peer.media.type === "mediaStore") {
-        streamStore = peer.media.streamStore;
-        attach = peer.media.attach;
-        detach = peer.media.detach;
+        attachVideo = peer.media.attachVideo;
+        detachVideo = peer.media.detachVideo;
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
@@ -193,13 +189,10 @@
         {#if showAfterDelay}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
-                mediaStream={$streamStore}
-                {attach}
-                {detach}
+                {attachVideo}
+                {detachVideo}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
-                outputDeviceId={$speakerSelectedStore}
-                volume={$volumeProximityDiscussionStore}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}

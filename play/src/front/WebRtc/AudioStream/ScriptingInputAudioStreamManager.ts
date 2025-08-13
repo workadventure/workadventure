@@ -7,7 +7,7 @@ import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
- * Class in charge of receiving audio streams from the scripting API and playing them.
+ * Class in charge of receiving audio streams from the users and forwarding them to the scripting API for analysis.
  */
 export class ScriptingInputAudioStreamManager {
     private appendPCMDataStreamUnsubscriber: Subscription | undefined;

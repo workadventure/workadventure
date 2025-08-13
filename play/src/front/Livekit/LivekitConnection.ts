@@ -122,21 +122,6 @@ export class LivekitConnection {
         }
     }
 
-    async dispatchSound(url: URL): Promise<void> {
-        if (!this.livekitRoomStreamer) {
-            console.error("LivekitRoom not found for dispatchSound");
-            throw new Error("LivekitRoom not found for dispatchSound");
-        }
-
-        try {
-            await this.livekitRoomStreamer.dispatchSound(url);
-        } catch (err) {
-            console.error("Error dispatching sound to Livekit room:", err);
-            Sentry.captureException(err);
-            throw err;
-        }
-    }
-
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoomStreamer) {
             console.error("LivekitRoom not found for dispatchStream");

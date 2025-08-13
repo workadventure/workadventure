@@ -123,7 +123,7 @@ import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage 
 import { StringUtils } from "../../Utils/StringUtils";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
