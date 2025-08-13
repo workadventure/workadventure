@@ -660,36 +660,6 @@ export class SimplePeer {
         }
     }
 
-    public dispatchSound(url: URL) {
-        return new Promise<void>((resolve, reject) => {
-            (async () => {
-                // TODO: create only one?
-                const audioContext = new AudioContext();
-
-                const response = await fetch(url);
-                const arrayBuffer = await response.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-                const destination = audioContext.createMediaStreamDestination();
-                const bufferSource = audioContext.createBufferSource();
-                bufferSource.buffer = audioBuffer;
-                bufferSource.start(0);
-                bufferSource.connect(destination);
-                bufferSource.onended = () => {
-                    nbSoundPlayedInBubbleStore.soundEnded();
-                    resolve();
-                };
-                nbSoundPlayedInBubbleStore.soundStarted();
-
-                for (const videoPeer of this._space.allVideoStreamStore.values()) {
-                    if (videoPeer instanceof VideoPeer) {
-                        videoPeer.addStream(destination.stream);
-                    }
-                }
-            })().catch(reject);
-        });
-    }
-
     private scriptingApiStream: MediaStream | undefined = undefined;
 
     /**

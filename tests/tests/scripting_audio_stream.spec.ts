@@ -30,20 +30,20 @@ async function playAudioStream(page: Page, frequency: number) {
   }, { frequency });
 }
 
-async function hasAudioStream(page: Page): Promise<void> {
+async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
   // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
-  await evaluateScript(page, async () => {
+  await evaluateScript(page, async ({ volume }) => {
     const sampleRate = 24000;
 
     return new Promise<void>((resolve) => {
       WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
-        if (data.some((sample) => Math.abs(sample) > 0.7)) {
+        if (data.some((sample) => Math.abs(sample) > volume)) {
           resolve();
         }
       });
     });
-  });
+  }, { volume });
 }
 
 test.describe("Scripting audio streams", () => {
@@ -55,7 +55,7 @@ test.describe("Scripting audio streams", () => {
       return;
     }
   });
-  test("can play and listen to sounds", async ({
+  test("can play and listen to streams", async ({
     browser,
   }, { project }) => {
     // This test runs only on Chrome
@@ -135,4 +135,29 @@ test.describe("Scripting audio streams", () => {
     await page.close();
     await page.context().close();
   });
-});
+
+  test("can play and listen to sound files", async ({
+                                                  browser,
+                                                }, { project }) => {
+    const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Map.teleportToPosition(bob, 32, 32);
+
+    // Open new page for alice
+    const alice = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(alice);
+
+    // Move alice to the same position as bob
+    await Map.teleportToPosition(alice, 32, 32);
+
+    await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+
+    // Test play sound scripting
+    await evaluateScript(bob, async () => {
+      WA.player.proximityMeeting.playSound("http://maps.workadventure.localhost/tests/Audience.mp3");
+    });
+
+    // Test listen to sound scripting
+    await hasAudioStream(alice, 0.2);
+
+    });
+  });

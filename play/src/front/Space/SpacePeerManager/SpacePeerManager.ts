@@ -6,6 +6,7 @@ import { SpaceInterface } from "../SpaceInterface";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
 export interface ICommunicationState {
@@ -13,7 +14,6 @@ export interface ICommunicationState {
     destroy(): void;
     completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
-    dispatchSound(url: URL): Promise<void>;
     dispatchStream(mediaStream: MediaStream): void;
 }
 
@@ -31,7 +31,6 @@ export interface SimplePeerConnectionInterface {
     dispatchStream(mediaStream: MediaStream): void;
     cleanupStore(): void;
     removePeer(userId: string): void;
-    dispatchSound(url: URL): Promise<void>;
 }
 
 export interface PeerFactoryInterface {
@@ -145,9 +144,29 @@ export class SpacePeerManager {
         }
     }
 
-    //TODO : a tester
     dispatchSound(url: URL): Promise<void> {
-        return this._communicationState.dispatchSound(url);
+        return new Promise<void>((resolve, reject) => {
+            (async () => {
+                const audioContext = new AudioContext();
+
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                const destination = audioContext.createMediaStreamDestination();
+                const bufferSource = audioContext.createBufferSource();
+                bufferSource.buffer = audioBuffer;
+                bufferSource.start(0);
+                bufferSource.connect(destination);
+                bufferSource.onended = () => {
+                    nbSoundPlayedInBubbleStore.soundEnded();
+                    resolve();
+                };
+                nbSoundPlayedInBubbleStore.soundStarted();
+
+                return this._communicationState.dispatchStream(destination.stream);
+            })().catch(reject);
+        });
     }
 
     private currentMediaStream: MediaStream | undefined;
