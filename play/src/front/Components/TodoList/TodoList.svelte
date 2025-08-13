@@ -70,17 +70,22 @@
             <div class="flex flex-col justify-center gap-4">
                 {#if !$userIsConnected}
                     <div class="flex flex-col justify-center items-center">
+                        <!--
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
-                        {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size > 0}
-                            <ExternalComponents zone="todoListButton" />
-                        {:else}
+                        -->
+                        {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size === 0}
                             <button
                                 class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                                 on:click={goToLoginPage}
                                 >{$LL.menu.profile.login()}
                             </button>
                         {/if}
+                    </div>
+                {/if}
+                {#if get(externalSvelteComponentService.getComponentsByZone("todoListButton")).size > 0}
+                    <div class="flex flex-col justify-center items-center content-center">
+                        <ExternalComponents zone="todoListButton" />
                     </div>
                 {/if}
                 {#each [...$todoListsStore.entries()] as [key, todoList] (key)}
