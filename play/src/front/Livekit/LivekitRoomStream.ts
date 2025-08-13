@@ -302,15 +302,15 @@ export class LiveKitRoomStream implements LiveKitRoom {
             return;
         }
 
-        const videoTrack = mediaStream.getVideoTracks()[0];
-        if (!videoTrack) {
+        const audioTrack = mediaStream.getAudioTracks()[0];
+        if (!audioTrack) {
             console.error("No video track found in the media stream");
             Sentry.captureException(new Error("No video track found in the media stream"));
             return;
         }
 
-        const localTrack = await this.localParticipant.publishTrack(videoTrack, {
-            source: Track.Source.ScreenShare,
+        const localTrack = await this.localParticipant.publishTrack(audioTrack, {
+            source: Track.Source.Microphone,
         });
 
         this.dispatchSoundTrack = localTrack.track;

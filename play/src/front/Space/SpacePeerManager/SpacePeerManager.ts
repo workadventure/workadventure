@@ -139,13 +139,21 @@ export class SpacePeerManager {
 
         state.completeSwitch();
         this._communicationState = state;
+        if (this.currentMediaStream) {
+            // If we have a current media stream, we need to dispatch it to the new state
+            this._communicationState.dispatchStream(this.currentMediaStream);
+        }
     }
+
     //TODO : a tester
     dispatchSound(url: URL): Promise<void> {
         return this._communicationState.dispatchSound(url);
     }
-    //TODO : a tester
+
+    private currentMediaStream: MediaStream | undefined;
+
     dispatchStream(mediaStream: MediaStream): void {
+        this.currentMediaStream = mediaStream;
         this._communicationState.dispatchStream(mediaStream);
     }
 

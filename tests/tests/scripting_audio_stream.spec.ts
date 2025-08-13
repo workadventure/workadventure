@@ -1,10 +1,50 @@
-import { expect, test} from "@playwright/test";
+import {expect, Page, test} from "@playwright/test";
 import { evaluateScript } from "./utils/scripting";
 import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 import Menu from "./utils/menu";
+
+async function playAudioStream(page: Page, frequency: number) {
+  // Test play sound scripting
+  await evaluateScript(page, async ({frequency}) => {
+    const sampleRate = 24000;
+
+    const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
+
+    // Generate a sine wave
+    const amplitude = 1;
+    const duration = 200;
+    const numSamples = duration * sampleRate;
+    const samples = new Float32Array(numSamples);
+    for (let i = 0; i < numSamples; i++) {
+      samples[i] = amplitude * Math.sin(2 * Math.PI * frequency * i / sampleRate);
+    }
+
+    window.streamInterrupted = false;
+    window.audioStream = audioStream;
+    audioStream.appendAudioData(samples).catch((e) => {
+      window.streamInterrupted = true;
+    });
+  }, { frequency });
+}
+
+async function hasAudioStream(page: Page): Promise<void> {
+  // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+  await evaluateScript(page, async () => {
+    const sampleRate = 24000;
+
+    return new Promise<void>((resolve) => {
+      WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+        // At some point, the volume of the sound should be high enough to be noticed in the sample
+        if (data.some((sample) => Math.abs(sample) > 0.7)) {
+          resolve();
+        }
+      });
+    });
+  });
+}
 
 test.describe("Scripting audio streams", () => {
   test.beforeEach(async ({ browserName, page }) => {
@@ -33,43 +73,12 @@ test.describe("Scripting audio streams", () => {
 
     await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
 
-    // Test play sound scripting
-    await evaluateScript(page, async () => {
-      const sampleRate = 24000;
-
-      const audioStream = await WA.player.proximityMeeting.startAudioStream(sampleRate);
-
-      // Generate a sine wave
-      const frequency = 440;
-      const amplitude = 1;
-      const duration = 20;
-      const numSamples = duration * sampleRate;
-      const samples = new Float32Array(numSamples);
-      for (let i = 0; i < numSamples; i++) {
-        samples[i] = amplitude * Math.sin(2 * Math.PI * frequency * i / sampleRate);
-      }
-
-      window.audioStream = audioStream;
-      audioStream.appendAudioData(samples).catch((e) => {
-        window.streamInterrupted = true;
-      });
-    });
+    await playAudioStream(page, 440);
 
     // Test listen to sound scripting
-    await evaluateScript(alice, async () => {
-      const sampleRate = 24000;
+    await hasAudioStream(alice);
 
-      return new Promise((resolve) => {
-        WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
-          // At some point, the volume of the sound should be high enough to be noticed in the sample
-          if (data.some((sample) => Math.abs(sample) > 0.7)) {
-              resolve();
-          }
-        });
-      });
-    });
-
-    await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(undefined);
+    await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(false);
 
     // Now, let's add more users to test the switch to Livekit
     const alice2 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
@@ -78,24 +87,16 @@ test.describe("Scripting audio streams", () => {
     const alice3 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(alice3);
     await Map.teleportToPosition(alice3, 32, 32);
-    const alice4 = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
-    await Menu.turnOffMicrophone(alice4);
-    await Map.teleportToPosition(alice4, 32, 32);
+    const eve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(eve);
+    await Map.teleportToPosition(eve, 32, 32);
 
-    // alice4 entered last. She should receive sound only through Livekit.
-    // Let's wait for the audio stream to be ready
-    await evaluateScript(alice4, async () => {
-      const sampleRate = 24000;
+    // eve entered last. She should receive sound only through Livekit.
+    // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+    await hasAudioStream(eve);
 
-      return new Promise((resolve) => {
-        WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
-          // At some point, the volume of the sound should be high enough to be noticed in the sample
-          if (data.some((sample) => Math.abs(sample) > 0.7)) {
-            resolve();
-          }
-        });
-      });
-    });
+    // Let's also check that the users that were in WebRTC before the switch are still receiving the sound
+    await hasAudioStream(alice3);
 
 
     // Now, let's reset the audio buffer
@@ -105,14 +106,32 @@ test.describe("Scripting audio streams", () => {
 
     await expect.poll(() => evaluateScript(page, () => window.streamInterrupted)).toBe(true);
 
+    // Now, let's close the audio stream
+    await evaluateScript(page, async () => {
+      window.audioStream.close();
+    });
+
+    // Let's restart the audio buffer
+    await playAudioStream(page, 330);
+    await hasAudioStream(alice3);
+
+    // Now, let's disconnect eve to force the switch back to WebRTC
+    await eve.close();
+    await eve.context().close();
+
+    // Let's wait for eve to be disconnected
+    await expect(alice3.getByText('eve')).toBeHidden();
+
+    // After disconnect, alice3 should still receive the sound through WebRTC
+    await hasAudioStream(alice3);
+
+
     await alice.close();
     await alice.context().close();
     await alice2.close();
     await alice2.context().close();
     await alice3.close();
     await alice3.context().close();
-    await alice4.close();
-    await alice4.context().close();
     await page.close();
     await page.context().close();
   });
