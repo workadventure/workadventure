@@ -79,7 +79,7 @@ npm run ts-proto  # Generates TypeScript from .proto files
 cd back
 npm install --workspace=workadventureback  # Install from root
 npm run typecheck
-npm run fix # ESLint with auto fix
+npm run lint-fix # ESLint with auto fix
 npm run test -- --watch=false # Run vitest tests
 
 # Play service  
@@ -97,7 +97,7 @@ cd map-storage
 npm install --workspace=map-storage
 npm run typecheck
 npm run test -- --watch=false # Run vitest tests
-npm run lint # ESLint with auto fix
+npm run lint-fix # ESLint with auto fix
 ```
 
 ### End-to-End Tests
@@ -110,7 +110,7 @@ npx playwright install --with-deps
 
 # Development environment tests (OIDC enabled by default)
 docker-compose up -d
-npm run fix # ESLint tests for E2E tests 
+npm run lint-fix # ESLint tests for E2E tests 
 
 # Single test with UI
 npm run test-headed-chrome -- tests/[test-file.ts]
@@ -124,12 +124,16 @@ npm run test-headed-chrome -- tests/[test-file.ts]
 # Install precommit hooks (REQUIRED after first clone)
 npm install
 
-# Manual linting for each service
+# Manual linting for each service (standardized commands)
 cd play && npm run lint-fix && npm run svelte-check && npm run pretty
-cd back && npm run fix && npm run pretty
-cd map-storage && npm run lint && npm run pretty
-cd tests && npm run lint
+cd back && npm run lint-fix && npm run pretty
+cd map-storage && npm run lint-fix && npm run pretty
+cd tests && npm run lint-fix
 ```
+
+**Standardized npm scripts**: All services and libraries use:
+- `npm run lint` - runs ESLint to check for errors without fixing them
+- `npm run lint-fix` - runs ESLint with `--fix` to automatically fix errors where possible
 
 ## Validation Pipeline
 
