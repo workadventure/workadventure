@@ -226,7 +226,7 @@ export class SimplePeer {
         const uuid = player.userUuid;
         if (this._blackListManager.isBlackListed(uuid)) return null;
 
-        const peerConnection = this._space.allVideoStreamStore.get(user.userId);
+        const peerConnection = this._space.getVideoStream(user.userId);
         if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
                 this._streamableSubjects.videoPeerRemoved.next(peerConnection.media);
@@ -276,14 +276,14 @@ export class SimplePeer {
         });
 
         //Create a notification for first user in circle discussion
-        if (this._space.allVideoStreamStore.size === 0) {
+        if (this._space.getVideoStreamCount() === 0) {
             const notificationText = get(LL).notification.discussion({ name });
             this._notificationManager.createNotification(new BasicNotification(notificationText));
         }
 
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
-        this._space.allVideoStreamStore.set(user.userId, peer);
+        this._space.registerVideoStream(user.userId, peer);
         this._streamableSubjects.videoPeerAdded.next(peer.media);
         return peer;
     }
@@ -358,7 +358,7 @@ export class SimplePeer {
 
         // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("stream", (stream) => {
-            this._space.allScreenShareStreamStore.set(user.userId, peer);
+            this._space.registerScreenShareStream(user.userId, peer);
         });
 
         this.screenSharePeers.set(user.userId, peer);
@@ -382,7 +382,7 @@ export class SimplePeer {
         }
 
         try {
-            const peer = this._space.allVideoStreamStore.get(userId);
+            const peer = this._space.getVideoStream(userId);
             if (!peer || !(peer instanceof VideoPeer)) {
                 return;
             }
@@ -404,7 +404,7 @@ export class SimplePeer {
             if (shouldCloseStream) {
                 peer.toClose = true;
                 peer.destroy();
-                this._space.allVideoStreamStore.delete(userId);
+                this._space.unregisterVideoStream(userId);
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
@@ -456,13 +456,13 @@ export class SimplePeer {
         }
 
         if (shouldCloseStream) {
-            this._space.allScreenShareStreamStore.delete(userId);
+            this._space.unregisterScreenShareStream(userId);
             this.screenSharePeers.delete(userId);
         }
     }
 
     public closeAllConnections(needToDelete?: boolean) {
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this._space.getAllVideoStreams().keys()) {
             this.closeConnection(userId, needToDelete);
         }
 
@@ -487,17 +487,17 @@ export class SimplePeer {
     }
 
     public cleanupStore() {
-        this._space.allVideoStreamStore.forEach((peer) => {
+        this._space.forEachVideoStream((peer) => {
             if (peer instanceof VideoPeer) {
                 peer.destroy();
-                this._space.allVideoStreamStore.delete(peer.user.userId);
+                this._space.unregisterVideoStream(peer.user.userId);
             }
         });
 
         this.screenSharePeers.forEach((peer) => {
             peer.destroy();
             this.screenSharePeers.delete(peer.user.userId);
-            this._space.allScreenShareStreamStore.delete(peer.user.userId);
+            this._space.unregisterScreenShareStream(peer.user.userId);
         });
     }
 
@@ -511,7 +511,7 @@ export class SimplePeer {
                 const extendedSpaceUser = await this._space.extendSpaceUser(spaceUser);
                 await this.createPeerConnection(data, extendedSpaceUser);
             }
-            const peer = this._space.allVideoStreamStore.get(data.userId);
+            const peer = this._space.getVideoStream(data.userId);
 
             if (!(peer instanceof VideoPeer)) {
                 console.error("peer is not a VideoPeer");
@@ -595,7 +595,7 @@ export class SimplePeer {
      */
     public sendLocalScreenSharingStream(localScreenCapture: MediaStream) {
         const promises: Promise<void>[] = [];
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this._space.getAllVideoStreams().keys()) {
             promises.push(this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture));
         }
         return Promise.all(promises);
@@ -605,7 +605,7 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public stopLocalScreenSharingStream(stream: MediaStream) {
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this._space.getAllVideoStreams().keys()) {
             this.stopLocalScreenSharingStreamToUser(userId, stream);
         }
     }
@@ -667,11 +667,11 @@ export class SimplePeer {
      * Used to send streams generated by the scripting API.
      */
     public dispatchStream(mediaStream: MediaStream) {
-        for (const videoPeer of this._space.allVideoStreamStore.values()) {
+        this._space.forEachVideoStream((videoPeer) => {
             if (videoPeer instanceof VideoPeer) {
                 videoPeer.addStream(mediaStream);
             }
-        }
+        });
         this.scriptingApiStream = mediaStream;
     }
 

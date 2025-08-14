@@ -264,7 +264,7 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
+            const oldVideoStream = this.space.getVideoStream(this._spaceUser.spaceUserId);
             if (oldVideoStream) {
                 this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
             }
@@ -282,7 +282,7 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
+            const oldScreenShareStream = this.space.getScreenShareStream(this._spaceUser.spaceUserId);
             if (oldScreenShareStream) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
             }
@@ -347,26 +347,26 @@ export class LiveKitParticipant {
 
     private async updateLivekitVideoStreamStore() {
         const videoStream = await this.getVideoStream();
-        const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
+        const oldVideoStream = this.space.getVideoStream(this._spaceUser.spaceUserId);
 
         if (oldVideoStream) {
             this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
         }
 
-        this.space.allVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
+        this.space.registerVideoStream(this._spaceUser.spaceUserId, videoStream);
 
         this._streamableSubjects.videoPeerAdded.next(videoStream.media);
     }
 
     private async updateLivekitScreenShareStreamStore() {
         const screenShareStream = await this.getScreenShareStream();
-        const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
+        const oldScreenShareStream = this.space.getScreenShareStream(this._spaceUser.spaceUserId);
 
         if (oldScreenShareStream) {
             this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
         }
 
-        this.space.allScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
+        this.space.registerScreenShareStream(this._spaceUser.spaceUserId, screenShareStream);
 
         this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.media);
     }
