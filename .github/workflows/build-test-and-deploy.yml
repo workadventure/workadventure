@@ -334,11 +334,21 @@ jobs:
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()
@@ -419,7 +429,7 @@ jobs:
           message: "⏳ GitLab SaaS pipeline in progress... [Check status](${{ env.PIPELINE_URL }})"
           fail: false
           recreate: true
-          
+
       - name: Long poll GitLab pipeline until finished
         id: poll-pipeline
         run: |
@@ -439,7 +449,7 @@ jobs:
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_SAAS_READ_API_TOKEN }}" \
               "https://git.thecodingmachine.com/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}")
-            
+
             if [[ "$(echo "$RESPONSE" | jq -r '.message')" == "401 Unauthorized" ]]; then
               echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_SAAS_READ_API_TOKEN secret."
               echo "failed=true" >> "$GITHUB_OUTPUT"
@@ -574,12 +584,22 @@ jobs:
           sleep 10
           npm run upload-test-map-single-domain
         working-directory: map-storage
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
         run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
         if: failure()
@@ -663,7 +683,7 @@ jobs:
           #version: '<version>' # default is latest (stable)
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
-      
+
       - name: Add comment on PR
         if: github.event_name == 'pull_request'
         uses: hasura/comment-progress@v2.3.0
@@ -847,6 +867,15 @@ jobs:
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
         working-directory: map-storage
 
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
@@ -859,6 +888,7 @@ jobs:
           ROOM_API_SECRET_KEY: "password"
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -937,4 +967,3 @@ jobs:
           keep-last: 5
           prune-untagged: true
           prune-tags-regexes: ".*"
-
