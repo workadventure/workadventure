@@ -16,11 +16,13 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 ## Project Architecture
 
 ### Main Services
-- **`play/`** - Main frontend application (Svelte + Phaser.js game engine)
+- **`play/`** - Main frontend application + Node websocket dispatcher (Svelte + Phaser.js game engine)
+  - **`play/src/front`** - contains the front code (Svelte + Phaser, built using Vite)
+  - **`play/src/pusher`** - contains the server-side code (mostly establishes the websocket connection to the front and forwards calls to the back)
 - **`back/`** - Backend API server with gRPC and HTTP endpoints  
 - **`messages/`** - Protocol Buffer definitions for service communication
-- **`map-storage/`** - Map storage and management service
-- **`uploader/`** - File upload service
+- **`map-storage/`** - Map storage and management service (talks to back, stores map on disk or in S3 compatible service)
+- **`uploader/`** - File upload service (deprecated)
 - **`tests/`** - End-to-end tests using Playwright
 
 ### Shared Libraries (`libs/`)
@@ -52,30 +54,13 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 # Copy environment template (REQUIRED)
 cp .env.template .env
 
-# Add required entries to /etc/hosts (Linux/macOS):
-echo "127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost traefik.workadventure.localhost matrix.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost" >> /etc/hosts
-```
-
-### Development Environment (Docker - Recommended)
-**Time required**: 5-10 minutes for initial startup
-
-```bash
-# Start development environment
-docker-compose up
-
-# With OIDC test server (for authentication testing)
+# Start development environment with OIDC test server (for authentication testing)
 docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up
 
-# Access: http://play.workadventure.localhost
-# Traefik dashboard: http://traefik.workadventure.localhost
+# Access: http://play.workadventure.localhost/_/global/maps.workadventure.localhost/starter/map.json
 ```
 
-**Known Issues & Workarounds**:
-- CORS/502 errors: Restart specific containers: `docker-compose restart play back`
-- Windows users: MUST run `git config --global core.autocrlf false` before cloning
-- macOS users: Requires at least 6GB RAM allocated to Docker
-
-### Manual Build Process (Without Docker)
+### Manual Build / Typecheck
 **⚠️ Protocol Buffer Dependency**: Messages MUST be built first and require protoc
 
 1. **Install Messages Dependencies & Build** (ALWAYS FIRST):
@@ -85,47 +70,35 @@ npm install
 npm run ts-proto  # Generates TypeScript from .proto files
 ```
 
-2. **Build Individual Services** (order matters):
+2. **Running Individual Services**:
 ```bash
 # Backend service
 cd back
 npm install --workspace=workadventureback  # Install from root
 npm run typecheck
-npm run build  # TypeScript compilation
+npm run fix # ESLint with auto fix
+npm run test -- --watch=false # Run vitest tests
 
-# Frontend service  
+# Play service  
 cd play
 npm install --workspace=workadventure-play
 npm run typesafe-i18n  # Generate i18n files (REQUIRED)
-npm run build  # Time: 2-5 minutes, may need NODE_OPTIONS=--max-old-space-size=16384
+npm run build  # Time: 2-5 minutes, may need NODE_OPTIONS=--max-old-space-size=16384, builds Vite (front)
 npm run build-iframe-api  # Build API for embeds
+npm run lint-fix # ESLint with auto fix
+npm run svelte-check # Svelte-check checks
+npm run test -- --watch=false # Run vitest tests
 
 # Map storage
 cd map-storage  
 npm install --workspace=map-storage
-npm run build
-
-# Uploader
-cd uploader
-npm install --workspace=workadventureuploader
 npm run typecheck
+npm run test -- --watch=false # Run vitest tests
+npm run lint # ESLint with auto fix
 ```
 
-### Testing
-
-#### Unit Tests
-```bash
-# Individual services
-cd play && npm test
-cd back && npm test  
-cd map-storage && npm test
-cd libs/map-editor && npm test
-cd libs/shared-utils && npm test
-cd libs/store-utils && npm test
-```
-
-#### End-to-End Tests
-**Time required**: 10-20 minutes for full suite
+### End-to-End Tests
+**Time required**: 10-30 minutes for full suite
 
 ```bash
 cd tests
@@ -134,14 +107,11 @@ npx playwright install --with-deps
 
 # Development environment tests
 docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
-npm run test
-
-# Production-like tests  
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d --build
-npm run test-prod-like
+npm run fix # ESLint tests for E2E tests 
 
 # Single test with UI
-npm run test-headed -- tests/[test-file.ts]
+npm run test-headed-chrome -- tests/[test-file.ts]
+# You can read the report in the playwright-report directory
 ```
 
 ### Linting & Formatting
@@ -150,16 +120,12 @@ npm run test-headed -- tests/[test-file.ts]
 ```bash
 # Install precommit hooks (REQUIRED after first clone)
 npm install
-npm run prepare
 
 # Manual linting for each service
-cd play && npm run lint && npm run svelte-check && npm run pretty-check
-cd back && npm run lint && npm run pretty-check  
-cd map-storage && npm run lint && npm run pretty-check
+cd play && npm run lint-fix && npm run svelte-check && npm run pretty
+cd back && npm run fix && npm run pretty
+cd map-storage && npm run lint && npm run pretty
 cd tests && npm run lint
-
-# Auto-fix issues
-cd [service] && npm run lint-fix && npm run pretty
 ```
 
 ## Validation Pipeline
@@ -198,7 +164,7 @@ Production Docker images built and tested in CI:
 
 ### Port Conflicts
 **Symptom**: "Port already in use" errors
-**Solution**: Check and kill processes:
+**Solution**: Check and kill processes or "docker-compose down":
 ```bash
 lsof -ti:3000,3001,8080,9229 | xargs kill -9
 ```
@@ -234,26 +200,10 @@ lsof -ti:3000,3001,8080,9229 | xargs kill -9
 - `*/tsconfig.json` - TypeScript configurations (service-specific)
 - `messages/protos/*.proto` - Protocol Buffer definitions
 
-### Important Commands Reference
-```bash
-# Development
-docker-compose up                          # Start all services
-npm run dev                               # Start individual service in dev mode
+## I18n
 
-# Building  
-npm run build                             # Build service
-npm run typecheck                         # Type validation
-npm run typesafe-i18n                     # Generate i18n (play service)
-
-# Testing
-npm test                                  # Unit tests
-npm run test-prod-like                    # E2E tests (tests/)
-
-# Code Quality
-npm run lint                              # ESLint checking
-npm run pretty                            # Prettier formatting  
-npm run svelte-check                      # Svelte validation (play service)
-```
+Any message added to the code should be translated in the supported languages.
+WorkAdventure uses typesafe-i18n and the translation files are in `play/src/i18n/[language]/[module].ts`
 
 ## Trust These Instructions
 These instructions are comprehensive and validated. Only search for additional information if:
