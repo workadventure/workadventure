@@ -6,7 +6,6 @@ import {
     SpaceUser,
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
@@ -64,8 +63,20 @@ export interface SpaceInterface {
     videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
     screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 
-    allVideoStreamStore: MapStore<string, ExtendedStreamable>;
-    allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
+    // Video stream methods
+    getVideoStream(userId: string): ExtendedStreamable | undefined;
+    registerVideoStream(userId: string, stream: ExtendedStreamable): void;
+    unregisterVideoStream(userId: string): void;
+    getAllVideoStreams(): Map<string, ExtendedStreamable>;
+    forEachVideoStream(callback: (stream: ExtendedStreamable, userId: string) => void): void;
+    getVideoStreamCount(): number;
+
+    // Screen share stream methods
+    getScreenShareStream(userId: string): ExtendedStreamable | undefined;
+    registerScreenShareStream(userId: string, stream: ExtendedStreamable): void;
+    unregisterScreenShareStream(userId: string): void;
+    getAllScreenShareStreams(): Map<string, ExtendedStreamable>;
+    forEachScreenShareStream(callback: (stream: ExtendedStreamable, userId: string) => void): void;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
     getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;

@@ -40,10 +40,59 @@ export class Space implements SpaceInterface {
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager | undefined;
-    public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    private allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    private allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<
+        string,
+        ExtendedStreamable
+    >();
     public videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
     public screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+
+    // Video stream methods
+    public getVideoStream(userId: string): ExtendedStreamable | undefined {
+        return this.allVideoStreamStore.get(userId);
+    }
+
+    public registerVideoStream(userId: string, stream: ExtendedStreamable): void {
+        this.allVideoStreamStore.set(userId, stream);
+    }
+
+    public unregisterVideoStream(userId: string): void {
+        this.allVideoStreamStore.delete(userId);
+    }
+
+    public getAllVideoStreams(): MapStore<string, ExtendedStreamable> {
+        return this.allVideoStreamStore;
+    }
+
+    public forEachVideoStream(callback: (stream: ExtendedStreamable, userId: string) => void): void {
+        this.allVideoStreamStore.forEach(callback);
+    }
+
+    public getVideoStreamCount(): number {
+        return this.allVideoStreamStore.size;
+    }
+
+    // Screen share stream methods
+    public getScreenShareStream(userId: string): ExtendedStreamable | undefined {
+        return this.allScreenShareStreamStore.get(userId);
+    }
+
+    public registerScreenShareStream(userId: string, stream: ExtendedStreamable): void {
+        this.allScreenShareStreamStore.set(userId, stream);
+    }
+
+    public unregisterScreenShareStream(userId: string): void {
+        this.allScreenShareStreamStore.delete(userId);
+    }
+
+    public getAllScreenShareStreams(): MapStore<string, ExtendedStreamable> {
+        return this.allScreenShareStreamStore;
+    }
+
+    public forEachScreenShareStream(callback: (stream: ExtendedStreamable, userId: string) => void): void {
+        this.allScreenShareStreamStore.forEach(callback);
+    }
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
@@ -315,13 +364,13 @@ export class Space implements SpaceInterface {
             this._peerManager.destroy();
         }
 
-        this.allVideoStreamStore.forEach((peer) => {
+        this.forEachVideoStream((peer) => {
             if (peer instanceof VideoPeer) {
                 peer.destroy();
             }
         });
 
-        this.allScreenShareStreamStore.forEach((peer) => {
+        this.forEachScreenShareStream((peer) => {
             if (peer instanceof ScreenSharingPeer) {
                 peer.destroy();
             }
@@ -390,8 +439,8 @@ export class Space implements SpaceInterface {
                 this._leftUserSubscriber.next(user);
             }
 
-            this.allVideoStreamStore.delete(spaceUserId);
-            this.allScreenShareStreamStore.delete(spaceUserId);
+            this.unregisterVideoStream(spaceUserId);
+            this.unregisterScreenShareStream(spaceUserId);
         }
     }
 

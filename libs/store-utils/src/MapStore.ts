@@ -36,6 +36,8 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
     private readonly store = writable(this);
     private readonly storesByKey = new Map<K, Writable<V | undefined>>();
 
+    // TODO: Should we extend the MapStore class to have RxJS observables on new and deleted items?
+
     subscribe(run: Subscriber<Map<K, V>>, invalidate?: (value?: Map<K, V>) => void): Unsubscriber {
         return this.store.subscribe(run, invalidate);
     }
