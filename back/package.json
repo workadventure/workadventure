@@ -12,7 +12,7 @@
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
     "lint": "DEBUG= eslint src/ --ext .ts",
-    "fix": "DEBUG= eslint --fix src/ --ext .ts",
+    "lint-fix": "DEBUG= eslint --fix src/ --ext .ts",
     "precommit": "lint-staged",
     "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
