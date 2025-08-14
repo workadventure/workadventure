@@ -76,7 +76,7 @@ npm run ts-proto  # Generates TypeScript from .proto files
 cd back
 npm install --workspace=workadventureback  # Install from root
 npm run typecheck
-npm run fix # ESLint with auto fix
+npm run lint-fix # ESLint with auto fix
 npm run test -- --watch=false # Run vitest tests
 
 # Play service  
@@ -107,7 +107,7 @@ npx playwright install --with-deps
 
 # Development environment tests
 docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
-npm run fix # ESLint tests for E2E tests 
+npm run lint-fix # ESLint tests for E2E tests 
 
 # Single test with UI
 npm run test-headed-chrome -- tests/[test-file.ts]
@@ -123,9 +123,9 @@ npm install
 
 # Manual linting for each service
 cd play && npm run lint-fix && npm run svelte-check && npm run pretty
-cd back && npm run fix && npm run pretty
-cd map-storage && npm run lint && npm run pretty
-cd tests && npm run lint
+cd back && npm run lint-fix && npm run pretty
+cd map-storage && npm run lint-fix && npm run pretty
+cd tests && npm run lint-fix
 ```
 
 ## Validation Pipeline
