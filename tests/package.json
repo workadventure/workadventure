@@ -19,7 +19,7 @@
   },
   "scripts": {
     "lint": "eslint tests/ . --ext .ts",
-    "fix": "eslint --fix tests/ . --ext .ts",
+    "lint-fix": "eslint --fix tests/ . --ext .ts",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",

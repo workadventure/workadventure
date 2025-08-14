@@ -64,6 +64,22 @@ $ docker-compose exec play npm run pretty
 $ docker-compose exec back npm run pretty
 ```
 
+You can also run ESLint directly for code linting:
+
+```console
+# To check for linting errors only
+$ docker-compose exec play npm run lint
+$ docker-compose exec back npm run lint
+
+# To check and automatically fix linting errors
+$ docker-compose exec play npm run lint-fix
+$ docker-compose exec back npm run lint-fix
+```
+
+All services and libraries in the project use standardized npm scripts:
+- `npm run lint` - runs ESLint to check for errors without fixing them
+- `npm run lint-fix` - runs ESLint with `--fix` to automatically fix errors where possible
+
 ### Providing tests
 
 WorkAdventure is based on a video game engine (Phaser), and video games are not the easiest programs to unit test.
