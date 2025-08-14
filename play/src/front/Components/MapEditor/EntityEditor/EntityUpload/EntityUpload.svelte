@@ -37,11 +37,12 @@
         }
     }
 
-    const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
-        (uploadEntityMessage) => {
-            completeAndResetUpload(uploadEntityMessage);
+    const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe((storeValue) => {
+        // Only process if the EntityEditorTool has completed its work
+        if (storeValue.processingComplete) {
+            completeAndResetUpload(storeValue.message);
         }
-    );
+    });
 
     function isASupportedFormat(format: string): boolean {
         return format.trim().length > 0 && ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(format);
@@ -65,15 +66,18 @@
                 customEditedEntity.tags && customEditedEntity.tags.length > 0 ? customEditedEntity.tags[0] : BASIC_TYPE;
 
             mapEditorEntityUploadEventStore.set({
-                id: generatedId,
-                file: fileAsUint8Array,
-                direction: CustomEntityDirection.Down,
-                name: customEditedEntity.name,
-                tags: customEditedEntity.tags,
-                imagePath: `${generatedId}-${fileToUpload.name}`,
-                collisionGrid: customEditedEntity.collisionGrid,
-                depthOffset: customEditedEntity.depthOffset,
-                color: "",
+                message: {
+                    id: generatedId,
+                    file: fileAsUint8Array,
+                    direction: CustomEntityDirection.Down,
+                    name: customEditedEntity.name,
+                    tags: customEditedEntity.tags,
+                    imagePath: `${generatedId}-${fileToUpload.name}`,
+                    collisionGrid: customEditedEntity.collisionGrid,
+                    depthOffset: customEditedEntity.depthOffset,
+                    color: "",
+                },
+                processingComplete: false,
             });
         }
     }
@@ -81,7 +85,7 @@
     function initFileUpload() {
         files = undefined;
         customEntityToUpload = undefined;
-        mapEditorEntityUploadEventStore.set(undefined);
+        mapEditorEntityUploadEventStore.set({ message: undefined, processingComplete: false });
         errorOnFile = undefined;
     }
 
@@ -133,7 +137,7 @@
                 id="upload"
                 class="hidden"
                 type="file"
-                accept={ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT}
+                accept={ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT.join(", ")}
                 bind:files
                 data-testid="uploadCustomAsset"
             />
