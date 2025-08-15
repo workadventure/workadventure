@@ -62,6 +62,8 @@ export const mapEditorEntityUploadEventStore = writable<UploadEntityMessage | un
 export const mapEditorModifyCustomEntityEventStore = writable<ModifyCustomEntityMessage | undefined>(undefined);
 export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntityMessage | undefined>(undefined);
 
+export const mapEditorEntityFileDroppedStore = writable<boolean>(false);
+
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
     RoomSettings = "Room Settings",

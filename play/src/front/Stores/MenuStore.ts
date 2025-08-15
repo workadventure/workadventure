@@ -63,6 +63,7 @@ export enum SubMenusInterface {
     contact = "contact",
     report = "report",
     chat = "chat",
+    shortcuts = "shortcuts",
 }
 
 export type MenuKeys = keyof Translation["menu"]["sub"];
@@ -144,6 +145,11 @@ function createSubMenusStore() {
                         ENABLE_REPORT_ISSUES_MENU &&
                         REPORT_ISSUES_URL != undefined)
             ),
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.shortcuts,
+            visible: alwaysVisible,
         },
     ]);
     const { subscribe, update } = store;

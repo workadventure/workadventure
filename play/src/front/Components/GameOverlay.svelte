@@ -14,6 +14,7 @@
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
     import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
+    import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -31,6 +32,7 @@
     import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
+    import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
     import WokaScene from "./Woka/WokaScene.svelte";
 
     export let game: Game;
@@ -49,6 +51,11 @@
 {#if $loaderVisibleStore}
     <div class="bg-contrast">
         <LoaderScene />
+    </div>
+{/if}
+{#if $draggingFile}
+    <div>
+        <DroppingFileScene />
     </div>
 {/if}
 {#if $errorScreenStore !== undefined}

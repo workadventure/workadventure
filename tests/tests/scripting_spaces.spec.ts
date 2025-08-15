@@ -321,7 +321,7 @@ test.describe('Scripting space-related functions', () => {
 
     });
 
-    test('should reconnect to a space when backend is restarted', async ({ browser, context, browserName }, { project }) => {
+    test('should reconnect to a space when backend is restarted @local', async ({ browser, context, browserName }, { project }) => {
         if (browserName === "webkit") {
             // eslint-disable-next-line playwright/no-skipped-test
             test.skip();

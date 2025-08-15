@@ -76,7 +76,7 @@ export class MapEditorModeManager {
      */
     private currentCommandIndex: number;
 
-    private mapEditorModeUnsubscriber!: Unsubscriber;
+    private mapEditorModeUnsubscriber: Unsubscriber | undefined;
 
     private isReverting: Promise<void> = Promise.resolve();
 
@@ -461,7 +461,7 @@ export class MapEditorModeManager {
     }
 
     private unsubscribeFromStores(): void {
-        this.mapEditorModeUnsubscriber();
+        this.mapEditorModeUnsubscriber?.();
     }
 
     public get currentlyActiveTool(): MapEditorTool | undefined {
