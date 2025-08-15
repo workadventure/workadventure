@@ -1,6 +1,7 @@
 import { Room, EventType, EventTimeline } from "matrix-js-sdk";
 import { derived, get, Readable, writable, Writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
+import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
@@ -18,8 +19,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly rooms: Readable<MatrixChatRoom[]>;
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
+    readonly availableRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
+    readonly hasChildRoomsError: Writable<boolean> = writable(false);
     readonly allSuggestedRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
     readonly suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    readonly joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
     private joinRoomDeferred = new Deferred<void>();
@@ -79,15 +83,20 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             }
         );
 
+        this.joinableRooms = derived([this.availableRooms], ([$allChildRooms]) => $allChildRooms);
+
         if (get(this.myMembership) === KnownMembership.Join) this.joinRoomDeferred.resolve();
     }
 
     init() {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
+                console.log("🚀🚀🚀 Initializing room folder");
                 this.getChildren();
-                this.refreshSuggestedRooms().catch((error) => {
-                    console.error("Failed to refresh suggested rooms:", error);
+                this.hasChildRoomsError.set(false);
+                this.refreshRooms().catch((error: Error) => {
+                    console.error("Failed to refresh rooms:", error);
+                    this.hasChildRoomsError.set(true);
                     Sentry.captureException(error);
                 });
             }
@@ -237,34 +246,72 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         });
     }
 
-    async refreshSuggestedRooms() {
-        const { rooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, true);
+    async refreshRooms() {
+        try {
+            const { rooms: allRooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
 
-        const suggestedMatrixChatRooms: { name: string; id: string; avatarUrl: string }[] = [];
+            const { rooms: suggestedRoomsData } = await this.room.client.getRoomHierarchy(this.id, 100, 2, true);
 
-        rooms.forEach((room) => {
-            const roomId = room.room_id;
+            const hierarchy = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
 
-            if (this.id === roomId) return;
+            console.log("⛺️Hierarchy: ", hierarchy);
 
-            const chatRoom = this.room.client.getRoom(roomId);
+            const localRooms = this.room.client.getRooms();
 
-            const avatarUrl = chatRoom?.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
+            const suggestedRooms: { name: string; id: string; avatarUrl: string }[] = [];
+            const availableRooms: { name: string; id: string; avatarUrl: string }[] = [];
 
-            if (!chatRoom && !this.roomList.has(roomId) && !this.folderList.has(roomId)) {
-                suggestedMatrixChatRooms.push({ name: room.name ?? "", id: roomId, avatarUrl: avatarUrl ?? "" });
-            }
-        });
+            suggestedRoomsData.forEach((room) => {
+                const roomId = room.room_id;
+                if (this.id === roomId) return;
 
-        this.allSuggestedRooms.set(suggestedMatrixChatRooms);
+                const chatRoom = localRooms.find((r) => r.roomId === roomId);
+                if (!chatRoom) return;
+
+                const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                suggestedRooms.push({
+                    name: room.name ?? "",
+                    id: roomId,
+                    avatarUrl
+                });
+                console.log("📬📬📬 Suggested room:", room.name, room.room_id, "Avatar URL:", avatarUrl);
+            });
+
+            allRooms.forEach((room) => {
+                console.log("Refreshing room:", room.name, room.room_id, "Is suggested: ", room.children_state);
+                const roomId = room.room_id;
+                if (this.id === roomId) return;
+
+                const chatRoom = localRooms.find((r) => r.roomId === roomId);
+                if (!chatRoom) return;
+
+                const membership = chatRoom.getMyMembership();
+
+                if (membership !== "join" && membership !== "invite" && membership !== "ban") {
+                    const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
+                    availableRooms.push({
+                        name: room.name ?? "",
+                        id: roomId,
+                        avatarUrl
+                    });
+                }
+            });
+
+            this.allSuggestedRooms.set(suggestedRooms);
+            this.availableRooms.set(availableRooms);
+        } catch (error) {
+            console.error("Failed to refresh rooms:", error);
+            this.hasChildRoomsError.set(true);
+            Sentry.captureException(error);
+        }
     }
 
     protected override onRoomMyMembership(room: Room) {
         if (room.getMyMembership() === KnownMembership.Join) {
             this.joinRoomDeferred.resolve();
             this.getChildren();
-            this.refreshSuggestedRooms().catch((error) => {
-                console.error("Failed to refresh suggested rooms:", error);
+            this.refreshRooms().catch((error: Error) => {
+                console.error("Failed to refresh rooms:", error);
                 Sentry.captureException(error);
             });
         }
@@ -281,6 +328,39 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             ?.getStateEvents(EventType.SpaceChild);
 
         if (!childEvents) return;
+
+        // let joinableRooms: { name: string; id: string; avatarUrl: string }[] = []
+        //
+        // childEvents.forEach((ev) => {
+        //     const stateKey = ev.getStateKey();
+        //     console.log(!stateKey ? "No state key for event" : "State key:", stateKey);
+        //     if (!stateKey) return;
+        //
+        //     const room = client.getRoom(stateKey);
+        //     // const room = history[history.length - 1];x
+        //
+        //     console.log(!room ? "❌ Room not found " : `✅Room found:${room.name}`);
+        //
+        //     if (!room) return;
+        //
+        //     if (room.getMyMembership() === KnownMembership.Join || room.getMyMembership() === KnownMembership.Invite) {
+        //         console.log("🚗🚗 Room joined or invited, adding to room list");
+        //         if (room.isSpaceRoom()) {
+        //             const spaceFolder = new MatrixRoomFolder(room);
+        //             this.folderList.set(room.roomId, spaceFolder);
+        //             spaceFolder.init();
+        //         } else {
+        //             this.roomList.set(room.roomId, new MatrixChatRoom(room));
+        //         }
+        //     } else if (room.getMyMembership() !== KnownMembership.Ban) {
+        //         console.log("🚗🚗🚗 Other room not joined or invited, adding to joinable rooms");
+        //         const avatarUrl = room.getAvatarUrl(client.baseUrl, 24, 24, "scale") ?? "";
+        //         console.log("adding room", room.name, room.roomId, avatarUrl);
+        //         joinableRooms.push({ name: room.name ?? "", id: room.roomId, avatarUrl });
+        //         console.log(" 😍😍😍Available rooms updated:", get(this.availableRooms));
+        //     }
+        //     this.availableRooms.set(joinableRooms)
+        // });
 
         const children = childEvents
             .map((ev) => {

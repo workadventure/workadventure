@@ -18,6 +18,8 @@ import {
     RoomState,
     RoomStateEvent,
     TimelineWindow,
+    StateEvents,
+    EventTimeline,
 } from "matrix-js-sdk";
 import * as Sentry from "@sentry/svelte";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
@@ -717,6 +719,17 @@ export class MatrixChatRoom
                 return hasSufficientPowerLevel && currentRoomMemberPowerLevel > otherUserPowerLevel;
             }
         );
+    }
+
+    public hasPermissionForRoomStateEvent(eventType: keyof StateEvents): Readable<boolean> {
+        return derived([get(this.currentRoomMember).permissionLevel], () => {
+            return (
+                this.matrixRoom
+                    .getLiveTimeline()
+                    .getState(EventTimeline.FORWARDS)
+                    ?.maySendStateEvent(eventType, this.matrixRoom.client.getSafeUserId()) ?? false
+            );
+        });
     }
 
     public async changePermissionLevelFor(member: ChatRoomMember, permissionLevel: ChatPermissionLevel): Promise<void> {
