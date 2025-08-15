@@ -18,7 +18,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { ENABLE_OPENID } from "../../../Enum/EnvironmentVariable";
     import Woka from "../../Woka/WokaFromUserId.svelte";
-    import Companion from "../../Companion/Companion.svelte";
+    //import Companion from "../../Companion/Companion.svelte";
     import ChevronDownIcon from "../../Icons/ChevronDownIcon.svelte";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
@@ -35,8 +35,8 @@
     import { LoginScene, LoginSceneName } from "../../../Phaser/Login/LoginScene";
     import { selectCharacterSceneVisibleStore } from "../../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../../Phaser/Login/SelectCharacterScene";
-    import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
-    import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
+    //import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
+    //import { SelectCompanionScene, SelectCompanionSceneName } from "../../../Phaser/Login/SelectCompanionScene";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import ActionBarButton from "../ActionBarButton.svelte";
@@ -72,10 +72,10 @@
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
-    function openEditCompanionScene() {
+    /*function openEditCompanionScene() {
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
-    }
+    }*/
 
     function openEnableCameraScene() {
         enableCameraSceneVisibilityStore.showEnableCameraScene();
@@ -200,7 +200,7 @@
                 >
                     <Woka userId={-1} placeholderSrc="" customWidth="26px" />
                 </ActionBarButton>
-                <ActionBarButton
+                <!-- <ActionBarButton
                     label={$LL.actionbar.companion()}
                     on:click={() => {
                         openEditCompanionScene();
@@ -213,7 +213,7 @@
                         width="26px"
                         height="26px"
                     />
-                </ActionBarButton>
+                </ActionBarButton> -->
                 <!--                                <button-->
                 <!--                                    class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-left rounded"-->
                 <!--                                >-->

@@ -31,7 +31,7 @@
     import SelectSpeaker from "./SelectSpeaker.svelte";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
-    const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
+    const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#6e1946";
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
     let selectedCamera: string | undefined = undefined;

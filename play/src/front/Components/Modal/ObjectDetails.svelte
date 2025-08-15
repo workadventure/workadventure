@@ -208,7 +208,7 @@
         word-break: break-all;
         pointer-events: auto;
         color: whitesmoke;
-        background-color: #1b2a41d9;
+        background-color: #6e1946d9;
         backdrop-filter: blur(40px);
         top: 15rem;
         left: calc(50% - 334px);
