@@ -367,9 +367,12 @@ export class SocketManager implements ZoneEventListener {
 
     public async handleJoinSpace(
         client: Socket,
+
         spaceName: string,
+
         localSpaceName: string,
-        filterType: FilterType
+        filterType: FilterType,
+        propertiesToSync: string[]
     ): Promise<void> {
         const socketData = client.getUserData();
 
@@ -387,7 +390,8 @@ export class SocketManager implements ZoneEventListener {
                 eventProcessor,
                 filterType,
                 onSpaceEmpty,
-                this._spaceConnection
+                this._spaceConnection,
+                propertiesToSync
             );
 
             this.spaces.set(spaceName, space);
@@ -463,6 +467,18 @@ export class SocketManager implements ZoneEventListener {
 
         // Now, we need to listen to the correct viewport.
         this.handleViewport(client, viewport);
+    }
+
+    onGroupUsersUpdated(group: GroupDescriptor, listener: Socket): void {
+        emitInBatch(listener, {
+            message: {
+                $case: "groupUsersUpdateMessage",
+                groupUsersUpdateMessage: {
+                    groupId: group.groupId,
+                    userIds: group.userIds,
+                },
+            },
+        });
     }
 
     onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void {
@@ -1286,6 +1302,7 @@ export class SocketManager implements ZoneEventListener {
         if (!socketData.userId) {
             throw new Error("User id not found");
         }
+
         space.forwarder.forwardMessageToSpaceBack({
             $case: "publicEvent",
             publicEvent: {

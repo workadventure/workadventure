@@ -31,7 +31,7 @@ export class JitsiTrackStreamWrapper implements Streamable {
     public muteAudio = false;
     public readonly displayMode: "fit" | "cover";
     public readonly displayInPictureInPictureMode = true;
-
+    public readonly usePresentationMode = false;
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
         public readonly target: "video/audio" | "desktop"
@@ -99,27 +99,55 @@ export class JitsiTrackStreamWrapper implements Streamable {
             type: "jitsiTrack",
             jitsiTrackStreamWrapper: this,
         };*/
+        const streamStore = derived(
+            [this._videoTrackStore, this._audioTrackStore],
+            ([$videoTrackStore, $audioTrackStore]) => {
+                const tracks = [];
+                if ($videoTrackStore) {
+                    tracks.push($videoTrackStore.getTrack());
+                }
+                if ($audioTrackStore) {
+                    tracks.push($audioTrackStore.getTrack());
+                }
+
+                if (tracks.length === 0) {
+                    return undefined;
+                }
+
+                return new MediaStream(tracks);
+            }
+        );
+
+        // Use a closure to keep the videoElementUnsubscribers map private to this getter call
+        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         return {
             type: "mediaStore",
-            streamStore: derived(
-                [this._videoTrackStore, this._audioTrackStore],
-                ([$videoTrackStore, $audioTrackStore]) => {
-                    // We are recreating a MediaStream from the 2 separate tracks received.
-                    const tracks = [];
-                    if ($videoTrackStore) {
-                        tracks.push($videoTrackStore.getTrack());
-                    }
-                    if ($audioTrackStore) {
-                        tracks.push($audioTrackStore.getTrack());
-                    }
-
-                    if (tracks.length === 0) {
-                        return undefined;
-                    }
-
-                    return new MediaStream(tracks);
+            streamStore,
+            attach: (container: HTMLVideoElement) => {
+                // If already attached, detach first to avoid leaks
+                if (videoElementUnsubscribers.has(container)) {
+                    const prevUnsub = videoElementUnsubscribers.get(container);
+                    if (prevUnsub) prevUnsub();
+                    videoElementUnsubscribers.delete(container);
                 }
-            ),
+                const unsubscribe = streamStore.subscribe((stream) => {
+                    if (stream) {
+                        container.srcObject = stream;
+                    } else {
+                        container.srcObject = null;
+                    }
+                });
+                videoElementUnsubscribers.set(container, unsubscribe);
+            },
+            detach: (container: HTMLVideoElement) => {
+                // Call the unsubscribe function if it exists and remove it from the Map
+                const unsubscribe = videoElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    videoElementUnsubscribers.delete(container);
+                }
+                container.srcObject = null;
+            },
         };
     }
 
@@ -161,5 +189,9 @@ export class JitsiTrackStreamWrapper implements Streamable {
 
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
+    }
+
+    once(event: string, callback: (...args: unknown[]) => void) {
+        callback();
     }
 }

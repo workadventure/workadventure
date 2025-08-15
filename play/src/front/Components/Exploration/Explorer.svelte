@@ -246,6 +246,13 @@
                     addFilter("openFile");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="livekitRoomProperty"
+                isActive={$selectFilters.includes("livekitRoomProperty")}
+                on:click={() => {
+                    addFilter("livekitRoomProperty");
+                }}
+            />
 
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
                 <AddPropertyButtonWrapper

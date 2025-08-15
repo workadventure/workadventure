@@ -20,6 +20,7 @@ export interface FrontConfigurationInterface {
     PUBLIC_MAP_STORAGE_PREFIX: string | undefined;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
+    MAX_DISPLAYED_VIDEOS: number;
     NODE_ENV: string;
     CONTACT_URL: string | undefined;
     POSTHOG_API_KEY: string | undefined;

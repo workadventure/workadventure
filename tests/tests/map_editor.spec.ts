@@ -134,7 +134,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
         await Map.teleportToPosition(page, 4 * 32, 2 * 32);
 
-        await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
+        await expect(page.locator('#cameras-container').getByText('You')).toBeVisible();
 
         // Second browser
         const page2 = await getPage(browser, "Admin2", Map.url("empty"));
@@ -498,11 +498,11 @@ test.describe("Map editor @oidc", () => {
 
         // Select uploaded entity and move it to the map
         await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName() + "OddSize");
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32);
 
         // Add open link interaction on uploaded asset
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32);
         await EntityEditor.addProperty(page, "openWebsite");
 
         // fill link
@@ -510,11 +510,17 @@ test.describe("Map editor @oidc", () => {
 
         // close object selector
         await Menu.closeMapEditor(page);
+        
+        await page.getByTestId("camera-container").waitFor({ state: 'detached' });
+        
 
         // click on the object and open popup on both pages
-        await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
-        await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
+        await EntityEditor.moveAndClick(page, 6 * 32, 10 * 32);
 
+        await page2.getByTestId("camera-container").waitFor({ state: 'detached' });
+        await EntityEditor.moveAndClick(page2, 6 * 32, 10 * 32);
+
+        
         // check if the popup with application is opened on both pages
         await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
         await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();

@@ -28,7 +28,8 @@
 
     export let videoEnabled = false;
     export let mediaStream: MediaStream | undefined = undefined;
-
+    export let attach: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    export let detach: ((container: HTMLVideoElement) => void) | undefined = undefined;
     export let videoUrl: string | undefined = undefined;
     export let videoConfig: VideoConfig | undefined = undefined;
 
@@ -73,7 +74,6 @@
             console.warn("User has not interacted with the browser yet. The video will be muted.");
             missingUserActivation = true;
         }
-        videoElement.srcObject = mediaStream;
     }
     $: if (videoUrl && videoElement) {
         videoElement.src = videoUrl;
@@ -87,6 +87,7 @@
     let videoStreamHeight: number;
     let overlayWidth: number;
     let overlayHeight: number;
+    let videoRatio: number;
 
     $: {
         if (
@@ -98,7 +99,8 @@
             videoStreamHeight
         ) {
             const containerRatio = containerWidth / containerHeight;
-            const videoRatio = videoStreamWidth / videoStreamHeight;
+            // In case there is no video, we put an arbitrary ratio of 16/9 to avoid division by 0.
+            videoRatio = videoStreamWidth && videoStreamHeight ? videoStreamWidth / videoStreamHeight : 16 / 9;
 
             //debug("videoRatio:" + videoRatio + "; containerRatio: " + containerRatio + "; containerWidth: " + containerWidth + "; containerHeight: " + containerHeight +" ; videoStreamWidth: " + videoStreamWidth + "; videoStreamHeight: " + videoStreamHeight);
 
@@ -174,6 +176,7 @@
             }
             callbackId = videoElement.requestVideoFrameCallback(() => {
                 // A video frame was displayed. No need to display a warning.
+                // console.log("video frame displayed", videoID);
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;
@@ -267,6 +270,10 @@
             displayNoVideoWarning = false;
         });
 
+        if (attach) {
+            attach(videoElement);
+        }
+
         return () => {
             unsubscriber();
         };
@@ -276,6 +283,10 @@
         if (noVideoTimeout) {
             clearTimeout(noVideoTimeout);
             noVideoTimeout = undefined;
+        }
+
+        if (detach) {
+            detach(videoElement);
         }
         sinkIdPromise.cancel();
     });
@@ -288,9 +299,7 @@
 </script>
 
 <div
-    class="h-full w-full relative {(!cover || videoStreamWidth / videoStreamHeight < 1) && withBackground
-        ? 'bg-contrast/80 rounded-lg'
-        : ''}"
+    class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
 >
@@ -354,13 +363,13 @@
     <!-- This div represents an overlay on top of the video -->
     <div
         class={"absolute border-solid " + (videoEnabled || !withBackground ? "" : "bg-contrast/80 backdrop-blur")}
-        class:w-full={!videoEnabled}
-        class:h-full={!videoEnabled}
-        class:rounded-lg={!videoEnabled}
+        class:w-full={!videoEnabled || displayNoVideoWarning}
+        class:h-full={!videoEnabled || displayNoVideoWarning}
+        class:rounded-lg={!videoEnabled || displayNoVideoWarning}
         class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
         class:border-secondary={!videoEnabled && isTalking}
         class:hidden={videoEnabled && !overlayHeight}
-        style={videoEnabled
+        style={videoEnabled && !displayNoVideoWarning
             ? "width: " +
               overlayWidth +
               "px; height: " +
