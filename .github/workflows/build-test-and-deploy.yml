@@ -335,7 +335,7 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
@@ -345,13 +345,13 @@ jobs:
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
