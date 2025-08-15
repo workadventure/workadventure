@@ -34,7 +34,7 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
-    import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { IconChevronDown, IconChevronRight, IconInfoCircle } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
@@ -633,6 +633,10 @@
             bind:value={areaName}
             onChange={onUpdateName}
         />
+        <p class="help-text">
+            <IconInfoCircle font-size="18" />
+            {$LL.mapEditor.areaEditor.nameHelpText()}
+        </p>
 
         <div class="area-name-container">
             {#if !showDescriptionField}

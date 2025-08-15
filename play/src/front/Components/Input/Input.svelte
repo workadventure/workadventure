@@ -108,7 +108,7 @@
             <input
                 id={uniqueId}
                 type="url"
-                class="grow input-text input-icon  "
+                class="grow input-text input-icon"
                 class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
@@ -132,7 +132,7 @@
             <input
                 id={uniqueId}
                 type="number"
-                class="grow input-text input-icon  "
+                class="grow input-text input-icon"
                 class:input-icon-left={appendSide === "left"}
                 class:input-text-light={variant === "light"}
                 class:input-text-xs={size === "xs"}
