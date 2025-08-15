@@ -94,9 +94,6 @@ class EntityEditor {
   async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
     // Wait for a bit for the image to be uploaded.
-    // TODO: find a way to be sure upload succeeded
-    // eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(1000);
     if(await page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
       // Check loader end
       await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });
