@@ -48,10 +48,10 @@ test.describe("chat moderation @matrix", () => {
 
     await page.getByTestId(publicChatRoomName).getByTestId("manageParticipantOption").click();
 
-    await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant")).toBeAttached();
+    await expect(page.getByTestId("@bob.doe:matrix.workadventure.localhost-participant")).toBeAttached();
 
-    await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-permissionLevel")).toHaveText("Admin");
-    await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-membership")).toHaveText("Joined");
+    await expect(page.getByTestId("@bob.doe:matrix.workadventure.localhost-participant").getByTestId("@bob.doe:matrix.workadventure.localhost-permissionLevel")).toHaveText("Admin");
+    await expect(page.getByTestId("@bob.doe:matrix.workadventure.localhost-participant").getByTestId("@bob.doe:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 
     await page.close();
     await page.context().close();
@@ -72,7 +72,7 @@ test.describe("chat moderation @matrix", () => {
     await page.getByTestId("createRoomName").fill(publicChatRoomName);
     await page.getByTestId("createRoomButton").click();
 
-    await matrixApi.overrideRateLimitForUser('@john.doe:matrix.workadventure.localhost');
+    await matrixApi.overrideRateLimitForUser('@bob.doe:matrix.workadventure.localhost');
 
     await expect(page.getByText(publicChatRoomName)).toBeAttached();
 
@@ -83,7 +83,7 @@ test.describe("chat moderation @matrix", () => {
 
     await page.getByTestId(publicChatRoomName).getByTestId("manageParticipantOption").click();
 
-    await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant")).toBeAttached();
+    await expect(page.getByTestId("@bob.doe:matrix.workadventure.localhost-participant")).toBeAttached();
 
     await expect(page.getByTestId("inviteParticipantsModalContent").getByPlaceholder("Users")).toBeAttached();
 
