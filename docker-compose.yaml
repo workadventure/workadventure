@@ -440,6 +440,28 @@ services:
                 "ValueType": "json"
               },
             ]
+          },
+          {
+            "SubjectId":"3",
+            "Username":"UserMatrix",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+            ]
           }
         ]
       IDENTITY_RESOURCES_INLINE: |
