@@ -68,10 +68,18 @@ cp .env.template .env
 docker-compose up
 ```
 
-The environment will start.
+The environment will start with the OIDC mock server enabled by default.
 
 You should now be able to browse to http://play.workadventure.localhost/ and see the application.
 You can view the Traefik dashboard at http://traefik.workadventure.localhost
+
+(Test user is "User1" and password is "pwd")
+
+If you want to disable the OIDC mock server (for anonymous access), you can run:
+
+```console
+$ docker-compose -f docker-compose.yaml -f docker-compose-no-oidc.yaml up
+```
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
@@ -79,14 +87,6 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 ```
 127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost traefik.workadventure.localhost matrix.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
 ```
-
-You can also start WorkAdventure + a test OpenID connect server using:
-
-```console
-$ docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up
-```
-
-(Test user is "User1" and his password is "pwd")
 
 
 ### Troubleshooting

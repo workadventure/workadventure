@@ -15,7 +15,7 @@ export function dockerCompose(command: string) {
   }
 
   return execSync(
-    "docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml " +
+    "docker compose -f docker-compose.yaml " +
       param +
       " " +
       command,

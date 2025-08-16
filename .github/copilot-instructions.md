@@ -54,8 +54,11 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 # Copy environment template (REQUIRED)
 cp .env.template .env
 
-# Start development environment with OIDC test server (for authentication testing)
-docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up
+# Start development environment (OIDC test server enabled by default)
+docker-compose up
+
+# To disable OIDC (for anonymous access):
+# docker-compose -f docker-compose.yaml -f docker-compose-no-oidc.yaml up
 
 # Access: http://play.workadventure.localhost/_/global/maps.workadventure.localhost/starter/map.json
 ```
@@ -105,8 +108,8 @@ cd tests
 npm install
 npx playwright install --with-deps
 
-# Development environment tests
-docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
+# Development environment tests (OIDC enabled by default)
+docker-compose up -d
 npm run fix # ESLint tests for E2E tests 
 
 # Single test with UI
