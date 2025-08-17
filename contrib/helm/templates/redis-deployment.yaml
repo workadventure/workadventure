@@ -1,0 +1,76 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-redis
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: redis
+  template:
+    metadata:
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          {{- if .Values.redis.auth.enabled }}
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-redis-secret
+                  key: redis-password
+          {{- end }}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          {{- if .Values.redis.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
+      {{- if .Values.redis.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "workadventure.fullname" . }}-redis-data
+      {{- end }}
+      {{- with .Values.redis.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.redis.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

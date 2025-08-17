@@ -684,7 +684,34 @@ ingress:
   rewritePathSuffix: "(/|$)(.*)"
 
 redis:
-  architecture: standalone
-
+  enabled: true
+  image:
+    repository: redis
+    tag: "7.2-alpine"
+    pullPolicy: IfNotPresent
+  
   auth:
     enabled: false
+    password: ""
+  
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 8Gi
+    
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  service:
+    type: ClusterIP
+    port: 6379
