@@ -12,9 +12,44 @@ This Helm chart deploys Workadventure on Kubernetes.
 
 ### Redis Migration Guide
 
-If you are upgrading from a previous version that used the Bitnami Redis chart, please follow these steps to migrate your Redis data:
+If you are upgrading from a previous version that used the Bitnami Redis chart, you have two migration options:
 
-#### 1. Backup your existing Redis data
+#### Option 1: Seamless Migration (Recommended) 
+
+For **zero-downtime migration without data backup/restore**, enable Bitnami compatibility mode:
+
+**1. Update your values.yaml with Bitnami compatibility:**
+```yaml
+redis:
+  enabled: true
+  auth:
+    enabled: false  # Match your original Bitnami setting
+  persistence:
+    enabled: true
+    bitnamiCompatible: true  # 🔑 This enables seamless migration
+    storageClass: "fast-ssd"  # Use same storage class as before
+    size: 8Gi               # Use same size as before
+```
+
+**2. Upgrade your Helm release:**
+```bash
+helm upgrade <release-name> workadventure/workadventure -f values.yaml
+```
+
+**How it works:** 
+- Uses the same PVC name as Bitnami (`data-<release-name>-redis-0`)
+- Mounts data at the same path (`/data`) 
+- Runs as the same user (1001) to preserve file permissions
+- **No data migration needed** - Redis will start with existing data intact
+
+**3. (Optional) Disable compatibility mode after migration:**
+Once migration is complete and tested, you can optionally switch to the new naming convention in a future upgrade by setting `bitnamiCompatible: false` and following the manual migration steps below.
+
+#### Option 2: Manual Migration
+
+If you prefer explicit data migration or need to change storage settings, follow these steps:
+
+**1. Backup your existing Redis data**
 
 Before upgrading, backup your Redis data if you have persistence enabled:
 
@@ -27,7 +62,7 @@ kubectl exec -it <redis-pod-name> -- redis-cli SAVE
 kubectl cp <redis-pod-name>:/data/dump.rdb ./redis-backup.rdb
 ```
 
-#### 2. Update your values.yaml
+**2. Update your values.yaml**
 
 The Redis configuration structure has changed. Update your `values.yaml`:
 
@@ -52,28 +87,21 @@ redis:
     enabled: false
   persistence:
     enabled: true
+    bitnamiCompatible: false  # Use new naming convention
     storageClass: "fast-ssd"
     size: 8Gi
 ```
 
-#### 3. Handle Persistent Volumes
+**3. Handle Persistent Volumes**
 
 If you had persistence enabled with the Bitnami chart, you'll need to migrate the data:
 
-**Option A: Manual Migration (Recommended)**
 1. Scale down the old Redis deployment
 2. Create a temporary pod to access the old PVC
 3. Copy data to the new Redis PVC
 4. Update your Helm release
 
-**Option B: PVC Renaming**
-If your old PVC was named `data-<release-name>-redis-master-0`, you can rename it to match the new naming:
-```bash
-# Patch the old PVC to match new naming convention
-kubectl patch pvc data-<release-name>-redis-master-0 -p '{"metadata":{"name":"<release-name>-workadventure-redis-data"}}'
-```
-
-#### 4. Upgrade the Helm chart
+**4. Upgrade the Helm chart**
 
 After updating your `values.yaml` and handling the PVC migration:
 
@@ -81,7 +109,7 @@ After updating your `values.yaml` and handling the PVC migration:
 helm upgrade <release-name> workadventure/workadventure -f values.yaml
 ```
 
-#### 5. Restore data (if needed)
+**5. Restore data (if needed)**
 
 If you need to restore from backup:
 
@@ -115,6 +143,9 @@ redis:
     storageClass: ""              # Storage class for PVC
     accessMode: ReadWriteOnce     # Access mode for PVC
     size: 8Gi                     # Size of persistent volume
+    # Set to true for seamless migration from Bitnami Redis chart
+    # Uses Bitnami-compatible PVC naming and user permissions
+    bitnamiCompatible: false      # Bitnami compatibility mode
     
   resources: {}                   # Resource limits and requests
   nodeSelector: {}               # Node selector

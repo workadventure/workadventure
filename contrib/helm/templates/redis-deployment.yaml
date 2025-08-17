@@ -18,10 +18,20 @@ spec:
         {{- include "workadventure.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: redis
     spec:
+      {{- if .Values.redis.persistence.bitnamiCompatible }}
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+      {{- end }}
       containers:
         - name: redis
           image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          {{- if .Values.redis.persistence.bitnamiCompatible }}
+          securityContext:
+            runAsUser: 1001
+            runAsNonRoot: true
+          {{- end }}
           {{- if .Values.redis.auth.enabled }}
           env:
             - name: REDIS_PASSWORD
@@ -59,7 +69,11 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
+            {{- if .Values.redis.persistence.bitnamiCompatible }}
+            claimName: data-{{ .Release.Name }}-redis-0
+            {{- else }}
             claimName: {{ include "workadventure.fullname" . }}-redis-data
+            {{- end }}
       {{- end }}
       {{- with .Values.redis.nodeSelector }}
       nodeSelector:
