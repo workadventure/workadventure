@@ -229,6 +229,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuleren",
             },
         },
+        nameHelpText: "Deze tekst wordt aan de gebruiker getoond wanneer ze het gebied betreden.",
     },
     areaEditorInstructions: {
         title: "Hoe werkt het?",

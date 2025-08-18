@@ -7,6 +7,7 @@
     import EntityItem from "../MapEditor/EntityEditor/EntityItem/EntityItem.svelte";
     import Input from "../Input/Input.svelte";
     import EntityToolImg from "../images/icon-tool-entity.svg";
+    import { IconSearch } from "@wa-icons";
 
     export let entitiesPrefabsVariants: Readable<EntityVariant[]>;
 
@@ -42,7 +43,11 @@
         <span class="font-semibold">{$LL.mapEditor.entityEditor.header.choose()}</span>
     </div>
 
-    <Input rounded bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()} />
+    <Input bind:value={searchTerm} placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}>
+        <span slot="inputAppend">
+            <IconSearch />
+        </span>
+    </Input>
 
     <div class="grid grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] gap-2 justify-center">
         {#each getFilteredEntities($entitiesPrefabsVariants, searchTerm) as entityVariant (entityVariant.id)}

@@ -181,7 +181,7 @@
             bind:value={optionAdvancedActivated}
         />
 
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option">
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
@@ -200,23 +200,6 @@
                 onChange={onValueChange}
             />
 
-            <!-- Replace with this to add the forceNewTab option
-            <InputSwitch
-                id="newTab"
-                label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
-                bind:value={property.newTab}
-                onChange={onValueChange}
-                disabled={property.forceNewTab}
-            />
-
-            {#if property.forceNewTab == true}
-                <div class="mb-3 ">
-                    <span class="err text-warning-900 text-xs italic">
-                        <IconAlertTriangle font-size="12" />
-                        {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
-                    </span>
-                </div>
-            {/if} -->
             {#if !property.newTab}
                 <div class="mt-3 mb-3">
                     <RangeSlider
@@ -239,14 +222,12 @@
                 />
 
                 {#if policy != undefined}
-                    <div class="value-input flex flex-col">
-                        <InputTags
-                            label={$LL.mapEditor.properties.linkProperties.policy()}
-                            options={policyOption}
-                            bind:value={policy}
-                            handleChange={handlePolicyChange}
-                        />
-                    </div>
+                    <InputTags
+                        label={$LL.mapEditor.properties.linkProperties.policy()}
+                        options={policyOption}
+                        bind:value={policy}
+                        handleChange={handlePolicyChange}
+                    />
                 {/if}
             {/if}
         </div>

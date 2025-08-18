@@ -62,9 +62,5 @@
 </div>
 
 {#if SLOTS.helper}
-    <div class="flex items-center px-3 space-x-1.5 opacity-50">
-        <div class="text-sm text-white grow">
-            <slot name="helper" />
-        </div>
-    </div>
+    <slot name="helper" />
 {/if}

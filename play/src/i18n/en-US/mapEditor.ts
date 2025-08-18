@@ -249,6 +249,7 @@ const mapEditor: BaseTranslation = {
             livekitUrl: "Livekit URL",
             roomNamePlaceholder: "Room name",
         },
+        noProperties: "No properties defined",
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -267,6 +268,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
             },
         },
+        nameHelpText: "This input will be shown to the user if they enter the area.",
     },
     areaEditorInstructions: {
         title: "How it works ?",
