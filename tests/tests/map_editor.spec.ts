@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
@@ -8,9 +10,9 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { evaluateScript } from "./utils/scripting";
-import {map_storage_url, publicTestMapUrl} from "./utils/urls";
+import { map_storage_url, publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
-import {isMobile} from "./utils/isMobile";
+import { isMobile } from "./utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -30,7 +32,7 @@ test.describe("Map editor @oidc", () => {
         }
     );
 
-    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({browserName}) => {
+    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
         //WebKit has issue with camera
         if (browserName === "webkit") {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -92,16 +94,16 @@ test.describe("Map editor @oidc", () => {
         await page
             .locator(".menu-container #content-liveMessage")
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
-        await page.getByRole('button', { name: 'Start live message' }).click({timeout: 10_000});
+        await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
 
         await page
             .locator(".menu-container #active-liveMessage")
         await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
-        await page.getByRole('button', { name: 'Start megaphone' }).click({timeout: 10_000});
+        await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });
 
 
         // click on the megaphone button to start the streaming session
-        await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({timeout: 15_000});
+        await expect(page2.getByText('Admin1', { exact: true })).toBeVisible({ timeout: 15_000 });
 
         await page.getByRole('button', { name: 'Stop megaphone' }).click();
         await expect(page.getByRole('heading', { name: 'Global communication' })).toBeHidden();
@@ -122,11 +124,11 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-    // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
+        // await expect(page.locator('canvas')).toBeVisible();
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
-        await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 6 * 32 * 1.5}, {x: 9 * 32 * 1.5, y: 9 * 32 * 1.5});
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
@@ -140,9 +142,9 @@ test.describe("Map editor @oidc", () => {
         await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
         // The user in the listener zone can see the speaker
-        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({timeout: 20_000});
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
         // The speaker cannot see the listener
-        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
 
         // Now, let's move player 2 to the speaker zone
         await Map.walkToPosition(page2, 4 * 32, 2 * 32);
@@ -150,9 +152,9 @@ test.describe("Map editor @oidc", () => {
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
         // The first speaker (player 1) can now see player2
-        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({timeout: 20_000});
+        await expect(page.locator('#cameras-container').getByText('Admin2')).toBeVisible({ timeout: 20_000 });
         // And the opposite is still true (player 2 can see player 1)
-        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({timeout: 20_000});
+        await expect(page2.locator('#cameras-container').getByText('Admin1')).toBeVisible({ timeout: 20_000 });
 
         await page2.close();
         await page2.context().close();
@@ -160,13 +162,13 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set start area in the map editor", async ({browser, request}) => {
+    test("Successfully set start area in the map editor", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 13 * 32, y: 0}, {x: 15 * 32, y: 2 * 32});
+        await AreaEditor.drawArea(page, { x: 13 * 32, y: 0 }, { x: 15 * 32, y: 2 * 32 });
         await AreaEditor.setAreaName(page, "MyStartZone");
         await AreaEditor.addProperty(page, "startAreaProperty");
         await Menu.closeMapEditor(page);
@@ -174,13 +176,13 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set and working exit area in the map editor", async ({browser, request}) => {
+    test("Successfully set and working exit area in the map editor", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
+        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "exitAreaProperty");
         await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
         await Menu.closeMapEditor(page);
@@ -206,14 +208,14 @@ test.describe("Map editor @oidc", () => {
     });
 
     // Test to set Klaxoon application in the area with the map editor
-    test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request}) => {
+    test("Successfully set Klaxoon's application in the area in the map editor", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
+        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
         await AreaEditor.setAreaName(page, "My app zone");
 
         // add property Klaxoon
@@ -233,14 +235,14 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({browser, request}) => {
+    test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
         //await Menu.openMapEditor(page);
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 8 * 32 * 1.5, y: 8 * 32 * 1.5}, {x: 10 * 32 * 1.5, y: 10 * 32 * 1.5});
+        await AreaEditor.drawArea(page, { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 }, { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 });
 
         await AreaEditor.setAreaName(page, "My app zone");
 
@@ -257,27 +259,27 @@ test.describe("Map editor @oidc", () => {
         const googleDockButtonLocator = page.getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit").first();
         // While the link is not filled, loop to fill it
         await googleDockButtonLocator.fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
-        await googleDockButtonLocator.first().blur({timeout: 10_000});
-        await expect(googleDockButtonLocator).toHaveValue("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true", {timeout: 10_000});
+        await googleDockButtonLocator.first().blur({ timeout: 10_000 });
+        await expect(googleDockButtonLocator).toHaveValue("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true", { timeout: 10_000 });
 
         // fill Google Sheets link
         const googleSheetsButtonLocator = page.getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit").first();
         await googleSheetsButtonLocator.fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
-        await googleSheetsButtonLocator.first().blur({timeout: 10_000});
-        await expect(googleSheetsButtonLocator).toHaveValue("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true", {timeout: 10_000});
+        await googleSheetsButtonLocator.first().blur({ timeout: 10_000 });
+        await expect(googleSheetsButtonLocator).toHaveValue("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true", { timeout: 10_000 });
 
         // fill Google Slides link
         const googleSlidesButtonLocator = page.getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit").first();
         // While the link is not filled, loop to fill it
         await googleSlidesButtonLocator.fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
-        await googleSlidesButtonLocator.first().blur({timeout: 10_000});
-        await expect(googleSlidesButtonLocator).toHaveValue("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true", {timeout: 10_000});
+        await googleSlidesButtonLocator.first().blur({ timeout: 10_000 });
+        await expect(googleSlidesButtonLocator).toHaveValue("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true", { timeout: 10_000 });
 
         // fill Google Slides link
         const googleDriveButtonLocator = page.getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview").first();
         await googleDriveButtonLocator.fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
-        await googleDriveButtonLocator.first().blur({timeout: 10_000});
-        await expect(googleDriveButtonLocator).toHaveValue("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview", {timeout: 10_000});
+        await googleDriveButtonLocator.first().blur({ timeout: 10_000 });
+        await expect(googleDriveButtonLocator).toHaveValue("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview", { timeout: 10_000 });
 
         // close object selector
         await Menu.closeMapEditor(page);
@@ -300,7 +302,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({browser, request}) => {
+    test("Successfully set GoogleWorkspace's application entity in the map editor", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -310,11 +312,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // add property Google Docs
         await EntityEditor.addProperty(page, "openWebsiteGoogleDocs");
@@ -352,7 +354,7 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // check if the popup with application is opened and can be close
         await expect(page.getByRole('button', { name: 'Open Google Drive' })).toBeVisible();
@@ -365,7 +367,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set Klaxoon's application entity in the map editor @local", async ({browser, request}) => {
+    test("Successfully set Klaxoon's application entity in the map editor @local", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -375,11 +377,11 @@ test.describe("Map editor @oidc", () => {
 
         // select entity and push it into the map
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // quit object selector
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // add property Klaxoon
         await EntityEditor.addProperty(page, "openWebsiteKlaxoon");
@@ -391,11 +393,11 @@ test.describe("Map editor @oidc", () => {
         await Menu.closeMapEditor(page);
 
         // click on the object and open popup
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
 
         // check if the popup with application is opened and can be closed
         await expect(page.getByRole('button', { name: 'Open Klaxoon' })).toBeVisible();
-        await page.getByRole('button', { name: 'Close', exact: true}).click();
+        await page.getByRole('button', { name: 'Close', exact: true }).click();
 
         await page.close();
         await page.context().close();
@@ -407,7 +409,7 @@ test.describe("Map editor @oidc", () => {
     // Create test for Google picker presentation
     // Create test for Google picker drive
 
-    test("Successfully upload a custom entity", async ({browser, request}) => {
+    test("Successfully upload a custom entity", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -427,7 +429,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully upload and use custom entity in the map", async ({ browser, request}) => {
+    test("Successfully upload and use custom entity in the map", async ({ browser, request }) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
@@ -475,7 +477,7 @@ test.describe("Map editor @oidc", () => {
     });
 
 
-    test("Successfully upload and use custom entity with odd size in the map", async ({browser, request}) => {
+    test("Successfully upload and use custom entity with odd size in the map", async ({ browser, request }) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
@@ -495,7 +497,7 @@ test.describe("Map editor @oidc", () => {
         await EntityEditor.uploadTestAssetWithOddSize(page);
 
         // Select uploaded entity and move it to the map
-        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName()+"OddSize");
+        await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName() + "OddSize");
         await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
         // Add open link interaction on uploaded asset
@@ -523,7 +525,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully upload and edit asset name", async ({browser, request}) => {
+    test("Successfully upload and edit asset name", async ({ browser, request }) => {
         // Init wam file
         await resetWamMaps(request);
 
@@ -570,7 +572,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully upload and remove custom entity", async ({ browser, request}) => {
+    test("Successfully upload and remove custom entity", async ({ browser, request }) => {
         await resetWamMaps(request);
 
         // First browser + moved woka
@@ -609,7 +611,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully set searchable feature for entity and zone", async ({ browser, request}) => {
+    test("Successfully set searchable feature for entity and zone", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -618,7 +620,7 @@ test.describe("Map editor @oidc", () => {
 
         // Area
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, {x: 1 * 32 * 1.5, y: 5}, {x: 9 * 32 * 1.5, y: 4 * 32 * 1.5});
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.setAreaName(page, "My Focusable Zone");
         await AreaEditor.setAreaDescription(
             page,
@@ -630,9 +632,9 @@ test.describe("Map editor @oidc", () => {
         // Entity
         await MapEditor.openEntityEditor(page);
         await EntityEditor.selectEntity(page, 0, "small table");
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
         await EntityEditor.clearEntitySelection(page);
-        await EntityEditor.moveAndClick(page, 1, ( 8.5 * 32 * 1.5 )-15);
+        await EntityEditor.moveAndClick(page, 1, (8.5 * 32 * 1.5) - 15);
         await EntityEditor.setEntityName(page, "My Jitsi Entity");
         await EntityEditor.setEntityDescription(
             page,
@@ -665,7 +667,7 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
-    test("Successfully test global message text and sound feature", async ({ browser, request}) => {
+    test("Successfully test global message text and sound feature", async ({ browser, request }) => {
         await resetWamMaps(request);
         const page = await getPage(browser, "Admin1", Map.url("empty"));
 
@@ -737,6 +739,66 @@ test.describe("Map editor @oidc", () => {
         await page.context().close();
     });
 
+    test('drop PDF file onto canvas inside #game', async ({ browser, request }) => {
+        await resetWamMaps(request);
+        const page = await getPage(browser, 'Admin1', Map.url('empty'));
+
+        // Prepare file
+        const filePath = path.join(__dirname, './assets/lorem-ipsum.pdf');
+        const buffer = fs.readFileSync(filePath);
+        const base64 = buffer.toString('base64');
+
+        // Drop file via drag-and-drop simulation
+        await page.evaluate(
+            async ({ selector, fileName, mimeType, base64Data }) => {
+                function base64ToUint8Array(base64: string): Uint8Array {
+                    const binary = atob(base64);
+                    const len = binary.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binary.charCodeAt(i);
+                    }
+                    return bytes;
+                }
+
+                const target = document.querySelector(selector);
+                if (!target) throw new Error(`Selector "${selector}" not found`);
+
+                const fileBytes = base64ToUint8Array(base64Data);
+                const blob = new Blob([fileBytes], { type: mimeType });
+                const file = new File([blob], fileName, { type: mimeType });
+
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+
+                const eventInit: DragEventInit = {
+                    bubbles: true,
+                    cancelable: true,
+                    dataTransfer,
+                };
+
+                for (const eventType of ['dragenter', 'dragover', 'drop']) {
+                    const event = new DragEvent(eventType, eventInit);
+                    target.dispatchEvent(event);
+                }
+            },
+            {
+                selector: '#game canvas',
+                fileName: 'lorem-ipsum.pdf',
+                mimeType: 'application/pdf',
+                base64Data: base64
+            }
+        );
+
+        await expect(page.getByText('Choose an object')).toBeVisible();
+        await page.getByText('Save').click();
+
+        EntityEditor.moveAndClick(page, 32, 300);
+
+        await expect(page.getByText('Books (Variant 5)')).toBeVisible();
+        await expect(page.getByText('lorem-ipsum.pdf')).toBeVisible();
+    });
+    
     test("Assert map explorer visible for guest", async ({ browser, request }) => {
         const page = await getPage(browser, 'Alice', Map.url("empty"));
 
