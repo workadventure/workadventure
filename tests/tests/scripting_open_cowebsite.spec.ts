@@ -6,7 +6,7 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 
 test.describe('Scripting WA.nav.openCoWebsite function', () => {
     test('one can open several tabs that stay loaded', async ({ browser}) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_open_cowebsite"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_open_cowebsite"));
 
         const url = new URL(
             `//${maps_domain}/tests/CoWebsite/page_with_input.html`,
@@ -45,7 +45,7 @@ test.describe('Scripting WA.nav.openCoWebsite function', () => {
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toHaveValue('tab2');
         await expect(getCoWebsiteIframe(page).locator('[id="\\#text_input"]')).toBeVisible();
 
-        await page.close();
+
         await page.context().close();
     });
 });

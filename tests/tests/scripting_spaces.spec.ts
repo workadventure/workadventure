@@ -12,7 +12,7 @@ test.describe('Scripting space-related functions', () => {
             test.skip();
             return;
         }
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -187,7 +187,7 @@ test.describe('Scripting space-related functions', () => {
 
         await bob.close();
         await bob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
@@ -202,7 +202,7 @@ test.describe('Scripting space-related functions', () => {
         const pages = context.pages();
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         expect(
             await evaluateScript(page, async () => {
@@ -216,7 +216,7 @@ test.describe('Scripting space-related functions', () => {
             })
         ).toContain("Cannot join space some-test-space");
 
-        await page.close();
+
         await page.context().close();
     });
 
@@ -233,7 +233,7 @@ test.describe('Scripting space-related functions', () => {
 
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -255,7 +255,7 @@ test.describe('Scripting space-related functions', () => {
 
         await bob.close();
         await bob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
@@ -269,7 +269,7 @@ test.describe('Scripting space-related functions', () => {
 
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -337,7 +337,7 @@ test.describe('Scripting space-related functions', () => {
 
         const apiContext = await request.newContext();
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);

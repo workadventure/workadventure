@@ -12,10 +12,10 @@ test.describe('Scripting follow functions', () => {
             test.skip();
             return;
         }
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
         await Map.teleportToPosition(page, 32, 32);
 
-        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
+        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await Map.teleportToPosition(page2, 32, 32);
 
         await expect(page.getByText('Bob')).toBeVisible();
@@ -75,9 +75,9 @@ test.describe('Scripting follow functions', () => {
         await page2.getByRole('button', { name: 'Stop following' }).click();
 
         await waitForUnfollowPromise;
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 });

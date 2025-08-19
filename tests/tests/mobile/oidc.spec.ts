@@ -16,7 +16,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         }
     })
     test('Can login and logout', async ({ browser }, { project }) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         await page.addLocatorHandler(page.getByText('Continue without webcam'), async () => {
             await page.getByText('Continue without webcam').click();
@@ -54,7 +54,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         });
         await expect(page.locator('#Input_Username')).toBeVisible();
 
-        await page.close();
+
         await page.context().close();
     });
 });

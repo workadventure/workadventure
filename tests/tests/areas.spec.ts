@@ -20,7 +20,7 @@ test.describe('Areas', () => {
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
 
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
 
@@ -37,13 +37,13 @@ test.describe('Areas', () => {
         });
 
         await expect(page.getByText('Silent zone 🤐')).toBeVisible();
-        await page.close();
+
         await page.context().close();
     });
 
     test('blocking audio areas', async ({ browser }) => {
         // Open audio test map
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")
         );
         // Verify audio area is working
@@ -82,13 +82,13 @@ test.describe('Areas', () => {
             return;
         });
         await Menu.expectButtonState(page, "music-button", "disabled");
-        await page.close();
+
         await page.context().close();
     });
 
     test('display warning on fail to load audio', async ({ browser }) => {
         // Open audio test map
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/audio.json", "areas")
         );
 
@@ -104,7 +104,7 @@ test.describe('Areas', () => {
         });
         await Menu.expectButtonState(page, "music-button", "forbidden");
         await expect(page.getByText('Could not load sound')).toBeVisible();
-        await page.close();
+
         await page.context().close();
     });
 });

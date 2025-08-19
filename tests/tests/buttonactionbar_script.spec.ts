@@ -14,7 +14,7 @@ test.describe('Button in action bar', () => {
     });
     test('test', async ({ browser }) => {
         
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
         // Use script to add new button
@@ -31,7 +31,7 @@ test.describe('Button in action bar', () => {
         await page.getByText('Register').click();
         // Check if the register button is hidden
         await expect(page.getByText('Register')).toHaveCount(0);
-        await page.close();
+
         await page.context().close();
     });
 });
@@ -45,7 +45,7 @@ test.describe('Action button in action bar', () => {
         }
     });
     test('test', async ({ browser }) => {
-        const page = await getPage(browser, 'Alice', 
+        await using page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );
         // Use script to add new button
@@ -67,7 +67,7 @@ test.describe('Action button in action bar', () => {
         await page.getByRole('button', { name: 'Register' }).click();
         // Check if the register button is hidden
         await expect(page.getByRole('button', { name: 'Register' })).toHaveCount(0);
-        await page.close();
+
         await page.context().close();
     });
 });

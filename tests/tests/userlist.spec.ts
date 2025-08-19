@@ -14,14 +14,14 @@ test.describe("Walk to", () => {
   });
   // FIXME: for some reason, this test fails in Helm. Find why
   test("walk to a user", async ({ browser }, { project }) => {
-    const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+    await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
     const alicePosition = {
       x: 4 * 32,
       y: 5 * 32,
     };
     await Map.teleportToPosition(page, alicePosition.x, alicePosition.y);
 
-    const userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+    await using userBob = await getPage(browser, "Bob", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
     await chatUtils.openUserList(userBob, false);
@@ -37,9 +37,8 @@ test.describe("Walk to", () => {
       "Bob joined the discussion"
     );
 
-    await userBob.close();
+
     await userBob.context().close();
-    await page.close();
     await page.context().close();
   });
 });
@@ -52,7 +51,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
       test.skip();
     }
 
-    const adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+    await using adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     const alicePosition = {
       x: 3 * 32,
@@ -61,7 +60,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
 
     await Map.teleportToPosition(adminPage, alicePosition.x, alicePosition.y);
 
-    const userBob = await getPage(browser, "Member1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
+    await using userBob = await getPage(browser, "Member1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
     //await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
 
@@ -72,9 +71,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await expect(userBob.getByTestId("roomName")).toHaveText(
       "John Doe"
     );
-
-    await userBob.close();
-    await adminPage.close();
+    await adminPage.context().close();
   });
 
   test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
@@ -84,17 +81,20 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     }
 
     // Alice is not connected
-    const userAlice = await getPage(browser, 'Alice', Map.url("empty"));
+    await using userAlice = await getPage(browser, 'Alice', Map.url("empty"));
     const alicePosition = {
       x: 4 * 32,
       y: 5 * 32,
     };
     await Map.teleportToPosition(userAlice, alicePosition.x, alicePosition.y);
     
-    const userUserLogin1 = await getPage(browser, 'Member1', Map.url("empty"));
+    await using userUserLogin1 = await getPage(browser, 'Member1', Map.url("empty"));
     await chatUtils.open(userUserLogin1, false);
     await chatUtils.slideToUsers(userUserLogin1);
     // Click on chat button
     await expect(userUserLogin1.getByTestId(`send-message-Alice`)).toBeDisabled();
+
+    await userAlice.context().close();
+    await userUserLogin1.context().close();
   });
 });
