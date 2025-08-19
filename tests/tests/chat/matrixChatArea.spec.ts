@@ -33,7 +33,7 @@ test.describe("matrix chat area property @matrix", () => {
     browserName, browser
   }) => {
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -61,7 +61,6 @@ test.describe("matrix chat area property @matrix", () => {
     expect(await page.getByTestId("roomName").textContent()).toBe(
       "name of new room"
     );
-    await page.close();
     await page.context().close();
   });
 
@@ -69,7 +68,7 @@ test.describe("matrix chat area property @matrix", () => {
     browser,
     browserName,
   }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
@@ -97,7 +96,7 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page, 1, 1);
 
     expect(await chatUtils.isChatSidebarOpen(page)).toBeFalsy();
-    await page.close();
+
     await page.context().close();
   });
 
@@ -105,7 +104,7 @@ test.describe("matrix chat area property @matrix", () => {
     browser,
     browserName,
   }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
@@ -136,7 +135,7 @@ test.describe("matrix chat area property @matrix", () => {
 
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
 
-    await page.close();
+
     await page.context().close();
   });
 
@@ -144,7 +143,7 @@ test.describe("matrix chat area property @matrix", () => {
     browser,
     browserName,
   }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
@@ -190,7 +189,7 @@ test.describe("matrix chat area property @matrix", () => {
       timeout: 60000
     });
 
-    await page.close();
+
     await page.context().close();
   });
 
@@ -198,7 +197,7 @@ test.describe("matrix chat area property @matrix", () => {
     browserName,
     browser
   }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
     if (browserName === "webkit") {
@@ -219,9 +218,9 @@ test.describe("matrix chat area property @matrix", () => {
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
-    await page.close();
+
     await page.context().close();
-    const page2 = await getPage(browser, 'Bob', Map.url("empty"));
+    await using page2 = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMemberTagLogin(page2);
     
     if (browserName === "webkit") {

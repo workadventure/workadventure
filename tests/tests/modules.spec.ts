@@ -12,7 +12,7 @@ test.describe('Module', () => {
         }
     });
   test('loading should work out of the box', async ({ browser }, { project }) => {
-    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"),
+    await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"),
         {
           pageCreatedHook: (page) => {
             startRecordLogs(page);

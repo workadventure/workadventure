@@ -31,7 +31,7 @@ test.describe("Scripting for Map editor @oidc", () => {
     });
     test("Scripting Area onEnter & onLeave", async ({browser, request}) => {
         await resetWamMaps(request);
-        const page = await getPage(browser, 'Admin1', Map.url("empty"));
+        await using page = await getPage(browser, 'Admin1', Map.url("empty"));
         await menu.openMapEditor(page);
         await mapeditor.openAreaEditor(page);
         await areaEditor.drawArea(page, {x: 0, y: 7 * 32 * 1.5}, {x: 5 * 32 * 1.5, y: 9 * 32 * 1.5});
@@ -68,7 +68,7 @@ test.describe("Scripting for Map editor @oidc", () => {
         await page.getByRole('button', { name: 'Close' }).click();
         await expect(page.locator('span.characterTriggerAction')).toBeHidden();
 
-        await page.close();
+
         await page.context().close();
     });
 });

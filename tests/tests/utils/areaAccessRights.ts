@@ -15,8 +15,8 @@ class AreaAccessRights {
     bottomRight: { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
   };
 
-  public entityPositionInArea: Coordinates = { x: 6 * 32, y: 3.5 * 32 };
-  public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 8 * 32 };
+  public entityPositionInArea: Coordinates = { x: 4 * 32 * 1.5, y: 3 * 32 * 1.5 };
+  public entityPositionOutsideArea: Coordinates = { x: 6 * 32 * 1.5, y: 8 * 32 * 1.5 };
 
   public mouseCoordinatesToClickOnEntityInsideArea = {
     x: this.entityPositionInArea.x + 10,

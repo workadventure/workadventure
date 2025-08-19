@@ -24,11 +24,11 @@ test.describe('Meeting actions test', () => {
             test.skip();
         }
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(userBob, 160, 160);
@@ -70,8 +70,8 @@ test.describe('Meeting actions test', () => {
             hasText: "Bob",
         }).locator('video')).toHaveClass(/w-0/);
 
-        await page.close();
-        await userBob.close();
+
+
         await userBob.context().close();
         await page.context().close();
   });
@@ -91,7 +91,7 @@ test.describe('Meeting actions test', () => {
     }
 
     await resetWamMaps(request);
-      const page = await getPage(browser, 'Admin1', Map.url("empty"));
+      await using page = await getPage(browser, 'Admin1', Map.url("empty"));
     // await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -117,7 +117,7 @@ test.describe('Meeting actions test', () => {
     //await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
-    const userBob = await getPage(browser, "Bob", Map.url("empty"))
+    await using userBob = await getPage(browser, "Bob", Map.url("empty"))
     // Move user "Bob" to the new area
     await Map.teleportToPosition(userBob, 2, 5);
 
@@ -146,8 +146,8 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('.video-media-box:has-text("Bob") video')).toHaveClass(/w-0/);
 
-    await page.close();
-    await userBob.close();
+
+
     await userBob.context().close();
     await page.context().close();
   });*/
@@ -158,11 +158,11 @@ test.describe('Meeting actions test', () => {
             test.skip();
         }
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(userBob, 192, 160);
@@ -199,8 +199,8 @@ test.describe('Meeting actions test', () => {
         await expect(page.getByText('Hello unbanned!')).toBeVisible();
         await expect(page.getByText('Hello banned!')).toBeHidden();
 
-        await page.close();
-        await userBob.close();
+
+
         await userBob.context().close();
         await page.context().close();
     });

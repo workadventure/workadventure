@@ -31,7 +31,7 @@ test.describe("chat moderation @matrix", () => {
 
   test("should create a public chat room and verify admin permissions",
       async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -53,7 +53,7 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-permissionLevel")).toHaveText("Admin");
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 
-    await page.close();
+
     await page.context().close();
   });
 
@@ -64,7 +64,7 @@ test.describe("chat moderation @matrix", () => {
       test.skip();
     }
 
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -127,7 +127,7 @@ test.describe("chat moderation @matrix", () => {
 
     expect(powerLevel).toBe(50);
 
-    await page.close();
+
     await page.context().close();
   });
 });

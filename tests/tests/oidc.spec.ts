@@ -13,7 +13,7 @@ test.describe('OpenID connect @oidc', () => {
     }
   });
   test('can login and logout', async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
+    await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
 
     // Test if player variable is correct
     let isLogged = await evaluateScript(page, async () => {

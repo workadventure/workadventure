@@ -18,7 +18,7 @@ test.describe('Availability Status', () => {
            }
             const statusName = "Busy";
 
-           const page = await getPage(browser, 'Alice',
+           await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "availability-status")
            );
 
@@ -36,7 +36,7 @@ test.describe('Availability Status', () => {
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100);
             await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
-            await page.close();
+
             await page.context().close();
         })
         test('should disable microphone and camera', async({ browser }, { project }) => {
@@ -46,7 +46,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Busy";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
 
@@ -64,7 +64,7 @@ test.describe('Availability Status', () => {
 
             await expect(page.getByTestId('camera-button').locator('.bg-danger')).toBeHidden();
             await expect(page.getByTestId('microphone-button').locator('.bg-danger')).toBeHidden();
-            await page.close();
+
             await page.context().close();
         })
 
@@ -76,7 +76,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Busy";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
             
@@ -94,7 +94,7 @@ test.describe('Availability Status', () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-            await page.close();
+
             await page.context().close();
         })
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',
@@ -107,7 +107,7 @@ test.describe('Availability Status', () => {
             }
             
             const statusName = "Busy";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
 
@@ -121,7 +121,7 @@ test.describe('Availability Status', () => {
             await page.getByText('Accept').click();
 
             await expect(page.getByText('Allow notifications?')).toBeHidden();
-            await page.close();
+
             await page.context().close();
         })
         
@@ -134,7 +134,7 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
-                const page = await getPage(browser, 'Alice',
+                await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
             
@@ -144,7 +144,7 @@ test.describe('Availability Status', () => {
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
                 
-                const userBob = await getPage(browser, 'Bob', 
+                await using userBob = await getPage(browser, 'Bob', 
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 )
                 const secondPageName = 'Bob'
@@ -169,9 +169,9 @@ test.describe('Availability Status', () => {
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 await expect(await isInBubble).toBeTruthy();
-                await userBob.close();
+
                 await userBob.context().close();
-                await page.close();
+
                 await page.context().close();
             })
             test('should return to online status after accept conversation',
@@ -182,7 +182,7 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
-                const page = await getPage(browser, 'Alice',
+                await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
 
@@ -196,7 +196,7 @@ test.describe('Availability Status', () => {
                 await Menu.clickOnStatus(page,statusName);
                 //await Menu.closeNotificationPopUp(page);
 
-                const userBob = await getPage(browser, 'Bob', 
+                await using userBob = await getPage(browser, 'Bob', 
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 )
                 const secondPageName = 'Bob'
@@ -212,9 +212,9 @@ test.describe('Availability Status', () => {
                 await page.getByText('Accept').first().click();
                 await Menu.openStatusList(page, false);
                 await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
-                await userBob.close();
+
                 await userBob.context().close();
-                await page.close();
+
                 await page.context().close();
             })
             test('should keep busy status  after refuse conversation',
@@ -227,7 +227,7 @@ test.describe('Availability Status', () => {
                 }
 
                 const statusName = "Busy";
-                const page = await getPage(browser, 'Alice',
+                await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
                 const positionToDiscuss = {
@@ -240,7 +240,7 @@ test.describe('Availability Status', () => {
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
                 
-                const userBob = await getPage(browser, 'Bob',
+                await using userBob = await getPage(browser, 'Bob',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
                 // Login user "Bob"
@@ -258,9 +258,9 @@ test.describe('Availability Status', () => {
                 await Menu.openStatusList(page, false);
                 await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
 
-                await userBob.close();
+
                 await userBob.context().close();
-                await page.close();
+
                 await page.context().close();
             })
         })
@@ -276,7 +276,7 @@ test.describe('Availability Status', () => {
             }
 
             const statusName = "Back in a moment";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
             if (isMobile(page)) {
@@ -293,7 +293,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
             await Map.walkTo(page,'ArrowRight',100);
             await Menu.expectStatus(page, 'Online');
-            await page.close();
+
             await page.context().close();
         })
         test('should disable microphone and camera',async({ browser, browserName }) => {
@@ -303,7 +303,7 @@ test.describe('Availability Status', () => {
                 test.skip();
                 return;
             }
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
 
@@ -318,7 +318,7 @@ test.describe('Availability Status', () => {
 
             await Menu.expectCameraDisabled(page);
             await Menu.expectMicrophoneDisabled(page);
-            await page.close();
+
             await page.context().close();
         })
 
@@ -330,7 +330,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Back in a moment";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
             
@@ -348,13 +348,13 @@ test.describe('Availability Status', () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-            await page.close();
+
             await page.context().close();
         })
         test.describe('Back in a moment interaction',async()=>{
             test('should not create a bubble',async({ browser }) => {
                 const statusName = "Back in a moment";
-                const page = await getPage(browser, 'Alice',
+                await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
                 const positionToDiscuss = {
@@ -366,7 +366,7 @@ test.describe('Availability Status', () => {
                 await Menu.openStatusList(page, false);
                 await Menu.clickOnStatus(page,statusName); 
                 
-                const userBob = await getPage(browser, 'Bob', 
+                await using userBob = await getPage(browser, 'Bob', 
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 )
                 
@@ -375,7 +375,7 @@ test.describe('Availability Status', () => {
                 
                 await userBob.close()
                 await userBob.context().close();
-                await page.close();
+
                 await page.context().close();
             })
         })
@@ -389,7 +389,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Do not disturb";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
             if (isMobile(page)) {
@@ -409,7 +409,7 @@ test.describe('Availability Status', () => {
             //move to trigger status change 
             await Map.walkTo(page,'ArrowRight',100);
             await Menu.expectStatus(page, 'Online');
-            await page.close();
+
             await page.context().close();
         })
         test('should disable microphone and camera', async({ browser, browserName }) => {
@@ -419,7 +419,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Do not disturb";
-            const page = await getPage(browser, 'Alice',
+            await using page = await getPage(browser, 'Alice',
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
 
@@ -434,7 +434,7 @@ test.describe('Availability Status', () => {
 
             await Menu.expectCameraDisabled(page);
             await Menu.expectMicrophoneDisabled(page);
-            await page.close();
+
             await page.context().close();
         })
 
@@ -446,7 +446,7 @@ test.describe('Availability Status', () => {
                 return;
             }
             const statusName = "Do not disturb";
-            const page = await getPage(browser, 'Alice', 
+            await using page = await getPage(browser, 'Alice', 
                 publicTestMapUrl("tests/E2E/empty.json", "availability-status")
             );
 
@@ -464,13 +464,13 @@ test.describe('Availability Status', () => {
 
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
-            await page.close();
+
             await page.context().close();
         })
         test.describe('Do not disturb interaction',async()=>{
             test('should not create a bubble ', async({ browser }) => {
                 const statusName = "Do not disturb";
-                const page = await getPage(browser, 'Alice',
+                await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
                 const positionToDiscuss = {
@@ -482,16 +482,16 @@ test.describe('Availability Status', () => {
                 await Menu.openStatusList(page, false);
                 await Menu.clickOnStatus(page,statusName);
 
-                const userBob = await getPage(browser, 'Bob',
+                await using userBob = await getPage(browser, 'Bob',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
                 );
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.animate-ping')).toBeHidden();
                 
-                await userBob.close();
+
                 await userBob.context().close();
-                await page.close();
+
                 await page.context().close();
             })
         })

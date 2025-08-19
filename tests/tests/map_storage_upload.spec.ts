@@ -53,8 +53,8 @@ test.describe('Map-storage Upload API', () => {
             }
         });
         await expect(uploadFile2.ok()).toBeTruthy();
-        const page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        const page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
+        await using page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        await using page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
@@ -77,9 +77,9 @@ test.describe('Map-storage Upload API', () => {
         // Now let's check the user in map1 did reload, but not on map2
         await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 

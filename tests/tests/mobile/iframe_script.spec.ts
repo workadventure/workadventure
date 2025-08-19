@@ -13,7 +13,7 @@ test.describe("Iframe API", () => {
         }
     });
     test("test disable invite user button", async ({ browser }) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         await Menu.openMenu(page);
         await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
@@ -27,7 +27,7 @@ test.describe("Iframe API", () => {
 
         await expect(page.getByRole('button', { name: 'Invite' })).toBeHidden();
 
-        await page.close();
+
         await page.context().close();
     });
     test("test disable screen sharing", async ({ browser, browserName }) => {
@@ -38,7 +38,7 @@ test.describe("Iframe API", () => {
             test.skip();
         }
 
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -75,12 +75,12 @@ test.describe("Iframe API", () => {
 
         await pageBob.close();
         await pageBob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
     test("test disable right click user button", async ({ browser }) => {
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -99,7 +99,7 @@ test.describe("Iframe API", () => {
 
         // TODO: check if the right click is enabled
 
-        await page.close();
+
         await page.context().close();
     });
 });
