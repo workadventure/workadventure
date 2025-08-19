@@ -11,11 +11,11 @@ interface Coordinates {
 
 class AreaAccessRights {
   private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
-    topLeft: { x: 1, y: 5 },
+    topLeft: { x: 1, y: 2 * 32 * 1.5 },
     bottomRight: { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
   };
 
-  public entityPositionInArea: Coordinates = { x: 6 * 32, y: 3 * 32 };
+  public entityPositionInArea: Coordinates = { x: 6 * 32, y: 3.5 * 32 };
   public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 8 * 32 };
 
   public mouseCoordinatesToClickOnEntityInsideArea = {
