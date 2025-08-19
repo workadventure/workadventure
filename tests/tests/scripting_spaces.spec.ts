@@ -143,6 +143,10 @@ test.describe('Scripting space-related functions', () => {
             window.mySpace.leave();
         });
 
+        // FIXME: remove this timeout when the Livekit branch is merged (the issue is fixed in the Livekit branch)
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(1000);
+
         /**
          * Test part 4: Let's do the same test with a livestream space.
          */
