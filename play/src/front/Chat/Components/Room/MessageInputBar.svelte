@@ -389,6 +389,15 @@
         applicationProperty = applicationPropertyEvent.detail;
     }
 
+    let applicationPropertyInProcessing = false;
+    function onProcessingApplicationProperty() {
+        applicationPropertyInProcessing = true;
+    }
+
+    function onProcessedApplicationProperty() {
+        applicationPropertyInProcessing = false;
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -619,6 +628,8 @@
             property={applicationProperty}
             on:close={() => (applicationProperty = undefined)}
             on:update={onUpdatApplicationProperty}
+            on:processing={onProcessingApplicationProperty}
+            on:processed={onProcessedApplicationProperty}
         />
     </div>
 {/if}
@@ -689,9 +700,7 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
-            disabled={message.trim().length === 0 &&
-                files.length === 0 &&
-                (!applicationProperty || applicationProperty.link.length === 0)}
+            disabled={applicationPropertyInProcessing}
             on:click={() => sendMessage(message)}
         >
             <IconSend />
