@@ -181,21 +181,21 @@
         if (!tabsContainer) {
             return;
         }
-        const scrollX = tabsContainer.scrollLeft;
-        for (let i = 0; i < tabsContainer.childNodes.length; i++) {
-            const tab = tabsContainer.childNodes[i] as HTMLElement;
-            if (tab.offsetLeft > scrollX) {
-                tabsContainer.scrollTo({
-                    left: tab.offsetLeft,
-                    behavior: "smooth",
-                });
-                break;
-            }
-        }
+        const containerWidth = tabsContainer.clientWidth;
+        const scrollWidth = tabsContainer.scrollWidth;
+
+        const newScrollX = scrollWidth - containerWidth;
+
+        tabsContainer.scrollTo({
+            left: newScrollX,
+            behavior: "smooth",
+        });
     }
 
     function onTabsScroll() {
-        tabsScrollX = tabsContainer?.scrollLeft ?? 0;
+        if (!tabsContainer) return;
+        tabsScrollX = tabsContainer.scrollLeft;
+        tabsOverflowing = tabsContainer.scrollWidth > tabsContainer.clientWidth;
     }
 </script>
 
@@ -207,7 +207,7 @@
     style="transition: background-color 0.2s ease-in-out, backdrop-filter 0.2s ease-in-out;"
 >
     <div class="h-full w-full flex flex-col">
-        <div class="flex py-2 ms-3 items-center height-tab overflow-hidden flex-none">
+        <div class="flex py-2 ms-3 items-center height-tab flex-none gap-x-2">
             {#if tabsOverflowing && tabsScrollX > 0}
                 <div class="flex-0 w-10">
                     <button
@@ -220,10 +220,10 @@
             {/if}
             <!-- For some weird reason, we need to put a random width so that flex-1 can work and ignore the width...
                  Otherwise, flex-1 does nothing -->
-            <div class="tab-bar flex-1 w-32" bind:clientWidth={tabsContainerWidth}>
+            <div class="tab-bar flex-1 w-32 min-w-0 " bind:clientWidth={tabsContainerWidth}>
                 <div
                     bind:this={tabsContainer}
-                    class="flex items-center overflow-x-hidden space-x-2 snap-x touch-pan-x"
+                    class="flex items-center space-x-2 snap-x touch-pan-x overflow-x-hidden"
                     on:scroll={onTabsScroll}
                 >
                     {#each $coWebsites as coWebsite, index (coWebsite.getId())}
@@ -231,29 +231,34 @@
                         <div
                             on:click={() => setActiveCowebsite(coWebsite)}
                             data-testid="tab{index + 1}"
-                            class="snap-start"
+                            class="snap-start flex-shrink min-w-[90px] basis-auto"
                         >
                             <CoWebsiteTab
                                 {coWebsite}
                                 isLoading={true}
                                 active={activeCowebsite === coWebsite}
                                 on:close={() => coWebsites.remove(coWebsite)}
+                                availableWidth={Math.max(
+                                    120,
+                                    (tabsContainerWidth - ($coWebsites.length - 1) * 8 - 80) / $coWebsites.length
+                                )}
                             />
                         </div>
                     {/each}
                 </div>
             </div>
 
-            {#if tabsOverflowing && tabsScrollX < tabsContainer?.scrollWidth - tabsContainer?.clientWidth}
-                <div class="flex-0 w-10">
-                    <button
-                        class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2"
-                        on:click={scrollTabsRight}
-                    >
-                        <ChevronRightIcon />
-                    </button>
-                </div>
-            {/if}
+            <div class="flex-0 w-10">
+                <button
+                    class="w-10 h-10 rounded flex items-center justify-center hover:bg-white/10 me-2 {tabsScrollX >=
+                    tabsContainer?.scrollWidth - tabsContainer?.clientWidth
+                        ? 'opacity-50 cursor-not-allowed'
+                        : ''}"
+                    on:click={scrollTabsRight}
+                >
+                    <ChevronRightIcon />
+                </button>
+            </div>
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="flex justify-end w-10 flex-none">
