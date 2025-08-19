@@ -137,7 +137,7 @@ test.describe("matrix chat area property @matrix", () => {
     expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
 
     await page.close();
-      await page.context().close();
+    await page.context().close();
   });
 
   test("it should be moderator in room when he have a admin tag (access to manage participants / can delete other message)", async ({
@@ -190,6 +190,8 @@ test.describe("matrix chat area property @matrix", () => {
       timeout: 60000
     });
 
+    await page.close();
+    await page.context().close();
   });
 
   test("it shouldn't be moderator in room when he don't have a admin tag ", async ({
@@ -217,7 +219,8 @@ test.describe("matrix chat area property @matrix", () => {
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
-    //await page.close()
+    await page.close();
+    await page.context().close();
     const page2 = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMemberTagLogin(page2);
     
@@ -226,7 +229,6 @@ test.describe("matrix chat area property @matrix", () => {
     }
     
     await Map.walkToPosition(page2, 4 * 32, 3 * 32);
-    
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
     await page2.addLocatorHandler(page2.getByTestId("closeModal"), async () => {
