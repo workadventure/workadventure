@@ -52,7 +52,7 @@ test.describe('Variables', () => {
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
-    const page = await getPage(browser, 'Alice',
+    await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 
 //    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
@@ -152,7 +152,7 @@ test.describe('Variables', () => {
     // So we should see the new value.
     await expectVariableToBe(page, 'value set after pusher restart');
 
-    await page.close();
+
     await page.context().close();
   });
 
@@ -163,7 +163,7 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_1.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
-    const page = await getPage(browser, 'Alice',
+    await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
 
 
@@ -173,7 +173,7 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_2.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
-    const page2 = await getPage(browser, 'Bob',
+    await using page2 = await getPage(browser, 'Bob',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
         { pageCreatedHook: (page2) => startRecordLogs(page2) });
 
@@ -188,9 +188,9 @@ test.describe('Variables', () => {
       return users;
     }).toBe(2);
 
-    await page2.close();
+
     await page2.context().close();
-    await page.close();
+
     await page.context().close();
   });
 });

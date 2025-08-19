@@ -20,7 +20,7 @@ test.describe("Scripting audio streams", () => {
     // This test runs only on Chrome
     // Firefox fails it because the sample rate must be equal to the microphone sample rate
     // Safari fails it because Safari
-    const page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await using page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
@@ -76,7 +76,7 @@ test.describe("Scripting audio streams", () => {
 
     await alice.close();
     await alice.context().close();
-    await page.close();
+
     await page.context().close();
   });
 });

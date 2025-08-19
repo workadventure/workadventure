@@ -25,7 +25,7 @@ test.describe("#Scripting chat functions", () => {
   test("can open / close chat + start / stop typing @chat", async ({
     browser
   }) => {
-    const page = await getPage(browser, "Bob", Map.url("empty"));
+    await using page = await getPage(browser, "Bob", Map.url("empty"));
     //await oidcMatrixUserLogin(page, false);
 
     // Test open chat scripting
@@ -84,12 +84,12 @@ test.describe("#Scripting chat functions", () => {
     });
     await expect(page.locator("#chat")).toBeHidden();
 
-    await page.close();
+
     await page.context().close();
   });
 
   test("can send message to bubble users @chat", async ({ browser }) => {
-    const bob = await getPage(browser, "Bob", Map.url("empty"));
+    await using bob = await getPage(browser, "Bob", Map.url("empty"));
     //await oidcMatrixUserLogin(bob, false);
     // test to send bubble message when entering proximity meeting
     await evaluateScript(bob, async () => {
@@ -108,7 +108,7 @@ test.describe("#Scripting chat functions", () => {
     await Map.teleportToPosition(bob, 32, 32);
 
     // Open new page for alice
-    const alice = await getPage(browser, "Alice", Map.url("empty"));
+    await using alice = await getPage(browser, "Alice", Map.url("empty"));
     //await oidcMemberTagLogin(alice, false);
 
     const chatMessageReceivedPromise = evaluateScript(alice, async () => {
@@ -154,9 +154,7 @@ test.describe("#Scripting chat functions", () => {
     expect(chatMessageReceived.message).toBe("Test message sent");
     expect(chatMessageReceived.event.authorId).toBeDefined();
     expect(chatMessageReceived.event.author).toBeDefined();
-    await alice.close();
     await alice.context().close();
-    await bob.close();
     await bob.context().close();
   });
 });

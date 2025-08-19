@@ -13,7 +13,7 @@ test.describe('Scripting API Events', () => {
     });
     test('test events', async ({ browser, request }) => {
         // Go to
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
@@ -45,7 +45,7 @@ test.describe('Scripting API Events', () => {
         expect(eventTriggered).toBeTruthy();
 
         // 2. Connect 2 users and check that the events are triggered on the other user (using broadcast events)
-        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         let gotExpectedBroadcastNotification = false;
         let gotExpectedTargetedNotification = false;
@@ -141,9 +141,9 @@ test.describe('Scripting API Events', () => {
         expect(await result.text()).toEqual("ok");
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 });

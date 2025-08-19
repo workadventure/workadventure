@@ -14,7 +14,7 @@ test.describe('Modal', () => {
         }
     });
     test('test', async ({ browser }) => {
-        const page = await getPage(browser, 'Alice', 
+        await using page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "banner_script")
         );
         // Create banner with scripting API
@@ -41,7 +41,7 @@ test.describe('Modal', () => {
 
         // Check the component of the Webpage
         await expect(page.locator('#modalIframe')).toHaveCount(0);
-        await page.close();
+
         await page.context().close();
     });
 });

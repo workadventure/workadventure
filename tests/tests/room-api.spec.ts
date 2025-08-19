@@ -55,7 +55,7 @@ test.describe('Room API', async () => {
             return;
         }
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
-        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
+        await using page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
@@ -75,7 +75,7 @@ test.describe('Room API', async () => {
         // Check reading on GRPC
         expect(Value.unwrap(value)).toEqual(newValue);
 
-        await page.close();
+
         await page.context().close();
     });
 
@@ -93,7 +93,7 @@ test.describe('Room API', async () => {
             name: variableName,
             room: roomUrl,
         });
-        const page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
+        await using page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
@@ -111,7 +111,7 @@ test.describe('Room API', async () => {
             break;
         }
 
-        await page.close();
+
         await page.context().close();
     });
 
@@ -137,7 +137,7 @@ test.describe('Room API', async () => {
         })().then(() => {
             resolved = true;
         })
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -147,7 +147,7 @@ test.describe('Room API', async () => {
 
         await expect.poll(() => resolved).toBeTruthy();
 
-        await page.close();
+
         await page.context().close();
     });
 
@@ -158,7 +158,7 @@ test.describe('Room API', async () => {
             test.skip();
             return;
         }
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         let gotExpectedBroadcastNotification = false;
         page.on('console', async (msg) => {
@@ -190,7 +190,7 @@ test.describe('Room API', async () => {
 
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
 
-        await page.close();
+
         await page.context().close();
     });
 });
