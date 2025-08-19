@@ -125,14 +125,14 @@ test.describe("Map editor @oidc", () => {
         await Menu.openMapEditor(page);
         await MapEditor.openAreaEditor(page);
         // await expect(page.locator('canvas')).toBeVisible();
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "speakerMegaphone");
         await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
         await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
         await AreaEditor.addProperty(page, "listenerMegaphone");
         await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
         await Menu.closeMapEditor(page);
-        await Map.teleportToPosition(page, 4 * 32, 2 * 32);
+        await Map.teleportToPosition(page, 4 * 32, 3 * 32);
 
         await expect(page.locator('#cameras-container').getByText('Admin1')).toBeVisible();
 
@@ -147,7 +147,7 @@ test.describe("Map editor @oidc", () => {
         await expect(page.locator('#cameras-container').getByText('Admin2')).toBeHidden({ timeout: 20_000 });
 
         // Now, let's move player 2 to the speaker zone
-        await Map.walkToPosition(page2, 4 * 32, 2 * 32);
+        await Map.walkToPosition(page2, 4 * 32, 3 * 32);
         // FIXME: if we use Map.teleportToPosition, the test fails. Why?
         //await Map.teleportToPosition(page2, 4*32, 2*32);
 
@@ -620,7 +620,7 @@ test.describe("Map editor @oidc", () => {
 
         // Area
         await MapEditor.openAreaEditor(page);
-        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
+        await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
         await AreaEditor.setAreaName(page, "My Focusable Zone");
         await AreaEditor.setAreaDescription(
             page,
