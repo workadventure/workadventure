@@ -48,14 +48,14 @@ test.describe("matrix chat area property @matrix", () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
     await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 4 * 32, 2 * 32);
+    await Map.walkToPosition(page, 4 * 32, 3 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
     expect(await page.getByTestId("roomName").textContent()).toBe(
@@ -83,14 +83,14 @@ test.describe("matrix chat area property @matrix", () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
     await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 4 * 32, 2 * 32);
+    await Map.walkToPosition(page, 4 * 32, 3 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
@@ -119,14 +119,14 @@ test.describe("matrix chat area property @matrix", () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
     await AreaEditor.addProperty(page, "matrixRoomPropertyData");
     await AreaEditor.setMatrixChatRoomProperty(page, true, "name of new room");
 
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 4 * 32, 2 * 32);
+    await Map.walkToPosition(page, 4 * 32, 3 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
@@ -158,7 +158,7 @@ test.describe("matrix chat area property @matrix", () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
     await AreaEditor.addProperty(page, "matrixRoomPropertyData");
@@ -172,7 +172,7 @@ test.describe("matrix chat area property @matrix", () => {
     
     //TODO : find a better way to wait for the room to be created
 
-    await Map.walkToPosition(page, 4 * 32, 2 * 32);
+    await Map.walkToPosition(page, 4 * 32, 3 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
 
@@ -210,7 +210,7 @@ test.describe("matrix chat area property @matrix", () => {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
-      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 1 * 32 * 1.5, y: 2 * 32 * 1.5 },
       { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
     );
     await AreaEditor.addProperty(page, "matrixRoomPropertyData");
@@ -225,7 +225,7 @@ test.describe("matrix chat area property @matrix", () => {
       await hideNoCamera(page2);
     }
     
-    await Map.walkToPosition(page2, 4 * 32, 2 * 32);
+    await Map.walkToPosition(page2, 4 * 32, 3 * 32);
     
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();
 
