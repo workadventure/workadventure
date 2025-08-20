@@ -13,7 +13,7 @@ test.describe('Modal', () => {
             return;
         }
     });
-    test('test', async ({ browser }) => {
+    test('Open banner', async ({ browser }) => {
         await using page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "banner_script")
         );

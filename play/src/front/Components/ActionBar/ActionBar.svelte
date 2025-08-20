@@ -238,7 +238,3 @@
         </div>
     </ResponsiveActionBar>
 {/if}
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-</style>

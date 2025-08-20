@@ -48,7 +48,12 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             }),
-            Icons({ compiler: "svelte" }),
+            Icons({
+                compiler: "svelte",
+                // avoid using @antfu/install-pkg + package-manager-detector at runtime
+                // which may trigger ESM require issues in some environments
+                //autoInstall: false,
+            }),
             legacy({
                 //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
 

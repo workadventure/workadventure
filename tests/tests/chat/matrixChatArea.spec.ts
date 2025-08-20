@@ -58,7 +58,7 @@ test.describe("matrix chat area property @matrix", () => {
     await Map.walkToPosition(page, 4 * 32, 3 * 32);
 
     await expect(page.getByTestId("closeChatButton")).toBeVisible();
-    expect(await page.getByTestId("roomName").textContent()).toBe(
+    await expect(page.getByTestId("roomName")).toHaveText(
       "name of new room"
     );
     await page.context().close();
@@ -133,7 +133,7 @@ test.describe("matrix chat area property @matrix", () => {
     await chatUtils.openChat(page);
     await chatUtils.openRoomAreaList(page);
 
-    expect(await page.getByText("name of new room").isVisible()).toBeFalsy();
+    await expect(page.getByText("name of new room")).toBeHidden();
 
 
     await page.context().close();
@@ -193,7 +193,7 @@ test.describe("matrix chat area property @matrix", () => {
     await page.context().close();
   });
 
-  test("it shouldn't be moderator in room when he don't have a admin tag ", async ({
+  test("it shouldn't be moderator in room when he don't have a admin tag", async ({
     browserName,
     browser
   }) => {

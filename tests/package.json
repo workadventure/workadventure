@@ -14,8 +14,8 @@
     "lint-staged": "^13.0.3"
   },
   "scripts": {
-    "lint": "eslint tests/ .",
-    "lint-fix": "eslint --fix tests/ .",
+    "lint": "eslint tests/",
+    "lint-fix": "eslint --fix tests/",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",

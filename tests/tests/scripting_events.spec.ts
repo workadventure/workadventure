@@ -11,7 +11,7 @@ test.describe('Scripting API Events', () => {
             test.skip();
         }
     });
-    test('test events', async ({ browser, request }) => {
+    test('events', async ({ browser, request }) => {
         // Go to
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
