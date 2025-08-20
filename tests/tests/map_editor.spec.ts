@@ -275,7 +275,7 @@ test.describe("Map editor @oidc", () => {
         await googleSlidesButtonLocator.first().blur({ timeout: 10_000 });
         await expect(googleSlidesButtonLocator).toHaveValue("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true", { timeout: 10_000 });
 
-        // fill Google Slides link
+        // fill Google Drive link
         const googleDriveButtonLocator = page.getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview").first();
         await googleDriveButtonLocator.fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
         await googleDriveButtonLocator.first().blur({ timeout: 10_000 });
