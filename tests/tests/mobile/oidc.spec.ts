@@ -27,7 +27,7 @@ test.describe('OpenId connect @oidc mobile', () => {
             await WA.onInit();
             return WA.player.isLogged;
         });
-        await expect(isLogged).toBe(false);
+        expect(isLogged).toBe(false);
 
         // Login and Logout
         await Menu.openMenu(page);
@@ -38,7 +38,7 @@ test.describe('OpenId connect @oidc mobile', () => {
             await WA.onInit();
             return WA.player.isLogged;
         });
-        await expect(isLogged).toBe(true);
+        expect(isLogged).toBe(true);
 
         // Logout User
         await oidcLogout(page);

@@ -91,12 +91,12 @@ test.describe("Map editor @oidc", () => {
 
 
         // Click on the button to start live message
-        await page
+        page
             .locator(".menu-container #content-liveMessage")
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeVisible();
         await page.getByRole('button', { name: 'Start live message' }).click({ timeout: 10_000 });
 
-        await page
+        page
             .locator(".menu-container #active-liveMessage")
         await expect(page.getByRole('button', { name: 'Start megaphone' })).toBeVisible();
         await page.getByRole('button', { name: 'Start megaphone' }).click({ timeout: 10_000 });

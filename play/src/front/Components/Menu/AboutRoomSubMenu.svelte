@@ -159,7 +159,3 @@
         </section>
     </section>
 </div>
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-</style>

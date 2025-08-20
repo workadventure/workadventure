@@ -20,7 +20,7 @@ test.describe('OpenID connect @oidc', () => {
       await WA.onInit();
       return WA.player.isLogged;
     });
-    await expect(isLogged).toBe(false);
+    expect(isLogged).toBe(false);
 
     // Sign in, then sign out
     await oidcLogin(page);
@@ -30,7 +30,7 @@ test.describe('OpenID connect @oidc', () => {
       await WA.onInit();
       return WA.player.isLogged;
     });
-    await expect(isLogged).toBe(true);
+    expect(isLogged).toBe(true);
 
     // Log out user
     await oidcLogout(page);

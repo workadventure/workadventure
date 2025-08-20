@@ -81,7 +81,7 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test("Test that player B arriving after player A set his variables can read the variable.",
+  test("that player B arriving after player A set his variables can read the variable.",
       async ({ browser }) => {
     await using page = await getPage(
       browser,
@@ -114,7 +114,7 @@ test.describe("API WA.players", () => {
       }
     });
 
-    await expect(myvar).toBe(12);
+    expect(myvar).toBe(12);
 
 
     await page2.context().close();
@@ -273,10 +273,10 @@ test.describe("API WA.players", () => {
     };
 
     // We should not be able to read a non public variable from another user
-    await expect(
+    expect(
       await readRemotePlayerVariable("Alice", "non_public_persisted", page2)
     ).toBe(undefined);
-    await expect(
+    expect(
       await readRemotePlayerVariable("Alice", "non_public_non_persisted", page2)
     ).toBe(undefined);
     await expect
@@ -383,7 +383,7 @@ test.describe("API WA.players", () => {
     await page2.context().close();
   };
 
-  test("Test variable persistence for anonymous users.", async ({ browser }) => {
+  test("variable persistence for anonymous users.", async ({ browser }) => {
     await using page = await getPage(
       browser,
       'Alice',
@@ -395,7 +395,7 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test("Test variable persistence for logged users. @oidc", async ({ browser }) => {
+  test("variable persistence for logged users. @oidc", async ({ browser }) => {
 
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     
@@ -412,7 +412,7 @@ test.describe("API WA.players", () => {
     await page.context().close();
   });
 
-  test("Test variables are sent across frames.", async ({ browser }) => {
+  test("variables are sent across frames.", async ({ browser }) => {
     await using page = await getPage(
       browser,
       'Alice',
@@ -452,14 +452,14 @@ test.describe("API WA.players", () => {
       },
       "embedded_iframe"
     );
-    await expect(variable).toBe(12);
+    expect(variable).toBe(12);
 
     await page.context().close();
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
   // All players with same UUID should share the same state (public or private as long as it is persisted)
-  test("Test that 2 players sharing the same UUID are notified of persisted private variable changes.",
+  test("that 2 players sharing the same UUID are notified of persisted private variable changes.",
       async ({ browser }) => {
     await using page = await getPage(
       browser,
@@ -485,7 +485,7 @@ test.describe("API WA.players", () => {
 
     let gotExpectedNotification = false;
     let gotUnexpectedNotification = false;
-    await page2.on("console", async (msg) => {
+    page2.on("console", async (msg) => {
       const text = await msg.text();
       //console.log(text);
       if (
@@ -555,7 +555,7 @@ test.describe("API WA.players", () => {
     //await page.context().close();
   });
 
-  test("Test that a variable changed can be listened to locally.", async ({ browser }) => {
+  test("that a variable changed can be listened to locally.", async ({ browser }) => {
     await using page = await getPage(
       browser,
       'Alice',
@@ -565,7 +565,7 @@ test.describe("API WA.players", () => {
     // Test that a variable triggered locally can be listened locally
     let gotExpectedNotification = false;
 
-    await page.on("console", async (msg) => {
+    page.on("console", async (msg) => {
       const text = msg.text();
 
       if (
@@ -612,10 +612,10 @@ test.describe("API WA.players", () => {
     );
 
     // Ouvrir le Site A dans le premier onglet
-    await page.locator('.siteA-page1');
+    page.locator('.siteA-page1');
 
     // Ouvrir le Site B dans le deuxième onglet
-    await page.locator('.siteB-page1');
+    page.locator('.siteB-page1');
     // await page.frameLocator('iframe[name="cowebsite-frame"]').locator('text=Site B Page 1').waitFor();
 
     //Switching tabs and pages
@@ -624,7 +624,7 @@ test.describe("API WA.players", () => {
     await expect(event).toContainText('Site A Page 1');
 
     await getCoWebsiteIframe(page).locator('.link-to-siteA-page2').click();
-    const eventpage = await getCoWebsiteIframe(page).locator('.siteA-page2');
+    const eventpage = getCoWebsiteIframe(page).locator('.siteA-page2');
     await expect(eventpage).toContainText('Site A Page 2');
 
     await page.getByTestId('tab2').click();
@@ -632,7 +632,7 @@ test.describe("API WA.players", () => {
     await expect(event2).toContainText('Site B Page 1');
 
     await getCoWebsiteIframe(page).locator('.link-to-siteB-page2').click();
-    const eventpage2 = await getCoWebsiteIframe(page).locator('.siteB-page2');
+    const eventpage2 = getCoWebsiteIframe(page).locator('.siteB-page2');
     await expect(eventpage2).toContainText('Site B Page 2');
 
 
