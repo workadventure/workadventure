@@ -25,10 +25,10 @@ class AreaEditor {
   }
 
   async addProperty(page: Page, property: string) {
-    await page.locator('.map-editor');
-    await page.locator('.map-editor .sidebar');
-    await page.locator('.map-editor .sidebar .item-picker-container');
-    await page.locator('select#speakerZoneSelector');
+    page.locator('.map-editor');
+    page.locator('.map-editor .sidebar');
+    page.locator('.map-editor .sidebar .item-picker-container');
+    page.locator('select#speakerZoneSelector');
     await page.getByTestId(property).click();
   }
 
@@ -86,11 +86,11 @@ class AreaEditor {
     readRights: string[]
   ) {
     await page.getByTestId("restrictedRightsPropertyData").click();
-    const writeRightsInput = await page.getByTestId("writeTags");
+    const writeRightsInput = page.getByTestId("writeTags");
     for (const writeRight of writeRights) {
       await this.fullFillAreaRight(writeRightsInput, writeRight);
     }
-    const readRightsInput = await page.getByTestId("readTags");
+    const readRightsInput = page.getByTestId("readTags");
     for (const readRight of readRights) {
       await this.fullFillAreaRight(readRightsInput, readRight);
     }

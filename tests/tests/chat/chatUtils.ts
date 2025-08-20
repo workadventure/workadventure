@@ -37,7 +37,7 @@ class ChatUtils {
     // Here, sometimes, SSO redirection is required by the Synapse server, sometimes it is not.
     // It is not clear why, especially since it can change from one test run to another.
 
-    //eslint-disable-next-line playwright/no-wait-for-timeout
+     
     // await page.waitForTimeout(1000);
 
     await page.getByText(roomName).click();

@@ -40,11 +40,11 @@ test.describe("Say bubbles", () => {
         const bobSpeechBubble = await bobPage.waitForSelector(".say-bubble", { timeout: 5000 });
 
         // Verify the speech bubble is visible and contains the correct text for both users
-        expect(await aliceSpeechBubble.isVisible()).toBeTruthy();
-        expect(await aliceSpeechBubble.textContent()).toBe("Hello Bob, this is a test message!");
+        await expect(aliceSpeechBubble).toBeVisible();
+        await expect(aliceSpeechBubble).toHaveText("Hello Bob, this is a test message!");
 
-        expect(await bobSpeechBubble.isVisible()).toBeTruthy();
-        expect(await bobSpeechBubble.textContent()).toBe("Hello Bob, this is a test message!");
+        await expect(bobSpeechBubble).toBeVisible();
+        await expect(bobSpeechBubble).toHaveText("Hello Bob, this is a test message!");
 
         // Close both pages
         await alicePage.close();
@@ -76,11 +76,11 @@ test.describe("Say bubbles", () => {
         const bobThinkingBubble = await bobPage.waitForSelector(".thinking-cloud", { timeout: 5000 });
 
         // Verify the thinking bubble is visible and contains the correct text for both users
-        expect(await aliceThinkingBubble.isVisible()).toBeTruthy();
-        expect(await aliceThinkingBubble.textContent()).toBe("This is a thinking message for Bob!");
+        await expect(aliceThinkingBubble).toBeVisible();
+        await expect(aliceThinkingBubble).toHaveText("This is a thinking message for Bob!");
 
-        expect(await bobThinkingBubble.isVisible()).toBeTruthy();
-        expect(await bobThinkingBubble.textContent()).toBe("This is a thinking message for Bob!");
+        await expect(bobThinkingBubble).toBeVisible();
+        await expect(bobThinkingBubble).toHaveText("This is a thinking message for Bob!");
 
         // Close both pages
         await alicePage.close();
