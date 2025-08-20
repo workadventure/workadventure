@@ -13,7 +13,7 @@ test.describe('Modal', () => {
             return;
         }
     });
-    test('test', async ({ browser }) => {
+    test('Modal script test', async ({ browser }) => {
         // Go to
         await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));
         await evaluateScript(page, async () => {
@@ -30,9 +30,7 @@ test.describe('Modal', () => {
         });
 
         // Let's expect #modalIframe to not be displayed
-        await expect(page.locator('#modalIframe')).toBeVisible({
-            visible: false
-        });
+        await expect(page.locator('#modalIframe')).toBeHidden();
 
         // Opening a modal with a relative path
         await evaluateScript(page, async () => {

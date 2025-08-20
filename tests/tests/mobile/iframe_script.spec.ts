@@ -12,7 +12,7 @@ test.describe("Iframe API", () => {
             test.skip();
         }
     });
-    test("test disable invite user button", async ({ browser }) => {
+    test("disable invite user button", async ({ browser }) => {
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         await Menu.openMenu(page);
@@ -30,7 +30,7 @@ test.describe("Iframe API", () => {
 
         await page.context().close();
     });
-    test("test disable screen sharing", async ({ browser, browserName }) => {
+    test("disable screen sharing", async ({ browser, browserName }) => {
         if (browserName === "webkit") {
             // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
             // The chat masks the buttons we are interested in.
@@ -79,7 +79,7 @@ test.describe("Iframe API", () => {
         await page.context().close();
     });
 
-    test("test disable right click user button", async ({ browser }) => {
+    test("disable right click user button", async ({ browser }) => {
         await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );

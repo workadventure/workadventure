@@ -73,7 +73,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable invite user button", async ({ browser }) => {
+  test("disable invite user button", async ({ browser }) => {
     await using page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -103,7 +103,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable screen sharing", async ({ browser }) => {
+  test("disable screen sharing", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     if (browser.browserType() !== chromium) {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -151,7 +151,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("test disable right click user button", async ({ browser }) => {
+  test("disable right click user button", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     if (browser.browserType() !== chromium) {
       //eslint-disable-next-line playwright/no-skipped-test

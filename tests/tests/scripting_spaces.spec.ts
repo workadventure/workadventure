@@ -120,7 +120,7 @@ test.describe('Scripting space-related functions', () => {
         })).toBe(1);
 
         // Bob clicks on the "Do not disturb" status
-        await Menu.openStatusList(bob, false);
+        await Menu.openMenu(bob);
         await Menu.clickOnStatus(bob, "Do not disturb");
 
         // We expect Bob's status to be "Do not disturb"

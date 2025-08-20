@@ -22,12 +22,12 @@ test.describe('Availability Status', () => {
             publicTestMapUrl("tests/E2E/empty.json", "availability-status")
            );
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
             /*if((browserName === "firefox") && await page.getByText(`Allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }*/
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             
             //await expect(page.locator('.status-button').getByText(statusName)).toHaveClass('opacity-50')
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
@@ -58,7 +58,7 @@ test.describe('Availability Status', () => {
 
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -87,7 +87,7 @@ test.describe('Availability Status', () => {
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
 
-            await Menu.openStatusList(page);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
             await Map.walkTo(page,'ArrowRight',100)
@@ -113,7 +113,7 @@ test.describe('Availability Status', () => {
 
             await Map.walkTo(page,'ArrowRight',500);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName);
 
             await expect(page.getByText('Allow notifications?')).toBeVisible();
@@ -149,7 +149,7 @@ test.describe('Availability Status', () => {
                 )
                 const secondPageName = 'Bob'
                 
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
 
@@ -168,7 +168,7 @@ test.describe('Availability Status', () => {
                 }*/
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
-                await expect(await isInBubble).toBeTruthy();
+                expect(await isInBubble).toBeTruthy();
 
                 await userBob.context().close();
 
@@ -192,7 +192,7 @@ test.describe('Availability Status', () => {
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName);
                 //await Menu.closeNotificationPopUp(page);
 
@@ -210,7 +210,7 @@ test.describe('Availability Status', () => {
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
 
                 await page.getByText('Accept').first().click();
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await expect(page.getByRole('button', { name: 'Online' }).locator('svg')).toBeVisible();
 
                 await userBob.context().close();
@@ -236,7 +236,7 @@ test.describe('Availability Status', () => {
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName); 
                // await Menu.closeNotificationPopUp(page);
                 
@@ -255,7 +255,7 @@ test.describe('Availability Status', () => {
 
                 //click on close button
                 await page.getByText('Accept').first().click();
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
 
 
@@ -285,10 +285,10 @@ test.describe('Availability Status', () => {
                 return;
             }
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
 
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
             await Map.walkTo(page,'ArrowRight',100);
@@ -312,7 +312,7 @@ test.describe('Availability Status', () => {
 
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -340,7 +340,7 @@ test.describe('Availability Status', () => {
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
 
-            await Menu.openStatusList(page);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
@@ -363,7 +363,7 @@ test.describe('Availability Status', () => {
                 };
 
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName); 
                 
                 await using userBob = await getPage(browser, 'Bob', 
@@ -399,11 +399,11 @@ test.describe('Availability Status', () => {
             }
 
             await Menu.closeNotificationPopUp(page);
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName);
             await page.waitForTimeout(500);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
 
             //move to trigger status change 
@@ -428,7 +428,7 @@ test.describe('Availability Status', () => {
 
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.openStatusList(page, false);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
             //await Menu.closeNotificationPopUp(page);
 
@@ -456,7 +456,7 @@ test.describe('Availability Status', () => {
             await Menu.expectCameraOn(page);
             await Menu.expectMicrophoneOff(page);
 
-            await Menu.openStatusList(page);
+            await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
@@ -468,7 +468,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         test.describe('Do not disturb interaction',async()=>{
-            test('should not create a bubble ', async({ browser }) => {
+            test('should not create a bubble', async({ browser }) => {
                 const statusName = "Do not disturb";
                 await using page = await getPage(browser, 'Alice',
                     publicTestMapUrl("tests/E2E/empty.json", "availability-status")
@@ -479,7 +479,7 @@ test.describe('Availability Status', () => {
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
-                await Menu.openStatusList(page, false);
+                await Menu.openMenu(page);
                 await Menu.clickOnStatus(page,statusName);
 
                 await using userBob = await getPage(browser, 'Bob',
