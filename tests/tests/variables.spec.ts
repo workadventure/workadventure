@@ -52,6 +52,7 @@ test.describe('Variables', () => {
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
+    // eslint-disable-next-line
     await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 

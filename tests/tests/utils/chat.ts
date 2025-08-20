@@ -45,7 +45,7 @@ class Chat {
     }
 
     async noChatZone(page: Page){
-        await expect(this.get(page)).not.toContain('#chatZones');
+        expect(this.get(page)).not.toContain('#chatZones');
     }
 
     async openChatZone(page: Page){
@@ -97,11 +97,11 @@ class Chat {
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.react').click();
         await page.frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
-        await expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
+        expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
     }
 
     async AT_checkReactLastMessageReceived(page: Page){
-        await expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeDefined();
+        expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeDefined();
     }
 
     async AT_lastMessageFileContain(page: Page, text: string){

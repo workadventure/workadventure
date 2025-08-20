@@ -14,6 +14,7 @@
     "libs/*",
     "benchmark",
     "uploader",
-    "play/packages/iframe-api-typings"
+    "play/packages/iframe-api-typings",
+    "tests"
   ]
 }

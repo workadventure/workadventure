@@ -21,7 +21,7 @@ class Menu {
 
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
-        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+        await expect(page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
     }
 
     /*async openMenu(page: Page) {

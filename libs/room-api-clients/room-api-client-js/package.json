@@ -1,6 +1,6 @@
 {
   "name": "@workadventure/room-api-client",
-  "version": "VERSION_PLACEHOLDER",
+  "version": "0.0.0-version-placeholder",
   "description": "Workadventure Room Api Client",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@types/node": "^18.15.5",
     "@workadventure/eslint-config": "file:../../eslint-config",
-    "eslint": "^9.25.1",
+    "eslint": "^9.33.0",
     "grpc-tools": "^1.12.4",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.6",
