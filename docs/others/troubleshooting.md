@@ -14,16 +14,24 @@ If the performance is poor, you can also try to [run WorkAdventure inside Vagran
 
 ## Windows users
 
-If you find errors in the docker logs that contain the string "\r", you have an issue with your Git configuration.
-On Windows, Git can be configured to change the carriage return from "\n" to "\r\n" on the fly. Since the code
-is running in Linux containers, you absolutely want to be sure the Git won't do that. For this, you need to
-disable the `core.autocrlf` settings.
+If you find errors in the docker logs that contain the string "\r" or "^M" e.g. "/bin/bash^M: bad interpreter: 
+No such file or directory", you have an issue with your Git configuration. On Windows, Git can be configured 
+to change the carriage return from "\n" to "\r\n" on the fly. Since the code is running in Linux containers, 
+you absolutely want to be sure the Git won't do that. For this, you need to disable the `core.autocrlf` settings.
 
 If you run into this issue, please run the command:
 
 ```console
 git config --global core.autocrlf false
 ```
+
+or edit `C:\Users\USER_NAME\.gitconfig` and add autocrlf in the core config:
+
+```ini
+[core]
+    autocrlf = false
+```
+
 
 Then, delete the WorkAdventure directory and check it out again.
 
