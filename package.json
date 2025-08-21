@@ -2,7 +2,8 @@
   "name": "workadventure",
   "private": true,
   "devDependencies": {
-    "husky": "^7.0.1"
+    "husky": "^7.0.1",
+    "typescript": "5.8.3"
   },
   "scripts": {
     "prepare": "husky install || echo 'Husky not found. Maybe you are installing only a subproject.'"
@@ -16,6 +17,33 @@
     "uploader",
     "play/packages/iframe-api-typings",
     "tests"
-  ]
+  ],
+  "overrides": {
+    "typescript": "5.8.3",
+    "@smarttools/eslint-plugin-rxjs": {
+      "typescript": "5.8.3"
+    },
+    "ts-jest": {
+      "typescript": "5.8.3"
+    },
+    "ts-node": {
+      "typescript": "5.8.3"
+    },
+    "ts-loader": {
+      "typescript": "5.8.3"
+    },
+    "svelte-preprocess": {
+      "typescript": "5.8.3"
+    },
+    "svelte-check": {
+      "typescript": "5.8.3"
+    },
+    "typesafe-i18n": {
+      "typescript": "5.8.3"
+    },
+    "ts-essentials": {
+      "typescript": "5.8.3"
+    }
+  }
 
 }
