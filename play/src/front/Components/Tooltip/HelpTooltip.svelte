@@ -35,7 +35,7 @@
                 <img alt="Help GIF" src={helpMedia} class="w-full rounded-md" loading="lazy" />
             {/if}
         {/if}
-        <div class="flex flex-col gap-2 items-start px-1 pt-1 ">
+        <div class="flex flex-col gap-2 items-start px-1 pt-1">
             <div class="flex flex-row items-start justify-between w-full">
                 <div class="text-lg bold leading-none">
                     {title}

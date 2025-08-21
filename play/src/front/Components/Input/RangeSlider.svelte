@@ -26,7 +26,7 @@
         class:input-range-secondary={variant === "secondary"}
         class:input-range-square={buttonShape === "square"}
     >
-        <div class="input-range-slider " style="width: {((value - min) / (max - min)) * 100}%;">
+        <div class="input-range-slider" style="width: {((value - min) / (max - min)) * 100}%;">
             <div class="input-range-btn group/range -end-5">
                 {#if buttonShape === "square"}
                     <svg

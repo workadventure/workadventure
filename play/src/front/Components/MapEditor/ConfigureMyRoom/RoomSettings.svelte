@@ -128,7 +128,7 @@
         </div>
     </div>
 
-    <div class="flex flex-row justify-center cursor-pointer ">
+    <div class="flex flex-row justify-center cursor-pointer">
         <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
     </div>
 </div>

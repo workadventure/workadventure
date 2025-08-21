@@ -32,7 +32,7 @@
             {#each deviceList as speaker, index (index)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="border border-solid border-white w-full rounded-lg m-2  items-center justify-between transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {selectedDevice ===
+                    class="border border-solid border-white w-full rounded-lg m-2 items-center justify-between transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {selectedDevice ===
                     speaker.deviceId
                         ? 'bg-white text-secondary border-none'
                         : 'border-white hover:bg-white/10'}"

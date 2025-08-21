@@ -82,7 +82,7 @@
         />
 
         {#if optionAdvancedActivated}
-            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2 ">
+            <div class:active={optionAdvancedActivated} class="advanced-option flex flex-col mt-3 gap-2">
                 <div class="value-switch">
                     <InputCheckbox
                         id="closable"

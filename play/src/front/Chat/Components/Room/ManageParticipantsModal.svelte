@@ -45,7 +45,7 @@
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             data-testid="roomID"
-            class="text-sm text-gray-300 text-center pb-4 cursor-pointer "
+            class="text-sm text-gray-300 text-center pb-4 cursor-pointer"
             on:click={() => navigator.clipboard.writeText(room.id)}
         >
             {$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}
