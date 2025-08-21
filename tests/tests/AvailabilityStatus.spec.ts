@@ -108,7 +108,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
         
-        test.describe('busy interaction',async() => {
+        test.describe('busy interaction', () => {
             test('should open a popup when a bubble is created...',
                 async({ browserName, browser }) => {
                 test.skip(browserName === 'webkit', 'WebKit limitations');
