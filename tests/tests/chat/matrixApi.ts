@@ -81,25 +81,21 @@ class MatrixApi {
    * @private
    */
   private async deactivateAndActivateUsers(users: { name: string }[]) {
-    try {
-      for (const user of users) {
+    for (const user of users) {
 
-        await axios.post(
-          `${DEACTIVATE_USER_ENDPOINT}/${user.name}`,
-          null,
-          this.getAuthenticatedHeader()
-        );
+      await axios.post(
+        `${DEACTIVATE_USER_ENDPOINT}/${user.name}`,
+        null,
+        this.getAuthenticatedHeader()
+      );
 
-        await axios.put(
-          `${USERS_ENDPOINT}/${user.name}`,
-          {
-            deactivated: false,
-          },
-          this.getAuthenticatedHeader()
-        );
-      }
-    } catch (error) {
-      throw new Error(error);
+      await axios.put(
+        `${USERS_ENDPOINT}/${user.name}`,
+        {
+          deactivated: false,
+        },
+        this.getAuthenticatedHeader()
+      );
     }
   }
 
