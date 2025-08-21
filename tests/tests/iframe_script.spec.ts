@@ -115,7 +115,7 @@ test.describe("Iframe API", () => {
     });
 
     // Second browser
-    const pageBob = await getPage(browser, 'Bob',
+    await using pageBob = await getPage(browser, 'Bob',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     )
     await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
@@ -137,9 +137,7 @@ test.describe("Iframe API", () => {
         page.getByTestId("screenShareButton")
     ).toBeEnabled();
 
-    await pageBob.close();
     await pageBob.context().close();
-    await page.close();
     await page.context().close();
   });
 
