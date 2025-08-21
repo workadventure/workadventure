@@ -149,7 +149,7 @@
             </div>
         {/if}
         <div class="w-full z-10 flex items-center">
-            <div class="bg-white/10 w-full h-[1px] " />
+            <div class="bg-white/10 w-full h-[1px]" />
         </div>
         {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
             <div class="flex flex-col gap-1">
@@ -218,7 +218,7 @@
             </div>
         {/if}
         <div class="w-full z-10 flex items-center">
-            <div class="bg-white/10 w-full h-[1px] " />
+            <div class="bg-white/10 w-full h-[1px]" />
         </div>
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
             <div class="flex flex-col gap-1">
