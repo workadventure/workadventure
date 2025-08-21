@@ -45,7 +45,7 @@ test.describe('Variables', () => {
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
-    // eslint-disable-next-line
+     
     await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 
@@ -61,10 +61,10 @@ test.describe('Variables', () => {
     await expectVariableToBe(page, 'new value');
 
     // Let's simulate a browser disconnection
-    await stopTraefik();
+    stopTraefik();
     // Let's detect the reconnecting screen
     await expect(page.getByTestId('camera-button')).toBeHidden();
-    await startTraefik();
+    startTraefik();
 
     // Now, let's kill the reverse proxy to cut the connexion
     /*console.log('Rebooting traefik');
@@ -88,6 +88,7 @@ test.describe('Variables', () => {
     const backDump = await getBackDump();
     //console.log('backDump', backDump);
     for (const room of backDump) {
+      // eslint-disable-next-line playwright/no-conditional-in-test
       if (
         room.roomUrl ===
         new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
@@ -98,7 +99,7 @@ test.describe('Variables', () => {
 
     const pusherDump = await getPusherDump();
     //console.log('pusherDump', pusherDump);
-    await expect(
+    expect(
       pusherDump[
         new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ]

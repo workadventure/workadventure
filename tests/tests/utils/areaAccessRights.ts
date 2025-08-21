@@ -42,7 +42,7 @@ class AreaAccessRights {
     await AreaEditor.setAreaRightProperty(page, writeRights, readRights);
   }
 
-  async openAreaEditorAndAddArea(page, topLeft?: Coordinates, bottomRight?: Coordinates) {
+  async openAreaEditorAndAddArea(page: Page, topLeft?: Coordinates, bottomRight?: Coordinates) {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
@@ -51,7 +51,7 @@ class AreaAccessRights {
     );
   }
 
-  async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page) {
+  async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page: Page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
     await EntityEditor.moveAndClick(
@@ -79,7 +79,7 @@ class AreaAccessRights {
     await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
   }
 
-  async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page) {
+  async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page: Page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
     await EntityEditor.moveAndClick(

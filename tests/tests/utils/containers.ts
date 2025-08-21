@@ -87,17 +87,18 @@ export async function rebootPlay(request: APIRequestContext): Promise<void> {
   let response: APIResponse;
   do {
     // wait for 1 second
+    // eslint-disable-next-line no-promise-executor-return
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const targetUrl = new URL("ping", play_url).toString();
     response = await request.get(targetUrl);
   } while(!response.ok())
 }
 
-export async function upPlay(): Promise<void> {
+export function upPlay(): void {
   dockerCompose("up -d play");
 }
 
-export async function upMapStorage(): Promise<void> {
+export function upMapStorage(): void {
   dockerCompose("up -d map-storage");
 }
 

@@ -17,6 +17,8 @@ export default [
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-return": "off",
             "no-await-in-loop": "off",
+            "@typescript-eslint/require-await": "off",
+            "svelte/no-ignored-unsubscribe": "off",
         }
     }
 ];
