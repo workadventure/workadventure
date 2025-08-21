@@ -421,7 +421,7 @@
                     {:else}
                         <div
                             title={preview.name}
-                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px] "
+                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
                         >
                             <span class="line-clamp-2 indent-3 text-xs">
                                 {preview.name}
