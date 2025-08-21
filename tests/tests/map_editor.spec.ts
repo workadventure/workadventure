@@ -23,22 +23,14 @@ test.describe("Map editor @oidc", () => {
     test.beforeEach(
         "Ignore tests on mobile because map editor not available for mobile devices",
         ({ page }) => {
-            //Map Editor not available on mobile
-            if (isMobile(page)) {
-                //eslint-disable-next-line playwright/no-skipped-test
-                test.skip();
-                return;
-            }
+            // Map Editor not available on mobile
+            test.skip(isMobile(page), 'Map editor is not available on mobile');
         }
     );
 
     test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
-        //WebKit has issue with camera
-        if (browserName === "webkit") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        // WebKit has issue with camera
+        test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
     });
 
     test("Successfully set the megaphone feature", async ({ browser, request }) => {

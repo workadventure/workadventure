@@ -8,10 +8,10 @@ import {isMobile} from "./utils/isMobile";
 test.setTimeout(180_000);
 test.describe("Connection", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (isMobile(page) || browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+    test.skip(
+      isMobile(page) || browserName === "webkit",
+      "Skip on mobile and WebKit due to limitations"
+    );
   });
   test("can succeed even if WorkAdventure starts while pusher is down @slow",
       async ({ browser }) => {

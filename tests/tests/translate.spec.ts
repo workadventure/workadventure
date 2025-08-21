@@ -5,10 +5,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Translation', () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+  test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test('can be switched to French', async ({ browser }) => {
     await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/mousewheel.json", "translate"))

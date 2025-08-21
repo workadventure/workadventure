@@ -12,11 +12,7 @@ test.use({
 
 test.describe('Mobile', () => {
     test.beforeEach(async ({ page, browserName }) => {
-        if (!isMobile(page) || browserName === "webkit") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(!isMobile(page) || browserName === 'webkit', 'Run only on mobile Chromium');
     });
     test('Successfully bubble discussion with mobile device', async ({ browser }) => {
         await using page = await getPage(browser, 'Bob', Map.url("empty"));

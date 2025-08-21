@@ -13,12 +13,8 @@ test.describe("chat moderation @matrix", () => {
     "Ignore tests on webkit because of issue with camera and microphone",
 
     async ({ browserName, request, page }) => {
-      //WebKit has issue with camera
-      if (browserName === "webkit") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  // WebKit has issue with camera
+  test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
       await resetWamMaps(request);
       await page.goto(Map.url("empty"));
       await ChatUtils.resetMatrixDatabase();
@@ -60,9 +56,7 @@ test.describe("chat moderation @matrix", () => {
   test("should manage participants and permissions in public chat room",
       async ({ browser }, testInfo) => {
 
-    if (testInfo.project.name === "mobilefirefox") {
-      test.skip();
-    }
+  test.skip(testInfo.project.name === 'mobilefirefox', 'Skip on mobile Firefox');
 
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);

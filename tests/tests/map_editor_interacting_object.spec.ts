@@ -18,12 +18,8 @@ test.describe("Map editor interacting with object @oidc", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
       ({ page }) => {
-      //Map Editor not available on mobile
-      if (isMobile(page)) {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+      // Map Editor not available on mobile
+      test.skip(isMobile(page), 'Map editor is not available on mobile');
     }
   );
 
@@ -60,11 +56,7 @@ test.describe("Map editor interacting with object @oidc", () => {
 
   test("Success to interact with entity", async ({ browser, request, browserName }) => {
     // Skip the test on Webkit because the click up doesn't work
-    if (browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(browserName === 'webkit', 'WebKit click up does not work here');
 
     // Go to the map
     await resetWamMaps(request);
@@ -100,11 +92,7 @@ test.describe("Map editor interacting with object @oidc", () => {
 
   test("Success to interact with openFile area and entity", async ({ browser, request, browserName }) => {
     // Skip the test on Webkit because the click up doesn't work
-    if (browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(browserName === 'webkit', 'WebKit click up does not work here');
 
     // Go to the map
     await resetWamMaps(request);

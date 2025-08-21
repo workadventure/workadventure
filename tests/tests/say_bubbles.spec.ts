@@ -8,12 +8,8 @@ test.describe("Say bubbles", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({ page }) => {
-            //Map Editor not available on mobile
-            if (isMobile(page)) {
-                //eslint-disable-next-line playwright/no-skipped-test
-                test.skip();
-                return;
-            }
+            // Map Editor not available on mobile
+            test.skip(isMobile(page), 'Map editor is not available on mobile');
         }
     );
 

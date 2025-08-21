@@ -9,11 +9,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe("API WA.players", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (isMobile(page) || browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
   });
 
   test("enter leave events are received", async ({ browser }) => {

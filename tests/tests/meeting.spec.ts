@@ -6,23 +6,23 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Meeting actions test', () => {
 
-    test.beforeEach(
-        "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({ browserName, page }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || isMobile(page)) {
-                //eslint-disable-next-line playwright/no-skipped-test
-                test.skip();
-                return;
-            }
-        }
-    );
+  test.beforeEach(
+    "Ignore tests on mobilechromium because map editor not available for mobile devices",
+    ({ browserName, page }) => {
+      // Map Editor not available on mobile and WebKit has issues with camera
+      test.skip(
+        browserName === "webkit" || isMobile(page),
+        "Map editor is not available on mobile and WebKit has camera issues"
+      );
+    }
+  );
 
-    test('Meeting action to mute microphone & video', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
+  test('Meeting action to mute microphone & video', async ({ browser }) => {
+    // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+    test.skip(
+      browser.browserType().name() === "firefox",
+      "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
+    );
         // Go to the empty map
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
@@ -79,16 +79,8 @@ test.describe('Meeting actions test', () => {
     // FIXME jitsi bug
   /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    if(browser.browserType() === webkit) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test.skip(project.name === 'mobilechromium', 'Skip on mobile Chromium');
+  test.skip(browser.browserType() === webkit, 'Skip on WebKit');
 
     await resetWamMaps(request);
       await using page = await getPage(browser, 'Admin1', Map.url("empty"));
@@ -152,11 +144,12 @@ test.describe('Meeting actions test', () => {
     await page.context().close();
   });*/
 
-    test('Block users', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
+  test('Block users', async ({ browser }) => {
+    // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+    test.skip(
+      browser.browserType().name() === "firefox",
+      "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
+    );
         // Go to the empty map
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
