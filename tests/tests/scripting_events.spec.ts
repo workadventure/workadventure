@@ -6,10 +6,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Scripting API Events', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('events', async ({ browser, request }) => {
         // Go to

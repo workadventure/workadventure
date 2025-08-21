@@ -4,11 +4,7 @@ import {isMobile} from "./utils/isMobile";
 test.describe('Swagger documentation', () => {
     test('Pusher -> Admin', async ({page}) => {
         // Skip test for mobile device
-        if(isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(isMobile(page), 'Skip on mobile devices');
 
         await page.goto(
             `/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`

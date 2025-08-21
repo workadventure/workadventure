@@ -19,22 +19,14 @@ const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "roo
 const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_variables.json`;
 const variableName = "textField";
 
-test.describe('Room API', async () => {
+test.describe('Room API', () => {
     test.beforeEach(async ({ browserName, page }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browserName !== "chromium" || isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
     });
     test("With a bad API key", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browser.browserType() !== chromium) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         const badClient = createRoomApiClient("BAD KEY", process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
         try {
             await badClient.saveVariable({
@@ -49,11 +41,7 @@ test.describe('Room API', async () => {
     });
     test("Save & read a variable", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browser.browserType() !== chromium) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
         await using page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
@@ -81,11 +69,7 @@ test.describe('Room API', async () => {
 
     test("Listen to a variable", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browser.browserType() !== chromium) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
 
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
 
@@ -117,11 +101,7 @@ test.describe('Room API', async () => {
 
     test("Listen to an event emitted from the game", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browser.browserType() !== chromium) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
 
         const listenEvent = client.listenToEvent({
             name: "my-event",
@@ -153,11 +133,7 @@ test.describe('Room API', async () => {
 
     test("Send an event from the Room API", async ({ browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
-        if(browser.browserType() !== chromium) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         let gotExpectedBroadcastNotification = false;

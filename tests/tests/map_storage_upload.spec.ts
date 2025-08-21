@@ -12,11 +12,7 @@ test.use({
 
 test.describe('Map-storage Upload API', () => {
     test.beforeEach(async ({page}) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('users are asked to reconnect when a map is updated',
         async ({ request, browser }) => {

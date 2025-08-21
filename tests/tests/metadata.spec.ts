@@ -5,11 +5,7 @@ import {isMobile} from "./utils/isMobile";
 test.describe('Meta tags', () => {
     test.beforeEach(async ({ page, browserName }) => {
         // Skip test for mobile device
-        if(isMobile(page) && browserName !== "chromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+  test.skip(isMobile(page) && browserName !== 'chromium', 'Skip on mobile non-Chromium');
     });
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({ request }) => {
     const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {

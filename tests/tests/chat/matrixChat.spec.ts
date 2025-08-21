@@ -14,12 +14,8 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     "Ignore tests on webkit because of issue with camera and microphone",
 
     async ({ request, browserName }) => {
-      //WebKit has issue with camera
-      if (browserName === "webkit") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  // WebKit has issue with camera
+  test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
       await resetWamMaps(request);
       await ChatUtils.resetMatrixDatabase();
     }
@@ -168,7 +164,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     // check if the iframe activity picker is opened
     const popupPromise = page.waitForEvent("popup");
     await popupPromise;
-    (await popupPromise).close();
+    await (await popupPromise).close();
 
     // Enter the link
     await page.getByTestId("applicationInputLink").click();

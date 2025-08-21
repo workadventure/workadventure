@@ -9,11 +9,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Areas', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('can edit Tiled area from scripting API', async ({ browser }) => {
         // This tests connects on a map with an area named "silent".
