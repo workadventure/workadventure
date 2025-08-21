@@ -601,7 +601,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await page.getByTestId("createRoomButton").click();
     await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
 
-    const otherPage = await getPage(browser, 'Bob', Map.url("empty"));
+    await using otherPage = await getPage(browser, 'Bob', Map.url("empty"));
     if (isMobile(otherPage)) {
       await Menu.openMenu(otherPage);
     }
@@ -620,9 +620,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
     await expect(page.getByTestId("understoodButton")).toBeAttached();
 
     await expect(otherPage.getByTestId("understoodButton")).toBeAttached();
-    await otherPage.close();
     await otherPage.context().close();
-    await page.close();
     await page.context().close();
   });
 
