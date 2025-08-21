@@ -50,8 +50,6 @@ export default defineConfig(({ mode }) => {
             }),
             Icons({
                 compiler: "svelte",
-                // avoid using @antfu/install-pkg + package-manager-detector at runtime
-                // which may trigger ESM require issues in some environments
                 autoInstall: false,
             }),
             legacy({
