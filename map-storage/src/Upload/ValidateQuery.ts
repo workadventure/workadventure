@@ -1,5 +1,4 @@
-import { z, ZodObject } from "zod";
-import { ZodRawShape } from "zod/lib/types";
+import { z, ZodObject, ZodRawShape } from "zod";
 import { Request, Response } from "express";
 
 /**
