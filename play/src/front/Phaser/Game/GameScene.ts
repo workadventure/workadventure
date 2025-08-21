@@ -3519,10 +3519,12 @@ ${escapedMessage}
                 (
                     object1:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody,
                     object2:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}
