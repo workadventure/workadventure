@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import {expect, Page} from "@playwright/test";
 import AreaEditor from "./map-editor/areaEditor";
 import EntityEditor from "./map-editor/entityEditor";
 import MapEditor from "./mapeditor";
@@ -29,7 +29,7 @@ class AreaAccessRights {
   };
 
   async openAreaEditorAndAddAreaWithRights(
-    page,
+    page: Page,
     writeRights: string[] = [],
     readRights: string[] = []
   ) {
