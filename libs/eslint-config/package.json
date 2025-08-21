@@ -8,7 +8,7 @@
   "dependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.33.0",
-    "@smarttools/eslint-plugin-rxjs": "^1.0.19",
+    "@smarttools/eslint-plugin-rxjs": "^1.0.22",
     "eslint": "^9.33.0",
     "eslint-import-resolver-typescript": "^3.10.1",
     "eslint-plugin-import": "^2.31.0",
@@ -18,16 +18,7 @@
     "svelte-eslint-parser": "^1.1.3",
     "typescript-eslint": "^8.40.0"
   },
-  "overrides": {
-    "@typescript-eslint/parser": {
-      "typescript": "^5.7.2"
-    },
-    "typescript-eslint": {
-      "typescript": "^5.7.2"
-    }
-  },
   "peerDependencies": {
-    "eslint": "^9.33.0",
-    "typescript": "^5.7.2"
+    "eslint": "^9.33.0"
   }
 }

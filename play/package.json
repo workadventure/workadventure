@@ -178,10 +178,5 @@
     "uuid": "^9.0.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.51.0",
     "zod": "^3.23.8"
-  },
-  "overrides": {
-    "unplugin-icons": {
-      "@iconify/utils": "2.3.0"
-    }
   }
 }
