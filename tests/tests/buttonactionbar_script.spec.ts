@@ -4,11 +4,11 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Button in action bar', () => {
+test.describe('action bar', () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), 'Skip on mobile devices');
     });
-    test('test', async ({ browser }) => {
+    test('Button in action bar', async ({ browser }) => {
         
         await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
@@ -30,13 +30,8 @@ test.describe('Button in action bar', () => {
 
         await page.context().close();
     });
-});
 
-test.describe('Action button in action bar', () => {
-    test.beforeEach(async ({ page }) => {
-        test.skip(isMobile(page), 'Skip on mobile devices');
-    });
-    test('test', async ({ browser }) => {
+    test('Action button in action bar', async ({ browser }) => {
         await using page = await getPage(browser, 'Alice', 
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
         );

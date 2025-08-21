@@ -12,6 +12,9 @@ export default [
                 'error',
                 { allowConditional: true }
             ],
+            // In tests, we don't need to be as strict as in production code
+            // We happily allow "any", unsafe calls, member access, assignments, and returns
+            // In the worst case, the code will crash, and the test will fail.
             "@typescript-eslint/no-unsafe-call": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/no-unsafe-assignment": "off",
@@ -19,6 +22,7 @@ export default [
             "no-await-in-loop": "off",
             "@typescript-eslint/require-await": "off",
             "svelte/no-ignored-unsubscribe": "off",
+            "rxjs/no-ignored-subscription": "off",
         }
     }
 ];
