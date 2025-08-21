@@ -7,11 +7,7 @@ import Menu from "./utils/menu";
 
 test.describe('Action bar responsiveness', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('Check items in the action bar go in the menu one by one @oidc', async ({ browser }) => {
         

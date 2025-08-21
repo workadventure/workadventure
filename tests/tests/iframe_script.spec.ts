@@ -8,11 +8,7 @@ import Map from "./utils/map";
 
 test.describe("Iframe API", () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test("can be called from an iframe loading a script", async ({ browser }) => {
     await using page = await getPage(browser, 'Alice', 
@@ -105,11 +101,7 @@ test.describe("Iframe API", () => {
 
   test("disable screen sharing", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browser.browserType() !== chromium) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
     await using page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
@@ -153,11 +145,7 @@ test.describe("Iframe API", () => {
 
   test("disable right click user button", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browser.browserType() !== chromium) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
     await using page = await getPage(browser, 'Alice',
       publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );

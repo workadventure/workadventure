@@ -8,11 +8,7 @@ import {isMobile} from "./utils/isMobile";
 test.describe("Scripting audio streams", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browserName !== "chromium" || isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
   test("can play and listen to sounds", async ({
     browser,

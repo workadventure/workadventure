@@ -6,11 +6,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Button in action bar', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('test', async ({ browser }) => {
         
@@ -38,11 +34,7 @@ test.describe('Button in action bar', () => {
 
 test.describe('Action button in action bar', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('test', async ({ browser }) => {
         await using page = await getPage(browser, 'Alice', 

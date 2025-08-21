@@ -13,11 +13,7 @@ test.describe("#Scripting chat functions", () => {
 
     async ({ browserName, request, page }) => {
       //WebKit has issue with camera
-      if (browserName === "webkit" || isMobile(page)) {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  test.skip(browserName === 'webkit' || isMobile(page), 'Skip on WebKit and mobile');
       await resetWamMaps(request);
       await chatUtils.resetMatrixDatabase();
     }

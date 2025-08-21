@@ -6,11 +6,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Error pages', () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-    }
+  test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test('successfully displayed for unsupported URLs', async ({ page }) => {
     await page.goto(

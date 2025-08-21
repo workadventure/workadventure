@@ -7,6 +7,11 @@ export default [
     {
         rules: {
             ...playwright.configs['flat/recommended'].rules,
+            // Allow conditional skips with a reason message
+            'playwright/no-skipped-test': [
+                'error',
+                { allowConditional: true }
+            ],
             "@typescript-eslint/no-unsafe-call": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/no-unsafe-assignment": "off",

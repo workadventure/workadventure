@@ -7,10 +7,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe("Walk to", () => {
   test.beforeEach(async ({ page, browserName }) => {
-    if (browserName === "webkit" || isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+    test.skip(browserName === 'webkit' || isMobile(page), 'Skip on WebKit and mobile');
   });
   // FIXME: for some reason, this test fails in Helm. Find why
   test("walk to a user", async ({ browser }, { project }) => {
@@ -46,10 +43,7 @@ test.describe("Walk to", () => {
 
 test.describe("Send Message from User List @oidc @matrix @chat", () => {
   test("Send Message from User List @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
-    if (isMobile(page) || browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+  test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
 
     await using adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
@@ -75,10 +69,7 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
   });
 
   test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
-    if (isMobile(page) && browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+  test.skip(isMobile(page) && browserName === 'webkit', 'Skip on mobile WebKit');
 
     // Alice is not connected
     await using userAlice = await getPage(browser, 'Alice', Map.url("empty"));

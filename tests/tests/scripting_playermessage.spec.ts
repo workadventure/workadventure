@@ -7,14 +7,10 @@ test.describe('Scripting player message function', () => {
 
     test.beforeEach(
         "Ignore tests on webkit because of issue with camera and microphone",
-        ({ browserName }) => {
-          //WebKit has issue with camera
-          if (browserName === "webkit") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-          }
-        }
+                ({ browserName }) => {
+                    // WebKit has issue with camera
+                    test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
+                }
       );
 
     test('play text on the head of user and remove it', async ({ browser}) => {

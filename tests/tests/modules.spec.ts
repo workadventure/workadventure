@@ -5,12 +5,9 @@ import {publicTestMapUrl} from "./utils/urls";
 import {isMobile} from "./utils/isMobile";
 
 test.describe('Module', () => {
-    test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
-    });
+  test.beforeEach(async ({ page }) => {
+    test.skip(isMobile(page), 'Skip on mobile devices');
+  });
   test('loading should work out of the box', async ({ browser }, { project }) => {
     await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/Modules/with_modules.json", "modules"),
         {

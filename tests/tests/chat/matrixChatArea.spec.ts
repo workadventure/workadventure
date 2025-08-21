@@ -14,12 +14,8 @@ test.describe("matrix chat area property @matrix", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {
-      //Map Editor not available on mobile / WebKit has issue with camera
-      if (isMobile(page) || project.name === "webkit") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+      // Map Editor not available on mobile / WebKit has issue with camera
+      test.skip(isMobile(page) || project.name === 'webkit', 'Skip on mobile or WebKit');
       await chatUtils.resetMatrixDatabase();
       await resetWamMaps(request);
     }

@@ -7,11 +7,7 @@ import Menu from "./utils/menu";
 test.describe('Scripting space-related functions', () => {
 
     test('can join and watch space', async ({ browser, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
@@ -192,11 +188,7 @@ test.describe('Scripting space-related functions', () => {
     });
 
     test('cannot join a space with a different filter on the same browser', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
 
         // Get all open pages in the context
         const pages = context.pages();
@@ -221,12 +213,7 @@ test.describe('Scripting space-related functions', () => {
     });
 
     test('cannot join a space with a different filter in 2 browsers', async ({ browser, context, browserName }, { project }) => {
-
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
         // Get all open pages in the context
 
         const pages = context.pages();
@@ -260,11 +247,7 @@ test.describe('Scripting space-related functions', () => {
     });
 
     test('can join a livestream space and see the user when it starts streaming', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
@@ -326,11 +309,7 @@ test.describe('Scripting space-related functions', () => {
     });
 
     test('should reconnect to a space when backend is restarted @local', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
