@@ -34,7 +34,9 @@ export default defineConfig(({ mode }) => {
             },
         },
         plugins: [
-            nodePolyfills(),
+            nodePolyfills({
+                include: ["events"],
+            }),
             svelte({
                 preprocess: sveltePreprocess(),
                 onwarn(warning, defaultHandler) {
