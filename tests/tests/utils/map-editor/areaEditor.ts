@@ -115,6 +115,7 @@ class AreaEditor {
 
   async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
     //TODO : find a better way to wait for the room to be created
+    //eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(4000);
     await page.getByTestId("shouldOpenAutomaticallyCheckbox").click();
 
@@ -122,7 +123,8 @@ class AreaEditor {
       await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
       await page.getByPlaceholder("My room").fill(roomName,{timeout : 20_000});
     }
-        //TODO : find a better way to wait for the room to be created
+    //TODO : find a better way to wait for the room to be created
+    //eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(4000);
   }
 
