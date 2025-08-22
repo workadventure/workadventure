@@ -97,11 +97,11 @@ class Chat {
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
         await this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.react').click();
         await page.frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
-        expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
+        await expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeVisible();
     }
 
     async AT_checkReactLastMessageReceived(page: Page){
-        expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeDefined();
+        await expect(this.get(page).locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeVisible();
     }
 
     async AT_lastMessageFileContain(page: Page, text: string){
