@@ -499,6 +499,14 @@ jobs:
       - name: "Install dependencies"
         run: npm ci --workspace=workadventure-e2e-tests --workspace=workadventure-play
 
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto
+        working-directory: "messages"
+
       - name: "Install Room API client dependencies"
         run: npm ci
         working-directory: "libs/room-api-clients/room-api-client-js"
