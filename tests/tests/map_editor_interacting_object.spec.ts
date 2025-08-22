@@ -124,6 +124,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.getByText('Open file').click();
 
     // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
+    //eslint-disable-next-line playwright/no-wait-for-selector
     const iframeE = await page.waitForSelector('iframe[src*="ipsum-lorem"]');
 
     // Assert that the iframe of the Entity has the correct 'src' attribute
@@ -154,6 +155,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await Map.teleportToPosition(page, 9 * 32, 9 * 32);
 
     // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
+    //eslint-disable-next-line playwright/no-wait-for-selector
     const iframeA = await page.waitForSelector('iframe[src*="lorem-ipsum"]');
 
     // Assert that the iframe of the Area has the correct 'src' attribute

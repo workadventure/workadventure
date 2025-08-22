@@ -348,7 +348,7 @@ test.describe('Availability Status', () => {
             await Menu.closeNotificationPopUp(page);
             await Menu.openMenu(page);
             await Menu.clickOnStatus(page,statusName);
-            await page.waitForTimeout(500);
+            await expect(page.getByTestId('profile-menu')).toBeHidden();
 
             await Menu.openMenu(page);
             await expect(page.getByRole('button', { name: statusName }).locator('svg')).toBeVisible();
@@ -406,7 +406,7 @@ test.describe('Availability Status', () => {
 
             await page.context().close();
         })
-        test.describe('Do not disturb interaction',async()=>{
+        test.describe('Do not disturb interaction', ()=>{
             test('should not create a bubble', async({ browser }) => {
                 const statusName = "Do not disturb";
                 await using page = await getPage(browser, 'Alice',

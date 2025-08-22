@@ -33,8 +33,10 @@ test.describe('Scripting follow functions', () => {
 
         let position = await Map.getPosition(page2);
 
+        //eslint-disable-next-line playwright/no-conditional-in-test
         if (position.x < 100) {
             // Wait a bit, maybe Bob was slow to start
+            //eslint-disable-next-line playwright/no-wait-for-timeout
             await page2.waitForTimeout(2000);
             position = await Map.getPosition(page2);
         }

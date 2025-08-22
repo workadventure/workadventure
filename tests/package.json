@@ -32,5 +32,8 @@
     "*.ts": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "catch-unknown": "^2.0.0"
   }
 }

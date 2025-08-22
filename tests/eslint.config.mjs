@@ -12,6 +12,9 @@ export default [
                 'error',
                 { allowConditional: true }
             ],
+            // False positive because some expect calls are in helper functions
+            'playwright/expect-expect': 'off',
+
             // In tests, we don't need to be as strict as in production code
             // We happily allow "any", unsafe calls, member access, assignments, and returns
             // In the worst case, the code will crash, and the test will fail.
