@@ -1,5 +1,6 @@
 import { Scene } from "phaser";
 import { ErrorApiData } from "@workadventure/messages";
+import { asError } from "catch-unknown";
 import { gameManager } from "../Game/GameManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
@@ -48,7 +49,7 @@ export class EntryScene extends Scene {
                                 this.scene.start(nextSceneName);
                             })
                             .catch((e) => {
-                                throw new Error("Error while waiting plugin load!", e);
+                                throw new Error("Error while waiting plugin load!" + asError(e).message);
                             });
                     })
                     .catch((err) => {
@@ -65,20 +66,19 @@ export class EntryScene extends Scene {
                     });
             })
             .catch((e) => {
-                throw new Error("Cannot load locale!", e);
+                throw new Error("Cannot load locale!" + asError(e).message);
             });
     }
 
     /**
      * Due to a bug, the rexAwait plugin sometimes does not finish to load in Webkit when the scene is started.
-     * Same thing for the rexWebFont plugin.
      * This function wait for the plugin to be loaded before starting to load resources.
      */
     private async waitPluginLoad(): Promise<void> {
         return new Promise((resolve) => {
             const check = () => {
                 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if ((this.load as any).rexAwait && (this.load as any).rexWebFont) {
+                if ((this.load as any).rexAwait) {
                     resolve();
                 } else {
                     console.log("Waiting for rex plugins to be loaded...");
