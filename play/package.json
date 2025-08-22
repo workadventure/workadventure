@@ -151,7 +151,7 @@
     "p-limit": "^4.0.0",
     "phaser": "^3.86.0",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#7e02ce91a100338a27f75f7b443bacd12459fd0f",
-    "phaser3-rex-plugins": "^1.1.42",
+    "phaser3-rex-plugins": "1.60.10",
     "posthog-js": "^1.211.3",
     "prom-client": "^14.1.0",
     "protobuf-fieldmask": "^2.0.0",
