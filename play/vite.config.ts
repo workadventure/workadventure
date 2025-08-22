@@ -54,7 +54,6 @@ export default defineConfig(({ mode }) => {
             }),
             Icons({
                 compiler: "svelte",
-                autoInstall: false,
             }),
             legacy({
                 //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
