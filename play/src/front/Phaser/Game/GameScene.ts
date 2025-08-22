@@ -540,7 +540,8 @@ export class GameScene extends DirtyScene {
         }
 
         // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
-        if (typeof this.load.rexWebFont === "function") {
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (typeof (this.load as any).rexWebFont === "function") {
             //eslint-disable-next-line @typescript-eslint/no-explicit-any
             (this.load as any).rexWebFont({
                 custom: {
