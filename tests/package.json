@@ -1,4 +1,7 @@
 {
+  "private": true,
+  "name": "workadventure-e2e-tests",
+  "version": "1.0.0",
   "devDependencies": {
     "@playwright/test": "^1.53.2",
     "@types/adm-zip": "^0.5.0",

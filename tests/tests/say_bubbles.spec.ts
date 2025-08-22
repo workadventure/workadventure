@@ -23,7 +23,7 @@ test.describe("Say bubbles", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob")).toBeVisible();
+        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible();
 
         // Alice sends a message
         await alicePage.keyboard.press("Enter");
@@ -52,7 +52,7 @@ test.describe("Say bubbles", () => {
         );
 
         // Wait for both users to be connected
-        await expect(alicePage.getByText("Bob")).toBeVisible();
+        await expect(alicePage.getByText("Bob", { exact: true })).toBeVisible();
 
         // Alice sends a thinking message
         await alicePage.keyboard.down("Control");
