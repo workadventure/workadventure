@@ -354,6 +354,7 @@ test.describe('Scripting space-related functions', () => {
         // This simulates a backend restart, as the space connection will be closed
         await apiContext.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space&token=123');
 
+        //eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(5000);
 
         // Alice should see Bob's user
