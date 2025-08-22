@@ -1,4 +1,4 @@
-import test, { expect } from "@playwright/test";
+import test, {expect, Page} from "@playwright/test";
 import MapEditor from "../utils/mapeditor";
 import Menu from "../utils/menu";
 import AreaEditor from "../utils/map-editor/areaEditor";
@@ -9,6 +9,12 @@ import { resetWamMaps } from "../utils/map-editor/uploader";
 import { getPage } from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
 import chatUtils from "./chatUtils";
+
+async function hideNoCameraIfWebkit(page: Page, browserName: string) {
+  if (browserName === "webkit") {
+    await hideNoCamera(page);
+  }
+}
 
 test.describe("matrix chat area property @matrix", () => {
   test.beforeEach(
@@ -33,9 +39,7 @@ test.describe("matrix chat area property @matrix", () => {
     await oidcMatrixUserLogin(page);
 
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
+    await hideNoCameraIfWebkit(page, browserName);
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
@@ -67,9 +71,7 @@ test.describe("matrix chat area property @matrix", () => {
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
+    await hideNoCameraIfWebkit(page, browserName);
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
@@ -103,9 +105,7 @@ test.describe("matrix chat area property @matrix", () => {
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
+    await hideNoCameraIfWebkit(page, browserName);
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
@@ -142,9 +142,7 @@ test.describe("matrix chat area property @matrix", () => {
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
+    await hideNoCameraIfWebkit(page, browserName);
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
@@ -196,9 +194,7 @@ test.describe("matrix chat area property @matrix", () => {
     await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
 
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
+    await hideNoCameraIfWebkit(page, browserName);
 
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
@@ -218,10 +214,8 @@ test.describe("matrix chat area property @matrix", () => {
     await page.context().close();
     await using page2 = await getPage(browser, 'Bob', Map.url("empty"));
     await oidcMemberTagLogin(page2);
-    
-    if (browserName === "webkit") {
-      await hideNoCamera(page2);
-    }
+
+    await hideNoCameraIfWebkit(page2, browserName);
     
     await Map.walkToPosition(page2, 4 * 32, 3 * 32);
     await expect(page2.getByTestId("closeChatButton")).toBeVisible();

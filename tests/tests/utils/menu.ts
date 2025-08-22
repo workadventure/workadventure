@@ -1,4 +1,5 @@
 import {expect, Page} from "@playwright/test";
+import {isMobile} from "./isMobile";
 
 class Menu {
 
@@ -22,6 +23,12 @@ class Menu {
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
         await expect(page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+    }
+
+    async openMenuIfMobile(page: Page) {
+        if (isMobile(page)) {
+            await this.openMenu(page);
+        }
     }
 
     /*async openMenu(page: Page) {
