@@ -44,8 +44,8 @@ class ChatUtils {
 
     // await page.getByTestId("VerifyWithPassphraseButton").click();
 
-    // //eslint-disable-next-line playwright/no-wait-for-timeout
-     await page.waitForTimeout(1000);
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     //eslint-disable-next-line playwright/no-element-handle
     const ssoButton = await page.$("text=Continue with SSO");
 

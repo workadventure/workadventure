@@ -352,7 +352,7 @@ test.describe('Map-storage Upload API', () => {
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
         expect(maps["maps"]["map.wam"]).toBeDefined();
-        expect(Object.keys(maps["maps"])).toHaveLength(1);
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(1);
     });
 
     test("delete the root folder", async ({ request }) => {
@@ -368,7 +368,7 @@ test.describe('Map-storage Upload API', () => {
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
         expect(maps["maps"]["map.wam"]).toBeDefined();
-        expect(Object.keys(maps["maps"])).toHaveLength(1);
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(1);
 
         const deleteRoot = await request.delete(``);
 
@@ -376,7 +376,7 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        expect(Object.keys(maps["maps"])).toHaveLength(0);
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(0);
     });
 
     test("delete a folder", async ({ request }) => {

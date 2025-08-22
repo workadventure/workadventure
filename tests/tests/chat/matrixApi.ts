@@ -1,3 +1,4 @@
+import {asError} from "catch-unknown";
 import axios from "axios";
 import { matrix_domain, matrix_server_url } from "../utils/urls";
 
@@ -69,7 +70,7 @@ class MatrixApi {
         (user) => user.name !== MATRIX_ADMIN_USER
       );
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
@@ -122,7 +123,7 @@ class MatrixApi {
         );
       }
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
@@ -149,7 +150,7 @@ class MatrixApi {
       return powerLevelsResponse.data.users[MATRIX_ADMIN_USER] || 0;
 
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
@@ -173,7 +174,7 @@ class MatrixApi {
         throw new Error("Failed with status " + response.status);
     }
 } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 }
