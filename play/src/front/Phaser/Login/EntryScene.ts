@@ -40,10 +40,16 @@ export class EntryScene extends Scene {
                 gameManager
                     .init(this.scene)
                     .then((nextSceneName) => {
-                        // Let's rescale before starting the game
-                        // We can do it at this stage.
-                        waScaleManager.applyNewSize();
-                        this.scene.start(nextSceneName);
+                        this.waitPluginLoad()
+                            .then(() => {
+                                // Let's rescale before starting the game
+                                // We can do it at this stage.
+                                waScaleManager.applyNewSize();
+                                this.scene.start(nextSceneName);
+                            })
+                            .catch((e) => {
+                                throw new Error("Error while waiting plugin load!", e);
+                            });
                     })
                     .catch((err) => {
                         // TODO: make this safer ?
@@ -58,8 +64,28 @@ export class EntryScene extends Scene {
                         }
                     });
             })
-            .catch(() => {
-                throw new Error("Cannot load locale!");
+            .catch((e) => {
+                throw new Error("Cannot load locale!", e);
             });
+    }
+
+    /**
+     * Due to a bug, the rexAwait plugin sometimes does not finish to load in Webkit when the scene is started.
+     * Same thing for the rexWebFont plugin.
+     * This function wait for the plugin to be loaded before starting to load resources.
+     */
+    private async waitPluginLoad(): Promise<void> {
+        return new Promise((resolve) => {
+            const check = () => {
+                //eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((this.load as any).rexAwait && (this.load as any).rexWebFont) {
+                    resolve();
+                } else {
+                    console.log("Waiting for rex plugins to be loaded...");
+                    setTimeout(check, 100);
+                }
+            };
+            check();
+        });
     }
 }
