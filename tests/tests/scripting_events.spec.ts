@@ -35,7 +35,7 @@ test.describe('Scripting API Events', () => {
                     resolve();
                 });
             });
-            WA.event.broadcast("key", "value");
+            await WA.event.broadcast("key", "value");
             await promise;
             return true;
         });
@@ -48,7 +48,7 @@ test.describe('Scripting API Events', () => {
         let gotExpectedTargetedNotification = false;
         let gotExpectedGlobalNotification = false;
         page.on('console', async (msg) => {
-            const text = await msg.text();
+            const text = msg.text();
             //console.log(text);
             if (text === 'Broadcast event triggered') {
                 gotExpectedBroadcastNotification = true;
@@ -79,7 +79,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page2, async () => {
             await WA.onInit();
-            WA.event.broadcast("key2", "value");
+            await WA.event.broadcast("key2", "value");
         });
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
 

@@ -388,6 +388,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
+    //eslint-disable-next-line playwright/no-conditional-in-test
     if (isMobile(page)) {
       await ChatUtils.closeChat(page);
     }
@@ -432,6 +433,7 @@ test.describe("Matrix chat tests @oidc @matrix", () => {
       (response) =>
         response.url().includes("anonymLogin") && response.status() === 200
     );
+    //eslint-disable-next-line playwright/no-conditional-in-test
     if (isMobile(page)) {
       await ChatUtils.closeChat(page);
     }

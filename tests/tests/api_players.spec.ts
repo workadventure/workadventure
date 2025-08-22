@@ -482,7 +482,7 @@ test.describe("API WA.players", () => {
     let gotExpectedNotification = false;
     let gotUnexpectedNotification = false;
     page2.on("console", async (msg) => {
-      const text = await msg.text();
+      const text = msg.text();
       //console.log(text);
       if (
         text === "NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE"

@@ -785,7 +785,7 @@ test.describe("Map editor @oidc", () => {
         await expect(page.getByText('Choose an object')).toBeVisible();
         await page.getByText('Save').click();
 
-        EntityEditor.moveAndClick(page, 32, 300);
+        await EntityEditor.moveAndClick(page, 32, 300);
 
         await expect(page.getByText('Books (Variant 5)')).toBeVisible();
         await expect(page.getByText('lorem-ipsum.pdf')).toBeVisible();
