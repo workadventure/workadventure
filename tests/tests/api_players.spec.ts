@@ -55,6 +55,11 @@ test.describe("API WA.players", () => {
 
     await page2.context().close();
     await expect(events.getByText('User left: Bob')).toBeVisible();
+    // Possible race condition here? Sometimes, Bob is still in the list when we check. A bit weird because the leave event is received.
+    // Seems it happens more in Kubernetes E2E tests....
+    // Let's add a small timeout just in case
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page1.waitForTimeout(500);
     await getCoWebsiteIframe(page1).locator("#listCurrentPlayers").click();
     await expect(list).not.toContainText("Bob");
     await page1.context().close();
