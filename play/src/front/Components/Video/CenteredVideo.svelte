@@ -168,7 +168,7 @@
                 analyticsClient.noVideoStreamReceived();
             }, 3000);
 
-            if (callbackId !== undefined) {
+            if (callbackId !== undefined && videoElement) {
                 // We need to cancel the previous callback if it exists.
                 videoElement.cancelVideoFrameCallback(callbackId);
             }
@@ -177,7 +177,7 @@
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;
-                if (callbackId !== undefined) {
+                if (callbackId !== undefined && videoElement) {
                     // We need to cancel the previous callback if it exists.
                     videoElement.cancelVideoFrameCallback(callbackId);
                 }
