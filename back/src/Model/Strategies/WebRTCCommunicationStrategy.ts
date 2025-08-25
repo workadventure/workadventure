@@ -138,7 +138,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
-        this.handleUserMediaUpdate(user);
+        // TODO: remove the handleUserMediaUpdate function after testing
+        //this.handleUserMediaUpdate(user);
     }
     private shutdownConnection(user: string, otherUser: string): void {
         try {
@@ -154,7 +155,9 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
+        //const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
+        //TODO: remove this
+        const hasMedia = true;
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
         // Only establish if we need media connection AND don't already have one
         return hasMedia && !hasExisting;
@@ -179,6 +182,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this._connections.removeUserToNotify(userId);
     }
 
+    //TODO : remove the handleUserMediaUpdate function after testing
     private handleUserMediaUpdate(user: SpaceUser): void {
         const otherUsers = this._space
             .getUsersToNotify()
