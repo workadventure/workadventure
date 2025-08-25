@@ -8,7 +8,7 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Availability Status', () => {
     test.describe('Busy Status',() => {
-        test('should return to online status when you move',
+        test('should return to online status when you move @nowebkit',
             async({ browser }, { project }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             test.skip(project.name === 'webkit', 'WebKit keyboard movement is flaky');
@@ -35,7 +35,7 @@ test.describe('Availability Status', () => {
 
             await page.context().close();
         })
-        test('should disable microphone and camera', async({ browser }, { project }) => {
+        test('should disable microphone and camera @nowebkit', async({ browser }, { project }) => {
             test.skip(project.name === 'webkit', 'WebKit limitations');
             const statusName = "Busy";
             await using page = await getPage(browser, 'Alice',
@@ -60,7 +60,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',
+        test('should keep same webcam and microphone config when you go back to online status @nowebkit',
             async({ browser, browserName })=>{
             test.skip(browserName === 'webkit', 'WebKit limitations');
             const statusName = "Busy";
@@ -85,7 +85,7 @@ test.describe('Availability Status', () => {
 
             await page.context().close();
         })
-        test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',
+        test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied @nowebkit @nofirefox',
             async({ browser, browserName }) => {
             test.skip(browserName === 'firefox' || browserName === 'webkit', 'Notification permission management issues');
             
@@ -109,7 +109,7 @@ test.describe('Availability Status', () => {
         })
         
         test.describe('busy interaction', () => {
-            test('should open a popup when a bubble is created...',
+            test('should open a popup when a bubble is created... @nowebkit',
                 async({ browserName, browser }) => {
                 test.skip(browserName === 'webkit', 'WebKit limitations');
                 const statusName = "Busy";
@@ -153,7 +153,7 @@ test.describe('Availability Status', () => {
 
                 await page.context().close();
             })
-            test('should return to online status after accept conversation',
+            test('should return to online status after accept conversation @nowebkit',
                 async({ browser, browserName }) => {
                 test.skip(browserName === 'webkit', 'WebKit limitations');
                 const statusName = "Busy";
@@ -192,7 +192,7 @@ test.describe('Availability Status', () => {
 
                 await page.context().close();
             })
-            test('should keep busy status  after refuse conversation',
+            test('should keep busy status  after refuse conversation @nowebkit',
                 async({ browser, browserName })=>{
                 
                 test.skip(browserName === 'webkit', 'WebKit limitations');
@@ -238,7 +238,7 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
-        test('should return to online status when you move', async({ browser, browserName }) => {
+        test('should return to online status when you move @nowebkit @nomobile', async({ browser, browserName }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             test.skip(browserName === 'webkit', 'WebKit limitations');
 
@@ -259,7 +259,7 @@ test.describe('Availability Status', () => {
 
             await page.context().close();
         })
-        test('should disable microphone and camera',async({ browser, browserName }) => {
+        test('should disable microphone and camera @nowebkit',async({ browser, browserName }) => {
             const statusName = "Back in a moment";
             test.skip(browserName === 'webkit', 'WebKit limitations');
             await using page = await getPage(browser, 'Alice',
@@ -281,7 +281,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',
+        test('should keep same webcam and microphone config when you go back to online status @nowebkit',
             async({ browser, browserName }) => {
             test.skip(browserName === 'webkit', 'WebKit limitations');
             const statusName = "Back in a moment";
@@ -336,7 +336,7 @@ test.describe('Availability Status', () => {
         })
     })
     test.describe('Do not disturb Status',()=>{
-        test('should return to online status when you move', async({ browser, browserName }) => {
+        test('should return to online status when you move @nowebkit @nomobile', async({ browser, browserName }) => {
             // Skip webkit because the moving player with the keyboard doesn't work
             test.skip(browserName === 'webkit', 'WebKit limitations');
             const statusName = "Do not disturb";
@@ -359,7 +359,7 @@ test.describe('Availability Status', () => {
 
             await page.context().close();
         })
-        test('should disable microphone and camera', async({ browser, browserName }) => {
+        test('should disable microphone and camera @nowebkit', async({ browser, browserName }) => {
             test.skip(browserName === 'webkit', 'WebKit limitations');
             const statusName = "Do not disturb";
             await using page = await getPage(browser, 'Alice',
@@ -381,7 +381,7 @@ test.describe('Availability Status', () => {
             await page.context().close();
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',
+        test('should keep same webcam and microphone config when you go back to online status @nowebkit',
             async({ browser, browserName }) => {
             test.skip(browserName === 'webkit', 'WebKit limitations');
             const statusName = "Do not disturb";

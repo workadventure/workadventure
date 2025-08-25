@@ -5,7 +5,7 @@ import { getPage } from './utils/auth';
 import {isMobile} from "./utils/isMobile";
 import Menu from "./utils/menu";
 
-test.describe('Action bar responsiveness', () => {
+test.describe('Action bar responsiveness @nomobile', () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), 'Skip on mobile devices');
     });

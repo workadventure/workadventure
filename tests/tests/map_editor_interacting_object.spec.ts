@@ -14,7 +14,7 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor interacting with object @oidc", () => {
+test.describe("Map editor interacting with object @oidc @nomobile", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
       ({ page }) => {
@@ -54,7 +54,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.context().close();
   });
 
-  test("Success to interact with entity", async ({ browser, request, browserName }) => {
+  test("Success to interact with entity @nowebkit", async ({ browser, request, browserName }) => {
     // Skip the test on Webkit because the click up doesn't work
     test.skip(browserName === 'webkit', 'WebKit click up does not work here');
 
@@ -90,7 +90,7 @@ test.describe("Map editor interacting with object @oidc", () => {
     await page.context().close();
   });
 
-  test("Success to interact with openFile area and entity", async ({ browser, request, browserName }) => {
+  test("Success to interact with openFile area and entity @nowebkit", async ({ browser, request, browserName }) => {
     // Skip the test on Webkit because the click up doesn't work
     test.skip(browserName === 'webkit', 'WebKit click up does not work here');
 
