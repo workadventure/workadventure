@@ -74,3 +74,21 @@ $LL.messages.coffeMachine.playerStart.start({
   playerName: "John",
 });
 ```
+
+## Check missing translations (diff tool)
+
+To compare English keys to another locale and list missing keys, use the helper script located in `play/scripts/diff-i18n.ts`.
+
+```bash
+cd play
+npm run i18n:diff -- fr-FR   # compare (fr-FR translations to en-US)
+```
+
+- Advanced: specify both target and source locales (default source is en-US):
+
+```bash
+cd play
+npm run i18n:diff -- ar-SA fr-FR  # compare (ar-SA translations to fr-FR)
+```
+
+The target locale argument is required for the generic command. The output lists modules and keys missing in the target locale, helping translators keep parity with English files while preserving placeholders.

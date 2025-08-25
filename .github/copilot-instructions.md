@@ -212,6 +212,10 @@ lsof -ti:3000,3001,8080,9229 | xargs kill -9
 Any message added to the code should be translated in the supported languages.
 WorkAdventure uses typesafe-i18n and the translation files are in `play/src/i18n/[language]/[module].ts`
 
+To audit missing keys between English and another locale, use the helper script:
+
+From `play/` run `npm run i18n:diff -- [language-code]` for instance `npm run i18n:diff:locale -- fr-FR`
+
 ## Trust These Instructions
 These instructions are comprehensive and validated. Only search for additional information if:
 1. A specific command fails with an error not covered above

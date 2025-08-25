@@ -23,185 +23,225 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     properties: {
         silentProperty: {
-            label: "صامت", // Stumm
-            description: "عدم السماح بأي محادثات في الداخل", // Keine Gespräche im Inneren erlauben
+            label: "صامت",
+            description: "عدم السماح بإجراء محادثات داخل المنطقة.",
         },
         textProperties: {
-            label: "عنوان", // Überschrift
-            placeholder: "أدخل النص الذي سيتم عرضه عند التفاعل مع الكائن هنا.", // Geben Sie hier den Text ein, der angezeigt wird, wenn Sie mit dem Objekt interagieren.
+            label: "نص العنوان",
+            placeholder: "أدخل هنا النص الذي سيظهر عند التفاعل مع الكائن",
         },
         focusableProperties: {
-            label: "قابل للتركيز", // Fokussierbar
-            description: "ركز الكاميرا عند دخول هذا القطاع.", // Fokussieren Sie die Kamera beim Betreten dieses Bereichs.
-            zoomMarginLabel: "هامش التكبير", // Zoom-Marge
-            defaultButtonLabel: "التركيز على", // Fokussieren auf
+            label: "قابل للتركيز",
+            description: "تركيز الكاميرا على هذه المنطقة عند الدخول.",
+            zoomMarginLabel: "هامش التكبير",
+            defaultButtonLabel: "التركيز على",
         },
         jitsiProperties: {
-            label: "غرفة جتسي", // Jitsi-Raum
-            description: "ابدأ اجتماع جتسي عند الدخول.", // Starten Sie ein Jitsi-Meeting beim Betreten.
-            roomNameLabel: "اسم الغرفة", // Raumname
-            jitsiUrl: "رابط جتسي", // Jitsi-URL
-            jitsiUrlPlaceholder: "meet.jit.si", // meet.jit.si
-            roomNamePlaceholder: "اسم الغرفة", // Raumname
-            defaultButtonLabel: "فتح غرفة جتسي", // Jitsi-Raum öffnen
-            audioMutedLabel: "الصوت مكتوم افتراضيًا", // Standardmäßig stummgeschaltet
-            moreOptionsLabel: "مزيد من الخيارات", // Mehr Optionen
-            trigger: "تفاعل", // Interaktion
-            triggerMessage: "رسالة توست", // Toast-Nachricht
-            triggerShowImmediately: "عرض فوراً عند الدخول", // Sofort beim Betreten anzeigen
-            triggerOnClick: "بدء كصغير في الشريط السفلي", // Als minimiert in der unteren Leiste starten
-            triggerOnAction: "عرض رسالة توست عند الإجراء", // Aktionstoast mit Nachricht anzeigen
-            closable: "يمكن إغلاقه", // Kann geschlossen werden
-            noPrefix: "مشاركة مع غرف أخرى", // Mit anderen Räumen teilen
-            width: "العرض", // Breite
+            label: "غرفة Jitsi",
+            description: "بدء اجتماع Jitsi عند الدخول.",
+            roomNameLabel: "اسم الغرفة",
+            jitsiUrl: "رابط Jitsi",
+            jitsiUrlPlaceholder: "meet.jit.si",
+            roomNamePlaceholder: "اسم الغرفة",
+            defaultButtonLabel: "فتح غرفة Jitsi",
+            audioMutedLabel: "كتم الميكروفون افتراضيًا",
+            moreOptionsLabel: "خيارات إضافية",
+            trigger: "التفاعل",
+            triggerMessage: "رسالة منبثقة",
+            triggerShowImmediately: "عرض فورًا عند الدخول",
+            triggerOnClick: "بدء مصغرًا في الشريط السفلي",
+            triggerOnAction: "إظهار إشعار إجراء مع رسالة",
+            closable: "قابل للإغلاق",
+            noPrefix: "مشاركة مع غرف أخرى",
+            width: "العرض",
             jitsiRoomConfig: {
-                addConfig: "إضافة خيار", // Option hinzufügen
-                startWithAudioMuted: "بدء مع ميكروفون معطل", // Mit deaktiviertem Mikrofon starten
-                startWithVideoMuted: "بدء مع كاميرا معطلة", // Mit deaktivierter Kamera starten
-                jitsiRoomAdminTag: "وسم المشرف لغرفة الاجتماع", // Moderator-Tag für den Meeting-Raum
-                cancel: "إلغاء", // Abbrechen
-                validate: "تحقق", // Validieren
+                addConfig: "إضافة خيار",
+                startWithAudioMuted: "بدء مع ميكروفون مكتوم",
+                startWithVideoMuted: "بدء مع كاميرا مغلقة",
+                jitsiRoomAdminTag: "وسم المشرف لغرفة الاجتماع",
+                cancel: "إلغاء",
+                validate: "اعتماد",
             },
+            disabled: "تم تعطيل تكامل Jitsi لهذه الغرفة ❌",
         },
         audioProperties: {
-            label: "تشغيل ملف صوتي", // Audiodatei abspielen
-            description: "تشغيل الصوت مع التحكم في مستوى الصوت.", // Audio mit einstellbarer Lautstärke abspielen.
-            volumeLabel: "مستوى الصوت", // Lautstärke
-            audioLinkLabel: "رابط الصوت", // Audiolink
-            audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3", // https://xxx.yyy/smthing.mp3
-            defaultButtonLabel: "تشغيل الموسيقى", // Musik abspielen
-            error: "تعذر تحميل الصوت", // Sound konnte nicht geladen werden
+            label: "تشغيل ملف صوتي",
+            description: "تشغيل صوت مع إمكانية ضبط مستوى الصوت.",
+            volumeLabel: "مستوى الصوت",
+            audioLinkLabel: "رابط الصوت",
+            audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            defaultButtonLabel: "تشغيل الموسيقى",
+            error: "تعذر تحميل الصوت",
         },
         linkProperties: {
-            label: "فتح الرابط", // Link öffnen
-            description: "فتح موقع ويب داخل WorkAdventure أو في تبويب جديد.", // Website innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            linkLabel: "رابط URL", // Link-URL
-            newTabLabel: "فتح في تبويب جديد", // In neuem Tab öffnen
-            trigger: "تفاعل", // Interaktion
-            triggerMessage: "رسالة توست", // Toast-Nachricht
-            triggerShowImmediately: "عرض فوراً عند الدخول", // Sofort beim Betreten anzeigen
-            triggerOnClick: "بدء كصغير في الشريط السفلي", // Als minimiert in der unteren Leiste starten
-            triggerOnAction: "عرض رسالة توست عند الإجراء", // Aktionstoast mit Nachricht anzeigen
-            closable: "يمكن إغلاقه", // Kann geschlossen werden
-            allowAPI: "السماح بـ API البرمجة النصية", // Scripting API erlauben
-            linkPlaceholder: "https://example.com", // https://example.com
-            defaultButtonLabel: "فتح الرابط", // Link öffnen
-            width: "العرض", // Breite
-            policy: "السماح بـ iFrame", // iFrame erlauben
-            policyPlaceholder: "كامل الشاشة", // fullscreen
-            errorEmbeddableLink: "الرابط غير قابل للتضمين", // Der Link ist nicht einbettbar
-            messageNotEmbeddableLink: "الرابط غير قابل للتضمين. يمكن فتحه فقط في تبويب جديد", // Der Link ist nicht einbettbar. Er kann nur in einem neuen Tab geöffnet werden
-            warningEmbeddableLink: "لا يمكن تضمين هذا الرابط.", // Dieser Link kann nicht eingebettet werden.
-            errorInvalidUrl: 'يرجى إدخال URL صالح يبدأ بـ "https://")', // Bitte geben Sie eine gültige URL ein (beginnend mit "https://")
-            findOutMoreHere: "تعرف على المزيد هنا", // Hier erfahren Sie mehr
-            openPickerSelector: "فتح محدد المنتقي", // Picker-Selector öffnen
-            forcedInNewTab: "فتح في تبويب جديد", // In neuem Tab öffnen
+            label: "فتح رابط",
+            description: "فتح موقع ويب داخل WorkAdventure أو في تبويب جديد.",
+            linkLabel: "عنوان الرابط",
+            newTabLabel: "فتح في تبويب جديد",
+            trigger: "التفاعل",
+            triggerMessage: "رسالة منبثقة",
+            triggerShowImmediately: "عرض فورًا عند الدخول",
+            triggerOnClick: "بدء مصغرًا في الشريط السفلي",
+            triggerOnAction: "إظهار إشعار إجراء مع رسالة",
+            closable: "قابل للإغلاق",
+            allowAPI: "السماح بواجهة Scripting API",
+            linkPlaceholder: "https://example.com",
+            defaultButtonLabel: "فتح الرابط",
+            width: "العرض",
+            policy: "سماح iFrame",
+            policyPlaceholder: "fullscreen",
+            errorEmbeddableLink: "الرابط غير قابل للتضمين",
+            messageNotEmbeddableLink: "هذا الرابط غير قابل للتضمين. لا يمكن فتحه إلا في تبويب جديد",
+            warningEmbeddableLink: "لا يمكن تضمين هذا الرابط.",
+            errorInvalidUrl: 'يرجى إدخال رابط صالح (يبدأ بـ "https://")',
+            findOutMoreHere: "اعرف المزيد هنا",
+            openPickerSelector: "فتح منتقي العناصر",
+            forcedInNewTab: "إجبار على فتح تبويب جديد",
+            openApplication: "فتح التطبيق",
         },
-        advancedOptions: "خيارات متقدمة", // Erweiterte Optionen
+        advancedOptions: "خيارات متقدمة",
         speakerMegaphoneProperties: {
-            label: "منطقة المتحدث", // Sprecherzone
-            description: "", // ""
-            nameLabel: "الاسم", // Name
-            namePlaceholder: "منطقة المتحدث الخاصة بي", // MySpeakerZone
+            label: "منطقة المتحدث",
+            description: "",
+            nameLabel: "الاسم",
+            namePlaceholder: "منطقة المتحدث الخاصة بي",
+            disabled: "تم تعطيل منطقة المتحدث لهذه الغرفة ❌",
         },
         listenerMegaphoneProperties: {
-            label: "منطقة الزائر", // Besucherzone
-            description: "", // ""
-            nameLabel: "اسم منطقة المتحدث", // Sprecherzonen-Name
-            namePlaceholder: "منطقة المتحدث الخاصة بي", // MySpeakerZone
+            label: "منطقة الحضور",
+            description: "",
+            nameLabel: "اسم منطقة المتحدث",
+            namePlaceholder: "منطقة المتحدث الخاصة بي",
+            disabled: "تم تعطيل منطقة الحضور لهذه الغرفة ❌",
         },
-        chatEnabled: "تم تفعيل الدردشة", // Chat aktiviert
+        chatEnabled: "ربط قناة دردشة مخصصة",
         startProperties: {
-            label: "منطقة البداية", // Startbereich
-            description: "مكان يمكن للناس البدء فيه على الخريطة.", // Wo Leute auf der Karte starten können.
-            nameLabel: "الاسم", // Name
-            namePlaceholder: "منطقة البداية", // Startbereich
-            type: "نوع نقطة البداية", // Startpositionstyp
-            defaultMenuItem: "استخدام الافتراضي", // Standardmäßig verwenden
-            hashMenuItem: "استخدام إذا كانت URL تحتوي على #[اسم المنطقة]", // Verwenden, wenn URL #[Bereichsname] enthält
+            label: "منطقة البداية",
+            description: "مكان يبدأ فيه الأشخاص على الخريطة.",
+            nameLabel: "اسم البداية",
+            namePlaceholder: "Enter1",
+            type: "نوع موضع البداية",
+            defaultMenuItem: "استخدام كافتراضي",
+            hashMenuItem: "استخدام إذا احتوى الرابط على #[اسم المنطقة]",
         },
         exitProperties: {
-            label: "منطقة الخروج", // Ausgangsbereich
-            description: "مكان يمكن للناس فيه مغادرة الخريطة للوصول إلى أخرى.", // Wo Leute die Karte verlassen können, um zu einer anderen zu gelangen.
-            exitMap: "مغادرة الخريطة", // Karte verlassen
-            exitMapStartAreaName: "منطقة البداية", // Startbereich
-            defaultStartArea: "منطقة البداية الافتراضية", // Standard-Startbereich
+            label: "منطقة الخروج",
+            description: "مكان يغادر منه الأشخاص الخريطة إلى أخرى.",
+            exitMap: "الخريطة الوجهة",
+            exitMapStartAreaName: "اسم منطقة البداية",
+            defaultStartArea: "منطقة البداية الافتراضية",
         },
         youtubeProperties: {
-            label: "فتح فيديو يوتيوب", // Youtube-Video öffnen
-            description: "فتح فيديو يوتيوب داخل WorkAdventure أو في تبويب جديد.", // YouTube-Video innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط يوتيوب صالح", // Bitte geben Sie eine gültige YouTube-URL ein
-            disabled: "تم تعطيل تكامل يوتيوب.", // YouTube-Integration ist deaktiviert.
+            label: "فتح فيديو يوتيوب",
+            description: "فتح فيديو يوتيوب داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط يوتيوب صالح",
+            disabled: "تم تعطيل تكامل يوتيوب.",
         },
         googleDocsProperties: {
-            label: "فتح مستندات جوجل", // Google Docs öffnen
-            description: "فتح مستندات جوجل داخل WorkAdventure أو في تبويب جديد.", // Google Docs innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط مستندات جوجل صالح", // Bitte geben Sie eine gültige Google Docs-URL ein
-            disabled: "تم تعطيل تكامل مستندات جوجل.", // Google Docs-Integration ist deaktiviert.
+            label: "فتح مستندات جوجل",
+            description: "فتح مستندات جوجل داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط مستندات جوجل صالح",
+            disabled: "تم تعطيل تكامل مستندات جوجل.",
         },
         klaxoonProperties: {
-            label: "فتح كلكسون", // Klaxoon öffnen
-            description: "فتح كلكسون داخل WorkAdventure أو في تبويب جديد.", // Klaxoon innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط كلكسون صالح", // Bitte geben Sie eine gültige Klaxoon-URL ein
-            disabled: "تم تعطيل تكامل كلكسون.", // Klaxoon-Integration ist deaktiviert.
+            label: "فتح Klaxoon",
+            description: "فتح Klaxoon داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط Klaxoon صالح",
+            disabled: "تم تعطيل تكامل Klaxoon.",
         },
         googleSheetsProperties: {
-            label: "فتح جداول جوجل", // Google Sheets öffnen
-            description: "فتح جداول جوجل داخل WorkAdventure أو في تبويب جديد.", // Google Sheets innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط جداول جوجل صالح", // Bitte geben Sie eine gültige Google Sheets-URL ein
-            disabled: "تم تعطيل تكامل جداول جوجل.", // Google Sheets-Integration ist deaktiviert.
+            label: "فتح جداول جوجل",
+            description: "فتح جداول جوجل داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط جداول جوجل صالح",
+            disabled: "تم تعطيل تكامل جداول جوجل.",
         },
         googleSlidesProperties: {
-            label: "فتح عروض جوجل", // Google Slides öffnen
-            description: "فتح عروض جوجل داخل WorkAdventure أو في تبويب جديد.", // Google Slides innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط عروض جوجل صالح", // Bitte geben Sie eine gültige Google Slides-URL ein
-            disabled: "تم تعطيل تكامل عروض جوجل.", // Google Slides-Integration ist deaktiviert.
+            label: "فتح عروض جوجل",
+            description: "فتح عروض جوجل داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط عروض جوجل صالح",
+            disabled: "تم تعطيل تكامل عروض جوجل.",
         },
         eraserProperties: {
-            label: "ممحاة", // Eraser
-            description: "مسح جميع الرسومات على الخريطة.", // Alle Zeichnungen auf der Karte löschen.
-            defaultButtonLabel: "مسح", // Löschen
-            error: "يرجى إدخال رابط ممحاة صالح", // Bitte geben Sie eine gültige Eraser-URL ein
-            disabled: "تم تعطيل تكامل الممحاة.", // Eraser-Integration ist deaktiviert.
+            label: "ممحاة",
+            description: "مسح كل الرسوم على الخريطة.",
+            defaultButtonLabel: "مسح",
+            error: "يرجى إدخال رابط ممحاة صالح",
+            disabled: "تم تعطيل تكامل الممحاة.",
         },
         googleDriveProperties: {
-            label: "فتح جوجل درايف", // Google Drive öffnen
-            description: "فتح جوجل درايف داخل WorkAdventure أو في تبويب جديد.", // Google Drive innerhalb von WorkAdventure oder in einem neuen Tab öffnen.
-            error: "يرجى إدخال رابط جوجل درايف صالح", // Bitte geben Sie eine gültige Google Drive-URL ein
-            disabled: "تم تعطيل تكامل جوجل درايف.", // Google Drive-Integration ist deaktiviert.
+            label: "فتح Google Drive",
+            description: "فتح Google Drive داخل WorkAdventure أو في تبويب جديد.",
+            error: "يرجى إدخال رابط Google Drive صالح",
+            disabled: "تم تعطيل تكامل Google Drive.",
         },
         restrictedRightsProperties: {
-            label: "إضافة حقوق", // Rechte hinzufügen
-            rightTitle: "حقوق الوصول / التحرير حسب وسم المستخدم", // Zugriffs- / Bearbeitungsrechte nach Benutzertag
+            label: "إضافة حقوق",
+            rightTitle: "حقوق الوصول/التحرير حسب وسم المستخدم",
             rightDescription:
-                "تعريف الحقوق من يمكنه التفاعل مع المنطقة. إذا تركتها فارغة، يمكن للجميع استخدامها. إذا قمت بضبطها، يمكن فقط للمستخدمين الذين لديهم واحد على الأقل من هذه 'الوسوم' استخدامها.", // Rechte definieren, wer mit dem Bereich interagieren kann. Wenn Sie es leer lassen, kann jeder es verwenden. Wenn Sie es einstellen, können nur Benutzer, die mindestens einen dieser 'Tags' haben, es verwenden.
-            rightWriteTitle: "حقوق التحرير", // Bearbeitungsrechte
+                "الحقوق تحدد من يمكنه التفاعل مع المنطقة. إذا تركتها فارغة فالجميع يمكنه استخدامها. إن وضعتها، فلا يمكن استخدامها إلا لمن لديهم أحد هذه الوسوم.",
+            rightWriteTitle: "حقوق التحرير",
             rightWriteDescription:
-                "تعريف حقوق التحرير من يمكنه تغيير المنطقة. يمكن للمستخدمين الذين لديهم واحد من هذه الوسوم إنشاء أو تحديث أو حذف الكائنات في المنطقة.", // Bearbeitungsrechte definieren, wer den Bereich ändern kann. Benutzer, die einen dieser Tags haben, können Objekte im Bereich erstellen, aktualisieren oder löschen.
-            rightReadTitle: "حقوق الوصول", // Zugriffsrechte
+                "حقوق التحرير تحدد من يمكنه تعديل المنطقة. المستخدمون المطابقون لأحد هذه الوسوم يمكنهم إنشاء أو تحديث أو حذف كائن في المنطقة.",
+            rightReadTitle: "حقوق الوصول",
             rightReadDescription:
-                "تعريف حقوق الوصول من يمكنه التفاعل مع المنطقة. يمكن للمستخدمين الذين لديهم واحد من هذه الوسوم دخول المنطقة واستخدام الكائنات فيها.", // Zugriffsrechte definieren, wer mit dem Bereich interagieren kann. Benutzer, die einen dieser Tags haben, können den Bereich betreten und Objekte im Bereich verwenden.
+                "حقوق الوصول تحدد من يمكنه التفاعل مع المنطقة. المستخدمون المطابقون لأحد هذه الوسوم يمكنهم دخول المنطقة واستخدام الكائنات داخلها.",
         },
         personalAreaConfiguration: {
-            label: "المنطقة الشخصية", // Persönlicher Bereich
-            description:
-                "يمكن للمستخدمين المطالبة بالمناطق الشخصية كمساحتهم الخاصة. كمسؤول، يمكنك تحديد/سحب ملكية منطقة.", // Benutzer können persönliche Bereiche als ihren eigenen Raum beanspruchen. Als Administrator können Sie den Besitz eines Bereichs festlegen / widerrufen.
-            accessClaimMode: "وضع المطالبة بالوصول", // Zugriffsbeanspruchungsmodus
-            dynamicAccessClaimMode: "ديناميكي", // Dynamisch
-            staticAccessClaimMode: "ثابت", // Statisch
-            dynamicAccessDescription: "يمكن لأي شخص لديه وسوم مستخدمين مناسبة المطالبة بملكية المنطقة.", // Jeder mit den entsprechenden Benutzertags kann das Eigentum an der Zone beanspruchen.
-            staticAccessDescription: "تعريف المالك للمنطقة يدويًا.", // Manuell den Eigentümer der Zone definieren.
-            allowedTags: "وسوم المستخدمين المسموح بها", // Erlaubte Benutzertags
-            allowedUser: "مستخدم مسموح", // Erlaubter Benutzer
-            owner: "المالك", // Eigentümer
-            revokeAccess: "سحب الوصول", // Zugriff widerrufen
+            label: "منطقة شخصية",
+            description: "يمكن للمستخدمين المطالبة بمناطق شخصية كمساحتهم الخاصة. كمسؤول، يمكنك تعيين/سحب ملكية منطقة",
+            accessClaimMode: "وضع المطالبة بالوصول",
+            dynamicAccessClaimMode: "ديناميكي",
+            staticAccessClaimMode: "ثابت",
+            dynamicAccessDescription: "يمكن لأي شخص لديه وسوم مناسبة المطالبة بملكية المنطقة.",
+            staticAccessDescription: "حدد مالك المنطقة يدويًا.",
+            allowedTags: "وسوم المستخدمين المسموح بها",
+            allowedUser: "مستخدم مسموح",
+            owner: "المالك",
+            revokeAccess: "سحب الوصول",
         },
         excalidrawProperties: {
-            label: "فتح إكسكاليدرا", // Excalidraw öffnen
-            description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة من النهاية إلى النهاية.", // Ein Open-Source-Whiteboard im handgezeichneten Stil. Kollaborativ und Ende-zu-Ende-verschlüsselt.
-            error: "يرجى إدخال رابط إكسكاليدرا صالح", // Bitte geben Sie eine gültige Excalidraw-URL ein
-            disabled: "تم تعطيل تكامل إكسكاليدرا.", // Excalidraw-Integration ist deaktiviert.
+            label: "فتح Excalidraw",
+            description: "لوحة بيضاء مفتوحة المصدر بأسلوب مرسوم يدويًا. تعاونية ومشفرة طرفًا لطرف.",
+            error: "يرجى إدخال رابط Excalidraw صالح",
+            disabled: "تم تعطيل تكامل Excalidraw.",
         },
+        cardsProperties: {
+            label: "فتح Cards",
+            description: "أسرع وأسهل طريقة لمشاركة المعرفة عبر الإنترنت وعلى Teams والجوال.",
+            error: "يرجى إدخال رابط Cards صالح",
+            disabled: "تم تعطيل تكامل Cards.",
+        },
+        matrixProperties: {
+            label: "ربط غرفة Matrix",
+            description: "اربط غرفة Matrix بمنطقتك",
+            openAutomaticallyChatLabel: "فتح الدردشة تلقائيًا",
+            roomNameLabel: "اسم عرض الغرفة",
+            roomNameLabelPlaceholder: "غرفتي",
+            defaultChatRoomAreaName: "منطقة الغرفة",
+        },
+        tooltipProperties: {
+            label: "فقاعة معلومات",
+            description: "أضف فقاعة معلومات إلى منطقتك ℹ️",
+            contentPlaceholder: "اكتب المحتوى هنا ✍️",
+            duration: "المدة (بالثواني) ⏱️",
+            infinityDuration: "مدة غير محدودة ⏱️",
+        },
+        openFileProperties: {
+            label: "فتح ملف",
+            description: "افتح ملفًا داخل WorkAdventure.",
+            error: "يرجى إدخال ملف صالح",
+            disabled: "تم تعطيل تكامل الملفات.",
+            fileUrlLabel: "رابط الملف",
+            uploadFile: {
+                title: "أضف ملفك",
+                description: "اسحب وأفلت أو اختر ملفك",
+                dragDrop: "اسحب وأفلت أو",
+                chooseFile: "اختر ملف",
+                errorOnFileFormat: "تنسيق الملف غير مدعوم",
+                errorOnFileNumber: "إسقاط ملفات متعددة غير مدعوم",
+            },
+        },
+        noProperties: "لا توجد خصائص محددة",
     },
     areaEditor: {
         editInstructions: "انقر على منطقة لتعديل خصائصها", // Click on an area to edit its properties
@@ -229,7 +269,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         header: {
             title: "أضف كائن إلى خريطتك", // Add an object to your map
-            description: "ابحث، حمّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة.", // Search, upload, or select an existing object and add it to the map.
+            description: "ابحث، حمِّل أو اختر كائنًا موجودًا وأضفه إلى الخريطة.", // Search, upload, or select an existing object and add it to the map.
+            choose: "اختر كائنًا",
         },
         title: "وضع الكائن", // Place object
         editing: "تعديل: {name}", // Editing: {name}
@@ -237,6 +278,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             searchPlaceholder: "بحث", // Search
             backToSelectObject: "العودة لاختيار الكائن", // Back to select object
         },
+        drop: "أسقط ملفك في أي مكان",
         trashTool: {
             delete: "انقر على الكائن لحذفه!", // Click on the object to delete it!
         },
@@ -264,6 +306,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         customEntityEditorForm: {
             imageName: "اسم الصورة", // Image name
             tags: "وسوم", // Tags
+            writeTag: "اكتب وسمًا...",
             objectType: "نوع الكائن", // Object type
             floatingObject: "كائن عائم", // Floating object
             floatingObjectDescription: "يمكن وضع الكائن العائم بحرية على الخريطة. وإلا، سيتم ضبطه على شبكة الخريطة.", // A floating object can be placed freely on the map. Otherwise, it will snap to the map's grid.
@@ -271,6 +314,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             groundLevel: "مستوى الأرض", // Ground level
             custom: "مخصص", // Custom
             standing: "واقف", // Standing
+            collision: "تصادم",
+            wokaAbove: "وكا فوق",
+            wokaBelow: "وكا تحت",
         },
         buttons: {
             editEntity: "تعديل الكائن", // Edit entity
@@ -280,27 +326,31 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             save: "حفظ", // Save
             upload: "تحميل", // Upload
         },
+        errors: {
+            dragNotConnected: "لا يمكنك تحميل الملفات إذا لم تكن مسجلاً الدخول وليس لديك الحقوق اللازمة.",
+            dragNotAllowed: "ليست لديك صلاحية لتحميل الملفات على هذه الخريطة",
+        },
     },
     settings: {
-        loading: "جارٍ التحميل...", // Loading...
+        loading: "جارٍ التحميل...",
         megaphone: {
-            title: "الميغا فون", // Megaphone
-            description: "الميغا فون هو أداة تمكنك من بث صوتك إلى العالم بأسره أو إلى غرفة محددة.", // The megaphone is a tool that allows you to broadcast your voice to the entire world or to a specific room.
+            title: "الميغافون",
+            description: "الميغافون أداة تتيح لك بث فيديو/صوت لجميع اللاعبين في الغرفة/العالم.",
             inputs: {
-                spaceName: "اسم الغرفة", // Room name
+                spaceName: "اسم الفضاء",
                 spaceNameHelper:
-                    "اسم الغرفة التي يمكن استخدام الميغا فون فيها. إذا تركته فارغًا، يمكن استخدامه في العالم بأسره. // The name of the room where the megaphone can be used. If left empty, it can be used worldwide.",
-                scope: "النطاق", // Scope
-                world: "العالم", // World
-                room: "الغرفة", // Room
-                rights: "الصلاحيات", // Rights
+                    "إذا أردت البث لكل المستخدمين عبر غرف مختلفة ضمن نفس العالم، ضع نفس اسم الفضاء لكل إعدادات الميغافون واضبط النطاق على 'العالم'.",
+                scope: "النطاق",
+                world: "العالم",
+                room: "الغرفة",
+                rights: "الحقوق",
                 rightsHelper:
-                    "الصلاحيات التي يجب أن يمتلكها المستخدم لاستخدام الميغا فون. إذا تركته فارغًا، يمكن لأي شخص استخدام الميغا فون. // The rights a user must have to use the megaphone. If left empty, anyone can use the megaphone.",
+                    "الحقوق تُحدد من يمكنه استخدام الميغافون. إن تركته فارغًا فالجميع يمكنه استخدامه. وإن وضعته فلا يمكن استخدامه إلا لمن لديه أحد هذه الوسوم.",
                 error: {
-                    title: "خطأ", // Error
+                    title: "يرجى إدخال عنوان",
                     save: {
-                        success: "تم حفظ إعدادات الميغا فون بنجاح", // Megaphone settings saved successfully
-                        fail: "فشل في حفظ إعدادات الميغا فون", // Failed to save megaphone settings
+                        success: "تم حفظ إعدادات الميغافون",
+                        fail: "حدث خطأ أثناء حفظ إعدادات الميغافون",
                     },
                 },
             },
