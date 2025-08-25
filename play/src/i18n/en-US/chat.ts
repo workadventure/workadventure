@@ -42,11 +42,13 @@ const chat: BaseTranslation = {
     searchUser: "Search for user, map, etc ...",
     searchChat: "Search for channel, message, etc ...",
     people: "People",
-    rooms: "Rooms",
+    rooms: "Your Discussions",
     addNew: "Add new : ",
     invitations: "Invitations",
     suggestedRooms: "Suggested rooms",
-    availableRooms: "Available rooms",
+    joinableRooms: "Available discussions",
+    joinableRoomsError: "Error loading discussions click to retry",
+    availableRooms: "Available discussions", // used in the search bar for results
     proximity: "Proximity Chat",
     role: {
         adminShort: "Admin",
@@ -200,6 +202,7 @@ const chat: BaseTranslation = {
     addRoomToFolderError: "Impossible to add the room to the folder",
     createRoom: {
         title: "Create new room",
+        rootTitle: "Create new discussion",
         name: "Name",
         visibility: {
             label: "Visibility",
@@ -218,10 +221,10 @@ const chat: BaseTranslation = {
         suggestedDescription: "This room will be suggested to users who in the same space.",
         users: "Users",
         historyVisibility: {
-            label: "Who can read history ?",
-            world_readable: "Anyone",
-            joined: "Members only (since they joined)",
-            invited: "Members only (since they were invited)",
+            label: "Visibility of previous messages",
+            world_readable: "All messages are visible",
+            joined: "Messages sent after joining are visible",
+            invited: "Messages sent after being invited are visible",
         },
         buttons: {
             edit: "Edit",
@@ -231,6 +234,7 @@ const chat: BaseTranslation = {
         error: "Error on room creation",
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
+        restrictedDescription: "This room will be visible only to members of the parent folder: {folderName}",
     },
     createFolder: {
         title: "Create new folder",
