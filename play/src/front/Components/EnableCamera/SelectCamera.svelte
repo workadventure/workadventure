@@ -32,7 +32,7 @@
         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="border border-solid border-white w-full rounded-lg m-2  items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4  {!selectedDevice
+                class="border border-solid border-white w-full rounded-lg m-2 items-center justify-start transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {!selectedDevice
                     ? 'bg-white text-secondary border-none'
                     : 'hover:bg-white/10'}"
                 class:hidden={!editMode && selectedDevice}
@@ -51,7 +51,7 @@
                 {/if}
                 <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
                     <div
-                        class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center  "
+                        class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center"
                         class:bg-secondary={!selectedDevice}
                         class:border-secondary={!selectedDevice}
                     >
@@ -96,7 +96,7 @@
                     {/if}
                     <div class="flex py-4 pe-8 ps-4 items-center space-x-4">
                         <div
-                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center"
                             class:bg-secondary={selectedDevice === device.deviceId}
                             class:border-secondary={selectedDevice === device.deviceId}
                         >
@@ -106,7 +106,7 @@
                         </div>
                         <div class="space-y-1">
                             <div
-                                class="text-lg bold  truncate  leading-tight"
+                                class="text-lg bold truncate leading-tight"
                                 style:width={!editMode && selectedDevice === device.deviceId ? "251px" : "auto"}
                             >
                                 {StringUtils.normalizeDeviceName(device.label)}
@@ -116,7 +116,7 @@
                                     <span class="chip-label">{$LL.camera.active()}</span>
                                 </span>
                             {:else}
-                                <span class="chip chip-sm chip-neutral inline rounded-sm ">
+                                <span class="chip chip-sm chip-neutral inline rounded-sm">
                                     <span class="chip-label">{$LL.camera.disabled()}</span>
                                 </span>
                             {/if}

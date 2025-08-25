@@ -7,15 +7,11 @@ import {isMobile} from "./utils/isMobile";
 
 test.describe('Modal', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
-    test('test', async ({ browser }) => {
+    test('Modal script test', async ({ browser }) => {
         // Go to
-        const page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));
+        await using page = await getPage(browser, "Alice", publicTestMapUrl("tests/E2E/empty.json", "modal_script"));
         await evaluateScript(page, async () => {
             return WA.ui.modal.openModal({
                 src: "https://workadventu.re"
@@ -30,9 +26,7 @@ test.describe('Modal', () => {
         });
 
         // Let's expect #modalIframe to not be displayed
-        await expect(page.locator('#modalIframe')).toBeVisible({
-            visible: false
-        });
+        await expect(page.locator('#modalIframe')).toBeHidden();
 
         // Opening a modal with a relative path
         await evaluateScript(page, async () => {

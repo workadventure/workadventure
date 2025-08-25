@@ -11,5 +11,5 @@ export async function resetWamMaps(request: APIRequestContext) {
       file: fs.createReadStream("../map-storage/tests/assets.zip"),
     },
   });
-  await expect(uploadFile1.ok()).toBeTruthy();
+  expect(uploadFile1.ok()).toBeTruthy();
 }

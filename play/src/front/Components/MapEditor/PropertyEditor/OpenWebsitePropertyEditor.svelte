@@ -841,7 +841,7 @@
             />
 
             {#if property.forceNewTab == true}
-                <div class="mb-3 ">
+                <div class="mb-3">
                     <span class="err text-warning-900 text-xs italic">
                         <IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}

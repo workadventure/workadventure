@@ -1,6 +1,6 @@
 {
   "name": "@workadventure/iframe-api-typings",
-  "version": "VERSION_PLACEHOLDER",
+  "version": "0.0.0-version-placeholder",
   "description": "Typescript typings for WorkAdventure iFrame API",
   "main": "iframe_api.js",
   "types": "iframe_api.d.ts",

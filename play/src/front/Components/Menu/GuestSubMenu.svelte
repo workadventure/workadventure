@@ -66,7 +66,7 @@
 <div transition:fly={{ x: -700, duration: 250 }}>
     {#if !canShare}
         <section class="share-url not-mobile">
-            <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+            <div class="bg-contrast font-bold text-lg p-4 flex items-center">
                 <PinIcon />
                 <div class="grow">{$LL.menu.invite.description()}</div>
             </div>
@@ -107,7 +107,7 @@
             >
         </section>
     {/if}
-    <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+    <div class="bg-contrast font-bold text-lg p-4 flex items-center">
         <LocationIcon />
         <div>
             {$LL.menu.invite.selectEntryPoint()}
@@ -125,7 +125,7 @@
             {/each}
         </Select>
 
-        <label for="walkto" class="flex cursor-pointer items-center relative my-4 ">
+        <label for="walkto" class="flex cursor-pointer items-center relative my-4">
             <InputSwitch
                 id="walkto"
                 bind:value={walkAutomatically}
@@ -137,7 +137,3 @@
         </label>
     </section>
 </div>
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-</style>

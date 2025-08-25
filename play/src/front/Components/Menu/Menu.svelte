@@ -217,8 +217,6 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
-
     .menu-nav-sidebar nav::-webkit-scrollbar {
         display: none;
     }

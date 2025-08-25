@@ -34,12 +34,18 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
+        noDevices: "Aucune caméra trouvée",
     },
     microphone: {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
+        noDevices: "Aucun micro trouvé",
     },
-
+    speaker: {
+        disabled: "Votre haut-parleur est désactivé",
+        activate: "Activer votre haut-parleur",
+        noDevices: "Aucun haut-parleur trouvé",
+    },
     status: {
         ONLINE: "En ligne",
         AWAY: "Absent",

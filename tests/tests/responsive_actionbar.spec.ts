@@ -7,15 +7,11 @@ import Menu from "./utils/menu";
 
 test.describe('Action bar responsiveness', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('Check items in the action bar go in the menu one by one @oidc', async ({ browser }) => {
         
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "responsive_actionbar")
         );
         // Use script to add new button
@@ -79,7 +75,7 @@ test.describe('Action bar responsiveness', () => {
         await expect(page.getByTestId('profile-menu').getByText('Login')).toBeVisible();
 
 
-        await page.close();
+
         await page.context().close();
     });
 });

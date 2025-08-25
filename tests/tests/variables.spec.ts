@@ -33,26 +33,20 @@ async function expectVariableToBe(page: Page, value: string) {
 test.setTimeout(360000);
 test.describe('Variables', () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+    test.skip(isMobile(page), 'Skip on mobile devices');
   });
   // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
   test('storage works @docker', async ({ browser, request }, { project }) => {
     // Skip test for Firefox because of some bug when reloading too many pages.
-    if(project.name === "firefox") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(project.name === 'firefox', 'Unstable in Firefox when reloading many pages');
 
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay(request)]);
 
-    const page = await getPage(browser, 'Alice',
+     
+    await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/empty_with_variable.json", "variables") + "&somerandomparam=1");
 
 //    const textField = page.locator('iframe[title="Cowebsite"]').contentFrame().locator('#textField');
@@ -67,10 +61,10 @@ test.describe('Variables', () => {
     await expectVariableToBe(page, 'new value');
 
     // Let's simulate a browser disconnection
-    await stopTraefik();
+    stopTraefik();
     // Let's detect the reconnecting screen
     await expect(page.getByTestId('camera-button')).toBeHidden();
-    await startTraefik();
+    startTraefik();
 
     // Now, let's kill the reverse proxy to cut the connexion
     /*console.log('Rebooting traefik');
@@ -94,6 +88,7 @@ test.describe('Variables', () => {
     const backDump = await getBackDump();
     //console.log('backDump', backDump);
     for (const room of backDump) {
+      // eslint-disable-next-line playwright/no-conditional-in-test
       if (
         room.roomUrl ===
         new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
@@ -104,7 +99,7 @@ test.describe('Variables', () => {
 
     const pusherDump = await getPusherDump();
     //console.log('pusherDump', pusherDump);
-    await expect(
+    expect(
       pusherDump[
         new URL(`/_/global/${maps_domain}/tests/Variables/empty_with_variable.json`, play_url).toString()
       ]
@@ -152,7 +147,7 @@ test.describe('Variables', () => {
     // So we should see the new value.
     await expectVariableToBe(page, 'value set after pusher restart');
 
-    await page.close();
+
     await page.context().close();
   });
 
@@ -163,7 +158,7 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_1.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
-    const page = await getPage(browser, 'Alice',
+    await using page = await getPage(browser, 'Alice',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"));
 
 
@@ -173,7 +168,7 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_cache_2.json',
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
-    const page2 = await getPage(browser, 'Bob',
+    await using page2 = await getPage(browser, 'Bob',
         publicTestMapUrl("tests/Variables/Cache/variables_tmp.json", "variables"),
         { pageCreatedHook: (page2) => startRecordLogs(page2) });
 
@@ -188,9 +183,9 @@ test.describe('Variables', () => {
       return users;
     }).toBe(2);
 
-    await page2.close();
+
     await page2.context().close();
-    await page.close();
+
     await page.context().close();
   });
 });

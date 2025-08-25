@@ -143,7 +143,7 @@
                 {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
                     <div class="relative group">
                         <div
-                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%] "
+                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%]"
                         >
                             {#if user.uuid === chatId}
                                 {$LL.chat.remoteUserNotConnected()}

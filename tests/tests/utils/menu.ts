@@ -1,4 +1,5 @@
 import {expect, Page} from "@playwright/test";
+import {isMobile} from "./isMobile";
 
 class Menu {
 
@@ -21,7 +22,13 @@ class Menu {
 
     async openMenu(page: Page) {
         await page.getByTestId('action-user').click({timeout: 30_000});
-        await expect(await page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+        await expect(page.getByTestId('profile-menu')).toHaveClass(/backdrop-blur/);
+    }
+
+    async openMenuIfMobile(page: Page) {
+        if (isMobile(page)) {
+            await this.openMenu(page);
+        }
     }
 
     /*async openMenu(page: Page) {
@@ -52,7 +59,7 @@ class Menu {
     }
 
     async waitForMapLoad(page: Page, timeout = 30_000) {
-        await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('microphone-button')).toBeVisible({ timeout });
     }
 
     async closeMapEditor(page: Page) {
@@ -81,13 +88,6 @@ class Menu {
         await expect(page.getByRole('button', { name: 'Start live message' })).toBeDisabled();
         await page.locator(".close-btn").first().click();
         //await this.closeMapMenu(page);
-    }
-
-    /**
-     * @deprecated Use Menu.openMenu instead
-     */
-    async openStatusList(page : Page, isMobile = false){
-        await this.openMenu(page);
     }
 
     async clickOnStatus(page:Page, status: string){

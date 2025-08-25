@@ -73,7 +73,7 @@
 
                     <div class="flex items-center justify-center p-2">
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl pl-3">
-                            <div class="w-max ml-5 mt-[29px] ">
+                            <div class="w-max ml-5 mt-[29px]">
                                 <h3>{actionsMenuData.menuName}</h3>
                             </div>
                         </div>

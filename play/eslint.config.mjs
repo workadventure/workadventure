@@ -15,6 +15,11 @@ export default [
             "listeners/no-missing-remove-event-listener": "error",
             "listeners/matching-remove-event-listener": "error",
             "listeners/no-inline-function-event-listener": "error",
+
+            // Uncomment this to detect circular dependencies in imports
+            // It is slow (~7 minutes) but is really helpful to detect architectural issues
+            // TODO: solve these issues one by one and then enable this rule in CI only
+            //"import/no-cycle": [2, { "maxDepth": 5, "ignoreExternal": true }],
         }
     }
 ];
