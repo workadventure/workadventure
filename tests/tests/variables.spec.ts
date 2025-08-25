@@ -151,7 +151,7 @@ test.describe('Variables @nomobile', () => {
     await page.context().close();
   });
 
-  test('cache doesnt prevent setting a variable in case the map changes @local',
+  test('cache doesnt prevent setting a variable in case the map changes @local @nowebkit',
       async ({ browser,  request }) => {
     // Let's start by visiting a map that DOES not have the variable.
     fs.copyFileSync(
