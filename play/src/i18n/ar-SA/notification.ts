@@ -7,6 +7,10 @@ const notification: DeepPartial<Translation["notification"]> = {
     chatRoom: "في المنتدى", // in the forum
     askToMuteMicrophone: "يرجى كتم الميكروفون 🙏", // please mute your microphone
     askToMuteCamera: "يرجى كتم الكاميرا 🙏", // please mute your camera
+    microphoneMuted: "تم كتم ميكروفونك بواسطة مشرف",
+    cameraMuted: "تم كتم كاميرتك بواسطة مشرف",
+    announcement: "إعلان",
+    open: "فتح",
     help: {
         title: "تم رفض الوصول إلى الإشعارات", // access to notifications denied
         permissionDenied: "تم الرفض", // access denied
@@ -21,6 +25,7 @@ const notification: DeepPartial<Translation["notification"]> = {
         },
     },
     addNewTag: "إضافة علامة جديدة: '{tag}'", // add new tag: '{tag}'
+    screenSharingError: "تعذر بدء مشاركة الشاشة",
 };
 
 export default notification;
