@@ -5,10 +5,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Kamera stoppen",
         activate: "Kamera starten",
+        noDevices: "Kein Kameragerät gefunden",
     },
     microphone: {
         disabled: "Mikrofon einschalten",
         activate: "Mikrofon stummschalten",
+        noDevices: "Kein Mikrofon gefunden",
+    },
+    speaker: {
+        disabled: "Lautsprecher stoppen",
+        activate: "Lautsprecher starten",
+        noDevices: "Kein Lautsprecher gefunden",
     },
     //disableMegaphone: "Megafon deaktivieren",
     //menu: "Menü öffnen / schließen",
