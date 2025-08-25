@@ -16,7 +16,7 @@ async function hideNoCameraIfWebkit(page: Page, browserName: string) {
   }
 }
 
-test.describe("matrix chat area property @matrix", () => {
+test.describe("matrix chat area property @matrix @nowebit @nomobile", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     async ({ page, request }, { project }) => {

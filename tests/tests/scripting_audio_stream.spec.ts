@@ -5,10 +5,10 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("Scripting audio streams", () => {
+test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-  test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
+    test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
   test("can play and listen to sounds", async ({
     browser,

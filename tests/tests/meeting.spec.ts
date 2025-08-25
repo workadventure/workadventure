@@ -5,7 +5,7 @@ import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 import {evaluateScript} from "./utils/scripting";
 
-test.describe('Meeting actions test', () => {
+test.describe('Meeting actions test @nomobile @nowebkit', () => {
 
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
@@ -18,7 +18,7 @@ test.describe('Meeting actions test', () => {
     }
   );
 
-  test('Meeting action to mute microphone & video', async ({ browser }) => {
+  test('Meeting action to mute microphone & video @nofirefox', async ({ browser }) => {
     // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
     test.skip(
       browser.browserType().name() === "firefox",
@@ -214,7 +214,7 @@ test.describe('Meeting actions test', () => {
     await page.context().close();
   });*/
 
-  test('Block users', async ({ browser }) => {
+  test('Block users @nofirefox', async ({ browser }) => {
     // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
     test.skip(
       browser.browserType().name() === "firefox",
