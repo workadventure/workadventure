@@ -151,7 +151,7 @@
         <div class="w-full z-10 flex items-center">
             <div class="bg-white/10 w-full h-[1px]" />
         </div>
-        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length >= 1}
             <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
