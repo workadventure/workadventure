@@ -55,11 +55,24 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 import { StartStreamInBubbleEvent } from "./Events/ProximityMeeting/StartStreamInBubbleEvent";
+import {
+    IframeErrorMessagePortEvent,
+    IframeMessagePortMap,
+    IframeSuccessMessagePortEvent,
+    isIframeMessagePortWrapper,
+} from "./Events/MessagePortEvents";
+import { CheckedWorkAdventureMessagePort } from "./Iframe/CheckedWorkAdventureMessagePort";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
     source: MessageEventSource | null
 ) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
+
+type OpenMessagePortAnswererCallback<T extends keyof IframeMessagePortMap> = (
+    data: IframeMessagePortMap[T]["data"],
+    port: CheckedWorkAdventureMessagePort<T>,
+    source: MessageEventSource | null
+) => void | PromiseLike<void>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -183,9 +196,6 @@ class IframeListener {
     private readonly _openInviteMenuStream: Subject<void> = new Subject();
     public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
 
-    private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
-    public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
-
     private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
     public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
 
@@ -233,6 +243,9 @@ class IframeListener {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
+    private readonly openMessagePortAnswerers: { [K in keyof IframeMessagePortMap]?: unknown } = {};
+
     public getUIWebsiteIframeIdFromSource(source: MessageEventSource): string | undefined {
         for (const [iframe, id] of this.iframes.entries()) {
             if (iframe.contentWindow === source) {
@@ -243,6 +256,8 @@ class IframeListener {
     }
 
     init() {
+        // The listener is part of a singleton and will never be unregistered.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         window.addEventListener(
             "message",
             (message: MessageEvent) => {
@@ -280,7 +295,78 @@ class IframeListener {
                     return;
                 }
 
-                if (isIframeQueryWrapper(payload)) {
+                if (isIframeMessagePortWrapper(payload)) {
+                    const queryId = payload.id;
+                    const port = message.ports[0];
+                    if (!port) {
+                        console.error("Received a message with messagePort=true but no port was provided.");
+                        return;
+                    }
+
+                    const messagePort = new CheckedWorkAdventureMessagePort(port, payload.type);
+
+                    if (!message.source) {
+                        throw new Error("Message is missing a source");
+                    }
+                    // If the calling iframe is closed, we need to close the message port
+                    this.onIframeCloseEvent(message.source, () => {
+                        messagePort.onCloseIframe();
+                    });
+
+                    const answerer = this.openMessagePortAnswerers[payload.type] as
+                        | OpenMessagePortAnswererCallback<keyof IframeMessagePortMap>
+                        | undefined;
+                    if (answerer === undefined) {
+                        const errorMsg =
+                            'The iFrame sent an open port message of type "' +
+                            payload.type +
+                            '" but there is no service configured to answer these messages.';
+                        console.error(errorMsg);
+                        iframe.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: payload.type,
+                                error: errorMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
+                        return;
+                    }
+
+                    const errorHandler = (reason: unknown) => {
+                        console.error(
+                            "An error occurred while responding to an iFrame open port message query.",
+                            reason
+                        );
+                        const error = asError(reason);
+                        const reasonMsg = error.message;
+
+                        iframe?.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                messagePort: true,
+                                error: reasonMsg,
+                            } as IframeErrorMessagePortEvent,
+                            "*"
+                        );
+                    };
+
+                    try {
+                        Promise.resolve(answerer(payload.data, messagePort, message.source))
+                            .then((value) => {
+                                iframe?.contentWindow?.postMessage(
+                                    {
+                                        id: queryId,
+                                        messagePort: true,
+                                    } satisfies IframeSuccessMessagePortEvent,
+                                    "*"
+                                );
+                            })
+                            .catch(errorHandler);
+                    } catch (reason) {
+                        errorHandler(reason);
+                    }
+                } else if (isIframeQueryWrapper(payload)) {
                     const queryId = payload.id;
                     const query = payload.query;
 
@@ -541,7 +627,9 @@ class IframeListener {
         this.iframes.set(iframe, id);
         iframe.addEventListener("load", () => {
             if (iframe.contentWindow) {
-                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                if (!this.iframeCloseCallbacks.has(iframe.contentWindow)) {
+                    this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+                }
             } else {
                 console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
             }
@@ -604,6 +692,8 @@ class IframeListener {
 </html>
 `;
 
+                // The listener never needs to be removed, so we can use an inline function here.
+                // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
                 iframe.addEventListener("load", () => {
                     resolve();
                 });
@@ -1063,6 +1153,25 @@ class IframeListener {
             source ?? undefined
         );
     }*/
+
+    /**
+     * Registers a callback that can be used to respond to some query (as defined in the IframeQueryMap type).
+     *
+     * Important! There can be only one "answerer" so registering a new one will unregister the old one.
+     *
+     * @param key The "type" of the query we are answering
+     * @param callback
+     */
+    public registerOpenMessagePortAnswerer<T extends keyof IframeMessagePortMap>(
+        key: T,
+        callback: OpenMessagePortAnswererCallback<T>
+    ): void {
+        this.openMessagePortAnswerers[key] = callback;
+    }
+
+    public unregisterOpenMessagePortAnswerer(key: keyof IframeMessagePortMap): void {
+        delete this.openMessagePortAnswerers[key];
+    }
 }
 
 export const iframeListener = new IframeListener();

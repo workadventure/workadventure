@@ -239,6 +239,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
             },
         },
+        noProperties: "Aucune propriété définie",
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
@@ -257,6 +258,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Annuler",
             },
         },
+        nameHelpText: "Le nom de la zone sera affiché aux utilisateurs lorsqu'ils entreront dans la zone.",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
@@ -266,9 +268,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Ajouter un objet",
             description: "Recherchez, téléchargez ou sélectionnez un objet existant et ajoutez-le à la carte.",
+            choose: "Choisissez un objet",
         },
         title: "Outil d'édition d'entités",
         editing: "Edition : {name}",
+        drop: "Déposez votre fichier n'importe où",
         itemPicker: {
             searchPlaceholder: "Rechercher",
             backToSelectObject: "Retour à la sélection d'objet",
@@ -320,6 +324,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             delete: "Supprimer",
             save: "Enregister",
             upload: "Charger",
+        },
+        errors: {
+            dragNotConnected:
+                "Vous ne pouvez pas télécharger de fichiers si vous n'êtes pas connecté et n'avez pas les droits pour le faire.",
+            dragNotAllowed: "Vous n'avez pas les droits pour télécharger des fichiers sur cette carte",
         },
     },
     settings: {

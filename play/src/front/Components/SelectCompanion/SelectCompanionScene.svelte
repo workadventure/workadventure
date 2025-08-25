@@ -110,8 +110,6 @@
 
 <!--</form>-->
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
-
     button {
         pointer-events: auto;
     }

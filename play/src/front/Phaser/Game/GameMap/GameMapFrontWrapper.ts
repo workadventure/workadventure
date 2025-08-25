@@ -615,7 +615,10 @@ export class GameMapFrontWrapper {
             y: Math.ceil(topLeftPos.y + height / 2),
         };
 
-        return canEntityBePlaced && this.scene.getEntityPermissions().canEdit(entityCenterCoordinates);
+        return (
+            canEntityBePlaced &&
+            this.scene.getEntityPermissions().canEdit(entityCenterCoordinates, width, height, !collisionGrid)
+        );
     }
 
     private canEntityBePlaced(

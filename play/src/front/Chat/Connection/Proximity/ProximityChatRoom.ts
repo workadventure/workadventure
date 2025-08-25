@@ -3,7 +3,7 @@ import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
 import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import { AvailabilityStatus } from "@workadventure/messages";
+import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import {
     ChatMessage,
@@ -15,12 +15,11 @@ import {
 } from "../ChatConnection";
 import LL from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
-import { SpaceInterface } from "../../../Space/SpaceInterface";
+import { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-import { SpaceFilterInterface, SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
@@ -30,6 +29,7 @@ import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
+import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -72,7 +72,6 @@ export class ProximityChatRoom implements ChatRoom {
     isEncrypted = writable(false);
     typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
     private _space: SpaceInterface | undefined;
-    private _spaceWatcher: SpaceFilterInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
     // Users by spaceUserId
@@ -371,12 +370,11 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public joinSpace(spaceName: string): void {
-        this._space = this.spaceRegistry.joinSpace(spaceName);
+    public async joinSpace(spaceName: string): Promise<void> {
+        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
 
-        this._spaceWatcher = this._space.watchAllUsers();
-        bindMuteEventsToSpace(this._space, this._spaceWatcher);
-        this.usersUnsubscriber = this._spaceWatcher.usersStore.subscribe((users) => {
+        bindMuteEventsToSpace(this._space);
+        this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
             this.users = users;
             this.hasUserInProximityChat.set(users.size > 1);
         });
@@ -386,14 +384,14 @@ export class ProximityChatRoom implements ChatRoom {
             return uuid && blackListManager.isBlackListed(uuid);
         };
 
-        this.spaceWatcherUserJoinedObserver = this._spaceWatcher.observeUserJoined.subscribe((spaceUser) => {
+        this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
             if (spaceUser.spaceUserId === this._spaceUserId) {
                 return;
             }
             this.addIncomingUser(spaceUser);
         });
 
-        this.spaceWatcherUserLeftObserver = this._spaceWatcher.observeUserLeft.subscribe((spaceUser) => {
+        this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
             this.addOutcomingUser(spaceUser);
         });
 
@@ -421,7 +419,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
         });
 
-        this.simplePeer.setSpaceFilter(this._spaceWatcher);
+        this.simplePeer.setSpace(this._space);
 
         this.saveChatState();
 
@@ -434,12 +432,16 @@ export class ProximityChatRoom implements ChatRoom {
                 !get(requestedCameraState) &&
                 (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
             ) {
-                chatVisibilityStore.set(true);
+                // If the user is not on the mobile, open the chat
+                // The user experience is disrupted by the chat on mobile
+                if (!isMediaBreakpointUp("md")) {
+                    chatVisibilityStore.set(true);
+                }
             }
         }
     }
 
-    public leaveSpace(spaceName: string): void {
+    public async leaveSpace(spaceName: string): Promise<void> {
         if (!this._space) {
             console.error("Trying to leave a space that is not joined");
             Sentry.captureMessage("Trying to leave a space that is not joined");
@@ -474,11 +476,18 @@ export class ProximityChatRoom implements ChatRoom {
             this.usersUnsubscriber();
         }
         this.users = undefined;
-        this.spaceRegistry.leaveSpace(this._space);
+
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
-        this.simplePeer.setSpaceFilter(undefined);
+        this.simplePeer.setSpace(undefined);
+
+        try {
+            await this.spaceRegistry.leaveSpace(this._space);
+        } catch (error) {
+            console.error("Error leaving space: ", error);
+            Sentry.captureException(error);
+        }
     }
 
     private restoreChatState() {
@@ -500,5 +509,13 @@ export class ProximityChatRoom implements ChatRoom {
 
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
+        this.spaceMessageSubscription?.unsubscribe();
+        this.spaceIsTypingSubscription?.unsubscribe();
+
+        this.spaceWatcherUserJoinedObserver?.unsubscribe();
+        this.spaceWatcherUserLeftObserver?.unsubscribe();
+        if (this.usersUnsubscriber) {
+            this.usersUnsubscriber();
+        }
     }
 }

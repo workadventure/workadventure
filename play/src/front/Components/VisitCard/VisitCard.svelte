@@ -5,6 +5,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { openDirectChatRoom } from "../../Chat/Utils";
+    import chat from "../images/chat.png";
 
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Spinner from "../Icons/Spinner.svelte";
@@ -35,7 +36,6 @@
 
     function handleIframeMessage(message: MessageEvent) {
         if (message.data.type === "cvIframeSize") {
-            console.log("visitCard message", message.data);
             // w = message.data.data.w + "px";
             h = message.data.data.h;
         }
@@ -75,10 +75,13 @@
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
                         <button
-                            class="btn btn-secondary light cursor-pointer"
+                            class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                             data-testid="sendMessagefromVisitCardButton"
-                            on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
+                            on:click={openChat}
                         >
+                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" />
+                            {$LL.menu.visitCard.sendMessage()}
+                        </button>
                     {:else}
                         <button
                             class="light cursor-pointer px-3 mb-2 mr-0"

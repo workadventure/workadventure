@@ -63,6 +63,7 @@ export enum SubMenusInterface {
     contact = "contact",
     report = "report",
     chat = "chat",
+    shortcuts = "shortcuts",
 }
 
 export type MenuKeys = keyof Translation["menu"]["sub"];
@@ -144,6 +145,11 @@ function createSubMenusStore() {
                         ENABLE_REPORT_ISSUES_MENU &&
                         REPORT_ISSUES_URL != undefined)
             ),
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.shortcuts,
+            visible: alwaysVisible,
         },
     ]);
     const { subscribe, update } = store;
@@ -427,12 +433,10 @@ function createOpenedMenuStore() {
     return {
         subscribe,
         open(menu: Menus) {
-            console.log("open", menu);
             set(menu);
             activeSecondaryZoneActionBarStore.set(undefined);
         },
         close(menu: Menus) {
-            console.log("close", menu);
             if (get({ subscribe }) === menu) {
                 set(undefined);
             }
@@ -441,7 +445,6 @@ function createOpenedMenuStore() {
             set(undefined);
         },
         toggle(menu: Menus) {
-            console.log("toggle", menu);
             if (get({ subscribe }) === menu) {
                 set(undefined);
             } else {

@@ -4,6 +4,8 @@ import LL from "../../../i18n/i18n-svelte";
 
 export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
     private timeoutDestroyText: NodeJS.Timeout | null = null;
+    private readonly span: HTMLSpanElement | null = null;
+
     constructor(
         public readonly id: string,
         text: string,
@@ -43,6 +45,7 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         const textTransformed = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
         const textMarked = marked.parse(textTransformed);
         const span = document.createElement("span");
+
         if (textMarked instanceof Promise) {
             textMarked
                 .then((resolvedText) => {
@@ -54,7 +57,6 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
         }
         span.id = `spanText-${id}`;
         span.classList.add("characterTriggerAction");
-        span.addEventListener("click", callback);
 
         super(
             scene,
@@ -65,6 +67,9 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
                 type === "message" ? "#ffffff" : "#f9e81e"
             }; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px); max-width: 300px; max-height: 150px; overflow-y: auto; whie-space: pre-wrap;`
         );
+
+        this.span = span;
+        this.span.addEventListener("click", this.callback);
         this.setAlpha(0);
     }
 
@@ -87,5 +92,15 @@ export class SpeechDomElement extends Phaser.GameObjects.DOMElement {
                 }, duration);
             },
         });
+    }
+
+    public destroy() {
+        if (this.span) {
+            this.span.removeEventListener("click", this.callback);
+        }
+        if (this.timeoutDestroyText) {
+            clearTimeout(this.timeoutDestroyText);
+        }
+        super.destroy();
     }
 }

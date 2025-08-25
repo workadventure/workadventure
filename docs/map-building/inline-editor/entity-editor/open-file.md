@@ -13,7 +13,7 @@ From the map editor, you can upload the documents to be displayed.
 The uploaded documents format can be PDF files, or images.
 :::
 
-## Configuring a open document entity
+## Configuring an open document entity
 
 While editing an entity, click the "file" icon.
 

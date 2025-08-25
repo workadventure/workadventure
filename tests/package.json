@@ -1,25 +1,24 @@
 {
+  "private": true,
+  "name": "workadventure-e2e-tests",
+  "version": "1.0.0",
   "devDependencies": {
-    "@playwright/test": "^1.50.0",
+    "@playwright/test": "1.53.2",
     "@types/adm-zip": "^0.5.0",
     "@types/dockerode": "^3.3.11",
-    "@typescript-eslint/eslint-plugin": "^5.40.1",
-    "@typescript-eslint/parser": "^5.40.1",
+    "@workadventure/eslint-config": "1.0.0",
     "@workadventure/iframe-api-typings": "^1.25.6",
     "adm-zip": "^0.5.10",
     "axios": "^1.7.4",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
-    "eslint": "^8.26.0",
-    "eslint-import-resolver-typescript": "^3.5.3",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-playwright": "^0.11.2",
-    "lint-staged": "^13.0.3",
-    "typescript-eslint": "^0.0.1-alpha.0"
+    "eslint": "^9.33.0",
+    "eslint-plugin-playwright": "^2.2.2",
+    "lint-staged": "^13.0.3"
   },
   "scripts": {
-    "lint": "eslint tests/ . --ext .ts",
-    "fix": "eslint --fix tests/ . --ext .ts",
+    "lint": "eslint tests/",
+    "lint-fix": "eslint --fix tests/",
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
@@ -36,5 +35,8 @@
     "*.ts": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "catch-unknown": "^2.0.0"
   }
 }

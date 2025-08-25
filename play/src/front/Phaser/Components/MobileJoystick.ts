@@ -43,10 +43,10 @@ export class MobileJoystick extends VirtualJoystick {
         // Disable the joystick by default
         this.enable = false;
 
-        // Show the joeytick at the bottom middle of the screen
+        // Show the joystick at the bottom middle of the screen
         const { width, height } = this.scene.game.canvas;
         this.x = width / 2;
-        this.y = height - 200;
+        this.y = height * 0.8;
 
         // Add opacity
         this.base.setAlpha(0.3);
@@ -66,7 +66,7 @@ export class MobileJoystick extends VirtualJoystick {
         this.visible = true;
     }
 
-    public hide(): void {
+    public hide(delay: number): void {
         // The joystick is not used by the player
         this.enable = false;
 
@@ -74,7 +74,7 @@ export class MobileJoystick extends VirtualJoystick {
         if (this.setimeout) clearTimeout(this.setimeout);
         this.setimeout = setTimeout(() => {
             this.visible = false;
-        }, 30000);
+        }, delay);
     }
 
     public resize() {
@@ -86,10 +86,10 @@ export class MobileJoystick extends VirtualJoystick {
         );
 
         // TODO: change it to apply the good ratio of the canvas
-        // Show the joeytick at the bottom middle of the screen
+        // Show the joystick at the bottom middle of the screen
         const { width, height } = this.scene.game.canvas;
-        this.showAt(width / 2, height - 200);
-        this.hide();
+        this.showAt(width / 2, height * 0.8);
+        this.hide(30_000);
     }
 
     private getDisplaySizeByElement(element: integer): integer {

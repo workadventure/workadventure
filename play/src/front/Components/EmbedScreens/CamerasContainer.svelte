@@ -95,9 +95,6 @@
     }
 
     function calculateOptimalLayout(containerWidth: number, containerHeight: number) {
-        //console.log("calculateOptimalLayout");
-        //console.log("containerWidth", containerWidth);
-        //console.log("containerHeight", containerHeight);
         if (!containerWidth || !containerHeight) {
             return {
                 videoWidth: minMediaBoxWidth,
@@ -114,10 +111,8 @@
 
         // Start with maximum possible videos per row and work backwards
         for (let vpr = maxVideosPerRow; vpr >= 1; vpr--) {
-            //console.log('Attempting to fit', vpr, 'videos per row');
             // Calculate video width based on container width and gap
             const width = (containerWidth - gap * (vpr - 1)) / vpr;
-            //console.log("width", width);
 
             // Calculate video height maintaining aspect ratio
             const height = (width * 9) / 16;
@@ -128,15 +123,10 @@
             const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
             const visibleVideos = rowsPerPage * vpr;
 
-            //console.log("visibleVideos", visibleVideos);
-
             // If we need scrolling, calculate the maximum height that would fit
             if (visibleVideos < $streamableCollectionStore.size) {
-                //console.log("max width for vpr", width);
-                //console.log('vpr', vpr);
                 // Calculate total number of rows needed
                 const totalRows = Math.ceil($streamableCollectionStore.size / vpr);
-                //console.log('totalRows', totalRows);
 
                 // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
                 if (totalRows === 1) {
@@ -176,7 +166,6 @@
                     adjustedHeight = (containerHeight - gap * (adjustedTotalRows - 1)) / adjustedTotalRows;
                 }
                 //const adjustedWidth = Math.max(adjustedWidthWithReducedHeight, adjustedWidthWithOneMoreVpr);
-                //console.log('adjustedWidth', adjustedWidth, 'adjustedHeight', adjustedHeight);
                 return {
                     videoWidth: adjustedWidth,
                     videoHeight: adjustedHeight,
@@ -267,7 +256,7 @@
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                     }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto "
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
                     class:aspect-video={videoHeight === undefined}
                 >
                     <MediaBox streamable={$myCameraPeerStore} />

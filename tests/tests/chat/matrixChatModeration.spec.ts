@@ -13,12 +13,8 @@ test.describe("chat moderation @matrix", () => {
     "Ignore tests on webkit because of issue with camera and microphone",
 
     async ({ browserName, request, page }) => {
-      //WebKit has issue with camera
-      if (browserName === "webkit") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  // WebKit has issue with camera
+  test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
       await resetWamMaps(request);
       await page.goto(Map.url("empty"));
       await ChatUtils.resetMatrixDatabase();
@@ -31,7 +27,7 @@ test.describe("chat moderation @matrix", () => {
 
   test("should create a public chat room and verify admin permissions",
       async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -53,18 +49,16 @@ test.describe("chat moderation @matrix", () => {
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-permissionLevel")).toHaveText("Admin");
     await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant").getByTestId("@john.doe:matrix.workadventure.localhost-membership")).toHaveText("Joined");
 
-    await page.close();
+
     await page.context().close();
   });
 
   test("should manage participants and permissions in public chat room",
       async ({ browser }, testInfo) => {
 
-    if (testInfo.project.name === "mobilefirefox") {
-      test.skip();
-    }
+  test.skip(testInfo.project.name === 'mobilefirefox', 'Skip on mobile Firefox');
 
-    const page = await getPage(browser, 'Alice', Map.url("empty"));
+    await using page = await getPage(browser, 'Alice', Map.url("empty"));
     await oidcMatrixUserLogin(page);
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
@@ -130,7 +124,7 @@ test.describe("chat moderation @matrix", () => {
 
     expect(powerLevel).toBe(50);
 
-    await page.close();
+
     await page.context().close();
   });
 });

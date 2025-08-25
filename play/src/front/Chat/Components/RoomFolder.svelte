@@ -81,9 +81,9 @@
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
         </button>
     </div>
-    <div class="flex flex-col ">
+    <div class="flex flex-col">
         {#if isOpen}
-            <div class="flex flex-col ">
+            <div class="flex flex-col">
                 {#if $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
                     <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div

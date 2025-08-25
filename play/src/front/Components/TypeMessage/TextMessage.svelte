@@ -26,11 +26,11 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="main-text-message bg-contrast/85 rounded absolute backdrop-blur-md flex gap-3 w-3/5 m-auto py-3 pl-5 pr-2 max-h-64 left-0 right-0 shadow-xl  pointer-events-auto animate-bounce-in"
+    class="main-text-message bg-contrast/85 rounded absolute backdrop-blur-md flex gap-3 w-3/5 m-auto py-3 pl-5 pr-2 max-h-64 left-0 right-0 shadow-xl pointer-events-auto animate-bounce-in"
     out:fade={{ duration: 150 }}
 >
     <div class="icon mt-3 text-white text-xl">💬</div>
-    <div class="content-text-message flex text-white max-h-60 w-full overflow-auto  mr-6">
+    <div class="content-text-message flex text-white max-h-60 w-full overflow-auto mr-6">
         {@html converter.convert()}
     </div>
     <ButtonClose on:click={closeTextMessage} />

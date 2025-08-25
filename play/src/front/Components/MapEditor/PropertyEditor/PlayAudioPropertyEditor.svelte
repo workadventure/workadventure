@@ -113,7 +113,7 @@
         />
 
         {#if optionAdvancedActivated}
-            <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+            <div class:active={optionAdvancedActivated} class="advanced-option">
                 {#if isArea === false}
                     <div class="value-input flex flex-col">
                         <Input

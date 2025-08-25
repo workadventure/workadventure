@@ -29,7 +29,6 @@
 
     onMount(() => {
         const notAskAgainValue = localStorage.getItem("notAskAgainHelpWebRtcSettingsPopup");
-        console.log("On mount notAskAgainValue", notAskAgainValue);
         if (notAskAgainValue === "true") {
             // Close this popup but show warning message
             warningMessageStore.addWarningMessage($LL.camera.webrtc.content());
@@ -52,7 +51,7 @@
         {:else}
             <h2 class="mb-2">
                 <div class="text-left">
-                    <div role="status" class="flex flex-row w-full gap-3 ">
+                    <div role="status" class="flex flex-row w-full gap-3">
                         <span class="grow">
                             {$LL.camera.webrtc.titlePending()}
                         </span>

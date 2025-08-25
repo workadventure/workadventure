@@ -38,6 +38,9 @@ export class RadialMenu extends Phaser.GameObjects.Container {
         image.setInteractive({
             useHandCursor: true,
         });
+        // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
+        /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
+
         image.on("pointerdown", () => this.emit(RadialMenuClickEvent, item));
         image.on("pointerover", () => {
             this.scene.tweens.add({
@@ -59,6 +62,7 @@ export class RadialMenu extends Phaser.GameObjects.Container {
                 ease: "Power3",
             });
         });
+        /* eslint-enable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
         const angle = (2 * Math.PI * index) / itemsNumber;
         Phaser.Actions.RotateAroundDistance([image], { x: 0, y: 0 }, angle, menuRadius);
     }

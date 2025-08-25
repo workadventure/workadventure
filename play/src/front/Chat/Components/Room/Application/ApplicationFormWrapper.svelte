@@ -18,6 +18,10 @@
 
     const dispatch = createEventDispatcher<{
         update: ApplicationProperty;
+        // Currently resolving oEmbed link
+        processing: void;
+        // Resolved oEmbed link
+        processed: void;
         close: void;
         input: string;
     }>();
@@ -89,6 +93,7 @@
     }
 
     async function unFocus() {
+        dispatch("processing");
         errorLink = undefined;
         let link = htmlElementInput.value.trim();
         try {
@@ -135,6 +140,7 @@
             link = "";
             errorLink = getErrorFromPropertyName() ?? errorLink ?? (error as Error).message;
         } finally {
+            dispatch("processed");
             dispatch("update", { ...property, link });
         }
     }

@@ -20,6 +20,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
+    import { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -27,6 +28,7 @@
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
     let showDescriptionField = false;
+    let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -45,6 +47,7 @@
                 entityDescription = descriptionProperty.description ?? "";
                 entitySearchable = descriptionProperty.searchable ?? false;
             }
+            selectedEntity = currentEntity;
         }
     });
 
@@ -255,6 +258,7 @@
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
+        selectedEntity?.removeEditColor();
     });
 
     function toggleDescriptionField() {
@@ -399,7 +403,7 @@
                     id="objectDescription"
                     placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                     bind:value={entityDescription}
-                    on:change={onUpdateDescription}
+                    onChange={onUpdateDescription}
                     onKeyPress={() => {}}
                 />
             {/if}

@@ -11,7 +11,7 @@
 </script>
 
 <div class="flex items-center gap-2 p-2" data-testid={dataTestId}>
-    <label class="inline-flex cursor-pointer relative ">
+    <label class="inline-flex cursor-pointer relative">
         <input
             id={uniqueId}
             class="sr-only peer"
