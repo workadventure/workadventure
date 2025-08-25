@@ -1,11 +1,11 @@
 import { Room, EventType, EventTimeline } from "matrix-js-sdk";
 import { derived, get, Readable, writable, Writable } from "svelte/store";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
-import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 
 import * as Sentry from "@sentry/svelte";
 import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "ts-deferred";
+import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { RoomFolder } from "../ChatConnection";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 
@@ -248,13 +248,10 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
     async refreshRooms() {
         try {
-            const { rooms: allRooms } = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
+            console.log("-------------------------------");
+            const { rooms: allRooms } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 1, false);
 
-            const { rooms: suggestedRoomsData } = await this.room.client.getRoomHierarchy(this.id, 100, 2, true);
-
-            const hierarchy = await this.room.client.getRoomHierarchy(this.id, 100, 1, false);
-
-            console.log("⛺️Hierarchy: ", hierarchy);
+            const { rooms: suggestedRoomsData } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 2, true);
 
             const localRooms = this.room.client.getRooms();
 
@@ -266,24 +263,39 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 if (this.id === roomId) return;
 
                 const chatRoom = localRooms.find((r) => r.roomId === roomId);
-                if (!chatRoom) return;
+
+                if (!chatRoom) {
+                    suggestedRooms.push({
+                        name: room.name ?? "",
+                        id: roomId,
+                        avatarUrl: "",
+                    });
+                    return;
+                }
 
                 const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
                 suggestedRooms.push({
                     name: room.name ?? "",
                     id: roomId,
-                    avatarUrl
+                    avatarUrl,
                 });
-                console.log("📬📬📬 Suggested room:", room.name, room.room_id, "Avatar URL:", avatarUrl);
             });
 
+            console.log("👻👻👻 All rooms data:", allRooms);
             allRooms.forEach((room) => {
-                console.log("Refreshing room:", room.name, room.room_id, "Is suggested: ", room.children_state);
                 const roomId = room.room_id;
                 if (this.id === roomId) return;
 
                 const chatRoom = localRooms.find((r) => r.roomId === roomId);
-                if (!chatRoom) return;
+                console.log("---------- Checking room:", room.name, roomId, chatRoom);
+                if (!chatRoom) {
+                    availableRooms.push({
+                        name: room.name ?? "",
+                        id: roomId,
+                        avatarUrl: "",
+                    });
+                    return;
+                }
 
                 const membership = chatRoom.getMyMembership();
 
@@ -292,13 +304,17 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     availableRooms.push({
                         name: room.name ?? "",
                         id: roomId,
-                        avatarUrl
+                        avatarUrl,
                     });
                 }
             });
 
-            this.allSuggestedRooms.set(suggestedRooms);
-            this.availableRooms.set(availableRooms);
+            if (get(this.allSuggestedRooms) != suggestedRooms) {
+                this.allSuggestedRooms.set(suggestedRooms);
+            }
+            if (get(this.availableRooms) != availableRooms) {
+                this.availableRooms.set(availableRooms);
+            }
         } catch (error) {
             console.error("Failed to refresh rooms:", error);
             this.hasChildRoomsError.set(true);
@@ -328,39 +344,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             ?.getStateEvents(EventType.SpaceChild);
 
         if (!childEvents) return;
-
-        // let joinableRooms: { name: string; id: string; avatarUrl: string }[] = []
-        //
-        // childEvents.forEach((ev) => {
-        //     const stateKey = ev.getStateKey();
-        //     console.log(!stateKey ? "No state key for event" : "State key:", stateKey);
-        //     if (!stateKey) return;
-        //
-        //     const room = client.getRoom(stateKey);
-        //     // const room = history[history.length - 1];x
-        //
-        //     console.log(!room ? "❌ Room not found " : `✅Room found:${room.name}`);
-        //
-        //     if (!room) return;
-        //
-        //     if (room.getMyMembership() === KnownMembership.Join || room.getMyMembership() === KnownMembership.Invite) {
-        //         console.log("🚗🚗 Room joined or invited, adding to room list");
-        //         if (room.isSpaceRoom()) {
-        //             const spaceFolder = new MatrixRoomFolder(room);
-        //             this.folderList.set(room.roomId, spaceFolder);
-        //             spaceFolder.init();
-        //         } else {
-        //             this.roomList.set(room.roomId, new MatrixChatRoom(room));
-        //         }
-        //     } else if (room.getMyMembership() !== KnownMembership.Ban) {
-        //         console.log("🚗🚗🚗 Other room not joined or invited, adding to joinable rooms");
-        //         const avatarUrl = room.getAvatarUrl(client.baseUrl, 24, 24, "scale") ?? "";
-        //         console.log("adding room", room.name, room.roomId, avatarUrl);
-        //         joinableRooms.push({ name: room.name ?? "", id: room.roomId, avatarUrl });
-        //         console.log(" 😍😍😍Available rooms updated:", get(this.availableRooms));
-        //     }
-        //     this.availableRooms.set(joinableRooms)
-        // });
 
         const children = childEvents
             .map((ev) => {
