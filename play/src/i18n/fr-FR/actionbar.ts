@@ -52,6 +52,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         BACK_IN_A_MOMENT: "De retour bientôt",
         DO_NOT_DISTURB: "Ne pas déranger",
         BUSY: "Occupé",
+        OFFLINE: "Hors ligne",
         SILENT: "Silencieux",
         JITSI: "En réunion",
         BBB: "En réunion",
@@ -78,9 +79,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
+            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",
@@ -92,15 +95,19 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         mic: {
             title: "Activer/désactiver votre micro",
+            desc: "Activez ou coupez votre micro pour que les autres vous entendent pendant la discussion.",
         },
         micDisabledByStatus: {
             title: "Micro désactivé",
+            desc: "Votre micro est désactivé car votre statut est « {status} ».",
         },
         cam: {
             title: "Activer/désactiver votre caméra",
+            desc: "Activez ou coupez votre caméra pour montrer votre vidéo aux autres participants.",
         },
         camDisabledByStatus: {
             title: "Caméra désactivée",
+            desc: "Votre caméra est désactivée car votre statut est « {status} ».",
         },
         share: {
             title: "Partager votre écran",
@@ -116,12 +123,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Liste des salons",
+            desc: "Parcourez la liste des salons pour voir qui est présent et rejoindre une conversation en un clic.",
         },
         calendar: {
             title: "Calendrier",
+            desc: "Consultez vos réunions à venir et rejoignez-les directement depuis WorkAdventure.",
         },
         todolist: {
             title: "Liste de tâches",
+            desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
     },
     listStatusTitle: {

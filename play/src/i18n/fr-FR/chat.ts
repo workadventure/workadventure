@@ -363,6 +363,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         content_3: "Veuillez vous connecter pour poursuivre l’expérience.",
     },
     verificationEmojiDialog: {
+        title: "Vérifier l’appareil",
         titleVerifyThisDevice: "Vérifier votre appareil",
         titleVerifyOtherDevice: "Vérifier un autre appareil",
         confirmation: "ils correspondent",
