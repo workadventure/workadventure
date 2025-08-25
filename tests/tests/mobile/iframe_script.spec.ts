@@ -5,9 +5,9 @@ import { getPage } from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
 import Menu from "../utils/menu";
 
-test.describe("Iframe API", () => {
+test.describe("Iframe API @nodesktop", () => {
     test.beforeEach(async ({ page }) => {
-    test.skip(!isMobile(page), 'Run only on mobile');
+        test.skip(!isMobile(page), 'Run only on mobile');
     });
     test("disable invite user button", async ({ browser }) => {
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
@@ -27,7 +27,7 @@ test.describe("Iframe API", () => {
 
         await page.context().close();
     });
-    test("disable screen sharing", async ({ browser, browserName }) => {
+    test("disable screen sharing @nowebkit", async ({ browser, browserName }) => {
         // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
         // The chat masks the buttons we are interested in.
         test.skip(browserName === 'webkit', 'Skip on WebKit');

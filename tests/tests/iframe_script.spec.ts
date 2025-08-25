@@ -6,7 +6,7 @@ import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 import Map from "./utils/map";
 
-test.describe("Iframe API", () => {
+test.describe("Iframe API @nowebkit", () => {
   test.beforeEach(async ({ page }) => {
     test.skip(isMobile(page), 'Skip on mobile devices');
   });
@@ -99,7 +99,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("disable screen sharing", async ({ browser }) => {
+  test("disable screen sharing @nofirefox @nowebkit", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
     await using page = await getPage(browser, 'Alice',
@@ -141,7 +141,7 @@ test.describe("Iframe API", () => {
     await page.context().close();
   });
 
-  test("disable right click user button", async ({ browser }) => {
+  test("disable right click user button @nofirefox @nowebkit", async ({ browser }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
     await using page = await getPage(browser, 'Alice',

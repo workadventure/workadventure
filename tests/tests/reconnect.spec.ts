@@ -6,7 +6,7 @@ import { getPage } from "./utils/auth"
 import {isMobile} from "./utils/isMobile";
 
 test.setTimeout(180_000);
-test.describe("Connection", () => {
+test.describe("Connection @nomobile @nowebkit", () => {
   test.beforeEach(async ({ page, browserName }) => {
     test.skip(
       isMobile(page) || browserName === "webkit",

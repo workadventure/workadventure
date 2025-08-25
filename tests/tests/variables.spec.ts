@@ -31,13 +31,13 @@ async function expectVariableToBe(page: Page, value: string) {
 }
 
 test.setTimeout(360000);
-test.describe('Variables', () => {
+test.describe('Variables @nomobile', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(isMobile(page), 'Skip on mobile devices');
   });
   // WARNING: Since this test restarts Traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ browser, request }, { project }) => {
+  test('storage works @docker @nofirefox', async ({ browser, request }, { project }) => {
     // Skip test for Firefox because of some bug when reloading too many pages.
     test.skip(project.name === 'firefox', 'Unstable in Firefox when reloading many pages');
 
