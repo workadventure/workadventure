@@ -20,7 +20,7 @@
 {#if isCameraDisabled}
     <div class="{position} z-30 responsive-dimension">
         <div class="flex justify-between rounded bg-transparent">
-            <div class="relative  px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center ">
+            <div class="relative px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center">
                 <div
                     class="w-8 @[15rem]/videomediabox:w-16 @[25rem]/videomediabox:w-32"
                     style="image-rendering:pixelated"

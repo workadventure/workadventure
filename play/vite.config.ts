@@ -6,6 +6,7 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 import Icons from "unplugin-icons/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import NodeGlobalsPolyfillPlugin from "@esbuild-plugins/node-globals-polyfill";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -33,6 +34,9 @@ export default defineConfig(({ mode }) => {
             },
         },
         plugins: [
+            nodePolyfills({
+                include: ["events"],
+            }),
             svelte({
                 preprocess: sveltePreprocess(),
                 onwarn(warning, defaultHandler) {
@@ -48,7 +52,9 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             }),
-            Icons({ compiler: "svelte" }),
+            Icons({
+                compiler: "svelte",
+            }),
             legacy({
                 //targets: ['defaults', 'not IE 11', 'iOS > 14.3']
 
@@ -58,6 +64,11 @@ export default defineConfig(({ mode }) => {
             }),
             tsconfigPaths(),
         ],
+        resolve: {
+            alias: {
+                events: "events",
+            },
+        },
         test: {
             environment: "jsdom",
             globals: true,

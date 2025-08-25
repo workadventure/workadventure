@@ -26,19 +26,19 @@ test.describe('Meeting actions test', () => {
         }
         
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user Alice to the meeting area
         await Map.teleportToPosition(page, 160, 160);
         
         // Create axpnd position 3 additional users
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userBob, 160, 160);
 
-        const userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userEve, 160, 160);
 
-        const userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userMallory, 160, 160);
 
         // Wait for the cameras container to be visible
@@ -72,22 +72,22 @@ test.describe('Meeting actions test', () => {
         }
         
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user Alice to the meeting area
         await Map.teleportToPosition(page, 160, 160);
         
         // Create axpnd position 3 additional users
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userBob, 160, 160);
 
-        const userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userEve, 160, 160);
 
-        const userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userMallory, 160, 160);
 
-        const userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         await Map.teleportToPosition(userJohn, 160, 160);
 
         // Wait for the cameras container to be visible

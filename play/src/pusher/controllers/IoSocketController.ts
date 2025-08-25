@@ -1102,7 +1102,8 @@ export class IoSocketController {
                                         message: "An error occurred in pusher: " + asError(e).message,
                                     },
                                 },
-                            }).finish()
+                            }).finish(),
+                            true
                         );
                     } catch (error) {
                         Sentry.captureException(error);

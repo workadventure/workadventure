@@ -11,7 +11,7 @@ function isIntersectingViewport(selector: string, page: Page): Promise<boolean> 
             observer.observe(element);
             // Firefox doesn't call IntersectionObserver callback unless
             // there are rafs.
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
+             
             requestAnimationFrame(() => {});
         });
         return visibleRatio > 0;

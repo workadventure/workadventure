@@ -5,7 +5,7 @@ import { getPage} from "./utils/auth";
 
 test.describe('Scripting moveto function', () => {
     test('stops at correct position', async ({ browser}) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
 
         await Map.walkToPosition(page, 5*32, 5*32);
 
@@ -20,7 +20,7 @@ test.describe('Scripting moveto function', () => {
 
         expect(position.x).toBe(5*32);
         expect(position.y).toBe(5*32);*/
-        await page.close();
+
         await page.context().close();
     });
 });

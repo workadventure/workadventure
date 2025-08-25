@@ -32,10 +32,17 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
+        noDevices: "Nenhum dispositivo de câmera encontrado",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
+        noDevices: "Nenhum dispositivo de microfone encontrado",
+    },
+    speaker: {
+        disabled: "Seu alto-falante está desabilitado",
+        activate: "Ativar seu alto-falante",
+        noDevices: "Nenhum dispositivo de alto-falante encontrado",
     },
     status: {
         ONLINE: "Online",

@@ -657,7 +657,7 @@
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="ps-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
+                <button class="ps-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}

@@ -12,11 +12,7 @@ test.use({
 
 test.describe('Map-storage Upload API', () => {
     test.beforeEach(async ({page}) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('users are asked to reconnect when a map is updated',
         async ({ request, browser }) => {
@@ -35,7 +31,7 @@ test.describe('Map-storage Upload API', () => {
                 }
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         const uploadFile2 = await request.put("map2.wam", {
             multipart: {
@@ -52,9 +48,9 @@ test.describe('Map-storage Upload API', () => {
                 }
             }
         });
-        await expect(uploadFile2.ok()).toBeTruthy();
-        const page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
-        const page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
+        expect(uploadFile2.ok()).toBeTruthy();
+        await using page = await getPage(browser, 'Alice', `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        await using page2 = await getPage(browser, 'Bob', `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
 
         // Let's trigger a reload of map 1 only
         const uploadFile3 = await request.put("map1.wam", {
@@ -72,14 +68,14 @@ test.describe('Map-storage Upload API', () => {
                 }
             }
         });
-        await expect(uploadFile3.ok()).toBeTruthy();
+        expect(uploadFile3.ok()).toBeTruthy();
 
         // Now let's check the user in map1 did reload, but not on map2
-        await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
+        await expect(page.locator(".test-class")).toHaveText("New version of map detected. Refresh needed");
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
@@ -90,12 +86,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/file1.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
         const accessFile1 = await request.get(`file1.txt`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain("hello");
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain("hello");
 
         createZipFromDirectory("./assets/file2/", "./assets/file2.zip");
         const uploadFile2 = await request.post("upload", {
@@ -103,16 +99,16 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/file2.zip"),
             }
         });
-        await expect(uploadFile2.ok()).toBeTruthy();
+        expect(uploadFile2.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
         const accessFile2 = await request.get(`subdir/file2.txt`);
-        await expect(accessFile2.ok()).toBeTruthy();
-        await expect(await accessFile2.text()).toContain("world");
+        expect(accessFile2.ok()).toBeTruthy();
+        expect(await accessFile2.text()).toContain("world");
 
         // Let's check that the old file is gone
         const accessFile3 = await request.get(`file1.txt`);
-        await expect(accessFile3.status()).toBe(404);
+        expect(accessFile3.status()).toBe(404);
 
         // Now let's try to upload zip1 again, but in a directory
         const uploadFile3 = await request.post("upload", {
@@ -121,17 +117,17 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/foo"
             }
         });
-        await expect(uploadFile3.ok()).toBeTruthy();
+        expect(uploadFile3.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
         const accessFile4 = await request.get(`foo/file1.txt`);
-        await expect(accessFile4.ok()).toBeTruthy();
-        await expect(await accessFile4.text()).toContain("hello");
+        expect(accessFile4.ok()).toBeTruthy();
+        expect(await accessFile4.text()).toContain("hello");
 
         // Because we uploaded in "/foo", the "/subdir" directory should always be here.
         const accessFile5 = await request.get(`subdir/file2.txt`);
-        await expect(accessFile5.ok()).toBeTruthy();
-        await expect(await accessFile5.text()).toContain("world");
+        expect(accessFile5.ok()).toBeTruthy();
+        expect(await accessFile5.text()).toContain("world");
     });
 
     test('not authenticated requests are rejected', async ({ request }) => {
@@ -141,8 +137,8 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/file1.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeFalsy();
-        await expect(uploadFile1.status()).toBe(401);
+        expect(uploadFile1.ok()).toBeFalsy();
+        expect(uploadFile1.status()).toBe(401);
     });
 
     test('download', async ({ request }) => {
@@ -153,11 +149,11 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/file2.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
         const downloadFile1 = await request.get(`download?directory=subdir`);
-        await expect(downloadFile1.ok()).toBeTruthy();
+        expect(downloadFile1.ok()).toBeTruthy();
         const buffer = await downloadFile1.body();
 
         // Let's reupload this ZIP file in subdirectory "bar"
@@ -171,12 +167,12 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/bar"
             }
         });
-        await expect(uploadFile2.ok()).toBeTruthy();
+        expect(uploadFile2.ok()).toBeTruthy();
 
         // Now, let's see if file /bar/file2.txt exists
         const accessFile1 = await request.get(`bar/file2.txt`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain("world");
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain("world");
 
     });
 
@@ -187,7 +183,7 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/create-wam-files.zip"),
             }
         });
-        await expect(uploadTmjFiles.ok()).toBeTruthy();
+        expect(uploadTmjFiles.ok()).toBeTruthy();
         // For every .tmj file there should be .wam file created:
         const files = [
             "maps/map.wam",
@@ -199,7 +195,7 @@ test.describe('Map-storage Upload API', () => {
         }
         const responses = await Promise.all(promises);
         for (const response of responses) {
-            await expect(response.ok()).toBeTruthy();
+            expect(response.ok()).toBeTruthy();
         }
     });
 
@@ -212,12 +208,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
             }
         });
-        await expect(uploadWamFileBase.ok()).toBeTruthy();
+        expect(uploadWamFileBase.ok()).toBeTruthy();
 
         // old .wam file should be of version 2.0.0
         const accessOldFile = await request.get(`dir/map.wam`);
-        await expect(accessOldFile.ok()).toBeTruthy();
-        await expect(await accessOldFile.text()).toContain('"version":"2.0.0"');
+        expect(accessOldFile.ok()).toBeTruthy();
+        expect(await accessOldFile.text()).toContain('"version":"2.0.0"');
 
         createZipFromDirectory("./assets/wam-files-upload-1/", "./assets/wam-files-upload-1.zip");
         // now we upload .tmj along with new .wam file
@@ -226,12 +222,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-upload-1.zip"),
             }
         });
-        await expect(uploadUpdate1.ok()).toBeTruthy();
+        expect(uploadUpdate1.ok()).toBeTruthy();
 
         // Old .wam file should be replaced with different version
         const accessFile1 = await request.get(`dir/map.wam`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain('"version":"1.0.0"');
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain('"version":"1.0.0"');
     });
 
     test('old .wam file is removed along with its .tmj file', async ({ request }) => {
@@ -242,12 +238,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
             }
         });
-        await expect(uploadWamFileBase.ok()).toBeTruthy();
+        expect(uploadWamFileBase.ok()).toBeTruthy();
 
         // check if old .wam file exists
         const accessFile1 = await request.get(`dir/map.wam`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain('"version":"2.0.0"');
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain('"version":"2.0.0"');
 
         createZipFromDirectory("./assets/wam-files-upload-3/", "./assets/wam-files-upload-3.zip");
         // upload new .tmj file without .wam
@@ -256,15 +252,15 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-upload-3.zip"),
             }
         });
-        await expect(uploadWithoutWam.ok()).toBeTruthy();
+        expect(uploadWithoutWam.ok()).toBeTruthy();
 
         // old .wam file should no longer exist
         const accessFile2 = await request.get(`dir/map.wam`);
-        await expect(accessFile2.ok()).toBeFalsy();
+        expect(accessFile2.ok()).toBeFalsy();
 
         // check if new .wam file exists
         const accessFile3 = await request.get(`dir/map2.wam`);
-        await expect(accessFile3.ok()).toBeTruthy();
+        expect(accessFile3.ok()).toBeTruthy();
     });
 
     test('new .tmj file with the same name is uploaded, old .wam file persists',
@@ -276,12 +272,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-base.zip"),
             }
         });
-        await expect(uploadWamFileBase.ok()).toBeTruthy();
+        expect(uploadWamFileBase.ok()).toBeTruthy();
 
         // check if old .wam file exists
         const accessFile1 = await request.get(`dir/map.wam`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain('"version":"2.0.0"');
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain('"version":"2.0.0"');
 
         createZipFromDirectory("./assets/wam-files-upload-2/", "./assets/wam-files-upload-2.zip");
         // upload new .tmj file with the same name, without .wam
@@ -290,12 +286,12 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/wam-files-upload-2.zip"),
             }
         });
-        await expect(uploadWithoutWam.ok()).toBeTruthy();
+        expect(uploadWithoutWam.ok()).toBeTruthy();
 
         // old .wam file should still be there
         const accessFile2 = await request.get(`dir/map.wam`);
-        await expect(accessFile2.ok()).toBeTruthy();
-        await expect(await accessFile2.text()).toContain('"version":"2.0.0"');
+        expect(accessFile2.ok()).toBeTruthy();
+        expect(await accessFile2.text()).toContain('"version":"2.0.0"');
     });
 
     test('cache-control header', async ({ request }) => {
@@ -309,17 +305,17 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/cache-control.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         const accessNormalFile = await request.get(`normal-file.js`);
-        await expect(accessNormalFile.ok()).toBeTruthy();
-        await expect(accessNormalFile.headers()['etag']).toBeDefined();
-        await expect(accessNormalFile.headers()['cache-control']).toContain('public, s-max-age=10')
+        expect(accessNormalFile.ok()).toBeTruthy();
+        expect(accessNormalFile.headers()['etag']).toBeDefined();
+        expect(accessNormalFile.headers()['cache-control']).toContain('public, s-max-age=10')
 
         const accessCacheControlFile = await request.get(`immutable.a45b7e8f.js`);
-        await expect(accessCacheControlFile.ok()).toBeTruthy();
-        await expect(accessCacheControlFile.headers()['etag']).toBeDefined();
-        await expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
+        expect(accessCacheControlFile.ok()).toBeTruthy();
+        expect(accessCacheControlFile.headers()['etag']).toBeDefined();
+        expect(accessCacheControlFile.headers()['cache-control']).toContain("immutable");
     });
 
     test("get list of maps", async ({ request }) => {
@@ -337,13 +333,13 @@ test.describe('Map-storage Upload API', () => {
             }
         });
 
-        await expect(uploadFile.ok()).toBeTruthy();
-        await expect(uploadFileToDir.ok()).toBeTruthy();
+        expect(uploadFile.ok()).toBeTruthy();
+        expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["map.wam"]).toBeDefined();
-        await expect(maps["maps"]["foo/map.wam"]).toBeDefined();
+        expect(maps["maps"]["map.wam"]).toBeDefined();
+        expect(maps["maps"]["foo/map.wam"]).toBeDefined();
 
         const uploadFileAlone = await request.post("upload", {
             multipart: {
@@ -352,11 +348,11 @@ test.describe('Map-storage Upload API', () => {
             }
         });
 
-        await expect(uploadFileAlone.ok()).toBeTruthy();
+        expect(uploadFileAlone.ok()).toBeTruthy();
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["maps"]["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps["maps"])).toHaveLength(1);
+        expect(maps["maps"]["map.wam"]).toBeDefined();
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(1);
     });
 
     test("delete the root folder", async ({ request }) => {
@@ -367,20 +363,20 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/"
             }
         });
-        await expect(uploadFileToDir.ok()).toBeTruthy();
+        expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["map.wam"]).toBeDefined();
-        await expect(Object.keys(maps["maps"])).toHaveLength(1);
+        expect(maps["maps"]["map.wam"]).toBeDefined();
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(1);
 
         const deleteRoot = await request.delete(``);
 
-        await expect(deleteRoot.status()).toBe(204);
+        expect(deleteRoot.status()).toBe(204);
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(Object.keys(maps["maps"])).toHaveLength(0);
+        expect(Object.keys(maps["maps"] as object)).toHaveLength(0);
     });
 
     test("delete a folder", async ({ request }) => {
@@ -396,22 +392,22 @@ test.describe('Map-storage Upload API', () => {
             }
         });
 
-        await expect(uploadFileToDir.ok()).toBeTruthy();
+        expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"][filePath]).toBeDefined();
+        expect(maps["maps"][filePath]).toBeDefined();
 
 
 
         const deleteRoot = await request.delete(folderName);
 
-        await expect(deleteRoot.status() === 204).toBeTruthy();
+        expect(deleteRoot.status() === 204).toBeTruthy();
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
         for (const key in maps["maps"]) {
-            await expect(key).not.toContain("toDelete");
+            expect(key).not.toContain("toDelete");
         }
     });
 
@@ -423,11 +419,11 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/toMove"
             }
         });
-        await expect(uploadFileToDir.ok()).toBeTruthy();
+        expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["toMove/map.wam"]).toBeDefined();
+        expect(maps["maps"]["toMove/map.wam"]).toBeDefined();
 
         const moveDir = await request.post(`move`, {
             data: {
@@ -436,12 +432,12 @@ test.describe('Map-storage Upload API', () => {
             }
         });
 
-        await expect(moveDir.ok()).toBeTruthy();
+        expect(moveDir.ok()).toBeTruthy();
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["maps"]["moved/map.wam"]).toBeDefined();
-        await expect(maps["maps"]["toMove/map.wam"]).toBeUndefined();
+        expect(maps["maps"]["moved/map.wam"]).toBeDefined();
+        expect(maps["maps"]["toMove/map.wam"]).toBeUndefined();
     });
 
     test("copy a folder", async ({ request }) => {
@@ -452,11 +448,11 @@ test.describe('Map-storage Upload API', () => {
                 directory: "/toCopy"
             }
         });
-        await expect(uploadFileToDir.ok()).toBeTruthy();
+        expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
+        expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
 
         const copyDir = await request.post(`copy`, {
             data: {
@@ -465,12 +461,12 @@ test.describe('Map-storage Upload API', () => {
             }
         });
 
-        await expect(copyDir.ok()).toBeTruthy();
+        expect(copyDir.ok()).toBeTruthy();
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
-        await expect(maps["maps"]["copied/map.wam"]).toBeDefined();
+        expect(maps["maps"]["toCopy/map.wam"]).toBeDefined();
+        expect(maps["maps"]["copied/map.wam"]).toBeDefined();
     });
 
     test('fails on invalid maps', async ({ request }) => {
@@ -480,8 +476,8 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/missing-image.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeFalsy();
-        await expect((await uploadFile1.json())['MissingImage.tmj']['tilesets'][0]['type']).toBe("error");
+        expect(uploadFile1.ok()).toBeFalsy();
+        expect((await uploadFile1.json())['MissingImage.tmj']['tilesets'][0]['type']).toBe("error");
     });
 
     test('fails on JSON extension', async ({ request }) => {
@@ -491,8 +487,8 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/json-map.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeFalsy();
-        await expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
+        expect(uploadFile1.ok()).toBeFalsy();
+        expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
     });
 
     test('upload / patch / delete single file @local', async ({ request }) => {
@@ -511,16 +507,16 @@ test.describe('Map-storage Upload API', () => {
                 }
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         // Now, let's try to fetch the file.
         const accessFile1 = await request.get(`single-map.wam`);
-        await expect(accessFile1.ok()).toBeTruthy();
-        await expect(await accessFile1.text()).toContain("https://example.com/map.tmj");
+        expect(accessFile1.ok()).toBeTruthy();
+        expect(await accessFile1.text()).toContain("https://example.com/map.tmj");
 
         const listOfMaps = await request.get("maps");
         const maps = await listOfMaps.json();
-        await expect(maps["maps"]["single-map.wam"]).toBeDefined();
+        expect(maps["maps"]["single-map.wam"]).toBeDefined();
 
         const patch = await request.patch(`single-map.wam`, {
             headers: {
@@ -530,19 +526,19 @@ test.describe('Map-storage Upload API', () => {
                 { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
             ])
         });
-        await expect(patch.ok()).toBeTruthy();
+        expect(patch.ok()).toBeTruthy();
 
         const accessFile2 = await request.get(`single-map.wam`);
-        await expect(accessFile2.ok()).toBeTruthy();
-        await expect(await accessFile2.text()).toContain("https://example.com/newmap.tmj");
+        expect(accessFile2.ok()).toBeTruthy();
+        expect(await accessFile2.text()).toContain("https://example.com/newmap.tmj");
 
 
         const deleteFile = await request.delete(`single-map.wam`);
-        await expect(deleteFile.ok()).toBeTruthy();
+        expect(deleteFile.ok()).toBeTruthy();
 
         const listOfMaps2 = await request.get("maps");
         const maps2 = await listOfMaps2.json();
-        await expect(maps2["single-map.wam"]).toBeUndefined();
+        expect(maps2["single-map.wam"]).toBeUndefined();
 
     });
 
@@ -553,15 +549,15 @@ test.describe('Map-storage Upload API', () => {
                 file: fs.createReadStream("./assets/special_characters.zip"),
             }
         });
-        await expect(uploadFile1.ok()).toBeTruthy();
+        expect(uploadFile1.ok()).toBeTruthy();
 
         const accessFileWithSpace = await request.get(`file+with%20space.txt`);
-        await expect(accessFileWithSpace.ok()).toBeTruthy();
-        await expect(await accessFileWithSpace.text()).toContain("ok");
+        expect(accessFileWithSpace.ok()).toBeTruthy();
+        expect(await accessFileWithSpace.text()).toContain("ok");
 
         const accessFileWithEmoji = await request.get(`🍕.txt`);
-        await expect(accessFileWithEmoji.ok()).toBeTruthy();
-        await expect(await accessFileWithEmoji.text()).toContain("ok");
+        expect(accessFileWithEmoji.ok()).toBeTruthy();
+        expect(await accessFileWithEmoji.text()).toContain("ok");
 
         const uploadFile2 = await request.put("🍕.wam", {
             multipart: {
@@ -578,10 +574,10 @@ test.describe('Map-storage Upload API', () => {
                 }
             }
         });
-        await expect(uploadFile2.ok()).toBeTruthy();
+        expect(uploadFile2.ok()).toBeTruthy();
 
         const accessFileWithEmoji2 = await request.get(`🍕.wam`);
-        await expect(accessFileWithEmoji2.ok()).toBeTruthy();
+        expect(accessFileWithEmoji2.ok()).toBeTruthy();
 
         const patch = await request.patch(`🍕.wam`, {
             headers: {
@@ -591,12 +587,12 @@ test.describe('Map-storage Upload API', () => {
                 { "op": "replace", "path": "/mapUrl", "value": "https://example.com/newmap.tmj" },
             ])
         });
-        await expect(patch.ok()).toBeTruthy();
+        expect(patch.ok()).toBeTruthy();
 
         const deleteFile = await request.delete(`🍕.wam`);
-        await expect(deleteFile.ok()).toBeTruthy();
+        expect(deleteFile.ok()).toBeTruthy();
 
         const accessFileWithEmoji3 = await request.get(`🍕.wam`);
-        await expect(accessFileWithEmoji3.ok()).toBeFalsy();
+        expect(accessFileWithEmoji3.ok()).toBeFalsy();
     });
 });

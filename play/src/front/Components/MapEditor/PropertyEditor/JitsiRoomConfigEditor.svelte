@@ -97,7 +97,7 @@
                     <button class=" btn btn-light btn-border w-full h-12" on:click={closeModal}>
                         {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}
                     </button>
-                    <button class=" btn btn-secondary w-full h-12 " on:click={saveAndClose}>
+                    <button class=" btn btn-secondary w-full h-12" on:click={saveAndClose}>
                         {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}
                     </button>
                 </div>
