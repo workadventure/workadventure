@@ -22,7 +22,11 @@ export class SpaceScriptingBridgeService {
                 }
                 this.spaceJoinedCounter.set(data.spaceName, (this.spaceJoinedCounter.get(data.spaceName) || 0) + 1);
             } else {
-                space = await spaceRegistry.joinSpace(data.spaceName, this.getFilterType(data.filterType));
+                space = await spaceRegistry.joinSpace(
+                    data.spaceName,
+                    this.getFilterType(data.filterType),
+                    data.propertiesToSync
+                );
                 this.spaceJoinedCounter.set(data.spaceName, 1);
             }
 

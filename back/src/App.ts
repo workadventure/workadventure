@@ -1,10 +1,24 @@
 // lib/app.ts
 import express, { Express } from "express";
-import { PrometheusController } from "./Controller/PrometheusController";
+import * as grpc from "@grpc/grpc-js";
+import { RoomManagerService, SpaceManagerService } from "@workadventure/messages/src/ts-proto-generated/services";
+import { SharedAdminApi } from "@workadventure/shared-utils/src/SharedAdminApi";
 import { DebugController } from "./Controller/DebugController";
+import { PrometheusController } from "./Controller/PrometheusController";
+import { roomManager } from "./RoomManager";
+import {
+    HTTP_PORT,
+    PROMETHEUS_PORT,
+    GRPC_PORT,
+    ADMIN_API_RETRY_DELAY,
+    ADMIN_API_URL,
+    GRPC_MAX_MESSAGE_SIZE,
+} from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
-import { HTTP_PORT, PROMETHEUS_PORT } from "./Enum/EnvironmentVariable";
+import { spaceManager } from "./SpaceManager";
+import { setCapabilities } from "./Services/Capabilities";
 
+const sharedAdminApi = new SharedAdminApi(ADMIN_API_RETRY_DELAY, ADMIN_API_URL);
 class App {
     private app: Express;
     private prometheusApp: Express | undefined;
@@ -40,6 +54,27 @@ class App {
                 console.info(`WorkAdventure Prometheus API starting on port ${PROMETHEUS_PORT}!`)
             );
         }
+    }
+
+    public async init() {
+        setCapabilities(await sharedAdminApi.initialise());
+    }
+
+    public grpcListen(): void {
+        const server = new grpc.Server({
+            "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+            "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+        });
+        server.addService(RoomManagerService, roomManager);
+        server.addService(SpaceManagerService, spaceManager);
+
+        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure(), (err) => {
+            if (err) {
+                throw err;
+            }
+            console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
+            server.start();
+        });
     }
 }
 

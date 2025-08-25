@@ -16,7 +16,7 @@ In order to remove warnings in your IDE, you need to build the typings from the 
 Run:
 
 ```console
-docker-compose exec play npm run build-typings
+docker compose exec play npm run build-typings
 ```
 
 If you change the scripting API, you will need to re-run this command.

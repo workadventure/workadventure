@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { publicTestMapUrl } from "./utils/urls";
 import { isMobile } from "./utils/isMobile";
+import Map from "./utils/map";
 import menu from "./utils/menu";
 
 test.describe("Say bubbles", () => {
@@ -18,6 +19,7 @@ test.describe("Say bubbles", () => {
         await using alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
+        await Map.teleportToPosition(alicePage, 0, 0);
         await using bobPage = await getPage(browser, 'Bob',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
@@ -47,6 +49,7 @@ test.describe("Say bubbles", () => {
         await using alicePage = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );
+        await Map.teleportToPosition(alicePage, 0, 0);
         await using bobPage = await getPage(browser, 'Bob',
             publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
         );

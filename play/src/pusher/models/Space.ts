@@ -67,6 +67,7 @@ export interface SpaceForSpaceConnectionInterface extends SpaceInterface {
     sendLocalUsersToBack(): void;
     setSpaceStreamToBack(spaceStreamToBack: Promise<BackSpaceConnection>): void;
     handleConnectionRetryFailure(): void;
+    getPropertiesToSync(): string[];
 }
 
 export class Space implements SpaceForSpaceConnectionInterface {
@@ -77,7 +78,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
     // The list of users connected to THIS pusher specifically
     public readonly _localConnectedUser: Map<string, Socket>;
     public readonly _localWatchers: Set<string> = new Set<string>();
-    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUser>();
+    public readonly _localConnectedUserWithSpaceUser = new Map<Socket, SpaceUserExtended>();
     public spaceStreamToBackPromise: Promise<BackSpaceConnection> | undefined;
     public readonly forwarder: SpaceToBackForwarderInterface;
     public readonly dispatcher: SpaceToFrontDispatcherInterface;
@@ -91,6 +92,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private _filterType: FilterType,
         private _onSpaceEmpty: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
+        private propertiesToSync: string[] = [],
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
         private SpaceToFrontDispatcherFactory: (
@@ -137,6 +139,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
+        console.log("👌👌👌👌👌👌👌 Space handleWatch addUserToNotify", spaceUser, this.name);
+        this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 
         this.users.forEach((user) => {
@@ -150,6 +154,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
             throw new Error("spaceUser not found");
         }
         this._localWatchers.delete(spaceUser.spaceUserId);
+        this.forwarder.deleteUserFromNotify(spaceUser);
         this._clientEventsEmitter.emitUnwatchSpace(this.name);
 
         debug(`${this.name} : filter removed for ${watcher.getUserData().userId}`);
@@ -272,5 +277,9 @@ export class Space implements SpaceForSpaceConnectionInterface {
             changedFields: updateSpaceUserMessage.updateMask,
             partialSpaceUser: updateSpaceUserMessage.user,
         };
+    }
+
+    getPropertiesToSync(): string[] {
+        return this.propertiesToSync;
     }
 }

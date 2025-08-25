@@ -5,6 +5,45 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { Space } from "../Space";
 import { SpaceUserExtended } from "../SpaceInterface";
 
+const defaultRoomConnectionMock = {
+    emitUserJoinSpace: vi.fn(),
+    emitAddSpaceFilter: vi.fn(),
+    emitJoinSpace: vi.fn(),
+    emitRemoveSpaceFilter: vi.fn(),
+} as unknown as RoomConnection;
+
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+//     cleanupStore: vi.fn(),
+//     removePeer: vi.fn(),
+//     getPeer: vi.fn(),
+// };
+
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+}));
+
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
         CharacterLayerManager: {
@@ -18,17 +57,35 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
-            getCurrentGameScene: () => ({}),
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: vi.fn(),
+            }),
         },
     };
 });
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
 
-const defaultRoomConnectionMock = {
-    emitUserJoinSpace: vi.fn(),
-    emitAddSpaceFilter: vi.fn(),
-    emitJoinSpace: vi.fn(),
-    emitRemoveSpaceFilter: vi.fn(),
-} as unknown as RoomConnection;
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
 
 describe("SpaceFilter", () => {
     describe("addUser", () => {
@@ -38,6 +95,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
+                [],
                 new Map<string, unknown>()
             );
             const spaceUserId = "foo_0";
@@ -54,6 +112,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
+                [],
                 new Map<string, unknown>()
             );
             const spaceUserId = "foo_1";
@@ -79,6 +138,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
+                [],
                 new Map<string, unknown>()
             );
             const spaceUserId = "";
@@ -107,6 +167,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
+                [],
                 new Map<string, unknown>()
             );
             const spaceUserId = "";
@@ -143,6 +204,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 defaultRoomConnectionMock,
+                [],
                 new Map<string, unknown>()
             );
             const spaceUserId = "";
@@ -180,6 +242,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 mockRoomConnection as unknown as RoomConnection,
+                [],
                 new Map<string, unknown>()
             );
 
@@ -208,6 +271,7 @@ describe("SpaceFilter", () => {
                 "space-name",
                 FilterType.ALL_USERS,
                 mockRoomConnection as unknown as RoomConnection,
+                [],
                 new Map<string, unknown>()
             );
 

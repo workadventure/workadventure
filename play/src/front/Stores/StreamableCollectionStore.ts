@@ -10,11 +10,12 @@ import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceInterface";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
+import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
-import { peerStore, screenSharingStreamStore } from "./PeerStore";
+
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
-import { embedScreenLayoutStore } from "./EmbedScreensStore";
+import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
 import { highlightFullScreen } from "./ActionsCamStore";
 import { scriptingVideoStore } from "./ScriptingVideoStore";
 import { myCameraStore } from "./MyMediaStore";
@@ -28,12 +29,19 @@ import {
     silentStore,
 } from "./MediaStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
+import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
 export interface MediaStoreStreamable {
     type: "mediaStore";
+    // TODO: split this into two stores, one for video and one for audio. Only the audio one might be useful for the scripting API actually.
+    /** @deprecated */
     readonly streamStore: Readable<MediaStream | undefined>;
+    readonly attachVideo: (container: HTMLVideoElement) => void;
+    readonly detachVideo: (container: HTMLVideoElement) => void;
+    readonly attachAudio: (container: HTMLAudioElement) => void;
+    readonly detachAudio: (container: HTMLAudioElement) => void;
 }
 
 export interface JitsiTrackStreamable {
@@ -72,7 +80,15 @@ export interface Streamable {
     // In cover mode, the video will cover the full container, even if it means that some parts of the video are not visible
     readonly displayMode: "fit" | "cover";
     readonly displayInPictureInPictureMode: boolean;
+    readonly usePresentationMode: boolean;
+    readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
 }
+
+export type ExtendedStreamable = Streamable & {
+    player: RemotePlayerData | undefined;
+    userId: number;
+    media: MediaStoreStreamable;
+};
 
 const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
     gameSceneStore,
@@ -112,12 +128,45 @@ const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
 });
 
 export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => {
+    const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+    const media = {
+        type: "mediaStore" as const,
+        streamStore: localstreamStoreValue,
+        attachVideo: (container: HTMLVideoElement) => {
+            const unsubscribe = localstreamStoreValue.subscribe((stream) => {
+                if (stream) {
+                    const videoTracks = stream.getVideoTracks();
+                    if (videoTracks.length > 0) {
+                        container.srcObject = new MediaStream(videoTracks);
+                    } else {
+                        container.srcObject = null;
+                    }
+                }
+            });
+            // Store the unsubscribe function in our Map
+            videoElementUnsubscribers.set(container, unsubscribe);
+        },
+        detachVideo: (container: HTMLVideoElement) => {
+            // Clean up the stream
+            container.srcObject = null;
+            // Call the unsubscribe function if it exists and remove it from the Map
+            const unsubscribe = videoElementUnsubscribers.get(container);
+            if (unsubscribe) {
+                unsubscribe();
+                videoElementUnsubscribers.delete(container);
+            }
+        },
+        attachAudio: (container: HTMLAudioElement) => {
+            // Never attach audio for the local camera, as we don't want audio feedback loop
+        },
+        detachAudio: (container: HTMLAudioElement) => {
+            // Never attach audio for the local camera, as we don't want audio feedback loop
+        },
+    } satisfies MediaStoreStreamable;
+
     return {
         uniqueId: "-1",
-        media: {
-            type: "mediaStore" as const,
-            streamStore: localstreamStoreValue,
-        },
+        media,
         volumeStore: localVolumeStore,
         hasVideo: requestedCameraState,
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
@@ -132,6 +181,10 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         muteAudio: true,
         displayMode: "cover" as const,
         displayInPictureInPictureMode: false,
+        usePresentationMode: false,
+        once: (event: string, callback: (...args: unknown[]) => void) => {
+            callback();
+        },
     };
 });
 
@@ -142,8 +195,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     return derived(
         [
             broadcastTracksStore,
-            screenSharingStreamStore,
-            peerStore,
+            screenShareStreamElementsStore,
+            videoStreamElementsStore,
             screenSharingLocalMedia,
             scriptingVideoStore,
             myCameraStore,
@@ -155,8 +208,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
         (
             [
                 $broadcastTracksStore,
-                $screenSharingStreamStore,
-                $peerStore,
+                $screenShareStreamElementsStore,
+                $videoStreamElementsStore,
                 $screenSharingLocalMedia,
                 $scriptingVideoStore,
                 $myCameraStore,
@@ -171,7 +224,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (peer instanceof ScreenSharingPeer) {
+                if (peer instanceof ScreenSharingPeer || peer.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -183,8 +236,9 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 addPeer($myJitsiCameraStore);
             }
 
-            $screenSharingStreamStore.forEach(addPeer);
-            $peerStore.forEach(addPeer);
+            $screenShareStreamElementsStore.forEach(addPeer);
+
+            $videoStreamElementsStore.forEach(addPeer);
             $scriptingVideoStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
@@ -204,11 +258,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 }
             });
 
-            if (
-                $screenSharingLocalMedia &&
-                $screenSharingLocalMedia.media.type === "mediaStore" &&
-                get($screenSharingLocalMedia.media.streamStore)
-            ) {
+            if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "mediaStore") {
                 addPeer($screenSharingLocalMedia);
             }
 
@@ -239,15 +289,21 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, screenSharingStreamStore, peerStore, scriptingVideoStore, silentStore],
-    ([$broadcastTracksStore, $screenSharingStreamStore, $peerStore, $scriptingVideoStore, $silentStore]) => {
+    [broadcastTracksStore, videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
+    ([
+        $broadcastTracksStore,
+        $screenSharingStreamStore,
+        $videoStreamElementsStore,
+        $scriptingVideoStore,
+        $silentStore,
+    ]) => {
         // If we are silent, we are not in a conversation
         if ($silentStore) {
             return false;
         }
 
         // Check if we have any peers
-        if ($peerStore.size > 0) {
+        if ($videoStreamElementsStore.length > 0) {
             return true;
         }
 
@@ -259,7 +315,7 @@ export const isInRemoteConversation = derived(
         }
 
         // Check if we have any screen sharing streams
-        if ($screenSharingStreamStore.size > 0) {
+        if ($screenSharingStreamStore.length > 0) {
             return true;
         }
 
