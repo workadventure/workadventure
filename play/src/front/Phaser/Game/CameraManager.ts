@@ -212,12 +212,20 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
-        this.cameraLocked = true;
 
-        this.unlockCameraWithDelay(duration);
+        this.cameraLocked = false;
+        this.zoomLocked = false;
+
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
-        this.camera.stopFollow();
+
+        //Set the camera to focus on the given point
+        const focusPoint = {
+            x: focusOn.x,
+            y: focusOn.y,
+        };
+
+        this.camera.startFollow(focusPoint, true);
         this.playerToFollow = undefined;
 
         const currentZoomModifier = this.waScaleManager.zoomModifier;
