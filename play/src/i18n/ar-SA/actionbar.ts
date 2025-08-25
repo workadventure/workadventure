@@ -32,10 +32,17 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
+        noDevices: "لم يتم العثور على جهاز كاميرا",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
+        noDevices: "لم يتم العثور على جهاز ميكروفون",
+    },
+    speaker: {
+        disabled: "مكبر الصوت معطل",
+        activate: "قم بتنشيط مكبر الصوت",
+        noDevices: "لم يتم العثور على جهاز مكبر صوت",
     },
     status: {
         ONLINE: "متصل",
