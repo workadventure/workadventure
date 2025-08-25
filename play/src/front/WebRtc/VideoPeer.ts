@@ -6,7 +6,6 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
-import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
@@ -34,6 +33,7 @@ export class VideoPeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
+    /** @deprecated */
     public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;
@@ -138,8 +138,11 @@ export class VideoPeer extends Peer implements Streamable {
                         break;
                     }
                     case "blocked": {
-                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                        // Find a way to block A's output stream in A's js client
+                        // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
+                        // The "block" message should go through the space.
+
+                        ////FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                        //// Find a way to block A's output stream in A's js client
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
@@ -229,7 +232,7 @@ export class VideoPeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.userId = player.userId;
-        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
+        this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + this.userId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
@@ -459,30 +462,54 @@ export class VideoPeer extends Peer implements Streamable {
 
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
                     }
                 });
-                const videoElements =
-                    this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements.push(container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            detachVideo: (container: HTMLVideoElement) => {
                 container.srcObject = null;
-                let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements = videoElements.filter((element) => element !== container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.unregisterVideoContainer(this.spaceUser.spaceUserId, container);
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
             },
         };

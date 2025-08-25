@@ -245,55 +245,6 @@ export class LiveKitRoomStream implements LiveKitRoom {
         });
     }
 
-    //TODO : Tester la fonction
-    public async dispatchSound(url: URL): Promise<void> {
-        if (!this.localParticipant) {
-            console.error("Local participant not found");
-            Sentry.captureException(new Error("Local participant not found"));
-            return;
-        }
-
-        const audioContext = new AudioContext();
-
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        const destination = audioContext.createMediaStreamDestination();
-        const bufferSource = audioContext.createBufferSource();
-        bufferSource.buffer = audioBuffer;
-        bufferSource.start(0);
-        bufferSource.connect(destination);
-
-        if (this.dispatchSoundTrack) {
-            await this.localParticipant.unpublishTrack(this.dispatchSoundTrack);
-            this.dispatchSoundTrack = undefined;
-        }
-
-        const localTrack = await this.localParticipant.publishTrack(destination.stream.getAudioTracks()[0], {
-            source: Track.Source.Unknown,
-        });
-
-        this.dispatchSoundTrack = localTrack.track;
-
-        bufferSource.onended = () => {
-            this._nbSoundPlayedInBubbleStore.soundEnded();
-            if (!this.dispatchSoundTrack || !this.localParticipant) return;
-
-            this.localParticipant
-                .unpublishTrack(this.dispatchSoundTrack)
-                .then(() => {
-                    this.dispatchSoundTrack = undefined;
-                })
-                .catch((err) => {
-                    console.error("An error occurred while unpublishing track", err);
-                    Sentry.captureException(err);
-                });
-        };
-
-        this._nbSoundPlayedInBubbleStore.soundStarted();
-    }
-
     //TODO : tester
     public async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.localParticipant) {
@@ -302,15 +253,15 @@ export class LiveKitRoomStream implements LiveKitRoom {
             return;
         }
 
-        const videoTrack = mediaStream.getVideoTracks()[0];
-        if (!videoTrack) {
+        const audioTrack = mediaStream.getAudioTracks()[0];
+        if (!audioTrack) {
             console.error("No video track found in the media stream");
             Sentry.captureException(new Error("No video track found in the media stream"));
             return;
         }
 
-        const localTrack = await this.localParticipant.publishTrack(videoTrack, {
-            source: Track.Source.ScreenShare,
+        const localTrack = await this.localParticipant.publishTrack(audioTrack, {
+            source: Track.Source.Microphone,
         });
 
         this.dispatchSoundTrack = localTrack.track;
