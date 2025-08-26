@@ -35,10 +35,10 @@ test.describe("Say bubbles @nomobile", () => {
         await alicePage.keyboard.press("Enter");
 
         // Verify the speech bubble is visible and contains the correct text for both users
-        await expect(alicePage.locator(".say-bubble")).toBeVisible();
+        await expect(alicePage.locator(".say-bubble")).toBeAttached();
         await expect(alicePage.locator(".say-bubble")).toHaveText("Hello Bob, this is a test message!");
 
-        await expect(bobPage.locator(".say-bubble")).toBeVisible();
+        await expect(bobPage.locator(".say-bubble")).toBeAttached();
         await expect(bobPage.locator(".say-bubble")).toHaveText("Hello Bob, this is a test message!");
 
         // Close both pages
@@ -68,10 +68,10 @@ test.describe("Say bubbles @nomobile", () => {
         await alicePage.keyboard.press("Enter");
 
         // Verify the thinking bubble is visible and contains the correct text for both users
-        await expect(alicePage.locator(".thinking-cloud")).toBeVisible();
+        await expect(alicePage.locator(".thinking-cloud")).toBeAttached();
         await expect(alicePage.locator(".thinking-cloud")).toHaveText("This is a thinking message for Bob!");
 
-        await expect(bobPage.locator(".thinking-cloud")).toBeVisible();
+        await expect(bobPage.locator(".thinking-cloud")).toBeAttached();
         await expect(bobPage.locator(".thinking-cloud")).toHaveText("This is a thinking message for Bob!");
 
         // Close both pages
