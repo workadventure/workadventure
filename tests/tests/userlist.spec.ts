@@ -5,7 +5,7 @@ import chatUtils from "./utils/chat";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("Walk to", () => {
+test.describe("Walk to @nomobile @nowebkit", () => {
   test.beforeEach(async ({ page, browserName }) => {
     test.skip(browserName === 'webkit' || isMobile(page), 'Skip on WebKit and mobile');
   });
@@ -42,8 +42,8 @@ test.describe("Walk to", () => {
 
 
 test.describe("Send Message from User List @oidc @matrix @chat", () => {
-  test("Send Message from User List @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
-  test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
+  test("Send Message from User List @oidc @matrix @chat @nomobile @nowebkit", async ({ page, browser, browserName }, { project }) => {
+    test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
 
     await using adminPage = await getPage(browser, "Admin1", publicTestMapUrl("tests/E2E/empty.json", "userlist"));
 
@@ -68,8 +68,8 @@ test.describe("Send Message from User List @oidc @matrix @chat", () => {
     await adminPage.context().close();
   });
 
-  test("Send Message from User List to user not connected @oidc @matrix @chat", async ({ page, browser, browserName }, { project }) => {
-  test.skip(isMobile(page) && browserName === 'webkit', 'Skip on mobile WebKit');
+  test("Send Message from User List to user not connected @oidc @matrix @chat @nomobile @nowebkit", async ({ page, browser, browserName }, { project }) => {
+    test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile or WebKit');
 
     // Alice is not connected
     await using userAlice = await getPage(browser, 'Alice', Map.url("empty"));

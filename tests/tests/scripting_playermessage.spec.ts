@@ -3,7 +3,7 @@ import {publicTestMapUrl} from "./utils/urls";
 import { evaluateScript } from './utils/scripting';
 import { getPage } from './utils/auth';
 
-test.describe('Scripting player message function', () => {
+test.describe('Scripting player message function @nowebkit', () => {
 
     test.beforeEach(
         "Ignore tests on webkit because of issue with camera and microphone",

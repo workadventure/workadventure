@@ -7,9 +7,9 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("API WA.players", () => {
+test.describe("API WA.players @nomobile @nowebkit", () => {
   test.beforeEach(async ({ page, browserName }) => {
-  test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
+    test.skip(isMobile(page) || browserName === 'webkit', 'Skip on mobile and WebKit');
   });
 
   test("enter leave events are received", async ({ browser }) => {

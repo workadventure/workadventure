@@ -6,11 +6,11 @@ import {getPage} from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
 import Menu from "../utils/menu";
 
-test.describe('OpenId connect @oidc mobile', () => {
+test.describe('OpenId connect @oidc mobile @nofirefox @nodesktop', () => {
     test.beforeEach(async ({ page, browserName }) => {
         // skip on firefox because the browser is too slow
         // (this is specific to mobile format make sur it work on a regular format)
-    test.skip(!isMobile(page) || browserName === 'firefox', 'Run only on mobile non-Firefox');
+        test.skip(!isMobile(page) || browserName === 'firefox', 'Run only on mobile non-Firefox');
     })
     test('Can login and logout', async ({ browser }, { project }) => {
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));

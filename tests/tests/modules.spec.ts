@@ -4,7 +4,7 @@ import { getPage } from './utils/auth';
 import {publicTestMapUrl} from "./utils/urls";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Module', () => {
+test.describe('Module @nomobile', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(isMobile(page), 'Skip on mobile devices');
   });

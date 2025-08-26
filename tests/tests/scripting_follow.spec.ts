@@ -5,9 +5,9 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
 
 test.describe('Scripting follow functions', () => {
-    test('can trigger follow from script', async ({ browser}, { project }) => {
-    // It seems WebRTC fails to start on Webkit
-    test.skip(browser.browserType() === webkit, 'WebRTC fails to start on WebKit');
+    test('can trigger follow from script @nowebkit', async ({ browser}, { project }) => {
+        // It seems WebRTC fails to start on Webkit
+        test.skip(browser.browserType() === webkit, 'WebRTC fails to start on WebKit');
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
         await Map.teleportToPosition(page, 32, 32);
 
