@@ -6,8 +6,8 @@
     import InputSwitch from "../Input/InputSwitch.svelte";
     import LocationIcon from "../Icons/LocationIcon.svelte";
     import CheckIcon from "../Icons/CheckIcon.svelte";
-    import PinIcon from "../Icons/PinIcon.svelte";
     import Select from "../Input/Select.svelte";
+    import ShareIcon from "../Icons/ShareIcon.svelte";
 
     let walkAutomatically = false;
     let linkCopied = false;
@@ -63,14 +63,20 @@
     }
 </script>
 
-<div transition:fly={{ x: -700, duration: 250 }}>
-    {#if !canShare}
-        <section class="share-url not-mobile">
-            <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-                <PinIcon />
-                <div class="grow">{$LL.menu.invite.description()}</div>
-            </div>
-            <div class="flex items-center relative m-4">
+<section class="is-mobile p-4">
+    <!-- <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">
+            {$LL.menu.invite.description()}
+        </h3> -->
+    <input type="hidden" readonly value={location.toString()} />
+    <div class="w-full flex flex-col items-center justify-center gap-2">
+        {#if canShare}
+            <button type="button" class="btn btn-secondary ml-1 w-full" on:click={shareLink}>
+                <ShareIcon height="h-4" width="w-4" classList="me-2" />
+                {$LL.menu.invite.share()}
+            </button>
+        {/if}
+        <div class="share-url w-full">
+            <div class="flex items-center relative">
                 <input
                     type="text"
                     readonly
@@ -95,25 +101,16 @@
                     <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
                 </button>
             </div>
-        </section>
-    {:else}
-        <section class="is-mobile">
-            <h3 class="bg-contrast font-bold text-lg p-4 flex items-center mb-7 m-l">
-                {$LL.menu.invite.description()}
-            </h3>
-            <input type="hidden" readonly value={location.toString()} />
-            <button type="button" class="btn btn-secondary mb-7 ml-1" on:click={shareLink}
-                >{$LL.menu.invite.share()}</button
-            >
-        </section>
-    {/if}
-    <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-        <LocationIcon />
-        <div>
-            {$LL.menu.invite.selectEntryPoint()}
         </div>
     </div>
+</section>
+
+<div transition:fly={{ x: -700, duration: 250 }}>
     <section class="m-4 mt-7">
+        <div class="flex items-center justify-start mb-4 gap-2">
+            <LocationIcon stroke="white" />
+            {$LL.menu.invite.selectEntryPoint()}
+        </div>
         <Select
             bind:value={entryPoint}
             onChange={() => {

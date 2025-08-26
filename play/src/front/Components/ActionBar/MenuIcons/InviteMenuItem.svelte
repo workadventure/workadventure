@@ -3,7 +3,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
-    import { IconShare3 } from "@wa-icons";
+    import ShareIcon from "../../Icons/ShareIcon.svelte";
 
     export let first: boolean | undefined = undefined;
     export let last: boolean | undefined = undefined;
@@ -18,12 +18,12 @@
 {#if $inviteUserActivated}
     <ActionBarButton
         label={$LL.menu.sub.invite()}
-        hideIconInActionBar={true}
+        hideIconInActionBar={false}
         on:click={showInviteScreen}
         {first}
         {last}
         {classList}
     >
-        <IconShare3 />
+        <ShareIcon />
     </ActionBarButton>
 {/if}
