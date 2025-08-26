@@ -37,7 +37,6 @@ export class MatrixRateLimiter {
 
         const suggestedRoomIds = new Set(suggestedRooms.rooms.map((room) => room.room_id));
 
-        // Filtrer les rooms disponibles pour exclure celles qui sont suggérées
         const filteredAvailableRooms = {
             ...allAvailableRooms,
             rooms: allAvailableRooms.rooms.filter((room) => !suggestedRoomIds.has(room.room_id)),

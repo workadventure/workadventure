@@ -559,22 +559,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         rootList.set(roomId, new RoomClass(room));
     }
 
-    // public async refreshFolderJoinableRooms(folderId: string): Promise<void> {
-    //     // randomly throw an error
-    //     // const randomError = Math.random() < 0.1;
-    //     // if (randomError) {
-    //     //     throw new Error("Random error occurred");
-    //     // }
-    //
-    //     const folder = this.roomFolders.get(folderId);
-    //     if (!folder) {
-    //         console.warn("Folder not found for ID:", folderId, "folders : ", this.roomFolders);
-    //         return;
-    //     }
-    //     console.log("🏎️🏎️🏎️ Joinable rooms refreshed for folder:", folderId);
-    //     // await folder.refreshAllChildRooms();
-    // }
-
     private handleOrphanRoom(room: Room): void {
         if (room.isSpaceRoom()) {
             this.createAndAddNewRootFolder(room);
@@ -709,12 +693,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.deleteRoom(roomId).catch((e) => {
                 console.error("Failed to delete room : ", e);
             });
-            //get room parent folder and refresh his child rooms
-            // const parentsFolderIds = this.getParentRoomID(room);
-            void (async () => {
-                // const parentFolder = await this.findParentFolder(parentsFolderIds[0]);
-                //await parentFolder?.refreshAllChildRooms();
-            })();
             return;
         }
     }

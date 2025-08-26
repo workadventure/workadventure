@@ -94,15 +94,6 @@
                     <option value="restricted">{$LL.chat.createFolder.visibility.restricted()}</option>
                 </select>
             {/if}
-
-            <!--            <p class="text-xs m-0 p-0 text-gray-400 pl-1">-->
-            <!--                <IconHelpCircle font-size={18} />-->
-            <!--                {#if createFolderOptions.visibility === "private"}-->
-            <!--                    {$LL.chat.createFolder.visibility.privateDescription()}-->
-            <!--                {:else if createFolderOptions.visibility === "public"}-->
-            <!--                    {$LL.chat.createFolder.visibility.publicDescription()}-->
-            <!--                {/if}-->
-            <!--            </p>-->
             <p class="p-0 m-0 pl-1 font-bold">
                 {$LL.chat.createFolder.description.label()}
             </p>

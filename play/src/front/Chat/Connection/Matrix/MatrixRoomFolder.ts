@@ -91,7 +91,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     init() {
         try {
             if (get(this.myMembership) === KnownMembership.Join) {
-                console.log("🚀🚀🚀 Initializing room folder");
                 this.getChildren();
                 this.hasChildRoomsError.set(false);
                 this.refreshRooms().catch((error: Error) => {
@@ -248,7 +247,6 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
 
     async refreshRooms() {
         try {
-            console.log("-------------------------------");
             const { rooms: allRooms } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 1, false);
 
             const { rooms: suggestedRoomsData } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 2, true);
@@ -281,13 +279,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                 });
             });
 
-            console.log("👻👻👻 All rooms data:", allRooms);
             allRooms.forEach((room) => {
                 const roomId = room.room_id;
                 if (this.id === roomId) return;
 
                 const chatRoom = localRooms.find((r) => r.roomId === roomId);
-                console.log("---------- Checking room:", room.name, roomId, chatRoom);
                 if (!chatRoom) {
                     availableRooms.push({
                         name: room.name ?? "",

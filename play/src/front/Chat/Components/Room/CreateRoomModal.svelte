@@ -94,9 +94,6 @@
             </span>
         {/if}
         {#if loadingRoomCreation}
-            <!--            <div class="animate-[spin_2s_linear_infinite] self-center">-->
-            <!--                <IconLoader font-size="2em" />-->
-            <!--            </div>-->
             <div class="w-full flex items-center justify-center p-2">
                 <Spinner />
             </div>
