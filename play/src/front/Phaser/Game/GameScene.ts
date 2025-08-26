@@ -3248,7 +3248,6 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
-            console.error("playSoundInBubble", soundUrl);
             try {
                 const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
                 await proximityChatRoom.dispatchSound(soundUrl);
