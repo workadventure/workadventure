@@ -54,6 +54,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             closable: "Kann geschlossen werden",
             noPrefix: "Mit anderen Räumen teilen",
             width: "Breite",
+            disabled: "Deaktiviert",
             jitsiRoomConfig: {
                 addConfig: "Option hinzufügen",
                 startWithAudioMuted: "Mit deaktiviertem Mikrofon starten",
@@ -96,6 +97,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             findOutMoreHere: "Hier erfahren Sie mehr",
             openPickerSelector: "Picker-Selector öffnen",
             forcedInNewTab: "In neuem Tab öffnen",
+            openApplication: "Anwendung öffnen",
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {
@@ -103,12 +105,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "",
             nameLabel: "Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Deaktiviert",
         },
         listenerMegaphoneProperties: {
             label: "Besucherzone",
             description: "",
             nameLabel: "Sprecherzonen-Name",
             namePlaceholder: "MySpeakerZone",
+            disabled: "Deaktiviert",
         },
         chatEnabled: "Chat aktiviert",
         startProperties: {
@@ -270,9 +274,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         header: {
             title: "Objekt zu Ihrer Karte hinzufügen",
             description: "Suchen, hochladen oder vorhandenes Objekt auswählen und zur Karte hinzufügen.",
+            choose: "Auswählen",
         },
         title: "Objekt platzieren",
         editing: "Bearbeiten: {name}",
+        drop: "Ablegen",
         itemPicker: {
             searchPlaceholder: "Suchen",
             backToSelectObject: "Zurück zur Objektauswahl",
@@ -304,6 +310,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         customEntityEditorForm: {
             imageName: "Bildname",
             tags: "Tags",
+            writeTag: "Tag schreiben...",
             objectType: "Objekttyp",
             floatingObject: "Schwebendes Objekt",
             floatingObjectDescription:
@@ -312,6 +319,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             groundLevel: "Bodenhöhe",
             custom: "Benutzerdefiniert",
             standing: "Stehend",
+            collision: "Kollision",
+            wokaAbove: "Woka oben",
+            wokaBelow: "Woka unten",
         },
         buttons: {
             editEntity: "Bearbeiten",
@@ -320,6 +330,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             delete: "Löschen",
             save: "Speichern",
             upload: "Hochladen",
+        },
+        errors: {
+            dragNotConnected:
+                "Sie können keine Dateien hochladen, wenn Sie nicht angemeldet sind und keine Berechtigung dazu haben.",
+            dragNotAllowed: "Sie haben keine Berechtigung, Dateien auf diese Karte hochzuladen",
         },
     },
     settings: {
