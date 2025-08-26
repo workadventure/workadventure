@@ -8,10 +8,10 @@ test.describe('Meeting actions test', () => {
 
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({ browserName, page }) => {
+        ({ browserName, page , browser }) => {
             //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || isMobile(page)) {
-                //eslint-disable-next-line playwright/no-skipped-test
+            if (browserName === "webkit" || isMobile(page) || browser.browserType().name() === "firefox") {
+                 
                 test.skip();
                 return;
             }
@@ -20,10 +20,6 @@ test.describe('Meeting actions test', () => {
 
 
     test('Should display 4 cameras on screen', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
         
         // Go to the empty map
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
@@ -66,10 +62,7 @@ test.describe('Meeting actions test', () => {
     });
 
         test('Should display 5 cameras on screen', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
+
         
         // Go to the empty map
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));

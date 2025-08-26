@@ -145,7 +145,7 @@ test.describe("Scripting audio streams", () => {
 
     // Test play sound scripting
     await evaluateScript(bob, async () => {
-      WA.player.proximityMeeting.playSound("http://maps.workadventure.localhost/tests/Audience.mp3");
+      await WA.player.proximityMeeting.playSound("http://maps.workadventure.localhost/tests/Audience.mp3");
     });
 
     // Test listen to sound scripting
