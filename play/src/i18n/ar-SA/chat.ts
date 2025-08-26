@@ -362,7 +362,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     verificationEmojiDialog: {
         confirmation: "تطابقوا",
         mismatch: "لا يتطابقون",
-        title: "التحقق من الجهاز",
         titleVerifyThisDevice: "تحقق من جهازك",
         titleVerifyOtherDevice: "تحقق من جهاز آخر",
         description: "أكد أن الرموز التعبيرية أدناه معروضة على كلا الجهازين وبنفس الترتيب:",
