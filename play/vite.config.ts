@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         build: {
-            sourcemap: true,
+            sourcemap: env.GENERATE_SOURCEMAP !== "false",
             outDir: "./dist/public",
             rollupOptions: {
                 plugins: [NodeGlobalsPolyfillPlugin({ buffer: true })],
