@@ -394,7 +394,6 @@ export class Space implements CustomJsonReplacerInterface {
                 event: processedEvent,
             },
         };
-        console.log("🧑‍⚖️🧑‍⚖️🧑‍⚖️Process Event : ", processedPublicEvent.spaceEvent?.event?.$case);
         this.notifyWatchers({
             message: {
                 $case: "publicEvent",
