@@ -10,9 +10,9 @@ test.use({
   baseURL: play_url,
 })
 
-test.describe('Mobile', () => {
+test.describe('Mobile @nowebkit @nodesktop', () => {
     test.beforeEach(async ({ page, browserName }) => {
-    test.skip(!isMobile(page) || browserName === 'webkit', 'Run only on mobile Chromium');
+        test.skip(!isMobile(page) || browserName === 'webkit', 'Run only on mobile Chromium');
     });
     test('Successfully bubble discussion with mobile device', async ({ browser }) => {
         await using page = await getPage(browser, 'Bob', Map.url("empty"));

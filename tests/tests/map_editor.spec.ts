@@ -19,7 +19,7 @@ test.use({
     baseURL: map_storage_url,
 });
 
-test.describe("Map editor @oidc", () => {
+test.describe("Map editor @oidc @nomobile @nowebkit", () => {
     test.beforeEach(
         "Ignore tests on mobile because map editor not available for mobile devices",
         ({ page }) => {

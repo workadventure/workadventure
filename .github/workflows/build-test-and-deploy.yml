@@ -171,84 +171,98 @@ jobs:
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 2
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 3
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: ""
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile"
           - browser: ""
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile|@nofirefox"
           - browser: ""
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
             nbShards: 1
             renderer: headless
+            ignoreTags: "@nomobile|@nowebkit"
     needs:
       - build-play
       - build-back
@@ -354,7 +368,7 @@ jobs:
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
       - name: Run Playwright tests
-        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
+        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}

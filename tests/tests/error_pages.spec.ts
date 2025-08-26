@@ -4,9 +4,9 @@ import {publicTestMapUrl} from "./utils/urls";
 import Map from "./utils/map";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Error pages', () => {
+test.describe('Error pages @nowebkit', () => {
   test.beforeEach(async ({ page }) => {
-  test.skip(isMobile(page), 'Skip on mobile devices');
+    test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test('successfully displayed for unsupported URLs', async ({ page }) => {
     await page.goto(

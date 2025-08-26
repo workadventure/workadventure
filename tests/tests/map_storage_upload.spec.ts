@@ -10,9 +10,9 @@ test.use({
     baseURL: map_storage_url,
 })
 
-test.describe('Map-storage Upload API', () => {
+test.describe('Map-storage Upload API @nomobile', () => {
     test.beforeEach(async ({page}) => {
-    test.skip(isMobile(page), 'Skip on mobile devices');
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
     test('users are asked to reconnect when a map is updated',
         async ({ request, browser }) => {

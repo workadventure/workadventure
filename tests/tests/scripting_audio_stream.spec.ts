@@ -46,10 +46,10 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
   }, { volume });
 }
 
-test.describe("Scripting audio streams", () => {
+test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-  test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
+    test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
   test("can play and listen to streams", async ({
     browser,

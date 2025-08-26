@@ -5,7 +5,7 @@ import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Areas', () => {
+test.describe('Areas @nomobile', () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), 'Skip on mobile devices');
     });

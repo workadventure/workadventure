@@ -5,7 +5,7 @@ import { isMobile } from "./utils/isMobile";
 import Map from "./utils/map";
 import menu from "./utils/menu";
 
-test.describe("Say bubbles", () => {
+test.describe("Say bubbles @nomobile", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({ page }) => {

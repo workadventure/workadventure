@@ -16,7 +16,7 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor area with rights @oidc", () => {
+test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({ page }) => {
@@ -29,7 +29,7 @@ test.describe("Map editor area with rights @oidc", () => {
     "Ignore tests on webkit because of issue with camera and microphone",
     ({ browserName }) => {
   // WebKit has issue with camera
-  test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
+      test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
     }
   );
 

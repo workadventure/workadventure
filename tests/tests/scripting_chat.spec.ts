@@ -7,7 +7,7 @@ import chatUtils from "./chat/chatUtils";
 import { getPage } from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("#Scripting chat functions", () => {
+test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
 
