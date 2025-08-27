@@ -107,7 +107,7 @@ describe("Space with filter", () => {
         });
     });
     describe("addUser", () => {
-        it("should send user to the watcher if result of filter is true", () => {
+        it("should send user to the watcher if result of filter is true", async () => {
             const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -135,7 +135,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.addUser(watcher, spaceUser);
+            await space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction).toHaveBeenCalledWith(
@@ -163,7 +163,7 @@ describe("Space with filter", () => {
                 })
             );
         });
-        it("should not send user to the watcher if result of filter is false", () => {
+        it("should not send user to the watcher if result of filter is false", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -191,12 +191,12 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.addUser(watcher, spaceUser);
+            await space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(0);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
         });
-        it.skip("should send remove user event if a error occurs ???", () => {
+        it.skip("should send remove user event if a error occurs ???", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn().mockImplementation(() => {
                 throw new Error("test");
@@ -226,7 +226,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.addUser(watcher, spaceUser);
+            await space.addUser(watcher, spaceUser);
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
@@ -535,7 +535,7 @@ describe("Space with filter", () => {
     });
 
     describe("removeUser", () => {
-        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
+        it("should send remove user message to all watchers when user is removed and the filter result remains true", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -579,7 +579,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            space.removeUser(watcher, "foo_1");
+            await space.removeUser(watcher, "foo_1");
 
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
             expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
@@ -597,7 +597,7 @@ describe("Space with filter", () => {
             );
         });
 
-        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
+        it("should send remove user message to all watchers when user is removed and the filter result remains true", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -641,7 +641,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            space.removeUser(watcher, "foo_1");
+            await space.removeUser(watcher, "foo_1");
 
             // watcher1 should not have received the event because it no longer has any users in its list
             expect(mockWriteFunction).toHaveBeenCalledTimes(1);
@@ -671,7 +671,7 @@ describe("Space with filter", () => {
                 })
             );
         });
-        it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", () => {
+        it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -714,7 +714,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
 
-            space.removeUser(watcher, "foo_1");
+            await space.removeUser(watcher, "foo_1");
 
             // watcher1 should not have received the event because it no longer has any users in its list
             expect(mockWriteFunction).not.toHaveBeenCalled();
@@ -836,7 +836,7 @@ describe("Space with filter", () => {
     });
 
     describe("dispatchPublicEvent", () => {
-        it("should send public event to all watchers", () => {
+        it("should send public event to all watchers", async () => {
             const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
@@ -859,7 +859,7 @@ describe("Space with filter", () => {
                 new Map<string, SpaceUser>()
             );
 
-            space.dispatchPublicEvent(
+            await space.dispatchPublicEvent(
                 PublicEvent.fromPartial({
                     spaceName: "test",
                 })
