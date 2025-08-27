@@ -5,9 +5,9 @@ import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoom } from "./LiveKitRoom";
-import {SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY} from "../Stores/StreamableCollectionStore";
 
 const ParticipantMetadataSchema = z.object({
     userId: z.string(),
@@ -159,7 +159,7 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         let priority = 0;
 
         // Let's reset the priority of the participant
-        for (const videoStream of this.space.videoStreamStore.values()) {
+        for (const videoStream of this.space.allVideoStreamStore.values()) {
             const lastSpeakTimestamp = videoStream.lastSpeakTimestamp;
             let bonusPriority = 0;
             if (lastSpeakTimestamp) {
@@ -172,7 +172,7 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         }
 
         for (const speaker of speakers) {
-            const extendedVideoStream = this.space.videoStreamStore.get(speaker.identity);
+            const extendedVideoStream = this.space.allVideoStreamStore.get(speaker.identity);
             if (extendedVideoStream) {
                 // If this is a video and not a screen share, we add 2000 to the priority
                 if (extendedVideoStream.displayMode === "cover") {
@@ -184,12 +184,12 @@ export class LiveKitRoomWatch implements LiveKitRoom {
             priority++;
         }
 
-        // Let's trigger an update onf the space's videoStreamStore to reorder the view
+        // Let's trigger an update one the space's videoStreamStore to reorder the view
         // To do so, we just take the first element of the map and put it back in the store at the same key.
-        const firstEntry = this.space.videoStreamStore.entries().next();
+        const firstEntry = this.space.allVideoStreamStore.entries().next();
         if (!firstEntry.done) {
             const [key, value] = firstEntry.value;
-            this.space.videoStreamStore.set(key, value);
+            this.space.allVideoStreamStore.set(key, value);
         }
 
         //TODO : revoir impl iteration sur tout les participants a chaque fois
