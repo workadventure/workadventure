@@ -101,7 +101,7 @@
     }
 </script>
 
-<div class="no-padding">
+<div class="p-1 bg-white/10 rounded-md flex flex-col gap-2">
     {#if !property.link}
         <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
@@ -138,6 +138,7 @@
                 bgColor="bg-white/10"
                 hoverColor="bg-white/20"
                 textColor="text-white"
+                size="xs"
                 on:click={() => {
                     selectedFile = undefined;
                     dispatch("deleteFile");
