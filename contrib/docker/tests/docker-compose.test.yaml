@@ -27,3 +27,25 @@ services:
       traefik.http.routers.maps-ssl.service: "maps"
       traefik.http.routers.maps-ssl.tls: "true"
       traefik.http.routers.maps-ssl.tls.certresolver: "myresolver"
+
+  livekit:
+    image: livekit/livekit-server:v1.8.4
+    command: --config /etc/livekit/config.yaml
+    ports:
+      - "7881:7881" # WebRTC TCP
+      - "7882:7882/udp" # WebRTC UDP
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.livekit.rule: "Host(`livekit.workadventure.localhost`)"
+      traefik.http.routers.livekit.entryPoints: "web"
+      traefik.http.routers.livekit.service: livekit
+      traefik.http.services.livekit.loadbalancer.server.port: "7880"
+      traefik.udp.routers.livekit-udp.entrypoints: udp
+      traefik.udp.routers.livekit-udp.service: livekit-udp
+      traefik.udp.services.livekit-udp.loadbalancer.server.port: 7881
+
+    volumes:
+      - ./livekit-config.yaml:/etc/livekit/config.yaml
+    depends_on:
+      redis:
+        condition: service_started

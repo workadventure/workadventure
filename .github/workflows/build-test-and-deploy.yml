@@ -602,7 +602,7 @@ jobs:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml -f ../../docker-compose.livekit.yaml up -d
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
@@ -629,19 +629,19 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml -f ../../docker-compose.livekit.yaml logs
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Display containers state
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml -f ../../docker-compose.livekit.yaml ps
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml -f ../../docker-compose.livekit.yaml logs > ../../tests/playwright-report/docker-compose.log
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs > ../../tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
