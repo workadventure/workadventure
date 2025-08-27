@@ -17,6 +17,7 @@ export class FileListener {
     private boundDragLeaveHandler: (event: DragEvent) => void;
     private boundDragEnterHandler: (event: DragEvent) => void;
     private boundDropHandler: (event: DragEvent) => void;
+    private BYTES_TO_MB = 1024 * 1024;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -86,7 +87,7 @@ export class FileListener {
                 if (file && file.size && file.size > GRPC_MAX_MESSAGE_SIZE) {
                     warningMessageStore.addWarningMessage(
                         get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileSize({
-                            size: GRPC_MAX_MESSAGE_SIZE / 1024 / 1024,
+                            size: GRPC_MAX_MESSAGE_SIZE / this.BYTES_TO_MB,
                         }),
                         {
                             closable: true,
