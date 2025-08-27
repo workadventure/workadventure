@@ -144,10 +144,12 @@
         <button
             class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
             on:click={onSave}
-            data-test-id="dropFileSave">Save</button
+            data-test-id="dropFileSave"
         >
-        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" on:click={removePopup}
-            >Cancel</button
-        >
+            {$LL.mapEditor.entityEditor.buttons.save()}
+        </button>
+        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" on:click={removePopup}>
+            {$LL.mapEditor.entityEditor.buttons.cancel()}
+        </button>
     </svelte:fragment>
 </PopUpContainer>

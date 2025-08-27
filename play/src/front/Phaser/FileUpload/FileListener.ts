@@ -8,6 +8,7 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 import { userIsConnected } from "../../Stores/MenuStore";
 import PopUpConnect from "../../Components/PopUp/PopUpConnect.svelte";
 import LL from "../../../i18n/i18n-svelte";
+import { GRPC_MAX_MESSAGE_SIZE } from "../../Enum/EnvironmentVariable";
 
 export class FileListener {
     private canvas: HTMLCanvasElement;
@@ -81,6 +82,20 @@ export class FileListener {
                 });
             } else {
                 const file = filesFromDropEvent.item(0);
+
+                if (file && file.size && file.size > GRPC_MAX_MESSAGE_SIZE) {
+                    warningMessageStore.addWarningMessage(
+                        get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileSize({
+                            size: GRPC_MAX_MESSAGE_SIZE / 1024 / 1024,
+                        }),
+                        {
+                            closable: true,
+                        }
+                    );
+                    draggingFile.set(false);
+                    return;
+                }
+
                 if (this.isASupportedFormat(file?.type ?? "")) {
                     if (file) {
                         popupStore.addPopup(
