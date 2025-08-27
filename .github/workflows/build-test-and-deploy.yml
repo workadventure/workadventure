@@ -311,7 +311,6 @@ jobs:
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
-          sed -i "s/LIVEKIT_WS_URL=/LIVEKIT_WS_URL=ws:\/\/livekit.workadventure.localhost/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
       - name: Download artifact
@@ -596,7 +595,6 @@ jobs:
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
-          sed -i "s/LIVEKIT_WS_URL=/LIVEKIT_WS_URL=ws:\/\/livekit.workadventure.localhost/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -784,7 +782,6 @@ jobs:
             LIVEKIT_HOST: \"${LIVEKIT_HOST}\"
             LIVEKIT_API_KEY: \"${LIVEKIT_API_KEY}\"
             LIVEKIT_API_SECRET: \"${LIVEKIT_API_SECRET}\"
-            LIVEKIT_WS_URL: \"${LIVEKIT_WS_URL}\"
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -809,8 +806,7 @@ jobs:
           LIVEKIT_HOST: ${{ secrets.LIVEKIT_HOST }}
           LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
           LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
-          LIVEKIT_WS_URL: ${{ secrets.LIVEKIT_WS_URL }}
-      
+
 
 
 #      - name: "Printing values file"

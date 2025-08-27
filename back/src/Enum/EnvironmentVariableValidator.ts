@@ -98,7 +98,6 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_HOST: z.string().optional().describe("The Livekit host."),
     LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
     LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
-    LIVEKIT_WS_URL: z.string().optional().describe("The Livekit WebSocket URL."),
     MAX_USERS_FOR_WEBRTC: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))
@@ -109,22 +108,10 @@ Note that anonymous players don't have any TTL limit because their data is store
         .optional()
         .transform(emptyStringToUndefined)
         .describe("The S3 endpoint for Livekit recording."),
-    LIVEKIT_RECORDING_S3_ACCESS_KEY: z
-        .string()
-        .optional()
-        .describe("The S3 access key for Livekit recording."),
-    LIVEKIT_RECORDING_S3_SECRET_KEY: z
-        .string()
-        .optional()
-        .describe("The S3 secret key for Livekit recording."),
-    LIVEKIT_RECORDING_S3_REGION: z
-        .string()
-        .optional()
-        .describe("The S3 region for Livekit recording."),
-    LIVEKIT_RECORDING_S3_BUCKET: z
-        .string()
-        .optional()
-        .describe("The S3 bucket for Livekit recording."),
+    LIVEKIT_RECORDING_S3_ACCESS_KEY: z.string().optional().describe("The S3 access key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
+    LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
+    LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
