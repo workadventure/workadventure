@@ -36,11 +36,13 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
     const sampleRate = 24000;
 
     return new Promise<void>((resolve) => {
-      WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
+      const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
         console.log("Max volume in sample:", Math.max(...data.map(Math.abs)));
         if (data.some((sample) => Math.abs(sample) > volume)) {
+          console.log("Audio stream received with sufficient volume");
           resolve();
+          subscription.unsubscribe();
         }
       });
     });
@@ -59,6 +61,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     // Firefox fails it because the sample rate must be equal to the microphone sample rate
     // Safari fails it because Safari
     await using page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await Menu.turnOffMicrophone(page);
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
