@@ -17,13 +17,15 @@
 
 {#if $inviteUserActivated}
     <ActionBarButton
-        label={$LL.menu.sub.invite()}
+        label={$LL.menu.invite.share()}
+        boldLabel={true}
         hideIconInActionBar={false}
         on:click={showInviteScreen}
+        bgColor="rgba(255, 255, 255, 0.1)"
         {first}
         {last}
         {classList}
     >
-        <ShareIcon />
+        <ShareIcon strokeWidth="stroke-[1.5]" />
     </ActionBarButton>
 {/if}

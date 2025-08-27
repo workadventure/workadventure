@@ -60,7 +60,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         copy: "Kopieren",
         share: "Teilen",
         walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
-        selectEntryPoint: "Startpunkt auswählen",
+        selectEntryPoint: "Verwenden Sie einen anderen Einstiegspunkt",
+        selectEntryPointSelect: "Wählen Sie den Einstiegspunkt aus, über den die Benutzer ankommen",
     },
     globalMessage: {
         text: "Text",

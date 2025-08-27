@@ -70,7 +70,8 @@ const menu: BaseTranslation = {
         copied: "Copied",
         share: "Share",
         walkAutomaticallyToPosition: "Walk automatically to my position",
-        selectEntryPoint: "Select an entry point",
+        selectEntryPoint: "Use a different entry point",
+        selectEntryPointSelect: "Select the entry point through which users will arrive",
     },
     globalMessage: {
         text: "Text",

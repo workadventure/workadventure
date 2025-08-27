@@ -10,6 +10,7 @@
     import ShareIcon from "../Icons/ShareIcon.svelte";
 
     let walkAutomatically = false;
+    let showZoneSelect = false;
     let linkCopied = false;
     const gameScene = gameManager.getCurrentGameScene();
     const currentPlayer = gameScene.CurrentPlayer;
@@ -70,10 +71,22 @@
     <input type="hidden" readonly value={location.toString()} />
     <div class="w-full flex flex-col items-center justify-center gap-2">
         {#if canShare}
-            <button type="button" class="btn btn-secondary ml-1 w-full" on:click={shareLink}>
-                <ShareIcon height="h-4" width="w-4" classList="me-2" />
-                {$LL.menu.invite.share()}
-            </button>
+            <div class="py-4 w-full">
+                <div class="pb-4 text-lg font-semibold">
+                    {$LL.menu.invite.description()}
+                </div>
+                <button type="button" class="btn btn-secondary w-full" on:click={shareLink}>
+                    <ShareIcon strokeWidth="stroke-[1.5]" height="h-5" width="w-5" classList="me-2" />
+                    <span class="text-lg font-bold">
+                        {$LL.menu.invite.share()}
+                    </span>
+                </button>
+            </div>
+            <div class="flex items-center justify-center flex-row gap-4 w-full mb-4">
+                <div class="w-full h-[1px] bg-white/10" />
+                <div class="font-bold text-sm text-white/50">OR</div>
+                <div class="w-full h-[1px] bg-white/10" />
+            </div>
         {/if}
         <div class="share-url w-full">
             <div class="flex items-center relative">
@@ -81,21 +94,19 @@
                     type="text"
                     readonly
                     id="input-share-link"
-                    class="grow h-12 text border-white bg-contrast rounded border border-solid border-white/20"
+                    class="grow h-12 text border-white bg-contrast rounded-md border border-solid border-white/20"
                     value={location.toString()}
                 />
                 <button
                     type="button"
-                    class="flex items-center btn btn-secondary btn-sm absolute right-2 transition-all w-32 text-center justify-center {linkCopied
+                    class="flex items-center btn btn-sm absolute right-2 transition-all w-32 text-center justify-center {linkCopied
                         ? 'btn-success'
                         : 'btn-secondary'}"
                     on:click={() => (linkCopied = !linkCopied)}
                     on:click={copyLink}
                 >
-                    <span hidden={!linkCopied}>
-                        <div class="icon-tabler icon-tabler-check">
-                            <CheckIcon />
-                        </div>
+                    <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">
+                        <CheckIcon height="h-5" width="w-5" />
                     </span>
                     <span hidden={!linkCopied}>{$LL.menu.invite.copied()}</span>
                     <span hidden={linkCopied}>{$LL.menu.invite.copy()}</span>
@@ -107,21 +118,34 @@
 
 <div transition:fly={{ x: -700, duration: 250 }}>
     <section class="m-4 mt-7">
-        <div class="flex items-center justify-start mb-4 gap-2">
-            <LocationIcon stroke="white" />
-            {$LL.menu.invite.selectEntryPoint()}
-        </div>
-        <Select
-            bind:value={entryPoint}
-            onChange={() => {
-                updateInputFieldValue();
-            }}
-        >
-            {#each startPositions as entryPointName (entryPointName)}
-                <option value={entryPointName}>{entryPointName}</option>
-            {/each}
-        </Select>
-
+        <label for="showZoneSelect" class="flex cursor-pointer items-center relative my-4">
+            <InputSwitch
+                id="showZoneSelect"
+                bind:value={showZoneSelect}
+                onChange={() => {
+                    updateInputFieldValue();
+                }}
+                label={$LL.menu.invite.selectEntryPoint()}
+            />
+        </label>
+        {#if showZoneSelect}
+            <div class="">
+                <div class="flex items-center justify-start mb-4 gap-2">
+                    <LocationIcon stroke="white" />
+                    {$LL.menu.invite.selectEntryPointSelect()}
+                </div>
+                <Select
+                    bind:value={entryPoint}
+                    onChange={() => {
+                        updateInputFieldValue();
+                    }}
+                >
+                    {#each startPositions as entryPointName (entryPointName)}
+                        <option value={entryPointName}>{entryPointName}</option>
+                    {/each}
+                </Select>
+            </div>
+        {/if}
         <label for="walkto" class="flex cursor-pointer items-center relative my-4">
             <InputSwitch
                 id="walkto"
