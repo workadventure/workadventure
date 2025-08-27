@@ -49,22 +49,24 @@ export const FRONT_URL = env.FRONT_URL || "";
 export const VITE_URL = env.VITE_URL || FRONT_URL; // Used only in development
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
-export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
-export const OPID_CLIENT_SECRET = env.OPID_CLIENT_SECRET || "";
-export const OPID_CLIENT_ISSUER = env.OPID_CLIENT_ISSUER || "";
+export const OPID_CLIENT_ID = env.OPENID_CLIENT_ID || env.OPID_CLIENT_ID || "";
+export const OPID_CLIENT_SECRET = env.OPENID_CLIENT_SECRET || env.OPID_CLIENT_SECRET || "";
+export const OPID_CLIENT_ISSUER = env.OPENID_CLIENT_ISSUER || env.OPID_CLIENT_ISSUER || "";
 if (OPID_CLIENT_ID && !PUSHER_URL) {
     throw new Error("Missing PUSHER_URL environment variable.");
 }
 export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
 export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
-    env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
-export const OPID_SCOPE = env.OPID_SCOPE || "openid email profile ";
-export const OPID_PROMPT = env.OPID_PROMPT || undefined;
-export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
-export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
-export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
-export const OPID_TAGS_CLAIM = env.OPID_TAGS_CLAIM || "tags";
+    env.OPENID_PROFILE_SCREEN_PROVIDER ||
+    env.OPID_PROFILE_SCREEN_PROVIDER ||
+    (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
+export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile ";
+export const OPID_PROMPT = env.OPENID_PROMPT || env.OPID_PROMPT || undefined;
+export const OPID_USERNAME_CLAIM = env.OPENID_USERNAME_CLAIM || env.OPID_USERNAME_CLAIM || "username";
+export const OPID_LOCALE_CLAIM = env.OPENID_LOCALE_CLAIM || env.OPID_LOCALE_CLAIM || "locale";
+export const OPID_WOKA_NAME_POLICY = env.OPENID_WOKA_NAME_POLICY || env.OPID_WOKA_NAME_POLICY || "user_input";
+export const OPID_TAGS_CLAIM = env.OPENID_TAGS_CLAIM || env.OPID_TAGS_CLAIM || "tags";
 export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const PROMETHEUS_PORT = env.PROMETHEUS_PORT === env.PUSHER_HTTP_PORT ? 0 : env.PROMETHEUS_PORT;
@@ -151,8 +153,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
     POSTHOG_URL: env.POSTHOG_URL,
     DISABLE_ANONYMOUS,
-    ENABLE_OPENID: !!env.OPID_CLIENT_ID,
-    OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
+    ENABLE_OPENID: !!env.OPENID_CLIENT_ID || !!env.OPID_CLIENT_ID,
+    OPID_PROFILE_SCREEN_PROVIDER: env.OPENID_PROFILE_SCREEN_PROVIDER || env.OPID_PROFILE_SCREEN_PROVIDER,
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_UPLOAD,
     FALLBACK_LOCALE,
