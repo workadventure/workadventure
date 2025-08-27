@@ -19,8 +19,33 @@ class EntityEditor {
   }
 
   async searchEntity(page: Page, search: string) {
+    const startTime = Date.now();
+    const timeout = 5000; // 5 seconds
+
+    // Initial search
     await page.getByPlaceholder("Search").click();
     await page.getByPlaceholder("Search").fill(search);
+    await this.wait2Frames(page);
+
+    while (Date.now() - startTime < timeout) {
+      // Check if we find at least one entity
+      const count = await page.getByTestId("entity-item").count();
+      if (count > 0) {
+        return page.getByTestId("entity-item").nth(0);
+      }
+
+      // Nothing found? Maybe it's a race condition (we are after an upload and the entity list is not yet updated).
+      // Let's wait a bit and try again.
+      await page.getByPlaceholder("Search").click();
+      await page.getByPlaceholder("Search").fill("");
+      await this.wait2Frames(page);
+      await page.getByPlaceholder("Search").fill(search);
+      await this.wait2Frames(page);
+      // eslint-disable-next-line playwright/no-wait-for-timeout
+      await page.waitForTimeout(100); // Wait a bit before trying again
+    }
+
+    // If we arrive here, we had no success.
     return page.getByTestId("entity-item").nth(0);
   }
 
@@ -93,6 +118,10 @@ class EntityEditor {
 
   async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
+    // Wait for a bit for the image to be uploaded.
+    // TODO: find a way to be sure upload succeeded
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     if(await page.getByTestId('entityImageLoader').isVisible({timeout: 2000})){
       // Check loader end
       await expect(page.getByTestId('entityImageLoader')).toHaveCount(0, { timeout: 30000 });

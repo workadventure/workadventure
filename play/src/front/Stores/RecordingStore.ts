@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
 
 interface RecordingState {
     isRecording: boolean;
@@ -21,36 +21,36 @@ function createRecordingStore() {
         isRecording: initialState.isRecording,
         isCurrentUserRecorder: initialState.isCurrentUserRecorder,
         startRecord(isCurrentUser: boolean = false) {
-            update(state => ({
+            update((state) => ({
                 ...state,
                 isRecording: true,
-                isCurrentUserRecorder: isCurrentUser
+                isCurrentUserRecorder: isCurrentUser,
             }));
             if (!isCurrentUser) this.showInfoPopup();
         },
         stopRecord() {
-            update(state => ({
+            update((state) => ({
                 ...state,
                 isRecording: false,
-                isCurrentUserRecorder: false
+                isCurrentUserRecorder: false,
             }));
             this.hideInfoPopup();
         },
         showInfoPopup() {
-            update(state => ({
+            update((state) => ({
                 ...state,
-                shouldShowInfoPopup: true
+                shouldShowInfoPopup: true,
             }));
         },
         hideInfoPopup() {
-            update(state => ({
+            update((state) => ({
                 ...state,
-                shouldShowInfoPopup: false
+                shouldShowInfoPopup: false,
             }));
         },
         reset() {
             set(initialState);
-        }
+        },
     };
 }
 

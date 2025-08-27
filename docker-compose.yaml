@@ -79,11 +79,11 @@ services:
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-      OPID_CLIENT_ID: $OPID_CLIENT_ID
-      OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
-      OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
+      OPID_CLIENT_ID: authorization-code-client-id
+      OPID_CLIENT_SECRET: authorization-code-client-secret
+      OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
-      OPID_SCOPE: $OPID_SCOPE
+      OPID_SCOPE: profile openid email tags-scope
       OPID_PROMPT: $OPID_PROMPT
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
@@ -158,7 +158,8 @@ services:
       MATRIX_DOMAIN: matrix.workadventure.localhost
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
-      IFRAMELY_KEY: "$IFRAMELY_KEY"
+      # Map editor restrictions (allow all users when OIDC is enabled by default)
+      MAP_EDITOR_ALLOW_ALL_USERS: "false"
     labels:
       - "traefik.enable=true"
 
@@ -436,6 +437,28 @@ services:
               {
                 "Type": "tags",
                 "Value": "[\"member\"]",
+                "ValueType": "json"
+              },
+            ]
+          },
+          {
+            "SubjectId":"3",
+            "Username":"UserMatrix",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
                 "ValueType": "json"
               },
             ]

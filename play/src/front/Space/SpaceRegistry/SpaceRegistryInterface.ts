@@ -2,7 +2,7 @@ import { FilterType } from "@workadventure/messages";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../SpaceInterface";
-import {Space} from "../Space";
+import { Space } from "../Space";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;

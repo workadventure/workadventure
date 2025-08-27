@@ -20,6 +20,7 @@
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../Stores/TodoListStore";
     import { warningMessageStore } from "../../Stores/ErrorStore";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import PopUpContainer from "./PopUpContainer.svelte";
     import DropFileEntityPicker from "./DropFileEntityPicker.svelte";
 
@@ -100,19 +101,22 @@
             width: 50,
         };
 
-        mapEditorCopiedEntityDataPropertiesStore.update((properties) => {
-            const newProperties = properties ? [...properties] : [];
-            newProperties.push(property);
-            return newProperties;
-        });
+        const mapEditorModeManager = scene.getMapEditorModeManager();
 
         analyticsClient.dragDropFile();
         mapEditorModeStore.switchMode(true);
+        mapEditorModeManager.equipTool(EditorToolName.EntityEditor);
         mapEditorEntityFileDroppedStore.set(true);
         mapEditorEntityModeStore.set("ADD");
         mapEditorSelectedEntityPrefabStore.set(entityPrefab || defaultEntityPrefab);
         isTodoListVisibleStore.set(false);
         isCalendarVisibleStore.set(false);
+
+        mapEditorCopiedEntityDataPropertiesStore.update((properties) => {
+            const newProperties = properties ? [...properties] : [];
+            newProperties.push(property);
+            return newProperties;
+        });
 
         removePopup();
     }
@@ -133,15 +137,17 @@
     <div class="flex flex-col gap-4 p-2 max-h-[80vh] overflow-y-auto">
         <DropFileEntityPicker {entitiesPrefabsVariants} on:select={(event) => selectEntity(event.detail)} />
 
-        <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" type="text" bind:value={entity.name} />
+        <Input label={$LL.mapEditor.entityEditor.objectName()} id="linkButton" bind:value={entity.name} />
     </div>
 
     <svelte:fragment slot="buttons">
         <button
-            class="btn btn-primary btn-sm w-full max-w-96 justify-center"
+            class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
             on:click={onSave}
             data-test-id="dropFileSave">Save</button
         >
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={removePopup}>Cancel</button>
+        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" on:click={removePopup}
+            >Cancel</button
+        >
     </svelte:fragment>
 </PopUpContainer>

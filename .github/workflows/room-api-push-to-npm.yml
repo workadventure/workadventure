@@ -21,7 +21,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Replace version number
-        run: 'sed -i "s#VERSION_PLACEHOLDER#${{ github.ref_name }}#g" package.json'
+        run: 'sed -i "s#0.0.0-version-placeholder#${{ github.ref_name }}#g" package.json'
         working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: Debug package.json
@@ -29,7 +29,7 @@ jobs:
         working-directory: "libs/room-api-clients/room-api-client-js"
 
       - name: Install Protoc
-        uses: arduino/setup-protoc@v1
+        uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           version: '3.x'

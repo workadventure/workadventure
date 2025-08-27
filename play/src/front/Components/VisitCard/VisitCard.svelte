@@ -75,7 +75,7 @@
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
                         <button
-                            class="btn  btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                            class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                             data-testid="sendMessagefromVisitCardButton"
                             on:click={openChat}
                         >

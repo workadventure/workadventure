@@ -20,6 +20,9 @@ on:
       context:
         required: true
         type: string
+      short_name:
+        required: true
+        type: string
       sentry_project:
         required: false
         type: string
@@ -87,16 +90,21 @@ jobs:
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
-          outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.sentry_project) || '' }}
+          build-args: |
+            # Some images (the play image) can be built in two modes: normal mode and fast mode (without Legacy browser support)
+            # We use the FAST_BUILD build-arg to control this.
+            # We use fast build when the image is just tested in CI and not pushed to the registry.
+            FAST_BUILD=${{ inputs.push-to-registry != true && '' || 'true' }}
+          outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.short_name) || '' }}
 
       - name: Zip image
         if: ${{ inputs.push-to-registry != true }}
-        run: gzip ${{ inputs.sentry_project }}.tar
+        run: gzip ${{ inputs.short_name }}.tar
         working-directory: /tmp
 
       - name: Upload image as artifact
         if: ${{ inputs.push-to-registry != true }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.sentry_project }}
-          path: /tmp/${{ inputs.sentry_project }}.tar.gz
+          name: ${{ inputs.short_name }}
+          path: /tmp/${{ inputs.short_name }}.tar.gz

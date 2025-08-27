@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {derived, get} from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { fly } from "svelte/transition";
     import { SvelteComponentTyped } from "svelte";
     import { silentStore } from "../../Stores/MediaStore";
@@ -49,8 +49,7 @@
 
     const shouldDisplayRecordingButton = derived(
         [spacesWithRecording],
-        ([$spacesWithRecording]) =>
-            $spacesWithRecording.length > 0
+        ([$spacesWithRecording]) => $spacesWithRecording.length > 0
     );
 
     function focusModeOn() {
@@ -249,7 +248,3 @@
         </div>
     </ResponsiveActionBar>
 {/if}
-
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
-</style>

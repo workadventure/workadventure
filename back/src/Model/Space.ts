@@ -21,12 +21,13 @@ import { SpacesWatcher } from "./SpacesWatcher";
 import { EventProcessor } from "./EventProcessor";
 import { CommunicationManager } from "./CommunicationManager";
 import { ICommunicationManager } from "./Interfaces/ICommunicationManager";
+import { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 
 const debug = Debug("space");
 
 type Filter = Exclude<FilterType, FilterType.UNRECOGNIZED>;
 
-export class Space implements CustomJsonReplacerInterface {
+export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<string, SpaceUser>>;
     private metadata: Map<string, unknown>;
@@ -115,7 +116,6 @@ export class Space implements CustomJsonReplacerInterface {
                         }),
                     },
                 });
-                //TODO : voir si on peut séparer la logique qui watch et qui peut etre watch / pour l'instant on a un probleme les videos ne sont envoyées que a tout les personnes qu'on peut watcher pas aux autres
 
                 this.communicationManager.handleUserAdded(user);
             } else if (oldFilter && !newFilter) {

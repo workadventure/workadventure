@@ -270,7 +270,7 @@
 </div>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+    @use "../style/breakpoints.scss" as *;
 
     .popups {
         z-index: 1000;

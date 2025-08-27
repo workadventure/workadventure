@@ -105,6 +105,9 @@ export class UserInputManager {
 
     private initVirtualJoystick() {
         this.joystick = new MobileJoystick(this.scene);
+        if (!touchScreenManager.primaryTouchDevice) {
+            this.joystick.visible = false; // Hide the joystick if the device is not primarily a touch device
+        }
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick?.forceX ? this.joystickForceAccuX : 0;
             this.joystickForceAccuY = this.joystick?.forceY ? this.joystickForceAccuY : 0;
@@ -352,7 +355,7 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_UP,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                this.joystick?.hide();
+                this.joystick?.hide(1_000); // Hide the joystick after 1 seconds of inactivity
                 this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
 
                 // Disable focus on iframe (need by Firefox)
@@ -378,7 +381,7 @@ export class UserInputManager {
                 if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
                     this.joystick?.showAt(pointer.x, pointer.y);
                 } else {
-                    this.joystick?.hide();
+                    this.joystick?.hide(30_000);
                 }
             }
         );

@@ -239,8 +239,7 @@
     <div
         bind:clientWidth={containerWidth}
         class="pointer-events-auto"
-        style={`gap: ${gap}px; ` +
-            (!isOnOneLine || (isOnOneLine && oneLineMode === "vertical") ? "height: " + containerHeight + "px;" : "")}
+        style={`gap: ${gap}px; ` + (!isOnOneLine ? "height: " + containerHeight + "px;" : "")}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -294,7 +293,7 @@
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                     }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto "
+                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
                     class:aspect-video={videoHeight === undefined}
                 >
                     <MediaBox streamable={$myCameraPeerStore} />

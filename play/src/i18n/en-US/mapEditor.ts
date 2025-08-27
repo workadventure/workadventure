@@ -242,6 +242,14 @@ const mapEditor: BaseTranslation = {
                 errorOnFileNumber: "Multiple file drop is not supported",
             },
         },
+        livekitProperties: {
+            label: "Livekit Room",
+            description: "Start Livekit meeting on enter.",
+            roomNameLabel: "Room Name",
+            livekitUrl: "Livekit URL",
+            roomNamePlaceholder: "Room name",
+        },
+        noProperties: "No properties defined",
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -260,6 +268,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
             },
         },
+        nameHelpText: "This input will be shown to the user if they enter the area.",
     },
     areaEditorInstructions: {
         title: "How it works ?",

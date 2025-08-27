@@ -69,16 +69,12 @@ export class ModeratorTagFinder {
         const jitsiRooms: JitsiRoomPropertyData[] = [];
         // Get Area properties with type "jitsiRoomProperty"
         for (const area of Object.values(this.wamFileProperties.areas)) {
-            const property = area.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
-                | JitsiRoomPropertyData
-                | undefined;
+            const property = area.properties?.find((prop) => prop.type === "jitsiRoomProperty");
             if (property != undefined && property.jitsiRoomAdminTag != undefined) jitsiRooms.push(property);
         }
         // Get Entity properties with type "jitsiRoomProperty"
         for (const entity of Object.values(this.wamFileProperties.entities)) {
-            const property = entity.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
-                | JitsiRoomPropertyData
-                | undefined;
+            const property = entity.properties?.find((prop) => prop.type === "jitsiRoomProperty");
             if (property != undefined && property.jitsiRoomAdminTag != undefined) jitsiRooms.push(property);
         }
         // Register the properties

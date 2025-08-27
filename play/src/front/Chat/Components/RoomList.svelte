@@ -200,7 +200,7 @@
                                 >
                                     <div class="absolute overflow-hidden w-full h-full rounded-full">
                                         <div
-                                            class=" flex items-center justify-center translate-y-[3px]  group-hover:translate-y-[0] transition-all"
+                                            class=" flex items-center justify-center translate-y-[3px] group-hover:translate-y-[0] transition-all"
                                         >
                                             <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
                                         </div>
@@ -342,7 +342,7 @@
                 <button
                     data-testid="restoreEncryptionButton"
                     on:click|stopPropagation={initChatConnectionEncryption}
-                    class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
+                    class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
                     <IconCloudLock font-size="20" />
                     <div class="text-sm font-bold grow text-start">

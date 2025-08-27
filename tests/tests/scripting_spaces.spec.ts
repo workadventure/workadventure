@@ -4,15 +4,10 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from './utils/auth';
 import Menu from "./utils/menu";
 
-test.describe('Scripting space-related functions', () => {
+test.describe('Scripting space-related functions @nowebkit', () => {
 
     test('can join and watch space', async ({ browser, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -120,7 +115,7 @@ test.describe('Scripting space-related functions', () => {
         })).toBe(1);
 
         // Bob clicks on the "Do not disturb" status
-        await Menu.openStatusList(bob, false);
+        await Menu.openMenu(bob);
         await Menu.clickOnStatus(bob, "Do not disturb");
 
         // We expect Bob's status to be "Do not disturb"
@@ -142,6 +137,10 @@ test.describe('Scripting space-related functions', () => {
         await evaluateScript(page, async () => {
             window.mySpace.leave();
         });
+
+        // FIXME: remove this timeout when the Livekit branch is merged (the issue is fixed in the Livekit branch)
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(1000);
 
         /**
          * Test part 4: Let's do the same test with a livestream space.
@@ -183,22 +182,16 @@ test.describe('Scripting space-related functions', () => {
 
         await bob.close();
         await bob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
     test('cannot join a space with a different filter on the same browser', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-
         // Get all open pages in the context
         const pages = context.pages();
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         expect(
             await evaluateScript(page, async () => {
@@ -212,24 +205,18 @@ test.describe('Scripting space-related functions', () => {
             })
         ).toContain("Cannot join space some-test-space");
 
-        await page.close();
+
         await page.context().close();
     });
 
     test('cannot join a space with a different filter in 2 browsers', async ({ browser, context, browserName }, { project }) => {
-
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
         // Get all open pages in the context
 
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -251,21 +238,16 @@ test.describe('Scripting space-related functions', () => {
 
         await bob.close();
         await bob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
     test('can join a livestream space and see the user when it starts streaming', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -321,19 +303,14 @@ test.describe('Scripting space-related functions', () => {
 
     });
 
-    test('should reconnect to a space when backend is restarted', async ({ browser, context, browserName }, { project }) => {
-        if (browserName === "webkit") {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+    test('should reconnect to a space when backend is restarted @local', async ({ browser, context, browserName }, { project }) => {
         const pages = context.pages();
 
         await expect.poll(() => pages.length).toBe(0);
 
         const apiContext = await request.newContext();
 
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -371,6 +348,7 @@ test.describe('Scripting space-related functions', () => {
         // This simulates a backend restart, as the space connection will be closed
         await apiContext.post('http://api.workadventure.localhost/debug/close-space-connection?spaceName=localWorld.some-test-space&token=123');
 
+        //eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(5000);
 
         // Alice should see Bob's user

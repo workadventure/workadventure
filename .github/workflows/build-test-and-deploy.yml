@@ -23,6 +23,7 @@ jobs:
       # FIXME: Final build should only build on master or tags
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
       dockerfile: play/Dockerfile
+      short_name: play
       # sentry_project: play
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
@@ -37,6 +38,7 @@ jobs:
       dockerio-image-name: 'thecodingmachine/workadventure-back'
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: back/Dockerfile
+      short_name: back
       sentry_project: back
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
@@ -51,6 +53,7 @@ jobs:
       dockerio-image-name: 'thecodingmachine/workadventure-uploader'
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: uploader/Dockerfile
+      short_name: uploader
       sentry_project: uploader
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
@@ -65,6 +68,7 @@ jobs:
       dockerio-image-name: 'thecodingmachine/workadventure-maps'
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: maps/Dockerfile
+      short_name: maps
       sentry_project: maps
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
@@ -79,6 +83,7 @@ jobs:
       dockerio-image-name: 'thecodingmachine/workadventure-map-storage'
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
       dockerfile: map-storage/Dockerfile
+      short_name: map-storage
       sentry_project: map-storage
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
@@ -166,84 +171,98 @@ jobs:
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 2
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 3
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: ""
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile"
           - browser: ""
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile|@nofirefox"
           - browser: ""
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
             nbShards: 1
             renderer: headless
+            ignoreTags: "@nomobile|@nowebkit"
     needs:
       - build-play
       - build-back
@@ -288,6 +307,11 @@ jobs:
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/LIVEKIT_WS_URL=/LIVEKIT_WS_URL=ws:\/\/livekit.workadventure.localhost/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
       - name: Download artifact
@@ -330,23 +354,33 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
-        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
+        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
@@ -419,7 +453,7 @@ jobs:
           message: "⏳ GitLab SaaS pipeline in progress... [Check status](${{ env.PIPELINE_URL }})"
           fail: false
           recreate: true
-          
+
       - name: Long poll GitLab pipeline until finished
         id: poll-pipeline
         run: |
@@ -439,7 +473,7 @@ jobs:
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_SAAS_READ_API_TOKEN }}" \
               "https://git.thecodingmachine.com/api/v4/projects/${{ secrets.GITLAB_SAAS_PROJECT_ID }}/pipelines/${PIPELINE_ID}")
-            
+
             if [[ "$(echo "$RESPONSE" | jq -r '.message')" == "401 Unauthorized" ]]; then
               echo "❌ Unauthorized access to GitLab API. Please check the GITLAB_SAAS_READ_API_TOKEN secret."
               echo "failed=true" >> "$GITHUB_OUTPUT"
@@ -558,13 +592,18 @@ jobs:
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/LIVEKIT_WS_URL=/LIVEKIT_WS_URL=ws:\/\/livekit.workadventure.localhost/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml -f ../../docker-compose.livekit.yaml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
@@ -574,12 +613,22 @@ jobs:
           sleep 10
           npm run upload-test-map-single-domain
         working-directory: map-storage
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
         run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
         if: failure()
@@ -663,7 +712,7 @@ jobs:
           #version: '<version>' # default is latest (stable)
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
-      
+
       - name: Add comment on PR
         if: github.event_name == 'pull_request'
         uses: hasura/comment-progress@v2.3.0
@@ -856,6 +905,15 @@ jobs:
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
         working-directory: map-storage
 
+      - name: Check for no-flaky label
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
         run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
@@ -868,6 +926,7 @@ jobs:
           ROOM_API_SECRET_KEY: "password"
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -946,4 +1005,3 @@ jobs:
           keep-last: 5
           prune-untagged: true
           prune-tags-regexes: ".*"
-

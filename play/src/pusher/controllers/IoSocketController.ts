@@ -17,9 +17,9 @@ import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
 import Debug from "debug";
+import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
@@ -734,7 +734,7 @@ export class IoSocketController {
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            await socketManager.handleRemoveSpaceFilterMessage(
+                            socketManager.handleRemoveSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.removeSpaceFilterMessage)
                             );
@@ -1112,7 +1112,7 @@ export class IoSocketController {
                     //let ok = ws.send(message, isBinary);
                 })().catch((e) => {
                     Sentry.captureException(e);
-                    console.error(e);
+                    console.error("An error occurred while processing a message: ", e);
 
                     try {
                         socket.send(
@@ -1123,7 +1123,8 @@ export class IoSocketController {
                                         message: "An error occurred in pusher: " + asError(e).message,
                                     },
                                 },
-                            }).finish()
+                            }).finish(),
+                            true
                         );
                     } catch (error) {
                         Sentry.captureException(error);

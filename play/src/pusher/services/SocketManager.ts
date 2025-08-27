@@ -1011,12 +1011,13 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async handleRemoveSpaceFilterMessage(
+    handleRemoveSpaceFilterMessage(
         client: Socket,
         removeSpaceFilterMessage: NonUndefinedFields<RemoveSpaceFilterMessage>
     ) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        await this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
+        // We don't check that the client is part of the space here, because we could stop watching a space after leaving it.
+        //await this.checkClientIsPartOfSpace(client, oldFilter.spaceName);
         const space = this.spaces.get(oldFilter.spaceName);
         if (space) {
             space.handleUnwatch(client);

@@ -5,7 +5,7 @@
     const NUMBER_OF_TYPING_MEMBER_TO_DISPLAY = 3;
 </script>
 
-<div class="flex row w-full text-gray-300 text-sm  m-0 px-2 mb-2">
+<div class="flex row w-full text-gray-300 text-sm m-0 px-2 mb-2">
     {#each typingMembers
         .map((typingMember, index) => ({ ...typingMember, index }))
         .slice(0, NUMBER_OF_TYPING_MEMBER_TO_DISPLAY) as typingMember (typingMember.id)}

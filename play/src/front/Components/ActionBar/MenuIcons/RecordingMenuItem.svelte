@@ -94,7 +94,7 @@
                     </span>
                 </div>
             {:else if $recordingStore.isCurrentUserRecorder}
-                <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1 ">
+                <div class="text-sm text-white flex flex-row items-center gap-2 px-2 py-1">
                     <div class="bg-red-500 rounded-full min-w-4 min-h-4 animate-pulse" />
                     <div>
                         {$LL.actionbar.help.recording.desc.yourRecordInProgress()}

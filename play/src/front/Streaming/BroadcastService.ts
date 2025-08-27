@@ -35,7 +35,6 @@ export class BroadcastService {
     public async joinSpace(spaceName: string): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        //TODO : verifier que ce sont les bonnes propriétés à sync et le bon type de filtre
         const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, FilterType.LIVE_STREAMING_USERS, [
             "screenSharing",
             "cameraState",

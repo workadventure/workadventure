@@ -16,34 +16,26 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor area with rights @oidc", () => {
+test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({ page }) => {
-      //Map Editor not available on mobile
-      if (isMobile(page)) {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  // Map Editor not available on mobile
+  test.skip(isMobile(page), 'Map editor is not available on mobile');
     }
   );
 
   test.beforeEach(
     "Ignore tests on webkit because of issue with camera and microphone",
     ({ browserName }) => {
-      //WebKit has issue with camera
-      if (browserName === "webkit") {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-      }
+  // WebKit has issue with camera
+      test.skip(browserName === 'webkit', 'WebKit has issues with camera/microphone');
     }
   );
 
   test("Successfully set Area with right access", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1',
+    await using page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
 
@@ -68,13 +60,13 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page.getByText("Sorry, you don't have access to this area")
     ).toBeAttached();
-    await page.close();
+
     await page.context().close();
   });
 
   test("Access restricted area with right click to move", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1',
+    await using page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
 
@@ -115,13 +107,13 @@ test.describe("Map editor area with rights @oidc", () => {
     );
 
     expect(userCurrentPosition).toEqual(actualPositionAfterRightClickToMove);
-    await page.close();
+
     await page.context().close();
   });
 
   test("MapEditor is disabled for basic user because there are no thematics", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Alice',
+    await using page = await getPage(browser, 'Alice',
       Map.url("empty")
     );
     // In the new design, you cannot access the map menu if the user is a basic user
@@ -132,14 +124,14 @@ test.describe("Map editor area with rights @oidc", () => {
       "section.side-bar-container .side-bar .tool-button button#EntityEditor"
     );
     await expect(entityEditorButton).not.toBeAttached();*/
-    await page.close();
+
     await page.context().close();
   });
 
   test("Area with restricted write access : Trying to just read an object", async ({ browser, request }) => {
     // FIXME work step by step, else does not work
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1',
+    await using page = await getPage(browser, 'Admin1',
       Map.url("empty")
     );
     // Add area with admin rights
@@ -155,7 +147,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page);
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1',
+    await using page2 = await getPage(browser, 'Member1',
       Map.url("empty")
     );
 
@@ -170,8 +162,8 @@ test.describe("Map editor area with rights @oidc", () => {
     
     await expect(page2.getByTestId("openWebsite")).toBeHidden();
 
-    await page2.close();
-    await page.close();
+
+
     await page2.context().close();
     await page.context().close();
   });
@@ -180,7 +172,7 @@ test.describe("Map editor area with rights @oidc", () => {
      // FIXME same error in the test aboves
      async ({ browser, request,}) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url("empty"))
+    await using page = await getPage(browser, 'Admin1', Map.url("empty"))
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -193,13 +185,13 @@ test.describe("Map editor area with rights @oidc", () => {
       page
     );
     await oidcLogout(page);
-
-    // Second browser with member user trying to read the object
-    await page.close();
     await page.context().close();
 
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"))
+    // Second browser with member user trying to read the object
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"))
 
+
+    //wait for cameras to be removed
     await page2.getByTestId('cameras-container').waitFor({ state: 'detached' });
 
     // Expect user in other page to not have the right
@@ -211,7 +203,7 @@ test.describe("Map editor area with rights @oidc", () => {
     );
 
 
-    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible({ timeout: 10000 });
+    await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
     await page2.close();
     await page2.context().close();
@@ -220,7 +212,7 @@ test.describe("Map editor area with rights @oidc", () => {
 
   test("Area with restricted write access : Trying to just add an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url('empty'));
+    await using page = await getPage(browser, 'Admin1', Map.url('empty'));
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -233,7 +225,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page);
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"))
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"))
 
     //From browser 2 
     //Check that the entity editor is not available
@@ -244,16 +236,16 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(page2.locator("#AreaEditor")).toBeHidden();
     await expect(page2.locator("#EntityEditor")).toBeHidden();
 
-    await page2.close();
+
     await page2.context().close();
-    await page.close();
+
     await page.context().close();
   });
 
   test("Area with restricted write access : Trying to add an object with write access", 
     async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url("empty"));
+    await using page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -264,11 +256,12 @@ test.describe("Map editor area with rights @oidc", () => {
     );
     await Menu.closeMapEditor(page);
     await oidcLogout(page);
+
     await page.close();
     await page.context().close();
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"));
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"));
 
     // From browser 2
     // Select entity and push it into the map
@@ -292,13 +285,13 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(
       page2.getByTestId("openWebsite")
     ).toBeAttached();
-    await page2.close();
+
     await page2.context().close();
   });
 
   test("Area with restricted write access : Trying to remove an object", async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url("empty"));
+    await using page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -315,7 +308,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await page.context().close();
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"));
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"));
 
     // From browser 2
     // Try to remove entity and click on it to
@@ -331,14 +324,16 @@ test.describe("Map editor area with rights @oidc", () => {
     await expect(page2.locator("#EntityEditor")).toBeHidden();
 
 
-    await page2.close();
+
     await page2.context().close();
+
+    await page.context().close();
   });
 
   test("Area with restricted write access : Trying to remove an object with write access", 
     async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url("empty"))
+    await using page = await getPage(browser, 'Admin1', Map.url("empty"))
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -353,7 +348,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page);
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"));
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"));
 
     // From browser 2
     // Try to remove entity and click on it to
@@ -376,16 +371,16 @@ test.describe("Map editor area with rights @oidc", () => {
     );
 
     await expect(page2.getByTestId("openWebsite")).toBeHidden();
-    await page2.close();
+
     await page2.context().close();
-    await page.close();
+
     await page.context().close();
   });
 
   test("Area with restricted write access : Trying to remove an object outside the area",
      async ({ browser, request }) => {
     await resetWamMaps(request);
-    const page = await getPage(browser, 'Admin1', Map.url("empty"));
+    await using page = await getPage(browser, 'Admin1', Map.url("empty"));
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
@@ -400,7 +395,7 @@ test.describe("Map editor area with rights @oidc", () => {
     await oidcLogout(page);
 
     // Second browser with member user trying to read the object
-    const page2 = await getPage(browser, 'Member1', Map.url("empty"));
+    await using page2 = await getPage(browser, 'Member1', Map.url("empty"));
 
        // From browser 2
        // Check that the map editor is not available
@@ -413,7 +408,7 @@ test.describe("Map editor area with rights @oidc", () => {
        await expect(page2.locator("#EntityEditor")).toBeHidden();
 
     await page2.context().close();
-    await page.close();
+
     await page.context().close()
   });
   

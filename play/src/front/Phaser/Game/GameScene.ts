@@ -123,7 +123,7 @@ import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage 
 import { StringUtils } from "../../Utils/StringUtils";
 
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
@@ -545,13 +545,17 @@ export class GameScene extends DirtyScene {
             this.doLoadTMJFile(this.mapUrlFile);
         }
 
+        // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this.load as any).rexWebFont({
-            custom: {
-                families: ["Press Start 2P"],
-                testString: "abcdefg",
-            },
-        });
+        if (typeof (this.load as any).rexWebFont === "function") {
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (this.load as any).rexWebFont({
+                custom: {
+                    families: ["Press Start 2P"],
+                    testString: "abcdefg",
+                },
+            });
+        }
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
@@ -3244,7 +3248,6 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
-            console.error("playSoundInBubble", soundUrl);
             try {
                 const proximityChatRoom = await this._proximityChatRoomDeferred.promise;
                 await proximityChatRoom.dispatchSound(soundUrl);
@@ -3494,10 +3497,12 @@ ${escapedMessage}
                 (
                     object1:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody,
                     object2:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}

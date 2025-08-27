@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import {expect, Page} from "@playwright/test";
 import AreaEditor from "./map-editor/areaEditor";
 import EntityEditor from "./map-editor/entityEditor";
 import MapEditor from "./mapeditor";
@@ -11,12 +11,12 @@ interface Coordinates {
 
 class AreaAccessRights {
   private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
-    topLeft: { x: 1, y: 5 },
+    topLeft: { x: 1, y: 2 * 32 * 1.5 },
     bottomRight: { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
   };
 
-  public entityPositionInArea: Coordinates = { x: 6 * 32, y: 3 * 32 };
-  public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 8 * 32 };
+  public entityPositionInArea: Coordinates = { x: 4 * 32 * 1.5, y: 3 * 32 * 1.5 };
+  public entityPositionOutsideArea: Coordinates = { x: 6 * 32 * 1.5, y: 8 * 32 * 1.5 };
 
   public mouseCoordinatesToClickOnEntityInsideArea = {
     x: this.entityPositionInArea.x + 10,
@@ -29,7 +29,7 @@ class AreaAccessRights {
   };
 
   async openAreaEditorAndAddAreaWithRights(
-    page,
+    page: Page,
     writeRights: string[] = [],
     readRights: string[] = []
   ) {
@@ -42,7 +42,7 @@ class AreaAccessRights {
     await AreaEditor.setAreaRightProperty(page, writeRights, readRights);
   }
 
-  async openAreaEditorAndAddArea(page, topLeft?: Coordinates, bottomRight?: Coordinates) {
+  async openAreaEditorAndAddArea(page: Page, topLeft?: Coordinates, bottomRight?: Coordinates) {
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(
       page,
@@ -51,7 +51,7 @@ class AreaAccessRights {
     );
   }
 
-  async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page) {
+  async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page: Page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
     await EntityEditor.moveAndClick(
@@ -79,7 +79,7 @@ class AreaAccessRights {
     await expect(page.getByRole('button', { name: 'Open Link' })).toBeVisible();
   }
 
-  async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page) {
+  async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page: Page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
     await EntityEditor.moveAndClick(

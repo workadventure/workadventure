@@ -52,7 +52,7 @@ const en_US: BaseTranslation = {
     externalModule,
     form,
     messageScreen,
-    recording
+    recording,
 };
 
 export default en_US;

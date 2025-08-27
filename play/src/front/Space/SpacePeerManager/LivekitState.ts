@@ -26,8 +26,6 @@ export class LivekitState implements ICommunicationState {
             this._space.observePrivateEvent(CommunicationMessageType.EXECUTE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.executeSwitchMessage.strategy === CommunicationType.WEBRTC) {
                     if (!this._nextState) {
-                        //TODO : voir si on peut throw une erreur ici
-                        //throw new Error("Next state is null");
                         console.error("Next state is null");
                         return;
                     }
@@ -36,8 +34,6 @@ export class LivekitState implements ICommunicationState {
                 }
             })
         );
-
-        //TODO : voir si on ajoute les event pour gerer les 2 tokens ici
 
         this.rxJsUnsubscribers.push(
             this._space
@@ -71,10 +67,6 @@ export class LivekitState implements ICommunicationState {
 
     shouldSynchronizeMediaState(): boolean {
         return true;
-    }
-
-    dispatchSound(url: URL): Promise<void> {
-        return this.livekitConnection.dispatchSound(url);
     }
 
     dispatchStream(mediaStream: MediaStream): void {

@@ -6,17 +6,14 @@ import {getPage} from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
 import Menu from "../utils/menu";
 
-test.describe('OpenId connect @oidc mobile', () => {
+test.describe('OpenId connect @oidc mobile @nofirefox @nodesktop', () => {
     test.beforeEach(async ({ page, browserName }) => {
         // skip on firefox because the browser is too slow
         // (this is specific to mobile format make sur it work on a regular format)
-        if (!isMobile(page) || browserName === "firefox") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+        test.skip(!isMobile(page) || browserName === 'firefox', 'Run only on mobile non-Firefox');
     })
     test('Can login and logout', async ({ browser }, { project }) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"));
 
         await page.addLocatorHandler(page.getByText('Continue without webcam'), async () => {
             await page.getByText('Continue without webcam').click();
@@ -27,7 +24,7 @@ test.describe('OpenId connect @oidc mobile', () => {
             await WA.onInit();
             return WA.player.isLogged;
         });
-        await expect(isLogged).toBe(false);
+        expect(isLogged).toBe(false);
 
         // Login and Logout
         await Menu.openMenu(page);
@@ -38,7 +35,7 @@ test.describe('OpenId connect @oidc mobile', () => {
             await WA.onInit();
             return WA.player.isLogged;
         });
-        await expect(isLogged).toBe(true);
+        expect(isLogged).toBe(true);
 
         // Logout User
         await oidcLogout(page);
@@ -54,7 +51,7 @@ test.describe('OpenId connect @oidc mobile', () => {
         });
         await expect(page.locator('#Input_Username')).toBeVisible();
 
-        await page.close();
+
         await page.context().close();
     });
 });

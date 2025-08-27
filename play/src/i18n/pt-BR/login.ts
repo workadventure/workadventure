@@ -1,7 +1,6 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
-const login: DeepPartial<Translation["login"]> = {
+const login: BaseTranslation = {
     input: {
         name: {
             placeholder: "Digite seu nome",
@@ -10,6 +9,7 @@ const login: DeepPartial<Translation["login"]> = {
             notValidError: "O nome não é válido",
         },
     },
+    genericError: "Ocorreu um erro",
     terms: "Ao continuar, você concorda com nossos {links}.",
     termsOfUse: "termos de uso",
     privacyPolicy: "política de privacidade",

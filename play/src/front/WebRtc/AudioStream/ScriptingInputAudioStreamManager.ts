@@ -7,7 +7,7 @@ import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
- * Class in charge of receiving audio streams from the scripting API and playing them.
+ * Class in charge of receiving audio streams from the users and forwarding them to the scripting API for analysis.
  */
 export class ScriptingInputAudioStreamManager {
     private appendPCMDataStreamUnsubscriber: Subscription | undefined;
@@ -100,7 +100,6 @@ export class ScriptingInputAudioStreamManager {
                 this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
             });
 
-        //TODO : voir si on doit exposer les videoPeerAdded et videoPeerRemoved dans le spacePeerManager
         this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((media) => {
             if (this.isListening) {
                 if (media.type === "mediaStore") {

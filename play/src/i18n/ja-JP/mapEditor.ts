@@ -228,6 +228,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "キャンセル",
             },
         },
+        nameHelpText: "この名前は、ユーザーがエリアに入ると表示されます。",
     },
     areaEditorInstructions: {
         title: "どのように機能しますか？",

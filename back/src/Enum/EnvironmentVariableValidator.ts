@@ -99,6 +99,10 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_API_KEY: z.string().optional().describe("The Livekit API key."),
     LIVEKIT_API_SECRET: z.string().optional().describe("The Livekit API secret."),
     LIVEKIT_WS_URL: z.string().optional().describe("The Livekit WebSocket URL."),
+    MAX_USERS_FOR_WEBRTC: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 4))
+        .describe("The maximum number of users for WebRTC."),
 
     LIVEKIT_RECORDING_S3_ENDPOINT: z
         .string()

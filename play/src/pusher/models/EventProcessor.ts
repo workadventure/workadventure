@@ -39,7 +39,11 @@ export class EventProcessor {
         this.publicEventProcessors.set(eventCase, processor);
     }
 
-    public processPublicEvent(event: CorePublicEvent, sender: SpaceUserExtended, senderSocketData: SocketData): CorePublicEvent {
+    public processPublicEvent(
+        event: CorePublicEvent,
+        sender: SpaceUserExtended,
+        senderSocketData: SocketData
+    ): CorePublicEvent {
         const processor = this.publicEventProcessors.get(event.$case);
         if (processor) {
             return processor(event, sender, senderSocketData);

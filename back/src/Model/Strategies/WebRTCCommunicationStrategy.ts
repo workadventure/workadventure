@@ -138,7 +138,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public updateUser(user: SpaceUser): void {
-        this.handleUserMediaUpdate(user);
+        // TODO: remove the handleUserMediaUpdate function after testing
+        //this.handleUserMediaUpdate(user);
     }
     private shutdownConnection(user: string, otherUser: string): void {
         try {
@@ -153,9 +154,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         }
     }
 
-    //TODO : prendre en compte seulement les users dans le filtre / 1 personne en parametre plutot que les 2
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
+        //const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
+        //TODO: remove this
+        const hasMedia = true;
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
         // Only establish if we need media connection AND don't already have one
         return hasMedia && !hasExisting;
@@ -168,7 +170,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
         const credentials1 = this._credentialsService.generateCredentials(user1.spaceUserId);
         const credentials2 = this._credentialsService.generateCredentials(user2.spaceUserId);
-        //TODO : identifier si on doit vraiment envoyer les credentials à tout le monde
         this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
     }
@@ -181,6 +182,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         this._connections.removeUserToNotify(userId);
     }
 
+    //TODO : remove the handleUserMediaUpdate function after testing
     private handleUserMediaUpdate(user: SpaceUser): void {
         const otherUsers = this._space
             .getUsersToNotify()
@@ -207,8 +209,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     private hasExistingConnection(userId1: string, userId2: string): boolean {
         return this._connections.hasConnection(userId1, userId2);
     }
-
-    //TODO : envoyer les events seulement aux personnes qui ont besoin de les recevoir dans prendre en compte les streaming
 
     private sendWebRTCStart(
         senderId: string,

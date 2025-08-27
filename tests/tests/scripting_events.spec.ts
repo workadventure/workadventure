@@ -4,16 +4,13 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from "./utils/auth"
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Scripting API Events', () => {
+test.describe('Scripting API Events @nomobile', () => {
     test.beforeEach(async ({ page }) => {
-        if (isMobile(page)) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+        test.skip(isMobile(page), 'Skip on mobile devices');
     });
-    test('test events', async ({ browser, request }) => {
+    test('events', async ({ browser, request }) => {
         // Go to
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
@@ -38,20 +35,20 @@ test.describe('Scripting API Events', () => {
                     resolve();
                 });
             });
-            WA.event.broadcast("key", "value");
+            await WA.event.broadcast("key", "value");
             await promise;
             return true;
         });
         expect(eventTriggered).toBeTruthy();
 
         // 2. Connect 2 users and check that the events are triggered on the other user (using broadcast events)
-        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
+        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_events"));
 
         let gotExpectedBroadcastNotification = false;
         let gotExpectedTargetedNotification = false;
         let gotExpectedGlobalNotification = false;
         page.on('console', async (msg) => {
-            const text = await msg.text();
+            const text = msg.text();
             //console.log(text);
             if (text === 'Broadcast event triggered') {
                 gotExpectedBroadcastNotification = true;
@@ -82,7 +79,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page2, async () => {
             await WA.onInit();
-            WA.event.broadcast("key2", "value");
+            await WA.event.broadcast("key2", "value");
         });
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
 
@@ -141,9 +138,9 @@ test.describe('Scripting API Events', () => {
         expect(await result.text()).toEqual("ok");
 
         await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 });

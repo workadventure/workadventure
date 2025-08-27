@@ -1,8 +1,8 @@
-import { PositionInterface } from "../Model/PositionInterface";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
-import type { Zone } from "../Model/Zone";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
+import { PositionInterface } from "./PositionInterface";
+import { Movable } from "./Movable";
+import { PositionNotifier } from "./PositionNotifier";
+import type { Zone } from "./Zone";
 import { User } from "./User";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
@@ -171,7 +171,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
 
     leave(user: User): void {
         const success = this.users.delete(user);
-        if (success === false) {
+        if (!success) {
             throw new Error(`Could not find user ${user.id} in the group ${this.id}`);
         }
         user.group = undefined;
@@ -221,10 +221,10 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     }
 
     setOutOfBounds(outOfBounds: boolean): void {
-        if (this.outOfBounds === true && outOfBounds === false) {
+        if (this.outOfBounds && !outOfBounds) {
             this.positionNotifier.enter(this);
             this.outOfBounds = false;
-        } else if (this.outOfBounds === false && outOfBounds === true) {
+        } else if (!this.outOfBounds && outOfBounds) {
             this.positionNotifier.leave(this);
             this.outOfBounds = true;
         }

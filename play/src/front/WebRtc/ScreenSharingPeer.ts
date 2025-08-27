@@ -20,8 +20,10 @@ import {
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { isFirefox } from "./DeviceUtils";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation in screen sharing
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000;
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -58,13 +60,26 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration for screen sharing
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings for screen sharing
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 15, // Higher pool for screen sharing
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled for screen sharing
+            ...(firefoxBrowser && { trickle: true }),
+        };
+
+        super(peerConfig);
 
         this.userId = player.userId;
         this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
@@ -105,6 +120,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._statusStore = writable<PeerStatus>("connecting");
 
+        // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
             // Filter ICE candidates for browser compatibility
@@ -146,6 +162,18 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
             this._statusStore.set("error");
+
+            // Firefox-specific error handling for screen sharing
+            if (isFirefox() && err.message) {
+                // Log Firefox-specific screen sharing errors for better debugging
+                if (err.message.includes("ICE")) {
+                    console.warn("Firefox screen sharing ICE connection error - this may be temporary");
+                } else if (err.message.includes("DTLS")) {
+                    console.warn("Firefox screen sharing DTLS handshake error - checking TURN configuration");
+                } else if (err.message.includes("getDisplayMedia")) {
+                    console.warn("Firefox screen sharing capture error - check permissions");
+                }
+            }
         });
 
         this.on("connect", () => {
@@ -380,23 +408,54 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
                     }
                 });
+                this.space.spacePeerManager.registerScreenShareContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            detachVideo: (container: HTMLVideoElement) => {
                 container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareContainer(this.spaceUser.spaceUserId, container);
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
             },
         };
@@ -415,7 +474,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.player.name);
+        return writable(this.spaceUser.name);
     }
 
     get showVoiceIndicator(): Readable<boolean> {

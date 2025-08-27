@@ -133,7 +133,7 @@
 {/if}
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+    @use "../style/breakpoints.scss" as *;
 
     @include media-breakpoint-up(sm) {
         .chatWindow {

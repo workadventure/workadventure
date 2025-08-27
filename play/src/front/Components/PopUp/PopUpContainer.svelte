@@ -22,7 +22,6 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
     .animation {
         animation-duration: 0.5s;
         animation-name: slidein;

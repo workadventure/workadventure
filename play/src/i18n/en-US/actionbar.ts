@@ -32,10 +32,17 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
+        noDevices: "No camera device found",
     },
     microphone: {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
+        noDevices: "No microphone device found",
+    },
+    speaker: {
+        disabled: "Your speaker is disabled",
+        activate: "Activate your speaker",
+        noDevices: "No speaker device found",
     },
     status: {
         ONLINE: "Online",
@@ -128,18 +135,17 @@ const actionbar: BaseTranslation = {
             title: {
                 start: "Start recording",
                 stop: "Stop recording",
-                inpProgress: "A recording is in progress"
+                inpProgress: "A recording is in progress",
             },
-            desc:{
+            desc: {
                 needLogin: "You need to be logged to record.",
                 needPremium: "You need to be premium to record.",
                 advert: "All participants will be notified that you are starting a recording.",
                 yourRecordInProgress: "Recording in progress, click to stop it.",
                 inProgress: "A recording is in progress",
-                notEnabled:" Recording is not enabled for this world."
-            }
-        }
-
+                notEnabled: " Recording is not enabled for this world.",
+            },
+        },
     },
     listStatusTitle: {
         enable: "Change your status",

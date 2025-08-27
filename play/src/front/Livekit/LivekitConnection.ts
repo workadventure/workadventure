@@ -9,7 +9,6 @@ import { LiveKitRoom } from "./LiveKitRoom";
 import { LiveKitRoomWatch } from "./LivekitRoomWatch";
 import { LiveKitRoomStream } from "./LivekitRoomStream";
 
-//TODO : trouver le moyen de l'avoir coté front et back , message.proto ?
 export enum CommunicationType {
     NONE = "NONE",
     WEBRTC = "WEBRTC",
@@ -107,46 +106,49 @@ export class LivekitConnection {
         );
     }
 
-    async joinRoom() {
+    async joinRoom(): Promise<void> {
         if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
             console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
             throw new Error("LivekitRoom not found");
         }
 
-        await this.livekitRoomStreamer?.joinRoom();
-        await this.livekitRoomWatcher?.joinRoom();
-    }
-
-    async dispatchSound(url: URL): Promise<void> {
-        if (!this.livekitRoomStreamer) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
-            throw new Error("LivekitRoom not found");
+        try {
+            await this.livekitRoomStreamer?.joinRoom();
+            await this.livekitRoomWatcher?.joinRoom();
+        } catch (err) {
+            console.error("Error joining Livekit room:", err);
+            Sentry.captureException(err);
+            throw err;
         }
-
-        await this.livekitRoomStreamer.dispatchSound(url);
     }
 
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoomStreamer) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
-            throw new Error("LivekitRoom not found");
+            console.error("LivekitRoom not found for dispatchStream");
+            throw new Error("LivekitRoom not found for dispatchStream");
         }
 
-        await this.livekitRoomStreamer.dispatchStream(mediaStream);
+        try {
+            await this.livekitRoomStreamer.dispatchStream(mediaStream);
+        } catch (err) {
+            console.error("Error dispatching stream to Livekit room:", err);
+            Sentry.captureException(err);
+            throw err;
+        }
     }
 
     destroy() {
         if (!this.livekitRoomStreamer && !this.livekitRoomWatcher) {
-            console.error("LivekitRoom not found");
-            Sentry.captureException(new Error("LivekitRoom not found"));
             return;
         }
 
-        this.livekitRoomStreamer?.destroy();
-        this.livekitRoomWatcher?.destroy();
+        try {
+            this.livekitRoomStreamer?.destroy();
+            this.livekitRoomWatcher?.destroy();
+        } catch (err) {
+            console.error("Error destroying Livekit room:", err);
+            Sentry.captureException(err);
+        }
         this._streamingMegaphoneStore.set(false);
         for (const subscription of this.unsubscribers) {
             subscription.unsubscribe();

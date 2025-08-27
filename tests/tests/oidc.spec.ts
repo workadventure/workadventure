@@ -5,22 +5,19 @@ import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('OpenID connect @oidc', () => {
+test.describe('OpenID connect @oidc @nomobile', () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-    }
+    test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test('can login and logout', async ({ browser }) => {
-    const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
+    await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "oidc"))
 
     // Test if player variable is correct
     let isLogged = await evaluateScript(page, async () => {
       await WA.onInit();
       return WA.player.isLogged;
     });
-    await expect(isLogged).toBe(false);
+    expect(isLogged).toBe(false);
 
     // Sign in, then sign out
     await oidcLogin(page);
@@ -30,7 +27,7 @@ test.describe('OpenID connect @oidc', () => {
       await WA.onInit();
       return WA.player.isLogged;
     });
-    await expect(isLogged).toBe(true);
+    expect(isLogged).toBe(true);
 
     // Log out user
     await oidcLogout(page);

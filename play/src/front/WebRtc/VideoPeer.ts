@@ -6,7 +6,6 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
-import { playersStore } from "../Stores/PlayersStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
@@ -16,13 +15,15 @@ import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
+import { isFirefox } from "./DeviceUtils";
 import { P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -32,6 +33,7 @@ export class VideoPeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
+    /** @deprecated */
     public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;
@@ -92,6 +94,16 @@ export class VideoPeer extends Peer implements Streamable {
         if ("code" in err) {
             console.error(`error code => ${err.code}`);
         }
+
+        // Firefox-specific error handling
+        if (isFirefox() && err.message) {
+            // Log Firefox-specific errors for better debugging
+            if (err.message.includes("ICE")) {
+                console.warn("Firefox ICE connection error - this may be temporary");
+            } else if (err.message.includes("DTLS")) {
+                console.warn("Firefox DTLS handshake error - checking TURN configuration");
+            }
+        }
     };
 
     private readonly iceTimeoutHandler = () => {
@@ -126,8 +138,11 @@ export class VideoPeer extends Peer implements Streamable {
                         break;
                     }
                     case "blocked": {
-                        //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                        // Find a way to block A's output stream in A's js client
+                        // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
+                        // The "block" message should go through the space.
+
+                        ////FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                        //// Find a way to block A's output stream in A's js client
                         //However, the output stream stream B is correctly blocked in A client
                         this.blocked = true;
                         this.toggleRemoteStream(false);
@@ -189,22 +204,35 @@ export class VideoPeer extends Peer implements Streamable {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
-        //TODO : remove player passer les infos dnas le spaceUser
+        // TODO: remove player, pass the information through spaceUser instead ??
         public readonly player: RemotePlayerData,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended
     ) {
         const bandwidth = get(videoBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 10,
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled
+            ...(firefoxBrowser && { trickle: true }),
+        };
+
+        super(peerConfig);
 
         this.userId = player.userId;
-        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
+        this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + this.userId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
@@ -434,30 +462,54 @@ export class VideoPeer extends Peer implements Streamable {
 
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
-            attach: (container: HTMLVideoElement) => {
+            attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = stream;
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
                     }
                 });
-                const videoElements =
-                    this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements.push(container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
                 videoElementUnsubscribers.set(container, unsubscribe);
             },
-            detach: (container: HTMLVideoElement) => {
+            detachVideo: (container: HTMLVideoElement) => {
                 container.srcObject = null;
-                let videoElements = this.space.spacePeerManager.videoContainerMap.get(this.spaceUser.spaceUserId) || [];
-                videoElements = videoElements.filter((element) => element !== container);
-                this.space.spacePeerManager.videoContainerMap.set(this.spaceUser.spaceUserId, videoElements);
+                this.space.spacePeerManager.unregisterVideoContainer(this.spaceUser.spaceUserId, container);
                 const unsubscribe = videoElementUnsubscribers.get(container);
                 if (unsubscribe) {
                     unsubscribe();
                     videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
                 }
             },
         };

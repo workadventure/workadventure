@@ -11,7 +11,7 @@ $grid-breakpoints: (
 );
 
 @function get-upper-breakpoint($breakpoint) {
-    @return map-get((
+    @return map.get((
         xs: map.get($grid-breakpoints, "sm"),
         sm: map.get($grid-breakpoints, "md"),
         md: map.get($grid-breakpoints, "lg"),
@@ -22,7 +22,7 @@ $grid-breakpoints: (
 }
 
 @function get-under-breakpoint($breakpoint) {
-    @return map-get((
+    @return map.get((
         xs: null,
         sm: map.get($grid-breakpoints, "xs"),
         md: map.get($grid-breakpoints, "sm"),

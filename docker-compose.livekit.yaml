@@ -1,4 +1,3 @@
-#TODO : revoir le docker compose peut etre le simplifier
 services:
   livekit:
     image: livekit/livekit-server:v1.8.4
@@ -85,11 +84,12 @@ services:
 
   back:
     environment:
-      LIVEKIT_HOST: "http://livekit.workadventure.localhost"
-      LIVEKIT_API_KEY: "devkey"
-      LIVEKIT_API_SECRET: "12345678901234567890123456789012"
-      LIVEKIT_WS_URL: "ws://livekit.workadventure.localhost"
+      LIVEKIT_HOST: "$LIVEKIT_HOST"
+      LIVEKIT_API_KEY: "$LIVEKIT_API_KEY"
+      LIVEKIT_API_SECRET: "$LIVEKIT_API_SECRET"
+      LIVEKIT_WS_URL: "$LIVEKIT_WS_URL"
       EGRESS_HOST: "http://egress.workadventure.localhost"
+      MAX_USERS_FOR_WEBRTC: "$MAX_USERS_FOR_WEBRTC"
       LIVEKIT_RECORDING_S3_ENDPOINT: "http://minio-livekit:9000"
       LIVEKIT_RECORDING_S3_ACCESS_KEY: "minio-access-key"
       LIVEKIT_RECORDING_S3_SECRET_KEY: "minio-secret-access-key"

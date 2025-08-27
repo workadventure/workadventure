@@ -156,7 +156,7 @@
 </script>
 
 <div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
-    <div class="w-11/12 lg:w-2/3  relative h-fit">
+    <div class="w-11/12 lg:w-2/3 relative h-fit">
         <PopUpContainer fullContent={true}>
             <div class="flex flex-col gap-2 w-full">
                 <div class="w-full flex justify-between">
@@ -181,7 +181,7 @@
                         <p>{$LL.recording.noRecordings()}</p>
                     {:else}
                         <div
-                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 overflow-y-scroll max-h-[50vh]"
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-scroll max-h-[50vh]"
                         >
                             {#each recordings as record, index (record.videoFile.filename)}
                                 <div

@@ -1049,7 +1049,6 @@ message PrivateEvent {
   PrivateSpaceEvent spaceEvent = 4;
 }
 
-//TODO : voir si on utilise le meme message pour back--->pusher et pusher--->front
 message PrivateEventBackToPusher {
   string spaceName = 1;
   string receiverUserId = 2;

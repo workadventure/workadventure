@@ -5,15 +5,12 @@ import { getPage } from "../utils/auth";
 import {isMobile} from "../utils/isMobile";
 import Menu from "../utils/menu";
 
-test.describe("Iframe API", () => {
+test.describe("Iframe API @nodesktop", () => {
     test.beforeEach(async ({ page }) => {
-        if (!isMobile(page)) {
-            // eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+        test.skip(!isMobile(page), 'Run only on mobile');
     });
-    test("test disable invite user button", async ({ browser }) => {
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
+    test("disable invite user button", async ({ browser }) => {
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         await Menu.openMenu(page);
         await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
@@ -27,18 +24,15 @@ test.describe("Iframe API", () => {
 
         await expect(page.getByRole('button', { name: 'Invite' })).toBeHidden();
 
-        await page.close();
+
         await page.context().close();
     });
-    test("test disable screen sharing", async ({ browser, browserName }) => {
-        if (browserName === "webkit") {
-            // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
-            // The chat masks the buttons we are interested in.
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-        }
+    test("disable screen sharing @nowebkit", async ({ browser, browserName }) => {
+        // Skipping webkit because it has no webcam. Therefore, it opens the chat directly.
+        // The chat masks the buttons we are interested in.
+        test.skip(browserName === 'webkit', 'Skip on WebKit');
 
-        const page = await getPage(browser, 'Alice',
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -51,7 +45,7 @@ test.describe("Iframe API", () => {
         });
 
         // Second browser
-        const pageBob = await getPage(browser, 'Bob',
+        await using pageBob = await getPage(browser, 'Bob',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         )
         await pageBob.evaluate(() => localStorage.setItem("debug", "*"));
@@ -73,14 +67,13 @@ test.describe("Iframe API", () => {
             page.getByTestId("screenShareButton")
         ).toBeEnabled();
 
-        await pageBob.close();
         await pageBob.context().close();
-        await page.close();
+
         await page.context().close();
     });
 
-    test("test disable right click user button", async ({ browser }) => {
-        const page = await getPage(browser, 'Alice',
+    test("disable right click user button", async ({ browser }) => {
+        await using page = await getPage(browser, 'Alice',
             publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
         );
         await page.evaluate(() => localStorage.setItem("debug", "*"));
@@ -99,7 +92,7 @@ test.describe("Iframe API", () => {
 
         // TODO: check if the right click is enabled
 
-        await page.close();
+
         await page.context().close();
     });
 });

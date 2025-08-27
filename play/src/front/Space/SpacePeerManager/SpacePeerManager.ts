@@ -7,6 +7,7 @@ import { requestedCameraState, requestedMicrophoneState } from "../../Stores/Med
 import { recordingStore } from "../../Stores/RecordingStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
@@ -15,7 +16,6 @@ export interface ICommunicationState {
     destroy(): void;
     completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
-    dispatchSound(url: URL): Promise<void>;
     dispatchStream(mediaStream: MediaStream): void;
     shouldDisplayRecordButton: boolean;
 }
@@ -34,7 +34,6 @@ export interface SimplePeerConnectionInterface {
     dispatchStream(mediaStream: MediaStream): void;
     cleanupStore(): void;
     removePeer(userId: string): void;
-    dispatchSound(url: URL): Promise<void>;
 }
 
 export interface PeerFactoryInterface {
@@ -43,8 +42,10 @@ export interface PeerFactoryInterface {
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
     private _communicationState: ICommunicationState;
-    public videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
-    public screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private videoContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private audioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
+    private screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
+    private screenShareAudioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
 
     private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
@@ -174,13 +175,121 @@ export class SpacePeerManager {
         state.completeSwitch();
         this._communicationState = state;
         this.shouldDisplayRecordButton.set(state.shouldDisplayRecordButton);
+        if (this.currentMediaStream) {
+            // If we have a current media stream, we need to dispatch it to the new state
+            this._communicationState.dispatchStream(this.currentMediaStream);
+        }
     }
 
     dispatchSound(url: URL): Promise<void> {
-        return this._communicationState.dispatchSound(url);
+        return new Promise<void>((resolve, reject) => {
+            (async () => {
+                const audioContext = new AudioContext();
+
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                const destination = audioContext.createMediaStreamDestination();
+                const bufferSource = audioContext.createBufferSource();
+                bufferSource.buffer = audioBuffer;
+                bufferSource.start(0);
+                bufferSource.connect(destination);
+                bufferSource.onended = () => {
+                    nbSoundPlayedInBubbleStore.soundEnded();
+                    resolve();
+                };
+                nbSoundPlayedInBubbleStore.soundStarted();
+
+                return this._communicationState.dispatchStream(destination.stream);
+            })().catch(reject);
+        });
     }
 
+    private currentMediaStream: MediaStream | undefined;
+
     dispatchStream(mediaStream: MediaStream): void {
+        this.currentMediaStream = mediaStream;
         this._communicationState.dispatchStream(mediaStream);
+    }
+
+    public registerVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        const videoElements = this.videoContainerMap.get(spaceUserId) || [];
+        videoElements.push(videoElement);
+        this.videoContainerMap.set(spaceUserId, videoElements);
+    }
+
+    public registerAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        const audioElements = this.audioContainerMap.get(spaceUserId) || [];
+        audioElements.push(audioElement);
+        this.audioContainerMap.set(spaceUserId, audioElements);
+    }
+
+    public registerScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        const videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
+        videoElements.push(videoElement);
+        this.screenShareContainerMap.set(spaceUserId, videoElements);
+    }
+
+    public registerScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        const audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
+        audioElements.push(audioElement);
+        this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
+    }
+
+    public unregisterVideoContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        let videoElements = this.videoContainerMap.get(spaceUserId) || [];
+        videoElements = videoElements.filter((element) => element !== videoElement);
+        if (videoElements.length === 0) {
+            this.videoContainerMap.delete(spaceUserId);
+        } else {
+            this.videoContainerMap.set(spaceUserId, videoElements);
+        }
+    }
+
+    public unregisterAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        let audioElements = this.audioContainerMap.get(spaceUserId) || [];
+        audioElements = audioElements.filter((element) => element !== audioElement);
+        if (audioElements.length === 0) {
+            this.audioContainerMap.delete(spaceUserId);
+        } else {
+            this.audioContainerMap.set(spaceUserId, audioElements);
+        }
+    }
+
+    public unregisterScreenShareContainer(spaceUserId: string, videoElement: HTMLVideoElement): void {
+        let videoElements = this.screenShareContainerMap.get(spaceUserId) || [];
+        videoElements = videoElements.filter((element) => element !== videoElement);
+        if (videoElements.length === 0) {
+            this.screenShareContainerMap.delete(spaceUserId);
+        } else {
+            this.screenShareContainerMap.set(spaceUserId, videoElements);
+        }
+    }
+
+    public unregisterScreenShareAudioContainer(spaceUserId: string, audioElement: HTMLAudioElement): void {
+        let audioElements = this.screenShareAudioContainerMap.get(spaceUserId) || [];
+        audioElements = audioElements.filter((element) => element !== audioElement);
+        if (audioElements.length === 0) {
+            this.screenShareAudioContainerMap.delete(spaceUserId);
+        } else {
+            this.screenShareAudioContainerMap.set(spaceUserId, audioElements);
+        }
+    }
+
+    public getVideoContainers(spaceUserId: string): HTMLVideoElement[] {
+        return this.videoContainerMap.get(spaceUserId) || [];
+    }
+
+    public getAudioContainers(spaceUserId: string): HTMLAudioElement[] {
+        return this.audioContainerMap.get(spaceUserId) || [];
+    }
+
+    public getScreenShareContainers(spaceUserId: string): HTMLVideoElement[] {
+        return this.screenShareContainerMap.get(spaceUserId) || [];
+    }
+
+    public getScreenShareAudioContainers(spaceUserId: string): HTMLAudioElement[] {
+        return this.screenShareAudioContainerMap.get(spaceUserId) || [];
     }
 }
