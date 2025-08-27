@@ -53,7 +53,15 @@ export class LivekitState extends CommunicationState implements IRecordableState
             livekitHost: LIVEKIT_HOST ?? "",
         }
     ) {
-        const strategy = await LivekitCommunicationStrategy.create(_space);
+        const strategy = await LivekitCommunicationStrategy.create(
+            _space,
+            new LiveKitService(
+                _livekitServerCredentials.livekitHost,
+                _livekitServerCredentials.livekitApiKey,
+                _livekitServerCredentials.livekitApiSecret,
+                _livekitServerCredentials.livekitHost.replace("http", "ws")
+            )
+        );
         return new LivekitState(_space, _communicationManager, _livekitServerCredentials, strategy, _readyUsers);
     }
 

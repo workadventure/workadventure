@@ -141,7 +141,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     // Remember that in most of the cases, even if its working, you will find a STUN host lookup received error
     // Chrome tried to look up the IPv6 DNS record for server and got an error in that process. However, it may still be accessible through the IPv4 address
     pc.onicecandidateerror = (e) => {
-        const event = e as RTCPeerConnectionIceErrorEvent;
+        const event = e;
 
         // Categorize error types for better debugging
         if (event.errorCode) {

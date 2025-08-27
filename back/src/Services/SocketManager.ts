@@ -685,6 +685,8 @@ export class SocketManager {
                 case "joinSpaceQuery":
                 case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
+                case "getRecordingsQuery":
+                case "deleteRecordingQuery":
                 case "enterChatRoomAreaQuery": {
                     break;
                 }
@@ -1570,10 +1572,7 @@ export class SocketManager {
         }
     }
 
-    async handleAddSpaceUserToNotifyMessage(
-        pusher: SpacesWatcher,
-        addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage
-    ) {
+    handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
         const space = this.spaces.get(addSpaceUserToNotifyMessage.spaceName);
         if (!space) {
             throw new Error(`Could not find space ${addSpaceUserToNotifyMessage.spaceName} to add user to notify`);
@@ -1581,7 +1580,7 @@ export class SocketManager {
         if (!addSpaceUserToNotifyMessage.user) {
             throw new Error(`User to add to notify is undefined in AddSpaceUserToNotifyMessage`);
         }
-        await space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
+        space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
     }
 
     handleDeleteSpaceUserToNotifyMessage(

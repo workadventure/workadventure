@@ -72,9 +72,10 @@ const spaceManager = {
                         break;
                     }
                     case "addSpaceUserToNotifyMessage": {
-                        socketManager
-                            .handleAddSpaceUserToNotifyMessage(pusher, message.message.addSpaceUserToNotifyMessage)
-                            .catch((e) => console.error("Error handling addSpaceUserToNotifyMessage:", e));
+                        socketManager.handleAddSpaceUserToNotifyMessage(
+                            pusher,
+                            message.message.addSpaceUserToNotifyMessage
+                        );
                         break;
                     }
                     case "deleteSpaceUserToNotifyMessage": {

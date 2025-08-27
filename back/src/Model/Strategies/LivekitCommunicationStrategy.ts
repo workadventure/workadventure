@@ -1,5 +1,6 @@
 import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
@@ -14,7 +15,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         });
     }
 
-    public static async create(space: ICommunicationSpace, livekitService = new LiveKitService()) {
+    public static async create(space: ICommunicationSpace, livekitService: LiveKitService) {
         await livekitService.createRoom(space.getSpaceName());
         return new LivekitCommunicationStrategy(space, livekitService);
     }
@@ -135,7 +136,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         try {
             await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
         } catch (e) {
-            throw new Error(e);
+            throw asError(e);
         }
     }
     async stopRecording(): Promise<void> {

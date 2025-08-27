@@ -20,7 +20,6 @@
     import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../Chat/ChatSidebarWidthStore";
-    import { recordingStore } from "../../Stores/RecordingStore";
     import MediaSettingsList from "./MediaSettingsList.svelte";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
@@ -33,8 +32,8 @@
     import ContextualMenuItems from "./MenuIcons/ContextualMenuItems.svelte";
     import CloseChatMenuItem from "./MenuIcons/CloseChatMenuItem.svelte";
     import SilentBlock from "./SilentBlock.svelte";
-    import { IconArrowDown } from "@wa-icons";
     import RecordingMenuItem from "./MenuIcons/RecordingMenuItem.svelte";
+    import { IconArrowDown } from "@wa-icons";
 
     let rightDiv: HTMLDivElement;
     let mediaSettingsDisplayed = false;

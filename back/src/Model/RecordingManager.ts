@@ -59,12 +59,15 @@ export class RecordingManager implements IRecordingManager {
         const livekitState = await LivekitState.create(this.space, this.communicationManager); // await is for room creation
         this.communicationManager.setState(livekitState);
 
-        livekitState.handleUserAdded(user);
+        await livekitState.handleUserAdded(user);
 
         const allUsers = this.space.getAllUsers();
         allUsers.forEach((spaceUser) => {
             if (spaceUser.spaceUserId !== user.spaceUserId) {
-                livekitState.handleUserAdded(spaceUser);
+                livekitState.handleUserAdded(spaceUser).catch((error) => {
+                    console.error(error);
+                    Sentry.captureException(error);
+                });
             }
         });
 

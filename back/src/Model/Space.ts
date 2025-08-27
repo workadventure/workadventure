@@ -401,6 +401,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             },
         });
     }
+
     public dispatchPrivateEvent(privateEvent: PrivateEvent) {
         const sender = this.getAllUsers().find((user) => user.spaceUserId === privateEvent.senderUserId);
         if (!sender) {

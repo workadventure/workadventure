@@ -15,10 +15,6 @@ import {
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import {
-    LIVEKIT_WS_URL,
-    LIVEKIT_API_SECRET,
-    LIVEKIT_API_KEY,
-    LIVEKIT_HOST,
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_BUCKET,
     LIVEKIT_RECORDING_S3_ACCESS_KEY,

@@ -6,7 +6,7 @@ export interface ICommunicationSpace {
     getUsersToNotify(): SpaceUser[];
     //getUser(userId: string): SpaceUser | undefined;
     dispatchPrivateEvent(privateEvent: PrivateEvent): void;
-    dispatchPublicEvent(publicEvent: PublicEvent): void;
+    dispatchPublicEvent(publicEvent: PublicEvent): Promise<void>;
     getSpaceName(): string;
     getPropertiesToSync(): string[];
 }
