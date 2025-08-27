@@ -142,10 +142,12 @@
 
     <svelte:fragment slot="buttons">
         <button
-            class="btn btn-primary btn-sm w-full max-w-96 justify-center"
+            class="btn btn-secondary btn-sm w-full max-w-96 justify-center"
             on:click={onSave}
             data-test-id="dropFileSave">Save</button
         >
-        <button class="btn btn-secondary btn-sm w-full max-w-96 justify-center" on:click={removePopup}>Cancel</button>
+        <button class="btn bg-white/10 hover:bg-white/30 btn-sm w-full max-w-96 justify-center" on:click={removePopup}
+            >Cancel</button
+        >
     </svelte:fragment>
 </PopUpContainer>
