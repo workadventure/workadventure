@@ -87,7 +87,6 @@ services:
       LIVEKIT_HOST: "$LIVEKIT_HOST"
       LIVEKIT_API_KEY: "$LIVEKIT_API_KEY"
       LIVEKIT_API_SECRET: "$LIVEKIT_API_SECRET"
-      LIVEKIT_WS_URL: "$LIVEKIT_WS_URL"
       EGRESS_HOST: "http://egress.workadventure.localhost"
       MAX_USERS_FOR_WEBRTC: "$MAX_USERS_FOR_WEBRTC"
 
