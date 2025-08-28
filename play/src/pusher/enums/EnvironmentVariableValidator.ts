@@ -286,10 +286,10 @@ export const EnvironmentVariables = z.object({
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
     MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
-    GRPC_MAX_MESSAGE_SIZE: z
-        .number()
-        .optional()
-        .default(20 * 1024 * 1024),
+    GRPC_MAX_MESSAGE_SIZE: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
+        .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
