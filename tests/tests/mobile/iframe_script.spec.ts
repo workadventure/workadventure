@@ -22,7 +22,7 @@ test.describe("Iframe API @nodesktop", () => {
 
         // Check if the map editor is enabled
 
-        await expect(page.getByRole('button', { name: 'Invite' })).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Share' })).toBeHidden();
 
 
         await page.context().close();
