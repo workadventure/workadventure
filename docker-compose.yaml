@@ -78,16 +78,6 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-      OPID_CLIENT_ID: authorization-code-client-id
-      OPID_CLIENT_SECRET: authorization-code-client-secret
-      OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
-      OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
-      OPID_SCOPE: profile openid email tags-scope
-      OPID_PROMPT: $OPID_PROMPT
-      OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
-      OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
-      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
       OPENID_CLIENT_ID: authorization-code-client-id
       OPENID_CLIENT_SECRET: authorization-code-client-secret
       OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
