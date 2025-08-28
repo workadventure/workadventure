@@ -204,7 +204,7 @@
 >
     <div
         bind:clientWidth={containerWidth}
-        class="pointer-events-none gap-4 m-2"
+        class="pointer-events-none gap-4 pb-2"
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -234,8 +234,10 @@
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
                 {#key uniqueId}
                     <div
-                        style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
-                            videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
+                        style={`width: ${Math.floor(videoWidth)}px; max-width: ${Math.floor(videoWidth)}px;${
+                            videoHeight
+                                ? `height: ${Math.floor(videoHeight)}px; max-height: ${Math.floor(videoHeight)}px;`
+                                : ""
                         }`}
                         class={isOnOneLine
                             ? oneLineMode === "horizontal"
