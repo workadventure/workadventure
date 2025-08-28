@@ -224,9 +224,8 @@
                             >
                                 <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                             </div>
+                            <div class="bg-danger">Promise timed out while waiting for user with id</div>
                         {/if}
-                    {:catch error}
-                        <div class="bg-danger">{error}</div>
                     {/await}
                 </UserName>
 
