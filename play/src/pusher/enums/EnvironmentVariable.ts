@@ -61,8 +61,22 @@ export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPENID_PROFILE_SCREEN_PROVIDER ||
     env.OPID_PROFILE_SCREEN_PROVIDER ||
     (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
+
+const isUsingDeprecatedOpenIdVariables =
+    env.OPID_CLIENT_ID ||
+    env.OPID_CLIENT_SECRET ||
+    env.OPID_CLIENT_ISSUER ||
+    env.OPID_PROFILE_SCREEN_PROVIDER ||
+    env.OPID_SCOPE ||
+    env.OPID_PROMPT ||
+    env.OPID_USERNAME_CLAIM ||
+    env.OPID_LOCALE_CLAIM ||
+    env.OPID_WOKA_NAME_POLICY ||
+    env.OPID_TAGS_CLAIM;
+
 export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile ";
-export const OPID_PROMPT = env.OPENID_PROMPT || env.OPID_PROMPT || undefined;
+export const OPID_PROMPT =
+    env.OPENID_PROMPT || env.OPID_PROMPT || (isUsingDeprecatedOpenIdVariables ? "login" : undefined);
 export const OPID_USERNAME_CLAIM = env.OPENID_USERNAME_CLAIM || env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPENID_LOCALE_CLAIM || env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPENID_WOKA_NAME_POLICY || env.OPID_WOKA_NAME_POLICY || "user_input";
