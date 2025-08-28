@@ -72,7 +72,7 @@ spec:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: MAP_STORAGE_API_TOKEN
             {{- if .Values.play.extraEnvVars }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.play.extraEnvVars "context" $) | nindent 12 }}
+            {{- toYaml .Values.play.extraEnvVars | nindent 12 }}
             {{- end }}
           ports:
             - name: http
@@ -93,11 +93,11 @@ spec:
             {{- toYaml .Values.play.resources | nindent 12 }}
           {{- with .Values.play.extraVolumeMounts }}
           volumeMounts:
-            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.play.extraVolumes }}
       volumes:
-        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.play.nodeSelector }}
       nodeSelector:

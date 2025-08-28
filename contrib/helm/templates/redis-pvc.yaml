@@ -1,0 +1,26 @@
+{{- if and .Values.redis.enabled .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  {{- if .Values.redis.persistence.bitnamiCompatible }}
+  name: data-{{ .Release.Name }}-redis-0
+  {{- else }}
+  name: {{ include "workadventure.fullname" . }}-redis-data
+  {{- end }}
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes:
+    - {{ .Values.redis.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+  {{- if .Values.redis.persistence.storageClass }}
+  {{- if (eq "-" .Values.redis.persistence.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: {{ .Values.redis.persistence.storageClass }}
+  {{- end }}
+  {{- end }}
+{{- end }}

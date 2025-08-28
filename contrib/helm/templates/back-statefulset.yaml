@@ -72,7 +72,7 @@ spec:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: SECRET_KEY
             {{- if .Values.back.extraEnvVars }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.back.extraEnvVars "context" $) | nindent 12 }}
+            {{- toYaml .Values.back.extraEnvVars | nindent 12 }}
             {{- end }}
           ports:
             - name: http
@@ -93,11 +93,11 @@ spec:
             {{- toYaml .Values.back.resources | nindent 12 }}
           {{- with .Values.back.extraVolumeMounts }}
           volumeMounts:
-            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.back.extraVolumes }}
       volumes:
-        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.back.nodeSelector }}
       nodeSelector:
