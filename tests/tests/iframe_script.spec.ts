@@ -93,7 +93,7 @@ test.describe("Iframe API @nowebkit", () => {
     });
 
     // Check if the screen sharing is enabled
-    await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Share' })).toBeVisible();
 
     await page.close();
     await page.context().close();
