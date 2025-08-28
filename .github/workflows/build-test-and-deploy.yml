@@ -311,8 +311,6 @@ jobs:
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
 
-      - name: Display .env file
-        run: grep -v "^\s*OPENID_PROMPT=" .env
 
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
