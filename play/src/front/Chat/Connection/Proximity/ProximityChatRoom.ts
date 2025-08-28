@@ -103,6 +103,8 @@ export class ProximityChatRoom implements ChatRoom {
 
     private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
+    private startListeningToStreamInBubbleStreamUnsubscriber: Subscription;
+    private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription;
 
     constructor(
         private _spaceUserId: string,
@@ -134,6 +136,27 @@ export class ProximityChatRoom implements ChatRoom {
                         console.error("Error while sending typing status", e);
                     });
                 }
+            });
+
+        this.startListeningToStreamInBubbleStreamUnsubscriber =
+            iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
+                if (!this.scriptingInputAudioStreamManager) {
+                    console.error("Trying to start listening to stream in bubble but no bubble has been joined yet");
+                    return;
+                }
+                this.scriptingInputAudioStreamManager.startListeningToAudioStream(message.sampleRate).catch((e) => {
+                    console.error("Error while starting listening to streams", e);
+                    Sentry.captureException(e);
+                });
+            });
+
+        this.stopListeningToStreamInBubbleStreamUnsubscriber =
+            iframeListener.stopListeningToStreamInBubbleStream.subscribe(() => {
+                if (!this.scriptingInputAudioStreamManager) {
+                    console.error("Trying to stop listening to stream in bubble but no bubble has been joined yet");
+                    return;
+                }
+                this.scriptingInputAudioStreamManager.stopListeningToAudioStream();
             });
     }
 
@@ -543,6 +566,8 @@ export class ProximityChatRoom implements ChatRoom {
 
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
+        this.startListeningToStreamInBubbleStreamUnsubscriber.unsubscribe();
+        this.stopListeningToStreamInBubbleStreamUnsubscriber.unsubscribe();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
