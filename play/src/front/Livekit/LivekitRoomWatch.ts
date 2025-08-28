@@ -60,7 +60,6 @@ export class LiveKitRoomWatch implements LiveKitRoom {
             await Promise.all(
                 Array.from(room.remoteParticipants.values()).map(async (participant) => {
                     const id = this.getParticipantId(participant);
-                    console.log("😱😱😱 Joining participant", id);
                     if (!participant.permissions?.canPublish) {
                         console.info("participant has no publish permission", id);
                         return;

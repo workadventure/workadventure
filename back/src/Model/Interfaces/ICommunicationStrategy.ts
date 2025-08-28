@@ -11,3 +11,8 @@ export interface ICommunicationStrategy {
     canSwitch(): boolean;
     cleanup(): void;
 }
+
+export interface IRecordableStrategy extends ICommunicationStrategy {
+    startRecording(user: SpaceUser, userUuid: string): Promise<void>;
+    stopRecording(): Promise<void>;
+}

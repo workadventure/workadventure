@@ -440,6 +440,8 @@ message QueryMessage {
     JoinSpaceQuery joinSpaceQuery = 14;
     LeaveSpaceQuery leaveSpaceQuery = 15;
     MapStorageJwtQuery mapStorageJwtQuery = 16;
+    GetRecordingsQuery getRecordingsQuery = 17;
+    DeleteRecordingQuery deleteRecordingQuery = 18;
   }
 }
 
@@ -511,6 +513,14 @@ message LeaveSpaceQuery{
   string spaceName = 1;
 }
 
+message GetRecordingsQuery {
+  optional string uuid = 2;
+}
+
+message DeleteRecordingQuery {
+  string recordingId = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -531,6 +541,8 @@ message AnswerMessage {
     JoinSpaceAnswer joinSpaceAnswer = 16;
     LeaveSpaceAnswer leaveSpaceAnswer = 17;
     MapStorageJwtAnswer mapStorageJwtAnswer = 18;
+    GetRecordingsAnswer getRecordingsAnswer = 19;
+    DeleteRecordingAnswer deleteRecordingAnswer = 20;
   }
 }
 
@@ -605,6 +617,19 @@ message JoinSpaceAnswer{
 message LeaveSpaceAnswer{
 }
 
+message SearchTagsAnswer{
+  repeated string tags = 1;
+}
+
+message GetRecordingsAnswer {
+  repeated Recording recordings = 1;
+}
+
+message DeleteRecordingAnswer {
+  bool success = 1;
+  optional string errorMessage = 2;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -626,8 +651,27 @@ message ChatMember {
   repeated string tags = 5;
 }
 
-message SearchTagsAnswer{
-  repeated string tags = 1;
+message Recording {
+  string timestamp = 1;
+  string baseFilename = 2;
+  VideoFile videoFile = 3;
+  repeated Thumbnail thumbnails = 4;
+}
+
+message VideoFile {
+  string key = 1;
+  string url = 2;
+  string filename = 3;
+  optional uint64 size = 4;
+}
+
+message Thumbnail {
+  string key = 1;
+  string url = 2;
+  string filename = 3;
+  optional uint64 size = 4;
+  optional int32 sequenceNumber = 5;
+  optional int32 timestampSeconds = 6;
 }
 
 /*********** PUSHER TO BACK QUERYMESSAGES *************/
@@ -675,6 +719,7 @@ message RemoveSpaceUserAnswer {
   string spaceName = 1;
   string spaceUserId = 2;
 }
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -927,6 +972,8 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+    StartRecordingMessage startRecordingMessage = 5;
+    StopRecordingMessage stopRecordingMessage = 6;
   }
 }
 
@@ -950,6 +997,9 @@ message PrivateSpaceEvent {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    StartRecordingResultMessage startRecordingResultMessage = 19;
+    StartRecordingMessage startRecordingMessage = 20;
+    StopRecordingResultMessage stopRecordingResultMessage = 21;
   }
 }
 
@@ -1501,6 +1551,25 @@ message UpdateSpaceMetadataMessage{
 message SyncSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+}
+
+/**
+ * Message sent by the user to start recording a space
+ */
+message StartRecordingMessage{
+  optional string userUuid = 1;
+}
+message StopRecordingMessage{
+}
+
+message StartRecordingResultMessage{
+  bool success = 1;
+  optional string errorMessage = 2; // if success is false, this field contains the error message
+}
+
+message StopRecordingResultMessage{
+  bool success = 1;
+  optional string errorMessage = 2; // if success is false, this field contains the error message
 }
 
 /**

@@ -1,4 +1,11 @@
-import { FilterType, PusherToBackSpaceMessage, SpaceUser, SubMessage } from "@workadventure/messages";
+import {
+    FilterType,
+    PusherToBackSpaceMessage,
+    SpaceUser,
+    SubMessage,
+    PublicEventFrontToPusher,
+    PrivateEventFrontToPusher,
+} from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import Debug from "debug";
 import { Color } from "@workadventure/shared-utils";
@@ -6,6 +13,8 @@ import { Color } from "@workadventure/shared-utils";
 import { Socket } from "../services/SocketManager";
 import { clientEventsEmitter } from "../services/ClientEventsEmitter";
 import { PartialSpaceUser, Space, SpaceUserExtended } from "./Space";
+import { EventProcessor } from "./EventProcessor";
+import { SocketData } from "./Websocket/SocketData";
 
 const debug = Debug("space-to-back-forwarder");
 
@@ -19,10 +28,16 @@ export interface SpaceToBackForwarderInterface {
     addUserToNotify(user: SpaceUser): void;
     deleteUserFromNotify(user: SpaceUser): void;
     leaveSpace(): void;
+    sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void;
+    sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void;
 }
 
 export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
-    constructor(private readonly _space: Space, private readonly _clientEventsEmitter = clientEventsEmitter) {}
+    constructor(
+        private readonly _space: Space,
+        private readonly eventProcessor: EventProcessor,
+        private readonly _clientEventsEmitter = clientEventsEmitter
+    ) {}
     async registerUser(client: Socket, filterType: FilterType): Promise<void> {
         const socketData = client.getUserData();
         const spaceUserId = socketData.spaceUserId;
@@ -238,5 +253,75 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             ...user,
             lowercaseName: user.name.toLowerCase(),
         };
+    }
+
+    sendPublicEvent(event: PublicEventFrontToPusher, senderSocket: SocketData): void {
+        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
+
+        if (!senderSpaceUser) {
+            console.trace(
+                "🚨🚨🚨 Sender not found in space, ignoring event",
+                senderSocket.spaceUserId,
+                this._space.name
+            );
+            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
+        }
+
+        if (!event.spaceEvent?.event) {
+            console.trace("🚨🚨🚨 Event is required in spaceEvent, ignoring event", event);
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const processedEvent = this.eventProcessor.processPublicEvent(
+            event.spaceEvent.event,
+            senderSpaceUser,
+            senderSocket
+        );
+
+        this.forwardMessageToSpaceBack({
+            $case: "publicEvent",
+            publicEvent: {
+                senderUserId: senderSocket.spaceUserId,
+                spaceEvent: {
+                    event: processedEvent,
+                },
+                spaceName: this._space.name,
+            },
+        });
+    }
+
+    sendPrivateEvent(event: PrivateEventFrontToPusher, senderSocket: SocketData): void {
+        const senderSpaceUser = this._space.users.get(senderSocket.spaceUserId || "");
+        const receiverSpaceUser = this._space.users.get(event.receiverUserId);
+
+        if (!senderSpaceUser) {
+            throw new Error(`Sender ${senderSocket.spaceUserId} not found in space ${this._space.name}`);
+        }
+
+        if (!receiverSpaceUser) {
+            throw new Error(`Receiver ${event.receiverUserId} not found in space ${this._space.name}`);
+        }
+
+        if (!event.spaceEvent?.event) {
+            throw new Error("Event is required in spaceEvent");
+        }
+
+        const processedEvent = this.eventProcessor.processPrivateEvent(
+            event.spaceEvent.event,
+            senderSpaceUser,
+            receiverSpaceUser
+        );
+
+        this.forwardMessageToSpaceBack({
+            $case: "privateEvent",
+            privateEvent: {
+                senderUserId: senderSocket.spaceUserId,
+                receiverUserId: event.receiverUserId,
+                spaceEvent: {
+                    event: processedEvent,
+                },
+                spaceName: this._space.name,
+            },
+        });
     }
 }

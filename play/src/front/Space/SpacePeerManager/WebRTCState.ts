@@ -21,6 +21,7 @@ export const defaultPeerFactory: PeerFactoryInterface = {
 };
 
 export class WebRTCState implements ICommunicationState {
+    public readonly shouldDisplayRecordButton = true;
     private _peer: SimplePeerConnectionInterface;
     private _nextState: LivekitState | null = null;
     private _rxJsUnsubscribers: Subscription[] = [];
