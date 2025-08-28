@@ -36,7 +36,6 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
     const sampleRate = 24000;
 
     return new Promise<void>((resolve) => {
-      console.log("Starting listening to audio stream");
       const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
         console.log("Max volume in sample:", Math.max(...data.map(Math.abs)));
@@ -48,6 +47,17 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
       });
     });
   }, { volume });
+}
+
+async function waitForJoinProximityChat(page: Page): Promise<void> {
+  await evaluateScript(page, async () => {
+    return new Promise<void>((resolve) => {
+      const joinSubscription = WA.player.proximityMeeting.onJoin().subscribe(() => {
+        resolve();
+        joinSubscription.unsubscribe();
+      });
+    });
+  });
 }
 
 test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
@@ -90,7 +100,9 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await Map.teleportToPosition(alice3, 32, 32);
     const eve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(eve);
+    const proximityChatPromise = waitForJoinProximityChat(eve);
     await Map.teleportToPosition(eve, 32, 32);
+    await proximityChatPromise;
 
     // eve entered last. She should receive sound only through Livekit.
     // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
