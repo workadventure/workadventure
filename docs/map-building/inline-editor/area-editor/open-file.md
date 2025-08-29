@@ -13,6 +13,8 @@ From the map editor, you can upload the documents to be displayed.
 The uploaded documents format can be PDF files, or images.
 :::
 
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/AZsWa3YTcuQ" title="Building your map - Special zones" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+
 ## Configuring a open document area
 
 While editing an area, click the "file" icon.
