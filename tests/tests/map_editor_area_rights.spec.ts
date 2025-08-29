@@ -185,9 +185,14 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       page
     );
     await oidcLogout(page);
+    await page.context().close();
 
     // Second browser with member user trying to read the object
     await using page2 = await getPage(browser, 'Member1', Map.url("empty"))
+
+
+    //wait for cameras to be removed
+    await page2.getByTestId('cameras-container').waitFor({ state: 'detached' });
 
     // Expect user in other page to not have the right
     // to read the object
@@ -196,11 +201,13 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
       AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
+
+
     await expect(page2.getByRole('button', { name: 'Open Link' })).toBeVisible();
 
+    await page2.close();
     await page2.context().close();
 
-    await page.context().close();
   });
 
   test("Area with restricted write access : Trying to just add an object", async ({ browser, request }) => {
@@ -260,6 +267,7 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
     // Select entity and push it into the map
     // Expect to not have the entity property editor
     // by clicking on the entity position
+    await page2.getByTestId('cameras-container').waitFor({ state: 'detached' });
     await Menu.openMapEditor(page2);
     await MapEditor.openEntityEditor(page2);
     await EntityEditor.selectEntity(page2, 0, "small table");
@@ -296,6 +304,8 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
       page
     );
     await oidcLogout(page);
+    await page.close();
+    await page.context().close();
 
     // Second browser with member user trying to read the object
     await using page2 = await getPage(browser, 'Member1', Map.url("empty"));

@@ -2,7 +2,7 @@ import {
     UpdateSpaceMetadataMessage,
     SpaceUser,
     PublicEvent,
-    PrivateEvent,
+    PrivateEventPusherToFront,
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
@@ -35,7 +35,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
-    public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public emitRequestFullSync = vi.fn();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent(
@@ -72,16 +72,41 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
 
     // Add any other methods or properties that need to be mocked
 }
-
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
+vi.mock("../../Phaser/Game/GameManager", () => {
     return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
+        gameManager: {
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
+            }),
         },
     };
 });
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
+    CharacterLayerManager: {
+        wokaBase64: vi.fn().mockReturnValue("data:image/png;base64,mockBase64String"),
+        prototype: {
+            getTexturesKeysForDefaultLayers: vi.fn().mockReturnValue([]),
+            getTexturesKeys: vi.fn().mockReturnValue([]),
+            loadTextures: vi.fn().mockResolvedValue(undefined),
+            getCharacterLayers: vi.fn().mockReturnValue([]),
+            setLayers: vi.fn(),
+            addLayers: vi.fn(),
+            removeLayers: vi.fn(),
+        },
+    },
+}));
 
 vi.mock("../../Connection/ConnectionManager", () => {
     return {
@@ -90,6 +115,83 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
+
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
+    CharacterLayerManager: {
+        wokaBase64: vi.fn().mockReturnValue("data:image/png;base64,mockBase64String"),
+        prototype: {
+            getTexturesKeysForDefaultLayers: vi.fn().mockReturnValue([]),
+            getTexturesKeys: vi.fn().mockReturnValue([]),
+            loadTextures: vi.fn().mockResolvedValue(undefined),
+            getCharacterLayers: vi.fn().mockReturnValue([]),
+            setLayers: vi.fn(),
+            addLayers: vi.fn(),
+            removeLayers: vi.fn(),
+        },
+    },
+}));
+
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+// } as unknown as PeerStoreInterface;
+
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
+});
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
+
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
@@ -99,7 +201,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
@@ -124,7 +226,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -174,7 +276,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -219,7 +321,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -285,7 +387,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const subscriber = vi.fn();
 
@@ -325,7 +427,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const subscriber = vi.fn();
 
@@ -333,7 +435,10 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: "foo_1",
+            sender: SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+            }),
             receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
@@ -350,7 +455,26 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: "foo_1",
+            sender: {
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+                name: "",
+                playUri: "",
+                roomName: undefined,
+                availabilityStatus: 0,
+                isLogged: false,
+                characterTextures: [],
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                showVoiceIndicator: false,
+                color: "",
+                visitCardUrl: undefined,
+                chatID: undefined,
+                tags: [],
+                jitsiParticipantId: undefined,
+            },
             $case: "muteVideo",
             muteVideo: {
                 force: true,

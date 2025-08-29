@@ -38,7 +38,6 @@
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
-    //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;

@@ -736,8 +736,8 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            const broadcastSpace = await this.scene.broadcastService.joinSpace(speakerZone.value, false);
-            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+            const space = await this.scene.broadcastService.joinSpace(speakerZone.value);
+            currentLiveStreamingSpaceStore.set(space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
             }*/
@@ -777,8 +777,8 @@ export class GameMapPropertiesListener {
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                const broadcastSpace = await this.scene.broadcastService.joinSpace(speakerZoneName, false);
-                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+                const space = await this.scene.broadcastService.joinSpace(speakerZoneName);
+                currentLiveStreamingSpaceStore.set(space);
             }
         }
     }

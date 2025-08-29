@@ -222,9 +222,11 @@ export class RemotePlayersRepository {
         if (player) {
             return Promise.resolve(player);
         }
-        const deferred = new Deferred<RemotePlayerData>();
-        this.getPlayerDeferred.set(userId, deferred);
-        //return deferred.promise;
+        let deferred: Deferred<RemotePlayerData> | undefined = this.getPlayerDeferred.get(userId);
+        if (!deferred) {
+            deferred = new Deferred<RemotePlayerData>();
+            this.getPlayerDeferred.set(userId, deferred);
+        }
 
         // We wait for 5 seconds for the player to be added
         return Promise.race([

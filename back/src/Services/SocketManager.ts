@@ -29,7 +29,6 @@ import {
     RoomsList,
     SendEventQuery,
     SendUserMessage,
-    ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     TurnCredentialsAnswer,
@@ -39,9 +38,6 @@ import {
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage,
-    WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
@@ -51,6 +47,8 @@ import {
     FilterType,
     SyncSpaceUsersMessage,
     SpaceQueryMessage,
+    AddSpaceUserToNotifyMessage,
+    DeleteSpaceUserToNotifyMessage,
     RequestFullSyncMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
@@ -73,6 +71,7 @@ import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
@@ -295,71 +294,6 @@ export class SocketManager {
         await room.setVariable(variable, newValue, "RoomApi");
     }
 
-    emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WebRTC signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcSignalToClientMessage",
-            webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
-    }
-
-    emitScreenSharing(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcScreenSharingSignalToClientMessage",
-            webRtcScreenSharingSignalToClientMessage:
-                WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
-    }
-
     leaveRoom(room: GameRoom, user: User) {
         // leave previous room and world
         try {
@@ -379,11 +313,9 @@ export class SocketManager {
                 roomId,
                 (user: User, group: Group) => {
                     this.joinWebRtcRoom(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 (user: User, group: Group) => {
                     this.disConnectedUser(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
@@ -400,7 +332,10 @@ export class SocketManager {
                     void this.onLockGroup(groupId, listener, roomPromise);
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
-                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
+                (group: Group, listener: ZoneSocket) => {
+                    this.onUserEntersOrLeavesBubble(group, listener);
+                }
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -524,6 +459,21 @@ export class SocketManager {
         }
     }
 
+    private onUserEntersOrLeavesBubble(group: Group, client: ZoneSocket) {
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "groupUsersUpdateMessage",
+                    groupUsersUpdateMessage: {
+                        groupId: group.getId(),
+                        userIds: group.getUsers().map((user) => user.id),
+                    },
+                },
+            },
+            client
+        );
+    }
+
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         emitZoneMessage(
             {
@@ -578,6 +528,7 @@ export class SocketManager {
                         groupSize: group.getSize,
                         fromZone: SocketManager.toProtoZone(fromZone),
                         locked: group.isLocked(),
+                        userIds: group.getUsers().map((user) => user.id),
                     },
                 },
             },
@@ -625,69 +576,15 @@ export class SocketManager {
         return undefined;
     }
 
-    private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const clientMessage: ServerToClientMessage["message"] = {
-            $case: "groupUsersUpdateMessage",
-            groupUsersUpdateMessage: {
-                groupId: group.getId(),
-                userIds: group.getUsers().map((user) => user.id),
-            },
-        };
-
-        group.getUsers().forEach((currentUser: User) => {
-            currentUser.write(clientMessage);
-        });
-    }
-
     private joinWebRtcRoom(user: User, group: Group) {
         user.write({
             $case: "joinSpaceRequestMessage",
             joinSpaceRequestMessage: {
                 // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
                 spaceName: group.spaceName,
+                propertiesToSync: ["cameraState", "microphoneState", "screenSharingState"],
             },
         });
-
-        // TODO: remove code below when WebRTC is managed in spaces
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
-                userId: otherUser.id,
-                initiator: true,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    otherUser.id.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                webrtcStartMessage1.webRtcUserName = username;
-                webrtcStartMessage1.webRtcPassword = password;
-            }
-
-            user.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
-            });
-
-            const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
-                userId: user.id,
-                initiator: false,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webRtcUserName = username;
-                webrtcStartMessage2.webRtcPassword = password;
-            }
-
-            otherUser.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
-            });
-        }
     }
 
     /**
@@ -717,35 +614,6 @@ export class SocketManager {
                 spaceName: group.spaceName,
             },
         });
-
-        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
-        // which will be shut for the other player).
-        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
-        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
-        // So we also send the disconnect event to the other player.
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            //if (!otherUser.socket.disconnecting) {
-            otherUser.write({
-                $case: "webRtcDisconnectMessage",
-                webRtcDisconnectMessage: {
-                    userId: user.id,
-                },
-            });
-            //}
-
-            //if (!user.socket.disconnecting) {
-            user.write({
-                $case: "webRtcDisconnectMessage",
-                webRtcDisconnectMessage: {
-                    userId: otherUser.id,
-                },
-            });
-            //}
-        }
     }
 
     public getWorlds(): Map<string, PromiseLike<GameRoom>> {
@@ -1406,7 +1274,12 @@ export class SocketManager {
             if (joinSpaceMessage.filterType === FilterType.UNRECOGNIZED) {
                 throw new Error("Unrecognized filter type when joining space");
             }
-            space = new Space(joinSpaceMessage.spaceName, joinSpaceMessage.filterType);
+            space = new Space(
+                joinSpaceMessage.spaceName,
+                joinSpaceMessage.filterType,
+                eventProcessor,
+                joinSpaceMessage.propertiesToSync
+            );
             this.spaces.set(joinSpaceMessage.spaceName, space);
             clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
         }
@@ -1692,6 +1565,33 @@ export class SocketManager {
             Sentry.captureException("Error while handling space query");
             return;
         }
+    }
+
+    handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
+        const space = this.spaces.get(addSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${addSpaceUserToNotifyMessage.spaceName} to add user to notify`);
+        }
+        if (!addSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to add to notify is undefined in AddSpaceUserToNotifyMessage`);
+        }
+        space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
+    }
+
+    handleDeleteSpaceUserToNotifyMessage(
+        pusher: SpacesWatcher,
+        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage
+    ) {
+        const space = this.spaces.get(deleteSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(
+                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`
+            );
+        }
+        if (!deleteSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);
+        }
+        space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
     }
 
     handleRequestFullSyncMessage(pusher: SpacesWatcher, { spaceName, users, senderUserId }: RequestFullSyncMessage) {

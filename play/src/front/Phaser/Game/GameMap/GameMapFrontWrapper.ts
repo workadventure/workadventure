@@ -1059,6 +1059,7 @@ export class GameMapFrontWrapper {
                     }
                     break;
                 }
+                // TODO: consider whether to also add the properties of livekitRoomProperty
                 case "jitsiRoomProperty": {
                     properties.push({
                         name: GameMapProperties.JITSI_ROOM,

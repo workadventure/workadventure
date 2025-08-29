@@ -4,28 +4,74 @@ import { Space } from "../Space";
 import { SpaceNameIsEmptyError } from "../Errors/SpaceError";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
-    return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
-        },
-    };
-});
+// Mock the entire GameManager module
+vi.mock("../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: vi.fn(() => ({
+            getRemotePlayersRepository: () => ({
+                getPlayer: vi.fn(),
+            }),
+            roomUrl: "test-room",
+        })),
+    },
+}));
 
-vi.mock("../../Phaser/Game/GameManager", () => {
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
     return {
-        gameManager: {
-            getCurrentGameScene: () => ({}),
-        },
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
     };
 });
 
 const defaultRoomConnectionMock = {
     emitJoinSpace: vi.fn(),
+    emitLeaveSpace: vi.fn(),
     emitAddSpaceFilter: vi.fn(),
 } as unknown as RoomConnection;
+
+const defaultPropertiesToSync = ["x", "y", "z"];
 
 describe("Space test", () => {
     beforeAll(() => {
@@ -48,14 +94,20 @@ describe("Space test", () => {
         const metadata = new Map<string, unknown>();
 
         await expect(
-            Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata)
+            Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, defaultPropertiesToSync, metadata)
         ).rejects.toThrow(SpaceNameIsEmptyError);
     });
     it("should not return a error when pass a string as spaceName", async () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
+        const space = await Space.create(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            metadata
+        );
         expect(space.getName()).toBe(spaceName);
     });
     it("should emit joinSpace event when you create the space", async () => {
@@ -65,11 +117,21 @@ describe("Space test", () => {
             emitJoinSpace: vi.fn(),
         };
 
-        await Space.create(spaceName, FilterType.ALL_USERS, mockRoomConnection as unknown as RoomConnection, metadata);
+        await Space.create(
+            spaceName,
+            FilterType.ALL_USERS,
+            mockRoomConnection as unknown as RoomConnection,
+            defaultPropertiesToSync,
+            metadata
+        );
 
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
-        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(spaceName, FilterType.ALL_USERS);
+        expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultPropertiesToSync
+        );
     });
 
     it("should emit leaveSpace event when you call destroy", async () => {
@@ -85,6 +147,7 @@ describe("Space test", () => {
             spaceName,
             FilterType.ALL_USERS,
             mockRoomConnection as unknown as RoomConnection,
+            defaultPropertiesToSync,
             metadata
         );
 
@@ -98,7 +161,13 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>();
 
-        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
+        const space = await Space.create(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            metadata
+        );
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-1", 0],
@@ -116,7 +185,13 @@ describe("Space test", () => {
         const spaceName = "space-name";
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
+        const space = await Space.create(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            metadata
+        );
 
         const newMetadata = new Map<string, unknown>([["metadata-1", 0]]);
 
@@ -128,10 +203,15 @@ describe("Space test", () => {
     });
     it("should not delete metadata who is in space data but not in newMetadata map ", async () => {
         const spaceName = "space-name";
-
         const metadata = new Map<string, unknown>([["metadata-1", 4]]);
 
-        const space = await Space.create(spaceName, FilterType.ALL_USERS, defaultRoomConnectionMock, metadata);
+        const space = await Space.create(
+            spaceName,
+            FilterType.ALL_USERS,
+            defaultRoomConnectionMock,
+            defaultPropertiesToSync,
+            metadata
+        );
 
         const newMetadata = new Map<string, unknown>([
             ["metadata-2", 0],
