@@ -204,7 +204,7 @@
 >
     <div
         bind:clientWidth={containerWidth}
-        class="pointer-events-none gap-4"
+        class="pointer-events-auto gap-4 pb-2"
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -223,7 +223,7 @@
         class:pb-3={isOnOneLine}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
-        class:w-full={true}
+        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
         class:items-start={!isOnOneLine}
         class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
