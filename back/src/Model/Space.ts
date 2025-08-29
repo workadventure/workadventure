@@ -119,6 +119,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 debug(
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
+
+                this.communicationManager.handleUserDeleted(user);
+
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -128,8 +131,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         }),
                     },
                 });
-
-                this.communicationManager.handleUserDeleted(user);
             } else if (oldFilter !== false && newFilter !== false) {
                 debug(
                     `${this.name} : user updated => updated ${user.spaceUserId} updateMask : ${updateMask.join(
@@ -190,6 +191,8 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             debug("Error while removing user", e);
         } finally {
             if (user && this.filterOneUser(user)) {
+                this.communicationManager.handleUserDeleted(user);
+
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -199,7 +202,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         }),
                     },
                 });
-                this.communicationManager.handleUserDeleted(user);
             }
         }
     }
