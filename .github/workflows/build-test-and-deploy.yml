@@ -306,9 +306,12 @@ jobs:
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
-          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
+          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+
+
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         uses: actions/download-artifact@v4
@@ -587,6 +590,7 @@ jobs:
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

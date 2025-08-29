@@ -76,26 +76,20 @@ test.describe('Room API @nomobile @nofirefox @nowebkit', () => {
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
-        // Async listening: we wait until we receive the new value
-        const listenPromise = (async () => {
-            for await (const value of listenVariable) {
-                if (Value.unwrap(value) === newValue) {
-                    //eslint-disable-next-line playwright/no-conditional-expect
-                    await expect(textField).toHaveValue(newValue);
-                    break;
-                }
-            }
-        })();
+        setTimeout(() => {
+            // eslint-disable-next-line playwright/no-conditional-expect
+            expect(client.saveVariable({
+                name: variableName,
+                room: roomUrl,
+                value: newValue,
+            })).resolves.not.toThrow().catch((e) => { test.fail(); throw e; });
+        }, 5000);
 
-        // Listening is started, now we save the new value
-        await expect(client.saveVariable({
-            name: variableName,
-            room: roomUrl,
-            value: newValue,
-        })).resolves.not.toThrow();
-
-        // Wait until we received the new value
-        await listenPromise;
+        for await (const value of listenVariable) {
+            expect(Value.unwrap(value)).toEqual(newValue);
+            await expect(textField).toHaveValue(newValue);
+            break;
+        }
 
         await page.context().close();
     });
