@@ -202,67 +202,69 @@
     bind:clientHeight={maxContainerHeight}
     class:h-full={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
 >
-    <div
-        bind:clientWidth={containerWidth}
-        class="pointer-events-auto gap-4 pb-2"
-        class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
-        class:flex={true}
-        class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
-        class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
-        class:flex-col={isOnOneLine && oneLineMode === "vertical"}
-        class:flex-wrap={!isOnOneLine}
-        class:content-start={!isOnOneLine}
-        class:justify-start={isOnOneLine}
-        class:justify-center={!isOnOneLine}
-        class:whitespace-nowrap={isOnOneLine}
-        class:relative={true}
-        class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
-        class:overflow-x-hidden={!isOnOneLine}
-        class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
-        class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
-        class:pb-3={isOnOneLine}
-        class:m-0={isOnOneLine}
-        class:my-0={isOnOneLine}
-        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
-        class:items-start={!isOnOneLine}
-        class:not-highlighted={!isOnOneLine}
-        class:mt-0={!isOnOneLine}
-        class:h-full={isOnOneLine && oneLineMode === "vertical"}
-        id="cameras-container"
-    >
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
-                {#key uniqueId}
+    <div class="flex w-full flex-row justify-center">
+        <div
+            bind:clientWidth={containerWidth}
+            class="pointer-events-auto gap-4 pb-2"
+            class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
+            class:flex={true}
+            class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
+            class:max-w-full={!isOnOneLine || (isOnOneLine && oneLineMode === "horizontal")}
+            class:flex-col={isOnOneLine && oneLineMode === "vertical"}
+            class:flex-wrap={!isOnOneLine}
+            class:content-start={!isOnOneLine}
+            class:justify-start={isOnOneLine}
+            class:justify-center={!isOnOneLine}
+            class:whitespace-nowrap={isOnOneLine}
+            class:relative={true}
+            class:overflow-x-auto={isOnOneLine && oneLineMode === "horizontal"}
+            class:overflow-x-hidden={!isOnOneLine}
+            class:overflow-y-auto={!isOnOneLine || (isOnOneLine && oneLineMode === "vertical")}
+            class:overflow-y-hidden={isOnOneLine && oneLineMode === "horizontal"}
+            class:pb-3={isOnOneLine}
+            class:m-0={isOnOneLine}
+            class:my-0={isOnOneLine}
+            class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
+            class:items-start={!isOnOneLine}
+            class:not-highlighted={!isOnOneLine}
+            class:mt-0={!isOnOneLine}
+            class:h-full={isOnOneLine && oneLineMode === "vertical"}
+            id="cameras-container"
+        >
+            {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+                {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
+                    {#key uniqueId}
+                        <div
+                            style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
+                                videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
+                            }`}
+                            class={isOnOneLine
+                                ? oneLineMode === "horizontal"
+                                    ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
+                                    : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
+                                : "pointer-events-auto shrink-0 camera-box"}
+                            class:aspect-video={videoHeight === undefined}
+                        >
+                            <MediaBox streamable={peer} />
+                        </div>
+                    {/key}
+                {/if}
+            {/each}
+            <!-- in PictureInPicture, let's finish with our video feedback in small -->
+            {#if isOnOneLine && oneLineMode === "vertical"}
+                <div class="fixed bottom-20 right-0 z-50">
                     <div
-                        style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
-                            videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
+                        style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
+                            videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
                         }`}
-                        class={isOnOneLine
-                            ? oneLineMode === "horizontal"
-                                ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
-                                : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-                            : "pointer-events-auto shrink-0 camera-box"}
+                        class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
                         class:aspect-video={videoHeight === undefined}
                     >
-                        <MediaBox streamable={peer} />
+                        <MediaBox streamable={$myCameraPeerStore} />
                     </div>
-                {/key}
-            {/if}
-        {/each}
-        <!-- in PictureInPicture, let's finish with our video feedback in small -->
-        {#if isOnOneLine && oneLineMode === "vertical"}
-            <div class="fixed bottom-20 right-0 z-50">
-                <div
-                    style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
-                        videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
-                    }`}
-                    class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
-                    class:aspect-video={videoHeight === undefined}
-                >
-                    <MediaBox streamable={$myCameraPeerStore} />
                 </div>
-            </div>
-        {/if}
+            {/if}
+        </div>
     </div>
     {#if !isOnOneLine}
         <ResizeHandle
