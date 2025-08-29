@@ -90,13 +90,13 @@
                 class:overflow-y-auto={inPictureInPicture}
                 bind:this={camContainer}
             >
-                {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer
-                        {oneLineMaxHeight}
-                        isOnOneLine={$isOnOneLine}
-                        oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
-                    />
-                {/if}
+                <!--{#if $streamableCollectionStore.size > 0}-->
+                <CamerasContainer
+                    {oneLineMaxHeight}
+                    isOnOneLine={$isOnOneLine}
+                    oneLineMode={inPictureInPicture ? "vertical" : "horizontal"}
+                />
+                <!--{/if}-->
             </div>
         {/if}
 
