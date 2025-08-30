@@ -8,7 +8,7 @@ sidebar_position: 25
 
 On your map, you can define entities that open a document when a user presses space after coming to the entity.
 
-There are 2 ways to do this:
+There are two ways to do this:
 
 - From the map editor, you can upload the documents to be displayed.
 - or simply drag'n'drop a PDF/image file on the map directly
@@ -34,6 +34,6 @@ While editing an entity, click the "file" icon.
 
 1. You can define the way the action is triggered.
 2. You can drag and drop or select the PDF/image that will be opened when the player enters the entity.
-3. Those settings are related to the way the action is triggered. You can choose to open the pdf in a new tab, or in a cowebsite, the size of the cowebsite, if it can be closed, etc ...
+3. Those settings are related to the way the action is triggered. You can choose to open the PDF in a new tab, or in a co‑website (an embedded website panel inside WorkAdventure). You can configure its size, whether it can be closed, etc.
 
 ![open_pdf](../../images/editor/open_pdf.png)
