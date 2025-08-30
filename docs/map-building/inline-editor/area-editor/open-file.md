@@ -15,7 +15,7 @@ The uploaded documents format can be PDF files, or images.
 
 <iframe width="100%" height="480" src="https://www.youtube.com/embed/AZsWa3YTcuQ" title="Building your map - Special zones" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
-## Configuring a open document area
+## Configuring an open document area
 
 While editing an area, click the "file" icon.
 
@@ -23,7 +23,7 @@ While editing an area, click the "file" icon.
 
 1. You can define the way the action is triggered.
 2. You can drag and drop or select the PDF/image that will be opened when the player enters the area.
-3. Those settings are related to the way the action is triggered. You can choose to open the pdf in a new tab, or in a cowebsite, the size of the cowebsite, if it can be closed, etc ...
+3. Those settings are related to the way the action is triggered. You can choose to open the PDF in a new tab, or in a co‑website (an embedded website panel inside WorkAdventure). You can configure its size, whether it can be closed, etc.
 
 ![open_pdf](../../images/editor/open_pdf.png)
 
