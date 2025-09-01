@@ -175,8 +175,10 @@
         }
     }
 
-    onMount(async () => {
-        await loadWokaData();
+    onMount(() => {
+        loadWokaData().catch((err) => {
+            console.error("Error in onMount while loading Woka data:", err);
+        });
         document.addEventListener("keydown", useKeyBoardNavigation);
         document.addEventListener("keyup", useKeyBoardNavigationUp);
     });
