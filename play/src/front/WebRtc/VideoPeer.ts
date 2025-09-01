@@ -9,7 +9,6 @@ import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
@@ -61,6 +60,9 @@ export class VideoPeer extends Peer implements Streamable {
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
+        if (this.toClose || this.closing) {
+            return;
+        }
         this.sendWebrtcSignal(data);
 
         const ZodCandidate = z.object({
@@ -204,8 +206,6 @@ export class VideoPeer extends Peer implements Streamable {
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
-        // TODO: remove player, pass the information through spaceUser instead ??
-        public readonly player: RemotePlayerData,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended
     ) {
@@ -231,7 +231,7 @@ export class VideoPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = player.userId;
+        this.userId = spaceUser.userId;
         this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + this.userId;
 
@@ -370,7 +370,6 @@ export class VideoPeer extends Peer implements Streamable {
                 {
                     $case: "webRtcSignalToServerMessage",
                     webRtcSignalToServerMessage: {
-                        //receiverId: this.userId,
                         signal: JSON.stringify(data),
                     },
                 },
@@ -410,6 +409,10 @@ export class VideoPeer extends Peer implements Streamable {
             this.off("connect", this.connectHandler);
             this.off("data", this.dataHandler);
             this.off("finish", this.finishHandler);
+
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
+            }
 
             this._connected = false;
             if (!this.toClose || this.closing) {
@@ -528,7 +531,7 @@ export class VideoPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.player.name);
+        return writable(this.spaceUser.name);
     }
 
     get showVoiceIndicator(): Readable<boolean> {

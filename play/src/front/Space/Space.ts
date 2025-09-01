@@ -379,6 +379,7 @@ export class Space implements SpaceInterface {
 
         return extendSpaceUser;
     }
+
     removeUser(spaceUserId: string): void {
         const user = this._users.get(spaceUserId);
         if (user) {
@@ -452,9 +453,6 @@ export class Space implements SpaceInterface {
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
-            },
-            getPlayer: () => {
-                return this._remotePlayersRepository.getPlayer(this.extractUserIdFromSpaceId(user.spaceUserId));
             },
             space: this,
         } as unknown as SpaceUserExtended;

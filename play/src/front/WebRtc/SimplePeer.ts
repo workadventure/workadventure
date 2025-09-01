@@ -6,8 +6,6 @@ import type { WebRtcSignalReceivedMessageInterface } from "../Connection/Connexi
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { nbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
-import { RemotePlayersRepository } from "../Phaser/Game/RemotePlayersRepository";
 import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
@@ -45,14 +43,11 @@ export class SimplePeer {
 
     constructor(
         private _space: SpaceInterface,
-        private _remotePlayersRepository: RemotePlayersRepository,
         private _streamableSubjects: StreamableSubjects,
         private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
         private _playersStore = playersStore,
         private _analyticsClient = analyticsClient,
-        private _nbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore,
         private _notificationManager = notificationManager,
-        private _LL = LL,
         private _customWebRTCLogger = customWebRTCLogger,
         private _blackListManager = blackListManager
     ) {
@@ -215,15 +210,7 @@ export class SimplePeer {
         user: UserSimplePeerInterface,
         spaceUser: SpaceUserExtended
     ): Promise<VideoPeer | null> {
-        //TOOD : pas forcement la bonne maniere de faire on peut creer une connection avec un user qui n'est pas dans le space dans le cas d'un watcher qui ne stream pas / trouver une autre solution ==> pusher qui renvoie directement le spaceUSer ?
-
-        const player = await spaceUser.getPlayer();
-        if (!player) {
-            console.error("While creating peer connection, cannot find player with ID " + user.userId);
-            return null;
-        }
-
-        const uuid = player.userUuid;
+        const uuid = spaceUser.uuid;
         if (this._blackListManager.isBlackListed(uuid)) return null;
 
         const peerConnection = this._space.allVideoStreamStore.get(user.userId);
@@ -240,7 +227,7 @@ export class SimplePeer {
             }
         }
 
-        const name = player.name;
+        const name = spaceUser.name;
 
         this._lastWebrtcUserName = user.webRtcUser;
         this._lastWebrtcPassword = user.webRtcPassword;
@@ -251,7 +238,7 @@ export class SimplePeer {
             return null;
         }
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, player, this._space, spaceUser);
+        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this._space, spaceUser);
 
         peer.toClose = false;
 
@@ -323,16 +310,10 @@ export class SimplePeer {
             );
             return null;
         }
-        const player = await spaceUser.getPlayer();
-        if (!player) {
-            console.error("While creating peer connection, cannot find player with ID " + user.userId);
-            return null;
-        }
 
         const peer = new ScreenSharingPeer(
             user,
             user.initiator ? user.initiator : false,
-            player,
             stream,
             this._space,
             spaceUser,
@@ -538,14 +519,7 @@ export class SimplePeer {
             return;
         }
 
-        const player = await spaceUser.getPlayer();
-
-        if (!player) {
-            console.error("While receiving webrtc screen sharing signal, cannot find player with ID " + data.userId);
-            return;
-        }
-
-        const uuid = player.userUuid;
+        const uuid = spaceUser.uuid;
 
         if (this._blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(this._screenSharingLocalStreamStore);

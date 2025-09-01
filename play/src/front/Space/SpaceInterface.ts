@@ -10,7 +10,6 @@ import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
@@ -120,6 +119,5 @@ export type SpaceUserExtended = SpaceUser & {
     reactiveUser: ReactiveSpaceUser;
     getPeerStore: () => Readable<VideoPeer> | undefined;
     getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
-    getPlayer: () => Promise<RemotePlayerData> | undefined;
     userId: number;
 };

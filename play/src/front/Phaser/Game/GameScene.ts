@@ -2240,7 +2240,7 @@ export class GameScene extends DirtyScene {
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
 
-                statusChanger.setUserNameInteraction(peer.player?.name ?? "unknow");
+                statusChanger.setUserNameInteraction(get(peer.name) ?? "unknow");
 
                 statusChanger.applyInteractionRules();
 
