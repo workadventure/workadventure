@@ -233,7 +233,7 @@ export class VideoPeer extends Peer implements Streamable {
 
         this.userId = spaceUser.userId;
         this.userUuid = spaceUser.uuid;
-        this.uniqueId = "video_" + this.userId;
+        this.uniqueId = "video_" + spaceUser.spaceUserId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {

@@ -82,7 +82,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         super(peerConfig);
 
         this.userId = spaceUser.userId;
-        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
