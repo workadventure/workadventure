@@ -41,7 +41,10 @@
         }
     }
 
+    let mounted = false;
+
     onMount(() => {
+        mounted = true;
         // Get the current textures
         const currentTextures = gameManager.getCharacterTextureIds();
         if (currentTextures && currentTextures.length > 1) {
@@ -52,6 +55,7 @@
     });
 
     onDestroy(() => {
+        mounted = false;
         // Clean up the scene visibility store when the component is destroyed
         selectCharacterSceneVisibleStore.set(false);
         // Remove keyboard navigation listener
@@ -59,10 +63,12 @@
     });
 </script>
 
-{#if buildOwnWoka}
-    <WokaCustomizeScene back={() => (buildOwnWoka = false)} {saveAndContinue} />
-{:else}
-    <WokaSelectScene customize={() => (buildOwnWoka = true)} {saveAndContinue} />
+{#if mounted}
+    {#if buildOwnWoka}
+        <WokaCustomizeScene back={() => (buildOwnWoka = false)} {saveAndContinue} />
+    {:else}
+        <WokaSelectScene customize={() => (buildOwnWoka = true)} {saveAndContinue} />
+    {/if}
 {/if}
 
 {#if error}
