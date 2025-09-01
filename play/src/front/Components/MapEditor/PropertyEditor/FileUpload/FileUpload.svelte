@@ -5,6 +5,7 @@
     import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
+    import { GRPC_MAX_MESSAGE_SIZE } from "../../../../Enum/EnvironmentVariable";
     import ButtonClose from "../../../Input/ButtonClose.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
@@ -19,6 +20,7 @@
     let dropZoneRef: HTMLDivElement;
     let errorOnFile: string | undefined;
     let fileToUpload: UploadFileMessage | undefined = undefined;
+    const BYTES_TO_MB = 1024 * 1024;
 
     const dispatch = createEventDispatcher<{
         change: string | null | undefined;
@@ -49,6 +51,13 @@
         if (!selectedFile) {
             return;
         }
+        if (selectedFile.size > GRPC_MAX_MESSAGE_SIZE) {
+            errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileSize({
+                size: GRPC_MAX_MESSAGE_SIZE / BYTES_TO_MB,
+            });
+            return;
+        }
+
         const fileBuffer = await selectedFile.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         const generatedId = uuidv4();

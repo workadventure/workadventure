@@ -71,7 +71,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         copied: "Copié",
         share: "Partager",
         walkAutomaticallyToPosition: "Marcher automatiquement jusqu'à ma position",
-        selectEntryPoint: "Selectionner la zone de départ",
+        selectEntryPoint: "Utiliser une autre zone de départ",
+        selectEntryPointSelect: "Sélectionnez le point d'entrée par lequel les utilisateurs arriveront",
     },
     globalMessage: {
         text: "Texte",
@@ -132,7 +133,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "Profil",
         settings: "Paramètres",
-        invite: "Inviter",
+        invite: "Partager",
         credit: "Crédits",
         globalMessages: "Messages globaux",
         contact: "Contact",

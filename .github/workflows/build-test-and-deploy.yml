@@ -306,13 +306,16 @@ jobs:
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
-          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
+          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
           sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
           sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+
+
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         uses: actions/download-artifact@v4
@@ -591,6 +594,7 @@ jobs:
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
           sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
           sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
           sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env

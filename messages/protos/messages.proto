@@ -183,7 +183,6 @@ message EditMapMessage {
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
     UploadFileMessage uploadFileMessage = 13;
-    DeleteFileMessage deleteFileMessage = 14;
   }
 }
 
@@ -261,11 +260,6 @@ message CreateEntityMessage {
 
 message DeleteEntityMessage {
   string id = 1;
-}
-
-message DeleteFileMessage {
-  string propertyId = 1;
-  string name = 2;
 }
 
 message CollisionGridRow {

@@ -32,6 +32,6 @@ A Matrix chat room linked to an area works with specific privacy and message his
 
 - **Area-Based Access**: Only users who are inside the designated area can see and participate in the Matrix chat room. People outside the area will not have access to the chat or its messages.
   
-- **Conversation History**: When a user enters the area, they can only view the messages sent during the time they are present in the area. This means that users do not have access to previous chat history from times they were not in the area. Once they leave, they will no longer be able to see new messages until they re-enter the area.
+- **Conversation History**: When a user enters the area, they can only view the messages sent during the time they are present in the area. Users do not have access to previous chat history from times they were not in the area. Once they leave, they will no longer see new messages until they re-enter the area.
 
 This ensures that the chat room provides real-time communication specifically for users present within the designated area, maintaining a localized and private interaction zone.

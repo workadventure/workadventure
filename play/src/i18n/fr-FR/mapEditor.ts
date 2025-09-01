@@ -244,6 +244,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 chooseFile: "Choisir ",
                 errorOnFileFormat: "Format du fichier non supporté",
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
+                errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
         },
         livekitProperties: {
@@ -312,6 +313,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Choisir ",
             errorOnFileFormat: "Format du fichier non supporté",
             errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
         },
         images: "Image{{s}}",
         noImage: "Aucune image",
