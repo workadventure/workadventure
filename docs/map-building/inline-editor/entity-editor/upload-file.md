@@ -6,14 +6,14 @@ sidebar_position: 80
 
 # Drag and drop files
 
-:::warning
+:::note
 This will create an entity to open the document you want to drop. If you want the entity to be the image you dropped, see: [custom entity](./index.md#uploading-an-object)
 :::
 
 You can create entities with a simple drag and drop of a file on the map.
 It is a shortcut to create an entity with the [open document property](./open-file.md).
 
-:::note
+:::info
 The uploaded documents format can be PDF files, or images.
 :::
 
