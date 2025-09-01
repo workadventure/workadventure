@@ -10,18 +10,13 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import { IconChevronUp } from "@wa-icons";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import Spinner from "../../Components/Icons/Spinner.svelte";
 
     export let rootFolder: boolean;
     export let folder: RoomFolder & ChatRoomModeration;
-    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, hasChildRoomsError } = folder);
+    $: ({ name, folders, invitations, rooms, id, suggestedRooms, joinableRooms } = folder);
     let isOpen: boolean = localUserStore.hasFolderOpened(folder.id) ?? false;
     let joinableRoomsOpen = false;
     const isFoldersOpen: { [key: string]: boolean } = {};
-    let refreshSpinner: boolean = false;
-
-    const chat = gameManager.chatConnection;
 
     $: filteredRoom = $rooms
         .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
@@ -49,7 +44,6 @@
     function toggleJoinableRooms() {
         joinableRoomsOpen = !joinableRoomsOpen;
     }
-
 </script>
 
 <div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>

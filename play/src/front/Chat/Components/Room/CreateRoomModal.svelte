@@ -144,7 +144,7 @@
                                 on:focusout={unfocusChatInput}
                             />
                         </div>
-                        <p class="text-xs m-0 p-0 text-gray-400 flex items-center ">
+                        <p class="text-xs m-0 p-0 text-gray-400 flex items-center">
                             <IconAlertTriangle class="mr-2" font-size={16} />
                             {$LL.chat.createRoom.e2eEncryption.description()}
                         </p>
@@ -190,7 +190,7 @@
             >
             <button
                 data-testid="createRoomButton"
-                class="disabled:text-gray-400  btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
+                class="disabled:text-gray-400 btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
                 disabled={createRoomOptions.name === undefined ||
                     createRoomOptions.name?.trim().length === 0 ||
                     (createRoomOptions.visibility === "private" && (createRoomOptions.invite?.length ?? 0) < 1)}
