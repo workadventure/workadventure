@@ -7,6 +7,7 @@
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
+    import { getItemsPerRow } from "./ItemsPerRow";
 
     export let customize: () => void;
     export let saveAndContinue: (texturesId: string[]) => void;
@@ -126,6 +127,8 @@
         return `${ABSOLUTE_PUSHER_URL}${relativeUrl}`;
     }
 
+    let enterPressed = false;
+
     // Function to validate character textures
     function useKeyBoardNavigation(event: KeyboardEvent) {
         if (!wokaData || !currentWokaCollection) return;
@@ -144,15 +147,30 @@
             const textures = wokaData["woka"].collections[currentIndex].textures;
             const currentTextureIndex = textures.findIndex((t: WokaTexture) => t.id === selectedWokaTextureId["woka"]);
 
-            if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-                const newIndex = (currentTextureIndex - 1 + textures.length) % textures.length;
+            if (event.key === "ArrowLeft") {
+                const newIndex = Math.max(currentTextureIndex - 1, 0);
                 selectTexture(currentIndex, textures[newIndex].id);
-            } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-                const newIndex = (currentTextureIndex + 1) % textures.length;
+            } else if (event.key === "ArrowRight") {
+                const newIndex = Math.min(currentTextureIndex + 1, textures.length - 1);
+                selectTexture(currentIndex, textures[newIndex].id);
+            } else if (event.key === "ArrowUp") {
+                const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
+                const newIndex = Math.max(currentTextureIndex - itemsPerRow, 0);
+                selectTexture(currentIndex, textures[newIndex].id);
+            } else if (event.key === "ArrowDown") {
+                const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
+                const newIndex = Math.min(currentTextureIndex + itemsPerRow, textures.length - 1);
                 selectTexture(currentIndex, textures[newIndex].id);
             }
+        } else if (event.key === "Enter") {
+            enterPressed = true;
         }
-        if (event.key === "Enter") {
+    }
+
+    function useKeyBoardNavigationUp(event: KeyboardEvent) {
+        if (!wokaData || !currentWokaCollection) return;
+        if (event.key === "Enter" && enterPressed) {
+            enterPressed = false;
             saveAndContinue([selectedWokaTextureId["woka"]]); // Save and continue when Enter is pressed
         }
     }
@@ -160,10 +178,12 @@
     onMount(async () => {
         await loadWokaData();
         document.addEventListener("keydown", useKeyBoardNavigation);
+        document.addEventListener("keyup", useKeyBoardNavigationUp);
     });
 
     onDestroy(() => {
         document.removeEventListener("keydown", useKeyBoardNavigation);
+        document.removeEventListener("keyup", useKeyBoardNavigationUp);
     });
 </script>
 

@@ -25,7 +25,7 @@
             gameManager.setCharacterTextureIds(texturesId);
             await connectionManager.saveTextures(texturesId);
             selectCharacterSceneVisibleStore.set(false);
-            gameManager.tryToStopGameScene(SelectCharacterSceneName);
+            gameManager.tryToStopScene(SelectCharacterSceneName);
             gameManager.tryResumingGame(EnableCameraSceneName);
         } catch (err) {
             console.error("Error saving textures:", err);
