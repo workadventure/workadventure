@@ -16,6 +16,7 @@ export class MobileJoystick extends VirtualJoystick {
     private resizeCallback: () => void;
 
     private setimeout: NodeJS.Timeout | null = null;
+    private destroyed: boolean = false;
 
     constructor(scene: Phaser.Scene) {
         super(scene, {
@@ -73,6 +74,9 @@ export class MobileJoystick extends VirtualJoystick {
         // After 30 seconds, disable the joystick
         if (this.setimeout) clearTimeout(this.setimeout);
         this.setimeout = setTimeout(() => {
+            if (this.destroyed) {
+                return;
+            }
             this.visible = false;
         }, delay);
     }
@@ -99,5 +103,6 @@ export class MobileJoystick extends VirtualJoystick {
     public destroy() {
         this.scene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
         super.destroy();
+        this.destroyed = true;
     }
 }
