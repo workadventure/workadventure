@@ -594,6 +594,7 @@ message EnterChatRoomAreaAnswer{
 }
 
 message JoinSpaceAnswer{
+  string spaceUserId = 1;
 }
 
 message LeaveSpaceAnswer{

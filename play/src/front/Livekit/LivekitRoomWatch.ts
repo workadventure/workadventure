@@ -71,6 +71,11 @@ export class LiveKitRoomWatch implements LiveKitRoom {
                         console.error("spaceUser not found for participant", id);
                         return;
                     }
+
+                    if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+                        return;
+                    }
+
                     this.participants.set(
                         participant.sid,
                         new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
@@ -136,6 +141,10 @@ export class LiveKitRoomWatch implements LiveKitRoom {
             .then((spaceUser) => {
                 if (!spaceUser) {
                     console.info("spaceUser not found for participant", id);
+                    return;
+                }
+
+                if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
                     return;
                 }
 

@@ -95,6 +95,7 @@ export interface SpaceInterface {
      */
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
     readonly filterType: FilterType;
+    get mySpaceUserId(): SpaceUser["spaceUserId"];
 }
 
 export type ReactiveSpaceUser = {

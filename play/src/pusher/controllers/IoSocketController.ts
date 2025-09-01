@@ -904,7 +904,9 @@ export class IoSocketController {
 
                                             answerMessage.answer = {
                                                 $case: "joinSpaceAnswer",
-                                                joinSpaceAnswer: {},
+                                                joinSpaceAnswer: {
+                                                    spaceUserId: socket.getUserData().spaceUserId,
+                                                },
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
                                             socketManager.deleteSpaceIfEmpty(

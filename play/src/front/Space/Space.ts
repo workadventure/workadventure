@@ -71,6 +71,7 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
+        private _mySpaceUserId: SpaceUser["spaceUserId"],
         private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         if (name === "") {
@@ -181,8 +182,8 @@ export class Space implements SpaceInterface {
         propertiesToSync: string[] = [],
         metadata = new Map<string, unknown>()
     ): Promise<Space> {
-        await connection.emitJoinSpace(name, filterType, propertiesToSync);
-        const space = new Space(name, metadata, connection, filterType, propertiesToSync);
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync);
+        const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
         return space;
     }
 
@@ -541,5 +542,9 @@ export class Space implements SpaceInterface {
 
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+
+    public get mySpaceUserId(): SpaceUser["spaceUserId"] {
+        return this._mySpaceUserId;
     }
 }
