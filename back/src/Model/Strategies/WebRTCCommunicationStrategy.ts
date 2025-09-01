@@ -163,10 +163,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return hasMedia && !hasExisting;
     }
 
-    private hasActiveMediaState(user: SpaceUser): boolean {
-        return user.cameraState || user.microphoneState;
-    }
-
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
         const credentials1 = this._credentialsService.generateCredentials(user1.spaceUserId);
         const credentials2 = this._credentialsService.generateCredentials(user2.spaceUserId);
@@ -180,30 +176,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private cleanupUserToNotifyMessages(userId: string): void {
         this._connections.removeUserToNotify(userId);
-    }
-
-    //TODO : remove the handleUserMediaUpdate function after testing
-    private handleUserMediaUpdate(user: SpaceUser): void {
-        const otherUsers = this._space
-            .getUsersToNotify()
-            .filter((otherUser) => otherUser.spaceUserId !== user.spaceUserId);
-
-        otherUsers.forEach((otherUser) => {
-            const hasExistingConnection = this.hasExistingConnection(user.spaceUserId, otherUser.spaceUserId);
-
-            if (
-                hasExistingConnection /* && !this.hasActiveMediaState(otherUser) */ &&
-                !this.hasActiveMediaState(user)
-            ) {
-                this.shutdownConnection(user.spaceUserId, otherUser.spaceUserId);
-                return;
-            }
-
-            if (this.shouldEstablishConnection(user, otherUser)) {
-                this.establishConnection(user, otherUser);
-                return;
-            }
-        });
     }
 
     private hasExistingConnection(userId1: string, userId2: string): boolean {
