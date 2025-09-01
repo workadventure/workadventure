@@ -4,6 +4,7 @@
     export let strokeColor = "stroke-white";
     // Ignoring fillColor for this icon as it is not used
     // Still putting the prop here for consistency with other icons and to avoid a warning
+    // svelte-ignore unused-export-let
     export let fillColor = "fill-white";
     export let hover = "group-hover/btn-emoji:fill-white";
     export let classList = "aspect-ratio transition-all";
