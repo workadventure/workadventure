@@ -2,9 +2,9 @@ import {expect, test} from '@playwright/test';
 import {isMobile} from "./utils/isMobile";
 
 test.describe('Swagger documentation', () => {
-    test('Pusher -> Admin', async ({page}) => {
+    test('Pusher -> Admin @nomobile', async ({page}) => {
         // Skip test for mobile device
-    test.skip(isMobile(page), 'Skip on mobile devices');
+        test.skip(isMobile(page), 'Skip on mobile devices');
 
         await page.goto(
             `/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`

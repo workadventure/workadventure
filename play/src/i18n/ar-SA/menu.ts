@@ -14,10 +14,12 @@ const menu: DeepPartial<Translation["menu"]> = {
             closeEmoji: "أغلق قائمة الرموز التعبيرية", // Close emoji menu
             mobile: "افتح قائمة الجوال", // Open mobile menu
             calendar: "افتح التقويم", // Open calendar
+            todoList: "قائمة المهام",
         },
     },
     visitCard: {
         close: "إغلاق", // Close
+        sendMessage: "إرسال رسالة",
     },
     profile: {
         login: "تسجيل الدخول", // Login
@@ -49,15 +51,23 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "إعدادات أخرى", // Other settings
         fullscreen: "ملء الشاشة", // Fullscreen
         notifications: "الإشعارات", // Notifications
+        enablePictureInPicture: "تمكين صورة داخل صورة",
         chatSounds: "أصوات الدردشة", // Chat sounds
         cowebsiteTrigger: "اسأل في كل مرة قبل فتح مواقع الويب أو غرف Jitsi-Meet", // Ask every time before opening websites or Jitsi-Meet rooms
         ignoreFollowRequest: "تجاهل طلبات المتابعة من المستخدمين الآخرين", // Ignore follow requests from other users
+        proximityDiscussionVolume: "مستوى صوت النقاش القريب",
         blockAudio: "تعطيل الموسيقى والأصوات الخلفية", // Disable music and background sounds
         disableAnimations: "تعطيل الرسوم المتحركة للخرائط", // Disable map animations
+        bubbleSound: "صوت الفقاعة",
+        bubbleSoundOptions: {
+            ding: "دينغ",
+            wobble: "ووبل",
+        },
     },
     invite: {
         description: "شارك الرابط إلى هذه الغرفة!", // Share the link to this room!
         copy: "نسخ", // Copy
+        copied: "تم النسخ",
         share: "مشاركة", // Share
         walkAutomaticallyToPosition: "اذهب تلقائيًا إلى موقعي", // Walk automatically to my position
         selectEntryPoint: "اختر نقطة الدخول", // Select entry point
@@ -87,6 +97,19 @@ const menu: DeepPartial<Translation["menu"]> = {
             description: "يمكنك أيضًا إنشاء خريطتك الخاصة. اتبع دليلنا خطوة بخطوة.", // You can also create your own map. Follow our step-by-step guide.
         },
     },
+    chat: {
+        matrixIDLabel: "معرّف Matrix الخاص بك",
+        settings: "الإعدادات",
+        resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
+        resetKeyStorageConfirmationModal: {
+            title: "تأكيد إعادة تعيين مخزن المفاتيح",
+            content: "أنت على وشك إعادة تعيين مخزن المفاتيح. هل أنت متأكد؟",
+            warning:
+                "سيؤدي إعادة تعيين مخزن المفاتيح إلى إزالة جلستك الحالية وجميع المستخدمين الموثوق بهم. قد تفقد الوصول إلى بعض الرسائل السابقة، ولن يتم التعرف عليك كمستخدم موثوق به بعد الآن.",
+            cancel: "إلغاء",
+            continue: "متابعة",
+        },
+    },
     about: {
         mapInfo: "معلومات عن هذه الخريطة", // Information about this map
         mapLink: "رابط الخريطة", // Map link
@@ -113,6 +136,34 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
+        chat: "الدردشة",
+        help: "مساعدة وشروحات",
+        contextualActions: "إجراءات سياقية",
+        shortcuts: "اختصارات",
+    },
+    shortcuts: {
+        title: "اختصارات لوحة المفاتيح",
+        keys: "الاختصار",
+        actions: "الإجراء",
+        moveUp: "تحرك للأعلى",
+        moveDown: "تحرك للأسفل",
+        moveLeft: "تحرك لليسار",
+        moveRight: "تحرك لليمين",
+        speedUp: "الركض",
+        interact: "تفاعل",
+        follow: "اتبع",
+        openChat: "فتح الدردشة",
+        openUserList: "فتح قائمة المستخدمين",
+        toggleMapEditor: "إظهار/إخفاء محرر الخرائط",
+        rotatePlayer: "تدوير اللاعب",
+        emote1: "تعبير 1",
+        emote2: "تعبير 2",
+        emote3: "تعبير 3",
+        emote4: "تعبير 4",
+        emote5: "تعبير 5",
+        emote6: "تعبير 6",
+        openSayPopup: "فتح نافذة قل",
+        openThinkPopup: "فتح نافذة فكر",
     },
 };
 

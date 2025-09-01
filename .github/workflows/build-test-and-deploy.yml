@@ -171,84 +171,98 @@ jobs:
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: chromium
             parameters: --project=chromium
             project: chromium
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 1
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 2
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 3
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: firefox
             parameters: --project=firefox
             project: firefox
             shard: 4
             nbShards: 4
             renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 2
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: webkit
             parameters: --project=webkit
             project: webkit
             shard: 3
             nbShards: 3
             renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
           - browser: ""
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile"
           - browser: ""
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
+            ignoreTags: "@nomobile|@nofirefox"
           - browser: ""
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
             nbShards: 1
             renderer: headless
+            ignoreTags: "@nomobile|@nowebkit"
     needs:
       - build-play
       - build-back
@@ -292,9 +306,12 @@ jobs:
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
-          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env
+          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+
+
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         uses: actions/download-artifact@v4
@@ -349,7 +366,7 @@ jobs:
             echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
           fi
       - name: Run Playwright tests
-        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow"
+        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
           RENDERER_MODE: ${{ matrix.renderer }}
@@ -573,6 +590,7 @@ jobs:
           sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

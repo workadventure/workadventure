@@ -367,7 +367,6 @@ const chat: BaseTranslation = {
     verificationEmojiDialog: {
         confirmation: "They match",
         mismatch: "They don't match",
-        title: "Verify device",
         titleVerifyThisDevice: "Verify your device",
         titleVerifyOtherDevice: "Verify a other device",
         description: "Confirm that the emojis below are displayed on both devices and in the same order:",

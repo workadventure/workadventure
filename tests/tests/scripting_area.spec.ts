@@ -8,7 +8,7 @@ import areaEditor from "./utils/map-editor/areaEditor";
 import {getPage} from "./utils/auth"
 import {isMobile} from "./utils/isMobile";
 
-test.describe("Scripting for Map editor @oidc", () => {
+test.describe("Scripting for Map editor @oidc @nomobile @nowebkit", () => {
     test.beforeEach(
         "Ignore tests on mobilechromium because map editor not available for mobile devices",
         ({ page }) => {

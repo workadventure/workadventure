@@ -726,7 +726,7 @@ export class IoSocketController {
                                 message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName = `${
                                     socket.getUserData().world
                                 }.${message.message.removeSpaceFilterMessage.spaceFilterMessage.spaceName}`;
-                            await socketManager.handleRemoveSpaceFilterMessage(
+                            socketManager.handleRemoveSpaceFilterMessage(
                                 socket,
                                 noUndefined(message.message.removeSpaceFilterMessage)
                             );
@@ -1085,7 +1085,7 @@ export class IoSocketController {
                     //let ok = ws.send(message, isBinary);
                 })().catch((e) => {
                     Sentry.captureException(e);
-                    console.error(e);
+                    console.error("An error occurred while processing a message: ", e);
 
                     try {
                         socket.send(

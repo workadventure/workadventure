@@ -3,8 +3,9 @@ import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import {evaluateScript} from "./utils/scripting";
 
-test.describe('Meeting actions test', () => {
+test.describe('Meeting actions test @nomobile @nowebkit', () => {
 
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
@@ -17,7 +18,7 @@ test.describe('Meeting actions test', () => {
     }
   );
 
-  test('Meeting action to mute microphone & video', async ({ browser }) => {
+  test('Meeting action to mute microphone & video @nofirefox', async ({ browser }) => {
     // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
     test.skip(
       browser.browserType().name() === "firefox",
@@ -75,6 +76,75 @@ test.describe('Meeting actions test', () => {
         await userBob.context().close();
         await page.context().close();
   });
+
+    test('enter and exit meeting quickly', async ({ browser }) => {
+        // We test creating a bubble and closing it as soon as possible.
+        // The video element should be removed from the DOM when the bubble is closed.
+
+        // Go to the empty map
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(page, 160, 160);
+
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user in and out as fast as possible
+        await Map.teleportToPosition(userBob, 160, 160);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(100);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(200);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(500);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+
+        // Really fast now
+        await evaluateScript(userBob, async () => {
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+        });
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await evaluateScript(userBob, async () => {
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            return;
+        });
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+
+
+        // Let's wait a bit for all the events to be processed
+        await userBob.waitForTimeout(2000);
+
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeHidden();
+        await expect(userBob.locator('#cameras-container').getByText("Alice")).toBeHidden();
+
+        await userBob.context().close();
+        await page.context().close();
+    });
+
 
     // FIXME jitsi bug
   /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
@@ -144,7 +214,7 @@ test.describe('Meeting actions test', () => {
     await page.context().close();
   });*/
 
-  test('Block users', async ({ browser }) => {
+  test('Block users @nofirefox', async ({ browser }) => {
     // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
     test.skip(
       browser.browserType().name() === "firefox",

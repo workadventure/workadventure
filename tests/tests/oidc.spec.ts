@@ -5,7 +5,7 @@ import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('OpenID connect @oidc', () => {
+test.describe('OpenID connect @oidc @nomobile', () => {
   test.beforeEach(async ({ page }) => {
     test.skip(isMobile(page), 'Skip on mobile devices');
   });
@@ -33,7 +33,7 @@ test.describe('OpenID connect @oidc', () => {
     await oidcLogout(page);
     await expect(page.locator('button:has-text("Login")')).toBeVisible();
     // Let's check the sign-in button is back here when we signed out
-    await page.getByRole('button', { name: 'Invite' }).click();
+    await page.getByRole('button', { name: 'Share' }).click();
     await expect(page.locator('button:has-text("Login")')).toContainText("Login");
 
     // Let's try to login using the scripting API

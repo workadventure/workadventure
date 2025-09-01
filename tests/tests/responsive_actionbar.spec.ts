@@ -5,7 +5,7 @@ import { getPage } from './utils/auth';
 import {isMobile} from "./utils/isMobile";
 import Menu from "./utils/menu";
 
-test.describe('Action bar responsiveness', () => {
+test.describe('Action bar responsiveness @nomobile', () => {
     test.beforeEach(async ({ page }) => {
         test.skip(isMobile(page), 'Skip on mobile devices');
     });
@@ -61,17 +61,17 @@ test.describe('Action bar responsiveness', () => {
         await Menu.closeMenu(page);
 
 
-        await expect(page.getByText('Invite')).toBeVisible();
+        await expect(page.getByText('Share')).toBeVisible();
         await expect(page.getByText('Login')).toBeVisible();
 
         await page.setViewportSize({ width: 345, height: 600 });
 
-        await expect(page.getByText('Invite')).toBeHidden();
+        await expect(page.getByText('Share')).toBeHidden();
         await expect(page.getByText('Login')).toBeHidden();
 
         await Menu.openMenu(page);
 
-        await expect(page.getByTestId('profile-menu').getByText('Invite')).toBeVisible();
+        await expect(page.getByTestId('profile-menu').getByText('Share')).toBeVisible();
         await expect(page.getByTestId('profile-menu').getByText('Login')).toBeVisible();
 
 

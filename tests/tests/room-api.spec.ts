@@ -1,5 +1,5 @@
 import {asError} from "catch-unknown";
-import {chromium, expect, test} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client-js/src';
 import {Value} from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct";
 import {evaluateScript} from "./utils/scripting";
@@ -20,14 +20,12 @@ const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "roo
 const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_variables.json`;
 const variableName = "textField";
 
-test.describe('Room API', () => {
+test.describe('Room API @nomobile @nofirefox @nowebkit', () => {
     test.beforeEach(async ({ browserName, page }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
     });
     test("With a bad API key", async ({ browser }) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-        test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         const badClient = createRoomApiClient("BAD KEY", process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
         try {
             await badClient.saveVariable({
@@ -42,8 +40,6 @@ test.describe('Room API', () => {
         }
     });
     test("Save & read a variable", async ({ browser }) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
         await using page = await getPage(browser, "Alice", roomUrl + "?phaserMode=" + RENDERER_MODE);
 
@@ -70,9 +66,6 @@ test.describe('Room API', () => {
     });
 
     test("Listen to a variable", async ({ browser }) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-        test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
-
         const newValue = "New Value - " + Math.random().toString(36).substring(2, 7);
 
         const listenVariable = client.listenVariable({
@@ -83,34 +76,25 @@ test.describe('Room API', () => {
 
         const textField = getCoWebsiteIframe(page).locator("#textField");
 
-        // Async listening: we wait until we receive the new value
-        const listenPromise = (async () => {
-            for await (const value of listenVariable) {
-                if (Value.unwrap(value) === newValue) {
-                    //eslint-disable-next-line playwright/no-conditional-expect
-                    await expect(textField).toHaveValue(newValue);
-                    break;
-                }
-            }
-        })();
+        setTimeout(() => {
+            // eslint-disable-next-line playwright/no-conditional-expect
+            expect(client.saveVariable({
+                name: variableName,
+                room: roomUrl,
+                value: newValue,
+            })).resolves.not.toThrow().catch((e) => { test.fail(); throw e; });
+        }, 5000);
 
-        // Listening is started, now we save the new value
-        await expect(client.saveVariable({
-            name: variableName,
-            room: roomUrl,
-            value: newValue,
-        })).resolves.not.toThrow();
-
-        // Wait until we received the new value
-        await listenPromise;
+        for await (const value of listenVariable) {
+            expect(Value.unwrap(value)).toEqual(newValue);
+            await expect(textField).toHaveValue(newValue);
+            break;
+        }
 
         await page.context().close();
     });
 
     test("Listen to an event emitted from the game", async ({ browser }) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
-
         const listenEvent = client.listenToEvent({
             name: "my-event",
             room: `${play_url}/_/room-api/${maps_domain}/tests/E2E/empty.json`,
@@ -143,8 +127,6 @@ test.describe('Room API', () => {
     });
 
     test("Send an event from the Room API", async ({ browser }) => {
-        // This test does not depend on the browser. Let's only run it in Chromium.
-    test.skip(browser.browserType() !== chromium, 'Run only on Chromium');
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "room-api"));
 
         let gotExpectedBroadcastNotification = false;

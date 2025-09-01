@@ -60,6 +60,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         disableAnimations: "Désactiver les animations de la carte",
         bubbleSound: "Son des bulles",
         otherSettings: "Autres paramètres",
+        bubbleSoundOptions: {
+            ding: "Ding",
+            wobble: "Wobble",
+        },
     },
     invite: {
         description: "Partager le lien de la salle!",
@@ -67,7 +71,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         copied: "Copié",
         share: "Partager",
         walkAutomaticallyToPosition: "Marcher automatiquement jusqu'à ma position",
-        selectEntryPoint: "Selectionner la zone de départ",
+        selectEntryPoint: "Utiliser une autre zone de départ",
+        selectEntryPointSelect: "Sélectionnez le point d'entrée par lequel les utilisateurs arriveront",
     },
     globalMessage: {
         text: "Texte",
@@ -128,7 +133,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     sub: {
         profile: "Profil",
         settings: "Paramètres",
-        invite: "Inviter",
+        invite: "Partager",
         credit: "Crédits",
         globalMessages: "Messages globaux",
         contact: "Contact",
@@ -152,6 +157,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "Ouvrir la liste des utilisateurs",
         toggleMapEditor: "Afficher/Cacher l'éditeur de carte",
         rotatePlayer: "Faire pivoter le joueur",
+        follow: "Suivre",
         emote1: "Émoticône 1",
         emote2: "Émoticône 2",
         emote3: "Émoticône 3",

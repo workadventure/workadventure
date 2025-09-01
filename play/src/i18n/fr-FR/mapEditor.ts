@@ -121,6 +121,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Où les joueurs apparaissent lorsqu'ils entrent dans la carte.",
             nameLabel: "Nom de la zone de départ",
             namePlaceholder: "MaZoneDeDépart",
+            type: "Type de position de départ",
+            defaultMenuItem: "Utiliser par défaut",
+            hashMenuItem: "Utiliser si l’URL contient #[nom de zone]",
         },
         exitProperties: {
             label: "Zone de sortie",
@@ -162,6 +165,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         eraserProperties: {
             label: "Ouvrir Eraser",
             description: "Ouvrir Eraser dans l'application ou dans un nouvel onglet.",
+            defaultButtonLabel: "Effacer",
             error: "Veuillez entrer une URL Eraser valide",
             disabled: "L'intégration Eraser est désactivée.",
         },
@@ -174,6 +178,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         restrictedRightsProperties: {
             label: "Ajouter des droits",
             rightTitle: "Droit d'accès et d'édition via les tags utilisateur",
+            rightDescription:
+                "Les droits définissent qui peut interagir avec la zone. Si vous laissez vide, tout le monde peut l’utiliser. Si vous définissez des tags, seuls les utilisateurs possédant au moins un de ces tags peuvent l’utiliser.",
             rightWriteTitle: "Droits d'édition",
             rightWriteDescription:
                 "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
@@ -230,6 +236,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Ouvrir un fichier dans l'application.",
             error: "Veuillez entrer fichier valide",
             disabled: "L'intégration de fichier est désactivée.",
+            fileUrlLabel: "URL du fichier",
             uploadFile: {
                 title: "Ajouter votre fichier",
                 description: "Glissez-déposer ou choisissez votre fichier afin de l'ajouter sur la carte",
@@ -237,6 +244,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 chooseFile: "Choisir ",
                 errorOnFileFormat: "Format du fichier non supporté",
                 errorOnFileNumber: "Dépot multiple de fichier non supporté",
+                errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
         },
         noProperties: "Aucune propriété définie",
@@ -298,6 +306,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Choisir ",
             errorOnFileFormat: "Format du fichier non supporté",
             errorOnFileNumber: "Dépot multiple de fichier non supporté",
+            errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
         },
         images: "Image{{s}}",
         noImage: "Aucune image",
@@ -355,6 +364,34 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                     },
                 },
             },
+        },
+        room: {
+            title: "Paramètres du salon",
+            description: "Configurer votre salon",
+            inputs: {
+                name: "Nom du salon",
+                description: "Description du salon",
+                tags: "Tags",
+                copyright: "Licence du salon",
+                thumbnail: "Vignette du salon",
+            },
+            helps: {
+                description:
+                    "Une description de la carte. Peut être utilisée sur les réseaux sociaux lors du partage d’un lien vers la carte.",
+                tags: "Une liste de tags. Peut être utilisée pour accorder l’accès à la carte.",
+                thumbnail:
+                    "URL d’une image miniature. Cette image sera utilisée sur les réseaux sociaux lors du partage d’un lien vers la carte.",
+                copyright:
+                    "Mention de copyright pour cette carte. Peut être un lien vers une licence. Des parties de la carte comme les tilesets ou les images peuvent avoir leur propre copyright.",
+            },
+            actions: {
+                save: "Enregistrer",
+                confirm: "Confirmer",
+                success: "Paramètres du salon enregistrés",
+                error: "Erreur lors de l’enregistrement des paramètres du salon",
+            },
+            confirmSave:
+                "Confirmez que vous souhaitez enregistrer les modifications de la carte. Cela créera une nouvelle version de la carte, déconnectera tous les joueurs et rechargera la carte pour tout le monde.",
         },
     },
     explorer: {
