@@ -88,8 +88,8 @@ export class MobileJoystick extends VirtualJoystick {
         // TODO: change it to apply the good ratio of the canvas
         // Show the joystick at the bottom middle of the screen
         const { width, height } = this.scene.game.canvas;
-        this.showAt(width / 2, height * 0.8);
-        this.hide(30_000);
+        this.x = width / 2;
+        this.y = height * 0.8;
     }
 
     private getDisplaySizeByElement(element: integer): integer {
