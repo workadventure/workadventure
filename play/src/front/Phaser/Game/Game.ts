@@ -3,7 +3,6 @@ import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
 import { ResizableScene } from "../Login/ResizableScene";
 
 const Events = Phaser.Core.Events;
-const RendererEvents = Phaser.Renderer.Events;
 
 /**
  * A specialization of the main Phaser Game scene.
@@ -26,23 +25,6 @@ export class Game extends Phaser.Game {
                 }
             }
         });
-
-        // Handle WebGL context loss and restoration
-        this.events.on(Events.CONTEXT_LOST, () => {
-            console.warn("WebGL context lost detected. Rendering will be halted until context is restored.");
-        });
-
-        if (this.renderer && this.renderer.type === Phaser.WEBGL) {
-            this.renderer.on(RendererEvents.LOSE_WEBGL, () => {
-                console.warn("WebGL context lost at renderer level. Waiting for restoration...");
-            });
-
-            this.renderer.on(RendererEvents.RESTORE_WEBGL, () => {
-                console.info("WebGL context restored. Forcing scene redraw...");
-                // Force a complete redraw of all scenes
-                this.markDirty();
-            });
-        }
     }
 
     public step(time: number, delta: number) {

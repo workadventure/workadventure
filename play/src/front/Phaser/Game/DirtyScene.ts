@@ -4,6 +4,7 @@ import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
 import StructEvents = Phaser.Structs.Events;
+import RendererEvents = Phaser.Renderer.Events;
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -27,6 +28,18 @@ export abstract class DirtyScene extends ResizableScene {
             return;
         }
         this.isAlreadyTracking = true;
+
+        // Handle WebGL context loss and restoration
+        if (this.game.renderer && this.game.renderer.type === Phaser.WEBGL) {
+            this.game.renderer.on(RendererEvents.LOSE_WEBGL, () => {
+                console.warn("WebGL context lost at renderer level. Waiting for restoration...");
+            });
+
+            this.game.renderer.on(RendererEvents.RESTORE_WEBGL, () => {
+                console.info("WebGL context restored. Forcing scene redraw...");
+                this.markDirty();
+            });
+        }
         const trackAnimationFunction = this.trackAnimation.bind(this);
         this.sys.updateList.on(StructEvents.PROCESS_QUEUE_ADD, (gameObject: GameObject) => {
             this.objectListChanged = true;
