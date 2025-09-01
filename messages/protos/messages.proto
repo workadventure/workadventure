@@ -1042,10 +1042,6 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    //WebRtcStartMessage webRtcStartMessage = 4;
-    //WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
-    //WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
-    //WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
