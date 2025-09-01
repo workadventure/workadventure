@@ -22,6 +22,7 @@
     export let media = "";
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
+    export let boldLabel = false;
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -99,7 +100,7 @@
             {#if !hideIconInActionBar}
                 <slot />
             {/if}
-            {#if label}<span>{label}</span>{/if}
+            {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle != "" || tooltipDesc != "")}
             <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
