@@ -80,9 +80,14 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await Menu.turnOffMicrophone(alice);
 
     // Move alice to the same position as bob
+    const aliceProximityChatPromise = waitForJoinProximityChat(alice);
+    const bobProximityChatPromise = waitForJoinProximityChat(page);
     await Map.teleportToPosition(alice, 32, 32);
+    await aliceProximityChatPromise;
+    await bobProximityChatPromise;
 
-    await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+    //await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+    //await expect(page.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
 
     await playAudioStream(page, 440);
 
@@ -106,8 +111,15 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
 
     // eve entered last. She should receive sound only through Livekit.
     // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+    await evaluateScript(eve, async () => {
+      console.log("eve is starting to listen to the audio stream");
+    });
     await hasAudioStream(eve);
 
+
+    await evaluateScript(alice3, async () => {
+      console.log("Alice3 is starting to listen to the audio stream");
+    });
     // Let's also check that the users that were in WebRTC before the switch are still receiving the sound
     await hasAudioStream(alice3);
 
