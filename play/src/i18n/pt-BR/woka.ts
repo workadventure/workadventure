@@ -7,13 +7,13 @@ const woka: BaseTranslation = {
             finish: "Terminar",
             backToDefaultWoka: "Voltar ao personagem padrão",
         },
-        randomize: "Losowy",
+        randomize: "Randomizar",
     },
     selectWoka: {
         title: "Selecionar seu personagem",
         continue: "Continuar",
         customize: "Customizar seu personagem",
-        randomize: "Losowy",
+        randomize: "Selecionar aleatoriamente",
     },
     menu: {
         businessCard: "Cartão de visitas",

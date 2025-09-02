@@ -2,15 +2,16 @@ import { AreaData, EntityData, WAMEntityData } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get, Unsubscriber } from "svelte/store";
+import { v4 as uuidv4 } from "uuid";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorDeleteCustomEntityEventStore,
+    mapEditorEntityFileDroppedStore,
     mapEditorEntityModeStore,
     mapEditorEntityUploadEventStore,
     mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
-import { Entity } from "../../../ECS/Entity";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
@@ -24,6 +25,8 @@ import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
+    private handleUpdateEntity: (entityData: EntityData) => void;
+    private handleCopyEntity: (data: CopyEntityEventData) => void;
     /**
      * Visual representations of map Areas objects
      */
@@ -40,32 +43,38 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => void;
 
-    protected mapEditorEntityUploadStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorModifyCustomEntityEventStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorDeleteCustomEntityEventStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorEntityUploadStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorModifyCustomEntityEventStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorDeleteCustomEntityEventStoreUnsubscriber: Unsubscriber | undefined;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super(mapEditorModeManager);
         this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
 
-        this.bindEventHandlers();
-        this.bindEntitiesManagerEventHandlers();
-        this.subscribeToEntityUpload();
-        this.subscribeToModifyCustomEntityEventStore();
-        this.subscribeToDeleteCustomEntityEventStore();
+        this.handleUpdateEntity = this.updateEntity.bind(this);
+        this.handleCopyEntity = this.copyEntity.bind(this);
     }
 
     public activate(): void {
         super.activate();
         this.createAreaPreviews();
         this.setAreaPreviewsVisibility(true);
+        this.subscribeToEntityUpload();
+        this.subscribeToModifyCustomEntityEventStore();
+        this.subscribeToDeleteCustomEntityEventStore();
+
+        this.bindEventHandlers();
+        this.bindEntitiesManagerEventHandlers();
     }
 
     public clear(): void {
         super.clear();
         this.setAreaPreviewsVisibility(false);
         this.deleteAreaPreview();
+        this.unbindEventHandlers();
+        this.unsubscribeStore();
+        this.unbindEntitiesManagerEventHandlers();
     }
 
     /**
@@ -106,6 +115,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         collectionName: entityPrefab.collectionName,
                     },
                     properties: createEntityMessage.properties,
+                    name: createEntityMessage.name,
                 };
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
@@ -190,66 +200,15 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     public destroy() {
         super.destroy();
         this.unbindEventHandlers();
+        this.unbindEntitiesManagerEventHandlers();
         this.unsubscribeStore();
         this.setAreaPreviewsVisibility(false);
         this.deleteAreaPreview();
     }
 
     protected bindEntitiesManagerEventHandlers(): void {
-        this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
-            this.mapEditorModeManager
-                .executeCommand(
-                    new DeleteEntityFrontCommand(
-                        this.scene.getGameMap(),
-                        entity.entityId,
-                        undefined,
-                        this.entitiesManager
-                    )
-                )
-                .catch((e) => console.error(e));
-        });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
-            // Create commande to update entity data
-            this.mapEditorModeManager
-                .executeCommand(
-                    new UpdateEntityFrontCommand(
-                        this.scene.getGameMap(),
-                        entityData.id,
-                        {
-                            ...entityData,
-                        },
-                        undefined,
-                        undefined,
-                        this.entitiesManager,
-                        this.scene
-                    )
-                )
-                .catch((e) => console.error(e));
-        });
-        this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, (data: CopyEntityEventData) => {
-            if (!CopyEntityEventData.parse(data)) {
-                return;
-            }
-            const entityData: WAMEntityData = {
-                x: data.position.x,
-                y: data.position.y,
-                prefabRef: data.prefabRef,
-                properties: data.properties ?? [],
-            };
-            this.mapEditorModeManager
-                .executeCommand(
-                    new CreateEntityFrontCommand(
-                        this.scene.getGameMap(),
-                        undefined,
-                        entityData,
-                        undefined,
-                        this.entitiesManager,
-                        data.entityDimensions
-                    )
-                )
-                .catch((e) => console.error(e));
-            this.cleanPreview();
-        });
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, this.handleUpdateEntity);
+        this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, this.handleCopyEntity);
     }
 
     protected bindEventHandlers() {
@@ -273,11 +232,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     protected subscribeToEntityUpload() {
         this.mapEditorEntityUploadStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
             (uploadEntityMessage) => {
-                const isAdmin = this.scene.connection?.isAdmin();
-                const isEditor = this.scene.connection?.hasTag("editor");
-                if (!isAdmin && !isEditor) {
-                    return;
-                }
                 if (uploadEntityMessage) {
                     (async () => {
                         await this.mapEditorModeManager.executeCommand(
@@ -419,24 +373,37 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
+        const entityId = uuidv4();
+
+        const properties = get(mapEditorCopiedEntityDataPropertiesStore);
+
         const entityData: WAMEntityData = {
             x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),
             y: Math.floor(y - this.entityPrefabPreview.displayHeight * 0.5),
             prefabRef: this.entityPrefab,
-            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
+            properties: properties ?? [],
+            name: properties?.find((p) => p.type === "openFile")?.name ?? undefined,
         };
 
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
                     this.scene.getGameMap(),
-                    undefined,
+                    entityId,
                     entityData,
                     undefined,
                     this.entitiesManager,
                     { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height }
                 )
             )
+            .then(() => {
+                const openEntity = this.entitiesManager.getEntities().get(entityId);
+                if (get(mapEditorEntityFileDroppedStore)) {
+                    mapEditorEntityFileDroppedStore.set(false);
+                    mapEditorEntityModeStore.set("EDIT");
+                    mapEditorSelectedEntityStore.set(openEntity);
+                }
+            })
             .catch((e) => console.error(e));
     }
 
@@ -445,6 +412,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.shiftKey?.off(Phaser.Input.Keyboard.Events.DOWN);
         this.shiftKey?.off(Phaser.Input.Keyboard.Events.UP);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+    }
+
+    protected unbindEntitiesManagerEventHandlers(): void {
+        this.entitiesManager.off(EntitiesManagerEvent.UpdateEntity, this.handleUpdateEntity);
+        this.entitiesManager.off(EntitiesManagerEvent.CopyEntity, this.handleCopyEntity);
     }
 
     protected createAreaPreviews(): AreaPreview[] {
@@ -503,9 +475,53 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         );
     }
 
+    private updateEntity(entityData: EntityData) {
+        // Create commande to update entity data
+        this.mapEditorModeManager
+            .executeCommand(
+                new UpdateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    entityData.id,
+                    {
+                        ...entityData,
+                    },
+                    undefined,
+                    undefined,
+                    this.entitiesManager,
+                    this.scene
+                )
+            )
+            .catch((e) => console.error(e));
+    }
+
+    private copyEntity = (data: CopyEntityEventData) => {
+        if (!CopyEntityEventData.parse(data)) {
+            return;
+        }
+        const entityData: WAMEntityData = {
+            x: data.position.x,
+            y: data.position.y,
+            prefabRef: data.prefabRef,
+            properties: data.properties ?? [],
+        };
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    undefined,
+                    entityData,
+                    undefined,
+                    this.entitiesManager,
+                    data.entityDimensions
+                )
+            )
+            .catch((e) => console.error(e));
+        this.cleanPreview();
+    };
+
     private unsubscribeStore() {
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
-        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
+        this.mapEditorEntityUploadStoreUnsubscriber?.();
+        this.mapEditorModifyCustomEntityEventStoreUnsubscriber?.();
+        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber?.();
     }
 }

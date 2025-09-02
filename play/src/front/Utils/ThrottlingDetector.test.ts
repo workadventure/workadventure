@@ -1,13 +1,16 @@
+import { performance as nodePerformance } from "perf_hooks";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { writable } from "svelte/store";
 import { ThrottlingDetector, ThrottlingEvent } from "./ThrottlingDetector";
 
-// Mock performance.now for consistent timing tests
-const mockPerformanceNow = vi.fn();
-Object.defineProperty(global, "performance", {
-    value: { now: mockPerformanceNow },
-    writable: true,
-});
+// Ensure global performance exists in Node environment
+if (!("performance" in globalThis)) {
+    Object.defineProperty(globalThis, "performance", {
+        value: nodePerformance,
+        configurable: true,
+        writable: true,
+    });
+}
 
 // Mock console.log to avoid noise in tests
 vi.spyOn(console, "log").mockImplementation(() => {});
@@ -16,22 +19,26 @@ describe("ThrottlingDetector", () => {
     let detector: ThrottlingDetector;
     let mockVisibilityStore: ReturnType<typeof writable<boolean>>;
     let currentTime = 1000; // Start at 1 second
+    let performanceNowSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
         vi.clearAllMocks();
         vi.useFakeTimers();
         currentTime = 1000;
 
+        // Spy on performance.now so the detector uses controlled time
+        performanceNowSpy = vi.spyOn(globalThis.performance, "now").mockImplementation(() => currentTime);
+
         // Create a real Svelte writable store for each test
         mockVisibilityStore = writable(false);
-
-        // Mock performance.now to return controlled time
-        mockPerformanceNow.mockImplementation(() => currentTime);
     });
 
     afterEach(() => {
         if (detector) {
             detector.destroy();
+        }
+        if (performanceNowSpy) {
+            performanceNowSpy.mockRestore();
         }
         vi.useRealTimers();
         vi.clearAllTimers();

@@ -1,0 +1,16 @@
+version: "3.6"
+services:
+  play:
+    environment:
+      # Disable OIDC by unsetting the OIDC environment variables
+      OPID_CLIENT_ID: ""
+      OPID_CLIENT_SECRET: ""
+      OPID_CLIENT_ISSUER: ""
+      OPID_SCOPE: ""
+      # Allow all users to access map editor when OIDC is disabled
+      MAP_EDITOR_ALLOW_ALL_USERS: "true"
+
+  # Disable the OIDC mock server container
+  oidc-server-mock:
+    deploy:
+      replicas: 0

@@ -96,8 +96,8 @@ for (const passportStrategy of passportStrategies) {
 }
 app.use(passport.initialize());
 
-app.get("*.wam", (req, res, next) => {
-    const wamPath = req.url;
+app.get(/.*\.wam$/, (req, res, next) => {
+    const wamPath = req.path;
     const domain = req.hostname;
     if (wamPath.includes("..") || domain.includes("..")) {
         res.status(400).send("Invalid request");
@@ -132,7 +132,7 @@ new ValidatorController(app);
 new PingController(app);
 
 app.get(
-    "/private/files/*",
+    "/private/files/{*splat}",
     (req, res, next) => {
         Promise.resolve(verifyJWT(req, res, next)).catch(next);
     },
@@ -144,7 +144,7 @@ app.use(proxyFiles(fileSystem));
 // Check that the dist-ui directory exists
 if (fs.existsSync("dist-ui")) {
     app.use("/ui", express.static("dist-ui"));
-    app.get("/ui/*", (req, res) => {
+    app.get("/ui/{*splat}", (req, res, next) => {
         res.sendFile("index.html", { root: "dist-ui" });
     });
 }

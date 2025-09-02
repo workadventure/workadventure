@@ -273,6 +273,7 @@ const mapStorageServer: MapStorageServer = {
                                     x: message.x,
                                     y: message.y,
                                     properties: message.properties as EntityDataProperties,
+                                    name: message.name,
                                 },
                                 commandId
                             )
@@ -354,7 +355,7 @@ const mapStorageServer: MapStorageServer = {
                         break;
                     }
                     default: {
-                        //const _exhaustiveCheck: never = editMapMessage;
+                        const _exhaustiveCheck: never = editMapMessage;
                     }
                 }
                 // send edit map message back as a valid one

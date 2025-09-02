@@ -240,6 +240,7 @@ const mapEditor: BaseTranslation = {
                 chooseFile: "Choose file",
                 errorOnFileFormat: "File format not supported",
                 errorOnFileNumber: "Multiple file drop is not supported",
+                errorOnFileSize: "File is too large, max size is {size} MB",
             },
         },
         noProperties: "No properties defined",
@@ -271,9 +272,11 @@ const mapEditor: BaseTranslation = {
         header: {
             title: "Add object to your map",
             description: "Search, upload or select existing object and add it in the map.",
+            choose: "Choose an object",
         },
         title: "Put your object",
         editing: "Editing: {name}",
+        drop: "Drop your file anywhere",
         itemPicker: {
             searchPlaceholder: "Search",
             backToSelectObject: "Back to select object",
@@ -299,6 +302,7 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Choose file",
             errorOnFileFormat: "File format not supported",
             errorOnFileNumber: "Multiple file drop is not supported",
+            errorOnFileSize: "File is too large, max size is {size} MB",
         },
         images: "Image{{s}}",
         noImage: "No image",
@@ -325,6 +329,10 @@ const mapEditor: BaseTranslation = {
             delete: "Delete",
             save: "Save",
             upload: "Upload",
+        },
+        errors: {
+            dragNotConnected: "You can't upload files if you are not logged in and don't have the rights to do so.",
+            dragNotAllowed: "You do not have the rights to upload files on this map",
         },
     },
     settings: {

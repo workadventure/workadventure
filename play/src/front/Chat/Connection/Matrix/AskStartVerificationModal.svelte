@@ -113,7 +113,7 @@
                 {$LL.chat.askStartVerificationModal.ignore()}
             </button>
             <button
-                class="btn btn-secondary flex-1 justify-center  bg-secondary"
+                class="btn btn-secondary flex-1 justify-center bg-secondary"
                 data-testid="VerifyTheSessionButton"
                 on:click={acceptToStartVerification}
             >
