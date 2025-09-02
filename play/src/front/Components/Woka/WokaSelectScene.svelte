@@ -248,7 +248,6 @@
                                     class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
                                 >
                                     {#each collection.textures || [] as texture (texture.id)}
-
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka ===
                                             texture.id
@@ -257,7 +256,13 @@
                                             id="woka-{texture.id}"
                                             on:click={() => selectTexture(collectionIndex, texture.id)}
                                         >
-                                            <WokaImage selectedTextures={{"woka": texture.id}} {wokaData} {getTextureUrl} classList="p-2" direction={assetsDirection} />
+                                            <WokaImage
+                                                selectedTextures={{ woka: texture.id }}
+                                                {wokaData}
+                                                {getTextureUrl}
+                                                classList="p-2"
+                                                direction={assetsDirection}
+                                            />
                                         </button>
                                     {/each}
                                 </div>
