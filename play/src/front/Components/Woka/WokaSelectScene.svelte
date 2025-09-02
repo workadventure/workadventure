@@ -139,28 +139,33 @@
             event.key === "ArrowDown"
         ) {
             event.preventDefault();
-            const currentIndex = wokaData?.["woka"]?.collections.findIndex(
+            const currentCollectionIndex = wokaData?.["woka"]?.collections.findIndex(
                 (c: WokaCollection) => c.name === currentWokaCollection?.name
             );
-            if (currentIndex === undefined || currentIndex < 0) return;
+            if (currentCollectionIndex === undefined || currentCollectionIndex < 0) return;
 
-            const textures = wokaData["woka"].collections[currentIndex].textures;
+            const textures = wokaData["woka"].collections[currentCollectionIndex].textures;
             const currentTextureIndex = textures.findIndex((t: WokaTexture) => t.id === selectedWokaTextureId["woka"]);
 
+            let newIndex = currentCollectionIndex;
             if (event.key === "ArrowLeft") {
-                const newIndex = Math.max(currentTextureIndex - 1, 0);
-                selectTexture(currentIndex, textures[newIndex].id);
+                newIndex = Math.max(currentTextureIndex - 1, 0);
             } else if (event.key === "ArrowRight") {
-                const newIndex = Math.min(currentTextureIndex + 1, textures.length - 1);
-                selectTexture(currentIndex, textures[newIndex].id);
+                newIndex = Math.min(currentTextureIndex + 1, textures.length - 1);
             } else if (event.key === "ArrowUp") {
                 const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
-                const newIndex = Math.max(currentTextureIndex - itemsPerRow, 0);
-                selectTexture(currentIndex, textures[newIndex].id);
+                newIndex = Math.max(currentTextureIndex - itemsPerRow, 0);
             } else if (event.key === "ArrowDown") {
                 const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
-                const newIndex = Math.min(currentTextureIndex + itemsPerRow, textures.length - 1);
-                selectTexture(currentIndex, textures[newIndex].id);
+                newIndex = Math.min(currentTextureIndex + itemsPerRow, textures.length - 1);
+            }
+            if (newIndex !== currentTextureIndex) {
+                selectTexture(currentCollectionIndex, textures[newIndex].id);
+                // Scroll to the newly selected texture
+                const element = document.getElementById(`woka-${textures[newIndex].id}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                }
             }
         } else if (event.key === "Enter") {
             enterPressed = true;
