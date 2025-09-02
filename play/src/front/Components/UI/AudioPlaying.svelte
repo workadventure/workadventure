@@ -8,7 +8,7 @@
     export let url: string;
     let audio: HTMLAudioElement;
     let muted = false;
-    let timeOutToEnd: ReturnType<typeof setTimeout>;;
+    let timeOutToEnd: ReturnType<typeof setTimeout>;
 
     function soundEnded() {
         soundPlayingStore.soundEnded();
@@ -22,16 +22,16 @@
         }
     }
 
-    function unmute(){
-        if(timeOutToEnd) clearTimeout(timeOutToEnd);
+    function unmute() {
+        if (timeOutToEnd) clearTimeout(timeOutToEnd);
         audio.muted = false;
         muted = false;
     }
-    function mute(){
+    function mute() {
         audio.muted = true;
         muted = true;
         timeOutToEnd = setTimeout(() => {
-           soundEnded();
+            soundEnded();
         }, 5000);
     }
 
@@ -44,14 +44,18 @@
     });
 </script>
 
-<div class="audio-playing bg-contrast/80 backdrop-blur pointer-events-auto flex flex-row justify-start items-center rounded-lg" transition:fly={{ x: 210, duration: 500 }}>
+<div
+    class="audio-playing bg-contrast/80 backdrop-blur pointer-events-auto flex flex-row justify-start items-center rounded-lg"
+    transition:fly={{ x: 210, duration: 500 }}
+>
     <IconMusic class="top-0 bottom-0 h-8 w-8 m-2" />
     <p>{$LL.audio.message()}</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded}>
         <track kind="captions" />
     </audio>
     <!-- Button to stop the audio -->
-    <button class="group/audio-playing absolute bg-contrast/80 hover:bg-contrast backdrop-blur hover:backdrop-blur-0 p-3 w-14 -left-16 rounded-lg top-0 bottom-0 flex justify-center items-center cursor-pointer"
+    <button
+        class="group/audio-playing absolute bg-contrast/80 hover:bg-contrast backdrop-blur hover:backdrop-blur-0 p-3 w-14 -left-16 rounded-lg top-0 bottom-0 flex justify-center items-center cursor-pointer"
         on:click={toggleMuteUnmuteAudio}
     >
         {#if muted == false}
