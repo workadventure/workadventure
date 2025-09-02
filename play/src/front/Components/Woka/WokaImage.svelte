@@ -20,7 +20,6 @@
     let frameCount: number = 0;
     const framesPerStep = 15;
 
-
     function findTextureUrl(bodyPart: string): string | null {
         const textureId = selectedTextures?.[bodyPart];
         if (!textureId || !wokaData?.[bodyPart]?.collections) return null;

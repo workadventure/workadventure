@@ -380,7 +380,13 @@
                                             on:click={() => selectTexture(selectedBodyPart, texture.id)}
                                             id={`texture-${selectedBodyPart}-${texture.id}`}
                                         >
-                                            <WokaImage selectedTextures={{[selectedBodyPart]: texture.id}} {wokaData} {getTextureUrl} classList="p-2" direction={assetsDirection} />
+                                            <WokaImage
+                                                selectedTextures={{ [selectedBodyPart]: texture.id }}
+                                                {wokaData}
+                                                {getTextureUrl}
+                                                classList="p-2"
+                                                direction={assetsDirection}
+                                            />
                                         </button>
                                     {/each}
                                 </div>

@@ -14,7 +14,6 @@
 
     let direction: number = 0;
     const canvasSize = 130;
-
 </script>
 
 <div class="woka-preview flex items-center justify-center relative">
@@ -42,6 +41,12 @@
                 /><path d="M20 4v5h-5" /></svg
             >
         </button>
-        <WokaImage {selectedTextures} {wokaData} {getTextureUrl} {canvasSize} direction={directionsMapping[direction]} />
+        <WokaImage
+            {selectedTextures}
+            {wokaData}
+            {getTextureUrl}
+            {canvasSize}
+            direction={directionsMapping[direction]}
+        />
     </div>
 </div>
