@@ -3,8 +3,7 @@
     import { onDestroy, afterUpdate } from "svelte";
     import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import megaphoneImg from "./images/megaphone.svg";
-    import { IconPause, IconPauseFilled, IconPlay, IconPlayFilled } from "@wa-icons";
+    import { IconMusic, IconPause, IconPauseFilled, IconPlay, IconPlayFilled } from "@wa-icons";
 
     export let url: string;
     let audio: HTMLAudioElement;
@@ -45,8 +44,8 @@
     });
 </script>
 
-<div class="audio-playing bg-contrast/80 backdrop-blur pointer-events-auto" transition:fly={{ x: 210, duration: 500 }}>
-    <img src={megaphoneImg} alt="Audio playing" class="rounded-full" />
+<div class="audio-playing bg-contrast/80 backdrop-blur pointer-events-auto flex flex-row justify-start items-center rounded-lg" transition:fly={{ x: 210, duration: 500 }}>
+    <IconMusic class="top-0 bottom-0 h-8 w-8 m-2" />
     <p>{$LL.audio.message()}</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded}>
         <track kind="captions" />
@@ -74,8 +73,6 @@
         right: 0;
         top: 40px;
         transition: all 0.1s ease-out;
-        //background-color: black;
-        border-radius: 30px 0 0 30px;
         display: inline-flex;
         z-index: 750;
 
