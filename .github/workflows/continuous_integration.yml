@@ -494,11 +494,7 @@ jobs:
           cache-dependency-path: "tests/package-lock.json"
 
       - name: "Install dependencies"
-        run: npm ci
-        working-directory: "tests"
-
-      - name: "Install play dependencies"
-        run: npm ci --workspace=workadventure-play
+        run: npm ci --workspace=workadventure-e2e-tests --workspace=workadventure-play
 
       - name: "Install messages dependencies"
         run: npm ci

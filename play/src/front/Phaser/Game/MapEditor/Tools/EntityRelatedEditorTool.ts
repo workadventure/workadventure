@@ -2,9 +2,10 @@ import { EntityPrefab } from "@workadventure/map-editor";
 import { get, Unsubscriber } from "svelte/store";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { GameScene } from "../../GameScene";
-import { EntitiesManager } from "../../GameMap/EntitiesManager";
+import { EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorEntityFileDroppedStore,
     mapEditorEntityModeStore,
     mapEditorModeStore,
     mapEditorSelectedEntityDraggedStore,
@@ -12,11 +13,14 @@ import {
     mapEditorSelectedEntityStore,
     mapEditorVisibilityStore,
 } from "../../../../Stores/MapEditorStore";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
+import { Entity } from "../../../ECS/Entity";
 import { MapEditorTool } from "./MapEditorTool";
 
 export abstract class EntityRelatedEditorTool extends MapEditorTool {
+    private handleDeleteEntity: (entity: Entity) => void;
     protected scene: GameScene;
     protected mapEditorModeManager: MapEditorModeManager;
 
@@ -26,10 +30,10 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
     protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    protected mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    protected mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityPrefabStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEntityEditorModeStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityStoreUnsubscriber: Unsubscriber | undefined;
+    protected mapEditorSelectedEntityDraggedStoreUnsubscriber: Unsubscriber | undefined;
 
     protected constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -42,7 +46,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefabPreview = undefined;
         this.entityOldPositionPreview = undefined;
 
-        this.subscribeToStores();
+        this.handleDeleteEntity = this.deleteEntity.bind(this);
     }
 
     public update(time: number, dt: number): void {}
@@ -50,23 +54,26 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     public clear(): void {
         this.scene.input.topOnly = false;
         mapEditorEntityModeStore.set("ADD");
+        mapEditorSelectedEntityStore.set(undefined);
         this.entitiesManager.clearAllEntitiesTint();
         this.entitiesManager.clearAllEntitiesEditOutlines();
         this.cleanPreview();
+        this.unsubscribeToStores();
+        this.entitiesManager.off(EntitiesManagerEvent.DeleteEntity, this.handleDeleteEntity);
     }
 
     public activate(): void {
         this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
         mapEditorVisibilityStore.set(true);
+
+        this.subscribeToStores();
+        this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, this.handleDeleteEntity);
     }
 
     public destroy(): void {
         this.cleanPreview();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorSelectedEntityStoreUnsubscriber();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
+        this.unsubscribeToStores();
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
@@ -98,6 +105,13 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
                 break;
             }
         }
+    }
+
+    protected unsubscribeToStores(): void {
+        this.mapEditorSelectedEntityPrefabStoreUnsubscriber?.();
+        this.mapEntityEditorModeStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityStoreUnsubscriber?.();
+        this.mapEditorSelectedEntityDraggedStoreUnsubscriber?.();
     }
 
     protected subscribeToStores(): void {
@@ -173,6 +187,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
         this.entityPrefab = undefined;
         mapEditorCopiedEntityDataPropertiesStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
+        mapEditorEntityFileDroppedStore.set(false);
         this.scene.markDirty();
     }
 
@@ -191,5 +206,13 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
             x: Math.floor(this.entityPrefabPreview.displayWidth / 32) % 2 === 1 ? 16 : 0,
             y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
         };
+    }
+
+    private deleteEntity(entity: Entity) {
+        this.mapEditorModeManager
+            .executeCommand(
+                new DeleteEntityFrontCommand(this.scene.getGameMap(), entity.entityId, undefined, this.entitiesManager)
+            )
+            .catch((e) => console.error(e));
     }
 }

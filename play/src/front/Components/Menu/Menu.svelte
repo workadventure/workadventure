@@ -25,6 +25,7 @@
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import ChatSubMenu from "./ChatSubMenu.svelte";
+    import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: ComponentType = ProfileSubMenu;
@@ -93,6 +94,10 @@
                 case SubMenusInterface.chat:
                     activeComponent = ChatSubMenu;
                     analyticsClient.menuChat();
+                    break;
+                case SubMenusInterface.shortcuts:
+                    activeComponent = ShortcutSubMenu;
+                    analyticsClient.menuShortcuts();
                     break;
             }
         } else {
@@ -213,8 +218,6 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
-
     .menu-nav-sidebar nav::-webkit-scrollbar {
         display: none;
     }

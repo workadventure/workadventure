@@ -25,7 +25,7 @@ export class CustomFileService {
             `/private/files/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
             this.hostname
         );
-        console.log("Uploading file to: ", mapPath);
+        console.info("Uploading file to: ", mapPath);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
         return;
     }

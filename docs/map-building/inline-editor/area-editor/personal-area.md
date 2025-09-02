@@ -6,7 +6,7 @@ sidebar_position: 60
 
 ## Description
 
-A personal area is a designated zone where a user can claim ownership or has been assigned as the owner. This feature allows a user to add objects to their area and display their visit card when they are away. Essentially, it serves as the user's virtual office space.
+A personal area is a designated zone where a user can claim ownership or be assigned as the owner. This feature allows the user to add objects to their area and display their visit card when they are away. Essentially, it serves as the user's virtual office space.
 
 ## Create a personal area
 
@@ -15,8 +15,7 @@ While editing an area, select the personal area option.
 ![](../../images/editor/personal-area/personal-area-1.png)
 
 Then define how users can claim this area.<br/>
-There are two options :
-
+There are two options:
 - Dynamic claim mode : Users with specific tags can walk through the area and claim access.
 - Static claim mode : A specified user is set as the area owner.
 
@@ -28,14 +27,14 @@ _Static claim mode: Search for the user's email or name to assign ownership._
 
 ## Claim personal area access
 
-If the personal area is set to dynamic access mode, users with the allowed tags can claim the area by walking through it. A pop-up message will appear, inviting the user to claim or decline the area.<br/>
+If the personal area is set to dynamic access mode, users with the allowed tags can claim the area by walking through it. A pop-up invites them to claim or decline the area.<br/>
 ![](../../images/editor/personal-area/personal-area-4.png)<br/>
 
 Once the area is claimed, the owner can add items to their personal space.
 
 ## Revoke personal area access
 
-As an authorized user, you can manage personal area properties in the map editor. If an area is claimed, you have the option to revoke access, making the area available for others to claim.
+As an authorized user, you can manage personal area properties in the map editor. If an area is claimed, you can revoke access, making the area available for others to claim.
 
 ![](../../images/editor/personal-area/personal-area-5.png)
 

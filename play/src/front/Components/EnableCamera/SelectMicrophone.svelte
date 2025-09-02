@@ -16,7 +16,7 @@
 <div
     class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 mx-2 md:mx-0 w-full min-w-[300px] md:min-w-[400px] max-w-[450px] flex flex-col lg:min-h-[24rem] items-center"
 >
-    <div class="text-lg bold flex items-center space-x-3 mb-2 ps-2 ">
+    <div class="text-lg bold flex items-center space-x-3 mb-2 ps-2">
         <slot name="icon" />
         <div class="grow pe-8 ps-2">
             <slot name="title" />
@@ -30,10 +30,10 @@
     </div>
 
     <div class="flex w-full">
-        <div class="flex flex-wrap  justify-center w-full  min-h-[129px]">
+        <div class="flex flex-wrap justify-center w-full min-h-[129px]">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="flex border border-solid border-white w-full rounded-lg m-2  items-center justify-start transition-all overflow-hidden cursor-pointer px-8 py-6 space-x-4   {!selectedDevice
+                class="flex border border-solid border-white w-full rounded-lg m-2 items-center justify-start transition-all overflow-hidden cursor-pointer px-8 py-6 space-x-4 {!selectedDevice
                     ? 'bg-white text-secondary border-none'
                     : ' hover:bg-white/10 pt-4'} "
                 class:hidden={!editMode && selectedDevice}
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="space-y-1 min-w-0">
-                    <div class="text-lg bold  truncate leading-tight flex  self-start">
+                    <div class="text-lg bold truncate leading-tight flex self-start">
                         {#if editMode && selectedDevice}
                             <MicOffIcon height="h-4" width="w-4" />
                         {/if}
@@ -75,7 +75,7 @@
             {#each deviceList ?? [] as device (device.deviceId)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="border border-solid border-white w-full rounded-lg m-2  transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4  {selectedDevice ===
+                    class="border border-solid border-white w-full rounded-lg m-2 transition-all overflow-hidden cursor-pointer relative px-8 py-6 space-x-4 {selectedDevice ===
                     device.deviceId
                         ? 'bg-white text-secondary pt-12'
                         : 'hover:bg-white/10 pt-4'}"
@@ -91,7 +91,7 @@
                     {/if}
                     <div class="flex items-center justify-start w-full">
                         <div
-                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center "
+                            class="aspect-square me-4 h-6 rounded-full border border-solid border-white flex items-center justify-center"
                             class:bg-secondary={selectedDevice === device.deviceId}
                             class:border-secondary={selectedDevice === device.deviceId}
                         >

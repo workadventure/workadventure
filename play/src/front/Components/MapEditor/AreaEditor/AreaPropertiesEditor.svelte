@@ -13,7 +13,12 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
+    import {
+        FEATURE_FLAG_BROADCAST_AREAS,
+        MATRIX_PUBLIC_URI,
+        PUSHER_URL,
+        ADMIN_URL,
+    } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -29,7 +34,7 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
-    import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { IconChevronDown, IconChevronRight, IconInfoCircle } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
@@ -417,7 +422,7 @@
 {:else}
     <div class="overflow-x-hidden space-y-3">
         <div class="properties-buttons flex flex-row flex-wrap">
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty && ADMIN_URL}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
                     on:click={() => onAddProperty("personalAreaPropertyData")}
@@ -628,10 +633,14 @@
             bind:value={areaName}
             onChange={onUpdateName}
         />
+        <p class="help-text">
+            <IconInfoCircle font-size="18" />
+            {$LL.mapEditor.areaEditor.nameHelpText()}
+        </p>
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="ps-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
+                <button class="ps-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}

@@ -22,20 +22,18 @@ const eventName = "my-event";
 async function init() {
   // Send an event in 5 seconds
   setTimeout(() => {
-    console.log('Sending event: { foo: "Default Value" }');
+    console.info("Sending event: { foo: \"Default Value\" }");
 
-    client
-      .broadcastEvent({
-        name: eventName,
-        room: roomUrl,
-        data: { foo: "Default Value" },
-      })
-      .then(() => {
-        console.log('Event sent: { foo: "Default Value" }');
-      })
-      .catch((e) => {
-        console.error("Error sending event:", e);
-      });
+    client.broadcastEvent({
+      name: eventName,
+      room: roomUrl,
+      data: { foo: "Default Value" },
+    }).then(() => {
+      console.info("Event sent: { foo: \"Default Value\" }");
+    }).catch((e) => {
+      console.error("Error sending event:", e);
+    });
+
   }, 1000);
 
   // Listen a event
@@ -45,9 +43,9 @@ async function init() {
   });
 
   for await (const event of events) {
-    console.log("Event", event);
-    console.log("Sender:", event.senderId);
-    console.log("Value:", event.data);
+    console.info("Event", event);
+    console.info("Sender:", event.senderId);
+    console.info("Value:", event.data);
     break;
   }
 }

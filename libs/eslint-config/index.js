@@ -82,9 +82,9 @@ export function generateConfig(tsconfigRootDir) {
           SharedArrayBuffer: "readonly",
         },
 
-        //parser: tsParser,
-        ecmaVersion: 2018,
-        sourceType: "module",
+                //parser: tsParser,
+                ecmaVersion: "latest",
+                sourceType: "module",
 
         parserOptions: {
           projectService: true,

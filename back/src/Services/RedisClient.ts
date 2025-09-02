@@ -25,10 +25,10 @@ if (redisClient) {
         }
     });
     redisClient.on("connect", () => {
-        console.log("Redis client is connected");
+        console.info("Redis client is connected");
     });
-    redisClient.on("reconnecting", () => console.log("Redis client is reconnecting"));
-    redisClient.on("ready", () => console.log("Redis client is ready"));
+    redisClient.on("reconnecting", () => console.info("Redis client is reconnecting"));
+    redisClient.on("ready", () => console.info("Redis client is ready"));
 }
 
 export type RedisClient = NonNullable<typeof redisClient>;

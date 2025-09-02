@@ -13,7 +13,7 @@ When editing an area or an entity, you can add the play sound property to it. Yo
 
 ![](../../images/editor/play_property.png)
 
-1. You must define the URL of the sound that will be played when the player enters the area.
+1. You must define the URL of the sound that will be played when the player interacts with the entity or enters the area.
 2. You can define the volume of the sound. (0 to 1)
 3. You can define the label of the button that will be displayed to the user. (optional)
 

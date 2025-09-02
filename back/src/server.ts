@@ -49,6 +49,6 @@ server.bindAsync(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure()
     if (err) {
         throw err;
     }
-    console.log("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
+    console.info("WorkAdventure HTTP/2 API starting on port %d!", GRPC_PORT);
     server.start();
 });

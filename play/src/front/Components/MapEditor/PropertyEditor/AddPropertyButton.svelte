@@ -45,7 +45,7 @@
     on:mouseenter={onMouseEnter}
     on:mouseleave={onMouseLeave}
     class="add-property-button tooltip p-3 flex justify-center items-center
-    border border-solid border-white/25 text-gray-500 rounded-lg relative  flex-col m-[0.25rem_0.125rem]"
+    border border-solid border-white/25 text-gray-500 rounded-lg relative flex-col m-[0.25rem_0.125rem]"
     use:floatingUiRef
     data-testid={testId}
     {style}
