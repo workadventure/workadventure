@@ -8,6 +8,7 @@
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaCollection, WokaData, WokaTexture } from "./WokaTypes";
     import { getItemsPerRow } from "./ItemsPerRow";
+    import WokaImage from "./WokaImage.svelte";
 
     export let customize: () => void;
     export let saveAndContinue: (texturesId: string[]) => void;
@@ -247,6 +248,7 @@
                                     class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
                                 >
                                     {#each collection.textures || [] as texture (texture.id)}
+
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka ===
                                             texture.id
@@ -255,14 +257,7 @@
                                             id="woka-{texture.id}"
                                             on:click={() => selectTexture(collectionIndex, texture.id)}
                                         >
-                                            <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                                <div
-                                                    class="w-[64px] h-[64px] bg-no-repeat"
-                                                    style="background-image: url('{getTextureUrl(
-                                                        texture.url
-                                                    )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                                />
-                                            </div>
+                                            <WokaImage selectedTextures={{"woka": texture.id}} {wokaData} {getTextureUrl} classList="p-2" direction={assetsDirection} />
                                         </button>
                                     {/each}
                                 </div>

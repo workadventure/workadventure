@@ -15,6 +15,7 @@
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
     import { getItemsPerRow } from "./ItemsPerRow";
+    import WokaImage from "./WokaImage.svelte";
 
     export let back: () => void;
     export let saveAndContinue: (texturesId: string[]) => void;
@@ -379,34 +380,7 @@
                                             on:click={() => selectTexture(selectedBodyPart, texture.id)}
                                             id={`texture-${selectedBodyPart}-${texture.id}`}
                                         >
-                                            <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                                {#if texture.url.includes("empty.png")}
-                                                    <div class="w-[64px] h-[64px] flex items-center justify-center">
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            width="32"
-                                                            height="32"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            stroke-width="2"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
-                                                            ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                                                                d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
-                                                            /><path d="M9 9l6 6" /></svg
-                                                        >
-                                                    </div>
-                                                {:else}
-                                                    <div
-                                                        class="w-[64px] h-[64px] bg-no-repeat"
-                                                        style="background-image: url('{getTextureUrl(
-                                                            texture.url
-                                                        )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                                    />
-                                                {/if}
-                                            </div>
+                                            <WokaImage selectedTextures={{[selectedBodyPart]: texture.id}} {wokaData} {getTextureUrl} classList="p-2" direction={assetsDirection} />
                                         </button>
                                     {/each}
                                 </div>
