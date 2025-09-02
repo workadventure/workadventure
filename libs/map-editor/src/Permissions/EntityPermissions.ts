@@ -9,11 +9,16 @@ export class EntityPermissions {
         private userUUID?: string
     ) {}
 
-    public canEdit(entityCenterCoordinates: EntityCoordinates): boolean {
+    public canEdit(
+        entityCenterCoordinates: EntityCoordinates,
+        width: number = 0,
+        height: number = 0,
+        floating: boolean = false
+    ): boolean {
         if (this.userCanEdit) {
             return true;
         }
-        return this.isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates);
+        return this.isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates, width, height, floating);
     }
 
     public canRead(entityCenterCoordinates: EntityCoordinates): boolean {
@@ -23,11 +28,19 @@ export class EntityPermissions {
         return this.isEntityInsideAreaWithUserReadAccess(entityCenterCoordinates);
     }
 
-    private isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates: EntityCoordinates) {
+    private isEntityInsideAreaWithUserWriteAccess(
+        entityCenterCoordinates: EntityCoordinates,
+        height: number,
+        width: number,
+        floating: boolean
+    ) {
         return this.gameMapAreas.isUserHasWriteAccessOnAreaForEntityCoordinates(
             entityCenterCoordinates,
             this.userConnectedTags,
-            this.userUUID
+            this.userUUID,
+            width,
+            height,
+            floating
         );
     }
 

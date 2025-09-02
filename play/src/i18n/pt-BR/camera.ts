@@ -1,10 +1,15 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
-const camera: DeepPartial<Translation["camera"]> = {
+const camera: BaseTranslation = {
+    editCam: "Editar câmera",
+    editMic: "Editar microfone",
+    editSpeaker: "Editar saída de áudio",
+    active: "Ativo",
+    disabled: "Desabilitado",
+    notRecommended: "Não recomendado",
     enable: {
         title: "Ligue sua câmera e microfone",
-        start: "Vamos lá!",
+        start: "Bem-vindo à nossa página de configuração de dispositivos de áudio e vídeo! Encontre aqui as ferramentas para melhorar sua experiência online. Ajuste as configurações às suas preferências para resolver possíveis problemas. Certifique-se de que seu hardware esteja conectado corretamente e atualizado. Explore e teste diferentes configurações para encontrar o que funciona melhor para você.",
     },
     help: {
         title: "Necessário acesso à câmera/microfone",
@@ -12,27 +17,36 @@ const camera: DeepPartial<Translation["camera"]> = {
         content: "Você deve permitir o acesso à câmera e ao microfone em seu navegador.",
         firefoxContent:
             'Por favor, clique na caixa de seleção "Lembrar esta decisão", se você não quiser que o Firefox continue pedindo a autorização.',
+        allow: "Permitir webcam",
         continue: "Continuar sem webcam",
         screen: {
             firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
             chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
         },
     },
-    /*webrtc: {
-        title: "TODO: Video relay server connection error",
-        titlePending: "TODO: Video relay server connection pending",
-        error: "TODO: TURN server isn't reachable",
-        content: "TODO: The video relay server cannot be reached. You may be unable to communicate with other users.",
-        solutionVpn: "TODO: If you are <strong>connecting via a VPN</strong>, please disconnect from you VPN and refresh the web page.",
-        solutionHotspot: "TODO: If you are on a restricted network (company network...), try switching network. For instance, create a <strong>Wifi hotspot</strong> with your phone and connect via your phone.",
-        solutionNetworkAdmin: "TODO: If you are a <strong>network administrator</strong>, review the ",
-        preparingYouNetworkGuide: 'TODO: "Preparing your network" guide',
-        refresh: "TODO: Refresh",
-        continue: "TODO: Continue",
-    },*/
+    webrtc: {
+        title: "Erro de conexão do servidor de retransmissão de vídeo",
+        titlePending: "Conexão do servidor de retransmissão de vídeo pendente",
+        error: "Servidor TURN não está acessível",
+        content:
+            "O servidor de retransmissão de vídeo não pode ser alcançado. Você pode não conseguir se comunicar com outros usuários.",
+        solutionVpn:
+            "Se você está <strong>conectando via VPN</strong>, por favor desconecte da sua VPN e atualize a página web.",
+        solutionVpnNotAskAgain: "Entendido. Não me avise novamente 🫡",
+        solutionHotspot:
+            "Se você está em uma rede restrita (rede da empresa...), tente trocar de rede. Por exemplo, crie um <strong>hotspot Wifi</strong> com seu telefone e conecte via seu telefone.",
+        solutionNetworkAdmin: "Se você é um <strong>administrador de rede</strong>, revise o ",
+        preparingYouNetworkGuide: 'guia "Preparando sua rede"',
+        refresh: "Atualizar",
+        continue: "Continuar",
+        newDeviceDetected: "Novo dispositivo detectado {device} 🎉 Trocar? [ESPAÇO]",
+    },
     my: {
         silentZone: "Zona silenciosa",
+        silentZoneDesc:
+            "Você está em uma zona silenciosa. Você só pode ver e ouvir as pessoas com quem está. Você não pode ver ou ouvir as outras pessoas na sala.",
         nameTag: "Você",
+        loading: "Carregando sua câmera...",
     },
     disable: "Desligue sua câmera",
     menu: {
@@ -40,12 +54,12 @@ const camera: DeepPartial<Translation["camera"]> = {
         closeMenu: "Fechar menu",
         senPrivateMessage: "Enviar mensagem privada (em breve)",
         kickoffUser: "Expulsar usuário",
-        muteAudioUser: "Mudo",
-        muteAudioEveryBody: "Mudo para todos",
-        muteVideoUser: "Desligar vídeo",
-        muteVideoEveryBody: "Desligar vídeo para todos",
+        muteAudioUser: "Silenciar áudio",
+        muteAudioEveryBody: "Silenciar áudio para todos",
+        muteVideoUser: "Silenciar vídeo",
+        muteVideoEveryBody: "Silenciar vídeo para todos",
         pin: "Fixar",
-        blockOrReportUser: "Bloquear ou denunciar usuário",
+        blockOrReportUser: "Moderação",
     },
 };
 

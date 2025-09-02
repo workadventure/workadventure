@@ -2,6 +2,8 @@
     import { createEventDispatcher, onDestroy } from "svelte";
     import { inputFormFocusStore } from "../../../Stores/UserInputStore";
     import ButtonClose from "../../Input/ButtonClose.svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { IconInfoCircle } from "@wa-icons";
     const dispatch = createEventDispatcher<{
         close: void;
     }>();
@@ -12,18 +14,26 @@
 </script>
 
 <div class="property-settings-container">
-    <div class="header relative font-bold flex items-center justify-between px-2">
-        <slot name="header">_MISSING_</slot>
-        <ButtonClose
-            on:click={() => {
-                dispatch("close");
-            }}
-            bgColor="bg-white/20"
-            hoverColor="bg-white/30"
-            size="xs"
-        />
+    <div class="header relative font-bold flex items-center flex-col gap-2 px-3">
+        <div class="flex items-center justify-between w-full">
+            <slot name="header">_MISSING_</slot>
+            <ButtonClose
+                on:click={() => {
+                    dispatch("close");
+                }}
+                bgColor="bg-white/20"
+                hoverColor="bg-white/30"
+                size="sm"
+            />
+        </div>
+        <span class="w-full bg-white/10 h-[1px] my-3" />
     </div>
-    <div class="content p-2">
-        <slot name="content">No content</slot>
+    <div class="content">
+        <slot name="content">
+            <p class="help-text">
+                <IconInfoCircle font-size="18" />
+                {$LL.mapEditor.properties.noProperties()}
+            </p>
+        </slot>
     </div>
 </div>

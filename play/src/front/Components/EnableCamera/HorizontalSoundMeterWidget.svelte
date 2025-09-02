@@ -23,7 +23,7 @@
 </script>
 
 <div
-    class="horizontal-sound-meter flex items-center justify-center rounded-full overflow-hidden w-full max-w-[700px]  mx-5 "
+    class="horizontal-sound-meter flex items-center justify-center rounded-full overflow-hidden w-full max-w-[700px] mx-5"
     class:active={spectrum !== undefined}
 >
     {#each [...Array(NB_BARS).keys()] as i (i)}

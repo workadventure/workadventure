@@ -28,13 +28,18 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         qrCodeExplainText:
             "Scannez le code QR avec votre application Discord pour vous connecter. Les codes QR sont limités dans le temps, vous devez parfois en régénérer un",
         qrCodeRegenerate: "Re-générer le QR Code",
+        tokenInputLabel: "Jeton Discord",
         loginToken: "Se connecter avec le token",
-        sendDiscordToken: "envoyer",
+        loginTokenExplainText:
+            "Vous devez saisir votre jeton Discord. Pour effectuer l'intégration de Discord, consultez",
+        sendDiscordToken: "Envoyer",
         tokenNeeded: "Vous devez saisir votre jeton Discord. Pour effectuer l'intégration de Discord, consultez",
         howToGetTokenButton: "Comment obtenir mon jeton de connexion Discord",
         loggedIn: "Connecté en tant que",
         saveSync: "Enregistrer et synchroniser 🔌",
         logout: "Se déconnecter",
+        guilds: "Serveurs Discord",
+        guildExplain: "Sélectionnez les canaux que vous souhaitez ajouter à l’interface de chat WorkAdventure.\n",
     },
     outlook: {
         signIn: "Se connecter avec Outlook",
@@ -55,6 +60,14 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Google",
+    },
+    calendar: {
+        title: "Vos réunions aujourd’hui",
+        joinMeeting: "Cliquez ici pour rejoindre la réunion",
+    },
+    todoList: {
+        title: "À faire",
+        sentence: "Faites une pause 🙏 peut-être un café ou un thé ? ☕",
     },
 };
 

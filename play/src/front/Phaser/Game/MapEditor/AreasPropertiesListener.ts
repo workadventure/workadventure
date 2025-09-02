@@ -66,8 +66,8 @@ import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
-import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
-import PopupFile from "../../../Components/PopUp/PopupFile.svelte";
+import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
+import PopUpFile from "../../../Components/PopUp/PopUpFile.svelte";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -1165,7 +1165,7 @@ export class AreasPropertiesListener {
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
             popupStore.addPopup(
-                PopupFile,
+                PopUpFile,
                 {
                     message: message,
                     click: () => {

@@ -36,7 +36,6 @@ export class ThrottlingDetector {
 
             // If a large delay is detected, consider it throttling
             if (actualDelay > this.throttlingThreshold && !this.wasThrottled) {
-                console.log(`[ThrottlingDetector] Throttling detected: ${actualDelay.toFixed(0)}ms`);
                 this.wasThrottled = true;
 
                 // Emit throttling events
@@ -56,7 +55,6 @@ export class ThrottlingDetector {
         // Listen for when the page becomes visible again
         this.visibilityUnsubscribe = this._visibilityStore.subscribe((isVisible) => {
             if (isVisible && this.wasThrottled) {
-                console.log("[ThrottlingDetector] 🎯 Recovery triggered - Page visible after throttling");
                 this.wasThrottled = false;
 
                 // Emit recovery events

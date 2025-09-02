@@ -85,7 +85,7 @@
             </p>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                    <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
+                    <button type="button" class="btn-lg btn btn-light btn-border button" on:click={click}>
                         {#if $errorScreenStore.type === "retry"}<img
                                 src={reload}
                                 alt=""

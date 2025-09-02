@@ -251,7 +251,7 @@ export class UploadController {
 
     private putUpload() {
         this.app.put(
-            "/*",
+            "/{*splat}",
             passportAuthenticator,
             upload.single("file"),
             bodyParser.raw({
@@ -405,7 +405,7 @@ export class UploadController {
         /**
          * This endpoint is used to patch aany WAM file using the JSON Patch notation.
          */
-        this.app.patch("/*.wam", passportAuthenticator, (req, res, next) => {
+        this.app.patch(/.*\.wam$/, passportAuthenticator, (req, res, next) => {
             (async () => {
                 const filePath = req.path;
 
@@ -646,7 +646,7 @@ export class UploadController {
     }
 
     private deleteFile() {
-        this.app.delete("/*", passportAuthenticator, (req, res, next) => {
+        this.app.delete("/{*splat}", passportAuthenticator, (req, res, next) => {
             (async () => {
                 const filePath = req.path;
 

@@ -119,7 +119,7 @@
 >
     <div class="flex flex-col items-center">
         <div>
-            <p class="pointer-events-none ">
+            <p class="pointer-events-none">
                 {$LL.menu.globalAudio.dragAndDrop()}
             </p>
         </div>

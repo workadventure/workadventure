@@ -177,7 +177,7 @@ const mapStorageServer: MapStorageServer = {
                                 };
                             }
                         } else {
-                            console.log(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
+                            console.info(`[${new Date().toISOString()}] Could not find area with id: ${message.id}`);
                         }
                         break;
                     }
@@ -245,7 +245,7 @@ const mapStorageServer: MapStorageServer = {
                                 )
                             );
                         } else {
-                            console.log(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
+                            console.info(`[${new Date().toISOString()}] Could not find entity with id: ${message.id}`);
                         }
                         break;
                     }
@@ -273,6 +273,7 @@ const mapStorageServer: MapStorageServer = {
                                     x: message.x,
                                     y: message.y,
                                     properties: message.properties as EntityDataProperties,
+                                    name: message.name,
                                 },
                                 commandId
                             )
@@ -354,7 +355,7 @@ const mapStorageServer: MapStorageServer = {
                         break;
                     }
                     default: {
-                        //const _exhaustiveCheck: never = editMapMessage;
+                        const _exhaustiveCheck: never = editMapMessage;
                     }
                 }
                 // send edit map message back as a valid one

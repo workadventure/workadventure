@@ -86,24 +86,29 @@
                 {#if $userIsConnected}
                     <div class="bg-white/20 h-[1px] w-full my-2" />
                     <h4 class=" text-base font-bold text-left">
-                        ${$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
+                        {$LL.externalModule.calendar.title()} ({$calendarEventsStore.size})
                     </h4>
                 {/if}
             </div>
             <div class="flex flex-col justify-center gap-4">
                 {#if !$userIsConnected}
                     <div class="flex flex-col justify-center items-center">
+                        <!--
                         <h4 class="text-l text-left">{$LL.externalModule.teams.userNotConnected()}</h4>
                         <p class="text-xs text-left">{$LL.externalModule.teams.connectToYourTeams()}</p>
-                        {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size > 0}
-                            <ExternalComponents zone="calendarButton" />
-                        {:else}
+                        -->
+                        {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size == 0}
                             <button
                                 class="btn disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1 justify-center"
                                 on:click={goToLoginPage}
                                 >{$LL.menu.profile.login()}
                             </button>
                         {/if}
+                    </div>
+                {/if}
+                {#if get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size > 0}
+                    <div class="flex flex-col justify-center items-center content-center">
+                        <ExternalComponents zone="calendarButton" />
                     </div>
                 {/if}
                 {#if $calendarEventsStore.size > 0}

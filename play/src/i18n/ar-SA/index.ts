@@ -21,6 +21,10 @@ import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
 import area from "./area";
+import externalModule from "./externalModule";
+import form from "./form";
+import messageScreen from "./messageScreen";
+import say from "./say";
 
 const ar_SA = merge(en_US, {
     area,
@@ -44,6 +48,10 @@ const ar_SA = merge(en_US, {
     megaphone,
     video,
     statusModal,
+    externalModule,
+    form,
+    messageScreen,
+    say,
 });
 
 export default ar_SA;

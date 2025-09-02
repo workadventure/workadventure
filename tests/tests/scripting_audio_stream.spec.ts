@@ -5,14 +5,10 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
 
-test.describe("Scripting audio streams", () => {
+test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
-    if (browserName !== "chromium" || isMobile(page)) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+    test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
   test("can play and listen to sounds", async ({
     browser,
@@ -20,7 +16,7 @@ test.describe("Scripting audio streams", () => {
     // This test runs only on Chrome
     // Firefox fails it because the sample rate must be equal to the microphone sample rate
     // Safari fails it because Safari
-    const page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
+    await using page = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Map.teleportToPosition(page, 32, 32);
 
     // Open new page for alice
@@ -76,7 +72,7 @@ test.describe("Scripting audio streams", () => {
 
     await alice.close();
     await alice.context().close();
-    await page.close();
+
     await page.context().close();
   });
 });

@@ -33,7 +33,7 @@
         wokaMenuStore.clear();
     }
 
-    let buttonsLayout: "row" | "column" = "row";
+    let buttonsLayout: "row" | "column" | "wrap" = "row";
 
     async function openChat(chatID: string) {
         if (!get(userIsConnected)) {
@@ -71,11 +71,11 @@
                     return 0;
                 }
             });
-            const nbButtons = sortedActions.length + (wokaMenuData.wokaName ? 0 : 1);
-            if (nbButtons > 2) {
-                buttonsLayout = "column";
-            } else {
+            const nbButtons = sortedActions.length + (wokaMenuData.wokaName ? 0 : 1) + (remotePlayer?.chatID ? 1 : 0);
+            if (nbButtons < 4) {
                 buttonsLayout = "row";
+            } else {
+                buttonsLayout = "wrap";
             }
         }
     });
@@ -91,7 +91,7 @@
 
 {#if wokaMenuData}
     <div
-        class="absolute left-0 right-0 m-auto max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
+        class="absolute left-0 right-0 m-auto max-w-md max-sm:max-w-[89%] z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 -translate-y-1/2"
         data-testid="actions-menu"
     >
         {#if wokaMenuData.wokaName}
@@ -102,7 +102,7 @@
                     </div>
 
                     <div class="flex items-center justify-center p-2">
-                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl ">
+                        <div class="text-white flex flex-col justify-center items-center font-bold text-xl">
                             <div
                                 id="woka"
                                 class=" bt-3 overflow-hidden mt-9 border w-fit h-fit pt-3 rounded-lg cursor-not-allowed bg-[rgb(103,185,133)]"
@@ -113,7 +113,7 @@
                                     customWidth="4rem"
                                 />
                             </div>
-                            <div class=" w-max mt-[29px] ">
+                            <div class=" w-max mt-[29px]">
                                 <h3>{wokaMenuData.wokaName}</h3>
                             </div>
                         </div>
@@ -132,15 +132,15 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast  w-full"
+                class="flex items-center bg-contrast w-full justify-center"
                 class:margin-close={!wokaMenuData.wokaName}
-                class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
+                class:flex-wrap={buttonsLayout === "wrap"}
             >
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 flex-1 min-w-0 {action.style ??
+                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0 {action.style ??
                             ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
@@ -148,7 +148,7 @@
                             action.callback();
                         }}
                     >
-                        <span class="flex flex-row gap-2 items-center justify-center">
+                        <span class="flex flex-row gap-1 items-center justify-center">
                             {#if action.actionIcon}
                                 <div
                                     class="w-6 h-6"
@@ -165,7 +165,7 @@
                 {#if remotePlayer?.chatID}
                     <button
                         type="button"
-                        class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
+                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 min-w-0"
                         data-testid="sendMessagefromVisitCardButton"
                         on:click={() => openChat(remotePlayer?.chatID ?? "")}
                     >
@@ -179,7 +179,7 @@
                 {#if !wokaMenuData.wokaName}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full"
+                        class="btn btn-light btn-ghost text-nowrap justify-center my-2 mx-1 w-fit"
                         on:click|preventDefault|stopPropagation={closeActionsMenu}
                     >
                         {$LL.actionbar.close()}

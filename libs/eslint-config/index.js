@@ -88,7 +88,7 @@ export function generateConfig(tsconfigRootDir) {
                 },
 
                 //parser: tsParser,
-                ecmaVersion: 2018,
+                ecmaVersion: "latest",
                 sourceType: "module",
 
                 parserOptions: {

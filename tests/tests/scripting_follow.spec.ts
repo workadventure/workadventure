@@ -5,17 +5,13 @@ import {publicTestMapUrl} from "./utils/urls";
 import { getPage } from './utils/auth';
 
 test.describe('Scripting follow functions', () => {
-    test('can trigger follow from script', async ({ browser}, { project }) => {
+    test('can trigger follow from script @nowebkit', async ({ browser}, { project }) => {
         // It seems WebRTC fails to start on Webkit
-        if(browser.browserType() === webkit) {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
+        test.skip(browser.browserType() === webkit, 'WebRTC fails to start on WebKit');
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"))
         await Map.teleportToPosition(page, 32, 32);
 
-        const page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
+        await using page2 = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_follow"));
         await Map.teleportToPosition(page2, 32, 32);
 
         await expect(page.getByText('Bob')).toBeVisible();
@@ -37,8 +33,10 @@ test.describe('Scripting follow functions', () => {
 
         let position = await Map.getPosition(page2);
 
+        //eslint-disable-next-line playwright/no-conditional-in-test
         if (position.x < 100) {
             // Wait a bit, maybe Bob was slow to start
+            //eslint-disable-next-line playwright/no-wait-for-timeout
             await page2.waitForTimeout(2000);
             position = await Map.getPosition(page2);
         }
@@ -75,9 +73,9 @@ test.describe('Scripting follow functions', () => {
         await page2.getByRole('button', { name: 'Stop following' }).click();
 
         await waitForUnfollowPromise;
-        await page2.close();
+
         await page2.context().close();
-        await page.close();
+
         await page.context().close();
     });
 });

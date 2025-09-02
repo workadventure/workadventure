@@ -41,6 +41,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: Map<string, Space> = new Map<string, Space>();
+    private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -147,6 +148,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         filterType: FilterType,
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
+        const leavingPromise = this.leavingSpacesPromises.get(spaceName);
+        if (leavingPromise) {
+            await leavingPromise;
+        }
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
         const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
@@ -161,7 +166,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        await spaceInRegistry.destroy();
+        const leavingPromise = spaceInRegistry.destroy();
+        this.leavingSpacesPromises.set(spaceName, leavingPromise);
+        try {
+            await leavingPromise;
+        } finally {
+            this.leavingSpacesPromises.delete(spaceName);
+        }
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
