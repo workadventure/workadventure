@@ -22,7 +22,10 @@ export const isUserData = z.object({
   eraserToolActivated: z.boolean().optional().default(false),
   klaxoonToolClientId: z.string().optional(),
   excalidrawToolActivated: z.boolean().optional().default(false),
-  excalidrawToolDomains: z.array(z.string()).optional().default(['excalidraw.com']),
+  excalidrawToolDomains: z
+    .array(z.string())
+    .optional()
+    .default(["excalidraw.com"]),
   applications: z.array(isApplicationDefinitionInterface).optional(),
 });
 

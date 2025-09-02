@@ -74,7 +74,7 @@ services:
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:3000/ping" ]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
       interval: 5s
       timeout: 5s
       start_period: 3s
@@ -111,7 +111,7 @@ services:
 
   synapse:
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8008" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8008"]
       interval: 5s
       timeout: 5s
       start_period: 3s

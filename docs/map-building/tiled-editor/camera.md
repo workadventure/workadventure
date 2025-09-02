@@ -1,8 +1,6 @@
 ---
-
 sidebar_position: 90
 title: Camera
-
 ---
 
 # Working with camera
@@ -35,7 +33,7 @@ It is possible to define special regions on the map that can make the camera zoo
 
    ![Add Property](../images/camera/5_click_add_property.png)
 
-6. Add a **bool** property of name *focusable*:
+6. Add a **bool** property of name _focusable_:
 
    ![Add focusable property](../images/camera/6_add_focusable_prop.png)
 
@@ -53,20 +51,20 @@ If you want, you can add an additional property to control how much should the c
 
    ![Add Property](../images/camera/5_click_add_property.png)
 
-2. Add a **float** property of name *zoomMargin*:
+2. Add a **float** property of name _zoomMargin_:
 
    ![Add zoomMargin property](../images/camera/8_add_zoom_margin.png)
 
-2. Define how much (in percentage value) should the zoom be decreased:
+3. Define how much (in percentage value) should the zoom be decreased:
 
    ![Define zoomMargin property](../images/camera/9_optional_zoom_margin_defined.png)
 
-    For example, if you define your area as a 300x200 rectangle, setting this property to 0.5 *(50%)* means the camera will try to fit within the viewport the entire area + margin of 50% of its dimensions, so 450x300.
+   For example, if you define your area as a 300x200 rectangle, setting this property to 0.5 _(50%)_ means the camera will try to fit within the viewport the entire area + margin of 50% of its dimensions, so 450x300.
 
-    - No margin defined
+   - No margin defined
 
-        ![No margin defined](../images/camera/no_margin.png)
+     ![No margin defined](../images/camera/no_margin.png)
 
-    - Margin set to **0.35**
+   - Margin set to **0.35**
 
-        ![Margin set to 0.35](../images/camera/with_margin.png)
+     ![Margin set to 0.35](../images/camera/with_margin.png)

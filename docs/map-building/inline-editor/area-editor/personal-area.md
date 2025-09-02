@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 60
-
 ---
 
 # Personal area
@@ -9,7 +7,6 @@ sidebar_position: 60
 ## Description
 
 A personal area is a designated zone where a user can claim ownership or be assigned as the owner. This feature allows the user to add objects to their area and display their visit card when they are away. Essentially, it serves as the user's virtual office space.
-
 
 ## Create a personal area
 
@@ -23,11 +20,10 @@ There are two options:
 - Static claim mode : A specified user is set as the area owner.
 
 ![](../../images/editor/personal-area/personal-area-2.png)<br/>
-*Dynamic claim mode: Enter user tags in the "allowed user tags" input field.*
-
+_Dynamic claim mode: Enter user tags in the "allowed user tags" input field._
 
 ![](../../images/editor/personal-area/personal-area-3.png)<br/>
-*Static claim mode: Search for the user's email or name to assign ownership.*
+_Static claim mode: Search for the user's email or name to assign ownership._
 
 ## Claim personal area access
 
@@ -52,7 +48,3 @@ If the area contains objects, a warning message will prompt you to decide how to
 This feature is not available in the self-hosted version of WorkAdventure.
 :::
 When a user walks through a personal area and the owner is away, the owner's visit card will be displayed. From there, visitors can leave a message in the chat.
-
-
-
-

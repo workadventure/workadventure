@@ -30,6 +30,7 @@ There are additional environment variables which can be used to configure the Op
 For developers, here is the complete flow:
 
 **Login diagram**
+
 ```mermaid
 sequenceDiagram
     Front->>+Pusher: /login-screen - Call this URL to connect users
@@ -49,6 +50,7 @@ sequenceDiagram
 ```
 
 **Page loading diagram**
+
 ```mermaid
 sequenceDiagram
     Front->>+Pusher: /me?token=x&playUri=y - Fetch data about current user

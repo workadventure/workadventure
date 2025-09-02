@@ -27,6 +27,7 @@ Furthermore, you need to make the global `WA` object available. To do this, edit
 Add this line at the top of the file:
 
 **index.ts**
+
 ```typescript
 /// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
 ```
@@ -40,6 +41,7 @@ Below is a step by step guide explaining how to set up Typescript + Vite along y
 In your map directory, start by adding a `package.json` file. This file will contain dependencies on Vite, Typescript and the Workadventure typings:
 
 **package.json**
+
 ```json
 {
   "scripts": {
@@ -54,7 +56,7 @@ In your map directory, start by adding a `package.json` file. This file will con
     "typescript": "^4.9.5",
     "vite": "^4.3.9",
     "wa-map-optimizer-vite": "^1.1.15"
-  },
+  }
 }
 ```
 
@@ -66,44 +68,51 @@ $ npm install
 
 We now need to add a Vite configuration file (for development mode). This Vite file will:
 
-*   Start a local webserver that will be in charge of serving the map
-*   Compile Typescript into Javascript and serve it automatically
-*   Optimize your built map
+- Start a local webserver that will be in charge of serving the map
+- Compile Typescript into Javascript and serve it automatically
+- Optimize your built map
 
 **vite.config.js**
+
 ```js
 import { defineConfig } from "vite";
-import { getMaps, getMapsOptimizers, getMapsScripts } from "wa-map-optimizer-vite";
+import {
+  getMaps,
+  getMapsOptimizers,
+  getMapsScripts,
+} from "wa-map-optimizer-vite";
 
 const maps = getMaps();
 
 export default defineConfig({
-    base: "./",
-    build: {
-        rollupOptions: {
-            input: {
-                index: "./index.html",
-                ...getMapsScripts(maps),
-            },
-        },
+  base: "./",
+  build: {
+    rollupOptions: {
+      input: {
+        index: "./index.html",
+        ...getMapsScripts(maps),
+      },
     },
-    plugins: [...getMapsOptimizers(maps)],
-    server: {
-        host: "localhost",
-        headers: {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-            "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-        },
-        open: "/",
+  },
+  plugins: [...getMapsOptimizers(maps)],
+  server: {
+    host: "localhost",
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers":
+        "X-Requested-With, content-type, Authorization",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
     },
+    open: "/",
+  },
 });
 ```
 
 We need to configure Typescript, using a `tsconfig.json` file.
 
 **tsconfig.json**
+
 ```json
 {
   "compilerOptions": {
@@ -111,10 +120,7 @@ We need to configure Typescript, using a `tsconfig.json` file.
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "allowJs": true,
     "moduleResolution": "Node",
     "strict": true,
@@ -136,37 +142,34 @@ We need to configure Typescript, using a `tsconfig.json` file.
     "noImplicitReturns": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
 ```
 
 Create your entry point (the index.html).
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <meta name="robots" content="noindex">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
     <title>WorkAdventure Starter</title>
-</head>
+  </head>
 
-<body></body>
-
+  <body></body>
 </html>
 ```
-
 
 Create your entry script (the Typescript file at the root of your project).
 
 **src/index.ts**
+
 ```typescript
 /// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
 
-console.log('Hello world!');
+console.log("Hello world!");
 ```
 
 The first comment line is important in order to get `WA` typings.

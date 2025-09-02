@@ -4,7 +4,8 @@
  * unnecessary checks for undefined fields in our code. Those transformers cast the generated interfaces to interfaces
  * with object fields being required.
  */
-import {AddSpaceUserMessage, UpdateSpaceUserMessage} from "../ts-proto-generated/messages";
-import {noUndefinedForKeys, type RequiredFields } from "./undefinedChecker";
-
-
+import {
+  AddSpaceUserMessage,
+  UpdateSpaceUserMessage,
+} from "../ts-proto-generated/messages";
+import { noUndefinedForKeys, type RequiredFields } from "./undefinedChecker";

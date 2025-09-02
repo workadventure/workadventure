@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 40
-
 ---
 
 # Opening a website when walking on the map
@@ -12,7 +10,6 @@ that trigger opening a website.
 The inline map editor is easier to use and can be accessed directly from WorkAdventure.
 :::
 
-
 <iframe width="100%" height="480" src="https://www.youtube.com/embed/Me8cu5lLN3A" title="Building your map - Opening a website" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 ## The openWebsite property
@@ -22,12 +19,12 @@ on the right side of the screen)
 
 In order to create a zone that opens websites:
 
-* You must create a specific object.
-* Object class must be "`area`"
-* In object properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
-* You may also use "`openWebsiteWidth`" property (of type "`int`" or "`float`" between 0 and 100) to control the width of the iframe.
-* You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
-* You can decide if the website should be closable with "`openWebsiteClosable`" property (of type "`bool`")
+- You must create a specific object.
+- Object class must be "`area`"
+- In object properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
+- You may also use "`openWebsiteWidth`" property (of type "`int`" or "`float`" between 0 and 100) to control the width of the iframe.
+- You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
+- You can decide if the website should be closable with "`openWebsiteClosable`" property (of type "`bool`")
 
 :::warning Forbidden iframes
 A website can explicitly forbid another website from loading it in an iFrame using
@@ -61,7 +58,6 @@ To embed a Youtube video, be sure to **use the "embed" link**. You can get this 
 ![Put this URL in the "openWebsite" property](../images/open_website.png)
 
 <div class="text--center text--italic">Put this URL in the "openWebsite" property</div>
-
 
 ### Triggering of the "open website" action
 

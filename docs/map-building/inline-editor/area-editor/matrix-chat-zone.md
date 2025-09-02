@@ -1,10 +1,9 @@
 ---
-
 sidebar_position: 110
-
 ---
 
 # Matrix Chat Room Property
+
 :::info
 This feature requires a Matrix server. If you are using WorkAdventure SaaS, we already provide a Matrix server out-of-the-box. If you are self-hosting, be sure to connect a Matrix server to your install.
 :::
@@ -16,15 +15,14 @@ When editing an area, you can add the Matrix chat room property by clicking on t
 
 ![Matrix Chat Icon](../../images/editor/matrix-chat-zone/matrix-chat-zone-1.png)
 
-   ![Matrix Chat Room](../../images/editor/matrix-chat-zone/matrix-chat-zone-2.png)
+![Matrix Chat Room](../../images/editor/matrix-chat-zone/matrix-chat-zone-2.png)
 
 1. You must define a **display name** for the Matrix chat room.
-   
 2. Choose how the chat room is triggered when entering the area:
+
    - **Automatically open chat**: If this option is selected, the chat will open immediately when the user enters the area.
 
 3. If not selected, the chat can be manually opened by the user from the interface.
-
 
 ## Matrix Chat Room Functionality
 

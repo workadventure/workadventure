@@ -1,12 +1,10 @@
 ---
-
 sidebar_position: 70
-
 ---
 
 # Play sound property
 
-On your map, you can define special zones where a sound will be played when a user enters the area. 
+On your map, you can define special zones where a sound will be played when a user enters the area.
 Also, you can define an entity that will trigger a sound.
 
 ## Setting play sound area

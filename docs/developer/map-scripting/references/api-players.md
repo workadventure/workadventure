@@ -34,7 +34,6 @@ that are in the player's viewport (or in a zone near the current viewport). This
 you cannot listen to every user in a room. You can only listen to users that your player can actually see.
 :::
 
-
 ## Getting a list of players around me
 
 The `WA.players.list()` method returns a list of players around the current player character.
@@ -44,11 +43,12 @@ WA.players.list(): IterableIterator<RemotePlayerInterface>
 ```
 
 **Example:**
+
 ```javascript
 await WA.players.configureTracking();
 const players = WA.players.list();
 for (const player of players) {
-    console.log(`Player ${player.name} is near you`);
+  console.log(`Player ${player.name} is near you`);
 }
 ```
 
@@ -60,36 +60,36 @@ Remote players are represented by an object implementing the `RemotePlayerInterf
 
 ```typescript
 interface RemotePlayerInterface {
-    /**
-     * A unique ID for this player. Each character on the map has a unique ID
-     */
-    readonly id: number;
-    /**
-     * The displayed name for this player
-     */
-    readonly name: string;
-    /**
-     * A unique ID for the user. Unlike the "id", 2 characters can have the same UUID if they belong to the same user
-     * (i.e. if the same user logged twice using 2 different tabs)
-     */
-    readonly uuid: string;
-    /**
-     * The color of the outline around the player's name
-     */
-    readonly outlineColor: number | undefined;
+  /**
+   * A unique ID for this player. Each character on the map has a unique ID
+   */
+  readonly id: number;
+  /**
+   * The displayed name for this player
+   */
+  readonly name: string;
+  /**
+   * A unique ID for the user. Unlike the "id", 2 characters can have the same UUID if they belong to the same user
+   * (i.e. if the same user logged twice using 2 different tabs)
+   */
+  readonly uuid: string;
+  /**
+   * The color of the outline around the player's name
+   */
+  readonly outlineColor: number | undefined;
 
-    /**
-     * The position of the current player, expressed in game pixels, relative to the top - left of the map.
-     */
-    readonly position: PlayerPosition;
-    /**
-     * A stream updated with the position of this current player.
-     */
-    readonly position$: Observable<PlayerPosition>;
-    /**
-     * An object storing players variables
-     */
-    readonly state: ReadOnlyState;
+  /**
+   * The position of the current player, expressed in game pixels, relative to the top - left of the map.
+   */
+  readonly position: PlayerPosition;
+  /**
+   * A stream updated with the position of this current player.
+   */
+  readonly position$: Observable<PlayerPosition>;
+  /**
+   * An object storing players variables
+   */
+  readonly state: ReadOnlyState;
 }
 ```
 
@@ -97,9 +97,9 @@ with:
 
 ```typescript
 type PlayerPosition = {
-    x: number,
-    y: number,
-}
+  x: number;
+  y: number;
+};
 ```
 
 ## Getting a remote player by ID
@@ -111,11 +111,12 @@ WA.players.get(id: number): RemotePlayerInterface | undefined;
 ```
 
 **Example:**
+
 ```javascript
 await WA.players.configureTracking();
 const player = WA.players.get(1);
 if (player !== undefined) {
-    console.log(`Player 1 name is ${player.name}`);
+  console.log(`Player 1 name is ${player.name}`);
 }
 ```
 
@@ -144,19 +145,21 @@ an object on which you can add subscriptions using the `subscribe` method.
 ```typescript
 await WA.players.configureTracking();
 WA.players.onPlayerEnters.subscribe((player: RemotePlayerInterface) => {
-    console.log(`Player ${player.name} entered your nearby zone`);
+  console.log(`Player ${player.name} entered your nearby zone`);
 });
 WA.players.onPlayerLeaves.subscribe((player: RemotePlayerInterface) => {
-    console.log(`Player ${player.name} left your nearby zone`);
+  console.log(`Player ${player.name} left your nearby zone`);
 });
 ```
 
 If you want to stop tracking rxJs subscriptions, the `subscribe()` function returns a `Subscription` object with an `unsubscribe()` method.
 
 ```javascript
-const subscription = WA.players.onPlayerEnters.subscribe((player: RemotePlayerInterface) => {
+const subscription = WA.players.onPlayerEnters.subscribe(
+  (player: RemotePlayerInterface) => {
     console.log(`Player ${player.name} entered your nearby zone`);
-});
+  }
+);
 
 // Later:
 subscription.unsubscribe();
@@ -174,9 +177,9 @@ with:
 
 ```typescript
 interface RemotePlayerMoved {
-    player: RemotePlayerInterface;
-    newPosition: PlayerPosition;
-    oldPosition: PlayerPosition;
+  player: RemotePlayerInterface;
+  newPosition: PlayerPosition;
+  oldPosition: PlayerPosition;
 }
 ```
 
@@ -185,10 +188,12 @@ interface RemotePlayerMoved {
 ```typescript
 await WA.players.configureTracking();
 WA.players.onPlayerMoves().subscribe((event: RemotePlayerMoved) => {
-    const player = event.player;
-    const oldPosition = event.oldPosition;
-    const newPosition = event.newPosition;
-    console.log(`Player ${player.name} moved from ${oldPosition.x},${oldPosition.y} to ${newPosition.x},${newPosition.y}`);
+  const player = event.player;
+  const oldPosition = event.oldPosition;
+  const newPosition = event.newPosition;
+  console.log(
+    `Player ${player.name} moved from ${oldPosition.x},${oldPosition.y} to ${newPosition.x},${newPosition.y}`
+  );
 });
 ```
 
@@ -208,11 +213,12 @@ Those public variables are exposed in the `RemotePlayer.state` object.
 Variables in `RemotePlayer.state` are read-only.
 
 **Example:**
+
 ```javascript
 await WA.players.configureTracking();
 const players = WA.players.list();
 for (const player of players) {
-    console.log(`Player ${player.name} score is ${player.state.score}`);
+  console.log(`Player ${player.name} score is ${player.state.score}`);
 }
 ```
 
@@ -225,11 +231,12 @@ RemotePlayer.state.onVariableChange(key: string): Observable<unknown>;
 ```
 
 **Example:**
+
 ```javascript
 // Assuming remotePlayer is a RemotePlayerInterface instance
 // Let's listen to changes in the "score" variable:
 remotePlayer.state.onVariableChange("score").subscribe((value: unknown) => {
-    console.log(`Player ${remotePlayer.name} new score is ${value}`);
+  console.log(`Player ${remotePlayer.name} new score is ${value}`);
 });
 ```
 
@@ -247,8 +254,8 @@ with:
 
 ```typescript
 interface PlayerVariableChanged {
-    player: RemotePlayer;
-    value: unknown;
+  player: RemotePlayer;
+  value: unknown;
 }
 ```
 
@@ -256,10 +263,13 @@ This will trigger an event containing a reference to the remote player and the n
 of the variable.
 
 **Example:**
+
 ```javascript
-WA.players.onVariableChange("score").subscribe((event: PlayerVariableChanged) => {
+WA.players
+  .onVariableChange("score")
+  .subscribe((event: PlayerVariableChanged) => {
     console.log(`Player ${event.player.name} new score is ${event.value}`);
-});
+  });
 ```
 
 ## Sending an event to a remote player

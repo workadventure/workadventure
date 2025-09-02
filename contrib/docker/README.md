@@ -49,7 +49,7 @@ graph LR
 
 > **Note**
 > You can host your maps on the WorkAdventure server itself (using the dedicated map-storage container), or outside
-> of the WorkAdventure server, on any [properly configured HTTP server](../../docs/maps/hosting.md) (Nginx, Apache...). 
+> of the WorkAdventure server, on any [properly configured HTTP server](../../docs/maps/hosting.md) (Nginx, Apache...).
 > The default docker-compose file does **not** contain a container dedicated to hosting maps. The documentation and
 
 ## Getting started
@@ -62,7 +62,7 @@ graph LR
 
 On your server, install the latest Docker version, along docker-compose.
 
-### 2. Copy deployment files 
+### 2. Copy deployment files
 
 Copy the [`.env.prod.template`](.env.prod.template) file on your server, and rename it to `.env`.
 Copy the [`docker-compose.prod.yaml`](docker-compose.prod.yaml) file on your server, and rename it to `docker-compose.yaml`.
@@ -76,7 +76,7 @@ For your environment to start, you will need to at least configure:
 - **VERSION**: the version of WorkAdventure to install. See below for more information.
 - **SECRET_KEY**: a random key used to generate JWT secrets
 - **DOMAIN**: your domain name (without any "https://" prefix)
-- **MAP_STORAGE_AUTHENTICATION_USER**: the username for the map-storage container 
+- **MAP_STORAGE_AUTHENTICATION_USER**: the username for the map-storage container
 - **MAP_STORAGE_AUTHENTICATION_PASSWORD**: the password for the map-storage container
 
 Fill free to look the other environment variables and modify them according to your preferences.
@@ -130,7 +130,7 @@ Open your browser and go to `https://<your-domain>/map-storage/`.
 You will be asked to authenticate. Use the credentials you configured in the `.env` file.
 
 > **Note**
-> Right now, authentication is limited to a single user credential in the map-storage container, 
+> Right now, authentication is limited to a single user credential in the map-storage container,
 > hard coded in the `.env` file. This is not ideal, but works for now (the map-storage container
 > is quite new). Contributions are welcome if you want to improve this.
 
@@ -183,7 +183,7 @@ The upgrade path will depend on the installation of WorkAdventure you are using.
 
 - Download the `docker-compose.prod.yaml` for the version you want to upgrade to and replace it on your server
 - Now, edit the `.env` file and change the `VERSION` to the matching version.
-- Read the upgrade notes for the version you are upgrading to (see the [releases page](https://github.com/thecodingmachine/workadventure/releases/)), 
+- Read the upgrade notes for the version you are upgrading to (see the [releases page](https://github.com/thecodingmachine/workadventure/releases/)),
   and apply any changes if needed (this might often be an additional variable to add to the `.env` file)
 
 Then, simply run:

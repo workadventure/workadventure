@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 40
-
 ---
 
 # Megaphone
@@ -37,9 +35,7 @@ One click will enable the megaphone, and a second click will disable it.
 
 ![](../images/editor/megaphone-icon.png)
 
-
 ## Frequently Asked Questions
-
 
 ### How do I know if the megaphone is enabled?
 

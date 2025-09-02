@@ -17,15 +17,15 @@ You can position this popup by using a "rectangle" object in Tiled that you will
 WA.ui.openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup
 ```
 
-*   **targetObject**: the name of the rectangle object defined in Tiled.
-*   **message**: the message to display in the popup.
-*   **buttons**: an array of action buttons defined underneath the popup.
+- **targetObject**: the name of the rectangle object defined in Tiled.
+- **message**: the message to display in the popup.
+- **buttons**: an array of action buttons defined underneath the popup.
 
 Action buttons are `ButtonDescriptor` objects containing these properties.
 
-*   **label (_string_)**: The label of the button.
-*   **className (_string_)**: The visual type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled".
-*   **callback (_(popup: Popup)=>void_)**: Callback called when the button is pressed.
+- **label (_string_)**: The label of the button.
+- **className (_string_)**: The visual type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled".
+- **callback (_(popup: Popup)=>void_)**: Callback called when the button is pressed.
 
 Please note that `openPopup` returns an object of the `Popup` class. Also, the callback called when a button is clicked is passed a `Popup` object.
 
@@ -33,10 +33,10 @@ The `Popup` class that represents an open popup contains a single method: `close
 
 ```ts
 class Popup {
-    /**
-     * Closes the popup
-     */
-    close() {};
+  /**
+   * Closes the popup
+   */
+  close() {}
 }
 ```
 
@@ -47,20 +47,22 @@ let helloWorldPopup;
 
 // Open the popup when we enter a given zone
 WA.room.onEnterLayer("myZone").subscribe(() => {
-    helloWorldPopup = WA.ui.openPopup("popupRectangle", 'Hello world!', [{
-        label: "Close",
-        className: "primary",
-        callback: (popup) => {
-            // Close the popup when the "Close" button is pressed.
-            popup.close();
-        }
-    }]);
+  helloWorldPopup = WA.ui.openPopup("popupRectangle", "Hello world!", [
+    {
+      label: "Close",
+      className: "primary",
+      callback: (popup) => {
+        // Close the popup when the "Close" button is pressed.
+        popup.close();
+      },
+    },
+  ]);
 });
 
 // Close the popup when we leave the zone.
 WA.room.onLeaveLayer("myZone").subscribe(() => {
-    helloWorldPopup.close();
-})
+  helloWorldPopup.close();
+});
 ```
 
 ### Add custom menu
@@ -68,8 +70,10 @@ WA.room.onLeaveLayer("myZone").subscribe(() => {
 ```
 WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu
 ```
+
 Add a custom menu item containing the text `commandDescriptor` in the navbar of the menu.
 `options` attribute accepts an object with three properties :
+
 - `callback : (commandDescriptor: string) => void` : A click on the custom menu will trigger the `callback`.
 - `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
 - `key?: string` : A unique identifier for your menu item.
@@ -84,13 +88,13 @@ Custom menu exist only until the map is unloaded, or you leave the iframe zone o
 ![Custom Menu Iframe](../images/custom-menu-iframe.png)
 
 Example:
+
 ```ts
-const menu = WA.ui.registerMenuCommand('menu test',
-    {
-        callback: () => {
-            WA.chat.sendChatMessage('test');
-        }
-    })
+const menu = WA.ui.registerMenuCommand("menu test", {
+  callback: () => {
+    WA.chat.sendChatMessage("test");
+  },
+});
 
 // Some time later, if you want to remove the menu:
 menu.remove();
@@ -108,12 +112,16 @@ class Menu {
   /**
    * Remove the menu
    */
-  public remove(): void {/*...*/};
+  public remove(): void {
+    /*...*/
+  }
 
   /**
    * Programmatically open the menu
    */
-  public open(): void {/*...*/};
+  public open(): void {
+    /*...*/
+  }
 }
 ```
 
@@ -153,16 +161,16 @@ Example:
 
 ```ts
 const triggerMessage = WA.ui.displayActionMessage({
-    message: "press 'space' to confirm",
-    callback: () => {
-        WA.chat.sendChatMessage("confirmed", "trigger message logic")
-    }
+  message: "press 'space' to confirm",
+  callback: () => {
+    WA.chat.sendChatMessage("confirmed", "trigger message logic");
+  },
 });
 
 setTimeout(() => {
-    // later
-    triggerMessage.remove();
-}, 1000)
+  // later
+  triggerMessage.remove();
+}, 1000);
 ```
 
 Please note that `displayActionMessage` returns an object of the `ActionMessage` class.
@@ -171,10 +179,10 @@ The `ActionMessage` class contains a single method: `remove(): Promise<void>`. T
 
 ```ts
 class ActionMessage {
-    /**
-     * Hides the message
-     */
-    remove() {};
+  /**
+   * Hides the message
+   */
+  remove() {}
 }
 ```
 
@@ -195,16 +203,14 @@ WA.ui.onRemotePlayerClicked.subscribe((remotePlayer: RemotePlayer) => {
 ```
 
 `remotePlayer.addAction(actionName, callback)` returns an Action object, which can remove itself from ActionsMenu:
+
 ```ts
-const action = remotePlayer.addAction('This will disappear!', () => {
-    console.log('You managed to click me!');
+const action = remotePlayer.addAction("This will disappear!", () => {
+  console.log("You managed to click me!");
 });
-setTimeout(
-    () => {
-        action.remove();
-    },
-    1000,
-);
+setTimeout(() => {
+  action.remove();
+}, 1000);
 ```
 
 ## Manage fixed iframes
@@ -269,15 +275,15 @@ You can open a website with the `WA.ui.website.open()` method. It returns an `Pr
 
 ```ts
 const myWebsite = await WA.ui.website.open({
-    url: "https://wikipedia.org",
-    position: {
-        vertical: "middle",
-        horizontal: "middle",
-    },
-    size: {
-        height: "50vh",
-        width: "50vw",
-    },
+  url: "https://wikipedia.org",
+  position: {
+    vertical: "middle",
+    horizontal: "middle",
+  },
+  size: {
+    height: "50vh",
+    width: "50vw",
+  },
 });
 
 myWebsite.position.vertical = "top";
@@ -288,12 +294,15 @@ The `url` parameter can be a relative URL. In this case, the URL is relative to 
 :::
 
 ### Close a UI website
+
 You can close a website with the close function on the `UIWebsite` object
 
 ```ts
 myWebsite.close();
 ```
+
 ### Get all UI websites
+
 You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
 
 ```ts
@@ -301,6 +310,7 @@ WA.ui.website.getAll();
 ```
 
 ### Get UI website by ID
+
 You can get a specific website with the `WA.ui.website.getById()` method. It returns an `Promise<UIWebsite>` instance.
 If your code is running inside a UIWebsite iframe, you can use `WA.iframeId` to obtain the id of the current iframe.
 
@@ -310,6 +320,7 @@ const website = await WA.ui.website.getById(websiteId);
 ```
 
 ## The modal iframe API
+
 ### Open the modal iframe
 
 ```ts
@@ -325,12 +336,12 @@ WA.ui.modal.openModal({
 ```
 
 - `src` (string, **mandatory**): the URL of the iframe modal (mandatory).
-- `allow` (string, *optional*, default ""): the list of [permission policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Permissions_Policy) allowed.
-- `allowApi` (boolean, *optional*, default `false`): if set to `true`, the iframe will be able to use the scripting API.
-- `position` (string, *optional*, default `right`): the position of the modal. Possible values are `center`, `left`, `right`.
-- `allowFullScreen` (boolean, *optional*, default `true`): if set to `false`, the "fullscreen" button next to the close button will be hidden.
+- `allow` (string, _optional_, default ""): the list of [permission policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Permissions_Policy) allowed.
+- `allowApi` (boolean, _optional_, default `false`): if set to `true`, the iframe will be able to use the scripting API.
+- `position` (string, _optional_, default `right`): the position of the modal. Possible values are `center`, `left`, `right`.
+- `allowFullScreen` (boolean, _optional_, default `true`): if set to `false`, the "fullscreen" button next to the close button will be hidden.
 - `title`: the title of the iframe (note: this is mostly useless since the title is not displayed).
-- `closeCallback` (function, *optional*): a function that will be called when the modal is closed. The function will be passed the `ModalEvent` object used to configure the modal.
+- `closeCallback` (function, _optional_): a function that will be called when the modal is closed. The function will be passed the `ModalEvent` object used to configure the modal.
 
 ### Example
 
@@ -355,12 +366,12 @@ WA.ui.modal.openModal({
 Opening a modal on the right side:
 
 ```ts
-    WA.ui.modal.openModal({
-        title: "WorkAdventure website",
-        src: 'https://workadventu.re',
-        allow: "fullscreen",
-        position: "right"
-    });
+WA.ui.modal.openModal({
+  title: "WorkAdventure website",
+  src: "https://workadventu.re",
+  allow: "fullscreen",
+  position: "right",
+});
 ```
 
 ![Modal Right](../images/modal/modal-right.png)
@@ -368,11 +379,11 @@ Opening a modal on the right side:
 Opening a modal on the left side:
 
 ```ts
-    WA.ui.modal.openModal({
-        title: "WorkAdventure website",
-        src: 'https://workadventu.re',
-        position: "left"
-    });
+WA.ui.modal.openModal({
+  title: "WorkAdventure website",
+  src: "https://workadventu.re",
+  position: "left",
+});
 ```
 
 ![Modal Left](../images/modal/modal-left.png)
@@ -398,7 +409,7 @@ WA.ui.actionBar.addButton(descriptor: {
     id: string,
     label: string | undefined,
     imageSrc: string | undefined,
-    toolTip: string | undefined, 
+    toolTip: string | undefined,
     // Specifies the background color of the button. This parameter is nullable.
     bgColor: string | undefined,
     // Specifies the text color of the button. This parameter is nullable.
@@ -416,50 +427,52 @@ WA.ui.actionBar.addButton(descriptor: {
 - clickCallback: function called when the user clicks on the button. The callback is passed a `AddButtonActionBar` instance in parameter.
 
 With `AddButtonActionBar` defined as:
+
 ```ts
 interface AddButtonActionBar {
-    /*
-     *   the id of the button action bar defined.
-     */
-    id: string,
+  /*
+   *   the id of the button action bar defined.
+   */
+  id: string;
 
-    /*
-     *   the label to display in button action bar.
-     */
-    label: string
+  /*
+   *   the label to display in button action bar.
+   */
+  label: string;
 
-    /*
-     *  the image of button associated, This parameter is nullable.
-     */
-    imageSrc: string
+  /*
+   *  the image of button associated, This parameter is nullable.
+   */
+  imageSrc: string;
 
-    /*
-     *   the label displayed above the action button. This parameter is nullable.
-     */
-    toolTip: string
-  
-    /*
-     *   specifies the background color of the button. This parameter is nullable.
-     */
-    bgColor: string
+  /*
+   *   the label displayed above the action button. This parameter is nullable.
+   */
+  toolTip: string;
 
-    /*
-     *   specifies the button text color. This parameter can be null.    
-     */
-    textColor: string
+  /*
+   *   specifies the background color of the button. This parameter is nullable.
+   */
+  bgColor: string;
 
-    /*
-     *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
-     */
-    isGradient: boolean
-  
+  /*
+   *   specifies the button text color. This parameter can be null.
+   */
+  textColor: string;
+
+  /*
+   *   specifies if the button is a gradient button or not. False by default. When true, a gradient is applied to the button with the 'bgColor' parameter.
+   */
+  isGradient: boolean;
 }
 ```
 
 ### Remove a button from the action bar
+
 ```ts
     WA.ui.actionBar.removeButton(id: string);
 ```
+
 - id: the id of the action bar button previously defined.
 
 ### Example of an icon only action bar button
@@ -467,17 +480,17 @@ interface AddButtonActionBar {
 ![Action Bar Button](../images/action_bar/button-action.png)
 
 ```ts
-    // Add action bar button 'Register'.
-    WA.ui.actionBar.addButton({
-        id: 'icon-btn',
-        imageSrc: '<Your image url>',
-        toolTip: 'Click me',
-        callback: (event) => {
-            console.log('Button clicked', event);
-            // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('icon-btn');
-        }
-    });
+// Add action bar button 'Register'.
+WA.ui.actionBar.addButton({
+  id: "icon-btn",
+  imageSrc: "<Your image url>",
+  toolTip: "Click me",
+  callback: (event) => {
+    console.log("Button clicked", event);
+    // When a user clicks on the action bar button 'Register', we remove it.
+    WA.ui.actionBar.removeButton("icon-btn");
+  },
+});
 ```
 
 ### Example of an action bar button with gradient
@@ -485,23 +498,23 @@ interface AddButtonActionBar {
 ![Action Bar Button](../images/action_bar/button-gradient.png)
 
 ```ts
-    // Add action bar button 'Register'.
-    WA.ui.actionBar.addButton({
-        id: 'gradient-btn',
-        label: 'Register',
-        bgColor: '#edb911',
-        isGradient: true,
-        callback: (event) => {
-            console.log('Button clicked', event);
-            // When a user clicks on the action bar button 'Register', we remove it.
-            WA.ui.actionBar.removeButton('gradient-btn');
-        }
-    });
+// Add action bar button 'Register'.
+WA.ui.actionBar.addButton({
+  id: "gradient-btn",
+  label: "Register",
+  bgColor: "#edb911",
+  isGradient: true,
+  callback: (event) => {
+    console.log("Button clicked", event);
+    // When a user clicks on the action bar button 'Register', we remove it.
+    WA.ui.actionBar.removeButton("gradient-btn");
+  },
+});
 ```
-> Note that when the screen is too small, buttons are added to the right menu of the action bar. In this case, the button is displayed with an image and a tooltip, while for the gradient button, it retains its color and its text remains centered. 
+
+> Note that when the screen is too small, buttons are added to the right menu of the action bar. In this case, the button is displayed with an image and a tooltip, while for the gradient button, it retains its color and its text remains centered.
 
 ![Action Bar Button](../images/action_bar/button-in-menu.png)
-
 
 ## Open / Close banner
 
@@ -511,18 +524,19 @@ guaranteed and we might break the signature of these methods at any moment. Use 
 :::
 
 ### Open the banner
+
 ```ts
-    WA.ui.banner.openBanner({
-        id: string,
-        text: string,
-        bgColor?: string,
-        textColor?: string,
-        closable?: boolean,
-        link?: {
-            url: string,
-            label: string
-        }
-    });
+WA.ui.banner.openBanner({
+  id: string,
+  text: string,
+  bgColor: string,
+  textColor: string,
+  closable: boolean,
+  link: {
+    url: string,
+    label: string,
+  },
+});
 ```
 
 - id: Id of the banner component,
@@ -532,35 +546,36 @@ guaranteed and we might break the signature of these methods at any moment. Use 
 - closable (optional): let the possoibility for the user to close the banner. By default is `true`,
 - timeToClose (optional): let the possibility for the user to define the time (in milliseconds) to close. If set to 0, the banner will not close automatically. By default is `120000`
 - link (optional): link added into the banner. The link has two mandatory parameter `url` and `label`:
-    - url: Url link,
-    - label: text dsiplayed for the banner link.
-
+  - url: Url link,
+  - label: text dsiplayed for the banner link.
 
 ### Close the banner
+
 ```ts
-    WA.ui.banner.closeBanner();
+WA.ui.banner.closeBanner();
 ```
 
 ### Example of banner opened
+
 ```ts
 WA.ui.banner.openBanner({
-    id: "banner-test",
-    text: "Banner test",
-    bgColor: "#000000",
-    textColor: "#ffffff",
-    closable: false,
-    timeToClose: 120000,
-    link: {
-        label: "Test",
-        url: "https://workadventu.re"
-    }
+  id: "banner-test",
+  text: "Banner test",
+  bgColor: "#000000",
+  textColor: "#ffffff",
+  closable: false,
+  timeToClose: 120000,
+  link: {
+    label: "Test",
+    url: "https://workadventu.re",
+  },
 });
 ```
 
 ![Banner Opened](../images/banner/open-banner.png)
 
-
 ### Example of banner closed
+
 ```ts
 WA.ui.banner.closeBanner();
 ```
@@ -586,7 +601,7 @@ interface VideoConfig {
 }
 ```
 
-Arguments: 
+Arguments:
 
 - `videoUrl`: the URL of the video to play.
 - `config`: an object with the following optional properties:
@@ -607,7 +622,9 @@ interface Video {
 Example:
 
 ```ts
-const video = await WA.ui.playVideo('https://example.com/video.mp4', { loop: true });
+const video = await WA.ui.playVideo("https://example.com/video.mp4", {
+  loop: true,
+});
 
 // Later, stop the video
 await video.stop();

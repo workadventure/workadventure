@@ -1,18 +1,15 @@
 {
     "compilerOptions": {
-      "rootDir": ".",
-      "outDir": "dist",
-      "target": "ES2020",
-      "lib": [
-        "es2019",
-        "dom"
-      ],
-      "module": "CommonJS",
-      "esModuleInterop": true,
-      "strict": true,
-      "declaration": true,
-      "sourceMap": true,
-      "importsNotUsedAsValues": "remove",
-      "skipLibCheck": true
+        "rootDir": ".",
+        "outDir": "dist",
+        "target": "ES2020",
+        "lib": ["es2019", "dom"],
+        "module": "CommonJS",
+        "esModuleInterop": true,
+        "strict": true,
+        "declaration": true,
+        "sourceMap": true,
+        "importsNotUsedAsValues": "remove",
+        "skipLibCheck": true
     }
 }

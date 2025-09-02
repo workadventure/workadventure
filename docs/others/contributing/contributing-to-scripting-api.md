@@ -51,7 +51,7 @@ The scripting API provides the global `WA` object.
 So let's take an example with a sample script:
 
 ```typescript
-WA.chat.sendChatMessage('Hello world!', 'John Doe');
+WA.chat.sendChatMessage("Hello world!", "John Doe");
 ```
 
 When this script is called, the scripting API is dispatching a JSON message to WorkAdventure.
@@ -59,6 +59,7 @@ When this script is called, the scripting API is dispatching a JSON message to W
 In our case, the `sendChatMessage` function looks like this:
 
 **src/Api/Iframe/chat.ts**
+
 ```typescript
     sendChatMessage(message: string, author: string) {
         sendToWorkadventure({
@@ -80,6 +81,7 @@ The message callback implemented in `IframeListener` is a giant (and disgusting)
 part of the code depending on the `type` property.
 
 **src/Api/IframeListener.ts**
+
 ```typescript
 // ...
     } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
@@ -129,11 +131,11 @@ Let's go back at our example. Let's have a look at the JSON message sent when we
 
 ```typescript
 sendToWorkadventure({
-    type: "chat",
-    data: {
-        message: message,
-        author: author,
-    },
+  type: "chat",
+  data: {
+    message: message,
+    author: author,
+  },
 });
 ```
 
@@ -143,8 +145,8 @@ The "data" part of the message is defined in `front/src/Api/Events/ChatEvent.ts`
 import { z } from "zod";
 
 export const isChatEvent = z.object({
-    message: z.string(),
-    author: z.string(),
+  message: z.string(),
+  author: z.string(),
 });
 
 /**
@@ -172,19 +174,19 @@ The `IFrameEvent` type is defined in `front/src/Api/Events/IframeEvent.ts`:
 
 ```typescript
 export type IframeEventMap = {
-    loadPage: LoadPageEvent;
-    chat: ChatEvent;
-    openPopup: OpenPopupEvent;
-    closePopup: ClosePopupEvent;
-    openTab: OpenTabEvent;
-    // ...
-    // All the possible messages go here
-    // The key goes into the "type" JSON property
-    // ...
+  loadPage: LoadPageEvent;
+  chat: ChatEvent;
+  openPopup: OpenPopupEvent;
+  closePopup: ClosePopupEvent;
+  openTab: OpenTabEvent;
+  // ...
+  // All the possible messages go here
+  // The key goes into the "type" JSON property
+  // ...
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
-    type: T;
-    data: IframeEventMap[T];
+  type: T;
+  data: IframeEventMap[T];
 }
 ```
 
@@ -192,17 +194,17 @@ Similarly, if you want to type messages from WorkAdventure to the iframe, there 
 
 ```typescript
 export interface IframeResponseEventMap {
-    userInputChat: UserInputChatEvent;
-    enterEvent: EnterLeaveEvent;
-    leaveEvent: EnterLeaveEvent;
-    // ...
-    // All the possible messages go here
-    // The key goes into the "type" JSON property
-    // ...
+  userInputChat: UserInputChatEvent;
+  enterEvent: EnterLeaveEvent;
+  leaveEvent: EnterLeaveEvent;
+  // ...
+  // All the possible messages go here
+  // The key goes into the "type" JSON property
+  // ...
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
-    type: T;
-    data: IframeResponseEventMap[T];
+  type: T;
+  data: IframeResponseEventMap[T];
 }
 ```
 
@@ -215,8 +217,8 @@ The signature of `queryWorkadventure` is:
 
 ```typescript
 function queryWorkadventure<T extends keyof IframeQueryMap>(
-    content: IframeQuery<T>
-): Promise<IframeQueryMap[T]["answer"]>
+  content: IframeQuery<T>
+): Promise<IframeQueryMap[T]["answer"]>;
 ```
 
 Yes, that's a bit cryptic. Hopefully, all you need to know is that to add a new query, you need to edit the `iframeQueryMapTypeGuards`
@@ -224,17 +226,17 @@ array in `front/src/Api/Events/IframeEvent.ts`:
 
 ```typescript
 export const iframeQueryMapTypeGuards = {
-    openCoWebsite: {
-        query: isOpenCoWebsiteEvent,
-        answer: isCoWebsite,
-    },
-    getCoWebsites: {
-        query: tg.isUndefined,
-        answer: tg.isArray(isCoWebsite),
-    },
-    // ...
-    // the `query` key points to the type guard of the query
-    // the `answer` key points to the type guard of the response
+  openCoWebsite: {
+    query: isOpenCoWebsiteEvent,
+    answer: isCoWebsite,
+  },
+  getCoWebsites: {
+    query: tg.isUndefined,
+    answer: tg.isArray(isCoWebsite),
+  },
+  // ...
+  // the `query` key points to the type guard of the query
+  // the `answer` key points to the type guard of the response
 };
 ```
 
@@ -247,11 +249,14 @@ Registering an answerer happens using the `iframeListener.registerAnswerer()` me
 Here is a sample:
 
 ```typescript
-iframeListener.registerAnswerer("openCoWebsite", (openCoWebsiteEvent, source) => {
+iframeListener.registerAnswerer(
+  "openCoWebsite",
+  (openCoWebsiteEvent, source) => {
     // ...
 
     return /*...*/;
-});
+  }
+);
 ```
 
 The `registerAnswerer` callback is passed the event, and should return a response (or a promise to the response) in the expected format
@@ -262,7 +267,6 @@ Important:
 - there can be only one answerer registered for a given query type.
 - if the answerer is not valid any more, you need to unregister the answerer using `iframeListener.unregisterAnswerer`.
 
-
 ## sendToWorkadventure VS queryWorkadventure
 
 - `sendToWorkadventure` is used to send messages one way from the iframe to WorkAdventure. No response is expected. In particular
@@ -272,4 +276,3 @@ Important:
 
 Because `queryWorkadventure` handles exceptions properly, it can be interesting to use `queryWorkadventure` instead
 of `sendToWorkadventure`, even for "one-way" messages. The return message type is simply `undefined` in this case.
-

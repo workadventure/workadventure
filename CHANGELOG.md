@@ -1,16 +1,20 @@
 ## Version develop
 
 ### Updates
+
 - Added multi Co-Website management
 
 ### Bugfix
+
 - Moving a discussion over a user will now add this user to the discussion
 - Being in a silent zone new forces mediaConstraints to false (#1508)
 - Fixes for the emote menu (#1501)
 - Fixing chat message attributed to wrong user (#1507 #1528)
 
 ## Version 1.5.0
+
 ### Updates
+
 - Added support for login with OpenID Connect
 - New scripting library available to extend WorkAdventure: see [Scripting API Extra](https://github.com/workadventure/scripting-api-extra/)
 - New menu design!
@@ -18,6 +22,7 @@
 - Possible integration with Posthog (#1458)
 
 ### Bugfix
+
 - Fixing layers flattened several times (#1427 @Lurkars)
 - Fixing CSS of video elements
 - Chat now scrolls to bottom when opened (#1450)
@@ -26,6 +31,7 @@
 - Fixing audio not shut down when exiting a room (#1459)
 
 ### Misc
+
 - Finished migrating "Build your map" documentation into the "/docs" directory of this repository (#1417 #1385)
 - Refactoring documentation (dedicated page for variables) (#1414)
 - Front container code is now completely linted (#1413)
@@ -33,6 +39,7 @@
 ## Version 1.4.15
 
 ### Updates
+
 - New scripting API features :
   - Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu` to add a custom menu or an iframe to the menu.
 - New `jitsiWidth` parameter to set the width of Jitsi and Cowebsite (#1398 @tabascoeye)
@@ -41,6 +48,7 @@
 - Changes performed in `WA.room.setPropertyLayer` now have a real-time impact (#1395)
 
 ### Bugfixes
+
 - Fixing streams in bubbles sometimes improperly muted when there are more than 2 people in the bubble (#1400 #1402)
 - Properly displaying carriage returns in popups (#1388)
 - `WA.state` now answers correctly to "in" keyword (#1393)
@@ -49,6 +57,7 @@
 ## Version 1.4.14
 
 ### Updates
+
 - New scripting API features :
   - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
 - Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
@@ -125,14 +134,16 @@
 
 - Added the emote feature to WorkAdventure. (@Kharhamel, @Tabascoeye)
   - The emote menu can be opened by clicking on your character.
-  -  Clicking on one of its element will close the menu and play an emote above your character.
-  -  This emote can be seen by other players.
+  - Clicking on one of its element will close the menu and play an emote above your character.
+  - This emote can be seen by other players.
 - Player names were improved. (@Kharhamel)
+
   - We now create a GameObject.Text instead of GameObject.BitmapText
   - now use the 'Press Start 2P' font family and added an outline
   - As a result, we can now allow non-standard letters like french accents or chinese characters!
 
 - Added the contact card feature. (@Kharhamel)
+
   - Click on another player to see its contact info.
   - Premium-only feature unfortunately. I need to find a way to make it available for all.
   - If no contact data is found (either because the user is anonymous or because no admin backend), display an error card.
@@ -149,7 +160,6 @@
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
 
-
 ### Bug Fixes
 
 - Pinch gesture does no longer move the character
@@ -158,9 +168,8 @@
 
 ### New Features
 
-* Maps can now contain "group" layers (layers that contain other layers) - #899 #779 (@Lurkars @moufmouf)
+- Maps can now contain "group" layers (layers that contain other layers) - #899 #779 (@Lurkars @moufmouf)
 
 ### Updates
-
 
 ### Bug Fixes

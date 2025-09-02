@@ -11,7 +11,7 @@ sidebar_position: 30
 To create an area, follow these steps:
 1. Open the map editor.
 2. Access the "area map editor" section.
-![](../../images/editor/area_editor.png)
+   ![](../../images/editor/area_editor.png)
 
 3. Create an area by clicking on the map directly or by selecting a zone.
 

@@ -1,8 +1,6 @@
 ---
-
 sidebar_position: 100
 title: Chat zones
-
 ---
 
 # Working with chat
@@ -37,7 +35,7 @@ import ReactPlayer from 'react-player'
 
 ![Define new zone](../images/chat/zones/5_click_add_property.png)
 
-6. Add a **string** property of name *chatName*
+6. Add a **string** property of name _chatName_
 
 ![Define new zone](../images/chat/zones/6_add_chatName_prop.png)
 
@@ -45,7 +43,7 @@ import ReactPlayer from 'react-player'
 
 ![Define new zone](../images/chat/zones/7_make_sure_prop_defined.png)
 
-8. Add a **string** property of name *chatDescription*
+8. Add a **string** property of name _chatDescription_
 
 ![Define new zone](../images/chat/zones/8_add_chatDescription_prop.png)
 

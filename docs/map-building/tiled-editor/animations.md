@@ -1,8 +1,6 @@
 ---
-
 sidebar_position: 70
 title: Animations
-
 ---
 
 # Animating WorkAdventure maps

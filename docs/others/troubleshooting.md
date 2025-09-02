@@ -46,7 +46,7 @@ configurable log levels.
 In the front container, if you want to increase the log level, you need set the "debug" key of your localstorage:
 
 ```js
-localStorage.debug = '*'
+localStorage.debug = "*";
 ```
 
 See https://github.com/debug-js/debug#browser-support
@@ -70,6 +70,7 @@ to compute a timeboxed username and password.
 Enabling TURN-related debug messages might also help: In a Chromium-like
 browser, enter the following in the JavaScript console and reload
 Workadventure:
+
 ```
 localStorage.debug="CheckTurn"
 ```

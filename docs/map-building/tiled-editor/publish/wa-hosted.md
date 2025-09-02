@@ -153,6 +153,7 @@ If you are using a [custom domain](/admin/rebranding#using-a-custom-domain), the
 ```
 https://[custom-domain]/@/[upload-directory]/[path-to-your-map-directory]/[map-name].wam
 ```
+
 :::
 
 </TabItem>
@@ -178,7 +179,6 @@ using the WorkAdventure Map Editor.
 
 </TabItem>
 </Tabs>
-
 
 ## How it works
 
@@ -251,8 +251,8 @@ Instead, you should use the "secrets" feature of GitHub to store your private in
 
 You should create a secret named `MAP_STORAGE_API_KEY` and paste your map storage API Key there. See the [previous section](#using-the-command-line) to know how to get your API key.
 
-*Note that you can optionally create a `MAP_STORAGE_URL` and a `UPLOAD_DIRECTORY` as well and completely bypass the `.env` file, if you need to.*
-*If you have both, the variables from GitHub secrets will be used in priority when uploading via the CI.*
+_Note that you can optionally create a `MAP_STORAGE_URL` and a `UPLOAD_DIRECTORY` as well and completely bypass the `.env` file, if you need to._
+_If you have both, the variables from GitHub secrets will be used in priority when uploading via the CI._
 
 Now, for every change you want to make public, you just have to commit and push to your repository! Just wait a few minutes, and your map will be propagated automatically on your server.
 

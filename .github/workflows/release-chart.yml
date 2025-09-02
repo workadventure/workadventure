@@ -26,16 +26,16 @@ jobs:
 
       - name: Configure proper version number. Use "0.0.9-dev1" for master and "tag" for releases
         run: |
-            if [ -z "$GITHUB_REF_NAME" ]; then
-                echo "GITHUB_REF_NAME is not set. Exiting."
-                exit 1
-            fi
-            if [ "$GITHUB_REF_NAME" != "master" ]; then
-                echo "Setting version to $GITHUB_REF_NAME"
-                sed -i "s/version: 0.0.9-dev1/version: $GITHUB_REF_NAME/g" Chart.yaml
-                sed -i "s/appVersion: \"0.0.9-dev1\"/appVersion: \"$GITHUB_REF_NAME\"/g" Chart.yaml
-                sed -i "s/^appVersion: \"master\"/appVersion: \"$GITHUB_REF_NAME\"/g" values.yaml
-            fi
+          if [ -z "$GITHUB_REF_NAME" ]; then
+              echo "GITHUB_REF_NAME is not set. Exiting."
+              exit 1
+          fi
+          if [ "$GITHUB_REF_NAME" != "master" ]; then
+              echo "Setting version to $GITHUB_REF_NAME"
+              sed -i "s/version: 0.0.9-dev1/version: $GITHUB_REF_NAME/g" Chart.yaml
+              sed -i "s/appVersion: \"0.0.9-dev1\"/appVersion: \"$GITHUB_REF_NAME\"/g" Chart.yaml
+              sed -i "s/^appVersion: \"master\"/appVersion: \"$GITHUB_REF_NAME\"/g" values.yaml
+          fi
         working-directory: contrib/helm
 
       - name: Install chart-museum push plugin

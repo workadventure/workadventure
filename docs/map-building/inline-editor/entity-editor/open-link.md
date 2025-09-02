@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 20
-
 ---
 
 # Open link property

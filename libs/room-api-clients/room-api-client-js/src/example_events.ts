@@ -6,10 +6,15 @@ if (!apiKey) {
   throw new Error("No ROOM_API_SECRET_KEY defined on environment variables!");
 }
 
-const client = createRoomApiClient(apiKey, "room-api.workadventure.localhost", 80);
+const client = createRoomApiClient(
+  apiKey,
+  "room-api.workadventure.localhost",
+  80
+);
 
 // URL of the room you wish to interact with
-const roomUrl = "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
+const roomUrl =
+  "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
 
 // Name of the event with which you want to interact
 const eventName = "my-event";
@@ -45,4 +50,4 @@ async function init() {
   }
 }
 
-init().catch(e => console.error(e));
+init().catch((e) => console.error(e));

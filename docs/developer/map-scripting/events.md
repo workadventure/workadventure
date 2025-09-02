@@ -30,7 +30,7 @@ To broadcast an event, use the `WA.event.broadcast` method:
 WA.event.broadcast("my-event", "my payload");
 ```
 
-An event has a name (`my-event` in the example above), and a payload (`my payload` in the example above). 
+An event has a name (`my-event` in the example above), and a payload (`my payload` in the example above).
 
 The payload can be any JSON-serializable value (including objects, arrays, strings, numbers, booleans, undefined, etc.).
 
@@ -44,9 +44,9 @@ Example: let's send an event only to players that have the `admin` tag:
 await WA.players.configureTracking();
 const players = WA.players.list();
 for (const player of players) {
-    if (player.tags.includes("admin")) {
-        player.sendEvent("my-event", "my payload");
-    }
+  if (player.tags.includes("admin")) {
+    player.sendEvent("my-event", "my payload");
+  }
 }
 ```
 
@@ -56,7 +56,7 @@ All events (whether they are broadcast or targeted) can be listened to using `WA
 
 ```typescript
 WA.event.on("my-event").subscribe((event) => {
-    console.log("Event received", event.data);
+  console.log("Event received", event.data);
 });
 ```
 
@@ -72,7 +72,7 @@ The `subscribe` method returns a `Subscription` object. You can use the `unsubsc
 
 ```typescript
 const subscription = WA.event.on("my-event").subscribe((event) => {
-    console.log("Event received", event.data);
+  console.log("Event received", event.data);
 });
 
 // ...
@@ -87,8 +87,8 @@ is not known in advance. You can use a type assertion to tell Typescript what is
 
 ```typescript
 WA.event.on("my-event").subscribe((event) => {
-    const payload = event.data as string;
-    console.log("Event received", payload);
+  const payload = event.data as string;
+  console.log("Event received", payload);
 });
 ```
 
@@ -102,22 +102,22 @@ Use [Zod](https://zod.dev/) to validate the type of the payload.
 The example below validates the type of the payload of the event and ensures it is an object containing a `myField` field of type `string`:
 
 ```typescript
-import {z} from "zod";
+import { z } from "zod";
 
 const myEventSchema = z.object({
-    myField: z.string()
+  myField: z.string(),
 });
 
 WA.event.on("some-event").subscribe((event) => {
-    const result = myEventSchema.safeParse(event.data);
-    if (!result.success) {
-        console.error("Invalid event payload", result.error);
-        return;
-    }
-    const payload = result.data;
-    
-    console.log("Event received", payload.myField);
+  const result = myEventSchema.safeParse(event.data);
+  if (!result.success) {
+    console.error("Invalid event payload", result.error);
+    return;
+  }
+  const payload = result.data;
+
+  console.log("Event received", payload.myField);
 });
 ```
-:::
 
+:::

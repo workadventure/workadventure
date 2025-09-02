@@ -18,8 +18,8 @@ The `Sound` class that represents a loaded sound contains two methods: `play(sou
 
 ```ts
 class Sound {
-    play(soundConfig : SoundConfig|undefined): void;
-    stop(): void;
+  play(soundConfig: SoundConfig | undefined): void;
+  stop(): void;
 }
 ```
 
@@ -30,14 +30,14 @@ Example:
 ```javascript
 var mySound = WA.sound.loadSound("Sound.ogg");
 var config = {
-    volume : 0.5,
-    loop : false,
-    rate : 1,
-    detune : 1,
-    delay : 0,
-    seek : 0,
-    mute : false
-}
+  volume: 0.5,
+  loop: false,
+  rate: 1,
+  detune: 1,
+  delay: 0,
+  seek: 0,
+  mute: false,
+};
 mySound.play(config);
 // ...
 mySound.stop();

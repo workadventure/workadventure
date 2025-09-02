@@ -8,7 +8,7 @@
     async function _addServer() {
         try {
             await addServer();
-        } catch(e) {
+        } catch (e) {
             console.log(e);
             error = e.message;
         }

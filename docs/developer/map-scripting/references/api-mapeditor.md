@@ -23,14 +23,18 @@ Listens to the position of the current user. The event is triggered when the use
 Example:
 
 ```ts
-const myAreaEnterSubscriber = WA.mapEditor.area.onEnter("myAreaName").subscribe(() => {
-  WA.chat.sendChatMessage("Hello!", "Mr Robot");
-});
+const myAreaEnterSubscriber = WA.mapEditor.area
+  .onEnter("myAreaName")
+  .subscribe(() => {
+    WA.chat.sendChatMessage("Hello!", "Mr Robot");
+  });
 
-const myAreaLeaveSubscriber = WA.mapEditor.area.onLeave("myAreaName").subscribe(() => {
-  WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
-  myAreaSubscriber.unsubscribe();
-});
+const myAreaLeaveSubscriber = WA.mapEditor.area
+  .onLeave("myAreaName")
+  .subscribe(() => {
+    WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
+    myAreaSubscriber.unsubscribe();
+  });
 
 // If you want to stop listening to the events at some point:
 myAreaEnterSubscriber.unsubscribe();
@@ -52,8 +56,8 @@ interface MapEditorArea {
   y: number;
   width: number;
   height: number;
-  description: string|undefined;
-  searchable: boolean|undefined;
+  description: string | undefined;
+  searchable: boolean | undefined;
 }
 ```
 
@@ -62,6 +66,8 @@ Example:
 ```ts
 const areas = await WA.mapEditor.area.list();
 for (const area of areas) {
-  console.log(`Area ${area.name} at (${area.x}, ${area.y}) with width ${area.width} and height ${area.height}`);
+  console.log(
+    `Area ${area.name} at (${area.x}, ${area.y}) with width ${area.width} and height ${area.height}`
+  );
 }
 ```

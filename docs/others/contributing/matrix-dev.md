@@ -63,7 +63,7 @@ need the legacy Olm library.
 
 ## Login flow
 
-The login flow to Matrix happens just  after the login to WorkAdventure.
+The login flow to Matrix happens just after the login to WorkAdventure.
 
 ```mermaid
 sequenceDiagram
@@ -171,7 +171,6 @@ forwards the Matrix ID along the other user information to the other users. This
 front component, you can add someone to your list of contacts by clicking on the user and
 sending a Matrix invite.
 
-
 ## Space rooms
 
 > [!WARNING]
@@ -209,7 +208,6 @@ Custom state events are added to the room:
 - `re.workadventu.room_type`: the room type ("map" or "area").
 - `re.workadventu.tags`: the tags to enter this room (pipe separated list).
 
-
 ## List of rooms displayed in WorkAdventure
 
 > [!WARNING]
@@ -244,7 +242,7 @@ The same admin credentials are used by the Admin component to invite users to th
 ```mermaid
 graph TD
     A[Pusher] --1. Creates a room--> C[Matrix server]
-    B[Admin] --2. Invites users--> C 
+    B[Admin] --2. Invites users--> C
 ```
 
 # Architecture decision records
@@ -275,7 +273,7 @@ in his history, and it will be tedious to remove them one by one.
 
 Create a single Matrix room for each WorkAdventure area. When someone enters the area, the user is invited to the
 room and joins automatically. When the user leaves the area, the user is kicked out of the room.
-The history settings of the area are configured to *"only members" since they joined*.
+The history settings of the area are configured to _"only members" since they joined_.
 
 As a result, the user will only see what happens in the room since he joined the room.
 If the user leaves the area and comes back, he will see the history of the room at the time he was in the room.

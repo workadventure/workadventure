@@ -26,4 +26,3 @@ sequenceDiagram
     A->>P: 200 (user data)
     P->>Br: SendUserMessage (if any message to send)
 ```
-

@@ -48,7 +48,9 @@ will need to allow **all** origins with:
 ```
 Access-Control-Allow-Origin: *
 ```
+
 or alternatively:
+
 ```
 Access-Control-Allow-Origin: null
 ```

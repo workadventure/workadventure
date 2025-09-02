@@ -2,7 +2,7 @@ name: Cleanup images and environments
 
 on:
   pull_request:
-    types: [ closed ]
+    types: [closed]
 
 # Enables BuildKit
 env:
@@ -13,7 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   delete_namespace:
     runs-on: ubuntu-latest
 

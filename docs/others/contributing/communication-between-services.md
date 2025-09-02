@@ -22,14 +22,10 @@ is to terminate SSL connections. It is the reverse-proxy that will handle HTTPS 
 The play and map-storage containers don't handle the SSL certificates themselves. It is the role of the
 reverse-proxy to do so.
 
-
 ## Front container
 
 The "front" container is responsible for serving HTML / JS / CSS static files.
 It is a simple webserver (nginx).
-
-
-
 
 ## Communication between services
 

@@ -28,7 +28,7 @@ The `font-family` property can contain any "web-font" that can be loaded by your
 
 :::info Pro-tip
 By default, WorkAdventure uses the **'"Press Start 2P"'** font, which is a great pixelated
-font that has support for a variety of accents. It renders great when used at *8px* size.
+font that has support for a variety of accents. It renders great when used at _8px_ size.
 :::
 
 ![The "font-family" property](../images/text-object.png)

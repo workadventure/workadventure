@@ -1,6 +1,7 @@
 ---
 sidebar_position: 1000
 ---
+
 # Troubleshooting
 
 ## Look at the browser console

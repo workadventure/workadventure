@@ -13,21 +13,21 @@ This Helm chart deploys Workadventure on Kubernetes.
 
 ## Version numbering and upgrading
 
-Versions of the Helm chart are aligned with the versions of the WorkAdventure Docker image. 
+Versions of the Helm chart are aligned with the versions of the WorkAdventure Docker image.
 When a new version of the WorkAdventure Docker images are released, a new version of the Helm chart is released as well.
 
 > [!WARNING]
-> This Helm chart is newer than the [Docker Compose install](../docker/README.md) and might change more frequently in the 
+> This Helm chart is newer than the [Docker Compose install](../docker/README.md) and might change more frequently in the
 > coming month. Therefore, we do not (yet) guarantee the absence of breaking changes between minor or patch versions.
-> When upgrading, please check changes in `values.yaml`. We will try to document breaking changes in the 
+> When upgrading, please check changes in `values.yaml`. We will try to document breaking changes in the
 > [release notes](https://github.com/workadventure/workadventure/releases).
-
 
 ## Configuration
 
 The chart is designed to work out of the box with the minimum required configuration.
 
 The two compulsory parameters you need to provide are:
+
 - the `domainName` parameter that should point to the domain name that will host WorkAdventure.
 - the `m̀apstorage.secretEnv.AUTHENTICATION_PASSWORD` parameter that you should set to a password to access the map-storage container.
 
@@ -39,7 +39,7 @@ The two compulsory parameters you need to provide are:
 
 For each pod, there is a corresponding `xxx.env` entry in the `values.yaml` file (that will map to a `ConfigMap`),
 and a `xxx.secretEnv` entry (that will map to a `Secret`). There are many pre initialized variables in the template files
-(all variables relative to the URLs). Additional entries can be easily added in the corresponding 
+(all variables relative to the URLs). Additional entries can be easily added in the corresponding
 sections of the values file.
 
 Furthermore, the `commonEnv` and `commonSecretEnv` sections can be used to add environment variables in all pods.
@@ -53,6 +53,7 @@ Please use the original [docker-compose file](../docker/docker-compose.prod.yaml
 Assuming you are using the nginx ingress controller, and CertManager for the SSL certificates (with a cluster issuer named `letsencrypt-prod`), here is a minimal configuration file:
 
 **values.yaml**
+
 ```yaml
 domainName: example.com
 
@@ -97,7 +98,7 @@ npm run upload -- -u https://example.com/map-storage/ -k 123
 
 #### Checking everything worked
 
-Open your browser and go to `https://<your-domain>/map-storage/` (or `https://map-storage.<your-domain>` if you are 
+Open your browser and go to `https://<your-domain>/map-storage/` (or `https://map-storage.<your-domain>` if you are
 using `singleDomain: false` in `values.yaml`).
 
 You will be asked to authenticate. Use the credentials you configured in the `.env` file.

@@ -22,7 +22,6 @@ graph LR
 > (and Synapse configured with the "experimental_features.msc3861" option) is not yet supported by WorkAdventure.
 > Instead, you should configure Synapse with the classic "sso" option (see below).
 
-
 ## Synapse configuration
 
 ### OpenID Connect provider
@@ -46,7 +45,7 @@ oidc_providers:
   - idp_id: <some-id>
     idp_name: <some-name>
     issuer: "https://<provider-url>"
-    
+
     # Use skip_verification if your OpenID Connect provider is not using a valid certificate or is using HTTP instead of HTTPS.
     # skip_verification: true
     client_id: "<client-id>"
@@ -64,7 +63,7 @@ oidc_providers:
         localpart_template: "{{ user.email.split('@')[0] }}"
         display_name_template: "{{ user.name }}"
         email_template: "{{ user.email }}"
-```        
+```
 
 Use the `sso.client_whitelist` option to skip the Matrix "Continue to your account" page.
 You should whitelist the URL of your WorkAdventure instance. Don't forget to end the URL with a `/`.
@@ -89,7 +88,6 @@ register_new_matrix_user -u @admin-wa:myserver.com -p mypassword -c /etc/matrix-
 
 See https://manpages.debian.org/testing/matrix-synapse/register_new_matrix_user.1.en.html
 
-
 ### Configuring WorkAdventure to point to the Synapse server
 
 #### With docker-compose
@@ -113,6 +111,7 @@ MATRIX_ADMIN_PASSWORD=
 If you are using the Helm chart to deploy WorkAdventure, you can set the following values in your `values.yaml` file:
 
 **values.yaml**
+
 ```yaml
 play:
   env:
@@ -130,5 +129,5 @@ play:
 
 ## Developer notes
 
-If you are looking for a developer description of the WorkAdventure / Matrix integration, you can find it in the 
+If you are looking for a developer description of the WorkAdventure / Matrix integration, you can find it in the
 [Matrix developer notes](../contributing/matrix-dev.md).

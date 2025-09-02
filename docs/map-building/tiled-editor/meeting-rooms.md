@@ -1,8 +1,6 @@
 ---
-
 sidebar_position: 50
 title: Meeting rooms
-
 ---
 
 # Meeting rooms with Jitsi
@@ -15,11 +13,11 @@ On your map, you can define special zones (meeting rooms) that will trigger the 
 
 In order to create Jitsi meet zones:
 
-* You must create a specific object.
-* Object must be of class "`area`"
-* In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
-* You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
-* You may also use "jitsiClosable" property (of type "boolean" true or false) to control the close button of the iframe containing the meeting room.
+- You must create a specific object.
+- Object must be of class "`area`"
+- In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
+- You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
+- You may also use "jitsiClosable" property (of type "boolean" true or false) to control the close button of the iframe containing the meeting room.
 
 You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
 
@@ -58,9 +56,10 @@ The `jitsiInterfaceConfig` property will override the Jitsi [interface_config.js
 
 :::warning Troubleshooting
 If your customizations are not working:
- * First, check that the JSON you are entering is valid. Take a look at the console in your browser. If the JSON string is invalid, you should see a warning.
- * Then, check that the JSON you are using is matching the version of Jitsi used.
-:::
+
+- First, check that the JSON you are entering is valid. Take a look at the console in your browser. If the JSON string is invalid, you should see a warning.
+- Then, check that the JSON you are using is matching the version of Jitsi used.
+  :::
 
 ## Granting moderator controls in Jitsi
 
@@ -70,11 +69,11 @@ Moderator controls are linked to member tags. You need a pro account to edit mem
 
 You can grant moderator rights to some of your members. Jitsi moderators can:
 
-*   Publish a Jitsi meeting on Youtube Live (you will need a Youtube Live account)
-*   Record a meeting to Dropbox (you will need a Dropbox account)
-*   Mute someone
-*   Mute everybody except one speaker
-*   Kick users out of the meeting
+- Publish a Jitsi meeting on Youtube Live (you will need a Youtube Live account)
+- Record a meeting to Dropbox (you will need a Dropbox account)
+- Mute someone
+- Mute everybody except one speaker
+- Kick users out of the meeting
 
 All users with the "admin" tag are moderators.
 
@@ -134,18 +133,18 @@ The same concept of Jitsi rooms is applied to BigBlueButton rooms. When a player
 
 In order to create a BigBlueButton session zone:
 
-* You must create a specific object.
-* Object must be of class "`area`"
-* In object properties:
-  * You MUST add a "`bbbMeeting`" property (of type "`string`"). The value of this property will be used to calculate the meetingID of the BigBlueButton room. We suggest you to use [a random UUID](https://www.uuidgenerator.net/version4).
-  * You CAN add a "`meetingName`" property (of type "`string`"). The value of this property will be used as `meetingName` of the BigBlueButton room. If you do not set it, `meetingName` will be the same as `meetingID`.
-  * You CAN add "`userdata-`" properties (of type "`string`"). They will be passed in the JOIN API call on BigBlueButton, and will allow you to customize UI settings on BigBlueButton. These are a few properties you can set::
-    * `userdata-bbb_auto_share_webcam=true`: webcam will be shared automatically
-    * `userdata-bbb_hide_presentation=true`: presentation will be minimized and webcams will use the whole space
-    * `userdata-bbb_listen_only_mode=false`: microphone will be enabled for audio and listen only mode won't be used
-    * `userdata-bbb_skip_check_audio=true`: echo test when enabling microphone won't be displayed
-    * `userdata-bbb_skip_video_preview=true`: webcam preview won't be displayed before sharing
-    * `userdata-bbb_show_participants_on_login=false`: users list won't be displayed
+- You must create a specific object.
+- Object must be of class "`area`"
+- In object properties:
+  - You MUST add a "`bbbMeeting`" property (of type "`string`"). The value of this property will be used to calculate the meetingID of the BigBlueButton room. We suggest you to use [a random UUID](https://www.uuidgenerator.net/version4).
+  - You CAN add a "`meetingName`" property (of type "`string`"). The value of this property will be used as `meetingName` of the BigBlueButton room. If you do not set it, `meetingName` will be the same as `meetingID`.
+  - You CAN add "`userdata-`" properties (of type "`string`"). They will be passed in the JOIN API call on BigBlueButton, and will allow you to customize UI settings on BigBlueButton. These are a few properties you can set::
+    - `userdata-bbb_auto_share_webcam=true`: webcam will be shared automatically
+    - `userdata-bbb_hide_presentation=true`: presentation will be minimized and webcams will use the whole space
+    - `userdata-bbb_listen_only_mode=false`: microphone will be enabled for audio and listen only mode won't be used
+    - `userdata-bbb_skip_check_audio=true`: echo test when enabling microphone won't be displayed
+    - `userdata-bbb_skip_video_preview=true`: webcam preview won't be displayed before sharing
+    - `userdata-bbb_show_participants_on_login=false`: users list won't be displayed
 
 :::info
 All participants join BigBlueButton as moderators.
@@ -198,6 +197,7 @@ $ bbb-conf --secret
 ```
 
 You'll set the following environment variables with URL and secret:
+
 ```
 BBB_URL: YOUR-SERVER
 BBB_SECRET: YOUR-SECRET

@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 50
-
 ---
 
 # Jitsi meeting property

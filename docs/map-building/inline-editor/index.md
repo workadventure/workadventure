@@ -1,7 +1,5 @@
 ---
-
 sidebar_position: 10
-
 ---
 
 # Inline Map Editor

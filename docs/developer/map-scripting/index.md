@@ -8,10 +8,10 @@ Do you want to add a bit of intelligence to your map? Scripts allow you to creat
 
 You can for instance:
 
-*   Create FTUE (First Time User Experience) scenarios where a first-time user will be displayed a notification popup.
-*   Create NPC (non playing characters) and interact with those characters using the chat.
-*   Organize interactions between an iframe and your map (for instance, walking on a special zone might add a product in the cart of an eCommerce website...)
-*   etc...
+- Create FTUE (First Time User Experience) scenarios where a first-time user will be displayed a notification popup.
+- Create NPC (non playing characters) and interact with those characters using the chat.
+- Organize interactions between an iframe and your map (for instance, walking on a special zone might add a product in the cart of an eCommerce website...)
+- etc...
 
 Please note that scripting in WorkAdventure is at an early stage of development and that more features might be added in the future. You can actually voice your opinion about useful features by adding [an issue on GitHub](https://github.com/thecodingmachine/workadventure/issues).
 
@@ -25,8 +25,8 @@ Client-side scripting is done in **Javascript** (or any language that transpile 
 
 There are 2 ways you can use the scripting language:
 
-*   **In the map**: By directly referring a Javascript file inside your map, in the `script` property of your map.
-*   **In an iFrame**: By placing your Javascript script into an iFrame, your script can communicate with the WorkAdventure game
+- **In the map**: By directly referring a Javascript file inside your map, in the `script` property of your map.
+- **In an iFrame**: By placing your Javascript script into an iFrame, your script can communicate with the WorkAdventure game
 
 ## Adding a script in the map
 
@@ -45,8 +45,9 @@ You can put relative URLs. If your script file is next to your map, you can simp
 Start by testing this with a simple message sent to the chat.
 
 **script.js**
+
 ```javascript
-WA.chat.sendChatMessage('Hello world', 'Mr Robot');
+WA.chat.sendChatMessage("Hello world", "Mr Robot");
 ```
 
 The `WA` objects contains a number of useful methods enabling you to interact with the WorkAdventure game. For instance, `WA.chat.sendChatMessage` opens the chat and adds a message in it.
@@ -58,13 +59,17 @@ Internally, scripts are running inside a [sandboxed iframe](https://blog.dareboo
 Furthermore, the script itself is loaded as module with `<script src="" type="module">`. Scripts loaded as module must enforce CORS.
 But the iframe itself does not have any origin, because it is sandboxed. As a result, for the script to be loaded correctly,
 you will need to allow ALL origins using this header:
+
 ```
 Access-Control-Allow-Origin: *
 ```
+
 or alternatively:
+
 ```
 Access-Control-Allow-Origin: null
 ```
+
 :::
 
 Because the script is sandboxed, a number of restrictions apply. If you want a discussion on how to overcome them,
@@ -87,24 +92,25 @@ The library is available at `https://play.workadventu.re/iframe_api.js`.
 _Note:_ if you are using a self-hosted version of WorkAdventure, use `https://[front_domain]/iframe_api.js`
 
 **iframe.html**
+
 ```html
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <script src="https://play.workadventu.re/iframe_api.js"></script>
-    </head>
-    <body>
-    </body>
+  <head>
+    <script src="https://play.workadventu.re/iframe_api.js"></script>
+  </head>
+  <body></body>
 </html>
 ```
 
 You can now start by testing this with a simple message sent to the chat.
 
 **iframe.html**
+
 ```html
 ...
 <script>
-WA.chat.sendChatMessage('Hello world', 'Mr Robot');
+  WA.chat.sendChatMessage("Hello world", "Mr Robot");
 </script>
 ...
 ```

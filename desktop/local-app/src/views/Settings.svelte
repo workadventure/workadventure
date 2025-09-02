@@ -19,7 +19,7 @@
     });
 
     async function saveShortcut(key: keyof SettingsData["shortcuts"], value: string) {
-        const shortcuts = get(settings)['shortcuts'];
+        const shortcuts = get(settings)["shortcuts"];
         shortcuts[key] = value;
         settings.update((s) => ({ ...s, shortcuts }));
         await api.saveSetting("shortcuts", shortcuts);
@@ -62,14 +62,15 @@
 
             <InputField id="toggle-autostart" title="Toggle autostart">
                 <ToggleSwitch
-                id="toggle-autostart"
-                value={$settings.auto_launch_enabled}
-                title="Autostart WorkAdventure after your PC started"
-                on:change={(e) => saveAutoLaunch(e.detail)}
+                    id="toggle-autostart"
+                    value={$settings.auto_launch_enabled}
+                    title="Autostart WorkAdventure after your PC started"
+                    on:change={(e) => saveAutoLaunch(e.detail)}
                 />
             </InputField>
 
-            <span class="mt-8 text-xs text-gray-200 max-w-128">Hint: Shortcuts are disabled while seeing this page</span>
-            {/if}
+            <span class="mt-8 text-xs text-gray-200 max-w-128">Hint: Shortcuts are disabled while seeing this page</span
+            >
+        {/if}
     </div>
 </div>

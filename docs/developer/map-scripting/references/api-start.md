@@ -19,7 +19,7 @@ Example:
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Current player name: ', WA.player.name);
+  console.log("Current player name: ", WA.player.name);
 });
 ```
 
@@ -27,7 +27,7 @@ Or the same code, using await/async:
 
 ```typescript
 (async () => {
-    await WA.onInit();
-    console.log('Current player name: ', WA.player.name);
+  await WA.onInit();
+  console.log("Current player name: ", WA.player.name);
 })();
 ```

@@ -1,159 +1,152 @@
-{ "compressionlevel":-1,
- "height":10,
- "infinite":false,
- "layers":[
+{
+  "compressionlevel": -1,
+  "height": 10,
+  "infinite": false,
+  "layers": [
+    {
+      "data": [
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1
+      ],
+      "height": 10,
+      "id": 1,
+      "name": "floor",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 10,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0
+      ],
+      "height": 10,
+      "id": 2,
+      "name": "start",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 10,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 34, 34, 34, 34, 34, 0, 0, 0, 0, 0, 34, 34, 34, 34, 34, 0, 0, 0, 0, 0,
+        34, 34, 34, 34, 34, 0, 0, 0, 0, 0, 34, 34, 34, 34, 34, 0, 0, 0, 0, 0,
+        34, 34, 34, 34, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      ],
+      "height": 10,
+      "id": 5,
+      "name": "audio",
+      "opacity": 1,
+      "properties": [
         {
-         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-         "height":10,
-         "id":1,
-         "name":"floor",
-         "opacity":1,
-         "type":"tilelayer",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
-        }, 
+          "name": "audioLoop",
+          "type": "bool",
+          "value": true
+        },
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            12, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         "height":10,
-         "id":2,
-         "name":"start",
-         "opacity":1,
-         "type":"tilelayer",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
-        }, 
+          "name": "playAudio",
+          "type": "string",
+          "value": "Audience.mp3"
+        }
+      ],
+      "type": "tilelayer",
+      "visible": true,
+      "width": 10,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0
+      ],
+      "height": 10,
+      "id": 6,
+      "name": "exit",
+      "opacity": 1,
+      "properties": [
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
-            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
-            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
-            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
-            0, 0, 0, 0, 0, 34, 34, 34, 34, 34,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         "height":10,
-         "id":5,
-         "name":"audio",
-         "opacity":1,
-         "properties":[
-                {
-                 "name":"audioLoop",
-                 "type":"bool",
-                 "value":true
-                }, 
-                {
-                 "name":"playAudio",
-                 "type":"string",
-                 "value":"Audience.mp3"
-                }],
-         "type":"tilelayer",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
-        }, 
+          "name": "exitUrl",
+          "type": "string",
+          "value": "Properties/silent_start.json"
+        }
+      ],
+      "type": "tilelayer",
+      "visible": true,
+      "width": 10,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 3,
+      "name": "floorLayer",
+      "objects": [
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 12,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         "height":10,
-         "id":6,
-         "name":"exit",
-         "opacity":1,
-         "properties":[
-                {
-                 "name":"exitUrl",
-                 "type":"string",
-                 "value":"Properties\/silent_start.json"
-                }],
-         "type":"tilelayer",
-         "visible":true,
-         "width":10,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":3,
-         "name":"floorLayer",
-         "objects":[
-                {
-                 "height":308.584234177831,
-                 "id":1,
-                 "name":"",
-                 "rotation":0,
-                 "text":
-                    {
-                     "fontfamily":"Sans Serif",
-                     "pixelsize":13,
-                     "text":"Test:\nWalk on the carpet\n\nResult:\nA sound is played in loop.\nControls at the top of the screen allow you to control the sound.\n\nTest:\nWalk on the white spot in the carpet\n\nResult:\nThe user is redirected to another map AND sound is shut down",
-                     "wrap":true
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":315.4375,
-                 "x":1.74700399641053,
-                 "y":1.43404009627554
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }],
- "nextlayerid":7,
- "nextobjectid":2,
- "orientation":"orthogonal",
- "renderorder":"right-down",
- "tiledversion":"1.8.4",
- "tileheight":32,
- "tilesets":[
-        {
-         "columns":11,
-         "firstgid":1,
-         "image":"tileset1.png",
-         "imageheight":352,
-         "imagewidth":352,
-         "margin":0,
-         "name":"tileset1",
-         "spacing":0,
-         "tilecount":121,
-         "tileheight":32,
-         "tilewidth":32
-        }],
- "tilewidth":32,
- "type":"map",
- "version":"1.8",
- "width":10
+          "height": 308.584234177831,
+          "id": 1,
+          "name": "",
+          "rotation": 0,
+          "text": {
+            "fontfamily": "Sans Serif",
+            "pixelsize": 13,
+            "text": "Test:\nWalk on the carpet\n\nResult:\nA sound is played in loop.\nControls at the top of the screen allow you to control the sound.\n\nTest:\nWalk on the white spot in the carpet\n\nResult:\nThe user is redirected to another map AND sound is shut down",
+            "wrap": true
+          },
+          "type": "",
+          "visible": true,
+          "width": 315.4375,
+          "x": 1.74700399641053,
+          "y": 1.43404009627554
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 7,
+  "nextobjectid": 2,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.8.4",
+  "tileheight": 32,
+  "tilesets": [
+    {
+      "columns": 11,
+      "firstgid": 1,
+      "image": "tileset1.png",
+      "imageheight": 352,
+      "imagewidth": 352,
+      "margin": 0,
+      "name": "tileset1",
+      "spacing": 0,
+      "tilecount": 121,
+      "tileheight": 32,
+      "tilewidth": 32
+    }
+  ],
+  "tilewidth": 32,
+  "type": "map",
+  "version": "1.8",
+  "width": 10
 }

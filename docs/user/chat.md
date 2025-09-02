@@ -37,7 +37,7 @@ Matrix chat rooms are **persistent chat rooms**.
 
 ### Creating a chat room
 
-Anyone logged can create a chat room. 
+Anyone logged can create a chat room.
 
 ![](images/create-room-button.png)
 
@@ -45,11 +45,11 @@ A click on the "+" icon next to the "Rooms" section will prompt a form to create
 
 ![](images/create-room-popup.png)
 
-**Room visibility** can be set to "Public" or "Private". Public rooms are visible to **everyone**, while private rooms are 
+**Room visibility** can be set to "Public" or "Private". Public rooms are visible to **everyone**, while private rooms are
 only visible to users that have been invited to the room.
 
 :::note
-When we say public rooms are accessible to *everyone*, we mean it. The Matrix protocol is federated, and anyone with a 
+When we say public rooms are accessible to _everyone_, we mean it. The Matrix protocol is federated, and anyone with a
 Matrix account can join a public room. Even if they are not logged in WorkAdventure.
 :::
 
@@ -98,24 +98,23 @@ them with a "green" or "orange" dot in the **Disconnected users** section.
 
 ![](images/disconnected-users.png)
 
-
 ## End-to-end encryption
 
-End-to-end encryption brings the highest level of security, ensuring that even WorkAdventure administrators cannot read 
+End-to-end encryption brings the highest level of security, ensuring that even WorkAdventure administrators cannot read
 your messages. However, this means users become responsible for keeping their encryption key safe.
 
 The first time you use encryption, WorkAdventure generates an encryption key that can be saved using a recovery passphrase.
 Be sure to store this key securely or remember the recovery passphrase.
 
-Since the encryption key is stored in your browser and never reaches WorkAdventure servers, if you access WorkAdventure 
+Since the encryption key is stored in your browser and never reaches WorkAdventure servers, if you access WorkAdventure
 from another browser, you'll need to provide this encryption key again to read your message history.
 
-To keep WorkAdventure simple and avoid burdening first-time users, encryption is not enabled by default when you create 
+To keep WorkAdventure simple and avoid burdening first-time users, encryption is not enabled by default when you create
 a room or chat with a user. Enabling encryption is as easy as checking the "Active end-to-end encryption" box when creating
 a room.
 
-Please note that if you receive a message while you're away, WorkAdventure will send a **notification email**. In encrypted 
-rooms, WorkAdventure cannot include a conversation snippet in the email because we can't decrypt the content. 
+Please note that if you receive a message while you're away, WorkAdventure will send a **notification email**. In encrypted
+rooms, WorkAdventure cannot include a conversation snippet in the email because we can't decrypt the content.
 Therefore, we advise enabling end-to-end encryption only if you truly need the added level of privacy.
 
 ### Resetting Your Key Storage

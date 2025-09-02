@@ -1,8 +1,6 @@
 ---
-
 sidebar_position: 80
 title: Integrated websites
-
 ---
 
 # Putting a website inside a map
