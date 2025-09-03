@@ -27,10 +27,10 @@ export const EnvironmentVariables = z.object({
         .describe("The maximum parallel number of requests done to the S3 bucket. Defaults to 50."),
     S3_CONNECTION_TIMEOUT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 5000))
-        .describe("The timeout in milliseconds for the S3 connection in milliseconds. Defaults to 5000 (5 seconds)."),
+        .describe("The timeout in milliseconds for the S3 connection. Defaults to 5000 (5 seconds)."),
     S3_REQUEST_TIMEOUT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 60000))
-        .describe("The timeout in milliseconds for the S3 requests in milliseconds. Defaults to 60000 (60 seconds)."),
+        .describe("The timeout in milliseconds for the S3 requests. Defaults to 60000 (60 seconds)."),
     //UPLOADER_AWS_SIGNED_URL_EXPIRATION: PositiveIntAsString.optional(),
     S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()
