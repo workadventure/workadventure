@@ -1615,6 +1615,9 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
+                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
+
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
