@@ -4,32 +4,12 @@
 
 # WorkAdventure
 
+WorkAdventure is a web-based collaborative workspace presented in the form of a
+32-bit video game.
 
-WorkAdventure is a platform that allows you to design **fully customizable collaborative virtual worlds** (metaverse). 
+In WorkAdventure you can move around your office and talk to your colleagues (using a video-chat system, triggered when you approach someone).
 
-With your own avatar, you can **interact spontaneously** with your colleagues, clients, partners (using a **video-chat system**, triggered when you approach someone).
-Imagine **all types of immersive experiences** (recruitments, onboarding, trainings, digital workplace, internal/external events) on desktop, mobile or tablet.
-
-_The little plus? The platform is **GDPR** and **open source**!_
-
-**See more features for your [virtual office](https://workadventu.re/virtual-offices/virtual-meetings/?utm_source=github)!**
-
-**Pricing for our [SaaS version](https://workadventu.re/pricing/?utm_source=github)!**
-
-
-[![Workadventure live demo example](https://workadventu.re/wp-content/uploads/2024/02/Button-Live-Demo.png)](https://play.staging.workadventu.re/@/tcm/workadventure/wa-village/?utm_source=github)
-[![Workadventure Website](https://workadventu.re/wp-content/uploads/2024/02/Button-Website.png)](https://workadventu.re/?utm_source=github)
-
-
-###### Support our team!
-[![Discord Logo](https://workadventu.re/wp-content/uploads/2024/02/Icon-Discord.png)](https://discord.com/invite/G6Xh9ZM9aR)
-[![X Social Logo](https://workadventu.re/wp-content/uploads/2024/02/Icon-X.png)](https://twitter.com/Workadventure_)
-[![LinkedIn Logo](https://workadventu.re/wp-content/uploads/2024/02/Icon-LinkedIn.png)](https://www.linkedin.com/company/workadventu-re/)
-
-
-![Stats repo](https://github-readme-stats.vercel.app/api?username={username}&theme=transparent)
-
-
+See more features for your virtual office: https://workadventu.re/virtual-office
 
 ## Community resources
 
@@ -84,11 +64,11 @@ $ docker-compose -f docker-compose.yaml -f docker-compose-no-oidc.yaml up
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
+
 ```
 127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost traefik.workadventure.localhost matrix.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
 ```
 
-
 ### Troubleshooting
 
-See our [troubleshooting guide](docs/others/troubleshooting.md). 
+See our [troubleshooting guide](docs/others/troubleshooting.md).
