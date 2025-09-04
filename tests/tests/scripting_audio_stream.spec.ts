@@ -65,7 +65,7 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
-  test("can play and listen to streams", async ({
+  test("can play and listen to streams @scripting", async ({
     browser,
   }, { project }) => {
     // This test runs only on Chrome
