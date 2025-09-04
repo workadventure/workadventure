@@ -100,9 +100,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     metadata.set(key, value);
                 }
 
-                if (message.metadata) {
-                    this.spaces.get(message.spaceName)?.setMetadata(metadata);
+                if (!message.metadata) {
+                    return;
                 }
+
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    Sentry.captureException(new Error(`Space does not exist: ${message.spaceName}`));
+                    return;
+                }
+
+                space.setMetadata(metadata);
             }
         );
 
