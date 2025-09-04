@@ -37,12 +37,13 @@ export class Space implements SpaceInterface {
     private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
+    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
     private _registerRefCount = 0;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
-
+    public readonly observeMetadata: Observable<Map<string, unknown>>;
     private readonly observeSyncUserAdded: Subscription;
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
@@ -99,6 +100,15 @@ export class Space implements SpaceInterface {
             };
         });
 
+        this.observeMetadata = new Observable<Map<string, unknown>>((subscriber) => {
+            this.registerSpaceFilter();
+            this._metadataSubscriber = subscriber;
+
+            return () => {
+                this.unregisterSpaceFilter();
+            };
+        });
+
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
             if (!message.addSpaceUserMessage.user) {
                 console.error("addSpaceUserMessage is missing a user");
@@ -143,6 +153,9 @@ export class Space implements SpaceInterface {
         metadata.forEach((value, key) => {
             this.metadata.set(key, value);
         });
+        if (this._metadataSubscriber) {
+            this._metadataSubscriber.next(this.metadata);
+        }
     }
 
     private async userLeaveSpace() {
