@@ -13,6 +13,7 @@ import {
     PrivateSpaceEvent,
 } from "@workadventure/messages";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
+import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -146,6 +147,11 @@ export class Space implements SpaceInterface {
     }
 
     private async userLeaveSpace() {
+        if (this._connection.closed) {
+            // It is not uncommon to try to leave a space after the connection is closed.
+            // In that case, we just skip sending the leaveSpace message to the server.
+            return;
+        }
         await this._connection.emitLeaveSpace(this.name);
     }
 
@@ -246,8 +252,13 @@ export class Space implements SpaceInterface {
         try {
             await this.userLeaveSpace();
         } catch (e) {
-            console.error("Error while leaving space", e);
-            Sentry.captureException(e);
+            if (e instanceof ConnectionClosedError) {
+                // It is not uncommon to try to leave a space after the connection is closed.
+                // In that case, we just skip logging the error.
+            } else {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            }
         }
 
         for (const subscription of Object.values(this.publicEventsObservables)) {

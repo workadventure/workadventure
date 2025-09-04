@@ -17,6 +17,7 @@ import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
  */
 export type RoomConnectionForSpacesInterface = Pick<
     RoomConnection,
+    | "closed"
     | "addSpaceUserMessageStream"
     | "updateSpaceUserMessageStream"
     | "removeSpaceUserMessageStream"
@@ -217,9 +218,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         // If a space is not destroyed, it means that there is a bug in the code.
         await Promise.all(
             Array.from(this.spaces.values()).map(async (space) => {
-                await space.destroy();
-                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-                Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+                if (!this.leavingSpacesPromises.has(space.getName())) {
+                    await space.destroy();
+                    console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                    Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+                }
             })
         );
 
