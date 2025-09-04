@@ -155,7 +155,7 @@
             {/if}
             <ChatHeader />
             <div
-                class="relative pt-16 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
+                class="relative pt-2 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' h-[calc(100%-2rem)]'
                     : 'h-full'}"
             >

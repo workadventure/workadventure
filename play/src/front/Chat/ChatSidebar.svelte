@@ -4,8 +4,8 @@
     import { gameManager } from "../Phaser/Game/GameManager";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import Chat from "./Components/Chat.svelte";
-    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
-    import { IconX } from "@wa-icons";
+    import { chatSidebarWidthStore } from "./ChatSidebarWidthStore";
+
 
     let container: HTMLElement;
 
@@ -15,9 +15,6 @@
         gameScene.reposition();
     }
 
-    function closeChat() {
-        chatVisibilityStore.set(false);
-    }
 
     let sideBarWidth: number = $chatSidebarWidthStore;
 
@@ -109,19 +106,7 @@
         )}px;"
         class=" chatWindow !min-w-[360px] max-sm:!min-w-[250px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
-        {#if $hideActionBarStoreBecauseOfChatBar}
-            <div class="close-window absolute end-2 top-2 p-2 bg-contrast/80 rounded-2xl z-50">
-                <button
-                    class="hover:bg-white/10 rounded aspect-square w-10 h-10 m-0 flex items-center justify-center !text-white"
-                    data-testid="closeChatButton"
-                    on:click={closeChat}
-                >
-                    <IconX font-size="20" />
-                </button>
-            </div>
-        {/if}
         <Chat {sideBarWidth} />
-
         <div
             class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize user-select-none"
             id="resize-bar"
