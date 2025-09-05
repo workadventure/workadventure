@@ -4,7 +4,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     //import LL from "../../../workadventure/play/src/i18n/i18n-svelte";
-    import { embedScreenLayoutStore } from "../../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../../Stores/EmbedScreenLayoutStore";
 
     // Still needed ?
     function switchLayoutMode() {

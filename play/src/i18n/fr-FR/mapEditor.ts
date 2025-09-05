@@ -247,6 +247,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "Fichier trop volumineux : la taille maximale est de {size} MB",
             },
         },
+        livekitProperties: {
+            label: "Livekit Room",
+            description: "Start Livekit meeting on enter.",
+            roomNameLabel: "Room Name",
+            livekitUrl: "Livekit URL",
+            roomNamePlaceholder: "Nom de la salle",
+        },
         noProperties: "Aucune propriété définie",
     },
     areaEditor: {

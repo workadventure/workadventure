@@ -9,8 +9,8 @@
         proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { peerStore } from "../../Stores/PeerStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
+    import { videoStreamElementsStore } from "../../Stores/PeerStore";
     import CameraMenuItem from "./MenuIcons/CameraMenuItem.svelte";
     import MicrophoneMenuItem from "./MenuIcons/MicrophoneMenuItem.svelte";
     import ScreenSharingMenuItem from "./MenuIcons/ScreenSharingMenuItem.svelte";
@@ -30,8 +30,8 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$peerStore.size > 0 &&
-    $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none flex-0 bp-menu {$videoStreamElementsStore.length >
+        0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
 >

@@ -54,7 +54,7 @@ serviceAccount:
 commonEnv:
   ENABLE_MAP_EDITOR: "true"
   JITSI_URL: https://meet.jit.si
-  MAX_PER_GROUP: 4
+  MAX_PER_GROUP: 1000
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
   UPLOAD_MAX_FILESIZE: "10485760"

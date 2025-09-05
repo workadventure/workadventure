@@ -115,11 +115,14 @@ describe("SpaceToBackForwarder", () => {
                 $case: "addSpaceUserQuery",
                 addSpaceUserQuery: {
                     spaceName: "test",
-                    user: SpaceUser.fromPartial({
-                        spaceUserId: "foo_1",
-                        name: "foo_1",
-                        color: "#f87ed1",
-                    }),
+                    user: {
+                        ...SpaceUser.fromPartial({
+                            spaceUserId: "foo_1",
+                            name: "foo_1",
+                            color: "#f87ed1",
+                        }),
+                        lowercaseName: "foo_1",
+                    },
                     filterType: FilterType.ALL_USERS,
                 },
             });

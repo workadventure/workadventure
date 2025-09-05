@@ -15,7 +15,16 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 });
 
 vi.mock("../../Phaser/Game/GameManager", () => {
-    return {};
+    return {
+        gameManager: {
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
+            }),
+        },
+    };
 });
 
 vi.mock("../../Connection/ConnectionManager", () => {
@@ -23,6 +32,54 @@ vi.mock("../../Connection/ConnectionManager", () => {
         connectionManager: {
             roomConnectionStream: new Subject(),
         },
+    };
+});
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation(() => {
+            return () => {};
+        }),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
     };
 });
 
@@ -38,7 +95,7 @@ describe("SpaceRegistry", () => {
         };
 
         const spaceRegistry = new SpaceRegistry(roomConnection as unknown as RoomConnection, new Subject());
-        const space = await spaceRegistry.joinSpace("space-name", FilterType.ALL_USERS);
+        const space = await spaceRegistry.joinSpace("space-name", FilterType.ALL_USERS, []);
 
         roomConnection.updateSpaceMetadataMessageStream.next(updateSpaceMetadataMessage);
 

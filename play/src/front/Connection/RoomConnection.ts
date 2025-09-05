@@ -51,11 +51,9 @@ import {
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     TurnCredentialsAnswer,
     PublicEvent,
-    PrivateEvent,
     JoinSpaceRequestMessage,
     LeaveSpaceRequestMessage,
     SpaceEvent,
@@ -74,6 +72,7 @@ import {
     FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
+    PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -92,7 +91,7 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/
 import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { isSpeakerStore } from "../Stores/MediaStore";
+import { isSpeakerStore, requestedMicrophoneState, requestedCameraState } from "../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
@@ -101,9 +100,9 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
+import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import type {
@@ -114,7 +113,6 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-    WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
 import { ConnectionClosedError } from "./ConnectionClosedError";
@@ -142,16 +140,6 @@ export class RoomConnection implements RoomConnection {
         room: RoomJoinedMessageInterface;
     }>();
     public readonly roomJoinedMessageStream = this._roomJoinedMessageStream.asObservable();
-    private readonly _webRtcStartMessageStream = new Subject<UserSimplePeerInterface>();
-    public readonly webRtcStartMessageStream = this._webRtcStartMessageStream.asObservable();
-    private readonly _webRtcSignalToClientMessageStream = new Subject<WebRtcSignalReceivedMessageInterface>();
-    public readonly webRtcSignalToClientMessageStream = this._webRtcSignalToClientMessageStream.asObservable();
-    private readonly _webRtcScreenSharingSignalToClientMessageStream =
-        new Subject<WebRtcSignalReceivedMessageInterface>();
-    public readonly webRtcScreenSharingSignalToClientMessageStream =
-        this._webRtcScreenSharingSignalToClientMessageStream.asObservable();
-    private readonly _webRtcDisconnectMessageStream = new Subject<WebRtcDisconnectMessageTsProto>();
-    public readonly webRtcDisconnectMessageStream = this._webRtcDisconnectMessageStream.asObservable();
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
     private readonly _worldFullMessageStream = new Subject<string | null>();
@@ -225,7 +213,7 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
-    private readonly _spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
     public readonly spacePublicMessageEvent = this._spacePublicMessageEvent.asObservable();
@@ -296,6 +284,10 @@ export class RoomConnection implements RoomConnection {
         params.set("version", apiVersionHash);
         params.set("chatID", localUserStore.getChatId() ?? "");
         params.set("roomName", gameManager.currentStartedRoom.roomName ?? "");
+        params.set("cameraState", get(requestedCameraState) ? "true" : "false");
+        params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
+        // TODO: check if the screenSharingState variable is used
+        params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 
         const url = urlObj.toString();
         let subProtocols: string[] | undefined = undefined;
@@ -465,6 +457,10 @@ export class RoomConnection implements RoomConnection {
                                 this._spaceDestroyedMessage.next(subMessage.spaceDestroyedMessage);
                                 break;
                             }
+                            case "groupUsersUpdateMessage": {
+                                this._groupUsersUpdateMessageStream.next(subMessage.groupUsersUpdateMessage);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = subMessage;
                             }
@@ -580,56 +576,9 @@ export class RoomConnection implements RoomConnection {
                     this.closeConnection();
                     break;
                 }
-                case "webRtcSignalToClientMessage": {
-                    this._webRtcSignalToClientMessageStream.next({
-                        userId: message.webRtcSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcSignalToClientMessage.webRtcUserName
-                            ? message.webRtcSignalToClientMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcSignalToClientMessage.webRtcPassword
-                            ? message.webRtcSignalToClientMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
-                case "webRtcScreenSharingSignalToClientMessage": {
-                    this._webRtcScreenSharingSignalToClientMessageStream.next({
-                        userId: message.webRtcScreenSharingSignalToClientMessage.userId,
-                        signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
-                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
-                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
-                            ? message.webRtcScreenSharingSignalToClientMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
-                case "webRtcStartMessage": {
-                    this._webRtcStartMessageStream.next({
-                        userId: message.webRtcStartMessage.userId,
-                        initiator: message.webRtcStartMessage.initiator,
-                        webRtcUser: message.webRtcStartMessage.webRtcUserName
-                            ? message.webRtcStartMessage.webRtcUserName
-                            : undefined,
-                        webRtcPassword: message.webRtcStartMessage.webRtcPassword
-                            ? message.webRtcStartMessage.webRtcPassword
-                            : undefined,
-                    });
-                    break;
-                }
-                case "webRtcDisconnectMessage": {
-                    this._webRtcDisconnectMessageStream.next(message.webRtcDisconnectMessage);
-                    break;
-                }
                 case "teleportMessageMessage": {
                     // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
                     this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
-                    break;
-                }
-                case "groupUsersUpdateMessage": {
-                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
                 }
                 case "sendUserMessage": {
@@ -912,30 +861,6 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "viewportMessage",
                 viewportMessage: this.toViewportMessage(viewport),
-            },
-        });
-    }
-
-    public sendWebrtcSignal(signal: unknown, receiverId: number) {
-        this.send({
-            message: {
-                $case: "webRtcSignalToServerMessage",
-                webRtcSignalToServerMessage: {
-                    receiverId,
-                    signal: JSON.stringify(signal),
-                },
-            },
-        });
-    }
-
-    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
-        this.send({
-            message: {
-                $case: "webRtcScreenSharingSignalToServerMessage",
-                webRtcScreenSharingSignalToServerMessage: {
-                    receiverId,
-                    signal: JSON.stringify(signal),
-                },
             },
         });
     }
@@ -1515,12 +1440,17 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async emitJoinSpace(spaceName: string, filterType: FilterType): Promise<void> {
+    public async emitJoinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        propertiesToSync: string[]
+    ): Promise<SpaceUser["spaceUserId"]> {
         const answer = await this.query({
             $case: "joinSpaceQuery",
             joinSpaceQuery: {
                 spaceName,
                 filterType,
+                propertiesToSync,
             },
         });
 
@@ -1528,7 +1458,7 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
 
-        return;
+        return answer.joinSpaceAnswer.spaceUserId;
     }
 
     public async emitLeaveSpace(spaceName: string): Promise<void> {
@@ -1881,6 +1811,7 @@ export class RoomConnection implements RoomConnection {
             position: position,
             groupSize: message.groupSize,
             locked: message.locked,
+            userIds: message.userIds,
         };
     }
 
@@ -1891,10 +1822,6 @@ export class RoomConnection implements RoomConnection {
         this._errorMessageStream.complete();
         this._errorScreenMessageStream.complete();
         this._roomJoinedMessageStream.complete();
-        this._webRtcStartMessageStream.complete();
-        this._webRtcSignalToClientMessageStream.complete();
-        this._webRtcScreenSharingSignalToClientMessageStream.complete();
-        this._webRtcDisconnectMessageStream.complete();
         this._teleportMessageMessageStream.complete();
         this._worldFullMessageStream.complete();
         this._worldConnectionMessageStream.complete();

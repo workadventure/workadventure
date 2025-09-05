@@ -6,6 +6,7 @@
     export let currentHeight: number;
     export let onResize: (height: number) => void;
     export let onResizeEnd: () => void = () => {};
+    export let dataTestid: string = "resize-handle";
 
     let dragHandle: HTMLElement;
 
@@ -60,6 +61,7 @@
 
 <div
     bind:this={dragHandle}
+    data-testid={dataTestid}
     class="relative drag-handle mx-auto mt-3 w-20 h-1 outline outline-4 outline-contrast bg-white cursor-ns-resize transition-colors rounded-lg"
 />
 

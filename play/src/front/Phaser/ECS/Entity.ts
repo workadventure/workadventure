@@ -337,6 +337,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         for (const property of properties) {
             switch (property.type) {
+                //TODO: see if we add livekit here
                 case "jitsiRoomProperty": {
                     const roomName = property.roomName;
                     const roomConfig = property.jitsiRoomConfig;
