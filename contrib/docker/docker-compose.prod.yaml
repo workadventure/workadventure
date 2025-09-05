@@ -1,6 +1,7 @@
 version: "3.6"
 services:
   reverse-proxy:
+    network_mode: host
     image: traefik:v2.11
     command:
       - --log.level=${LOG_LEVEL}
@@ -9,13 +10,19 @@ services:
       # Entry points
       - --entryPoints.web.address=:80
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      # - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:443
       - --entryPoints.grpc.address=:50051
       # HTTP challenge
       - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
+      - --certificatesResolvers.myresolver.acme.httpChallenge=true
+      #- --certificatesResolvers.myresolver.acme.dnsChallenge=true
+      #- --certificatesResolvers.myresolver.acme.dnsChallenge.provider=route53
+      #- --certificatesResolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      #- --certificatesResolvers.myresolver.acme.dnsChallenge.delayBeforeCheck=60
+      #- --certificatesResolvers.myresolver.acme.dnsChallenge.resolvers=1.1.1.1:53,8.8.8.8:53
       # Let's Encrypt's staging server
       # uncomment during testing to avoid rate limiting
       #- --certificatesresolvers.dnsresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
@@ -27,6 +34,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     restart: ${RESTART_POLICY}
+    environment:
+      - AWS_REGION=us-east-2
+      - AWS_HOSTED_ZONE_ID=Z059146316JRT8LL2BXQ0
 
   play:
     image: thecodingmachine/workadventure-play:${VERSION}
@@ -37,7 +47,7 @@ services:
       - ENABLE_MAP_EDITOR
       - MAP_EDITOR_ALLOWED_USERS
       - MAP_EDITOR_ALLOW_ALL_USERS
-      - PUSHER_URL=https://${DOMAIN}/
+      - PUSHER_URL=https://${DOMAIN}
       - ICON_URL=/icon
       - TURN_SERVER
       - TURN_USER
@@ -51,20 +61,24 @@ services:
       - DISABLE_NOTIFICATIONS
       - SECRET_KEY
       - API_URL=back:50051
-      - FRONT_URL=/
+      - FRONT_URL=https://${DOMAIN}
       - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
       - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - START_ROOM_URL
-      - OPID_PROMPT=login
-      - OPID_WOKA_NAME_POLICY
-      - OPID_CLIENT_ID
-      - OPID_CLIENT_SECRET
-      - OPID_CLIENT_ISSUER
-      - OPID_PROFILE_SCREEN_PROVIDER
-      - OPID_SCOPE
-      - OPID_USERNAME_CLAIM
-      - OPID_LOCALE_CLAIM
-      - OPID_LOGOUT_REDIRECT_URL
+      - OPENID_CLIENT_ENABLED=${OPENID_CLIENT_ENABLED}
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
+      - OPENID_PROMPT=login
+      - OPENID_WOKA_NAME_POLICY=${OPENID_WOKA_NAME_POLICY}
+      - OPENID_CLIENT_REDIRECT_URL=${OPID_CLIENT_REDIRECT_URL}
+      - OPENID_CLIENT_ID=${OPENID_CLIENT_ID}
+      - OPENID_CLIENT_SECRET=${OPENID_CLIENT_SECRET}
+      - OPENID_CLIENT_ISSUER=${OPENID_CLIENT_ISSUER}
+      - OPENID_PROFILE_SCREEN_PROVIDER=${OPENID_PROFILE_SCREEN_PROVIDER}
+      - OPENID_SCOPE=${OPENID_SCOPE}
+      - OPENID_USERNAME_CLAIM=${OPENID_USERNAME_CLAIM}
+      - OPENID_LOCALE_CLAIM=${OPENID_LOCALE_CLAIM}
+      - OPENID_LOGOUT_REDIRECT_URL=${OPENID_LOGOUT_REDIRECT_URL}
       - FALLBACK_LOCALE
       - ENABLE_CHAT
       - ENABLE_CHAT_UPLOAD
