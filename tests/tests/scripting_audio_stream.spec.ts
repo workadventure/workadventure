@@ -38,9 +38,7 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
     return new Promise<void>((resolve) => {
       const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
-        console.log("Max volume in sample:", Math.max(...data.map(Math.abs)));
         if (data.some((sample) => Math.abs(sample) > volume)) {
-          console.log("Audio stream received with sufficient volume");
           resolve();
           subscription.unsubscribe();
         }

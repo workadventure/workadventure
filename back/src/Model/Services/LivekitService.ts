@@ -60,7 +60,6 @@ export class LiveKitService {
             roomName.length > 250
                 ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
                 : roomName;
-        console.log("✅✅✅✅✅ create livekit room with name : ", hashedRoomName);
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
             name: hashedRoomName,
@@ -75,7 +74,6 @@ export class LiveKitService {
     async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
         const hashedRoomName = this.getHashedRoomName(roomName);
 
-        console.log("✅✅✅✅✅ generate livekit token for room : ", hashedRoomName);
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
             identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
             name: user.name,

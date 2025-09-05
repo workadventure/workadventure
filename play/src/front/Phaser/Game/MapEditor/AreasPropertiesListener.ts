@@ -1056,7 +1056,6 @@ export class AreasPropertiesListener {
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
             streamingMegaphoneStore.set(true);
-            console.log("handleSpeakerMegaphonePropertyOnEnter => space : ", space);
 
             space.emitUpdateUser({
                 megaphoneState: true,
@@ -1076,7 +1075,6 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            console.log("handleSpeakerMegaphonePropertyOnLeave => uniqRoomName before leave: ", uniqRoomName);
             this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
                 console.error("Error while leaving space", e);
                 Sentry.captureException(e);
@@ -1100,7 +1098,6 @@ export class AreasPropertiesListener {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
 
-                console.log("handleListenerMegaphonePropertyOnEnter => space : ", space);
                 currentLiveStreamingSpaceStore.set(space);
                 if (property.chatEnabled) {
                     //TODO : remove this or replace by matrix room
