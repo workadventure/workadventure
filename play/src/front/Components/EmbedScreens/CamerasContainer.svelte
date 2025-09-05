@@ -221,6 +221,35 @@
         );
     }
 
+    let camerasContainer: HTMLDivElement | undefined;
+    let grabPointerEvents = false;
+    const isWebkit = "WebkitAppearance" in document.documentElement.style;
+    $: {
+        // In Webkit, the scroll event on the cameras-container is not triggered when the user scrolls unless the
+        // pointer-events is set to auto. But we want to avoid that unless there is a scroll bar to keep the
+        // pointer events to go through to the map.
+
+        // Let's trigger this logic when the number of videos changes or when the container width changes
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        $streamableCollectionStore;
+
+        if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
+            setTimeout(() => {
+                if (camerasContainer) {
+                    if (camerasContainer.scrollWidth > containerWidth) {
+                        //eslint-disable-next-line svelte/infinite-reactive-loop
+                        grabPointerEvents = true;
+                    } else {
+                        //eslint-disable-next-line svelte/infinite-reactive-loop
+                        grabPointerEvents = false;
+                    }
+                }
+            }, 500);
+        } else {
+            grabPointerEvents = false;
+        }
+    }
+
     onDestroy(() => {
         gameScene.reposition();
     });
@@ -238,8 +267,10 @@
 >
     <div
         bind:clientWidth={containerWidth}
-        class="pointer-events-auto"
-        style={`gap: ${gap}px; ` + (!isOnOneLine ? "height: " + containerHeight + "px;" : "")}
+        bind:this={camerasContainer}
+        class="gap-4 pb-2"
+        class:pointer-events-none={!grabPointerEvents}
+        class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -258,7 +289,7 @@
         class:pb-3={isOnOneLine}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
-        class:w-full={true}
+        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
         class:items-start={!isOnOneLine}
         class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
