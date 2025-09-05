@@ -67,7 +67,7 @@ import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
-import PopupFile from "../../../Components/PopUp/PopupFile.svelte";
+import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -1165,7 +1165,7 @@ export class AreasPropertiesListener {
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
             popupStore.addPopup(
-                PopupFile,
+                FilePopup,
                 {
                     message: message,
                     click: () => {
