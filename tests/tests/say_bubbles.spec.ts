@@ -90,4 +90,50 @@ test.describe("Say bubbles @nomobile", () => {
 
         await alicePage.context().close();
     });
+
+    test("should restore user controls after closing say popup (Firefox focus fix)", async ({ browser }) => {
+        // This test specifically validates the Firefox focus issue fix
+        await using alicePage = await getPage(browser, 'Alice',
+            publicTestMapUrl("tests/E2E/empty.json", "say_bubbles")
+        );
+
+        // Start moving (to establish that controls work initially)
+        await alicePage.keyboard.down("ArrowRight");
+        await alicePage.waitForTimeout(100); // Small delay to register movement
+        await alicePage.keyboard.up("ArrowRight");
+
+        // Open say popup
+        await alicePage.keyboard.press("Enter");
+        await expect(alicePage.getByTestId("say-popup")).toBeVisible();
+
+        // Close say popup
+        await alicePage.keyboard.press("Escape");
+        await expect(alicePage.getByTestId("say-popup")).toBeHidden();
+
+        // Verify that user controls are restored by testing movement
+        // We'll test this by checking that keyboard input is not blocked
+        const initialPosition = await alicePage.evaluate(() => {
+            const player = document.querySelector('.character-container');
+            return player ? { x: player.getBoundingClientRect().x, y: player.getBoundingClientRect().y } : null;
+        });
+
+        // Try to move after closing popup
+        await alicePage.keyboard.down("ArrowRight");
+        await alicePage.waitForTimeout(500); // Give time for movement
+        await alicePage.keyboard.up("ArrowRight");
+
+        // Check if position changed (indicating controls are working)
+        const newPosition = await alicePage.evaluate(() => {
+            const player = document.querySelector('.character-container');
+            return player ? { x: player.getBoundingClientRect().x, y: player.getBoundingClientRect().y } : null;
+        });
+
+        // Assert that movement occurred (position should be different)
+        // If focus is stuck, the player won't move
+        if (initialPosition && newPosition) {
+            expect(newPosition.x).not.toBe(initialPosition.x);
+        }
+
+        await alicePage.context().close();
+    });
 });

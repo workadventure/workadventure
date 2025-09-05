@@ -9,6 +9,17 @@
     }>();
 
     onDestroy(() => {
+        // Firefox does not trigger the "blur" event when the input is removed from the DOM.
+        // So we need to manually set the focus to false when the component is destroyed.
+        
+        // Explicitly blur any focused element to ensure Firefox properly releases focus
+        if (document.activeElement && document.activeElement !== document.body) {
+            const activeEl = document.activeElement as HTMLElement;
+            if (typeof activeEl.blur === 'function') {
+                activeEl.blur();
+            }
+        }
+        
         inputFormFocusStore.set(false);
     });
 </script>

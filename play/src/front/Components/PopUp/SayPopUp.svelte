@@ -57,7 +57,10 @@
         
         // Explicitly blur any focused element to ensure Firefox properly releases focus
         if (document.activeElement && document.activeElement !== document.body) {
-            (document.activeElement as HTMLElement).blur();
+            const activeEl = document.activeElement as HTMLElement;
+            if (typeof activeEl.blur === 'function') {
+                activeEl.blur();
+            }
         }
         
         inputFormFocusStore.set(false);
