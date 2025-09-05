@@ -6,7 +6,6 @@
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore } from "./ChatSidebarWidthStore";
 
-
     let container: HTMLElement;
 
     const gameScene = gameManager.getCurrentGameScene();
@@ -14,7 +13,6 @@
     function reposition() {
         gameScene.reposition();
     }
-
 
     let sideBarWidth: number = $chatSidebarWidthStore;
 
