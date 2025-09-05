@@ -174,7 +174,7 @@
                             >
                                 <button
                                     type="button"
-                                    class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap"
+                                    class="menu-item m-0 relative z-10 bold block @md/main-layout:flex text-nowrap text-white"
                                 >
                                     {subMenuTranslations[i]}
                                 </button>
