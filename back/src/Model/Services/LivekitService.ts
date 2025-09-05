@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
@@ -57,7 +58,10 @@ export class LiveKitService {
 
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
-            name: roomName,
+            name:
+                roomName.length > 250
+                    ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+                    : roomName,
             emptyTimeout: 5 * 60 * 1000,
             //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
