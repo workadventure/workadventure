@@ -7,10 +7,10 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
-    import OnlineUsersCount from "./OnlineUsersCount.svelte";
-    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
-    import ChatActionMenu from "./ChatActionMenu.svelte";
     import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
+    import OnlineUsersCount from "./OnlineUsersCount.svelte";
+    import ChatActionMenu from "./ChatActionMenu.svelte";
+    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
 
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
@@ -23,12 +23,10 @@
     let typingTimer: ReturnType<typeof setTimeout>;
     const DONE_TYPING_INTERVAL = 2000;
 
-
     function handleToggleSearch() {
         console.log("handleToggleSearch appelé, searchActive avant:", searchActive);
         searchActive = !searchActive;
         console.log("searchActive après:", searchActive);
-        hideActionBarStoreBecauseOfChatBar.set(searchActive);
 
         if (!searchActive) {
             chatSearchBarValue.set("");
