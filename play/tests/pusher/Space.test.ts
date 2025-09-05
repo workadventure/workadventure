@@ -171,9 +171,9 @@ describe("Space", () => {
 
             space.initSpace();
 
-            space.users.set("foo_1", mockUsers[0] as SpaceUserExtended);
-            space.users.set("foo_2", mockUsers[1] as SpaceUserExtended);
-            space.users.set("foo_3", mockUsers[2] as SpaceUserExtended);
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
 
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
@@ -251,9 +251,9 @@ describe("Space", () => {
 
             space.initSpace();
 
-            space.users.set("foo_1", mockUsers[0] as SpaceUserExtended);
-            space.users.set("foo_2", mockUsers[1] as SpaceUserExtended);
-            space.users.set("foo_3", mockUsers[2] as SpaceUserExtended);
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
             space._localWatchers.add("foo_1");
 
             const mockSocket = mock<Socket>({
