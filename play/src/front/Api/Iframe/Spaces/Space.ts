@@ -10,9 +10,12 @@ export class Space {
     private readonly users: Map<string, SpaceUser> = new Map<string, SpaceUser>();
     public readonly userJoinedObservable: Observable<SpaceUser>;
     public readonly userLeftObservable: Observable<SpaceUser>;
+    public readonly metadataObservable: Observable<Map<string, unknown>>;
     private _userJoinedSubscriber: Subscriber<SpaceUser> | undefined;
     private _userLeftSubscriber: Subscriber<SpaceUser> | undefined;
+    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
     private left = false;
+    private metadata: Map<string, unknown> = new Map<string, unknown>();
 
     constructor(private readonly port: CheckedIframeMessagePort<"joinSpace">) {
         this.messagesSubscription = this.port.messages.subscribe((event) => {
@@ -66,6 +69,11 @@ export class Space {
                     this._userJoinedSubscriber?.next(user);
                     break;
                 }
+                case "onSetMetadata": {
+                    this.metadata = new Map(Object.entries(event.data.data.metadata));
+                    this._metadataSubscriber?.next(this.metadata);
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = event.data;
                 }
@@ -84,6 +92,15 @@ export class Space {
         this.userLeftObservable = new Observable<SpaceUser>((subscriber) => {
             this.watch();
             this._userLeftSubscriber = subscriber;
+
+            return () => {
+                this.unwatch();
+            };
+        });
+
+        this.metadataObservable = new Observable<Map<string, unknown>>((subscriber) => {
+            this.watch();
+            this._metadataSubscriber = subscriber;
 
             return () => {
                 this.unwatch();
@@ -158,6 +175,15 @@ export class Space {
     public stopStreaming(): void {
         this.port.postMessage({
             type: "stopStreaming",
+        });
+    }
+
+    public setMetadata(metadata: Map<string, unknown>): void {
+        this.port.postMessage({
+            type: "setMetadata",
+            data: {
+                metadata: Object.fromEntries(metadata.entries()),
+            },
         });
     }
 }

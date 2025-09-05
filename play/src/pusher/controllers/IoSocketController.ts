@@ -1145,6 +1145,9 @@ export class IoSocketController {
     }
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
+        if (socket.getUserData().disconnecting) {
+            return;
+        }
         socket.send(
             ServerToClientMessage.encode({
                 message: {

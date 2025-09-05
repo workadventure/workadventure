@@ -1,9 +1,6 @@
 import { Readable, derived, get, writable } from "svelte/store";
-import { createNestedStore } from "@workadventure/store-utils";
-import { GameScene } from "../Phaser/Game/GameScene";
 import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
-import { TrackWrapper } from "../Streaming/Common/TrackWrapper";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
@@ -13,7 +10,6 @@ import LL from "../../i18n/i18n-svelte";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
-import { gameSceneStore } from "./GameSceneStore";
 import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
 import { highlightFullScreen } from "./ActionsCamStore";
 import { scriptingVideoStore } from "./ScriptingVideoStore";
@@ -29,6 +25,7 @@ import {
 } from "./MediaStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
+import { broadcastTracksStore } from "./BroadcastTrackStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -87,11 +84,6 @@ export type ExtendedStreamable = Streamable & {
     userId: number;
     media: MediaStoreStreamable;
 };
-
-const broadcastTracksStore = createNestedStore<GameScene | undefined, Map<string, TrackWrapper>>(
-    gameSceneStore,
-    (gameScene) => (gameScene ? gameScene.broadcastService.getTracks() : writable<Map<string, TrackWrapper>>(new Map()))
-);
 
 const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore]) => {
     const jitsiTracks = new Map<string, JitsiTrackWrapper>();
