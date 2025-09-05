@@ -32,7 +32,7 @@ vi.mock("@workadventure/math-utils", () => ({
     },
 }));
 
-import { PathfindingManager, PathTileType } from "../../../src/front/Utils/PathfindingManager";
+import { PathfindingManager } from "../../../src/front/Utils/PathfindingManager";
 
 describe("PathfindingManager", () => {
     let pathfindingManager: PathfindingManager;
@@ -43,7 +43,7 @@ describe("PathfindingManager", () => {
         vi.clearAllMocks();
         // Reset the mock implementation
         mockEasyStar.findPath.mockReturnValue(1); // Return instance ID
-        
+
         // Create a simple 5x5 grid with some obstacles
         mockGrid = [
             [0, 0, 0, 0, 0], // 0 = walkable
@@ -79,7 +79,7 @@ describe("PathfindingManager", () => {
             });
 
             const path = await pathfindingManager.findPathFromGameCoordinates(start, end);
-            
+
             expect(path.length).toBeGreaterThan(0);
             expect(mockEasyStar.findPath).toHaveBeenCalled();
             expect(mockEasyStar.calculate).toHaveBeenCalled();
@@ -96,7 +96,7 @@ describe("PathfindingManager", () => {
             });
 
             const path = await pathfindingManager.findPathFromGameCoordinates(start, end);
-            
+
             expect(path).toEqual([]);
         });
 
@@ -116,7 +116,7 @@ describe("PathfindingManager", () => {
             });
 
             const path = await pathfindingManager.findPathFromGameCoordinates(start, end, true);
-            
+
             // Should find a path to a nearby walkable tile
             expect(path.length).toBeGreaterThan(0);
         });
@@ -128,14 +128,13 @@ describe("PathfindingManager", () => {
             const end1 = { x: 144, y: 16 };
             const end2 = { x: 16, y: 144 };
 
-            let firstCallbackCalled = false;
-            let secondCallbackCalled = false;
-
             // First pathfinding request - should be canceled
             mockEasyStar.findPath.mockImplementationOnce((sx, sy, ex, ey, callback) => {
                 setTimeout(() => {
-                    firstCallbackCalled = true;
-                    callback([{ x: sx, y: sy }, { x: ex, y: ey }]);
+                    callback([
+                        { x: sx, y: sy },
+                        { x: ex, y: ey },
+                    ]);
                 }, 50);
                 return 1; // instance ID
             });
@@ -146,15 +145,17 @@ describe("PathfindingManager", () => {
             // Second pathfinding request - should succeed
             mockEasyStar.findPath.mockImplementationOnce((sx, sy, ex, ey, callback) => {
                 setTimeout(() => {
-                    secondCallbackCalled = true;
-                    callback([{ x: sx, y: sy }, { x: ex, y: ey }]);
+                    callback([
+                        { x: sx, y: sy },
+                        { x: ex, y: ey },
+                    ]);
                 }, 10);
                 return 2; // instance ID
             });
 
             // Start second request quickly after first
             setTimeout(() => {
-                pathfindingManager.findPathFromGameCoordinates(start, end2);
+                void pathfindingManager.findPathFromGameCoordinates(start, end2);
             }, 5);
 
             await firstPromise;
@@ -165,10 +166,17 @@ describe("PathfindingManager", () => {
 
         it("should handle rapid successive pathfinding requests without memory leaks", async () => {
             const start = { x: 16, y: 16 };
-            
+
             // Mock quick responses
             mockEasyStar.findPath.mockImplementation((sx, sy, ex, ey, callback) => {
-                setTimeout(() => callback([{ x: sx, y: sy }, { x: ex, y: ey }]), 1);
+                setTimeout(
+                    () =>
+                        callback([
+                            { x: sx, y: sy },
+                            { x: ex, y: ey },
+                        ]),
+                    1
+                );
                 return Math.random(); // different instance IDs
             });
 
@@ -180,7 +188,7 @@ describe("PathfindingManager", () => {
             }
 
             const results = await Promise.all(promises);
-            
+
             // Should complete without throwing errors
             expect(results).toHaveLength(5);
             // cancelPath should have been called for intermediate requests
@@ -202,7 +210,7 @@ describe("PathfindingManager", () => {
             const startTime = Date.now();
             const path = await pathfindingManager.findPathFromGameCoordinates(start, end);
             const endTime = Date.now();
-            
+
             // Should timeout and return empty path
             expect(path).toEqual([]);
             expect(endTime - startTime).toBeLessThan(5000); // Should timeout in under 5 seconds
@@ -218,7 +226,7 @@ describe("PathfindingManager", () => {
             });
 
             const path = await pathfindingManager.findPathFromGameCoordinates(position, position);
-            
+
             // Should return single point or empty path
             expect(path.length).toBeLessThanOrEqual(1);
         });
@@ -229,7 +237,7 @@ describe("PathfindingManager", () => {
 
             // Start a pathfinding operation
             mockEasyStar.findPath.mockImplementation(() => 1);
-            pathfindingManager.findPathFromGameCoordinates(start, end);
+            void pathfindingManager.findPathFromGameCoordinates(start, end);
 
             // Call cleanup
             pathfindingManager.cleanup();
@@ -256,7 +264,7 @@ describe("PathfindingManager", () => {
             });
 
             const path = await pathfindingManager.findPathFromGameCoordinates(start, end);
-            
+
             // Should return empty path due to max calculations reached
             expect(path).toEqual([]);
             expect(calculateCallCount).toBeGreaterThan(0);
