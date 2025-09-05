@@ -56,12 +56,14 @@ export class LiveKitService {
             return;
         }
 
+        const hashedRoomName =
+            roomName.length > 250
+                ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+                : roomName;
+        console.log("✅✅✅✅✅ create livekit room with name : ", hashedRoomName);
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
-            name:
-                roomName.length > 250
-                    ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
-                    : roomName,
+            name: hashedRoomName,
             emptyTimeout: 5 * 60 * 1000,
             //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
