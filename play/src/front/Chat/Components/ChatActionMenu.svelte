@@ -4,14 +4,13 @@
     import { IconX, IconSearch } from "@wa-icons";
 
     export let searchActive = false;
-    export let searchLoader = false;
 
     let menuOpen = false;
-    
+
     type Events = {
         toggleSearch: void;
     };
-    
+
     const dispatch = createEventDispatcher<Events>();
 
     function closeChat() {
@@ -63,7 +62,6 @@
                 class="menu-item w-full flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg text-white text-left transition-colors"
                 on:click={handleToggleSearch}
             >
-
                 {#if searchActive}
                     <IconX font-size="20" />
                 {:else if !searchActive}
@@ -90,7 +88,7 @@
     <div
         class="fixed inset-0 z-40"
         on:click={() => (menuOpen = false)}
-        on:keydown={(e) => e.key === 'Escape' && (menuOpen = false)}
+        on:keydown={(e) => e.key === "Escape" && (menuOpen = false)}
         role="button"
         tabindex="-1"
         aria-label="Fermer menu"

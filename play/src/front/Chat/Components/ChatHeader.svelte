@@ -114,7 +114,7 @@
         <!-- Ici j'ai le bouton qui s'affiche pour chercher des utilisateurs ou des chats -->
         {#if $chatStatusStore !== "OFFLINE"}
             {#if $hideActionBarStoreBecauseOfChatBar}
-                <ChatActionMenu {searchActive} {searchLoader} on:toggleSearch={handleToggleSearch} />
+                <ChatActionMenu {searchActive} on:toggleSearch={handleToggleSearch} />
             {:else}
                 <button
                     class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
