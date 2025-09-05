@@ -150,6 +150,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockSpace = {
                 name: "test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>(),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
@@ -181,7 +182,9 @@ describe("SpaceToBackForwarder", () => {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
                         spaceName: "test",
-                        metadata: JSON.stringify(new Map([["metadata-1", "value-1"]])),
+                        metadata: JSON.stringify({
+                            "metadata-1": "value-1",
+                        }),
                     },
                 },
             });

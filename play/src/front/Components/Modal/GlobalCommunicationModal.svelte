@@ -472,7 +472,7 @@
                                 />
                                 <div class="w-full">
                                     <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
-                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
                                             {#each $cameraListStore as camera (camera.deviceId)}
                                                 <option value={camera.deviceId}>
                                                     {StringUtils.normalizeDeviceName(camera.label)}
