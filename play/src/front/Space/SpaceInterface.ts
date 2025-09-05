@@ -73,6 +73,7 @@ export interface SpaceInterface {
      * It can be easier than subscribing to every single property of every single user.
      */
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
+    readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
 }
 

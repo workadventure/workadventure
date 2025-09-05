@@ -1615,6 +1615,9 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
+                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
+
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
@@ -2326,7 +2329,9 @@ export class GameScene extends DirtyScene {
                 //this.reposition();
             } else {
                 this.CurrentPlayer.toggleTalk(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
+                if (!this.connection?.closed) {
+                    this.connection?.emitPlayerShowVoiceIndicator(false);
+                }
                 this.showVoiceIndicatorChangeMessageSent = false;
                 //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
