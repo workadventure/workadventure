@@ -11,6 +11,9 @@ importers:
       husky:
         specifier: ^7.0.1
         version: 7.0.4
+      typescript:
+        specifier: 5.8.3
+        version: 5.8.3
 
 packages:
 
@@ -19,6 +22,13 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
 
+  typescript@5.8.3:
+    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
 snapshots:
 
   husky@7.0.4: {}
+
+  typescript@5.8.3: {}
