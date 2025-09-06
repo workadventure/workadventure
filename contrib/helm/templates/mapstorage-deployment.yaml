@@ -53,6 +53,8 @@ spec:
         {{- end }}
       initContainers:
         - name: mapstorage-init
+          securityContext:
+            {{- toYaml .Values.mapstorage.securityContext | nindent 12 }}
           image: busybox
           command: ["/bin/sh", "-c"]
           args:
