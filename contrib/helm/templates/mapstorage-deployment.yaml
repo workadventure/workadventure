@@ -49,7 +49,7 @@ spec:
           emptyDir: {}
           {{- end }}
         {{- with .Values.mapstorage.extraVolumes }}
-        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       initContainers:
         - name: mapstorage-init
@@ -92,7 +92,7 @@ spec:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: MAP_STORAGE_API_TOKEN
             {{- if .Values.mapstorage.extraEnvVars }}
-            {{- include "common.tplvalues.render" (dict "value" .Values.mapstorage.extraEnvVars "context" $) | nindent 12 }}
+            {{- toYaml .Values.mapstorage.extraEnvVars | nindent 12 }}
             {{- end }}
           ports:
             - name: http
@@ -113,7 +113,7 @@ spec:
             - name: mapstorage
               mountPath: /maps
             {{- with .Values.mapstorage.extraVolumeMounts }}
-            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           resources:
             {{- toYaml .Values.mapstorage.resources | nindent 12 }}
