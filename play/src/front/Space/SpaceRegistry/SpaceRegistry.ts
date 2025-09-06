@@ -17,6 +17,7 @@ import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
  */
 export type RoomConnectionForSpacesInterface = Pick<
     RoomConnection,
+    | "closed"
     | "addSpaceUserMessageStream"
     | "updateSpaceUserMessageStream"
     | "removeSpaceUserMessageStream"
@@ -41,6 +42,7 @@ export type RoomConnectionForSpacesInterface = Pick<
  */
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: Map<string, Space> = new Map<string, Space>();
+    private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -98,9 +100,18 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     metadata.set(key, value);
                 }
 
-                if (message.metadata) {
-                    this.spaces.get(message.spaceName)?.setMetadata(metadata);
+                if (!message.metadata) {
+                    return;
                 }
+
+                const space = this.spaces.get(message.spaceName);
+                if (!space) {
+                    console.error("Space does not exist", message.spaceName);
+                    Sentry.captureException(new Error(`Space does not exist: ${message.spaceName}`));
+                    return;
+                }
+
+                space.setMetadata(metadata);
             }
         );
 
@@ -147,6 +158,10 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         filterType: FilterType,
         metadata: Map<string, unknown> = new Map<string, unknown>()
     ): Promise<SpaceInterface> {
+        const leavingPromise = this.leavingSpacesPromises.get(spaceName);
+        if (leavingPromise) {
+            await leavingPromise;
+        }
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
         const newSpace = await Space.create(spaceName, filterType, this.roomConnection, metadata);
         this.spaces.set(newSpace.getName(), newSpace);
@@ -161,7 +176,13 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         if (!spaceInRegistry) {
             throw new SpaceDoesNotExistError(spaceName);
         }
-        await spaceInRegistry.destroy();
+        const leavingPromise = spaceInRegistry.destroy();
+        this.leavingSpacesPromises.set(spaceName, leavingPromise);
+        try {
+            await leavingPromise;
+        } finally {
+            this.leavingSpacesPromises.delete(spaceName);
+        }
         this.spaces.delete(spaceName);
     }
     getAll(): SpaceInterface[] {
@@ -206,9 +227,11 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         // If a space is not destroyed, it means that there is a bug in the code.
         await Promise.all(
             Array.from(this.spaces.values()).map(async (space) => {
-                await space.destroy();
-                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-                Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+                if (!this.leavingSpacesPromises.has(space.getName())) {
+                    await space.destroy();
+                    console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                    Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
+                }
             })
         );
 

@@ -230,7 +230,7 @@
         {#if isSayBubbleEnabled}
             <div class="w-full h-[1px] bg-white/10" />
 
-            <div class="px-1 py-2  flex flex-row items-center justify-between">
+            <div class="px-1 py-2 flex flex-row items-center justify-between">
                 <div class="flex flex-row justify-between gap-2 items-center w-full">
                     <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"

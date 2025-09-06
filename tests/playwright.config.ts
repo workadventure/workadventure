@@ -22,8 +22,8 @@ const config: PlaywrightTestConfig = {
   },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 1 : 0,
+  /* Retry on CI only, unless NO_FLAKY is set */
+  retries: process.env.NO_FLAKY === "true" ? 0 : (process.env.CI ? 1 : 0),
   /* Opt out of parallel tests. */
   workers: 1,
   /* Limit failures to 9 in CI (to finish early) */
@@ -38,7 +38,7 @@ const config: PlaywrightTestConfig = {
     baseURL: process.env.PLAY_URL ?? 'http://play.workadventure.localhost/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
+    trace: process.env.NO_FLAKY === "true" ? 'retain-on-failure' : (process.env.CI ? 'on-first-retry' : 'retain-on-failure'),
     navigationTimeout: 60_000,
 
     // Emulates the user locale. See https://playwright.dev/docs/api/class-browsertype#browsertypelaunchoptions
@@ -122,7 +122,7 @@ const config: PlaywrightTestConfig = {
         ignoreHTTPSErrors: true,
       },
     },
-     
+
     /* To use safari project and test on mobile safari, we need to have https test environment ¨*/
      //{
      //  name: 'mobilesafari',

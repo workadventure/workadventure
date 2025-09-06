@@ -49,7 +49,7 @@
 
 <div
     class="report-menu-main
-    text-center  absolute left-0 right-0 bg-contrast/80 overflow-hidden backdrop-blur-md rounded text-white p-3 pointer-events-auto
+    text-center absolute left-0 right-0 bg-contrast/80 overflow-hidden backdrop-blur-md rounded text-white p-3 pointer-events-auto
     md:top-14 w-full md:w-1/2 m-auto z-[650]"
 >
     <section>

@@ -539,13 +539,17 @@ export class GameScene extends DirtyScene {
             this.doLoadTMJFile(this.mapUrlFile);
         }
 
+        // The condition is here for Webkit in headless mode (CI / automated tests). It doesn't have a proper font support.
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this.load as any).rexWebFont({
-            custom: {
-                families: ["Press Start 2P"],
-                testString: "abcdefg",
-            },
-        });
+        if (typeof (this.load as any).rexWebFont === "function") {
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (this.load as any).rexWebFont({
+                custom: {
+                    families: ["Press Start 2P"],
+                    testString: "abcdefg",
+                },
+            });
+        }
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
@@ -1078,6 +1082,7 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.pathfindingManager?.cleanup();
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
@@ -1611,6 +1616,9 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
+                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
+
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
@@ -2322,7 +2330,9 @@ export class GameScene extends DirtyScene {
                 //this.reposition();
             } else {
                 this.CurrentPlayer.toggleTalk(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
+                if (!this.connection?.closed) {
+                    this.connection?.emitPlayerShowVoiceIndicator(false);
+                }
                 this.showVoiceIndicatorChangeMessageSent = false;
                 //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
@@ -3519,10 +3529,12 @@ ${escapedMessage}
                 (
                     object1:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody,
                     object2:
                         | Phaser.Physics.Arcade.Body
+                        | Phaser.Physics.Arcade.StaticBody
                         | Phaser.Tilemaps.Tile
                         | Phaser.Types.Physics.Arcade.GameObjectWithBody
                 ) => {}

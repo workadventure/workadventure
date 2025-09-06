@@ -7,7 +7,7 @@ export const isAddActionBarButtonEvent = z.object({
     bgColor: z.string().optional(),
     textColor: z.string().optional(),
     imageSrc: z.string().optional(),
-    isGradient: z.boolean().optional().default(false),
+    isGradient: z.boolean().optional(),
 });
 
 export type AddButtonActionBarEvent = z.infer<typeof isAddActionBarButtonEvent>;

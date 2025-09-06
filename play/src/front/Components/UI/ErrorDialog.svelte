@@ -30,7 +30,7 @@
 </script>
 
 <div class="error-div is-dark is-rounded flex flex-col items-center justify-center">
-    <h2 class="is-error title ">{$LL.error.errorDialog.title()}</h2>
+    <h2 class="is-error title">{$LL.error.errorDialog.title()}</h2>
     <div class="body">
         {#each $errorStore as error (error.id)}
             <p class="text-lg place-self-center">{error.message}</p>

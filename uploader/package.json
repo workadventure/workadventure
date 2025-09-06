@@ -12,7 +12,7 @@
     "test": "jest --forceExit --detectOpenHandles",
     "startTestServer": "tsx tests/testServer.ts",
     "lint": "eslint src/ . --ext .ts",
-    "fix": "eslint --fix src/ . --ext .ts"
+    "lint-fix": "eslint --fix src/ . --ext .ts"
   },
   "repository": {
     "type": "git",

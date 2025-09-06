@@ -1,7 +1,6 @@
-import type { DeepPartial } from "../DeepPartial";
-import type { Translation } from "../i18n-types";
+import type { BaseTranslation } from "../i18n-types";
 
-const menu: DeepPartial<Translation["menu"]> = {
+const menu: BaseTranslation = {
     title: "Menu",
     icon: {
         open: {
@@ -13,11 +12,13 @@ const menu: DeepPartial<Translation["menu"]> = {
             openEmoji: "Abrir pop-up de emoji selecionado",
             closeEmoji: "Fechar menu de emojis",
             mobile: "Abrir menu móvel",
-            calendar: "Abrir calendário",
+            calendar: "Calendário",
+            todoList: "Lista de tarefas",
         },
     },
     visitCard: {
         close: "Fechar",
+        sendMessage: "Enviar mensagem",
     },
     profile: {
         login: "Entrar",
@@ -47,14 +48,26 @@ const menu: DeepPartial<Translation["menu"]> = {
             microphoneToggle: 'Mantenha o microfone ativo no "modo ausente"',
         },
         save: "Salvar",
+        otherSettings: "Todas as configurações",
         fullscreen: "Tela cheia",
         notifications: "Notificações",
+        enablePictureInPicture: "Habilitar picture-in-picture",
+        chatSounds: "Sons do chat",
         cowebsiteTrigger: "Sempre pergunte antes de abrir sites e salas do Jitsi Meet",
         ignoreFollowRequest: "Ignorar solicitações para seguir outros usuários",
+        proximityDiscussionVolume: "Volume de discussão de proximidade",
+        blockAudio: "Bloquear sons ambiente e música",
+        disableAnimations: "Desabilitar animações do mapa",
+        bubbleSound: "Som da bolha",
+        bubbleSoundOptions: {
+            ding: "Ding",
+            wobble: "Wobble",
+        },
     },
     invite: {
         description: "Compartilhe o link da sala!",
         copy: "Copiar",
+        copied: "Copiado",
         share: "Compartilhar",
         walkAutomaticallyToPosition: "Caminhe automaticamente para a minha posição",
         selectEntryPoint: "Selecione um ponto de entrada",
@@ -71,6 +84,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         error: "Nenhum arquivo selecionado. Você precisa fazer o upload de um arquivo antes de enviá-lo.",
         errorUpload:
             "Erro no upload do arquivo. Verifique seu arquivo e tente novamente. Se o problema persistir, entre em contato com o administrador.",
+        dragAndDrop: "Arraste e solte ou clique aqui para fazer upload do seu arquivo 🎧",
     },
     contact: {
         gettingStarted: {
@@ -101,6 +115,19 @@ const menu: DeepPartial<Translation["menu"]> = {
             },
         },
     },
+    chat: {
+        matrixIDLabel: "Seu ID Matrix",
+        settings: "Configurações",
+        resetKeyStorageUpButtonLabel: "Redefinir seu armazenamento de chaves",
+        resetKeyStorageConfirmationModal: {
+            title: "Confirmação de redefinição do armazenamento de chaves",
+            content: "Você está prestes a redefinir o armazenamento de chaves. Tem certeza?",
+            warning:
+                "Redefinir o armazenamento de chaves removerá sua sessão atual e todos os usuários confiáveis. Você pode perder o acesso a algumas mensagens anteriores e não será mais reconhecido como um usuário confiável. Certifique-se de entender completamente as consequências desta ação antes de prosseguir.",
+            cancel: "Cancelar",
+            continue: "Continuar",
+        },
+    },
     sub: {
         profile: "Perfil",
         settings: "Configurações",
@@ -108,7 +135,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         credit: "Crédito",
         globalMessages: "Mensagens globais",
         contact: "Contato",
-        report: "Report Issues",
+        report: "Relatar problemas",
+        chat: "Chat",
+        help: "Ajuda e tutoriais",
+        contextualActions: "Ações contextuais",
     },
 };
 

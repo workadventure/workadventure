@@ -96,7 +96,10 @@
     <h3 id="megaphone" style="color: white;">{$LL.mapEditor.settings.megaphone.title()}</h3>
 </div>
 
-<p class="help-text h-fit">{$LL.mapEditor.settings.megaphone.description()}</p>
+<p class="help-text">
+    <IconInfoCircle font-size="18" />
+    {$LL.mapEditor.settings.megaphone.description()}
+</p>
 {#if enabled}
     <div class="settings space-y-4 flex-grow flex-auto flex-shrink" transition:fade={{ duration: 200 }}>
         {#await getTags()}
@@ -127,7 +130,10 @@
             </p>
             <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}
-            <p class="help-text">{error}</p>
+            <p class="help-text text-danger-800">
+                <IconInfoCircle font-size="18" />
+                {error}
+            </p>
         {/await}
     </div>
 {/if}

@@ -26,6 +26,9 @@ on:
       context:
         required: true
         type: string
+      short_name:
+        required: true
+        type: string
       sentry_project:
         required: false
         type: string
@@ -42,8 +45,10 @@ jobs:
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
       context: ${{ inputs.context }}
+      short_name: ${{ inputs.short_name }}
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
+      final_build: ${{ inputs.final_build }}
 
   build-arm-image:
     uses: ./.github/workflows/build-single-image.yml
@@ -55,8 +60,10 @@ jobs:
       image-name: ${{ inputs.ghcr-dev-build-image-name }}
       dockerfile: ${{ inputs.dockerfile }}
       context: ${{ inputs.context }}
+      short_name: ${{ inputs.short_name }}
       sentry_project: ${{ inputs.sentry_project }}
       push-to-registry: ${{ inputs.push-to-registry }}
+      final_build: ${{ inputs.final_build }}
 
   merge-image:
     runs-on: ubuntu-latest

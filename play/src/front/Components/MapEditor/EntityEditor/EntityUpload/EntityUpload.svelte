@@ -115,7 +115,7 @@
             customEntity={customEntityToUpload}
             on:closeForm={initFileUpload}
             on:applyEntityModifications={({ detail: customModifiedEntity }) =>
-                processFileToUpload(customModifiedEntity)}
+                processFileToUpload(customModifiedEntity).catch((e) => console.error(e))}
         />
     </div>
 {:else}

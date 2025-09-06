@@ -282,7 +282,7 @@
         </div>
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
-        <div class="bg-contrast font-bold text-lg p-4 flex items-center ">
+        <div class="bg-contrast font-bold text-lg p-4 flex items-center">
             <div class="me-4 opacity-50"><MicOnIcon /></div>
 
             {$LL.menu.settings.shareScreenBandwidth.title()}
@@ -398,7 +398,7 @@
         </div>
         <div class="mt-2 p-2">
             <select
-                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0 "
+                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0"
                 bind:value={valueLocale}
                 on:change={updateLocale}
             >

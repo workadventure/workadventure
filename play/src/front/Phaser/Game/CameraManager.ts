@@ -212,12 +212,20 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
-        this.cameraLocked = true;
 
-        this.unlockCameraWithDelay(duration);
+        this.cameraLocked = false;
+        this.zoomLocked = false;
+
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
-        this.camera.stopFollow();
+
+        //Set the camera to focus on the given point
+        const focusPoint = {
+            x: focusOn.x,
+            y: focusOn.y,
+        };
+
+        this.camera.startFollow(focusPoint, true);
         this.playerToFollow = undefined;
 
         const currentZoomModifier = this.waScaleManager.zoomModifier;
@@ -311,13 +319,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 if (!this.playerToFollow) {
                     return;
                 }
-                const shiftX = (this.playerToFollow.x - oldPos.x) * tween.getValue();
-                const shiftY = (this.playerToFollow.y - oldPos.y) * tween.getValue();
+                const progress = tween.getValue() ?? 0;
+                const shiftX = (this.playerToFollow.x - oldPos.x) * progress;
+                const shiftY = (this.playerToFollow.y - oldPos.y) * progress;
                 this.explorerFocusOn.x = oldPos.x + shiftX;
                 this.explorerFocusOn.y = oldPos.y + shiftY;
                 if (targetZoomLevel !== undefined) {
                     this.waScaleManager.zoomModifier =
-                        (targetZoomLevel - startZoomModifier) * tween.getValue() + startZoomModifier;
+                        (targetZoomLevel - startZoomModifier) * progress + startZoomModifier;
                 }
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
@@ -370,7 +379,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             duration: 500,
             ease: Easing.QuadEaseOut,
             onUpdate: (tween) => {
-                const progress = tween.getValue();
+                const progress = tween.getValue() ?? 0;
                 const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
                 const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
                 this.camera.setFollowOffset(newOffsetX, newOffsetY);
@@ -436,7 +445,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             duration,
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
-                this.waScaleManager.zoomModifier = tween.getValue();
+                this.waScaleManager.zoomModifier = tween.getValue() ?? 0;
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {

@@ -11,13 +11,13 @@
 </script>
 
 <div class="flex items-center gap-2 p-2">
-    <label class="inline-flex cursor-pointer relative ">
+    <label class="inline-flex cursor-pointer relative">
         <input id={uniqueId} class="sr-only peer" type="radio" bind:group {value} on:change={onChange} {disabled} />
 
         <div class="input-radio input-radio-light" class:input-radio-contrast={variant === "contrast"} />
     </label>
 
-    <label for={uniqueId} class="  input-label input-label-inline input-label-light text-white "
+    <label for={uniqueId} class="  input-label input-label-inline input-label-light text-white"
         >{label} <slot />
     </label>
 </div>

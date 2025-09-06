@@ -46,7 +46,6 @@ export function createS3ClientWithMD5(configuration = {}) {
 
             // Add MD5
             if (typedArgs.request.body) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 const bodyContent = Buffer.from(typedArgs.request.body);
                 // Create a new hash instance for each request
                 headers["Content-MD5"] = createHash("md5").update(bodyContent).digest("base64");

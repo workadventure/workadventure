@@ -117,6 +117,7 @@ import type {
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import { localUserStore } from "./LocalUserStore";
+import { ConnectionClosedError } from "./ConnectionClosedError";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100_000;
@@ -125,7 +126,7 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string, protocols?: string[]) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     public readonly socket: WebSocket;
     private userId: number | null = null;
-    private closed = false;
+    private _closed = false;
     private tags: string[] = [];
     private canEdit = false;
 
@@ -668,7 +669,7 @@ export class RoomConnection implements RoomConnection {
                     this._errorScreenMessageStream.next(message.errorScreenMessage);
                     console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
                     if (message.errorScreenMessage.code !== "retry") {
-                        this.closed = true;
+                        this._closed = true;
                     }
                     if (message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect) {
                         window.location.assign(message.errorScreenMessage.urlToRedirect);
@@ -730,13 +731,13 @@ export class RoomConnection implements RoomConnection {
 
     // Event handlers as arrow function in order not to have to bind this explicitly
     private handleSocketClose = (event: CloseEvent) => {
-        console.info("Socket has been closed", this.userId, this.closed, event);
+        console.info("Socket has been closed", this.userId, this._closed, event);
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
 
         // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-        if (this.userId === null && !this.closed) {
+        if (this.userId === null && !this._closed) {
             this._connectionErrorStream.next(event);
             return;
         }
@@ -750,14 +751,13 @@ export class RoomConnection implements RoomConnection {
 
     private cleanupConnection(isNormalClosure: boolean) {
         // Cleanup queries:
-        const error = new Error("Socket closed");
         for (const query of this.queries.values()) {
-            query.reject(error);
+            query.reject(new ConnectionClosedError("Socket closed"));
         }
 
         this.completeStreams();
 
-        if (this.closed || connectionManager.unloading) {
+        if (this._closed || connectionManager.unloading) {
             return;
         }
 
@@ -875,9 +875,10 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.cleanupConnection(true);
         this.socket?.removeEventListener("close", this.handleSocketClose);
         this.socket?.removeEventListener("error", this.handleSocketError);
-        this.closed = true;
+        this._closed = true;
     }
 
     public sharePosition(
@@ -1982,5 +1983,9 @@ export class RoomConnection implements RoomConnection {
 
             this.lastQueryId++;
         });
+    }
+
+    get closed(): boolean {
+        return this._closed;
     }
 }
