@@ -7,6 +7,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
         selectMicrophone: "Wähle ein Mikrofon 🎙️",
         liveMessage: {
             startMegaphone: "Megaphon starten",
+            stopMegaphone: "Megaphon stoppen",
             goingToStream: "Du wirst streamen",
             yourMicrophone: "dein Mikrofon",
             yourCamera: "deine Kamera",
