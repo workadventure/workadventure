@@ -3,15 +3,12 @@ import { StringUtils } from "../../../../src/front/Utils/StringUtils";
 
 describe("Character", () => {
     describe("Font size based on character type", () => {
-        let mockStringUtilsSpy: ReturnType<typeof vi.spyOn<any, any>>;
-
         beforeEach(() => {
-            // Mock StringUtils.containsNonLatinCharacters to test font size logic
-            mockStringUtilsSpy = vi.spyOn(StringUtils, "containsNonLatinCharacters");
+            vi.clearAllMocks();
         });
 
         it("should use 8px font size for Latin character names", () => {
-            mockStringUtilsSpy.mockReturnValue(false);
+            const spy = vi.spyOn(StringUtils, "containsNonLatinCharacters").mockReturnValue(false);
 
             const name = "John";
             const hasNonLatin = StringUtils.containsNonLatinCharacters(name);
@@ -19,10 +16,12 @@ describe("Character", () => {
 
             expect(hasNonLatin).toBe(false);
             expect(fontSize).toBe("8px");
+            
+            spy.mockRestore();
         });
 
         it("should use 11px font size for non-Latin character names", () => {
-            mockStringUtilsSpy.mockReturnValue(true);
+            const spy = vi.spyOn(StringUtils, "containsNonLatinCharacters").mockReturnValue(true);
 
             const name = "田中";
             const hasNonLatin = StringUtils.containsNonLatinCharacters(name);
@@ -30,6 +29,8 @@ describe("Character", () => {
 
             expect(hasNonLatin).toBe(true);
             expect(fontSize).toBe("11px");
+            
+            spy.mockRestore();
         });
 
         it("should correctly detect various character types and apply appropriate font sizes", () => {
@@ -45,8 +46,6 @@ describe("Character", () => {
 
             testCases.forEach(({ name, expectedFontSize, hasNonLatin }) => {
                 // Use the actual StringUtils function instead of mocking
-                mockStringUtilsSpy.mockRestore();
-
                 const actualHasNonLatin = StringUtils.containsNonLatinCharacters(name);
                 const actualFontSize = actualHasNonLatin ? "11px" : "8px";
 
