@@ -3,7 +3,7 @@ import { StringUtils } from "../../../../src/front/Utils/StringUtils";
 
 describe("Character", () => {
     describe("Font size based on character type", () => {
-        let mockStringUtilsSpy: ReturnType<typeof vi.spyOn>;
+        let mockStringUtilsSpy: ReturnType<typeof vi.spyOn<any, any>>;
 
         beforeEach(() => {
             // Mock StringUtils.containsNonLatinCharacters to test font size logic
