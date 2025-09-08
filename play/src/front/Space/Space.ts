@@ -381,12 +381,6 @@ export class Space implements SpaceInterface {
             this.unregisterSpaceFilter();
         }
 
-        try {
-            await this.userLeaveSpace();
-        } catch (e) {
-            console.error("Error while leaving space", e);
-            Sentry.captureException(e);
-        }
         this.isDestroyed = true;
     }
 
