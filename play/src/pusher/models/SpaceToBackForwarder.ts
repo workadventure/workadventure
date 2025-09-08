@@ -78,8 +78,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     message: {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
-                            spaceName: this._space.name,
-                            metadata: JSON.stringify(this._space.metadata),
+                            spaceName: this._space.localName,
+                            metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                         },
                     },
                 };

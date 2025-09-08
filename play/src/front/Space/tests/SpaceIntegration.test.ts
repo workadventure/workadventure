@@ -25,6 +25,7 @@ import { SpaceUserExtended } from "../SpaceInterface";
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
+    public closed = false;
     public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
