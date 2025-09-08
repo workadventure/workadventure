@@ -66,8 +66,8 @@ export interface SpaceInterface {
     allVideoStreamStore: MapStore<string, ExtendedStreamable>;
     allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
 
-    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
-    getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
+    getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
     extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;

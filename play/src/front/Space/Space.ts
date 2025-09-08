@@ -561,12 +561,12 @@ export class Space implements SpaceInterface {
         this._registerRefCount++;
     }
 
-    public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
-        return lookupUserById(this.extractUserIdFromSpaceId(id), this, 30_000);
+    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
+        return this._users.get(id);
     }
 
-    public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
-        return lookupUserById(id, this, 30_000);
+    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
+        return lookupUserById(id, this);
     }
 
     public async dispatchSound(url: URL): Promise<void> {

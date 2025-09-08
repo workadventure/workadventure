@@ -63,10 +63,7 @@ export class SimplePeer {
 
                 if (streamResult.stream !== undefined) {
                     localScreenCapture = streamResult.stream;
-                    this.sendLocalScreenSharingStream(localScreenCapture).catch((e) => {
-                        console.error("Error while sending local screen sharing stream to user", e);
-                        Sentry.captureException(e);
-                    });
+                    this.sendLocalScreenSharingStream(localScreenCapture);
                 } else {
                     if (localScreenCapture) {
                         this.stopLocalScreenSharingStream(localScreenCapture);
@@ -85,18 +82,13 @@ export class SimplePeer {
                     return;
                 }
 
-                this._space
-                    .getSpaceUserByUserId(user.userId)
-                    .then((spaceUser) => {
-                        if (!spaceUser) {
-                            console.error("spaceUserId not found for userId", user.userId);
-                            return;
-                        }
-                        this.closeConnection(spaceUser.spaceUserId);
-                    })
-                    .catch((e) => {
-                        console.error("Error while getting space user by user id", e);
-                    });
+                const spaceUser = this._space.getSpaceUserByUserId(user.userId);
+
+                if (!spaceUser) {
+                    console.error("spaceUserId not found for userId", user.userId);
+                    return;
+                }
+                this.closeConnection(spaceUser.spaceUserId);
             })
         );
     }
@@ -250,10 +242,7 @@ export class SimplePeer {
         peer.on("connect", () => {
             const streamResult = get(this._screenSharingLocalStreamStore);
             if (streamResult.type === "success" && streamResult.stream !== undefined) {
-                this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream).catch((e) => {
-                    console.error("Error while sending local screen sharing stream to user", e);
-                    Sentry.captureException(e);
-                });
+                this.sendLocalScreenSharingStreamToUser(user.userId, streamResult.stream);
             }
 
             // Now, in case a stream is generated from the scripting API, we need to send it to the new peer
@@ -278,10 +267,10 @@ export class SimplePeer {
     /**
      * create peer connection to bind users
      */
-    private async createPeerScreenSharingConnection(
+    private createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
         stream: MediaStream | undefined
-    ): Promise<ScreenSharingPeer | null> {
+    ): ScreenSharingPeer | null {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         const peerScreenSharingConnection = this.screenSharePeers.get(user.userId);
 
@@ -303,7 +292,7 @@ export class SimplePeer {
             user.webRtcPassword = this._lastWebrtcPassword;
         }
 
-        const spaceUser = await this._space.getSpaceUserBySpaceUserId(user.userId);
+        const spaceUser = this._space.getSpaceUserBySpaceUserId(user.userId);
         if (!spaceUser) {
             console.error(
                 "While creating peer screen sharing connection, cannot find space user with ID " + user.userId
@@ -510,7 +499,7 @@ export class SimplePeer {
     }
 
     private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
-        const spaceUser = await this._space.getSpaceUserBySpaceUserId(data.userId);
+        const spaceUser = this._space.getSpaceUserBySpaceUserId(data.userId);
 
         if (!spaceUser) {
             console.error(
@@ -531,7 +520,7 @@ export class SimplePeer {
         try {
             //if offer type, create peer connection
             if (data.signal.type === "offer") {
-                await this.createPeerScreenSharingConnection(data, stream);
+                this.createPeerScreenSharingConnection(data, stream);
             }
             const peer = this.screenSharePeers.get(data.userId);
             if (peer !== undefined) {
@@ -542,7 +531,7 @@ export class SimplePeer {
                 );
                 this._customWebRTCLogger.info("Attempt to create new peer connection");
                 if (stream) {
-                    await this.sendLocalScreenSharingStreamToUser(data.userId, stream);
+                    this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }
             }
         } catch (e) {
@@ -568,11 +557,9 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public sendLocalScreenSharingStream(localScreenCapture: MediaStream) {
-        const promises: Promise<void>[] = [];
         for (const userId of this._space.allVideoStreamStore.keys()) {
-            promises.push(this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture));
+            this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture);
         }
-        return Promise.all(promises);
     }
 
     /**
@@ -584,8 +571,8 @@ export class SimplePeer {
         }
     }
 
-    private async sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): Promise<void> {
-        const spaceUser = await this._space.getSpaceUserBySpaceUserId(userId);
+    private sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): void {
+        const spaceUser = this._space.getSpaceUserBySpaceUserId(userId);
         if (!spaceUser) {
             console.error("While sending local screen sharing, cannot find user with ID " + userId);
             return;
@@ -602,7 +589,7 @@ export class SimplePeer {
             userId,
             initiator: true,
         };
-        const PeerConnectionScreenSharing = await this.createPeerScreenSharingConnection(
+        const PeerConnectionScreenSharing = this.createPeerScreenSharingConnection(
             screenSharingUser,
             localScreenCapture
         );
