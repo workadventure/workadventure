@@ -885,14 +885,30 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "oauthRefreshTokenQuery": {
-                                            answerMessage.answer = {
-                                                $case: "oauthRefreshTokenAnswer",
-                                                oauthRefreshTokenAnswer:
-                                                    await socketManager.handleOauthRefreshTokenQuery(
-                                                        message.message.queryMessage.query.oauthRefreshTokenQuery
-                                                    ),
-                                            };
-                                            this.sendAnswerMessage(socket, answerMessage);
+                                            try {
+                                                answerMessage.answer = {
+                                                    $case: "oauthRefreshTokenAnswer",
+                                                    oauthRefreshTokenAnswer:
+                                                        await socketManager.handleOauthRefreshTokenQuery(
+                                                            message.message.queryMessage.query.oauthRefreshTokenQuery
+                                                        ),
+                                                };
+                                                this.sendAnswerMessage(socket, answerMessage);
+                                            } catch (err) {
+                                                // The refresh token error could be arrived by anything, so let's just log it and send a generic error to the user.
+                                                console.warn("Token refresh failed", err);
+                                                const answerMessage: AnswerMessage = {
+                                                    id: message.message.queryMessage.id,
+                                                };
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message:
+                                                            "The token refresh failed. Please try to login again to be connected 🙏",
+                                                    },
+                                                };
+                                                this.sendAnswerMessage(socket, answerMessage);
+                                            }
                                             break;
                                         }
                                         case "joinSpaceQuery": {
