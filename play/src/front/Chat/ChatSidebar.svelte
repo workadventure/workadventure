@@ -3,8 +3,10 @@
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
-    import { chatSidebarWidthStore } from "./ChatSidebarWidthStore";
+    import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
+    import { IconX } from "@wa-icons";
 
     let container: HTMLElement;
 
@@ -13,6 +15,12 @@
     function reposition() {
         gameScene.reposition();
     }
+
+    function closeChat() {
+        chatVisibilityStore.set(false);
+    }
+
+    $: isInSpecificDiscussion = $selectedRoomStore !== undefined;
 
     let sideBarWidth: number = $chatSidebarWidthStore;
 
@@ -104,6 +112,18 @@
         )}px;"
         class=" chatWindow !min-w-[360px] max-sm:!min-w-[250px] bg-contrast/80 backdrop-blur-md p-0 screen-blocker"
     >
+        {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
+            <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">
+                <button
+                    class="hover:bg-white/10 rounded aspect-square w-8 h-8 m-0 flex items-center justify-center !text-white"
+                    data-testid="closeChatButton"
+                    on:click={closeChat}
+                >
+                    <IconX font-size="20" />
+                </button>
+            </div>
+        {/if}
+
         <Chat {sideBarWidth} />
         <div
             class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize user-select-none"
