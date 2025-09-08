@@ -220,7 +220,7 @@
             {/if}
             <!-- For some weird reason, we need to put a random width so that flex-1 can work and ignore the width...
                  Otherwise, flex-1 does nothing -->
-            <div class="tab-bar flex-1 w-32 min-w-0 " bind:clientWidth={tabsContainerWidth}>
+            <div class="tab-bar flex-1 w-32 min-w-0" bind:clientWidth={tabsContainerWidth}>
                 <div
                     bind:this={tabsContainer}
                     class="flex items-center space-x-2 snap-x touch-pan-x overflow-x-hidden"
