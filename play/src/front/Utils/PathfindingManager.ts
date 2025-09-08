@@ -13,6 +13,8 @@ export class PathfindingManager {
     private easyStar: EasyStar.js;
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
+    private currentPathfindingInstanceId: number | null = null;
+    private pathfindingTimeout: number | null = null;
 
     constructor(collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
         this.easyStar = new EasyStar.js();
@@ -29,6 +31,13 @@ export class PathfindingManager {
 
     public setCollisionGrid(collisionGrid: number[][]): void {
         this.setEasyStarGrid(collisionGrid);
+    }
+
+    /**
+     * Clean up any ongoing pathfinding operations
+     */
+    public cleanup(): void {
+        this.cancelCurrentPathfinding();
     }
 
     public async findPathFromGameCoordinates(
@@ -196,16 +205,86 @@ export class PathfindingManager {
         start: { x: number; y: number },
         end: { x: number; y: number }
     ): Promise<{ x: number; y: number }[]> {
+        // Cancel any ongoing pathfinding operation
+        this.cancelCurrentPathfinding();
+
         return new Promise((resolve) => {
-            this.easyStar.findPath(start.x, start.y, end.x, end.y, (path) => {
+            let pathFound = false;
+            let calculationCount = 0;
+            const maxCalculations = 50; // Maximum number of calculate() iterations
+            const maxTimeMs = 3000; // Maximum time in milliseconds (3 seconds)
+            const startTime = Date.now();
+
+            // Store the instance ID for potential cancellation
+            this.currentPathfindingInstanceId = this.easyStar.findPath(start.x, start.y, end.x, end.y, (path) => {
+                if (pathFound) return; // Already resolved
+
+                pathFound = true;
+                this.clearPathfindingTimeout();
+                this.currentPathfindingInstanceId = null;
+
                 if (path === null) {
                     resolve([]);
                 } else {
                     resolve(path);
                 }
             });
-            this.easyStar.calculate();
+
+            // Function to perform calculation with retry logic
+            const performCalculation = () => {
+                if (pathFound) return; // Path already found
+
+                const currentTime = Date.now();
+                if (currentTime - startTime > maxTimeMs) {
+                    // Timeout reached
+                    this.cancelCurrentPathfinding();
+                    console.warn("Pathfinding timeout reached, returning empty path");
+                    resolve([]);
+                    return;
+                }
+
+                calculationCount++;
+                if (calculationCount > maxCalculations) {
+                    // Too many calculations, probably no path exists
+                    this.cancelCurrentPathfinding();
+                    console.warn("Pathfinding max calculations reached, returning empty path");
+                    resolve([]);
+                    return;
+                }
+
+                // Perform one iteration of pathfinding calculation
+                this.easyStar.calculate();
+
+                // If no path found yet, schedule next calculation
+                if (!pathFound) {
+                    this.pathfindingTimeout = window.setTimeout(performCalculation, 10); // 10ms delay between calculations
+                }
+            };
+
+            // Start the calculation process
+            performCalculation();
         });
+    }
+
+    /**
+     * Cancel the current pathfinding operation if one is in progress
+     */
+    private cancelCurrentPathfinding(): void {
+        if (this.currentPathfindingInstanceId !== null) {
+            this.easyStar.cancelPath(this.currentPathfindingInstanceId);
+            this.currentPathfindingInstanceId = null;
+        }
+        this.clearPathfindingTimeout();
+    }
+
+    /**
+     * Clear the pathfinding timeout
+     */
+    private clearPathfindingTimeout(): void {
+        if (this.pathfindingTimeout !== null) {
+            clearTimeout(this.pathfindingTimeout);
+            this.pathfindingTimeout = null;
+        }
     }
 
     private setEasyStarGrid(grid: number[][]): void {

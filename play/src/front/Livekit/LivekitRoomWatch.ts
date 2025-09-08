@@ -133,23 +133,21 @@ export class LiveKitRoomWatch implements LiveKitRoom {
     private handleParticipantConnected(participant: Participant) {
         const id = this.getParticipantId(participant);
 
-        const spaceUser = this.space
-            .getSpaceUserBySpaceUserId(id);
+        const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
 
-            if (!spaceUser) {
-                console.info("spaceUser not found for participant", id);
-                return;
-            }
+        if (!spaceUser) {
+            console.info("spaceUser not found for participant", id);
+            return;
+        }
 
-            if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
-                return;
-            }
+        if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+            return;
+        }
 
-            this.participants.set(
-                participant.sid,
-                new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-            );
-
+        this.participants.set(
+            participant.sid,
+            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+        );
     }
 
     private handleParticipantDisconnected(participant: Participant) {

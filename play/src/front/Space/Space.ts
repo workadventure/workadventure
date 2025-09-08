@@ -63,6 +63,8 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
 
+    private _isDestroyed = false;
+
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this constructor directly.
@@ -225,6 +227,10 @@ export class Space implements SpaceInterface {
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateSpaceMetadata");
+            return;
+        }
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
@@ -302,6 +308,10 @@ export class Space implements SpaceInterface {
     }
 
     public emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitPublicMessage");
+            return;
+        }
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
@@ -313,6 +323,10 @@ export class Space implements SpaceInterface {
      * Sends a message to the server to update our user in the space.
      */
     public emitUpdateUser(spaceUser: SpaceUserUpdate): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateUser");
+            return;
+        }
         this._connection.emitUpdateSpaceUserMessage(this.name, spaceUser);
     }
 
@@ -321,6 +335,8 @@ export class Space implements SpaceInterface {
      * Do not call this method directly.
      */
     async destroy() {
+        this._isDestroyed = true;
+
         try {
             await this.userLeaveSpace();
         } catch (e) {
@@ -486,6 +502,10 @@ export class Space implements SpaceInterface {
             }>(),
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
+                if (this._isDestroyed) {
+                    console.warn("Space is destroyed, skipping emitPrivateEvent");
+                    return;
+                }
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
             },
             space: this,
@@ -523,6 +543,10 @@ export class Space implements SpaceInterface {
     }
 
     public requestFullSync() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping requestFullSync");
+            return;
+        }
         if (this._registerRefCount === 0) return;
         this._connection.emitRequestFullSync(this.name, this.getUsers());
     }
@@ -540,6 +564,10 @@ export class Space implements SpaceInterface {
     }
 
     private unregisterSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping unregisterSpaceFilter");
+            return;
+        }
         this._registerRefCount--;
         if (this._registerRefCount === 0) {
             this._connection.emitRemoveSpaceFilter({
@@ -551,6 +579,10 @@ export class Space implements SpaceInterface {
     }
 
     private registerSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping registerSpaceFilter");
+            return;
+        }
         if (this._registerRefCount === 0) {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {
