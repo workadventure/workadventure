@@ -133,62 +133,58 @@ export class VideoPeer extends Peer implements Streamable {
             const data = JSON.parse(chunk.toString("utf8"));
             const message = P2PMessage.parse(data);
 
-            (async () => {
-                switch (message.type) {
-                    case "constraint": {
-                        this._constraintsStore.set(message.message);
-                        break;
-                    }
-                    case "blocked": {
-                        // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
-                        // The "block" message should go through the space.
-
-                        ////FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
-                        //// Find a way to block A's output stream in A's js client
-                        //However, the output stream stream B is correctly blocked in A client
-                        this.blocked = true;
-                        this.toggleRemoteStream(false);
-                        const simplePeer = this.space.simplePeer;
-                        const spaceUser = await this.space.getSpaceUserByUserId(this.userId);
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for userId", this.userId);
-                            return;
-                        }
-                        if (!spaceUser) {
-                            console.error("spaceUser not found for userId", this.userId);
-                            return;
-                        }
-                        const spaceUserId = spaceUser.spaceUserId;
-                        if (!spaceUserId) {
-                            console.error("spaceUserId not found for userId", this.userId);
-                            return;
-                        }
-                        if (simplePeer) {
-                            simplePeer.blockedFromRemotePlayer(spaceUserId);
-                        }
-                        break;
-                    }
-                    case "unblocked": {
-                        this.blocked = false;
-                        this.toggleRemoteStream(true);
-                        break;
-                    }
-                    case "kickoff": {
-                        if (message.value !== this.userUuid) break;
-                        this._statusStore.set("closed");
-                        this._connected = false;
-                        this.toClose = true;
-                        this._onFinish();
-                        this.destroy();
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message;
-                    }
+            switch (message.type) {
+                case "constraint": {
+                    this._constraintsStore.set(message.message);
+                    break;
                 }
-            })().catch((e) => {
-                console.error("Error while handling P2P message", e);
-            });
+                case "blocked": {
+                    // FIXME: blocking user level should be done at another level (we should not have to implement it both for Livekit and P2P mode)
+                    // The "block" message should go through the space.
+
+                    ////FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
+                    //// Find a way to block A's output stream in A's js client
+                    //However, the output stream stream B is correctly blocked in A client
+                    this.blocked = true;
+                    this.toggleRemoteStream(false);
+                    const simplePeer = this.space.simplePeer;
+                    const spaceUser = this.space.getSpaceUserByUserId(this.userId);
+                    if (!spaceUser) {
+                        console.error("spaceUser not found for userId", this.userId);
+                        return;
+                    }
+                    if (!spaceUser) {
+                        console.error("spaceUser not found for userId", this.userId);
+                        return;
+                    }
+                    const spaceUserId = spaceUser.spaceUserId;
+                    if (!spaceUserId) {
+                        console.error("spaceUserId not found for userId", this.userId);
+                        return;
+                    }
+                    if (simplePeer) {
+                        simplePeer.blockedFromRemotePlayer(spaceUserId);
+                    }
+                    break;
+                }
+                case "unblocked": {
+                    this.blocked = false;
+                    this.toggleRemoteStream(true);
+                    break;
+                }
+                case "kickoff": {
+                    if (message.value !== this.userUuid) break;
+                    this._statusStore.set("closed");
+                    this._connected = false;
+                    this.toClose = true;
+                    this._onFinish();
+                    this.destroy();
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = message;
+                }
+            }
         } catch (e) {
             console.error("Unexpected P2P message received from peer: ", e);
             this._statusStore.set("error");
