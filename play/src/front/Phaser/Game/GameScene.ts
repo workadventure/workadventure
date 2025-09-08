@@ -154,7 +154,7 @@ import { scriptUtils } from "../../Api/ScriptUtils";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { warningMessageStore } from "../../Stores/ErrorStore";
+// import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
@@ -1979,10 +1979,11 @@ export class GameScene extends DirtyScene {
                 this._broadcastService = broadcastService;
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.errorMessageStream.subscribe((errorMessage) => {
-                    warningMessageStore.addWarningMessage(errorMessage.message);
-                });
+
+                // this.connection.errorMessageStream.subscribe((errorMessage) => {
+                //     console.error("An error occurred server side: " + errorMessage.message);
+                //     //warningMessageStore.addWarningMessage(errorMessage.message);
+                // });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
