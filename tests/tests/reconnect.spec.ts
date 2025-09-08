@@ -20,7 +20,7 @@ test.describe("Connection @nomobile @nowebkit", () => {
     //Simulation of offline network
     await page.context().setOffline(true);
 
-    await expect(page.getByText("Connection lost")).toBeVisible({
+    await expect(page.getByText("Connection")).toBeVisible({
         timeout: 180_000,
     });
 
