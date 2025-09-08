@@ -383,14 +383,14 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone", []);
             window.mySpace.setMetadata(new Map([["hello", "world"]]));
         });
 
         // Bob joins the same space
         const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
             await new Promise(resolve => {
                 window.mySpace.metadataObservable.subscribe((metadata) => {
                     console.log("Bob received metadata:", metadata);
