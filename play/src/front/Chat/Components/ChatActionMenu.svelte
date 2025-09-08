@@ -23,7 +23,6 @@
     }
 
     function handleToggleSearch() {
-        console.log("[ChatActionMenu] toggleSearch dispatch");
         dispatch("toggleSearch");
         menuOpen = false;
     }

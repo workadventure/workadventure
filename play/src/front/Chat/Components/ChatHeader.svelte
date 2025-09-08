@@ -24,9 +24,7 @@
     const DONE_TYPING_INTERVAL = 2000;
 
     function handleToggleSearch() {
-        console.log("handleToggleSearch appelé, searchActive avant:", searchActive);
         searchActive = !searchActive;
-        console.log("searchActive après:", searchActive);
 
         if (!searchActive) {
             chatSearchBarValue.set("");
