@@ -360,7 +360,6 @@ export class Space implements CustomJsonReplacerInterface {
                 }
                 case "removeSpaceUserQuery": {
                     this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
-                    this._clientEventsEmitter.emitSpaceLeave(this.name);
                     return {
                         answer: {
                             $case: "removeSpaceUserAnswer",
