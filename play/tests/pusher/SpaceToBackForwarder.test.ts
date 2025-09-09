@@ -567,7 +567,8 @@ describe("SpaceToBackForwarder", () => {
             });
 
             const mockSpace = {
-                name: "test",
+                name: "world.test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 _localWatchers: new Map<string, Socket>(),
