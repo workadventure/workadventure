@@ -1,15 +1,17 @@
 import { Unsubscriber } from "svelte/store";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
+import PopUpError from "../../Components/PopUp/PopUpError.svelte";
+import { popupStore } from "../../Stores/PopupStore";
 
 /**
  * Waits for the user whose id is "id" to be present in the space.
  */
 export function lookupUserById(id: number, space: SpaceInterface, timeout?: number): Promise<SpaceUserExtended> {
+    let unsubscribe: Unsubscriber | undefined;
     const promise = new Promise<SpaceUserExtended>((resolve, reject) => {
         let instantUnsubscribe = false;
-        let unsubscribe: Unsubscriber | undefined;
-        // eslint-disable-next-line prefer-const
+
         unsubscribe = space.usersStore.subscribe((users) => {
             const spaceUserId = gameManager.getCurrentGameScene().roomUrl + "_" + id;
             const user = users.get(spaceUserId);
@@ -34,9 +36,27 @@ export function lookupUserById(id: number, space: SpaceInterface, timeout?: numb
 
     const timeoutPromise = new Promise<SpaceUserExtended>((resolve, reject) => {
         setTimeout(() => {
-            reject(
-                new Error("Promise timed out while waiting for user with id " + id + " to be present in the space.")
+            if (unsubscribe) {
+                unsubscribe();
+            }
+
+            const errorMessage = `Promise timed out while waiting for user with id ${id} to be present in the space.`;
+
+            const popupId = `user-lookup-timeout-${id}`;
+            popupStore.addPopup(
+                PopUpError,
+                {
+                    message: "",
+                    click: () => {
+                        popupStore.removePopup(popupId);
+                    },
+                    userInputManager: gameManager.getCurrentGameScene().userInputManager,
+                },
+                popupId
             );
+
+            console.error(errorMessage);
+            reject(new Error(errorMessage));
         }, timeout);
     });
 
