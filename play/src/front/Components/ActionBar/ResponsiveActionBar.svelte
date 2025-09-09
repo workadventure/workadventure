@@ -106,7 +106,7 @@
                 </div>
                 <!-- Right bar -->
                 <div
-                    class="flex flex-row justify-end overflow-hidden md:overflow-visible"
+                    class="flex flex-row justify-end overflow-hidden"
                     class:flex-none={mode === "wide"}
                     class:flex-1={mode === "shrunk"}
                     bind:this={rightDiv}
