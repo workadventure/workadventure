@@ -183,6 +183,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -206,6 +207,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         ).toContain("Cannot join space some-test-space");
 
 
+        await page.close();
         await page.context().close();
     });
 
@@ -239,6 +241,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -411,6 +414,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await bob.close();
         await bob.context().close();
+        
         await page.close();
         await page.context().close();
 
