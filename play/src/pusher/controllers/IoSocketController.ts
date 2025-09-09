@@ -17,9 +17,9 @@ import { TemplatedApp, WebSocket } from "uWebSockets.js";
 import { asError } from "catch-unknown";
 import { Deferred } from "ts-deferred";
 import Debug from "debug";
+import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
 import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
@@ -257,6 +257,8 @@ export class IoSocketController {
                             version: z.string(),
                             chatID: z.string(),
                             roomName: z.string(),
+                            cameraState: z.string().transform((val) => val === "true"),
+                            microphoneState: z.string().transform((val) => val === "true"),
                         })
                     );
 
@@ -292,6 +294,8 @@ export class IoSocketController {
                         version,
                         companionTextureId,
                         roomName,
+                        cameraState,
+                        microphoneState,
                     } = query;
 
                     const chatID = query.chatID ? query.chatID : undefined;
@@ -488,7 +492,6 @@ export class IoSocketController {
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
                             spaceUserId: "",
-                            roomName: roomName,
                             emitInBatch: (payload: SubMessage): void => {},
                             batchedMessages: {
                                 event: "",
@@ -503,6 +506,9 @@ export class IoSocketController {
                             chatID,
                             world: userData.world,
                             currentChatRoomArea: [],
+                            roomName,
+                            microphoneState,
+                            cameraState,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -906,12 +912,15 @@ export class IoSocketController {
                                                     socket,
                                                     message.message.queryMessage.query.joinSpaceQuery.spaceName,
                                                     localSpaceName,
-                                                    message.message.queryMessage.query.joinSpaceQuery.filterType
+                                                    message.message.queryMessage.query.joinSpaceQuery.filterType,
+                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync
                                                 );
 
                                                 answerMessage.answer = {
                                                     $case: "joinSpaceAnswer",
-                                                    joinSpaceAnswer: {},
+                                                    joinSpaceAnswer: {
+                                                        spaceUserId: socket.getUserData().spaceUserId,
+                                                    },
                                                 };
                                                 this.sendAnswerMessage(socket, answerMessage);
                                                 socketManager.deleteSpaceIfEmpty(
@@ -923,6 +932,7 @@ export class IoSocketController {
                                                 );
                                                 throw e;
                                             }
+
                                             break;
                                         }
                                         case "leaveSpaceQuery": {
@@ -985,8 +995,6 @@ export class IoSocketController {
                             }
                             case "itemEventMessage":
                             case "variableMessage":
-                            case "webRtcSignalToServerMessage":
-                            case "webRtcScreenSharingSignalToServerMessage":
                             case "emotePromptMessage":
                             case "followRequestMessage":
                             case "followConfirmationMessage":

@@ -16,7 +16,7 @@ describe("Character", () => {
 
             expect(hasNonLatin).toBe(false);
             expect(fontSize).toBe("8px");
-            
+
             spy.mockRestore();
         });
 
@@ -29,7 +29,7 @@ describe("Character", () => {
 
             expect(hasNonLatin).toBe(true);
             expect(fontSize).toBe("11px");
-            
+
             spy.mockRestore();
         });
 

@@ -59,6 +59,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
@@ -78,6 +79,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );
@@ -155,6 +157,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockNotifyMeAddUser = vi.fn();
@@ -182,6 +185,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory,
                 mockClientEventsEmitter
@@ -250,6 +254,7 @@ describe("Space", () => {
             const mockSpaceToBackForwarderFactory = (space: Space) =>
                 ({
                     syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
                 } as unknown as SpaceToBackForwarder);
 
             const mockNotifyMeAddUser = vi.fn();
@@ -272,6 +277,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
             );

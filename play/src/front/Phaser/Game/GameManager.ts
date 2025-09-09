@@ -200,6 +200,7 @@ export class GameManager {
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
+
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);

@@ -308,6 +308,10 @@ jobs:
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
           sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
         env:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
 
@@ -352,7 +356,7 @@ jobs:
           docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d
       - name: Upload test-map
         run: sleep 5 && npm run upload-test-map
         working-directory: map-storage
@@ -375,10 +379,10 @@ jobs:
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
@@ -591,13 +595,18 @@ jobs:
           sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
           sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/MAX_PER_GROUP=4/MAX_PER_GROUP=100/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml up -d
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
@@ -624,19 +633,19 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
       - name: Display docker compose logs on failure
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Display containers state
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml ps
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test-maps.yaml logs > ../../tests/playwright-report/docker-compose.log
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs > ../../tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -775,6 +784,9 @@ jobs:
             GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
             GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
             MAP_STORAGE_API_TOKEN: \"${MAP_STORAGE_API_TOKEN}\"
+            LIVEKIT_HOST: \"${LIVEKIT_HOST}\"
+            LIVEKIT_API_KEY: \"${LIVEKIT_API_KEY}\"
+            LIVEKIT_API_SECRET: \"${LIVEKIT_API_SECRET}\"
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -796,6 +808,10 @@ jobs:
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
+          LIVEKIT_HOST: ${{ secrets.LIVEKIT_HOST }}
+          LIVEKIT_API_KEY: ${{ secrets.LIVEKIT_API_KEY }}
+          LIVEKIT_API_SECRET: ${{ secrets.LIVEKIT_API_SECRET }}
+
 
 
 #      - name: "Printing values file"

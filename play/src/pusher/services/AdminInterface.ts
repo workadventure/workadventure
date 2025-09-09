@@ -87,6 +87,8 @@ export interface AdminInterface {
     /**
      * @param locale
      * @param roomUrl
+     * @param tags
+     * @param bypassTagFilter
      * @return string[]
      */
     getUrlRoomsFromSameWorld(

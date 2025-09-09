@@ -40,8 +40,8 @@ import {
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
 } from "../enums/EnvironmentVariable";
-import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminInterface } from "./AdminInterface";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";

@@ -57,6 +57,7 @@
     "express": "^5.1.0",
     "google-protobuf": "^3.21.0",
     "jsonwebtoken": "^9.0.0",
+    "livekit-server-sdk": "^2.10.1",
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
     "prom-client": "^12.0.0",

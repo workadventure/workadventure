@@ -12,7 +12,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
             window.userCount = 0;
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -28,7 +28,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         // Bob joins the same space
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         // User count in the space should now be 2
@@ -53,7 +53,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         // Bob joins the first time
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         // User count in the space should now be 2
@@ -63,7 +63,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         // Bob joins the same space again
         await evaluateScript(bob, async () => {
-            window.mySpace2 = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace2 = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         // User count in the space should still be 2, as Bob is already in the space
@@ -97,7 +97,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         // Bob joins again
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         // User count in the space should still be 2, as Bob is already in the space
@@ -148,7 +148,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await evaluateScript(page, async () => {
             window.userCount = 0;
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -162,7 +162,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         // Bob joins the same space
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
         });
 
         // Bob does not stream, still no one in the space
@@ -183,6 +183,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -195,9 +196,9 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         expect(
             await evaluateScript(page, async () => {
-                await WA.spaces.joinSpace("some-test-space", "everyone");
+                await WA.spaces.joinSpace("some-test-space", "everyone",[]);
                 try {
-                    await WA.spaces.joinSpace("some-test-space", "streaming");
+                    await WA.spaces.joinSpace("some-test-space", "streaming",[]);
                 } catch (e) {
                     return e.message;
                 }
@@ -206,6 +207,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         ).toContain("Cannot join space some-test-space");
 
 
+        await page.close();
         await page.context().close();
     });
 
@@ -220,7 +222,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
-            await WA.spaces.joinSpace("some-test-space", "everyone");
+            await WA.spaces.joinSpace("some-test-space", "everyone",[]);
         });
 
         const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
@@ -228,7 +230,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         expect(
             await evaluateScript(bob, async () => {
                 try {
-                    await WA.spaces.joinSpace("some-test-space", "streaming");
+                    await WA.spaces.joinSpace("some-test-space", "streaming",[]);
                 } catch (e) {
                     return e.message;
                 }
@@ -239,6 +241,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -252,7 +255,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
             window.userCount = 0;
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -263,7 +266,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         // Bob joins the same space
         const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
         });
 
         // User count in the space should now be 1
@@ -315,7 +318,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
             window.userCount = 0;
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
             window.mySpace.userJoinedObservable.subscribe((user) => {
                 window.userCount++;
                 window.lastJoinedUser = user;
@@ -326,7 +329,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         // Bob joins the same space
         const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "streaming",[]);
         });
 
         // User count in the space should now be 0
@@ -379,18 +382,18 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await expect.poll(() => pages.length).toBe(0);
 
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone", []);
             window.mySpace.setMetadata(new Map([["hello", "world"]]));
         });
 
         // Bob joins the same space
-        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
         await evaluateScript(bob, async () => {
-            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone");
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
             await new Promise(resolve => {
                 window.mySpace.metadataObservable.subscribe((metadata) => {
                     console.log("Bob received metadata:", metadata);
@@ -409,10 +412,9 @@ test.describe('Scripting space-related functions @nowebkit', () => {
             return window.receivedMetadata?.get("hello");
         })).toBe("world");
 
-
-
         await bob.close();
         await bob.context().close();
+        
         await page.close();
         await page.context().close();
 
