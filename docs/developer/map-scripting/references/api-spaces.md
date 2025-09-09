@@ -17,7 +17,7 @@ With the scripting API, you can join a space, be notified when users join or lea
 ## Joining a space
 
 ```ts
-WA.spaces.joinSpace(spaceName: string, filterType: "everyone" | "streaming"): Space
+WA.spaces.joinSpace(spaceName: string, filterType: "everyone" | "streaming", propertiesToSync: ("availabilityStatus"|"cameraState"|"microphoneState"|"screenSharingState"|"megaphoneState")[]): Space
 ```
 
 Joins (or creates) a named space in the current world. All users joining the same `spaceName` in the same world will be grouped, even if they are on different maps.
@@ -26,6 +26,14 @@ Joins (or creates) a named space in the current world. All users joining the sam
 - **filterType**:
   - `"everyone"`: All users in the space can talk to each other
   - `"streaming"`: Only some users (e.g., "streamers") are audible to others
+- **propertiesToSync**: List of user properties to synchronize across all users in the space. This can include:
+  - `"availabilityStatus"`
+  - `"cameraState"` // True if the camera is on, false otherwise
+  - `"microphoneState"` // True if the microphone is on, false otherwise
+  - `"screenSharingState"` // True if the user is sharing their screen, false otherwise
+  - `"megaphoneState"` // True if the user is currently streaming or not (only relevant if `filterType` is `"streaming"`)
+
+  These properties will be automatically kept in sync for all users in the space.
 
 Returns a `Space` object to interact with the space.
 

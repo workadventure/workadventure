@@ -155,10 +155,6 @@ export class VideoPeer extends Peer implements Streamable {
                         console.error("spaceUser not found for userId", this.userId);
                         return;
                     }
-                    if (!spaceUser) {
-                        console.error("spaceUser not found for userId", this.userId);
-                        return;
-                    }
                     const spaceUserId = spaceUser.spaceUserId;
                     if (!spaceUserId) {
                         console.error("spaceUserId not found for userId", this.userId);

@@ -1098,7 +1098,6 @@ export class GameScene extends DirtyScene {
             unsubscriber();
         }
         this.unsubscribers = [];
-        console.log("unregister answerer before ");
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -1125,7 +1124,6 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("getWoka");
         iframeListener.unregisterAnswerer("goToLogin");
         iframeListener.unregisterAnswerer("playSoundInBubble");
-        console.log("unregister answerer after ");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
@@ -1811,7 +1809,6 @@ export class GameScene extends DirtyScene {
                     console.info("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
 
-                    console.log("createSuccessorGameScene in finally");
                     this.createSuccessorGameScene(true, true);
                 });
                 hideConnectionIssueMessage();

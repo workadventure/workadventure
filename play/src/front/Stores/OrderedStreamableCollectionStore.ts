@@ -3,7 +3,7 @@ import { streamableCollectionStore } from "./StreamableCollectionStore";
 import { stableNSort } from "./StableNSorter";
 
 const createMaxVisibleVideosStore = () => {
-    // Initialiser avec une valeur par défaut de 0
+    // Initialize with default value of 0
     const { subscribe, set } = writable<number>(0);
     let currentValue = 0;
 

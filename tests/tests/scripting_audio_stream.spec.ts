@@ -31,7 +31,7 @@ async function playAudioStream(page: Page, frequency: number) {
 }
 
 async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
-  // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+  // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in LiveKit)
   await evaluateScript(page, async ({ volume }) => {
     const sampleRate = 24000;
 
