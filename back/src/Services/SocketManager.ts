@@ -1432,7 +1432,6 @@ export class SocketManager {
             throw new Error("Cant unwatch space, space not found");
         }
         this.removeSpaceWatcher(pusher, space);
-        clientEventsEmitter.emitSpaceLeave(space.name);
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {
