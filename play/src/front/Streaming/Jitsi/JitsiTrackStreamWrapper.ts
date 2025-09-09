@@ -2,7 +2,13 @@ import { derived, get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import * as Sentry from "@sentry/svelte";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { JitsiTrackStreamable, MediaStoreStreamable, Streamable } from "../../Stores/StreamableCollectionStore";
+import {
+    JitsiTrackStreamable,
+    MediaStoreStreamable,
+    SCREEN_SHARE_STARTING_PRIORITY,
+    Streamable,
+    VIDEO_STARTING_PRIORITY,
+} from "../../Stores/StreamableCollectionStore";
 import { PeerStatus } from "../../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../../Space/SpaceInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
@@ -32,14 +38,18 @@ export class JitsiTrackStreamWrapper implements Streamable {
     public readonly displayMode: "fit" | "cover";
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = false;
+    public priority: number;
+    public lastSpeakTimestamp?: number;
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
         public readonly target: "video/audio" | "desktop"
     ) {
         if (target === "video/audio") {
             this.displayMode = "cover";
+            this.priority = VIDEO_STARTING_PRIORITY;
         } else {
             this.displayMode = "fit";
+            this.priority = SCREEN_SHARE_STARTING_PRIORITY;
         }
         //this.uniqueId = `${target}-${jitsiTrackWrapper.uniqueId}`;
         this.getExtendedSpaceUser()

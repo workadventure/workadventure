@@ -9,7 +9,7 @@ import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, Streamable, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -57,6 +57,8 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly displayMode = "cover";
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = false;
+    public priority: number = VIDEO_STARTING_PRIORITY;
+    public lastSpeakTimestamp?: number;
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {

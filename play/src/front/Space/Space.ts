@@ -43,8 +43,8 @@ export class Space implements SpaceInterface {
     private _peerManager: SpacePeerManager | undefined;
     public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
     public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    public screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();

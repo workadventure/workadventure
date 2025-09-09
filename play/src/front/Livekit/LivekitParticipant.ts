@@ -9,10 +9,14 @@ import {
     RemoteVideoTrack,
     RemoteAudioTrack,
 } from "livekit-client";
-import { derived, Writable, writable } from "svelte/store";
+import { derived, get, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import {
+    ExtendedStreamable,
+    SCREEN_SHARE_STARTING_PRIORITY,
+    VIDEO_STARTING_PRIORITY,
+} from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 
 export class LiveKitParticipant {
@@ -74,6 +78,7 @@ export class LiveKitParticipant {
     private _screenShareRemoteTrack: RemoteVideoTrack | undefined;
     private _screenShareAudioRemoteTrack: RemoteAudioTrack | undefined;
     private _isActiveSpeaker = writable<boolean>(false);
+    public lastSpeakTimestamp?: number;
 
     private boundHandleTrackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
     private boundHandleTrackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication) => void;
@@ -399,6 +404,8 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            priority: VIDEO_STARTING_PRIORITY,
+            lastSpeakTimestamp: this.lastSpeakTimestamp,
         };
     }
 
@@ -457,6 +464,7 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
+            priority: SCREEN_SHARE_STARTING_PRIORITY,
         };
 
         this.highlightedEmbedScreenStore.toggleHighlight(streamable);
@@ -465,6 +473,9 @@ export class LiveKitParticipant {
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {
+        if (get(this._isActiveSpeaker) === true && isActiveSpeaker === false) {
+            this.lastSpeakTimestamp = Date.now();
+        }
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
 
