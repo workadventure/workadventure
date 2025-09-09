@@ -6,31 +6,44 @@ services:
       - "8080"
     ports:
       - "80:80"
+      - "443:443"
+      - "50051:50051"
     command:
       - --api.insecure=true
       - --providers.docker
+      - --log.level=DEBUG
       - --entryPoints.web.address=:80
       - --providers.docker.exposedbydefault=false
-      #- --log.level=DEBUG
+      #- --entrypoints.web.http.redirections.entryPoint.to=websecure
+      # - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.grpc.address=:50051
+      # HTTP challenge
+      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
+      - --certificatesResolvers.myresolver.acme.httpChallenge=true
     labels:
       - "traefik.enable=true"
       - "traefik.port=8080"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.traefik.service=api@internal"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     networks:
       default:
         aliases:
-          - "front.workadventure.localhost"
-          - "play.workadventure.localhost"
-          - "room-api.workadventure.localhost"
-          - "maps.workadventure.localhost"
-          - "oidc.workadventure.localhost"
-          - "map-storage.workadventure.localhost"
-          - "xmpp.workadventure.localhost"
-          - "matrix.workadventure.localhost"
-          - "pusher.workadventure.localhost"
+          - "front.escritorio.dev.iza.com.vc"
+          - "play.escritorio.dev.iza.com.vc"
+          - "room-api.escritorio.dev.iza.com.vc"
+          - "maps.escritorio.dev.iza.com.vc"
+          - "oidc.escritorio.dev.iza.com.vc"
+          - "map-storage.escritorio.dev.iza.com.vc"
+          - "xmpp.escritorio.dev.iza.com.vc"
+          - "matrix.escritorio.dev.iza.com.vc"
+          - "pusher.escritorio.dev.iza.com.vc"
+
   play:
     image: thecodingmachine/nodejs:v2-20-bullseye
     command: npm run dev
@@ -44,140 +57,118 @@ services:
       - "9231:9229"
       - "9235:9235"
     environment:
-      # On startup, we ask the messages container to regenerate the files.
-      # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       STARTUP_COMMAND_1: ../wait-proto.sh
       STARTUP_COMMAND_2: ../npm-install.sh
       STARTUP_COMMAND_3: npm run typesafe-i18n
-      # Uncomment to run the production build in dev
-      #STARTUP_COMMAND_4: npm run build
-      #STARTUP_COMMAND_5: npm run build-iframe-api
-      #NODE_OPTIONS: --max-old-space-size=16384
       DEBUG: "socket,space"
       DEBUG_COLORS: "true"
       DEBUG_ERROR_MESSAGES: "true"
-      DEBUG_MODE: "$DEBUG_MODE"
-      JITSI_URL: $JITSI_URL
-      JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-      ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
+      DEBUG_MODE: "${DEBUG_MODE}"
+      JITSI_URL: "${JITSI_URL}"
+      JITSI_PRIVATE_MODE: "${JITSI_PRIVATE_MODE}"
+      ENABLE_MAP_EDITOR: "${ENABLE_MAP_EDITOR}"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
-      VITE_URL: "http://front.workadventure.localhost"
-      PUSHER_URL: http://play.workadventure.localhost
-      FRONT_URL: http://play.workadventure.localhost
-      UPLOADER_URL: http://uploader.workadventure.localhost
-      ICON_URL: http://icon.workadventure.localhost
-      STUN_SERVER: "$STUN_SERVER"
-      TURN_SERVER: "$TURN_SERVER"
-      DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
-      SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
-      # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
-      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      ALLOWED_CORS_ORIGIN: "https://escritorio.dev.iza.com.vc"
+      VITE_URL: "https://front.escritorio.dev.iza.com.vc"
+      PUSHER_URL: "https://play.escritorio.dev.iza.com.vc"
+      FRONT_URL: "https://play.escritorio.dev.iza.com.vc"
+      UPLOADER_URL: "https://uploader.escritorio.dev.iza.com.vc"
+      ICON_URL: "https://icon.escritorio.dev.iza.com.vc"
+      STUN_SERVER: "${STUN_SERVER}"
+      TURN_SERVER: "${TURN_SERVER}"
+      DISABLE_NOTIFICATIONS: "${DISABLE_NOTIFICATIONS}"
+      SKIP_RENDER_OPTIMIZATIONS: "${SKIP_RENDER_OPTIMIZATIONS}"
       TURN_USER: ""
       TURN_PASSWORD: ""
-      MAX_PER_GROUP: "$MAX_PER_GROUP"
-      MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-      OPID_CLIENT_ID: authorization-code-client-id
-      OPID_CLIENT_SECRET: authorization-code-client-secret
-      OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
-      OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
-      OPID_SCOPE: profile openid email tags-scope
-      OPID_PROMPT: $OPID_PROMPT
-      OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
-      OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
-      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
-      SECRET_KEY: "$SECRET_KEY"
-      ADMIN_API_URL: "$ADMIN_API_URL"
-      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      MAX_PER_GROUP: "${MAX_PER_GROUP}"
+      MAX_USERNAME_LENGTH: "${MAX_USERNAME_LENGTH}"
+      OPID_CLIENT_ID: "${OPID_CLIENT_ID}"
+      OPID_CLIENT_SECRET: "${OPID_CLIENT_SECRET}"
+      OPID_CLIENT_ISSUER: "${OPID_CLIENT_ISSUER}"
+      OPID_PROFILE_SCREEN_PROVIDER: "${OPID_PROFILE_SCREEN_PROVIDER}"
+      OPID_SCOPE: "${OPID_SCOPE}"
+      OPID_PROMPT: "${OPID_PROMPT}"
+      OPID_USERNAME_CLAIM: "${OPID_USERNAME_CLAIM}"
+      OPID_LOCALE_CLAIM: "${OPID_LOCALE_CLAIM}"
+      OPID_LOGOUT_REDIRECT_URL: "${OPID_LOGOUT_REDIRECT_URL}"
+      SECRET_KEY: "${SECRET_KEY}"
+      ADMIN_API_URL: "${ADMIN_API_URL}"
+      ADMIN_API_TOKEN: "${ADMIN_API_TOKEN}"
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       API_URL: back:50051
-      DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
-      #Map editor
-      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+      DISABLE_ANONYMOUS: "${DISABLE_ANONYMOUS}"
+      PUBLIC_MAP_STORAGE_URL: "https://map-storage.escritorio.dev.iza.com.vc"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
       ENABLE_OPENAPI_ENDPOINT: "true"
-      START_ROOM_URL: "$START_ROOM_URL"
-      ENABLE_CHAT: "$ENABLE_CHAT"
-      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
-      ENABLE_CHAT_ONLINE_LIST: "$ENABLE_CHAT_ONLINE_LIST"
-      ENABLE_CHAT_DISCONNECTED_LIST: "$ENABLE_CHAT_DISCONNECTED_LIST"
-      SERVER_NAME: $SERVER_NAME
-      SERVER_MOTD: $SERVER_MOTD
-      SERVER_ICON: $SERVER_ICON
-      # Report issues menu
-      ENABLE_REPORT_ISSUES_MENU: $ENABLE_REPORT_ISSUES_MENU
-      REPORT_ISSUES_URL: $REPORT_ISSUES_URL
-      # LogRocket
-      LOGROCKET_ID: $LOGROCKET_ID
-      # Sentry integration
-      SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
-      SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
-      SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
-      SENTRY_RELEASE: $SENTRY_RELEASE
-      SENTRY_ORG: $SENTRY_ORG
-      SENTRY_PROJECT: $SENTRY_PROJECT
-      # Room API
+      START_ROOM_URL: "${START_ROOM_URL}"
+      ENABLE_CHAT: "${ENABLE_CHAT}"
+      ENABLE_CHAT_UPLOAD: "${ENABLE_CHAT_UPLOAD}"
+      ENABLE_CHAT_ONLINE_LIST: "${ENABLE_CHAT_ONLINE_LIST}"
+      ENABLE_CHAT_DISCONNECTED_LIST: "${ENABLE_CHAT_DISCONNECTED_LIST}"
+      SERVER_NAME: "${SERVER_NAME}"
+      SERVER_MOTD: "${SERVER_MOTD}"
+      SERVER_ICON: "${SERVER_ICON}"
+      ENABLE_REPORT_ISSUES_MENU: "${ENABLE_REPORT_ISSUES_MENU}"
+      REPORT_ISSUES_URL: "${REPORT_ISSUES_URL}"
+      LOGROCKET_ID: "${LOGROCKET_ID}"
+      SENTRY_DSN_FRONT: "${SENTRY_DSN_FRONT}"
+      SENTRY_DSN_PUSHER: "${SENTRY_DSN_PUSHER}"
+      SENTRY_ENVIRONMENT: "${SENTRY_ENVIRONMENT}"
+      SENTRY_RELEASE: "${SENTRY_RELEASE}"
+      SENTRY_ORG: "${SENTRY_ORG}"
+      SENTRY_PROJECT: "${SENTRY_PROJECT}"
       ROOM_API_PORT: "50051"
-      ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
-      #GRPC_VERBOSITY: DEBUG
-      #GRPC_TRACE: all
-      JITSI_DOMAIN: "$JITSI_DOMAIN"
-      JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
-      JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
+      ROOM_API_SECRET_KEY: "${ROOM_API_SECRET_KEY}"
+      JITSI_DOMAIN: "${JITSI_DOMAIN}"
+      JITSI_MUC_DOMAIN: "${JITSI_MUC_DOMAIN}"
+      JITSI_XMPP_DOMAIN: "${JITSI_XMPP_DOMAIN}"
       FEATURE_FLAG_BROADCAST_AREAS: "true"
-      # Integration tools
-      KLAXOON_ENABLED: "$KLAXOON_ENABLED"
-      KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
-      YOUTUBE_ENABLED: "$YOUTUBE_ENABLED"
-      GOOGLE_DRIVE_ENABLED: "$GOOGLE_DRIVE_ENABLED"
-      GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
-      GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
-      GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
-      ERASER_ENABLED: "$ERASER_ENABLED"
-      EXCALIDRAW_ENABLED: "$EXCALIDRAW_ENABLED"
-      EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
-      EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
-      CARDS_ENABLED: "$CARDS_ENABLED"
-      # Report issues menu
+      KLAXOON_ENABLED: "${KLAXOON_ENABLED}"
+      KLAXOON_CLIENT_ID: "${KLAXOON_CLIENT_ID}"
+      YOUTUBE_ENABLED: "${YOUTUBE_ENABLED}"
+      GOOGLE_DRIVE_ENABLED: "${GOOGLE_DRIVE_ENABLED}"
+      GOOGLE_DOCS_ENABLED: "${GOOGLE_DOCS_ENABLED}"
+      GOOGLE_SHEETS_ENABLED: "${GOOGLE_SHEETS_ENABLED}"
+      GOOGLE_SLIDES_ENABLED: "${GOOGLE_SLIDES_ENABLED}"
+      ERASER_ENABLED: "${ERASER_ENABLED}"
+      EXCALIDRAW_ENABLED: "${EXCALIDRAW_ENABLED}"
+      EXCALIDRAW_DOMAINS: "${EXCALIDRAW_DOMAINS}"
+      EMBEDDED_DOMAINS_WHITELIST: "${EMBEDDED_DOMAINS_WHITELIST}"
+      CARDS_ENABLED: "${CARDS_ENABLED}"
       ACTIVE_REPORT_ISSUES_MENU: "true"
       URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
-      PEER_VIDEO_LOW_BANDWIDTH: "$PEER_VIDEO_LOW_BANDWIDTH"
-      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
-      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
-      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
-      # Google drive picker
-      GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
-      GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
-      #Chat
+      PEER_VIDEO_LOW_BANDWIDTH: "${PEER_VIDEO_LOW_BANDWIDTH}"
+      PEER_VIDEO_RECOMMENDED_BANDWIDTH: "${PEER_VIDEO_RECOMMENDED_BANDWIDTH}"
+      PEER_SCREEN_SHARE_LOW_BANDWIDTH: "${PEER_SCREEN_SHARE_LOW_BANDWIDTH}"
+      PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH}"
+      GOOGLE_DRIVE_PICKER_CLIENT_ID: "${GOOGLE_DRIVE_PICKER_CLIENT_ID}"
+      GOOGLE_DRIVE_PICKER_APP_ID: "${GOOGLE_DRIVE_PICKER_APP_ID}"
       MATRIX_API_URI: http://synapse:8008/
-      MATRIX_PUBLIC_URI: http://matrix.workadventure.localhost
+      MATRIX_PUBLIC_URI: "https://matrix.escritorio.dev.iza.com.vc"
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
-      MATRIX_DOMAIN: matrix.workadventure.localhost
-      # oEmbed providers
-      EMBEDLY_KEY: "$EMBEDLY_KEY"
-      # Map editor restrictions (allow all users when OIDC is enabled by default)
+      MATRIX_DOMAIN: matrix.escritorio.dev.iza.com.vc
+      EMBEDLY_KEY: "${EMBEDLY_KEY}"
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
+      - "traefik.http.routers.front.rule=Host(`front.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.front.service=front"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
 
-      - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
+      - "traefik.http.routers.room-api.rule=Host(`room-api.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.room-api.service=room-api"
       - "traefik.http.services.room-api.loadbalancer.server.port=50051"
       - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
 
-      - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
+      - "traefik.http.routers.play.rule=HostRegexp(`escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
 
-      - "traefik.http.routers.play-ws.rule=HostRegexp(`{domain:.*}`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.rule=HostRegexp(`escritorio.dev.iza.com.vc`) && PathPrefix(`/ws/`)"
       - "traefik.http.routers.play-ws.priority=2"
       - "traefik.http.routers.play-ws.service=play-ws"
       - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
@@ -188,7 +179,7 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      FRONT_URL: http://play.workadventure.localhost
+      FRONT_URL: https://play.escritorio.dev.iza.com.vc
       #APACHE_DOCUMENT_ROOT: dist/
       #APACHE_EXTENSIONS: headers
       #APACHE_EXTENSION_HEADERS: 1
@@ -198,7 +189,7 @@ services:
       - ./maps:/var/www/html
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
+      - "traefik.http.routers.maps.rule=Host(`maps.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.maps.entryPoints=web,traefik"
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
@@ -208,7 +199,7 @@ services:
     working_dir: /usr/src/app/back
     environment:
       DEBUG: "*"
-      PLAY_URL: http://play.workadventure.localhost
+      PLAY_URL: https://play.escritorio.dev.iza.com.vc
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       #STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate
@@ -233,7 +224,7 @@ services:
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       MAP_STORAGE_URL: "map-storage:50053"
-      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+      PUBLIC_MAP_STORAGE_URL: "https://map-storage.escritorio.dev.iza.com.vc"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
       PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
       ENABLE_CHAT: "$ENABLE_CHAT"
@@ -249,7 +240,7 @@ services:
       - "9232:9229"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.rule=Host(`api.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
@@ -276,7 +267,7 @@ services:
       SENTRY_RELEASE: $SENTRY_RELEASE
       PATH_PREFIX: ""
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
-      PUSHER_URL: http://play.workadventure.localhost
+      PUSHER_URL: https://play.escritorio.dev.iza.com.vc
       WHITELISTED_RESOURCE_URLS: ""
       SECRET_KEY: "$SECRET_KEY"
     volumes:
@@ -286,11 +277,11 @@ services:
       - "9233:9229"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
+      - "traefik.http.routers.map-storage.rule=Host(`map-storage.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.map-storage.entryPoints=web"
       - "traefik.http.routers.map-storage.service=map-storage"
       - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
-      - "traefik.http.routers.map-storage-ui.rule=Host(`map-storage.workadventure.localhost`) && PathPrefix(`/ui/`)"
+      - "traefik.http.routers.map-storage-ui.rule=Host(`map-storage.escritorio.dev.iza.com.vc`) && PathPrefix(`/ui/`)"
       - "traefik.http.routers.map-storage-ui.entryPoints=web"
       - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
       - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
@@ -303,7 +294,7 @@ services:
     environment:
       DEBUG: "*"
       STARTUP_COMMAND_1: ../npm-install.sh
-      UPLOADER_URL: http://uploader.workadventure.localhost
+      UPLOADER_URL: http://uploader.escritorio.dev.iza.com.vc
       #AWS
       AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
       AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
@@ -324,7 +315,7 @@ services:
       - "9234:9229"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader.rule=Host(`uploader.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.uploader.entryPoints=web"
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
@@ -348,7 +339,7 @@ services:
     image: redislabs/redisinsight:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.redisinsight.rule=Host(`redis.workadventure.localhost`)"
+      - "traefik.http.routers.redisinsight.rule=Host(`redis.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.redisinsight.entryPoints=web"
       - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
 
@@ -356,151 +347,151 @@ services:
     image: matthiasluedtke/iconserver:v3.15.0
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
+      - "traefik.http.routers.icon.rule=Host(`icon.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
   # A mock server to test OpenID connect connectivity
-  oidc-server-mock:
-    image: ghcr.io/soluto/oidc-server-mock:0.7.0
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      SERVER_OPTIONS_INLINE: |
-        {
-          "AccessTokenJwtType": "JWT",
-          "Discovery": {
-            "ShowKeySet": true
-          },
-          "Authentication": {
-            "CookieSameSiteMode": "Lax",
-            "CheckSessionCookieSameSiteMode": "Lax"
-          }
-        }
-      LOGIN_OPTIONS_INLINE: |
-        {
-          "AllowRememberLogin": false
-        }
-      LOGOUT_OPTIONS_INLINE: |
-        {
-          "AutomaticRedirectAfterSignOut": true
-        }
-      API_SCOPES_INLINE: |
-        - Name: tags
-          UserClaims:
-            - tags-scope
-      API_RESOURCES_INLINE: |
-        - Name: some-app
-          Scopes:
-            - some-app-scope-1
-            - tags-scope
-          UserClaims:
-            - tags
-      USERS_CONFIGURATION_INLINE: |
-        [
-          {
-            "SubjectId":"1",
-            "Username":"User1",
-            "Password":"pwd",
-            "Claims": [
-              {
-                "Type": "name",
-                "Value": "John Doe",
-                "ValueType": "string",
-              },
-              {
-                "Type": "email",
-                "Value": "john.doe@example.com",
-                "ValueType": "string"
-              },
-              {
-                "Type": "tags",
-                "Value": "[\"admin\"]",
-                "ValueType": "json"
-              },
-            ]
-          },
-          {
-            "SubjectId":"2",
-            "Username":"User2",
-            "Password":"pwd",
-            "Claims": [
-              {
-                "Type": "name",
-                "Value": "Alice Doe",
-                "ValueType": "string",
-              },
-              {
-                "Type": "email",
-                "Value": "alice.doe@example.com",
-                "ValueType": "string"
-              },
-              {
-                "Type": "tags",
-                "Value": "[\"member\"]",
-                "ValueType": "json"
-              },
-            ]
-          },
-          {
-            "SubjectId":"3",
-            "Username":"UserMatrix",
-            "Password":"pwd",
-            "Claims": [
-              {
-                "Type": "name",
-                "Value": "John Doe",
-                "ValueType": "string",
-              },
-              {
-                "Type": "email",
-                "Value": "john.doe@example.com",
-                "ValueType": "string"
-              },
-              {
-                "Type": "tags",
-                "Value": "[\"admin\"]",
-                "ValueType": "json"
-              },
-            ]
-          }
-        ]
-      IDENTITY_RESOURCES_INLINE: |
-        [
-          {
-            "Name": "tags-scope",
-            "ClaimTypes": ["tags"]
-          }
-        ]
-      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
-    volumes:
-      - ./contrib/oidc-server-mock:/tmp/config:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
-      - "traefik.http.routers.oidc.entryPoints=web"
-    healthcheck:
-      #disable: true
-      timeout: 5s
-    # A mock server to test OpenID connect connectivity
+  # oidc-server-mock:
+  #   image: ghcr.io/soluto/oidc-server-mock:0.7.0
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     SERVER_OPTIONS_INLINE: |
+  #       {
+  #         "AccessTokenJwtType": "JWT",
+  #         "Discovery": {
+  #           "ShowKeySet": true
+  #         },
+  #         "Authentication": {
+  #           "CookieSameSiteMode": "Lax",
+  #           "CheckSessionCookieSameSiteMode": "Lax"
+  #         }
+  #       }
+  #     LOGIN_OPTIONS_INLINE: |
+  #       {
+  #         "AllowRememberLogin": false
+  #       }
+  #     LOGOUT_OPTIONS_INLINE: |
+  #       {
+  #         "AutomaticRedirectAfterSignOut": true
+  #       }
+  #     API_SCOPES_INLINE: |
+  #       - Name: tags
+  #         UserClaims:
+  #           - tags-scope
+  #     API_RESOURCES_INLINE: |
+  #       - Name: some-app
+  #         Scopes:
+  #           - some-app-scope-1
+  #           - tags-scope
+  #         UserClaims:
+  #           - tags
+  #     USERS_CONFIGURATION_INLINE: |
+  #       [
+  #         {
+  #           "SubjectId":"1",
+  #           "Username":"User1",
+  #           "Password":"pwd",
+  #           "Claims": [
+  #             {
+  #               "Type": "name",
+  #               "Value": "John Doe",
+  #               "ValueType": "string",
+  #             },
+  #             {
+  #               "Type": "email",
+  #               "Value": "john.doe@example.com",
+  #               "ValueType": "string"
+  #             },
+  #             {
+  #               "Type": "tags",
+  #               "Value": "[\"admin\"]",
+  #               "ValueType": "json"
+  #             },
+  #           ]
+  #         },
+  #         {
+  #           "SubjectId":"2",
+  #           "Username":"User2",
+  #           "Password":"pwd",
+  #           "Claims": [
+  #             {
+  #               "Type": "name",
+  #               "Value": "Alice Doe",
+  #               "ValueType": "string",
+  #             },
+  #             {
+  #               "Type": "email",
+  #               "Value": "alice.doe@example.com",
+  #               "ValueType": "string"
+  #             },
+  #             {
+  #               "Type": "tags",
+  #               "Value": "[\"member\"]",
+  #               "ValueType": "json"
+  #             },
+  #           ]
+  #         },
+  #         {
+  #           "SubjectId":"3",
+  #           "Username":"UserMatrix",
+  #           "Password":"pwd",
+  #           "Claims": [
+  #             {
+  #               "Type": "name",
+  #               "Value": "John Doe",
+  #               "ValueType": "string",
+  #             },
+  #             {
+  #               "Type": "email",
+  #               "Value": "john.doe@example.com",
+  #               "ValueType": "string"
+  #             },
+  #             {
+  #               "Type": "tags",
+  #               "Value": "[\"admin\"]",
+  #               "ValueType": "json"
+  #             },
+  #           ]
+  #         }
+  #       ]
+  #     IDENTITY_RESOURCES_INLINE: |
+  #       [
+  #         {
+  #           "Name": "tags-scope",
+  #           "ClaimTypes": ["tags"]
+  #         }
+  #       ]
+  #     CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+  #   volumes:
+  #     - ./contrib/oidc-server-mock:/tmp/config:ro
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.oidc.rule=Host(`oidc.escritorio.dev.iza.com.vc`)"
+  #     - "traefik.http.routers.oidc.entryPoints=web"
+  #   healthcheck:
+  #     #disable: true
+  #     timeout: 5s
+  #   # A mock server to test OpenID connect connectivity
 
   synapse:
     image: matrixdotorg/synapse:v1.132.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.matrix.rule=Host(`matrix.workadventure.localhost`)"
+      - "traefik.http.routers.matrix.rule=Host(`matrix.escritorio.dev.iza.com.vc`)"
       - "traefik.http.routers.matrix.entryPoints=web"
       - "traefik.http.services.matrix.loadbalancer.server.port=8008"
       - "traefik.http.routers.matrix.service=matrix"
     volumes:
       - ./synapse:/data/
       #- ./synapse/homeserver.template.yaml:/data/homeserver.template.yaml
-      - ./synapse/federation:/etc/nginx/vhost.d/matrix.workadventure.localhost
+      - ./synapse/federation:/etc/nginx/vhost.d/matrix.escritorio.dev.iza.com.vc
     environment:
-      VIRTUAL_HOST: "matrix.workadventure.localhost"
+      VIRTUAL_HOST: "matrix.escritorio.dev.iza.com.vc"
       VIRTUAL_PORT: 8008
-      LETSENCRYPT_HOST: "matrix.workadventure.localhost"
-      SYNAPSE_SERVER_NAME: "matrix.workadventure.localhost"
+      LETSENCRYPT_HOST: "matrix.escritorio.dev.iza.com.vc"
+      SYNAPSE_SERVER_NAME: "matrix.escritorio.dev.iza.com.vc"
       SYNAPSE_REPORT_STATS: "yes"
       MATRIX_ADMIN_USER: admin
       MATRIX_ADMIN_PASSWORD: MySecretPassword
@@ -518,8 +509,8 @@ services:
 #      - --max-port=10010
 #      - --tls-listening-port=5349
 #      - --listening-ip=0.0.0.0
-#      - --realm=coturn.workadventure.localhost
-#      - --server-name=coturn.workadventure.localhost
+#      - --realm=coturn.escritorio.dev.iza.com.vc
+#      - --server-name=coturn.escritorio.dev.iza.com.vc
 #      - --lt-cred-mech
 #      # Enable Coturn "REST API" to validate temporary passwords.
 #      #- --use-auth-secret

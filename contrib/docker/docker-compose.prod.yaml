@@ -129,11 +129,11 @@ services:
       - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
       - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
       - MAP_STORAGE_API_TOKEN=${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}
-      - MATRIX_API_URI
-      - MATRIX_PUBLIC_URI
-      - MATRIX_ADMIN_USER
-      - MATRIX_ADMIN_PASSWORD
-      - MATRIX_DOMAIN
+      - MATRIX_API_URI=${MATRIX_API_URI}
+      - MATRIX_PUBLIC_URI=${MATRIX_PUBLIC_URI}
+      - MATRIX_ADMIN_USER=${MATRIX_ADMIN_USER}
+      - MATRIX_ADMIN_PASSWORD=${MATRIX_ADMIN_PASSWORD}
+      - MATRIX_DOMAIN=${MATRIX_DOMAIN}
     labels:
       traefik.enable: "true"
 
@@ -308,6 +308,40 @@ services:
       traefik.http.routers.map-storage-ssl.tls: "true"
       traefik.http.routers.map-storage-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
+
+  # synapse:
+  #     image: matrixdotorg/synapse:v1.132.0
+  #     entrypoint: /data/start.sh
+  #     labels:
+  #       - "traefik.enable=true"
+  #       - "traefik.http.routers.matrix.rule=Host(`matrix.${DOMAIN}`)"
+  #       - "traefik.http.routers.matrix.entryPoints=websecure"
+  #       - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+  #       - "traefik.http.routers.matrix.tls=true"
+  #       - "traefik.http.routers.matrix.tls.certresolver=myresolver"
+  #       - "traefik.http.routers.matrix.service=matrix"
+  #     volumes:
+  #       - ./synapse:/data/
+  #     environment:
+  #       SYNAPSE_SERVER_NAME: "${DOMAIN}"
+  #       SYNAPSE_REPORT_STATS: "no"
+  #       # MATRIX_ADMIN_USER: admin
+  #       # MATRIX_ADMIN_PASSWORD: MySecretPassword
+  #       JWT_SECRET: "${SECRET_KEY}"
+
+  # matrix:
+  #   image: matrixdotorg/synapse:latest
+  #   container_name: matrix-synapse
+  #   ports:
+  #     - "8008:8008"
+  #   volumes:
+  #     - ./matrix-data:/data
+  #     - ./homeserver.yaml:/data/homeserver.yaml
+  #   environment:
+  #     - SYNAPSE_SERVER_NAME=dev.iza.com.vc
+  #     - SYNAPSE_REPORT_STATS=no
+  #   command: python -m synapse.app.homeserver --config-path /data/homeserver.yaml
+  #   restart: unless-stopped
 
 volumes:
   redisdata:
