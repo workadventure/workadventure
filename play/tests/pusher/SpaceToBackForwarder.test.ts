@@ -587,7 +587,7 @@ describe("SpaceToBackForwarder", () => {
                 message: {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
-                        spaceName: "test",
+                        spaceName: "world.test",
                         metadata: JSON.stringify({
                             "metadata-1": "value-1",
                         }),

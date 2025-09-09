@@ -174,7 +174,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         this.forwardMessageToSpaceBack({
             $case: "updateSpaceMetadataMessage",
             updateSpaceMetadataMessage: {
-                spaceName: this._space.localName,
+                spaceName: this._space.name,
                 metadata: JSON.stringify(metadata),
             },
         });

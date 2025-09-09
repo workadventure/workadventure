@@ -379,7 +379,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
 
         await expect.poll(() => pages.length).toBe(0);
 
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
 
         await evaluateScript(page, async () => {
             await WA.player.teleport(1, 1);
@@ -388,7 +388,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         });
 
         // Bob joins the same space
-        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related"));
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
         await evaluateScript(bob, async () => {
             window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
             await new Promise(resolve => {
@@ -408,8 +408,6 @@ test.describe('Scripting space-related functions @nowebkit', () => {
             console.log("Received metadata:", window.receivedMetadata);
             return window.receivedMetadata?.get("hello");
         })).toBe("world");
-
-
 
         await bob.close();
         await bob.context().close();
