@@ -117,7 +117,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                             // TODO: this notification is wrong. It should only be displayed on MEGAPHONE (and not
                             // on speaker zones)
                             notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
-                            this.conference = await this.joinJitsiConference(this.space.getName());
+                            const conferenceName = this.space.getName().replace("@", "");
+                            this.conference = await this.joinJitsiConference(conferenceName);
                             this.space.emitUpdateUser({
                                 jitsiParticipantId: this.conference.participantId,
                             });

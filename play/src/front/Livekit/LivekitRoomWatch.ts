@@ -58,26 +58,28 @@ export class LiveKitRoomWatch implements LiveKitRoom {
                 autoSubscribe: true,
             });
 
-            await Promise.all(
-                Array.from(room.remoteParticipants.values()).map(async (participant) => {
-                    const id = this.getParticipantId(participant);
-                    console.log("😱😱😱 Joining participant", id);
-                    if (!participant.permissions?.canPublish) {
-                        console.info("participant has no publish permission", id);
-                        return;
-                    }
+            Array.from(room.remoteParticipants.values()).map((participant) => {
+                const id = this.getParticipantId(participant);
+                if (!participant.permissions?.canPublish) {
+                    console.info("participant has no publish permission", id);
+                    return;
+                }
 
-                    const spaceUser = await this.space.getSpaceUserBySpaceUserId(id);
-                    if (!spaceUser) {
-                        console.error("spaceUser not found for participant", id);
-                        return;
-                    }
-                    this.participants.set(
-                        participant.sid,
-                        new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-                    );
-                })
-            );
+                const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
+                if (!spaceUser) {
+                    console.error("spaceUser not found for participant", id);
+                    return;
+                }
+
+                if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+                    return;
+                }
+
+                this.participants.set(
+                    participant.sid,
+                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                );
+            });
         } catch (err) {
             console.error("An error occurred in joinRoom", err);
             Sentry.captureException(err);
@@ -132,23 +134,21 @@ export class LiveKitRoomWatch implements LiveKitRoom {
     private handleParticipantConnected(participant: Participant) {
         const id = this.getParticipantId(participant);
 
-        this.space
-            .getSpaceUserBySpaceUserId(id)
-            .then((spaceUser) => {
-                if (!spaceUser) {
-                    console.info("spaceUser not found for participant", id);
-                    return;
-                }
+        const spaceUser = this.space.getSpaceUserBySpaceUserId(id);
 
-                this.participants.set(
-                    participant.sid,
-                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
-                );
-            })
-            .catch((err) => {
-                console.error("An error occurred in handleParticipantConnected", err);
-                Sentry.captureException(err);
-            });
+        if (!spaceUser) {
+            console.info("spaceUser not found for participant", id);
+            return;
+        }
+
+        if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
+            return;
+        }
+
+        this.participants.set(
+            participant.sid,
+            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+        );
     }
 
     private handleParticipantDisconnected(participant: Participant) {

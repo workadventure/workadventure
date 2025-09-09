@@ -25,6 +25,7 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+import { StringUtils } from "../../Utils/StringUtils";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -172,9 +173,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             // Todo: Replace the font family with a better one
+            // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
+            const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
             this.playerNameText = new Text(scene, 0, playerNameY, name, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: "8px",
+                fontSize,
                 strokeThickness: 2,
                 stroke: "#14304C",
                 metrics: {

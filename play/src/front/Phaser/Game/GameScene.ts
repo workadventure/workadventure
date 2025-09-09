@@ -154,7 +154,7 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectC
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { warningMessageStore } from "../../Stores/ErrorStore";
+// import { warningMessageStore } from "../../Stores/ErrorStore";
 import { closeCoWebsite, getCoWebSite, openCoWebSite, openCoWebSiteWithoutSource } from "../../Chat/Utils";
 import { navChat } from "../../Chat/Stores/ChatStore";
 import { ProximityChatRoom } from "../../Chat/Connection/Proximity/ProximityChatRoom";
@@ -1074,6 +1074,7 @@ export class GameScene extends DirtyScene {
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
+        this.pathfindingManager?.cleanup();
         this._broadcastService?.destroy().catch((e) => {
             console.error("Error while destroying broadcast service", e);
             Sentry.captureException(e);
@@ -1635,6 +1636,9 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                gameManager.setCharacterTextureIds(onConnect.room.characterTextures.map((texture) => texture.id));
+                gameManager.setCompanionTextureId(onConnect.room?.companionTexture?.id ?? null);
+
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
@@ -1993,10 +1997,11 @@ export class GameScene extends DirtyScene {
                 this._broadcastService = broadcastService;
 
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
-                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.errorMessageStream.subscribe((errorMessage) => {
-                    warningMessageStore.addWarningMessage(errorMessage.message);
-                });
+
+                // this.connection.errorMessageStream.subscribe((errorMessage) => {
+                //     console.error("An error occurred server side: " + errorMessage.message);
+                //     //warningMessageStore.addWarningMessage(errorMessage.message);
+                // });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -2240,7 +2245,7 @@ export class GameScene extends DirtyScene {
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
 
-                statusChanger.setUserNameInteraction(peer.player?.name ?? "unknow");
+                statusChanger.setUserNameInteraction(get(peer.name) ?? "unknow");
 
                 statusChanger.applyInteractionRules();
 
@@ -2343,7 +2348,9 @@ export class GameScene extends DirtyScene {
                 //this.reposition();
             } else {
                 this.CurrentPlayer.toggleTalk(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
+                if (!this.connection?.closed) {
+                    this.connection?.emitPlayerShowVoiceIndicator(false);
+                }
                 this.showVoiceIndicatorChangeMessageSent = false;
                 //this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.toggleTalk(false, true));
                 if (this.localVolumeStoreUnsubscriber) {

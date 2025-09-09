@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
@@ -55,9 +56,13 @@ export class LiveKitService {
             return;
         }
 
+        const hashedRoomName =
+            roomName.length > 250
+                ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+                : roomName;
         // Room doesn't exist, create it
         const createOptions: CreateOptions = {
-            name: roomName,
+            name: hashedRoomName,
             emptyTimeout: 5 * 60 * 1000,
             //maxParticipants: 1000,
             departureTimeout: 5 * 60 * 1000,
@@ -67,6 +72,8 @@ export class LiveKitService {
     }
 
     async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
+        const hashedRoomName = this.getHashedRoomName(roomName);
+
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
             identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
             name: user.name,
@@ -77,7 +84,7 @@ export class LiveKitService {
         });
 
         token.addGrant({
-            room: roomName,
+            room: hashedRoomName,
             canPublish: tokenType === LivekitTokenType.STREAMER,
             canSubscribe: tokenType === LivekitTokenType.WATCHER,
             roomJoin: true,
@@ -91,9 +98,15 @@ export class LiveKitService {
         return token.toJwt();
     }
 
+    private getHashedRoomName(roomName: string): string {
+        return roomName.length > 250
+            ? crypto.createHash("sha256").update(roomName).digest("hex").substring(0, 250)
+            : roomName;
+    }
+
     async deleteRoom(roomName: string): Promise<void> {
         try {
-            await this.roomServiceClient.deleteRoom(roomName);
+            await this.roomServiceClient.deleteRoom(this.getHashedRoomName(roomName));
             // if(this.currentRecordingInformation) {
             //     this.stopRecording();
             // }
@@ -109,10 +122,10 @@ export class LiveKitService {
 
     async removeParticipant(roomName: string, participantName: string, tokenType: LivekitTokenType): Promise<void> {
         try {
-            const rooms = await this.roomServiceClient.listRooms([roomName]);
+            const rooms = await this.roomServiceClient.listRooms([this.getHashedRoomName(roomName)]);
 
             if (rooms && rooms.length > 0) {
-                const participants = await this.roomServiceClient.listParticipants(roomName);
+                const participants = await this.roomServiceClient.listParticipants(this.getHashedRoomName(roomName));
                 const participantExists = participants.some(
                     (p) => p.identity === this.getParticipantIdentity(participantName, tokenType)
                 );
@@ -124,7 +137,7 @@ export class LiveKitService {
                 console.warn(`LivekitService.removeParticipant: Room ${roomName} not found`);
                 return;
             }
-            await this.roomServiceClient.removeParticipant(roomName, participantName);
+            await this.roomServiceClient.removeParticipant(this.getHashedRoomName(roomName), participantName);
         } catch (error) {
             console.error(
                 `LivekitService.removeParticipant: Error removing participant ${participantName} from room ${roomName}:`,
@@ -168,7 +181,7 @@ export class LiveKitService {
             });
 
             this.currentRecordingInformation = await this.egressClient.startRoomCompositeEgress(
-                roomName,
+                this.getHashedRoomName(roomName),
                 {
                     file: output,
                 },

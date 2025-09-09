@@ -61,20 +61,14 @@ export class BroadcastService {
     public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.getName() === spaceNameSlugify);
-        console.log(
-            "leaveSpace => space: ",
-            space,
-            this.broadcastSpaces.map((space) => space.getName())
-        );
+
         if (space) {
             //await space.destroy();
             await this.spaceRegistry.leaveSpace(space);
-            console.log("leaveSpace => spaceNameSlugify: ", spaceNameSlugify);
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
             return;
         }
-        console.log("leaveSpace => space not found: ", spaceNameSlugify);
     }
 
     /**

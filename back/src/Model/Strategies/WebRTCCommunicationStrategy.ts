@@ -112,7 +112,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     public addUserToNotify(user: SpaceUser): void {
         const usersInFilter = this._space.getUsersInFilter();
         usersInFilter.forEach((existingUser) => {
-            if (this.shouldEstablishConnection(existingUser, user)) {
+            if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {
                 this.establishConnection(existingUser, user);
                 return;
             }
@@ -155,16 +155,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        //const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
-        //TODO: remove this
-        const hasMedia = true;
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
+        console.log("👌👌👌👌👌👌👌 shouldEstablishConnection", user1.spaceUserId, user2.spaceUserId, hasExisting);
         // Only establish if we need media connection AND don't already have one
-        return hasMedia && !hasExisting;
-    }
-
-    private hasActiveMediaState(user: SpaceUser): boolean {
-        return user.cameraState || user.microphoneState;
+        return !hasExisting;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
@@ -180,30 +174,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private cleanupUserToNotifyMessages(userId: string): void {
         this._connections.removeUserToNotify(userId);
-    }
-
-    //TODO : remove the handleUserMediaUpdate function after testing
-    private handleUserMediaUpdate(user: SpaceUser): void {
-        const otherUsers = this._space
-            .getUsersToNotify()
-            .filter((otherUser) => otherUser.spaceUserId !== user.spaceUserId);
-
-        otherUsers.forEach((otherUser) => {
-            const hasExistingConnection = this.hasExistingConnection(user.spaceUserId, otherUser.spaceUserId);
-
-            if (
-                hasExistingConnection /* && !this.hasActiveMediaState(otherUser) */ &&
-                !this.hasActiveMediaState(user)
-            ) {
-                this.shutdownConnection(user.spaceUserId, otherUser.spaceUserId);
-                return;
-            }
-
-            if (this.shouldEstablishConnection(user, otherUser)) {
-                this.establishConnection(user, otherUser);
-                return;
-            }
-        });
     }
 
     private hasExistingConnection(userId1: string, userId2: string): boolean {

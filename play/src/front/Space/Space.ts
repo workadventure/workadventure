@@ -18,6 +18,7 @@ import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -50,16 +51,19 @@ export class Space implements SpaceInterface {
     private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
+    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
     private _registerRefCount = 0;
     private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
-
+    public readonly observeMetadata: Observable<Map<string, unknown>>;
     private readonly observeSyncUserAdded: Subscription;
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
+
+    private _isDestroyed = false;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -71,6 +75,7 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
+        private _mySpaceUserId: SpaceUser["spaceUserId"],
         private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         if (name === "") {
@@ -115,6 +120,17 @@ export class Space implements SpaceInterface {
         this.observeUserUpdated = new Observable<UpdateSpaceUserEvent>((subscriber) => {
             this.registerSpaceFilter();
             this._updateUserSubscriber = subscriber;
+
+            return () => {
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
+            };
+        });
+
+        this.observeMetadata = new Observable<Map<string, unknown>>((subscriber) => {
+            this.registerSpaceFilter();
+            this._metadataSubscriber = subscriber;
 
             return () => {
                 if (!this.isDestroyed) {
@@ -181,8 +197,8 @@ export class Space implements SpaceInterface {
         propertiesToSync: string[] = [],
         metadata = new Map<string, unknown>()
     ): Promise<Space> {
-        await connection.emitJoinSpace(name, filterType, propertiesToSync);
-        const space = new Space(name, metadata, connection, filterType, propertiesToSync);
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync);
+        const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
         return space;
     }
 
@@ -196,13 +212,25 @@ export class Space implements SpaceInterface {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
         });
+        if (this._metadataSubscriber) {
+            this._metadataSubscriber.next(this._metadata);
+        }
     }
 
     private async userLeaveSpace() {
+        if (this._connection.closed) {
+            // It is not uncommon to try to leave a space after the connection is closed.
+            // In that case, we just skip sending the leaveSpace message to the server.
+            return;
+        }
         await this._connection.emitLeaveSpace(this.name);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateSpaceMetadata");
+            return;
+        }
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
@@ -280,6 +308,10 @@ export class Space implements SpaceInterface {
     }
 
     public emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitPublicMessage");
+            return;
+        }
         this._connection.emitPublicSpaceEvent(this.name, message);
     }
 
@@ -291,6 +323,10 @@ export class Space implements SpaceInterface {
      * Sends a message to the server to update our user in the space.
      */
     public emitUpdateUser(spaceUser: SpaceUserUpdate): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateUser");
+            return;
+        }
         this._connection.emitUpdateSpaceUserMessage(this.name, spaceUser);
     }
 
@@ -299,6 +335,20 @@ export class Space implements SpaceInterface {
      * Do not call this method directly.
      */
     async destroy() {
+        this._isDestroyed = true;
+
+        try {
+            await this.userLeaveSpace();
+        } catch (e) {
+            if (e instanceof ConnectionClosedError) {
+                // It is not uncommon to try to leave a space after the connection is closed.
+                // In that case, we just skip logging the error.
+            } else {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            }
+        }
+
         for (const subscription of Object.values(this.publicEventsObservables)) {
             subscription.complete();
         }
@@ -331,12 +381,6 @@ export class Space implements SpaceInterface {
             this.unregisterSpaceFilter();
         }
 
-        try {
-            await this.userLeaveSpace();
-        } catch (e) {
-            console.error("Error while leaving space", e);
-            Sentry.captureException(e);
-        }
         this.isDestroyed = true;
     }
 
@@ -379,6 +423,7 @@ export class Space implements SpaceInterface {
 
         return extendSpaceUser;
     }
+
     removeUser(spaceUserId: string): void {
         const user = this._users.get(spaceUserId);
         if (user) {
@@ -451,10 +496,11 @@ export class Space implements SpaceInterface {
             }>(),
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
+                if (this._isDestroyed) {
+                    console.warn("Space is destroyed, skipping emitPrivateEvent");
+                    return;
+                }
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
-            },
-            getPlayer: () => {
-                return this._remotePlayersRepository.getPlayer(this.extractUserIdFromSpaceId(user.spaceUserId));
             },
             space: this,
         } as unknown as SpaceUserExtended;
@@ -491,6 +537,10 @@ export class Space implements SpaceInterface {
     }
 
     public requestFullSync() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping requestFullSync");
+            return;
+        }
         if (this._registerRefCount === 0) return;
         this._connection.emitRequestFullSync(this.name, this.getUsers());
     }
@@ -508,6 +558,10 @@ export class Space implements SpaceInterface {
     }
 
     private unregisterSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping unregisterSpaceFilter");
+            return;
+        }
         this._registerRefCount--;
         if (this._registerRefCount === 0) {
             this._connection.emitRemoveSpaceFilter({
@@ -519,6 +573,10 @@ export class Space implements SpaceInterface {
     }
 
     private registerSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping registerSpaceFilter");
+            return;
+        }
         if (this._registerRefCount === 0) {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {
@@ -529,12 +587,12 @@ export class Space implements SpaceInterface {
         this._registerRefCount++;
     }
 
-    public async getSpaceUserBySpaceUserId(id: string): Promise<SpaceUserExtended | undefined> {
-        return lookupUserById(this.extractUserIdFromSpaceId(id), this, 30_000);
+    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
+        return this._users.get(id);
     }
 
-    public async getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined> {
-        return lookupUserById(id, this, 30_000);
+    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
+        return lookupUserById(id, this);
     }
 
     public async dispatchSound(url: URL): Promise<void> {
@@ -543,5 +601,9 @@ export class Space implements SpaceInterface {
 
     public getPropertiesToSync(): string[] {
         return this._propertiesToSync;
+    }
+
+    public get mySpaceUserId(): SpaceUser["spaceUserId"] {
+        return this._mySpaceUserId;
     }
 }

@@ -799,6 +799,10 @@ export class SocketManager {
             }
         }
 
+        if (bbbSettings === undefined || !bbbSettings.secret) {
+            throw new Error("You must set the SECRET_BBB_KEY key to the secret to generate JWT tokens for BBB.");
+        }
+
         const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;

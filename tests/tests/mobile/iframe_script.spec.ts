@@ -13,7 +13,7 @@ test.describe("Iframe API @nodesktop", () => {
         await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "iframe_script"));
         await page.evaluate(() => localStorage.setItem("debug", "*"));
         await Menu.openMenu(page);
-        await expect(page.getByRole('button', { name: 'Invite' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Share' })).toBeVisible();
         // Create a script to evaluate function to disable map editor
         await evaluateScript(page, async () => {
             await WA.onInit();
@@ -22,7 +22,7 @@ test.describe("Iframe API @nodesktop", () => {
 
         // Check if the map editor is enabled
 
-        await expect(page.getByRole('button', { name: 'Invite' })).toBeHidden();
+        await expect(page.getByRole('button', { name: 'Share' })).toBeHidden();
 
 
         await page.context().close();

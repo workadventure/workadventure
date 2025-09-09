@@ -78,7 +78,6 @@ export class WebRTCState extends CommunicationState {
             return;
         }
 
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyAdded", user);
         await super.handleUserToNotifyAdded(user);
     }
 
@@ -95,7 +94,6 @@ export class WebRTCState extends CommunicationState {
             }
         }
 
-        console.log("👌👌👌👌👌👌👌 WebRTCState handleUserToNotifyDeleted", user);
         await super.handleUserToNotifyDeleted(user);
     }
 

@@ -7,7 +7,6 @@ import { z } from "zod";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
@@ -50,12 +49,13 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly displayMode = "fit";
     public readonly displayInPictureInPictureMode = true;
     public readonly usePresentationMode = true;
+    private connectTimeout: ReturnType<typeof setTimeout> | undefined;
     public priority: number = SCREEN_SHARE_STARTING_PRIORITY;
     public lastSpeakTimestamp?: number;
+
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
-        public readonly player: RemotePlayerData,
         stream: MediaStream | undefined,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
@@ -83,10 +83,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = player.userId;
-        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + this.userId;
-
-        let connectTimeout: ReturnType<typeof setTimeout> | undefined;
+        this.userId = spaceUser.userId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
@@ -125,6 +123,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
+            if (this.toClose) {
+                return;
+            }
             // transform sdp to force to use h264 codec
             this.sendWebrtcScreenSharingSignal(data);
 
@@ -133,10 +134,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             });
             if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
                 // If the signal is a candidate, we set a connection timer
-                if (connectTimeout) {
-                    clearTimeout(connectTimeout);
+                if (this.connectTimeout) {
+                    clearTimeout(this.connectTimeout);
                 }
-                connectTimeout = setTimeout(() => {
+                this.connectTimeout = setTimeout(() => {
                     this._statusStore.set("error");
                 }, CONNECTION_TIMEOUT);
             }
@@ -176,8 +177,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("connect", () => {
-            if (connectTimeout) {
-                clearTimeout(connectTimeout);
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
             }
             this._connected = true;
             customWebRTCLogger.info(`connect => ${this.userId}`);
@@ -260,6 +261,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             if (!this.toClose) {
                 return;
             }
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
+            }
+
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             super.destroy(error);

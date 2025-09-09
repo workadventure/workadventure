@@ -86,8 +86,8 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     message: {
                         $case: "updateSpaceMetadataMessage",
                         updateSpaceMetadataMessage: {
-                            spaceName: this._space.name,
-                            metadata: JSON.stringify(this._space.metadata),
+                            spaceName: this._space.localName,
+                            metadata: JSON.stringify(Object.fromEntries(this._space.metadata)),
                         },
                     },
                 };
@@ -134,6 +134,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
 
         if (!this._space._localConnectedUser.has(spaceUserId)) {
             throw new Error("User not found in pusher local connected user");
+        }
+
+        const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
+
+        if (spaceUser) {
+            this.deleteUserFromNotify(spaceUser);
         }
 
         try {

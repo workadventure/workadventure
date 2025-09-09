@@ -183,7 +183,6 @@ message EditMapMessage {
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
     UploadFileMessage uploadFileMessage = 13;
-    DeleteFileMessage deleteFileMessage = 14;
   }
 }
 
@@ -261,11 +260,6 @@ message CreateEntityMessage {
 
 message DeleteEntityMessage {
   string id = 1;
-}
-
-message DeleteFileMessage {
-  string propertyId = 1;
-  string name = 2;
 }
 
 message CollisionGridRow {
@@ -600,6 +594,7 @@ message EnterChatRoomAreaAnswer{
 }
 
 message JoinSpaceAnswer{
+  string spaceUserId = 1;
 }
 
 message LeaveSpaceAnswer{
@@ -1042,10 +1037,6 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    //WebRtcStartMessage webRtcStartMessage = 4;
-    //WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
-    //WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
-    //WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;

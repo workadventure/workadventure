@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
 import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-import { Space, SpaceForSpaceConnectionInterface, SpaceUserExtended } from "../../src/pusher/models/Space";
+import { Space, SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
@@ -193,9 +193,9 @@ describe("Space", () => {
 
             space.initSpace();
 
-            space.users.set("foo_1", mockUsers[0] as SpaceUserExtended);
-            space.users.set("foo_2", mockUsers[1] as SpaceUserExtended);
-            space.users.set("foo_3", mockUsers[2] as SpaceUserExtended);
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
 
             const mockSocket = mock<Socket>({
                 getUserData: vi.fn().mockReturnValue({
@@ -284,9 +284,9 @@ describe("Space", () => {
 
             space.initSpace();
 
-            space.users.set("foo_1", mockUsers[0] as SpaceUserExtended);
-            space.users.set("foo_2", mockUsers[1] as SpaceUserExtended);
-            space.users.set("foo_3", mockUsers[2] as SpaceUserExtended);
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
             space._localWatchers.add("foo_1");
 
             const mockSocket = mock<Socket>({
