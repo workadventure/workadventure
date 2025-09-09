@@ -155,12 +155,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
-        //const hasMedia = this.hasActiveMediaState(user1) || this.hasActiveMediaState(user2);
-        //TODO: remove this
-        const hasMedia = true;
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
+        console.log("👌👌👌👌👌👌👌 shouldEstablishConnection", user1.spaceUserId, user2.spaceUserId, hasExisting);
         // Only establish if we need media connection AND don't already have one
-        return hasMedia && !hasExisting;
+        return !hasExisting;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {

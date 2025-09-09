@@ -136,6 +136,12 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("User not found in pusher local connected user");
         }
 
+        const spaceUser = this._space._localConnectedUserWithSpaceUser.get(socket);
+
+        if (spaceUser) {
+            this.deleteUserFromNotify(spaceUser);
+        }
+
         try {
             await this._space.query.send({
                 $case: "removeSpaceUserQuery",
