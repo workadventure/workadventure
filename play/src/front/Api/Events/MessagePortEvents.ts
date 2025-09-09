@@ -11,6 +11,8 @@ export const iframeMessagePortTypeGuards = {
         data: z.object({
             spaceName: z.string(),
             filterType: z.enum(["everyone", "streaming"]),
+            // TODO: see if we can improve typing to directly get the properties to sync
+            propertiesToSync: z.array(z.string()),
         }),
         iframeEvents: z.union([
             z.object({

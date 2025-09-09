@@ -1,19 +1,17 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Readable } from "svelte/store";
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
@@ -35,9 +33,12 @@
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
-    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+
     if (peer.media.type === "mediaStore") {
-        streamStore = peer.media.streamStore;
+        attachVideo = peer.media.attachVideo;
+        detachVideo = peer.media.detachVideo;
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
@@ -171,7 +172,7 @@
         {#if $statusStore === "connecting" && showAfterDelay}
             <div class="absolute w-full h-full z-50 overflow-hidden">
                 <div
-                    class="flex w-8 h-8 flex justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
+                    class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
                     <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
@@ -188,11 +189,10 @@
         {#if showAfterDelay}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
-                mediaStream={$streamStore}
+                {attachVideo}
+                {detachVideo}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
-                outputDeviceId={$speakerSelectedStore}
-                volume={$volumeProximityDiscussionStore}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
@@ -276,7 +276,7 @@
 
     {#if inCameraContainer && videoEnabled && !missingUserActivation}
         <button
-            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
             on:click={() => highlightPeer(peer)}
         >
             <ArrowsMaximizeIcon />

@@ -20,14 +20,10 @@ export type BroadcastSpaceFactory = (
 
 export class BroadcastService {
     private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
-    private broadcastSpaces: BroadcastSpace[] = [];
+    private broadcastSpaces: SpaceInterface[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
 
-    constructor(
-        private roomConnection: RoomConnection,
-        private defaultBroadcastSpaceFactory: BroadcastSpaceFactory,
-        private spaceRegistry: SpaceRegistryInterface
-    ) {}
+    constructor(private spaceRegistry: SpaceRegistryInterface) {}
 
     /**
      * Join a broadcast space
@@ -36,25 +32,26 @@ export class BroadcastService {
      * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
      * @returns The broadcast space
      */
-    public async joinSpace(
-        spaceName: string,
-        playSound = true,
-        broadcastSpaceFactory?: BroadcastSpaceFactory
-    ): Promise<BroadcastSpace> {
+    public async joinSpace(spaceName: string): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const space = await this.spaceRegistry.joinSpace(spaceName, FilterType.LIVE_STREAMING_USERS);
+        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, FilterType.LIVE_STREAMING_USERS, [
+            "screenSharing",
+            "cameraState",
+            "microphoneState",
+            "megaphoneState",
+        ]);
 
-        const broadcastSpace = broadcastSpaceFactory
-            ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
-            : this.defaultBroadcastSpaceFactory(this.roomConnection, space, this, playSound);
+        // const broadcastSpace = broadcastSpaceFactory
+        //     ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
+        //     : this.defaultBroadcastSpaceFactory(this.roomConnection, space, this, playSound);
 
-        this.broadcastSpaces.push(broadcastSpace);
+        this.broadcastSpaces.push(space);
 
-        this.tracks.addStore(broadcastSpace.tracks);
+        // this.tracks.addStore(broadcastSpace.tracks);
         broadcastServiceLogger("joinSpace", spaceNameSlugify);
 
-        return broadcastSpace;
+        return space;
     }
 
     /**
@@ -63,11 +60,14 @@ export class BroadcastService {
      */
     public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
-        const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
+        const space = this.broadcastSpaces.find((space) => space.getName() === spaceNameSlugify);
+
         if (space) {
-            await space.destroy();
-            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
+            //await space.destroy();
+            await this.spaceRegistry.leaveSpace(space);
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
+            return;
         }
     }
 
@@ -118,7 +118,7 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public async destroy(): Promise<void> {
-        await Promise.all(this.broadcastSpaces.map((space) => space.destroy()));
+        await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
     }
 
     /**

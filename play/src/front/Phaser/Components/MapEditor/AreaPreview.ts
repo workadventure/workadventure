@@ -540,6 +540,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     color: "0b66c2",
                 };
             }
+            case "livekitRoomProperty": {
+                return {
+                    name: "Livekit",
+                    color: "1E88E5",
+                };
+            }
             default:
                 return {
                     name: "",

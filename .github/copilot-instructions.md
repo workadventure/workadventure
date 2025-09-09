@@ -212,9 +212,15 @@ lsof -ti:3000,3001,8080,9229 | xargs kill -9
 Any message added to the code should be translated in the supported languages.
 WorkAdventure uses typesafe-i18n and the translation files are in `play/src/i18n/[language]/[module].ts`
 
-To audit missing keys between English and another locale, use the helper script:
+Audit missing translation keys with the helper script:
 
-From `play/` run `npm run i18n:diff -- [language-code]` for instance `npm run i18n:diff:locale -- fr-FR`
+- Summary across all locales (source defaults to `en-US`):
+  - From `play/` run `npm run i18n:diff`
+  - This prints, for each locale, the number of missing keys and missing files.
+
+- Detailed diff for a specific locale:
+  - From `play/` run `npm run i18n:diff -- <language-code>` (e.g. `npm run i18n:diff -- fr-FR`)
+  - Optionally compare against a different source locale: `npm run i18n:diff -- <target-locale> <source-locale>`
 
 ## Trust These Instructions
 These instructions are comprehensive and validated. Only search for additional information if:

@@ -11,6 +11,7 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
 export type LockGroupCallback = (groupId: number, listener: ZoneSocket) => void;
+export type GroupUsersUpdatedCallback = (group: Group, listener: ZoneSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
     listener: ZoneSocket
@@ -27,6 +28,7 @@ export class Zone implements CustomJsonReplacerInterface {
         private onEmote: EmoteCallback,
         private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        private onGroupUsersUpdated: GroupUsersUpdatedCallback,
         public readonly x: number,
         public readonly y: number
     ) {}
@@ -111,6 +113,12 @@ export class Zone implements CustomJsonReplacerInterface {
     public emitLockGroupEvent(groupId: number) {
         for (const listener of this.listeners) {
             this.onLockGroup(groupId, listener);
+        }
+    }
+
+    public emitGroupUsersUpdatedEvent(group: Group) {
+        for (const listener of this.listeners) {
+            this.onGroupUsersUpdated(group, listener);
         }
     }
 
