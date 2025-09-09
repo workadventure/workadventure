@@ -474,7 +474,7 @@ export class LiveKitParticipant {
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {
         if (get(this._isActiveSpeaker) === true && isActiveSpeaker === false) {
-            this.lastSpeakTimestamp = new Date().getTime();
+            this.lastSpeakTimestamp = Date.now();
         }
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
