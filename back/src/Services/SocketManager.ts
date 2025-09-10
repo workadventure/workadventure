@@ -592,6 +592,7 @@ export class SocketManager {
      * and the Coturn server.
      * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
      */
+    // TODO: this function is now duplicated in WebRTCCredentialsService, we should probably remove this.
     private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
         const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
         const username = [unixTimeStamp, name].join(":");
