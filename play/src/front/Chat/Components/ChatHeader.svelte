@@ -8,9 +8,10 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
     import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
+    import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
     import ChatActionMenu from "./ChatActionMenu.svelte";
-    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
+    import { IconMessageCircle2, IconUsers } from "@wa-icons";
 
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
@@ -18,10 +19,12 @@
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
     const showNavBar = gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
     const userProviderMergerPromise = gameScene.userProviderMerger;
-    let searchLoader = false;
     const chatStatusStore = chat.connectionStatus;
     let typingTimer: ReturnType<typeof setTimeout>;
+    let searchLoader = false;
     const DONE_TYPING_INTERVAL = 2000;
+
+    $: isInSpecificDiscussion = $selectedRoomStore !== undefined;
 
     function handleToggleSearch() {
         searchActive = !searchActive;
@@ -109,28 +112,13 @@
         {/if}
     </div>
     <div class="relative">
+        <ChatActionMenu
+            {searchActive}
+            hasCloseChat={$hideActionBarStoreBecauseOfChatBar}
+            hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
+            on:toggleSearch={handleToggleSearch}
+        />
         <!-- Ici j'ai le bouton qui s'affiche pour chercher des utilisateurs ou des chats -->
-        {#if $chatStatusStore !== "OFFLINE"}
-            {#if $hideActionBarStoreBecauseOfChatBar}
-                <ChatActionMenu {searchActive} on:toggleSearch={handleToggleSearch} />
-            {:else}
-                <button
-                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
-                    on:click={handleToggleSearch}
-                >
-                    {#if searchLoader}
-                        <LoadingSmall />
-                    {/if}
-                    {#if !searchActive}
-                        <IconSearch font-size="20" />
-                    {:else}
-                        <IconX font-size="20" />
-                    {/if}
-                </button>
-            {/if}
-        {:else}
-            <div class="w-12" />
-        {/if}
     </div>
     <!-- searchbar -->
     {#if searchActive && $chatStatusStore !== "OFFLINE"}
@@ -148,6 +136,11 @@
                     on:focusin={focusChatInput}
                     on:focusout={unfocusChatInput}
                 />
+                {#if searchLoader}
+                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <LoadingSmall />
+                    </div>
+                {/if}
             </div>
         {/await}
     {/if}
