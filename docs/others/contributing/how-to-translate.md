@@ -6,7 +6,7 @@ We use the [typesafe-i18n](https://github.com/ivanhofer/typesafe-i18n) package t
 
 It is very easy to add a new language!
 
-First, in the `front/src/i18n` folder create a new folder with the language code as name (the language code according to [RFC 5646](https://datatracker.ietf.org/doc/html/rfc5646)).
+First, in the `play/src/i18n` folder create a new folder with the language code as name (the language code according to [RFC 5646](https://datatracker.ietf.org/doc/html/rfc5646)).
 
 In the previously created folder, add a file named index.ts with the following content containing your language information (french from France in this example):
 
@@ -77,18 +77,30 @@ $LL.messages.coffeMachine.playerStart.start({
 
 ## Check missing translations (diff tool)
 
-To compare English keys to another locale and list missing keys, use the helper script located in `play/scripts/diff-i18n.ts`.
+Use the helper script located in `play/scripts/diff-i18n.ts` to audit missing keys.
+
+- Summary across all locales (source defaults to `en-US`):
 
 ```bash
 cd play
-npm run i18n:diff -- fr-FR   # compare (fr-FR translations to en-US)
+npm run i18n:diff
+# Prints, for each locale, the number of missing keys and missing files
 ```
 
-- Advanced: specify both target and source locales (default source is en-US):
+- Detailed diff for a specific locale (compare that locale to `en-US`):
+
+```bash
+cd play
+npm run i18n:diff -- fr-FR
+```
+
+- Advanced: specify both target and source locales:
 
 ```bash
 cd play
 npm run i18n:diff -- ar-SA fr-FR  # compare (ar-SA translations to fr-FR)
 ```
 
-The target locale argument is required for the generic command. The output lists modules and keys missing in the target locale, helping translators keep parity with English files while preserving placeholders.
+Tip: from the summary output, run `npm run i18n:diff -- <language-code>` to see the exact missing modules/keys for that locale.
+
+The detailed output lists modules and keys missing in the target locale, helping translators keep parity with source files (placeholders preserved).

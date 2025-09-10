@@ -14,13 +14,13 @@ import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
-import { peerStore } from "./PeerStore";
 import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
-
+import { videoStreamElementsStore } from "./PeerStore";
+import { broadcastTracksStore } from "./BroadcastTrackStore";
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -269,7 +269,8 @@ export const cameraEnergySavingStore = derived(
     [
         deviceChanged10SecondsAgoStore,
         userMoved5SecondsAgoStore,
-        peerStore,
+        videoStreamElementsStore,
+        broadcastTracksStore,
         enabledWebCam10secondsAgoStore,
         mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
@@ -279,7 +280,8 @@ export const cameraEnergySavingStore = derived(
     ([
         $deviceChanged10SecondsAgoStore,
         $userMoved5SecondsAgoStore,
-        $peerStore,
+        $videoStreamElementsStore,
+        $broadcastTracksStore,
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
@@ -290,7 +292,8 @@ export const cameraEnergySavingStore = derived(
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             !$deviceChanged10SecondsAgoStore &&
-            $peerStore.size === 0 &&
+            $broadcastTracksStore.size === 0 &&
+            $videoStreamElementsStore.length === 0 &&
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
             !$devicesNotLoaded &&
@@ -302,6 +305,7 @@ export const cameraEnergySavingStore = derived(
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
+export const inLivekitStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -324,6 +328,7 @@ export const availabilityStatusStore = derived(
         proximityMeetingStore,
         isSpeakerStore,
         requestedStatusStore,
+        inLivekitStore,
     ],
     ([
         $inJitsiStore,
@@ -333,6 +338,7 @@ export const availabilityStatusStore = derived(
         $proximityMeetingStore,
         $isSpeakerStore,
         $requestedStatusStore,
+        $inLivekitStore,
     ]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
@@ -341,6 +347,7 @@ export const availabilityStatusStore = derived(
         if ($silentStore) return AvailabilityStatus.SILENT;
         if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
+        if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
 
         return AvailabilityStatus.ONLINE;
     },
@@ -450,7 +457,7 @@ export const mediaStreamConstraintsStore = derived(
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.SPEAKER ||
+            //$availabilityStatusStore === AvailabilityStatus.SPEAKER ||
             $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
             $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
             $availabilityStatusStore === AvailabilityStatus.BUSY

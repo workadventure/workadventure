@@ -1,7 +1,7 @@
 <script lang="ts">
     import debug from "debug";
     import { onMount } from "svelte";
-    import { peerStore } from "../../Stores/PeerStore";
+    import { videoStreamElementsStore } from "../../Stores/PeerStore";
 
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
 
@@ -77,8 +77,8 @@
 </script>
 
 <div
-    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$peerStore.size > 0 &&
-    $highlightFullScreen
+    class="@container/actions w-full z-[301] transition-all pointer-events-none bp-menu {$videoStreamElementsStore.length >
+        0 && $highlightFullScreen
         ? 'hidden'
         : ''}"
 >
@@ -106,7 +106,7 @@
                 </div>
                 <!-- Right bar -->
                 <div
-                    class="flex flex-row justify-end overflow-hidden md:overflow-visible"
+                    class="flex flex-row justify-end overflow-hidden"
                     class:flex-none={mode === "wide"}
                     class:flex-1={mode === "shrunk"}
                     bind:this={rightDiv}

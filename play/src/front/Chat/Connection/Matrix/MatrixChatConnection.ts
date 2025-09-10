@@ -96,6 +96,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             | AvailabilityStatus.BBB
             | AvailabilityStatus.DENY_PROXIMITY_MEETING
             | AvailabilityStatus.SPEAKER
+            | AvailabilityStatus.LIVEKIT
             | RequestedStatus
         >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity
@@ -246,7 +247,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     async startMatrixClient() {
         if (!this.client) return;
-        this.client.on(ClientEvent.Sync, (state) => {
+        this.client.on(ClientEvent.Sync, (state, prevState, res) => {
             if (!this.client) return;
             switch (state) {
                 case SyncState.Prepared:
@@ -255,6 +256,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     break;
                 case SyncState.Error:
                     this.connectionStatus.set("ON_ERROR");
+                    if (res?.error) {
+                        console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
+                        Sentry.captureException(res?.error);
+                    }
                     break;
                 case SyncState.Reconnecting:
                     this.connectionStatus.set("CONNECTING");
@@ -990,7 +995,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                             }
                         })
                         .map((chunkRoom) => {
-                            console.debug(chunkRoom);
                             return {
                                 id: chunkRoom.room_id,
                                 name: chunkRoom.name,

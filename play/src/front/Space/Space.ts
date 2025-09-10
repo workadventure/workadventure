@@ -1,18 +1,24 @@
-import { get, readable, Readable, Writable, writable } from "svelte/store";
+import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Observable, Subject, Subscriber, Subscription } from "rxjs";
 import { merge } from "lodash";
+import { MapStore } from "@workadventure/store-utils";
 import {
-    PrivateEvent,
     PublicEvent,
     SpaceEvent,
     UpdateSpaceMetadataMessage,
     FilterType,
     SpaceUser,
     PrivateSpaceEvent,
+    PrivateEventPusherToFront,
 } from "@workadventure/messages";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -24,28 +30,40 @@ import {
 } from "./SpaceInterface";
 import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
+import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import { lookupUserById } from "./Utils/UserLookup";
 
 export class Space implements SpaceInterface {
     private readonly name: string;
+
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private _onLeaveSpace = new Subject<void>();
     public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
+    private _peerManager: SpacePeerManager | undefined;
+    public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
+    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
     private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
     private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
+    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
     private _registerRefCount = 0;
+    private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
     public readonly observeUserJoined: Observable<SpaceUserExtended>;
     public readonly observeUserLeft: Observable<SpaceUserExtended>;
     public readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
-
+    public readonly observeMetadata: Observable<Map<string, unknown>>;
     private readonly observeSyncUserAdded: Subscription;
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
+
+    private _isDestroyed = false;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -53,9 +71,12 @@ export class Space implements SpaceInterface {
      */
     private constructor(
         name: string,
-        private metadata = new Map<string, unknown>(),
+        private _metadata = new Map<string, unknown>(),
         private _connection: RoomConnectionForSpacesInterface,
-        public readonly filterType: FilterType
+        public readonly filterType: FilterType,
+        private _propertiesToSync: string[] = [],
+        private _mySpaceUserId: SpaceUser["spaceUserId"],
+        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
@@ -68,7 +89,9 @@ export class Space implements SpaceInterface {
             set(this._users);
 
             return () => {
-                this.unregisterSpaceFilter();
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
             };
         });
 
@@ -77,7 +100,9 @@ export class Space implements SpaceInterface {
             this._addUserSubscriber = subscriber;
 
             return () => {
-                this.unregisterSpaceFilter();
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
             };
         });
 
@@ -86,7 +111,9 @@ export class Space implements SpaceInterface {
             this._leftUserSubscriber = subscriber;
 
             return () => {
-                this.unregisterSpaceFilter();
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
             };
         });
 
@@ -95,10 +122,51 @@ export class Space implements SpaceInterface {
             this._updateUserSubscriber = subscriber;
 
             return () => {
-                this.unregisterSpaceFilter();
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
             };
         });
 
+        this.observeMetadata = new Observable<Map<string, unknown>>((subscriber) => {
+            this.registerSpaceFilter();
+            this._metadataSubscriber = subscriber;
+
+            return () => {
+                if (!this.isDestroyed) {
+                    this.unregisterSpaceFilter();
+                }
+            };
+        });
+
+        //TODO : voir si utile avec les nvx roles
+        this.videoStreamStore = derived(
+            [this.allVideoStreamStore, this.usersStore],
+            ([videoStreamStore, usersStore]) => {
+                const newVideoStreamStore = new Map<string, ExtendedStreamable>();
+                for (const [key, value] of videoStreamStore.entries()) {
+                    if (usersStore.has(key)) {
+                        newVideoStreamStore.set(key, value);
+                    }
+                }
+                return newVideoStreamStore;
+            }
+        );
+        //TODO : voir si utile avec les nvx roles
+        this.screenShareStreamStore = derived(
+            [this.allScreenShareStreamStore, this.usersStore],
+            ([screenShareStreamStore, usersStore]) => {
+                const newScreenShareStreamStore = new Map<string, ExtendedStreamable>();
+                for (const [key, value] of screenShareStreamStore.entries()) {
+                    if (usersStore.has(key)) {
+                        newScreenShareStreamStore.set(key, value);
+                    }
+                }
+                return newScreenShareStreamStore;
+            }
+        );
+
+        this._peerManager = new SpacePeerManager(this);
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
             if (!message.addSpaceUserMessage.user) {
                 console.error("addSpaceUserMessage is missing a user");
@@ -118,7 +186,7 @@ export class Space implements SpaceInterface {
         });
     }
 
-    /**
+    /**,
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
      * Do not call this method directly.
      */
@@ -126,10 +194,11 @@ export class Space implements SpaceInterface {
         name: string,
         filterType: FilterType,
         connection: RoomConnectionForSpacesInterface,
+        propertiesToSync: string[] = [],
         metadata = new Map<string, unknown>()
     ): Promise<Space> {
-        await connection.emitJoinSpace(name, filterType);
-        const space = new Space(name, metadata, connection, filterType);
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync);
+        const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
         return space;
     }
 
@@ -137,19 +206,31 @@ export class Space implements SpaceInterface {
         return this.name;
     }
     getMetadata(): Map<string, unknown> {
-        return this.metadata;
+        return this._metadata;
     }
     setMetadata(metadata: Map<string, unknown>): void {
         metadata.forEach((value, key) => {
-            this.metadata.set(key, value);
+            this._metadata.set(key, value);
         });
+        if (this._metadataSubscriber) {
+            this._metadataSubscriber.next(this._metadata);
+        }
     }
 
     private async userLeaveSpace() {
+        if (this._connection.closed) {
+            // It is not uncommon to try to leave a space after the connection is closed.
+            // In that case, we just skip sending the leaveSpace message to the server.
+            return;
+        }
         await this._connection.emitLeaveSpace(this.name);
     }
 
     public emitUpdateSpaceMetadata(metadata: Map<string, unknown>) {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateSpaceMetadata");
+            return;
+        }
         this._connection.emitUpdateSpaceMetadata(this.name, Object.fromEntries(metadata.entries()));
     }
 
@@ -162,7 +243,6 @@ export class Space implements SpaceInterface {
         }
         return observable;
     }
-
     public observePrivateEvent<K extends keyof PrivateEventsObservables>(
         key: K
     ): NonNullable<PrivateEventsObservables[K]> {
@@ -202,7 +282,7 @@ export class Space implements SpaceInterface {
     /**
      * Take a message received by the RoomConnection and dispatch it to the right observable.
      */
-    public dispatchPrivateMessage(message: PrivateEvent) {
+    public dispatchPrivateMessage(message: PrivateEventPusherToFront) {
         const spaceEvent = message.spaceEvent;
         if (spaceEvent === undefined) {
             throw new Error("Received a message without spaceEvent");
@@ -211,7 +291,7 @@ export class Space implements SpaceInterface {
         if (spaceInnerEvent === undefined) {
             throw new Error("Received a message without event");
         }
-        const sender = message.senderUserId;
+        const sender = message.sender;
         if (sender === undefined) {
             throw new Error("Received a message without senderUserId");
         }
@@ -228,13 +308,25 @@ export class Space implements SpaceInterface {
     }
 
     public emitPublicMessage(message: NonNullable<SpaceEvent["event"]>): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitPublicMessage");
+            return;
+        }
         this._connection.emitPublicSpaceEvent(this.name, message);
+    }
+
+    public emitPrivateMessage(message: NonNullable<PrivateSpaceEvent["event"]>, receiverUserId: string): void {
+        this._connection.emitPrivateSpaceEvent(this.name, message, receiverUserId);
     }
 
     /**
      * Sends a message to the server to update our user in the space.
      */
     public emitUpdateUser(spaceUser: SpaceUserUpdate): void {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping emitUpdateUser");
+            return;
+        }
         this._connection.emitUpdateSpaceUserMessage(this.name, spaceUser);
     }
 
@@ -243,11 +335,18 @@ export class Space implements SpaceInterface {
      * Do not call this method directly.
      */
     async destroy() {
+        this._isDestroyed = true;
+
         try {
             await this.userLeaveSpace();
         } catch (e) {
-            console.error("Error while leaving space", e);
-            Sentry.captureException(e);
+            if (e instanceof ConnectionClosedError) {
+                // It is not uncommon to try to leave a space after the connection is closed.
+                // In that case, we just skip logging the error.
+            } else {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            }
         }
 
         for (const subscription of Object.values(this.publicEventsObservables)) {
@@ -261,6 +360,39 @@ export class Space implements SpaceInterface {
         this.observeSyncUserAdded.unsubscribe();
         this.observeSyncUserUpdated.unsubscribe();
         this.observeSyncUserRemoved.unsubscribe();
+
+        if (this._peerManager) {
+            this._peerManager.destroy();
+        }
+
+        this.allVideoStreamStore.forEach((peer) => {
+            if (peer instanceof VideoPeer) {
+                peer.destroy();
+            }
+        });
+
+        this.allScreenShareStreamStore.forEach((peer) => {
+            if (peer instanceof ScreenSharingPeer) {
+                peer.destroy();
+            }
+        });
+
+        if (this._registerRefCount > 0) {
+            this.unregisterSpaceFilter();
+        }
+
+        this.isDestroyed = true;
+    }
+
+    get simplePeer(): SimplePeerConnectionInterface | undefined {
+        return this._peerManager?.getPeer();
+    }
+
+    get spacePeerManager(): SpacePeerManager {
+        if (!this._peerManager) {
+            throw new Error("SpacePeerManager is not initialized");
+        }
+        return this._peerManager;
     }
 
     /**
@@ -291,6 +423,7 @@ export class Space implements SpaceInterface {
 
         return extendSpaceUser;
     }
+
     removeUser(spaceUserId: string): void {
         const user = this._users.get(spaceUserId);
         if (user) {
@@ -301,6 +434,9 @@ export class Space implements SpaceInterface {
             if (this._leftUserSubscriber) {
                 this._leftUserSubscriber.next(user);
             }
+
+            this.allVideoStreamStore.delete(spaceUserId);
+            this.allScreenShareStreamStore.delete(spaceUserId);
         }
     }
 
@@ -346,7 +482,7 @@ export class Space implements SpaceInterface {
         }*/
     }
 
-    private async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
+    public async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
 
         const extendedUser = {
@@ -360,6 +496,10 @@ export class Space implements SpaceInterface {
             }>(),
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
+                if (this._isDestroyed) {
+                    console.warn("Space is destroyed, skipping emitPrivateEvent");
+                    return;
+                }
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
             },
             space: this,
@@ -397,11 +537,31 @@ export class Space implements SpaceInterface {
     }
 
     public requestFullSync() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping requestFullSync");
+            return;
+        }
         if (this._registerRefCount === 0) return;
         this._connection.emitRequestFullSync(this.name, this.getUsers());
     }
 
+    private extractUserIdFromSpaceId(spaceId: string): number {
+        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
+        if (lastUnderscoreIndex === -1) {
+            throw new Error("Invalid spaceId format: no underscore found");
+        }
+        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
+        if (isNaN(userId)) {
+            throw new Error("Invalid userId format: not a number");
+        }
+        return userId;
+    }
+
     private unregisterSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping unregisterSpaceFilter");
+            return;
+        }
         this._registerRefCount--;
         if (this._registerRefCount === 0) {
             this._connection.emitRemoveSpaceFilter({
@@ -413,6 +573,10 @@ export class Space implements SpaceInterface {
     }
 
     private registerSpaceFilter() {
+        if (this._isDestroyed) {
+            console.warn("Space is destroyed, skipping registerSpaceFilter");
+            return;
+        }
         if (this._registerRefCount === 0) {
             this._connection.emitAddSpaceFilter({
                 spaceFilterMessage: {
@@ -421,5 +585,25 @@ export class Space implements SpaceInterface {
             });
         }
         this._registerRefCount++;
+    }
+
+    public getSpaceUserBySpaceUserId(id: string): SpaceUserExtended | undefined {
+        return this._users.get(id);
+    }
+
+    public getSpaceUserByUserId(id: number): SpaceUserExtended | undefined {
+        return lookupUserById(id, this);
+    }
+
+    public async dispatchSound(url: URL): Promise<void> {
+        await this.spacePeerManager.dispatchSound(url);
+    }
+
+    public getPropertiesToSync(): string[] {
+        return this._propertiesToSync;
+    }
+
+    public get mySpaceUserId(): SpaceUser["spaceUserId"] {
+        return this._mySpaceUserId;
     }
 }

@@ -25,6 +25,7 @@ export const JITSI_PRIVATE_MODE = env.JITSI_PRIVATE_MODE;
 export const ENABLE_MAP_EDITOR = env.ENABLE_MAP_EDITOR;
 export const MAX_USERNAME_LENGTH = env.MAX_USERNAME_LENGTH;
 export const MAX_PER_GROUP = env.MAX_PER_GROUP;
+export const MAX_DISPLAYED_VIDEOS = env.MAX_DISPLAYED_VIDEOS;
 export const NODE_ENV = env.NODE_ENV;
 export const CONTACT_URL = env.CONTACT_URL;
 export const POSTHOG_API_KEY = env.POSTHOG_API_KEY;

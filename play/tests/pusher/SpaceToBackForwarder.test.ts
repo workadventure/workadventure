@@ -115,11 +115,14 @@ describe("SpaceToBackForwarder", () => {
                 $case: "addSpaceUserQuery",
                 addSpaceUserQuery: {
                     spaceName: "test",
-                    user: SpaceUser.fromPartial({
-                        spaceUserId: "foo_1",
-                        name: "foo_1",
-                        color: "#f87ed1",
-                    }),
+                    user: {
+                        ...SpaceUser.fromPartial({
+                            spaceUserId: "foo_1",
+                            name: "foo_1",
+                            color: "#f87ed1",
+                        }),
+                        lowercaseName: "foo_1",
+                    },
                     filterType: FilterType.ALL_USERS,
                 },
             });
@@ -150,6 +153,7 @@ describe("SpaceToBackForwarder", () => {
 
             const mockSpace = {
                 name: "test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>(),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 spaceStreamToBackPromise: Promise.resolve(mockBackSpaceConnection),
@@ -181,7 +185,9 @@ describe("SpaceToBackForwarder", () => {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
                         spaceName: "test",
-                        metadata: JSON.stringify(new Map([["metadata-1", "value-1"]])),
+                        metadata: JSON.stringify({
+                            "metadata-1": "value-1",
+                        }),
                     },
                 },
             });
@@ -561,7 +567,8 @@ describe("SpaceToBackForwarder", () => {
             });
 
             const mockSpace = {
-                name: "test",
+                name: "world.test",
+                localName: "test",
                 _localConnectedUser: new Map<string, Socket>([["foo_1", mockSocket]]),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
                 _localWatchers: new Map<string, Socket>(),
@@ -580,7 +587,7 @@ describe("SpaceToBackForwarder", () => {
                 message: {
                     $case: "updateSpaceMetadataMessage",
                     updateSpaceMetadataMessage: {
-                        spaceName: "test",
+                        spaceName: "world.test",
                         metadata: JSON.stringify({
                             "metadata-1": "value-1",
                         }),

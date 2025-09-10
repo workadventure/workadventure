@@ -1,7 +1,7 @@
 import { get, Writable, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { peerStore } from "./PeerStore";
+import { videoStreamElementsStore } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
 
 export interface AudioManagerVolume {
@@ -109,6 +109,6 @@ export const bubbleSoundStore = writable<"ding" | "wobble">(localUserStore.getBu
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
-peerStore.subscribe((peers) => {
-    audioManagerVolumeStore.setTalking(peers.size > 0);
+videoStreamElementsStore.subscribe((peerElements) => {
+    audioManagerVolumeStore.setTalking(peerElements.length > 0);
 });

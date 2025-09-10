@@ -65,6 +65,13 @@ jobs:
         with:
           images: ${{ inputs.image-name }}
 
+      - name: Replace version string
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            sed -i "s/dev/${GITHUB_REF_NAME}/" back/src/Services/version.ts
+          fi
+
       - name: Get previous commit SHA
         id: prev-commit
         run: echo "PREV_SHA=$(git rev-parse HEAD^1)" >> $GITHUB_ENV

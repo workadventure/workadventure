@@ -2,6 +2,7 @@ import { Subscription } from "rxjs";
 import { get } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
 import { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
+import { streamingMegaphoneStore } from "../../Stores/MediaStore";
 
 /**
  * Represents a bridge between one Space and the scripting API.
@@ -12,6 +13,7 @@ export class SpaceScriptingBridge {
     private userJoinedSubscription: Subscription | undefined;
     private userLeftSubscription: Subscription | undefined;
     private userUpdatedSubscription: Subscription | undefined;
+    private metadataSubscription: Subscription | undefined;
 
     constructor(
         private space: SpaceInterface,
@@ -66,6 +68,16 @@ export class SpaceScriptingBridge {
                                 },
                             });
                         });
+
+                        // eslint-disable-next-line @smarttools/rxjs/no-nested-subscribe
+                        this.metadataSubscription = this.space.observeMetadata.subscribe((metadata) => {
+                            this.port.postMessage({
+                                type: "onSetMetadata",
+                                data: {
+                                    metadata: Object.fromEntries(metadata.entries()),
+                                },
+                            });
+                        });
                     }
                     this.watchCount++;
                     break;
@@ -90,9 +102,11 @@ export class SpaceScriptingBridge {
                 case "leave": {
                     this.leave();
                     this.onSpaceLeft();
+                    streamingMegaphoneStore.set(false);
                     break;
                 }
                 case "startStreaming": {
+                    streamingMegaphoneStore.set(true);
                     this.space.emitUpdateUser({
                         megaphoneState: true,
                     });
@@ -102,6 +116,11 @@ export class SpaceScriptingBridge {
                     this.space.emitUpdateUser({
                         megaphoneState: false,
                     });
+                    streamingMegaphoneStore.set(false);
+                    break;
+                }
+                case "setMetadata": {
+                    this.space.emitUpdateSpaceMetadata(new Map(Object.entries(event.data.data.metadata)));
                     break;
                 }
                 default: {
@@ -133,6 +152,7 @@ export class SpaceScriptingBridge {
         this.messagesSubscription.unsubscribe();
         this.userJoinedSubscription?.unsubscribe();
         this.userLeftSubscription?.unsubscribe();
+        this.metadataSubscription?.unsubscribe();
         this.port.close();
         // TODO: trigger a decrement of the space user join count
     }
