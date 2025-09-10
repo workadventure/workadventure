@@ -94,6 +94,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             | AvailabilityStatus.BBB
             | AvailabilityStatus.DENY_PROXIMITY_MEETING
             | AvailabilityStatus.SPEAKER
+            | AvailabilityStatus.LIVEKIT
             | RequestedStatus
         >,
         private matrixSecurity: MatrixSecurity = defaultMatrixSecurity

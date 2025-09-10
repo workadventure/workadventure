@@ -34,7 +34,7 @@
 
     <HeaderMenuItem label={$LL.actionbar.listStatusTitle.enable()} />
     <!-- Some status (silent, in a meeting...) are locking the status bar to only one option -->
-    {#if [AvailabilityStatus.SPEAKER, AvailabilityStatus.JITSI, AvailabilityStatus.BBB, AvailabilityStatus.DENY_PROXIMITY_MEETING, AvailabilityStatus.SILENT].includes($availabilityStatusStore)}
+    {#if [AvailabilityStatus.SPEAKER, AvailabilityStatus.JITSI, AvailabilityStatus.LIVEKIT, AvailabilityStatus.BBB, AvailabilityStatus.DENY_PROXIMITY_MEETING, AvailabilityStatus.SILENT].includes($availabilityStatusStore)}
         <button
             class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
         >

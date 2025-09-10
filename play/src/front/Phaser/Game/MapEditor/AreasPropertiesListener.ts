@@ -36,6 +36,7 @@ import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStor
  */
 import {
     inJitsiStore,
+    inLivekitStore,
     inOpenWebsite,
     isSpeakerStore,
     silentStore,
@@ -705,6 +706,7 @@ export class AreasPropertiesListener {
     }
 
     private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
+        inLivekitStore.set(true);
         const spaceRegistry = this.scene.spaceRegistry;
         const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
         await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
@@ -942,6 +944,7 @@ export class AreasPropertiesListener {
         if (space) {
             await spaceRegistry.leaveSpace(space);
         }
+        inLivekitStore.set(false);
     }
 
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
