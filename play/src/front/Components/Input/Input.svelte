@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { inputFormFocusStore } from "../../Stores/UserInputStore";
     import InfoButton from "./InfoButton.svelte";
 
     export let id: string | undefined = undefined;
@@ -49,6 +51,15 @@
             onInput();
         }
     }
+
+    // On Firefox, blur is not called when the element is removed from the DOM while focused.
+    // Let's blur it manually in this case.
+    onDestroy(() => {
+        if (inputElement && document.activeElement === inputElement) {
+            inputElement.blur();
+            inputFormFocusStore.set(false);
+        }
+    });
 </script>
 
 <div class="flex flex-col w-full">

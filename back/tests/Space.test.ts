@@ -3,6 +3,7 @@ import { BackToPusherSpaceMessage, FilterType, PrivateEvent, PublicEvent, SpaceU
 import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
+import { EventProcessor } from "../src/Model/EventProcessor";
 
 describe("Space with filter", () => {
     describe("addWatcher", () => {
@@ -12,7 +13,7 @@ describe("Space with filter", () => {
                 write: () => true,
             });
 
-            const space = new Space("test", FilterType.ALL_USERS);
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
 
             const spaceUser1: SpaceUser = SpaceUser.fromPartial({
                 spaceUserId: "foo_1",
@@ -107,7 +108,7 @@ describe("Space with filter", () => {
     });
     describe("addUser", () => {
         it("should send user to the watcher if result of filter is true", () => {
-            const space = new Space("test", FilterType.ALL_USERS);
+            const space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -163,7 +164,7 @@ describe("Space with filter", () => {
             );
         });
         it("should not send user to the watcher if result of filter is false", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -196,7 +197,7 @@ describe("Space with filter", () => {
             expect(mockWriteFunction2).toHaveBeenCalledTimes(0);
         });
         it.skip("should send remove user event if a error occurs ???", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn().mockImplementation(() => {
                 throw new Error("test");
             });
@@ -234,7 +235,7 @@ describe("Space with filter", () => {
 
     describe("updateUser", () => {
         it("should send add user message when user is updated and the filter result becomes true and the user did not previously match the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -305,7 +306,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send update user message when user is updated and the filter result remains true and the user already matched the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -384,7 +385,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send delete user message when user is updated and the filter result becomes false and the user previously matched the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -449,7 +450,7 @@ describe("Space with filter", () => {
             );
         });
         it("should not send anything when user is updated and the filter result remains false and the user did not previously match the filter", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -491,7 +492,7 @@ describe("Space with filter", () => {
         });
 
         it("should not send anything when user is not found on watcher list", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -535,54 +536,7 @@ describe("Space with filter", () => {
 
     describe("removeUser", () => {
         it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
-            const mockWriteFunction = vi.fn();
-            const watcher = mock<SpacesWatcher>({
-                id: "uuid-watcher",
-                write: mockWriteFunction,
-            });
-
-            const mockWriteFunction2 = vi.fn();
-            const watcher2 = mock<SpacesWatcher>({
-                id: "uuid-watcher-2",
-                write: mockWriteFunction2,
-            });
-
-            const spaceUser: SpaceUser = SpaceUser.fromPartial({
-                spaceUserId: "foo_1",
-                uuid: "uuid-test",
-                megaphoneState: true,
-            });
-
-            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
-                watcher,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
-            );
-            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
-                watcher2,
-                new Map<string, SpaceUser>([["foo_1", spaceUser]])
-            );
-
-            space.removeUser(watcher, "foo_1");
-
-            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
-            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
-
-            expect(mockWriteFunction2).toHaveBeenCalledWith(
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "removeSpaceUserMessage",
-                        removeSpaceUserMessage: {
-                            spaceName: "test",
-                            spaceUserId: "foo_1",
-                        },
-                    },
-                })
-            );
-        });
-
-        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -609,6 +563,80 @@ describe("Space with filter", () => {
                 ])
             );
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            // Initialize usersToNotify maps needed by removeUser
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser],
+                    ["foo_2", spaceUser],
+                ])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+
+            space.removeUser(watcher, "foo_1");
+
+            expect(mockWriteFunction).toHaveBeenCalledTimes(1);
+            expect(mockWriteFunction2).toHaveBeenCalledTimes(1);
+
+            expect(mockWriteFunction2).toHaveBeenCalledWith(
+                BackToPusherSpaceMessage.fromPartial({
+                    message: {
+                        $case: "removeSpaceUserMessage",
+                        removeSpaceUserMessage: {
+                            spaceName: "test",
+                            spaceUserId: "foo_1",
+                        },
+                    },
+                })
+            );
+        });
+
+        it("should send remove user message to all watchers when user is removed and the filter result remains true", () => {
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
+            const mockWriteFunction = vi.fn();
+            const watcher = mock<SpacesWatcher>({
+                id: "uuid-watcher",
+                write: mockWriteFunction,
+            });
+
+            const mockWriteFunction2 = vi.fn();
+            const watcher2 = mock<SpacesWatcher>({
+                id: "uuid-watcher-2",
+                write: mockWriteFunction2,
+            });
+
+            const spaceUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-test",
+                megaphoneState: true,
+            });
+
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser],
+                    ["foo_2", spaceUser],
+                ])
+            );
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
+            // Initialize usersToNotify maps needed by removeUser
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser],
+                    ["foo_2", spaceUser],
+                ])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
                 watcher2,
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
@@ -644,7 +672,7 @@ describe("Space with filter", () => {
             );
         });
         it("shouldn't send remove user message to all watchers when user is removed and the filter result becomes false", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -673,6 +701,18 @@ describe("Space with filter", () => {
                 watcher2,
                 new Map<string, SpaceUser>([["foo_1", spaceUser]])
             );
+            // Initialize usersToNotify maps needed by removeUser
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher,
+                new Map<string, SpaceUser>([
+                    ["foo_1", spaceUser],
+                    ["foo_2", spaceUser],
+                ])
+            );
+            (space as unknown as { usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>> }).usersToNotify.set(
+                watcher2,
+                new Map<string, SpaceUser>([["foo_1", spaceUser]])
+            );
 
             space.removeUser(watcher, "foo_1");
 
@@ -684,7 +724,7 @@ describe("Space with filter", () => {
 
     describe("updateMetadata", () => {
         it("should send update metadata message to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -742,7 +782,7 @@ describe("Space with filter", () => {
             );
         });
         it("should send update metadata message to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -797,7 +837,7 @@ describe("Space with filter", () => {
 
     describe("dispatchPublicEvent", () => {
         it("should send public event to all watchers", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -854,7 +894,7 @@ describe("Space with filter", () => {
 
     describe("dispatchPrivateEvent", () => {
         it("should send private event to the watcher that contains the user", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -883,6 +923,7 @@ describe("Space with filter", () => {
 
             space.dispatchPrivateEvent(
                 PrivateEvent.fromPartial({
+                    senderUserId: spaceUser.spaceUserId,
                     spaceName: "test",
                     receiverUserId: "foo_1",
                 })
@@ -898,6 +939,7 @@ describe("Space with filter", () => {
                         privateEvent: {
                             spaceName: "test",
                             receiverUserId: "foo_1",
+                            sender: spaceUser,
                         },
                     },
                 })
@@ -907,11 +949,11 @@ describe("Space with filter", () => {
 
     describe("canBeDeleted", () => {
         it("should return true if the space has no users", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             expect(space.canBeDeleted()).toBe(true);
         });
         it("should return false if the space has users", () => {
-            const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+            const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
             const mockWriteFunction = vi.fn();
             const watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -932,7 +974,7 @@ describe("Space with filter", () => {
         const senderUserId = "test_sender_123";
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),
@@ -949,10 +991,20 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
-                // Setup: server has one user, client provides empty list
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
+                // Setup: server has users including sender
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [];
@@ -965,7 +1017,7 @@ describe("Space with filter", () => {
                     const privateEvent = events[0].message.privateEvent;
                     expect(privateEvent.spaceName).toBe("test");
                     expect(privateEvent.receiverUserId).toBe(senderUserId);
-                    expect(privateEvent.senderUserId).toBe(senderUserId);
+                    expect(privateEvent.sender?.spaceUserId).toBe(senderUserId);
                     expect(privateEvent.spaceEvent?.event?.$case).toBe("addSpaceUserMessage");
                 }
             });
@@ -983,11 +1035,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
                     new Map([
                         ["user_1", user1],
                         ["user_2", user2],
+                        [senderUserId, senderUser],
                     ])
                 );
 
@@ -1001,7 +1061,7 @@ describe("Space with filter", () => {
             });
 
             it("should NOT generate ADD event for filtered out user", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const nonStreamingUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1009,9 +1069,19 @@ describe("Space with filter", () => {
                     megaphoneState: false, // This will be filtered out
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", nonStreamingUser]])
+                    new Map([
+                        ["user_1", nonStreamingUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [];
@@ -1029,10 +1099,17 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
-                // Setup: server has no users, client provides one user
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
+                // Setup: server only has sender user, client provides extra user
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map()
+                    new Map([[senderUserId, senderUser]])
                 );
 
                 const providedUsers: SpaceUser[] = [extraUser];
@@ -1045,7 +1122,7 @@ describe("Space with filter", () => {
                     const privateEvent = events[0].message.privateEvent;
                     expect(privateEvent.spaceName).toBe("test");
                     expect(privateEvent.receiverUserId).toBe(senderUserId);
-                    expect(privateEvent.senderUserId).toBe(senderUserId);
+                    expect(privateEvent.sender?.spaceUserId).toBe(senderUserId);
                     expect(privateEvent.spaceEvent?.event?.$case).toBe("removeSpaceUserMessage");
                 }
             });
@@ -1061,9 +1138,16 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map()
+                    new Map([[senderUserId, senderUser]])
                 );
 
                 const providedUsers: SpaceUser[] = [extraUser1, extraUser2];
@@ -1095,9 +1179,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [providedUser];
@@ -1131,9 +1225,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [providedUser];
@@ -1148,7 +1252,7 @@ describe("Space with filter", () => {
 
         describe("filter transitions (visibility changes)", () => {
             it("should generate ADD when user becomes visible due to filter change", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1162,9 +1266,19 @@ describe("Space with filter", () => {
                     megaphoneState: false, // Was not visible
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [providedUser];
@@ -1177,7 +1291,7 @@ describe("Space with filter", () => {
             });
 
             it("should generate REMOVE when user becomes invisible due to filter change", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1191,9 +1305,19 @@ describe("Space with filter", () => {
                     megaphoneState: true, // Was visible
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [providedUser];
@@ -1216,9 +1340,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", user]])
+                    new Map([
+                        ["user_1", user],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [user];
@@ -1228,9 +1362,16 @@ describe("Space with filter", () => {
             });
 
             it("should generate no events for empty user lists", () => {
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map()
+                    new Map([[senderUserId, senderUser]])
                 );
 
                 const providedUsers: SpaceUser[] = [];
@@ -1255,11 +1396,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
                     new Map([
                         ["user_1", localUser1],
                         ["user_2", localUser2],
+                        [senderUserId, senderUser],
                     ])
                 );
 
@@ -1295,7 +1444,7 @@ describe("Space with filter", () => {
             });
 
             it("should respect filter type consistently", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const streamingUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "streaming_user",
@@ -1307,11 +1456,19 @@ describe("Space with filter", () => {
                     megaphoneState: false, // Not visible with LIVE_STREAMING_USERS filter
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
                     new Map([
                         ["streaming_user", streamingUser],
                         ["non_streaming_user", nonStreamingUser],
+                        [senderUserId, senderUser],
                     ])
                 );
 
@@ -1344,9 +1501,19 @@ describe("Space with filter", () => {
                     megaphoneState: false,
                 });
 
+                const senderUser: SpaceUser = SpaceUser.fromPartial({
+                    spaceUserId: senderUserId,
+                    uuid: "uuid-sender",
+                    name: "Sender User",
+                    megaphoneState: false,
+                });
+
                 (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                     watcher,
-                    new Map([["user_1", localUser]])
+                    new Map([
+                        ["user_1", localUser],
+                        [senderUserId, senderUser],
+                    ])
                 );
 
                 const providedUsers: SpaceUser[] = [providedUser];
@@ -1365,7 +1532,7 @@ describe("Space with filter", () => {
         let watcher: SpacesWatcher;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),
@@ -1498,7 +1665,7 @@ describe("Space with filter", () => {
 
         describe("filter transitions", () => {
             it("should handle filter transitions from invisible to visible", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1523,7 +1690,7 @@ describe("Space with filter", () => {
             });
 
             it("should handle filter transitions from visible to invisible", () => {
-                const space = new Space("test", FilterType.LIVE_STREAMING_USERS);
+                const space = new Space("test", FilterType.LIVE_STREAMING_USERS, mock<EventProcessor>(), []);
 
                 const localUser: SpaceUser = SpaceUser.fromPartial({
                     spaceUserId: "user_1",
@@ -1622,7 +1789,7 @@ describe("Space with filter", () => {
         let mockWriteFunction: ReturnType<typeof vi.fn>;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             mockWriteFunction = vi.fn();
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -1707,7 +1874,7 @@ describe("Space with filter", () => {
         const senderUserId = "test_sender_123";
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             mockWriteFunction = vi.fn();
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
@@ -1722,9 +1889,19 @@ describe("Space with filter", () => {
                 megaphoneState: false,
             });
 
+            const senderUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: senderUserId,
+                uuid: "uuid-sender",
+                name: "Sender User",
+                megaphoneState: false,
+            });
+
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map([["user_1", localUser]])
+                new Map([
+                    ["user_1", localUser],
+                    [senderUserId, senderUser],
+                ])
             );
 
             const providedUsers: SpaceUser[] = [];
@@ -1739,7 +1916,7 @@ describe("Space with filter", () => {
             if (sentEvent.message?.$case === "privateEvent") {
                 const privateEvent = sentEvent.message.privateEvent;
                 expect(privateEvent.receiverUserId).toBe(senderUserId);
-                expect(privateEvent.senderUserId).toBe(senderUserId);
+                expect(privateEvent.sender?.spaceUserId).toBe(senderUserId);
                 expect(privateEvent.spaceName).toBe("test");
                 expect(privateEvent.spaceEvent?.event?.$case).toBe("addSpaceUserMessage");
             }
@@ -1752,9 +1929,19 @@ describe("Space with filter", () => {
                 megaphoneState: false,
             });
 
+            const senderUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: senderUserId,
+                uuid: "uuid-sender",
+                name: "Sender User",
+                megaphoneState: false,
+            });
+
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map([["user_1", localUser1]])
+                new Map([
+                    ["user_1", localUser1],
+                    [senderUserId, senderUser],
+                ])
             );
 
             const providedUser1: SpaceUser = SpaceUser.fromPartial({
@@ -1789,9 +1976,19 @@ describe("Space with filter", () => {
                 megaphoneState: false,
             });
 
+            const senderUser: SpaceUser = SpaceUser.fromPartial({
+                spaceUserId: senderUserId,
+                uuid: "uuid-sender",
+                name: "Sender User",
+                megaphoneState: false,
+            });
+
             (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
                 watcher,
-                new Map([["user_1", user]])
+                new Map([
+                    ["user_1", user],
+                    [senderUserId, senderUser],
+                ])
             );
 
             const providedUsers: SpaceUser[] = [user];
@@ -1807,7 +2004,7 @@ describe("Space with filter", () => {
         let watcher: SpacesWatcher;
 
         beforeEach(() => {
-            space = new Space("test", FilterType.ALL_USERS);
+            space = new Space("test", FilterType.ALL_USERS, mock<EventProcessor>(), []);
             watcher = mock<SpacesWatcher>({
                 id: "uuid-watcher",
                 write: vi.fn(),

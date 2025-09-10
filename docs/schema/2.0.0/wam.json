@@ -346,6 +346,42 @@
                         "type"
                       ],
                       "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "resourceUrl": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/resourceUrl"
+                        },
+                        "serverData": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/serverData"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "livekitRoomProperty"
+                        },
+                        "roomName": {
+                          "type": "string"
+                        },
+                        "triggerMessage": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "roomName"
+                      ],
+                      "additionalProperties": false
                     }
                   ]
                 }
@@ -864,6 +900,9 @@
                         "content"
                       ],
                       "additionalProperties": false
+                    },
+                    {
+                      "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/5"
                     }
                   ]
                 }

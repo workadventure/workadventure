@@ -243,6 +243,13 @@ const mapEditor: BaseTranslation = {
                 errorOnFileSize: "File is too large, max size is {size} MB",
             },
         },
+        livekitProperties: {
+            label: "Livekit Room",
+            description: "Start Livekit meeting on enter.",
+            roomNameLabel: "Room Name",
+            livekitUrl: "Livekit URL",
+            roomNamePlaceholder: "Room name",
+        },
         noProperties: "No properties defined",
     },
     areaEditor: {

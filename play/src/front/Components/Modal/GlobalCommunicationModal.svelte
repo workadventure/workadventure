@@ -167,11 +167,17 @@
         analyticsClient.startMegaphone();
         currentLiveStreamingSpaceStore.set($megaphoneSpaceStore);
         requestedMegaphoneStore.set(true);
+        $megaphoneSpaceStore?.emitUpdateUser({
+            megaphoneState: true,
+        });
         //close();
     }
 
     function stopLive() {
         analyticsClient.stopMegaphone();
+        $megaphoneSpaceStore?.emitUpdateUser({
+            megaphoneState: false,
+        });
         currentLiveStreamingSpaceStore.set(undefined);
         requestedMegaphoneStore.set(false);
         close();
@@ -472,7 +478,7 @@
                                 />
                                 <div class="w-full">
                                     <Select bind:value={cameraDiveId} on:change={() => selectCamera()}>
-                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
                                             {#each $cameraListStore as camera (camera.deviceId)}
                                                 <option value={camera.deviceId}>
                                                     {StringUtils.normalizeDeviceName(camera.label)}

@@ -8,12 +8,14 @@ export class ProximitySpaceManager {
     private leaveSpaceRequestMessageSubscription: Subscription;
 
     public constructor(roomConnection: RoomConnection, private proximityChatRoom: ProximityChatRoom) {
-        this.joinSpaceRequestMessageSubscription = roomConnection.joinSpaceRequestMessage.subscribe(({ spaceName }) => {
-            this.proximityChatRoom.joinSpace(spaceName).catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-            });
-        });
+        this.joinSpaceRequestMessageSubscription = roomConnection.joinSpaceRequestMessage.subscribe(
+            ({ spaceName, propertiesToSync }) => {
+                this.proximityChatRoom.joinSpace(spaceName, propertiesToSync).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
+            }
+        );
 
         this.leaveSpaceRequestMessageSubscription = roomConnection.leaveSpaceRequestMessage.subscribe(
             ({ spaceName }) => {

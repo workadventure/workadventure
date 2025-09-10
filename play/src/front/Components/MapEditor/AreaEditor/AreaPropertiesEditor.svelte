@@ -39,6 +39,7 @@
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
+    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
@@ -61,6 +62,7 @@
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
     let hasTooltipPropertyData: boolean;
+    let hasLivekitRoomProperty: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -119,6 +121,12 @@
                     hideButtonLabel: true,
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                     trigger: ON_ACTION_TRIGGER_ENTER,
+                };
+            case "livekitRoomProperty":
+                return {
+                    id,
+                    type,
+                    roomName: "",
                 };
             case "openWebsite":
                 // TODO refactore and use the same code than EntityPropertiesEditor
@@ -381,6 +389,7 @@
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
+        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -457,6 +466,14 @@
                     property="jitsiRoomProperty"
                     on:click={() => {
                         onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
+            {#if !hasLivekitRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="livekitRoomProperty"
+                    on:click={() => {
+                        onAddProperty("livekitRoomProperty");
                     }}
                 />
             {/if}
@@ -791,6 +808,14 @@
                         <OpenFilePropertyEditor
                             {property}
                             isArea={true}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "livekitRoomProperty"}
+                        <LivekitRoomPropertyEditor
+                            {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

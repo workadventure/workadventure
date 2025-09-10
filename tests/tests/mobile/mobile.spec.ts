@@ -56,6 +56,24 @@ test.describe('Mobile @nowebkit @nodesktop', () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageJohn, positionToDiscuss.x, positionToDiscuss.y);
 
+        const box = pageJohn.getByTestId('resize-handle');
+        const boxBoundingBox = box.boundingBox();
+
+        // Ensure the resize handle is visible and get its bounding box
+        await expect(box).toBeVisible();
+        const boundingBox = await boxBoundingBox;
+        expect(boundingBox).not.toBeNull();
+        
+        const startX = boundingBox.x + boundingBox.width / 2;
+        const startY = boundingBox.y + boundingBox.height / 2;
+
+        await pageJohn.mouse.move(startX, startY);
+        await pageJohn.mouse.down();
+
+        await pageJohn.mouse.move(startX, startY + 400, { steps: 10 });
+
+        await pageJohn.mouse.up();
+
         // Expect to see camera of users
         await expect(pageJohn.getByText('Bob')).toBeVisible();
         await expect(pageJohn.getByText('Alice')).toBeVisible();
