@@ -239,7 +239,7 @@ export class Space implements SpaceInterface {
     ): NonNullable<PublicEventsObservables[K]> {
         const observable = this.publicEventsObservables[key];
         if (!observable) {
-            return (this.publicEventsObservables[key] = new Subject() as NonNullable<PublicEventsObservables[K]>);
+            return (this.publicEventsObservables[key] = new Subject());
         }
         return observable;
     }
@@ -248,7 +248,7 @@ export class Space implements SpaceInterface {
     ): NonNullable<PrivateEventsObservables[K]> {
         const observable = this.privateEventsObservables[key];
         if (!observable) {
-            return (this.privateEventsObservables[key] = new Subject() as NonNullable<PrivateEventsObservables[K]>);
+            return (this.privateEventsObservables[key] = new Subject());
         }
         return observable;
     }
