@@ -10,7 +10,8 @@ infrastructure, and maintenance, which may not be feasible or practical for all 
 In order to self-host WorkAdventure, you will need:
 
 - at least one server for WorkAdventure, with a public facing IP and a DNS name
-- in addition, WorkAdventure requires to have 2 additional services: Jitsi and Coturn. In a typical setup, those services will be hosted on 2 additional servers (both with a public facing IP address and a DNS name)
+- in addition, WorkAdventure requires 2 additional services: Livekit and Coturn. In a typical setup, those services will be hosted on 2 additional servers (both with a public facing IP address and a DNS name)
+- as an option, a Jitsi server for large meeting rooms (before v1.27, it was required but now it is optional as Jitsi is getting replaced by Livekit)
 - a strong technical expertise regarding Docker and containers
 - a good understanding of networking concepts
 - ... and time (!), to keep up with the updates (about once a month)
@@ -42,38 +43,46 @@ In order to host WorkAdventure you will need to host:
 - **WorkAdventure** itself
 - **Coturn**: this is a service that proxies the WebRTC video signal in case a user is on a network that does not allow
   peer-to-peer connections. Coturn is optional, but without Coturn, approximately 15% of the users will fail to establish
-  a audio/video connection.
-- **Jitsi**: in large meeting rooms, Jitsi is used to broadcast video streams to all users.
+  a audio/video connection within bubbles.
+- **Livekit**: this is the service that manages the audio/video streams between users when there are more than 4 users in a bubble (below that, streams are peer-to-peer). Without Livekit, users cannot have audio/video conversations with more than 4 users at the same time.
+- **Jitsi** (optional): in large meeting rooms, Jitsi can be used instead of Livekit to host meetings. Jitsi was previously
+  the default video conferencing solution, but it is being superseded by Livekit. If you are starting a fresh install,
+  you can bypass Jitsi and use Livekit only.
 - **OIDC Provider** (optional): this is the service that authenticates users. It is optional as you can run a WorkAdventure
   instance with only anonymous users.
-- **Synapse**: this is the server that hosts the Matrix chat rooms. It is optional.
+- **Synapse** (optional): this is the server that hosts the Matrix chat rooms. It is optional. Without Synapse, users will not
+  be able to send messages to each others when they are not in the same bubble or offline and chat conversations will not be persisted.
 
 ```mermaid
 flowchart LR
   
     subgraph Servers
     WorkAdventure
-    Jitsi
+    Livekit
     Coturn
+    Jitsi
     Synapse
     end
     Browser1["Your browser"]
     Browser1-->WorkAdventure
-    Browser1-->Jitsi
+    Browser1-->Livekit
     Browser1-->Coturn
+    Browser1-.->Jitsi
     Browser1-.->Synapse
     WorkAdventure-.->OIDC[OIDC Provider - SSO]
     Synapse-.->OIDC
   style Synapse stroke-width:1px,stroke-dasharray: 5 5
+  style Jitsi stroke-width:1px,stroke-dasharray: 5 5
   style OIDC stroke-width:1px,stroke-dasharray: 5 5
 ```
 
 > [!WARNING]  
-> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Jitsi,
+> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Livekit, Jitsi,
 > Coturn and Synapse installs out of scope. OpenID Connect authentication is also out of scope for now.
 
+Livekit install guide: https://docs.livekit.io/home/self-hosting/deployment/  
 Jitsi install guide: https://jitsi.github.io/handbook/docs/devops-guide/  
-Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html
+Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html  
 Synapse install guide: https://element-hq.github.io/synapse/latest/setup/installation.html
 
 ## Installation method for the WorkAdventure server
