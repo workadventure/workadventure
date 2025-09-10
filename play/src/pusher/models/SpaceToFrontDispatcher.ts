@@ -129,7 +129,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         if (this._space.users.has(spaceUser.spaceUserId)) {
             throw new Error(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`);
         }
-        this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
+        this._space.users.set(spaceUser.spaceUserId, user);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
 
         const subMessage: SubMessage = {
