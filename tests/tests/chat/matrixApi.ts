@@ -136,7 +136,7 @@ class MatrixApi {
               this.getAuthenticatedHeader()
           );
         } catch (error) {
-          throw new Error(error);
+          throw asError(error);
         }
       }
   }
