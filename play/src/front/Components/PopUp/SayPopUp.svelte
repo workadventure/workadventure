@@ -31,6 +31,7 @@
         switch ($availabilityStatusStore) {
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
+            case AvailabilityStatus.LIVEKIT:
             case AvailabilityStatus.DENY_PROXIMITY_MEETING:
             case AvailabilityStatus.SPEAKER: {
                 type = "say";

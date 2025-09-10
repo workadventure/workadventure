@@ -50,6 +50,7 @@ describe("MatrixChatConnection", () => {
         | AvailabilityStatus.BBB
         | AvailabilityStatus.DENY_PROXIMITY_MEETING
         | AvailabilityStatus.SPEAKER
+        | AvailabilityStatus.LIVEKIT
         | RequestedStatus
     > = {
         subscribe: vi.fn(),
