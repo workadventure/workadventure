@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { SpaceUser } from "@workadventure/messages";
 import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
 import { WebRTCCredentialsService, webRTCCredentialsService } from "../Services/WebRTCCredentialsService";
@@ -156,14 +157,17 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private shouldEstablishConnection(user1: SpaceUser, user2: SpaceUser): boolean {
         const hasExisting = this.hasExistingConnection(user1.spaceUserId, user2.spaceUserId);
-        console.log("👌👌👌👌👌👌👌 shouldEstablishConnection", user1.spaceUserId, user2.spaceUserId, hasExisting);
         // Only establish if we need media connection AND don't already have one
         return !hasExisting;
     }
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
-        const credentials1 = this._credentialsService.generateCredentials(user1.spaceUserId);
-        const credentials2 = this._credentialsService.generateCredentials(user2.spaceUserId);
+        const credentials1 = this._credentialsService.generateCredentials(
+            crypto.createHash("md5").update(user1.spaceUserId).digest("hex")
+        );
+        const credentials2 = this._credentialsService.generateCredentials(
+            crypto.createHash("md5").update(user2.spaceUserId).digest("hex")
+        );
         this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
     }
