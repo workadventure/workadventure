@@ -10,7 +10,6 @@ import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
@@ -67,8 +66,8 @@ export interface SpaceInterface {
     allVideoStreamStore: MapStore<string, ExtendedStreamable>;
     allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
 
-    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): Promise<SpaceUserExtended | undefined>;
-    getSpaceUserByUserId(id: number): Promise<SpaceUserExtended | undefined>;
+    getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
+    getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
     extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
@@ -95,7 +94,9 @@ export interface SpaceInterface {
      * It can be easier than subscribing to every single property of every single user.
      */
     readonly observeUserUpdated: Observable<UpdateSpaceUserEvent>;
+    readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
+    get mySpaceUserId(): SpaceUser["spaceUserId"];
 }
 
 export type ReactiveSpaceUser = {
@@ -120,6 +121,5 @@ export type SpaceUserExtended = SpaceUser & {
     reactiveUser: ReactiveSpaceUser;
     getPeerStore: () => Readable<VideoPeer> | undefined;
     getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
-    getPlayer: () => Promise<RemotePlayerData> | undefined;
     userId: number;
 };

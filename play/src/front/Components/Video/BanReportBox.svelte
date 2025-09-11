@@ -1,17 +1,17 @@
 <script lang="ts">
+    import { get } from "svelte/store";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import reportImg from "./images/report.svg";
-
     export let peer: Streamable;
 
     async function openReport(peer: Streamable) {
         if (peer instanceof VideoPeer || peer instanceof ScreenSharingPeer) {
             showReportScreenStore.set({
                 userUuid: (await peer.getExtendedSpaceUser()).uuid,
-                userName: peer.player.name,
+                userName: get(peer.name),
             });
         }
     }

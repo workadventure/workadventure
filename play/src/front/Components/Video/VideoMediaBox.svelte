@@ -225,8 +225,6 @@
                                 <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                             </div>
                         {/if}
-                    {:catch error}
-                        <div class="bg-danger">{error}</div>
                     {/await}
                 </UserName>
 

@@ -29,6 +29,7 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
+        priority: 0,
     };
 }
 

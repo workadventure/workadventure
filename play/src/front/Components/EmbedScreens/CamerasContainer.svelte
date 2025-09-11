@@ -42,6 +42,10 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { MAX_DISPLAYED_VIDEOS } from "../../Enum/EnvironmentVariable";
+    import {
+        orderedStreamableCollectionStore,
+        maxVisibleVideosStore,
+    } from "../../Stores/OrderedStreamableCollectionStore";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -89,9 +93,11 @@
                     minMediaBoxWidth
                 );
                 videoHeight = undefined;
+                maxVisibleVideosStore.set(Math.ceil(containerWidth / videoWidth));
             } else {
                 videoWidth = containerWidth;
                 videoHeight = videoWidth * (9 / 16);
+                maxVisibleVideosStore.set(Math.ceil(containerHeight / videoHeight));
             }
         } else {
             const layout = calculateOptimalLayout(containerWidth, containerHeight);
@@ -128,6 +134,7 @@
             //if (height <= containerHeight) {
             // Calculate how many complete rows we can fit
             const rowsPerPage = Math.floor((containerHeight + gap) / (height + gap));
+
             const maxVisibleVideos = rowsPerPage * vpr;
 
             //console.log("maxVisibleVideos", maxVisibleVideos);
@@ -150,6 +157,9 @@
                 // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
                 if (totalRows === 1) {
                     const adjustedWidth = (containerHeight * 16) / 9;
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set(vpr);
+
                     return {
                         videoWidth: Math.max(adjustedWidth, minMediaBoxWidth),
                     };
@@ -181,6 +191,10 @@
                     }
                     // if solution 1 is better
                     adjustedWidth = adjustedWidthWithReducedHeight;
+
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set(vpr * (rowsPerPage + 1));
+
                     //console.log("Solution 1, total row", totalRows, "vpr", vpr, "adjustedVpr", adjustedVpr, "adjustedWidth", adjustedWidth, "maxHeightPerVideo", maxHeightPerVideo, "containerHeight", containerHeight, "totalRows", totalRows, "containerWidth", containerWidth);
                 } else {
                     //console.log("Solution 2, vpr", vpr+1);
@@ -192,6 +206,8 @@
                     if (adjustedHeight < adjustedWidth * (9 / 16)) {
                         adjustedHeight = adjustedWidth * (9 / 16);
                     }
+                    // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
+                    maxVisibleVideosStore.set((vpr + 1) * adjustedTotalRows);
                 }
 
                 if (adjustedWidth < minMediaBoxWidth) {
@@ -221,6 +237,35 @@
         );
     }
 
+    let camerasContainer: HTMLDivElement | undefined;
+    let grabPointerEvents = false;
+    const isWebkit = "WebkitAppearance" in document.documentElement.style;
+    $: {
+        // In Webkit, the scroll event on the cameras-container is not triggered when the user scrolls unless the
+        // pointer-events is set to auto. But we want to avoid that unless there is a scroll bar to keep the
+        // pointer events to go through to the map.
+
+        // Let's trigger this logic when the number of videos changes or when the container width changes
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        $streamableCollectionStore;
+
+        if (isWebkit && isOnOneLine && oneLineMode === "horizontal") {
+            setTimeout(() => {
+                if (camerasContainer) {
+                    if (camerasContainer.scrollWidth > containerWidth) {
+                        //eslint-disable-next-line svelte/infinite-reactive-loop
+                        grabPointerEvents = true;
+                    } else {
+                        //eslint-disable-next-line svelte/infinite-reactive-loop
+                        grabPointerEvents = false;
+                    }
+                }
+            }, 500);
+        } else {
+            grabPointerEvents = false;
+        }
+    }
+
     onDestroy(() => {
         gameScene.reposition();
     });
@@ -238,8 +283,10 @@
 >
     <div
         bind:clientWidth={containerWidth}
-        class="pointer-events-auto"
-        style={`gap: ${gap}px; ` + (!isOnOneLine ? "height: " + containerHeight + "px;" : "")}
+        bind:this={camerasContainer}
+        class="gap-4 pb-2"
+        class:pointer-events-none={!grabPointerEvents}
+        class:pointer-events-auto={grabPointerEvents}
         class:hidden={$highlightFullScreen && $highlightedEmbedScreen && oneLineMode !== "vertical"}
         class:flex={true}
         class:max-h-full={isOnOneLine && oneLineMode === "horizontal"}
@@ -258,7 +305,7 @@
         class:pb-3={isOnOneLine}
         class:m-0={isOnOneLine}
         class:my-0={isOnOneLine}
-        class:w-full={true}
+        class:w-full={!isOnOneLine && oneLineMode !== "horizontal"}
         class:items-start={!isOnOneLine}
         class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
@@ -266,9 +313,9 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+        {#each $orderedStreamableCollectionStore as peer (peer.uniqueId)}
             {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
-                {#key uniqueId}
+                {#key peer.uniqueId}
                     <div
                         style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
                             videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""

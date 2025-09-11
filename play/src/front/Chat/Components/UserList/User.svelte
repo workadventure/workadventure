@@ -49,6 +49,7 @@
                 return $LL.chat.status.back_in_a_moment();
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
+            case AvailabilityStatus.LIVEKIT:
                 return $LL.chat.status.meeting();
             case AvailabilityStatus.SPEAKER:
                 return $LL.chat.status.megaphone();

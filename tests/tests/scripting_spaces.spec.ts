@@ -183,6 +183,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -206,6 +207,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         ).toContain("Cannot join space some-test-space");
 
 
+        await page.close();
         await page.context().close();
     });
 
@@ -239,6 +241,7 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await bob.close();
         await bob.context().close();
 
+        await page.close();
         await page.context().close();
     });
 
@@ -373,4 +376,48 @@ test.describe('Scripting space-related functions @nowebkit', () => {
         await page.context().close();
 
     });
+
+    test('should receive metadata when you join a space', async ({ browser, context, browserName }, { project }) => {
+        const pages = context.pages();
+
+        await expect.poll(() => pages.length).toBe(0);
+
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
+
+        await evaluateScript(page, async () => {
+            await WA.player.teleport(1, 1);
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone", []);
+            window.mySpace.setMetadata(new Map([["hello", "world"]]));
+        });
+
+        // Bob joins the same space
+        const bob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "scripting_space_related_metadata"));
+        await evaluateScript(bob, async () => {
+            window.mySpace = await WA.spaces.joinSpace("some-test-space", "everyone",[]);
+            await new Promise(resolve => {
+                window.mySpace.metadataObservable.subscribe((metadata) => {
+                    console.log("Bob received metadata:", metadata);
+                    if(metadata.get("hello") === "world"){
+                        window.receivedMetadata = metadata;
+                        resolve(true);
+                    }
+                });
+            });
+        });
+
+        // Bob should have received the metadata
+        await expect.poll(() => evaluateScript(bob, async () => {
+            console.log("Checking metadata on Bob's page...");
+            console.log("Received metadata:", window.receivedMetadata);
+            return window.receivedMetadata?.get("hello");
+        })).toBe("world");
+
+        await bob.close();
+        await bob.context().close();
+        
+        await page.close();
+        await page.context().close();
+
+    });
+
 });

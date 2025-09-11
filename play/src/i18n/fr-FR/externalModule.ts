@@ -60,6 +60,17 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupScopeToSyncTask: "Synchroniser mes tâches",
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Google",
+        popupScopeToSyncMeet: "Créer des réunions en ligne",
+        googleMeetPopupWaiting: {
+            title: "Google Meet 🎉",
+            subtitle: "Création de votre espace Google… cela ne prendra qu’un instant 💪",
+            guestError: "Vous n’êtes pas connecté, vous ne pouvez donc pas créer de Google Meet 😭",
+            guestExplain:
+                "Veuillez vous connecter à la plateforme pour créer un Google Meet, ou demandez au propriétaire d’en créer un pour vous 🚀",
+            error: "Les paramètres de votre Google Workspace ne vous permettent pas de créer un Meet.",
+            errorExplain:
+                "Pas d’inquiétude, vous pouvez toujours rejoindre une réunion lorsque quelqu’un partage un lien 🙏",
+        },
     },
     calendar: {
         title: "Vos réunions aujourd’hui",

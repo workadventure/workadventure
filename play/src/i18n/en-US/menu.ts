@@ -70,7 +70,8 @@ const menu: BaseTranslation = {
         copied: "Copied",
         share: "Share",
         walkAutomaticallyToPosition: "Walk automatically to my position",
-        selectEntryPoint: "Select an entry point",
+        selectEntryPoint: "Use a different entry point",
+        selectEntryPointSelect: "Select the entry point through which users will arrive",
     },
     globalMessage: {
         text: "Text",
@@ -131,7 +132,7 @@ const menu: BaseTranslation = {
     sub: {
         profile: "Profile",
         settings: "Settings",
-        invite: "Invite",
+        invite: "Share",
         credit: "Credit",
         globalMessages: "Global Messages",
         contact: "Contact",

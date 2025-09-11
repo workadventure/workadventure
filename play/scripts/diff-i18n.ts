@@ -1,15 +1,11 @@
 import fs from "fs";
 import path from "path";
 
-// Usage: tsx scripts/diff-i18n.ts <target-locale> [source-locale]
-// Defaults: source = en-US; target is required
+// Usage:
+//  - Single comparison: tsx scripts/diff-i18n.ts <target-locale> [source-locale]
+//  - Summary mode (no args): tsx scripts/diff-i18n.ts
+// Defaults: source = en-US
 const args = process.argv.slice(2);
-if (!args[0]) {
-    console.error("Error: target locale is required.");
-    console.error("Usage: tsx ./scripts/diff-i18n.ts <target-locale> [source-locale]");
-    console.error("Example: npm run i18n:diff:locale -- fr-FR");
-    process.exit(1);
-}
 const targetLocale = args[0];
 const sourceLocale = args[1] || "en-US";
 
@@ -42,12 +38,99 @@ function deepKeys(obj: unknown, prefix = ""): string[] {
     return keys;
 }
 
+function listLocaleDirs(baseDir: string, exclude?: string): string[] {
+    if (!fs.existsSync(baseDir)) return [];
+    return fs
+        .readdirSync(baseDir)
+        .map((name) => path.join(baseDir, name))
+        .filter((p) => {
+            try {
+                return fs.statSync(p).isDirectory();
+            } catch {
+                return false;
+            }
+        })
+        .map((p) => path.basename(p))
+        .filter((name) => (exclude ? name !== exclude : true));
+}
+
+async function preloadSourceModules(dir: string) {
+    const files = listFiles(dir).filter((f) => f !== "index.ts");
+    const map = new Map<string, { keys: string[]; count: number }>();
+    for (const file of files) {
+        const srcPath = path.join(dir, file);
+        // eslint-disable-next-line no-await-in-loop
+        const mod = await loadModule(srcPath);
+        const keys = deepKeys(mod);
+        map.set(file, { keys, count: keys.length });
+    }
+    return map;
+}
+
+async function computeMissingCountsForLocale(
+    srcModules: Map<string, { keys: string[]; count: number }>,
+    srcDir: string,
+    localeDir: string
+) {
+    let missingKeys = 0;
+    let missingFiles = 0;
+    for (const [file, { keys: srcKeys, count }] of srcModules.entries()) {
+        const tgtPath = path.join(localeDir, file);
+        if (!fs.existsSync(tgtPath)) {
+            missingKeys += count;
+            missingFiles += 1;
+            continue;
+        }
+        // eslint-disable-next-line no-await-in-loop
+        const tgt = await loadModule(tgtPath);
+        const tgtKeys = deepKeys(tgt);
+        const missing = srcKeys.filter((k) => !tgtKeys.includes(k));
+        missingKeys += missing.length;
+    }
+    return { missingKeys, missingFiles };
+}
+
 async function run() {
     if (!fs.existsSync(srcDir)) {
         console.error(`Source locale folder not found: ${srcDir}`);
         process.exitCode = 1;
         return;
     }
+    // Summary mode when no target locale is provided
+    if (!targetLocale) {
+        const baseDir = path.resolve(__dirname, "../src/i18n");
+        const locales = listLocaleDirs(baseDir, sourceLocale);
+
+        if (locales.length === 0) {
+            console.log(`No locales found to compare against ${sourceLocale}.`);
+            return;
+        }
+
+        const srcModules = await preloadSourceModules(srcDir);
+
+        const results: Array<{ locale: string; missingKeys: number; missingFiles: number }> = [];
+        for (const locale of locales) {
+            const localeDir = path.join(baseDir, locale);
+            // eslint-disable-next-line no-await-in-loop
+            const { missingKeys, missingFiles } = await computeMissingCountsForLocale(srcModules, srcDir, localeDir);
+            results.push({ locale, missingKeys, missingFiles });
+        }
+
+        // Sort by missing keys desc
+        results.sort((a, b) => b.missingKeys - a.missingKeys);
+
+        console.log(`i18n diff summary (source: ${sourceLocale})`);
+        for (const r of results) {
+            console.log(
+                `${r.locale}: ${r.missingKeys} missing keys${r.missingFiles ? `, ${r.missingFiles} missing files` : ""}`
+            );
+        }
+        const totalMissing = results.reduce((acc, r) => acc + r.missingKeys, 0);
+        if (totalMissing === 0) console.log("All locales are fully translated. ✅");
+        console.log("\nTip: to view detailed missing keys for one locale, run: npm run i18n:diff -- <language-code>");
+        return;
+    }
+
     if (!fs.existsSync(tgtDir)) {
         console.error(`Target locale folder not found: ${tgtDir}`);
         process.exitCode = 1;
@@ -55,8 +138,6 @@ async function run() {
     }
 
     const srcFiles = listFiles(srcDir);
-    // const tgtFiles = listFiles(tgtDir); // not needed
-
     const report: string[] = [];
 
     for (const file of srcFiles) {

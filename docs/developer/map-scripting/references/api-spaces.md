@@ -12,20 +12,28 @@ This feature is experimental. The signature of the function might change in the 
 
 A **space** is a data structure in WorkAdventure that allows you to group users from the same world, even if they are on different maps. Spaces let you start an audio/video conversation between users without entering a bubble or meeting room.
 
-With the scripting API, you can join a space, be notified when users join or leave, and dynamically track information about group members.
+With the scripting API, you can join a space, be notified when users join or leave, dynamically track information about group members, and manage space metadata.
 
 ## Joining a space
 
 ```ts
-WA.spaces.joinSpace(spaceName: string, filterType: "everyone" | "streaming"): Space
+WA.spaces.joinSpace(spaceName: string, filterType: "everyone" | "streaming", propertiesToSync: ("availabilityStatus"|"cameraState"|"microphoneState"|"screenSharingState"|"megaphoneState")[]): Space
 ```
 
 Joins (or creates) a named space in the current world. All users joining the same `spaceName` in the same world will be grouped, even if they are on different maps.
 
 - **spaceName**: Name of the space to join (scoped to the world)
 - **filterType**:
-    - `"everyone"`: All users in the space can talk to each other
-    - `"streaming"`: Only some users (e.g., "streamers") are audible to others
+  - `"everyone"`: All users in the space can talk to each other
+  - `"streaming"`: Only some users (e.g., "streamers") are audible to others
+- **propertiesToSync**: List of user properties to synchronize across all users in the space. This can include:
+  - `"availabilityStatus"`
+  - `"cameraState"` // True if the camera is on, false otherwise
+  - `"microphoneState"` // True if the microphone is on, false otherwise
+  - `"screenSharingState"` // True if the user is sharing their screen, false otherwise
+  - `"megaphoneState"` // True if the user is currently streaming or not (only relevant if `filterType` is `"streaming"`)
+
+  These properties will be automatically kept in sync for all users in the space.
 
 Returns a `Space` object to interact with the space.
 
@@ -43,8 +51,10 @@ The object returned by `joinSpace` exposes the following properties and methods:
 
 - **userJoinedObservable**: [RxJS Observable](https://rxjs.dev/guide/observable#subscribing-to-observables) emitting a `SpaceUser` object whenever a new user joins the space.
 - **userLeftObservable**: RxJS Observable emitting a `SpaceUser` object whenever a user leaves the space.
+- **metadataObservable**: RxJS Observable emitting a `Map<string, unknown>` object whenever the space metadata changes.
 
 Example:
+
 ```ts
 space.userJoinedObservable.subscribe((user) => {
     console.log("A new user joined the space:", user);
@@ -52,6 +62,10 @@ space.userJoinedObservable.subscribe((user) => {
 
 space.userLeftObservable.subscribe((user) => {
     console.log("A user left the space:", user);
+});
+
+space.metadataObservable.subscribe((metadata) => {
+    console.log("Space metadata updated:", metadata);
 });
 ```
 
@@ -86,6 +100,20 @@ As soon as the space is joined, you will receive the list of all users currently
   space.stopStreaming();
   ```
 
+- **setMetadata(metadata: Map<string, unknown>)**: Sets the space metadata. This metadata will be synchronized across all users in the space.
+
+  ```ts
+  const metadata = new Map();
+  metadata.set("roomType", "conference");
+  metadata.set("maxParticipants", 50);
+  space.setMetadata(metadata);
+  ```
+
+### Metadata Synchronization
+
+- Metadata changes are automatically synchronized across all users in the space
+- When a user joins a space, they will receive the current metadata through the `metadataObservable`
+- All users will be notified when metadata is updated by any user in the space
 
 ## The SpaceUser object
 
@@ -115,6 +143,7 @@ About the reactive properties:
 Use **reactiveUser** to get notified when any property of a user changes.
 
 Example:
+
 ```ts
 space.userJoinedObservable.subscribe((user) => {
     user.reactiveUser.availabilityStatus.subscribe((newStatus) => {
@@ -128,6 +157,7 @@ It is a good practice to unsubscribe from observables when they are no longer ne
 :::
 
 Example of unsubscribing:
+
 ```ts
 const subscription = space.userJoinedObservable.subscribe((user) => {
     console.log("A new user joined the space:", user);
@@ -141,3 +171,4 @@ subscription.unsubscribe();
 
 - A space is limited to the current world (users from another world cannot join the same space).
 - The first user to join a space defines the `filterType` for all subsequent users. All users joining the space will need to pass the same `filterType` to connect to the space.
+- Space metadata is automatically synchronized across all users in the space. When a user joins, they will receive the current metadata state.

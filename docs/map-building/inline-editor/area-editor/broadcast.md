@@ -39,11 +39,11 @@ Please note that [access to the map editor](../index.md) is required to perform 
 
 ![](../../images/editor/megaphone_listener_2.png)
 
-9. Select the name, of the speaker zone that you already created, in the "speaker zone name" selector.
-10. (Optional) You can also create a chat channel for this zone. This forum will be used to chat with the people in the listener zone.
+9. Select the name of the speaker zone that you already created in the "speaker zone name" selector.
+10. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the listener zone.
 
 :::note
-If you enable the "associate a dedicated chat channel" in both area, the both chat will be merged can be used by users that are in the speaker zone AND in the listener zone.
+If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the speaker zone and in the listener zone.
 :::
 
 You're done ! Now, anyone in the listener zone will be able to hear/see the speakers that are in the speaker zone.

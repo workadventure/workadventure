@@ -8,6 +8,7 @@ import { warningMessageStore } from "../../Stores/ErrorStore";
 import { userIsConnected } from "../../Stores/MenuStore";
 import PopUpConnect from "../../Components/PopUp/PopUpConnect.svelte";
 import LL from "../../../i18n/i18n-svelte";
+import { GRPC_MAX_MESSAGE_SIZE } from "../../Enum/EnvironmentVariable";
 
 export class FileListener {
     private canvas: HTMLCanvasElement;
@@ -16,6 +17,7 @@ export class FileListener {
     private boundDragLeaveHandler: (event: DragEvent) => void;
     private boundDragEnterHandler: (event: DragEvent) => void;
     private boundDropHandler: (event: DragEvent) => void;
+    private BYTES_TO_MB = 1024 * 1024;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -81,6 +83,20 @@ export class FileListener {
                 });
             } else {
                 const file = filesFromDropEvent.item(0);
+
+                if (file && file.size && file.size > GRPC_MAX_MESSAGE_SIZE) {
+                    warningMessageStore.addWarningMessage(
+                        get(LL).mapEditor.entityEditor.uploadEntity.errorOnFileSize({
+                            size: GRPC_MAX_MESSAGE_SIZE / this.BYTES_TO_MB,
+                        }),
+                        {
+                            closable: true,
+                        }
+                    );
+                    draggingFile.set(false);
+                    return;
+                }
+
                 if (this.isASupportedFormat(file?.type ?? "")) {
                     if (file) {
                         popupStore.addPopup(

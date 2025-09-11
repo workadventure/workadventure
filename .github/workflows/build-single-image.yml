@@ -30,6 +30,9 @@ on:
       push-to-registry:
         required: true
         type: boolean
+      final_build:
+        required: true
+        type: boolean
 
 jobs:
   build-image:
@@ -62,6 +65,13 @@ jobs:
         with:
           images: ${{ inputs.image-name }}
 
+      - name: Replace version string
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            sed -i "s/dev/${GITHUB_REF_NAME}/" back/src/Services/version.ts
+          fi
+
       - name: Get previous commit SHA
         id: prev-commit
         run: echo "PREV_SHA=$(git rev-parse HEAD^1)" >> $GITHUB_ENV
@@ -88,13 +98,13 @@ jobs:
             "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || null }}"
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
+          # Some images (the play image) can be built in two modes: normal mode and fast mode (without Legacy browser support)
+          # We use the FAST_BUILD build-arg to control this.
+          # We use fast build when the image is just tested in CI and not pushed to the registry.
           build-args: |
-            # Some images (the play image) can be built in two modes: normal mode and fast mode (without Legacy browser support)
-            # We use the FAST_BUILD build-arg to control this.
-            # We use fast build when the image is just tested in CI and not pushed to the registry.
-            FAST_BUILD=${{ inputs.push-to-registry != true && '' || 'true' }}
+            FAST_BUILD=${{ inputs.final_build != true && 'true' || '' }}
           outputs: ${{ inputs.push-to-registry != true && format('type=docker,dest=/tmp/{0}.tar', inputs.short_name) || '' }}
 
       - name: Zip image

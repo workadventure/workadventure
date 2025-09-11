@@ -122,6 +122,12 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 debug(
                     `${this.name} : user updated => removed ${user.spaceUserId} updateMask : ${updateMask.join(", ")}`
                 );
+
+                this.communicationManager.handleUserDeleted(user, false).catch((e) => {
+                    console.error("Error while handling user deleted", e);
+                    Sentry.captureException(e);
+                });
+
                 this.notifyWatchers({
                     message: {
                         $case: "removeSpaceUserMessage",
@@ -504,7 +510,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 }
                 case "removeSpaceUserQuery": {
                     await this.removeUser(watcher, spaceQueryMessage.query.removeSpaceUserQuery.spaceUserId);
-                    this._clientEventsEmitter.emitSpaceLeave(this.name);
                     return {
                         answer: {
                             $case: "removeSpaceUserAnswer",

@@ -31,16 +31,14 @@ async function playAudioStream(page: Page, frequency: number) {
 }
 
 async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
-  // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+  // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in LiveKit)
   await evaluateScript(page, async ({ volume }) => {
     const sampleRate = 24000;
 
     return new Promise<void>((resolve) => {
       const subscription = WA.player.proximityMeeting.listenToAudioStream(sampleRate).subscribe((data: Float32Array) => {
         // At some point, the volume of the sound should be high enough to be noticed in the sample
-        console.log("Max volume in sample:", Math.max(...data.map(Math.abs)));
         if (data.some((sample) => Math.abs(sample) > volume)) {
-          console.log("Audio stream received with sufficient volume");
           resolve();
           subscription.unsubscribe();
         }
@@ -49,12 +47,23 @@ async function hasAudioStream(page: Page, volume = 0.7): Promise<void> {
   }, { volume });
 }
 
+async function waitForJoinProximityChat(page: Page): Promise<void> {
+  await evaluateScript(page, async () => {
+    return new Promise<void>((resolve) => {
+      const joinSubscription = WA.player.proximityMeeting.onJoin().subscribe(() => {
+        resolve();
+        joinSubscription.unsubscribe();
+      });
+    });
+  });
+}
+
 test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.
     test.skip(browserName !== 'chromium' || isMobile(page), 'Run only on Chromium and skip on mobile');
   });
-  test("can play and listen to streams", async ({
+  test("can play and listen to streams @scripting", async ({
     browser,
   }, { project }) => {
     // This test runs only on Chrome
@@ -69,9 +78,14 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await Menu.turnOffMicrophone(alice);
 
     // Move alice to the same position as bob
+    const aliceProximityChatPromise = waitForJoinProximityChat(alice);
+    const bobProximityChatPromise = waitForJoinProximityChat(page);
     await Map.teleportToPosition(alice, 32, 32);
+    await aliceProximityChatPromise;
+    await bobProximityChatPromise;
 
-    await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+    //await expect(alice.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
+    //await expect(page.getByTestId('screenShareButton')).toBeVisible({ timeout: 120_000 }); // Wait for the audio stream to be ready
 
     await playAudioStream(page, 440);
 
@@ -89,12 +103,21 @@ test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
     await Map.teleportToPosition(alice3, 32, 32);
     const eve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "scripting_audio_stream"));
     await Menu.turnOffMicrophone(eve);
+    const proximityChatPromise = waitForJoinProximityChat(eve);
     await Map.teleportToPosition(eve, 32, 32);
+    await proximityChatPromise;
 
     // eve entered last. She should receive sound only through Livekit.
     // Let's wait for the audio stream to be ready (here, we test that the audio stream is directly started in Livekiit)
+    await evaluateScript(eve, async () => {
+      console.log("eve is starting to listen to the audio stream");
+    });
     await hasAudioStream(eve);
 
+
+    await evaluateScript(alice3, async () => {
+      console.log("Alice3 is starting to listen to the audio stream");
+    });
     // Let's also check that the users that were in WebRTC before the switch are still receiving the sound
     await hasAudioStream(alice3);
 

@@ -1,6 +1,5 @@
 import { Subscription } from "rxjs";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
-import { gameManager } from "../../Phaser/Game/GameManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
 import { LivekitState } from "./LivekitState";
@@ -14,8 +13,7 @@ import { CommunicationMessageType } from "./CommunicationMessageType";
 
 export const defaultPeerFactory: PeerFactoryInterface = {
     create: (_space: SpaceInterface, _streamableSubjects: StreamableSubjects) => {
-        const playerRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository();
-        const peer = new SimplePeer(_space, playerRepository, _streamableSubjects);
+        const peer = new SimplePeer(_space, _streamableSubjects);
         return peer;
     },
 };

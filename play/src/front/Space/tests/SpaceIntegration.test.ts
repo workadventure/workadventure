@@ -25,6 +25,7 @@ import { SpaceUserExtended } from "../SpaceInterface";
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
+    public closed = false;
     public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
@@ -125,17 +126,23 @@ vi.mock("../../Stores/PeerStore", () => ({
         getPeer: vi.fn(),
     },
     videoStreamStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     videoStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },
     screenShareStreamElementsStore: {
-        subscribe: vi.fn().mockImplementation(() => {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
             return () => {};
         }),
     },

@@ -9,7 +9,7 @@ const isBbbData = z.object({
         description: 'The full URL to your BigBlueButton server. Do not forget the trailing "/bigbluebutton/".',
         example: "https://test-install.blindsidenetworks.com/bigbluebutton/",
     }),
-    secret: extendApi(z.string(), {
+    secret: extendApi(z.string().nullable().optional(), {
         description:
             'The BigBlueButton secret. From your BBB instance, you can get the correct values using the command: "bbb-conf --secret"',
     }),

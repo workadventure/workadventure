@@ -59,6 +59,8 @@ class App {
                     "Accept",
                     "Pragma",
                     "Cache-Control",
+                    "baggage",
+                    "sentry-trace",
                 ],
                 credentials: true,
             })

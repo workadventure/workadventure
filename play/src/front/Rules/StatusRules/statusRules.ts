@@ -42,6 +42,7 @@ const invalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = ne
     [AvailabilityStatus.DO_NOT_DISTURB, [...basicStatus]],
     [AvailabilityStatus.BACK_IN_A_MOMENT, [...basicStatus]],
     [AvailabilityStatus.UNRECOGNIZED, []],
+    [AvailabilityStatus.LIVEKIT, []],
 ]);
 
 export const StatusRules = {

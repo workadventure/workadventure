@@ -30,7 +30,7 @@ export class WebRTCCredentialsService {
     }
 
     private generatePassword(username: string, secret: string): string {
-        const hmac = crypto.createHmac("sha256", secret);
+        const hmac = crypto.createHmac("sha1", secret);
         hmac.update(username);
         const password = hmac.digest("base64");
         return password;

@@ -142,7 +142,6 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
-        console.log("👌👌👌👌👌👌👌 Space handleWatch addUserToNotify", spaceUser, this.name);
         this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 

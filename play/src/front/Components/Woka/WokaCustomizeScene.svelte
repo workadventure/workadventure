@@ -14,6 +14,8 @@
     import ShuffleIcon from "../Icons/ShuffleIcon.svelte";
     import WokaPreview from "./WokaPreview.svelte";
     import type { WokaBodyPart, WokaData, WokaTexture } from "./WokaTypes";
+    import { getItemsPerRow } from "./ItemsPerRow";
+    import WokaImage from "./WokaImage.svelte";
 
     export let back: () => void;
     export let saveAndContinue: (texturesId: string[]) => void;
@@ -195,6 +197,8 @@
         }, 100); // Delay to ensure the DOM is updated
     }
 
+    let enterPressed = false;
+
     // Function to handle keyboard navigation
     function useKeyBoardNavigation(event: KeyboardEvent) {
         if (!wokaData) return;
@@ -211,10 +215,16 @@
             }
             const currentIndex = textures.findIndex((texture) => texture.id === selectedTextures[selectedBodyPart]);
             let newIndex = currentIndex;
-            if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-                newIndex = (currentIndex - 1 + textures.length) % textures.length; // Wrap around
-            } else if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-                newIndex = (currentIndex + 1) % textures.length; // Wrap around
+            if (event.key === "ArrowLeft") {
+                newIndex = Math.max(currentIndex - 1, 0);
+            } else if (event.key === "ArrowRight") {
+                newIndex = Math.min(currentIndex + 1, textures.length - 1);
+            } else if (event.key === "ArrowUp") {
+                const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
+                newIndex = Math.max(currentIndex - itemsPerRow, 0);
+            } else if (event.key === "ArrowDown") {
+                const itemsPerRow = getItemsPerRow(document.getElementById(`woka-line-0`));
+                newIndex = Math.min(currentIndex + itemsPerRow, textures.length - 1);
             }
             if (newIndex !== currentIndex) {
                 selectTexture(selectedBodyPart, textures[newIndex].id);
@@ -225,8 +235,27 @@
                 }
             }
         } else if (event.key === "Enter") {
-            handlerSaveAndContinue();
+            enterPressed = true;
         }
+    }
+
+    function useKeyBoardNavigationUp(event: KeyboardEvent) {
+        if (!wokaData) return;
+        if (event.key === "Enter" && enterPressed) {
+            enterPressed = false;
+            if (selectedBodyPart === "accessory") {
+                // If it's the last body part, save and continue
+                handlerSaveAndContinue();
+            } else {
+                selectNextBodyPart();
+            }
+        }
+    }
+
+    function selectNextBodyPart() {
+        const currentIndex = bodyPartOrder.indexOf(selectedBodyPart);
+        const nextIndex = (currentIndex + 1) % bodyPartOrder.length;
+        selectedBodyPart = bodyPartOrder[nextIndex];
     }
 
     onMount(async () => {
@@ -234,11 +263,13 @@
         selectedBodyPart = bodyPartOrder[0];
         // Document event listener for keyboard navigation
         document.addEventListener("keydown", useKeyBoardNavigation);
+        document.addEventListener("keyup", useKeyBoardNavigationUp);
     });
 
     onDestroy(() => {
         // Remove keyboard navigation listener
         document.removeEventListener("keydown", useKeyBoardNavigation);
+        document.removeEventListener("keyup", useKeyBoardNavigationUp);
     });
 </script>
 
@@ -335,7 +366,10 @@
                         >
                             {#each wokaData?.[selectedBodyPart]?.collections || [] as collection, collectionIndex (collection.name)}
                                 <p class="text-sm text-gray-500 mb-1 mt-4 p-0">{collection.name}</p>
-                                <div class="w-full flex flex-row flex-wrap items-start justify-start gap-3">
+                                <div
+                                    class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
+                                    id={`woka-line-${collectionIndex}`}
+                                >
                                     {#each getAvailableTextures(collectionIndex, selectedBodyPart) as texture (texture.id)}
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedTextures[
@@ -346,34 +380,13 @@
                                             on:click={() => selectTexture(selectedBodyPart, texture.id)}
                                             id={`texture-${selectedBodyPart}-${texture.id}`}
                                         >
-                                            <div class="p-2 bg-white/10 rounded flex items-center justify-center">
-                                                {#if texture.url.includes("empty.png")}
-                                                    <div class="w-[64px] h-[64px] flex items-center justify-center">
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            width="32"
-                                                            height="32"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            stroke-width="2"
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            class="icon icon-tabler icons-tabler-outline icon-tabler-forbid"
-                                                            ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                                                                d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"
-                                                            /><path d="M9 9l6 6" /></svg
-                                                        >
-                                                    </div>
-                                                {:else}
-                                                    <div
-                                                        class="w-[64px] h-[64px] bg-no-repeat"
-                                                        style="background-image: url('{getTextureUrl(
-                                                            texture.url
-                                                        )}'); background-size: calc(3 * 64px) calc(4 * 64px); background-position: 0px calc(-1 * {assetsDirection} * 64px); image-rendering: pixelated;"
-                                                    />
-                                                {/if}
-                                            </div>
+                                            <WokaImage
+                                                selectedTextures={{ [selectedBodyPart]: texture.id }}
+                                                {wokaData}
+                                                {getTextureUrl}
+                                                classList="p-2"
+                                                direction={assetsDirection}
+                                            />
                                         </button>
                                     {/each}
                                 </div>

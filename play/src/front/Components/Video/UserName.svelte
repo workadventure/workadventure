@@ -35,12 +35,22 @@
         </div>
     </div>
 {:else}
-    <div class="{position} z-30 responsive-dimension max-w-full">
-        <div class="flex justify-between rounded max-w-full {isPlayingAudio ? 'bg-secondary/90' : 'bg-contrast/90'}">
-            <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
-                <Woka src={$picture ?? ""} customWidth="42px" {grayscale} />
-            </div>
-            <div class="relative px-2 py-1 text-white text-sm pl-12 bold rounded truncate select-none shrink">
+    <div class="{position} z-30 responsive-dimension">
+        <div
+            class="flex justify-between rounded {isPlayingAudio
+                ? '@[17.5rem]/videomediabox:bg-secondary/90'
+                : '@[17.5rem]/videomediabox:bg-contrast/90'}"
+        >
+            <div
+                class="relative @[17.5rem]/videomediabox:backdrop-blur px-2 py-1 text-white text-sm text-shadow-md @[17.5rem]/videomediabox:text-shadow-none {$picture
+                    ? 'pl-12'
+                    : ''} bold rounded text-nowrap select-none"
+            >
+                {#if $picture}
+                    <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
+                        <Woka src={$picture} customWidth="42px" {grayscale} />
+                    </div>
+                {/if}
                 {name}
 
                 <!--{#if $requestedScreenSharingState === true}-->

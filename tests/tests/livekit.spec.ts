@@ -22,19 +22,19 @@ test.describe('Meeting actions test', () => {
     test('Should display 4 cameras on screen', async ({ browser }) => {
         
         // Go to the empty map
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
 
         // Move user Alice to the meeting area
         await Map.teleportToPosition(page, 160, 160);
         
         // Create axpnd position 3 additional users
-        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userBob, 160, 160);
 
-        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userEve, 160, 160);
 
-        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userMallory, 160, 160);
 
         // Wait for the cameras container to be visible
@@ -65,22 +65,22 @@ test.describe('Meeting actions test', () => {
 
         
         // Go to the empty map
-        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
 
         // Move user Alice to the meeting area
         await Map.teleportToPosition(page, 160, 160);
         
         // Create and position 4 additional users
-        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userBob, 160, 160);
 
-        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userEve, 160, 160);
 
-        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userMallory, 160, 160);
 
-        await using userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userJohn, 160, 160);
 
         // Wait for the cameras container to be visible

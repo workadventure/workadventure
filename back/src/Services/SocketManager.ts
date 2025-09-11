@@ -592,6 +592,7 @@ export class SocketManager {
      * and the Coturn server.
      * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
      */
+    // TODO: this function is now duplicated in WebRTCCredentialsService, we should probably remove this.
     private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
         const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
         const username = [unixTimeStamp, name].join(":");
@@ -799,6 +800,10 @@ export class SocketManager {
                 // If the bbbMeetingAdminTag is not set, everyone is a moderator.
                 isAdmin = true;
             }
+        }
+
+        if (bbbSettings === undefined || !bbbSettings.secret) {
+            throw new Error("You must set the SECRET_BBB_KEY key to the secret to generate JWT tokens for BBB.");
         }
 
         const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
@@ -1303,7 +1308,6 @@ export class SocketManager {
             throw new Error("Cant unwatch space, space not found");
         }
         this.removeSpaceWatcher(pusher, space);
-        clientEventsEmitter.emitSpaceLeave(space.name);
     }
 
     handleUnwatchAllSpaces(pusher: SpacesWatcher) {

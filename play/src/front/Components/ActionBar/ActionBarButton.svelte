@@ -23,6 +23,7 @@
     export let media = "";
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
+    export let boldLabel = false;
 
     const SLOTS = $$props.$$slots;
 
@@ -102,7 +103,7 @@
             {#if !hideIconInActionBar}
                 <slot />
             {/if}
-            {#if label}<span>{label}</span>{/if}
+            {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
         {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || SLOTS.tooltip)}
             <HelpTooltip

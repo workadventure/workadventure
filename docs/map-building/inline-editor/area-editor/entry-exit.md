@@ -36,7 +36,7 @@ To do that, you must follow those instructions :
 1. Open the map editor.
 2. Access the "area map editor" section.
 3. Create an area by clicking on the map directly or by selecting a zone.
-4. Click on the "exit" icon.*
+4. Click on the "exit" icon.
 
 ![](../../images/editor/exit_area_1.png)
 

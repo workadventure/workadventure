@@ -240,6 +240,7 @@ const mapEditor: BaseTranslation = {
                 chooseFile: "Choose file",
                 errorOnFileFormat: "File format not supported",
                 errorOnFileNumber: "Multiple file drop is not supported",
+                errorOnFileSize: "File is too large, max size is {size} MB",
             },
         },
         livekitProperties: {
@@ -308,6 +309,7 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Choose file",
             errorOnFileFormat: "File format not supported",
             errorOnFileNumber: "Multiple file drop is not supported",
+            errorOnFileSize: "File is too large, max size is {size} MB",
         },
         images: "Image{{s}}",
         noImage: "No image",
