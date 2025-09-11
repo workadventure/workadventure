@@ -45,9 +45,19 @@
             {/if}
             <div class="h-72 overflow-hidden opacity-80 saturate-50">
                 {#if isFirefox}
-                    <img src={$LL.camera.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
+                    <img
+                        draggable="false"
+                        src={$LL.camera.help.screen.firefox()}
+                        alt="help camera setup"
+                        class="w-full m-auto"
+                    />
                 {:else if isChrome && !isAndroid}
-                    <img src={$LL.camera.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
+                    <img
+                        draggable="false"
+                        src={$LL.camera.help.screen.chrome()}
+                        alt="help camera setup"
+                        class="w-full m-auto"
+                    />
                 {/if}
             </div>
         {/if}

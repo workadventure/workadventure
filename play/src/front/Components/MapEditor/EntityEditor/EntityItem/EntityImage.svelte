@@ -43,6 +43,7 @@
 
 <img
     loading="lazy"
+    draggable="false"
     class={`${classNames} ${imageRetry || imageError ? "invisible flex-[0_1_0]" : "visible"}`}
     style="image-rendering: pixelated"
     src={imageSource}

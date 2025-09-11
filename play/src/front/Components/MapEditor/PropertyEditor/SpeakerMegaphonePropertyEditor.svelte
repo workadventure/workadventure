@@ -34,6 +34,7 @@
             class="w-6 me-2"
             src="resources/icons/icon_speaker.png"
             alt={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
+            draggable="false"
         />
         {$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
     </span>

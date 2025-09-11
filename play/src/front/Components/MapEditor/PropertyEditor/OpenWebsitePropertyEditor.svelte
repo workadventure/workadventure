@@ -646,16 +646,27 @@
 >
     <span slot="header" class="flex justify-center items-center">
         {#if property.application === "youtube"}
-            <img class="w-6 me-1" src={youtubeSvg} alt={$LL.mapEditor.properties.youtubeProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={youtubeSvg}
+                alt={$LL.mapEditor.properties.youtubeProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.youtubeProperties.label()}
         {:else if property.application === "klaxoon"}
-            <img class="w-6 me-1" src={klaxoonSvg} alt={$LL.mapEditor.properties.klaxoonProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={klaxoonSvg}
+                alt={$LL.mapEditor.properties.klaxoonProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.klaxoonProperties.label()}
         {:else if property.application === "googleDocs"}
             <img
                 class="w-6 me-1"
                 src={googleDocsSvg}
                 alt={$LL.mapEditor.properties.googleDocsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDocsProperties.label()}
         {:else if property.application === "googleSheets"}
@@ -663,6 +674,7 @@
                 class="w-6 me-1"
                 src={googleSheetsSvg}
                 alt={$LL.mapEditor.properties.googleSheetsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSheetsProperties.label()}
         {:else if property.application === "googleSlides"}
@@ -670,6 +682,7 @@
                 class="w-6 me-1"
                 src={googleSlidesSvg}
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else if property.application === "googleDrive"}
@@ -677,10 +690,16 @@
                 class="w-6 me-1"
                 src={googleDriveSvg}
                 alt={$LL.mapEditor.properties.googleDriveProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDriveProperties.label()}
         {:else if property.application === "eraser"}
-            <img class="w-6 me-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={eraserSvg}
+                alt={$LL.mapEditor.properties.eraserProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.eraserProperties.label()}
         {:else if property.application === "excalidraw"}
             <img
@@ -690,20 +709,30 @@
             />
             {$LL.mapEditor.properties.excalidrawProperties.label()}
         {:else if property.application === "cards"}
-            <img class="w-6 me-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={cardPng}
+                alt={$LL.mapEditor.properties.cardsProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.cardsProperties.label()}
         {:else if property.application === "website"}
-            <img class="w-6 me-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={icon}
+                alt={$LL.mapEditor.properties.linkProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.linkProperties.label()}
         {:else}
-            <img class="w-6 me-1" src={property.icon} alt={property.label} />
+            <img class="w-6 me-1" src={property.icon} alt={property.label} draggable="false" />
             {property.label}
         {/if}
     </span>
     <span slot="content">
         {#if property.poster}
             <div class="text-center">
-                <img class="w-20 me-1" src={property.poster} alt="" />
+                <img class="w-20 me-1" src={property.poster} alt="" draggable="false" />
             </div>
         {/if}
 
@@ -750,6 +779,7 @@
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress
@@ -766,6 +796,7 @@
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${property.application}`}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress

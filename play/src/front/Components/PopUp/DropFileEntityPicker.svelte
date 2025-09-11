@@ -39,7 +39,7 @@
 
 <div class="flex flex-col gap-2 my-2">
     <div class="flex justify-center items-center my-2">
-        <img class="w-6 mr-1" src={EntityToolImg} alt="Start icon" />
+        <img class="w-6 mr-1" src={EntityToolImg} alt="Start icon" draggable="false" />
         <span class="font-semibold">{$LL.mapEditor.entityEditor.header.choose()}</span>
     </div>
 
