@@ -191,9 +191,7 @@
             <button
                 data-testid="createRoomButton"
                 class="disabled:text-gray-400 btn btn-secondary disabled:bg-gray-500 bg-secondary flex-1 justify-center m-1"
-                disabled={createRoomOptions.name === undefined ||
-                    createRoomOptions.name?.trim().length === 0 ||
-                    (createRoomOptions.visibility === "private" && (createRoomOptions.invite?.length ?? 0) < 1)}
+                disabled={createRoomOptions.name === undefined || createRoomOptions.name?.trim().length === 0}
                 on:click={() => createNewRoom(createRoomOptions)}
                 >{$LL.chat.createRoom.buttons.create()}
             </button>

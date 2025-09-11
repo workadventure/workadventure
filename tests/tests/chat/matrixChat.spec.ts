@@ -619,7 +619,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
     await page.getByTestId("createRoomName").fill(room);
     // await page.getByTestId("createRoomVisibility").selectOption("restricted");
     await page.getByTestId("createRoomButton").click();
-    await page.getByText(privateFolder1).click();
+    await page.getByTestId(`toggleFolder${privateFolder1}`).click();
+
     await expect(page.getByText(room)).toBeAttached();
     await page.close();
     await page.context().close();

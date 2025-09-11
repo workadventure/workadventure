@@ -70,6 +70,7 @@
 
         <button
             class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
+            data-testid={`toggleFolder${$name}`}
             on:click={toggleFolder}
         >
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
