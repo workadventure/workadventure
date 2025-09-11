@@ -74,7 +74,7 @@ import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
 import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
-import PopUpFile from "../../../Components/PopUp/PopUpFile.svelte";
+import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 
 export class AreasPropertiesListener {
@@ -483,12 +483,12 @@ export class AreasPropertiesListener {
                  layoutManagerActionStore.addAction({
                  uuid: actionId,
                  type: "message",
-                        message: message,
-                        click: () => {
-                            popupStore.removePopup(actionId);
-                            scriptUtils.openTab(property.link as string);
-                        },
-                        userInputManager: this.scene.userInputManager,
+                 message: message,
+                 click: () => {
+                 popupStore.removePopup(actionId);
+                 scriptUtils.openTab(property.link as string);
+                 },
+                 userInputManager: this.scene.userInputManager,
                  });
                  */
             } else {
@@ -544,14 +544,14 @@ export class AreasPropertiesListener {
              layoutManagerActionStore.addAction({
              uuid: actionId,
              type: "message",
-                    message: message,
-                    click: () => {
-                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                actionId
-            );*/
+             message: message,
+             click: () => {
+             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+             },
+             userInputManager: this.scene.userInputManager,
+             },
+             actionId
+             );*/
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             let url = property.link ?? "";
             try {
@@ -692,14 +692,14 @@ export class AreasPropertiesListener {
              layoutManagerActionStore.addAction({
              uuid: "jitsi",
              type: "message",
-                    message: message,
-                    callback: () => {
-                        openJitsiRoomFunction().catch((e) => console.error(e));
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                "jitsi"
-            );*/
+             message: message,
+             callback: () => {
+             openJitsiRoomFunction().catch((e) => console.error(e));
+             },
+             userInputManager: this.scene.userInputManager,
+             },
+             "jitsi"
+             );*/
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }
@@ -881,7 +881,7 @@ export class AreasPropertiesListener {
          : undefined;
 
          if (action) {
-            popupStore.removePopup(actionTriggerUuid);
+         popupStore.removePopup(actionTriggerUuid);
          }
          */
 
@@ -1219,7 +1219,7 @@ export class AreasPropertiesListener {
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
             popupStore.addPopup(
-                PopUpFile,
+                FilePopup,
                 {
                     message: message,
                     click: () => {
@@ -1312,7 +1312,7 @@ export class AreasPropertiesListener {
          : undefined;
 
          if (action) {
-            popupStore.removePopup(actionTriggerUuid);
+         popupStore.removePopup(actionTriggerUuid);
          }
          */
 
