@@ -48,7 +48,6 @@
   },
   "devDependencies": {
     "@fontsource/roboto": "^4.5.8",
-    "@home-based-studio/phaser3-utils": "^0.4.7",
     "@iconify-json/tabler": "^1.1.113",
     "@rollup/plugin-inject": "^5.0.5",
     "@sentry/vite-plugin": "^0.5.1",
