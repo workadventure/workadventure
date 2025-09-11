@@ -7,7 +7,6 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import { selectDefaultSpeaker } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
@@ -193,7 +192,6 @@
                 {detachVideo}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
-                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={peer.flipX}

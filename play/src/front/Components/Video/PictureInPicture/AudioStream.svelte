@@ -13,11 +13,11 @@
         selectOutputAudioDeviceError: void;
     }>();
 
-    export let volume: number | undefined = undefined;
+    export let volume: number;
     let audioElement: HTMLAudioElement;
 
     $: {
-        if (volume !== undefined && audioElement) {
+        if (audioElement) {
             audioElement.volume = volume;
         }
     }
@@ -27,7 +27,7 @@
 
     $: {
         if (outputDeviceId && audioElement) {
-            setAudioOutput(outputDeviceId);
+            setAudioOutput(outputDeviceId, audioElement);
         }
     }
 
@@ -38,7 +38,7 @@
     let destroyed = false;
 
     //sets the ID of the audio device to use for output
-    function setAudioOutput(deviceId: string) {
+    function setAudioOutput(deviceId: string, audioElement: HTMLAudioElement) {
         if (destroyed) {
             // In case this function is called in a promise that resolves after the component is destroyed,
             // let's ignore the call.
@@ -67,7 +67,7 @@
             });
 
             try {
-                const setSinkIdRacePromise = Promise.race([timeOutPromise, audioElement?.setSinkId?.(deviceId)]);
+                const setSinkIdRacePromise = Promise.race([timeOutPromise, audioElement.setSinkId?.(deviceId)]);
 
                 let result = await setSinkIdRacePromise;
                 if (result === "timeout") {
@@ -77,7 +77,9 @@
                     dispatch("selectOutputAudioDeviceError");
                     return;
                 } else {
-                    debug("Audio output device set to ", deviceId);
+                    // eslint-disable-next-line require-atomic-updates
+                    audioElement.volume = volume;
+                    debug("Audio output device set to ", deviceId, "with volume", volume);
                     // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
                     /*if (videoElement && $streamStore) {
                         videoElement.srcObject = $streamStore;
@@ -97,6 +99,7 @@
 
     onMount(() => {
         attach(audioElement);
+        audioElement.volume = volume;
     });
 
     onDestroy(() => {
