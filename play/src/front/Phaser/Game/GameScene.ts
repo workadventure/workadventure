@@ -1339,11 +1339,22 @@ export class GameScene extends DirtyScene {
         if (!camera) {
             return;
         }
+
+        // We detect NaN values here for obscure reasons (Phaser bug)
+        const left = Math.max(0, camera.scrollX - margin);
+        const top = Math.max(0, camera.scrollY - margin);
+        const right = camera.scrollX + camera.width + margin;
+        const bottom = camera.scrollY + camera.height + margin;
+        if (Number.isNaN(left) || Number.isNaN(top) || Number.isNaN(right) || Number.isNaN(bottom)) {
+            console.error("NaN detected in viewport calculation", { left, top, right, bottom, camera });
+            return;
+        }
+
         this.connection?.setViewport({
-            left: Math.max(0, camera.scrollX - margin),
-            top: Math.max(0, camera.scrollY - margin),
-            right: camera.scrollX + camera.width + margin,
-            bottom: camera.scrollY + camera.height + margin,
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom,
         });
     }
 
@@ -1663,7 +1674,6 @@ export class GameScene extends DirtyScene {
                     .catch((e) => {
                         const errorMessage = "Failed to get chatConnection from gameManager : " + e;
                         console.error(errorMessage);
-                        Sentry.captureMessage(e);
                     });
 
                 this.initExtensionModule();

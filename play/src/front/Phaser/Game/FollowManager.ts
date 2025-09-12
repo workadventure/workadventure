@@ -1,6 +1,5 @@
 import { Subscription } from "rxjs";
 import { get } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
 import { availabilityStatusToJSON } from "@workadventure/messages";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -48,7 +47,6 @@ export class FollowManager {
                         "Received followConfirmationMessage for unknown player",
                         followConfirmationMessage.follower
                     );
-                    Sentry.captureMessage("Received followConfirmationMessage for unknown player");
                 }
             })
         );
@@ -72,7 +70,6 @@ export class FollowManager {
                         });
                     } else {
                         console.warn("Received followAbortMessage for unknown player", followAbortMessage.follower);
-                        Sentry.captureMessage("Received followAbortMessage for unknown player");
                     }
                 }
             })

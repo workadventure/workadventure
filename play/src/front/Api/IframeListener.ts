@@ -742,11 +742,11 @@ class IframeListener {
     unregisterScript(scriptUrl: string): void {
         const iFrameId = IframeListener.getIFrameId(scriptUrl);
         const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
-        if (!iframe) {
-            throw new Error('Unknown iframe for script "' + scriptUrl + '"');
+        // Just in case, we check that the iframe is registered before unregistering it.
+        if (iframe) {
+            this.unregisterIframe(iframe);
+            iframe.remove();
         }
-        this.unregisterIframe(iframe);
-        iframe.remove();
 
         this.scripts.delete(scriptUrl);
     }

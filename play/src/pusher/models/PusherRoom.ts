@@ -202,15 +202,6 @@ export class PusherRoom {
                     userData.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
                     console.error("Connection error between pusher and back server", err);
-                    Sentry.captureMessage(
-                        "Connection error between pusher and back server : " +
-                            err +
-                            " " +
-                            this.roomUrl +
-                            " " +
-                            userData.userUuid,
-                        "debug"
-                    );
                 }
             }
         });
@@ -222,10 +213,6 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     const userData = listener.getUserData();
                     userData.disconnecting = true;
-                    Sentry.captureMessage(
-                        "Close on back connection " + this.roomUrl + " " + userData.userUuid,
-                        "debug"
-                    );
                     listener.end(
                         1011,
                         "Connection closed between pusher and back server" +

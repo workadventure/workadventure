@@ -19,7 +19,6 @@ import {
     RoomStateEvent,
     TimelineWindow,
 } from "matrix-js-sdk";
-import * as Sentry from "@sentry/svelte";
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
@@ -145,15 +144,13 @@ export class MatrixChatRoom
             await matrixSecurity.restoreRoomsMessages();
         })()
             .catch((error) => {
-                console.error(error);
-                Sentry.captureMessage("Failed to init client crypto configuration");
+                console.error("Failed to init client crypto configuration", error);
             })
             .then(async () => {
                 await this.initMatrixRoomMessagesAndReactions();
             })
             .catch((error) => {
-                console.error(error);
-                Sentry.captureMessage(`Failed to init Matrix room messages : ${error}`);
+                console.error("Failed to init Matrix room messages:", error);
             });
 
         //Necessary to keep matrix event content for local event deletions after initialization
@@ -196,7 +193,6 @@ export class MatrixChatRoom
         if (event.isEncrypted()) {
             await this.matrixRoom.client.decryptEventIfNeeded(event).catch(() => {
                 console.error("Failed to decrypt");
-                Sentry.captureMessage("Failed to decrypt event");
             });
         }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
@@ -292,7 +288,6 @@ export class MatrixChatRoom
                 .catch((error: unknown) => {
                     this.matrixRoom.client.cancelPendingEvent(event);
                     console.error("Failed to resend event", eventId, error);
-                    Sentry.captureException(error);
                 })
                 .finally(() => {
                     if (eventId) {
@@ -514,7 +509,6 @@ export class MatrixChatRoom
             await this.matrixRoom.client.joinRoom(this.id);
             return;
         } catch (error) {
-            Sentry.captureMessage("Failed to leave room");
             console.error("Unable to join", error);
             return Promise.reject(new Error("Failed to leave room"));
         }
@@ -525,7 +519,6 @@ export class MatrixChatRoom
             await this.matrixRoom.client.leave(this.id);
             return;
         } catch (error) {
-            Sentry.captureMessage("Failed to leave room");
             console.error("Unable to leave", error);
             throw new Error("Failed to leave room");
         }
@@ -649,8 +642,7 @@ export class MatrixChatRoom
             });
             this.areNotificationsMuted.set(true);
         } catch (error) {
-            console.error("failed to mute notification");
-            Sentry.captureMessage(`Failed to mute notification :${error}`);
+            console.error("failed to mute notification", error);
         }
     }
 
@@ -664,8 +656,7 @@ export class MatrixChatRoom
             }
             this.areNotificationsMuted.set(false);
         } catch (error) {
-            console.error("failed to mute notification");
-            Sentry.captureMessage(`Failed to mute notification :${error}`);
+            console.error("failed to mute notification", error);
         }
     }
 
@@ -745,7 +736,6 @@ export class MatrixChatRoom
             await this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomPowerLevels, newRoomPowerLevelsState);
         } catch (e) {
             console.error("Failed to change permission level : " + e);
-            Sentry.captureMessage(`Failed to change Permission Level : ${e}`);
         }
     }
 

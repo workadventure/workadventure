@@ -690,8 +690,7 @@ export class AreasPropertiesListener {
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
                 })
                 .catch((error) => {
-                    Sentry.captureMessage(`Failed to join room area : ${error}`);
-                    console.error(error);
+                    console.error("Failed to confirm emojis validation", error);
                 });
             return;
         }

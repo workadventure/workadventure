@@ -454,12 +454,10 @@ export class ProximityChatRoom implements ChatRoom {
         this._spacePromise = this._spacePromise.then(async (space) => {
             if (!space) {
                 console.error("Trying to leave a space that is not joined");
-                Sentry.captureMessage("Trying to leave a space that is not joined");
                 return;
             }
             if (space.getName() !== spaceName) {
                 console.error("Trying to leave a space different from the one joined");
-                Sentry.captureMessage("Trying to leave a space different from the one joined");
                 return;
             }
 
