@@ -1,6 +1,7 @@
-import { Readable } from "svelte/store";
+import { Readable, Writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
+import { StateEvents } from "matrix-js-sdk";
 import { RoomConnection } from "../../Connection/RoomConnection";
 
 export type memberTypingInformation = { id: string; name: string | null; avatarUrl: string | null };
@@ -75,6 +76,7 @@ export interface ChatRoomModeration {
     readonly id: string;
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
+    readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
     readonly kick: (userID: string) => Promise<void>;
     readonly ban: (userID: string) => Promise<void>;
     readonly unban: (userID: string) => Promise<void>;
@@ -117,7 +119,7 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
 };
-export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
+export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
@@ -127,6 +129,8 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     folders: Readable<RoomFolder[]>;
     invitations: Readable<ChatRoom[]>;
     suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    hasChildRoomsError: Writable<boolean>;
 }
 
 export interface CreateRoomOptions {
