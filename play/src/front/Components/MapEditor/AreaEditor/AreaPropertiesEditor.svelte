@@ -761,15 +761,17 @@
                         />
                     {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                            <svelte:component
-                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                                {extensionModuleAreaMapEditor}
-                                {property}
-                                on:close={() => {
-                                    onDeleteProperty(property.id);
-                                }}
-                                on:change={() => onUpdateProperty(property)}
-                            />
+                            {#if extensionModuleAreaMapEditor[property.subtype] != undefined}
+                                <svelte:component
+                                    this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                    {extensionModuleAreaMapEditor}
+                                    {property}
+                                    on:close={() => {
+                                        onDeleteProperty(property.id);
+                                    }}
+                                    on:change={() => onUpdateProperty(property)}
+                                />
+                            {/if}
                         {/each}
                     {:else if property.type === "matrixRoomPropertyData"}
                         <MatrixRoomPropertyEditor
