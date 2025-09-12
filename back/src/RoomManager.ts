@@ -121,18 +121,6 @@ const roomManager = {
                                 await socketManager.handleVariableEvent(room, user, message.message.variableMessage);
                                 break;
                             }
-                            case "webRtcSignalToServerMessage": {
-                                socketManager.emitVideo(room, user, message.message.webRtcSignalToServerMessage);
-                                break;
-                            }
-                            case "webRtcScreenSharingSignalToServerMessage": {
-                                socketManager.emitScreenSharing(
-                                    room,
-                                    user,
-                                    message.message.webRtcScreenSharingSignalToServerMessage
-                                );
-                                break;
-                            }
                             case "queryMessage": {
                                 await socketManager.handleQueryMessage(room, user, message.message.queryMessage);
                                 break;

@@ -18,6 +18,7 @@ enum AvailabilityStatus {
   BUSY = 8;
   DO_NOT_DISTURB = 9;
   BACK_IN_A_MOMENT = 10;
+  LIVEKIT = 11;
 }
 
 message PositionMessage {
@@ -113,7 +114,6 @@ message UserMovesMessage {
 }
 
 message WebRtcSignalToServerMessage {
-  int32 receiverId = 1;
   string signal = 2;
 }
 
@@ -184,7 +184,6 @@ message EditMapMessage {
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
     UploadFileMessage uploadFileMessage = 13;
-    DeleteFileMessage deleteFileMessage = 14;
   }
 }
 
@@ -264,11 +263,6 @@ message DeleteEntityMessage {
   string id = 1;
 }
 
-message DeleteFileMessage {
-  string propertyId = 1;
-  string name = 2;
-}
-
 message CollisionGridRow {
   repeated uint32 row = 1;
 }
@@ -330,8 +324,6 @@ message ClientToServerMessage {
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 11;
     EmotePromptMessage emotePromptMessage = 13;
@@ -507,6 +499,7 @@ message EnterChatRoomAreaQuery{
 message JoinSpaceQuery{
   string spaceName = 1;
   FilterType filterType = 2;
+  repeated string propertiesToSync = 3;
 }
 
 message LeaveSpaceQuery{
@@ -602,6 +595,7 @@ message EnterChatRoomAreaAnswer{
 }
 
 message JoinSpaceAnswer{
+  string spaceUserId = 1;
 }
 
 message LeaveSpaceAnswer{
@@ -710,10 +704,11 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
     // FIXME: remove all this
     KickOffMessage kickOffMessage = 22;
     PublicEvent publicEvent = 29;
-    PrivateEvent privateEvent = 30;
+    PrivateEventPusherToFront privateEvent = 30;
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
   }
@@ -729,6 +724,7 @@ message GroupUpdateMessage {
   PointMessage position = 2;
   google.protobuf.UInt32Value groupSize = 3;
   google.protobuf.BoolValue locked = 4;
+  repeated int32 userIds = 5;
 }
 
 message GroupDeleteMessage {
@@ -816,18 +812,17 @@ message MegaphoneSettings{
 }
 
 message WebRtcStartMessage {
-  int32 userId = 1;
+  string userId = 1;
   bool initiator = 3;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
-  int32 userId = 1;
+  string userId = 1;
 }
 
 message WebRtcSignalToClientMessage {
-  int32 userId = 1;
   string signal = 2;
   string webRtcUserName = 4;
   string webRtcPassword = 5;
@@ -936,16 +931,59 @@ message PrivateSpaceEvent {
     MuteVideoPrivateMessage muteVideo = 1;
     MuteAudioPrivateMessage muteAudio = 2;
     KickOffUserPrivateMessage kickOffUser = 3;
-    AddSpaceUserMessage addSpaceUserMessage = 4;
-    UpdateSpaceUserMessage updateSpaceUserMessage = 5;
-    RemoveSpaceUserMessage removeSpaceUserMessage = 6;
+    WebRtcStartMessage webRtcStartMessage = 4;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 5;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 9;
+    CommunicationStrategyMessage communicationStrategyMessage = 10;
+    PrepareSwitchMessage prepareSwitchMessage = 11;
+    ExecuteSwitchMessage executeSwitchMessage = 12;
+    LivekitInvitationMessage livekitInvitationMessage = 13;
+    LivekitDisconnectMessage livekitDisconnectMessage = 14;
+    UserReadyForSwitchEvent userReadyForSwitchEvent = 15;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
+    UpdateSpaceUserMessage updateSpaceUserMessage = 17;
+    RemoveSpaceUserMessage removeSpaceUserMessage = 18;
   }
+}
+
+message CommunicationStrategyMessage {
+  string strategy = 1;
+}
+
+message PrepareSwitchMessage {
+  string strategy = 1;
+}
+
+message ExecuteSwitchMessage {
+  string strategy = 1;
+}
+
+enum LivekitTokenType {
+  WATCHER = 0;
+  STREAMER = 1;
+}
+
+message LivekitInvitationMessage {
+  string token = 1;
+  string serverUrl = 2;
+  bool shouldJoinRoomImmediately = 3;
+  LivekitTokenType tokenType = 4;
+}
+
+message LivekitDisconnectMessage {
+  LivekitTokenType tokenType = 1;
+}
+
+message UserReadyForSwitchEvent {
+  string strategy = 1;
 }
 
 message SpaceMessage {
   string message = 1;
 }
-
 message SpaceIsTyping {
   bool isTyping = 1;
 }
@@ -954,6 +992,20 @@ message PrivateEvent {
   string spaceName = 1;
   string receiverUserId = 2;
   string senderUserId = 3;
+  PrivateSpaceEvent spaceEvent = 4;
+}
+
+message PrivateEventBackToPusher {
+  string spaceName = 1;
+  string receiverUserId = 2;
+  SpaceUser sender = 3;
+  PrivateSpaceEvent spaceEvent = 4;
+}
+
+message PrivateEventPusherToFront {
+  string spaceName = 1;
+  string receiverUserId = 2;
+  SpaceUser sender = 3;
   PrivateSpaceEvent spaceEvent = 4;
 }
 
@@ -968,6 +1020,7 @@ message PrivateEventFrontToPusher {
  */
 message JoinSpaceRequestMessage {
   string spaceName = 1;
+  repeated string propertiesToSync = 2;
 }
 
 /**
@@ -985,10 +1038,6 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    WebRtcStartMessage webRtcStartMessage = 4;
-    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
-    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
-    WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
@@ -1003,7 +1052,6 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     MoveToPositionMessage moveToPositionMessage = 31;
@@ -1065,6 +1113,7 @@ message GroupUpdateZoneMessage {
   int32  groupSize = 3;
   Zone fromZone = 4;
   bool locked = 5;
+  repeated int32 userIds = 6;
 }
 
 message GroupLeftZoneMessage {
@@ -1098,8 +1147,6 @@ message PusherToBackMessage {
     UserMovesMessage userMovesMessage = 2;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -1136,6 +1183,7 @@ message SubToPusherMessage {
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
     EditMapCommandMessage editMapCommandMessage = 12;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
   }
 }
 
@@ -1316,7 +1364,9 @@ message PusherToBackSpaceMessage{
     PrivateEvent privateEvent = 16;
     SyncSpaceUsersMessage syncSpaceUsersMessage = 17;
     SpaceQueryMessage spaceQueryMessage = 18;
-    RequestFullSyncMessage requestFullSyncMessage = 19;
+    AddSpaceUserToNotifyMessage addSpaceUserToNotifyMessage = 19;
+    DeleteSpaceUserToNotifyMessage deleteSpaceUserToNotifyMessage = 20;
+    RequestFullSyncMessage requestFullSyncMessage = 21;
   }
 }
 
@@ -1330,7 +1380,7 @@ message BackToPusherSpaceMessage{
     // FIXME: the kick of message should be global to the room (unless we apply it on the world space???)
     KickOffMessage kickOffMessage = 6;
     PublicEvent publicEvent = 13;
-    PrivateEvent privateEvent = 14;
+    PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
   }
 }
@@ -1340,8 +1390,9 @@ message BackToPusherSpaceMessage{
  */
 message JoinSpaceMessage{
   string spaceName = 1;
-  FilterType filterType = 2;
-  bool isRetry = 3;
+  repeated string propertiesToSync = 2;
+  FilterType filterType = 3;
+  bool isRetry = 4;
 }
 
 enum FilterType{
@@ -1442,6 +1493,22 @@ message UpdateSpaceMetadataMessage{
 message SyncSpaceUsersMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
+}
+
+/**
+ * Message sent by the pusher to the back to add a user to the notify list
+ */
+message AddSpaceUserToNotifyMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
+}
+
+/**
+ * Message sent by the pusher to the back to delete a user from the notify list
+ */
+message DeleteSpaceUserToNotifyMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
 }
 
 /**

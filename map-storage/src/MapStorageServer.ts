@@ -355,7 +355,7 @@ const mapStorageServer: MapStorageServer = {
                         break;
                     }
                     default: {
-                        //const _exhaustiveCheck: never = editMapMessage;
+                        const _exhaustiveCheck: never = editMapMessage;
                     }
                 }
                 // send edit map message back as a valid one

@@ -21,7 +21,6 @@ import { chatVisibilityStore } from "../../../Stores/ChatStore";
 import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
-import { SimplePeer } from "../../../WebRtc/SimplePeer";
 import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
@@ -30,6 +29,8 @@ import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
 import { blackListManager } from "../../../WebRtc/BlackListManager";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
+import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
+import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -100,10 +101,14 @@ export class ProximityChatRoom implements ChatRoom {
         spaceUserId: undefined,
     } as ChatUser;
 
+    private scriptingOutputAudioStreamManager: ScriptingOutputAudioStreamManager | undefined;
+    private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
+    private startListeningToStreamInBubbleStreamUnsubscriber: Subscription;
+    private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription;
+
     constructor(
         private _spaceUserId: string,
         private spaceRegistry: SpaceRegistryInterface,
-        private simplePeer: SimplePeer,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
         private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
@@ -131,6 +136,27 @@ export class ProximityChatRoom implements ChatRoom {
                         console.error("Error while sending typing status", e);
                     });
                 }
+            });
+
+        this.startListeningToStreamInBubbleStreamUnsubscriber =
+            iframeListener.startListeningToStreamInBubbleStream.subscribe((message) => {
+                if (!this.scriptingInputAudioStreamManager) {
+                    console.error("Trying to start listening to stream in bubble but no bubble has been joined yet");
+                    return;
+                }
+                this.scriptingInputAudioStreamManager.startListeningToAudioStream(message.sampleRate).catch((e) => {
+                    console.error("Error while starting listening to streams", e);
+                    Sentry.captureException(e);
+                });
+            });
+
+        this.stopListeningToStreamInBubbleStreamUnsubscriber =
+            iframeListener.stopListeningToStreamInBubbleStream.subscribe(() => {
+                if (!this.scriptingInputAudioStreamManager) {
+                    console.error("Trying to stop listening to stream in bubble but no bubble has been joined yet");
+                    return;
+                }
+                this.scriptingInputAudioStreamManager.stopListeningToAudioStream();
             });
     }
 
@@ -371,12 +397,19 @@ export class ProximityChatRoom implements ChatRoom {
         });
     }
 
-    public async joinSpace(spaceName: string): Promise<void> {
+    public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
         this._spacePromise = this._spacePromise.then(async (space) => {
             if (space) {
                 throw new Error("Already in a space: " + space.getName());
             }
-            this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS);
+            this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync);
+
+            // TODO: we need to move that elsewhere.
+            // Set up manager of audio streams received by the scripting API (useful for bots)
+            this.scriptingOutputAudioStreamManager = new ScriptingOutputAudioStreamManager(
+                this._space.spacePeerManager
+            );
+            this.scriptingInputAudioStreamManager = new ScriptingInputAudioStreamManager(this._space.spacePeerManager);
 
             bindMuteEventsToSpace(this._space);
             this.usersUnsubscriber = this._space.usersStore.subscribe((users) => {
@@ -423,8 +456,6 @@ export class ProximityChatRoom implements ChatRoom {
                     this.removeTypingUser(event.sender);
                 }
             });
-
-            this.simplePeer.setSpace(this._space);
 
             this.saveChatState();
 
@@ -490,7 +521,10 @@ export class ProximityChatRoom implements ChatRoom {
             this.spaceMessageSubscription?.unsubscribe();
             this.spaceIsTypingSubscription?.unsubscribe();
 
-            this.simplePeer.setSpace(undefined);
+            this.scriptingOutputAudioStreamManager?.close();
+            this.scriptingInputAudioStreamManager?.close();
+            this.scriptingOutputAudioStreamManager = undefined;
+            this.scriptingInputAudioStreamManager = undefined;
 
             try {
                 await this.spaceRegistry.leaveSpace(space);
@@ -521,11 +555,24 @@ export class ProximityChatRoom implements ChatRoom {
         shouldRestoreChatStateStore.set(true);
     }
 
+    public dispatchSound(url: URL): Promise<void> {
+        if (!this._space) {
+            console.error("Trying to dispatch sound in a space that is not joined");
+            Sentry.captureMessage("Trying to dispatch sound in a space that is not joined");
+            return Promise.resolve();
+        }
+        return this._space.dispatchSound(url);
+    }
+
     public destroy(): void {
         this.newChatMessageWritingStatusStreamUnsubscriber.unsubscribe();
+        this.startListeningToStreamInBubbleStreamUnsubscriber.unsubscribe();
+        this.stopListeningToStreamInBubbleStreamUnsubscriber.unsubscribe();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
 
+        this.scriptingOutputAudioStreamManager?.close();
+        this.scriptingInputAudioStreamManager?.close();
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();
         if (this.usersUnsubscriber) {

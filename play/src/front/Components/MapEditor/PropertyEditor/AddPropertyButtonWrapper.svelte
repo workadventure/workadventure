@@ -404,6 +404,18 @@
         }}
     />
 {/if}
+{#if property === "livekitRoomProperty"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.livekitProperties.label()}
+        descriptionText={$LL.mapEditor.properties.livekitProperties.description()}
+        img="resources/icons/icon_meeting.png"
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="livekitRoomProperty"
+    />
+{/if}
 
 {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
     {#if property === "openWebsite" && subProperty === app.name}

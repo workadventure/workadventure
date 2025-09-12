@@ -4,13 +4,10 @@ import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
-import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
-import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
-import { lookupUserById } from "../Space/Utils/UserLookup";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -22,8 +19,10 @@ import {
     StreamStoppedMessage,
 } from "./P2PMessages/StreamEndedMessage";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { isFirefox } from "./DeviceUtils";
 
-const CONNECTION_TIMEOUT = 5000;
+// Firefox needs more time for ICE negotiation in screen sharing
+const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000;
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -49,27 +48,43 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public readonly muteAudio = false;
     public readonly displayMode = "fit";
     public readonly displayInPictureInPictureMode = true;
+    public readonly usePresentationMode = true;
+    private connectTimeout: ReturnType<typeof setTimeout> | undefined;
+    public priority: number = SCREEN_SHARE_STARTING_PRIORITY;
+    public lastSpeakTimestamp?: number;
+
     constructor(
-        user: UserSimplePeerInterface,
+        public user: UserSimplePeerInterface,
         initiator: boolean,
-        public readonly player: RemotePlayerData,
-        private connection: RoomConnection,
         stream: MediaStream | undefined,
-        private space: Promise<SpaceInterface>
+        private space: SpaceInterface,
+        private spaceUser: SpaceUserExtended,
+        isLocalScreenSharing: boolean
     ) {
         const bandwidth = get(screenShareBandwidthStore);
-        super({
+        const firefoxBrowser = isFirefox();
+
+        // Firefox-specific configuration for screen sharing
+        const peerConfig = {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+                // Firefox benefits from these additional settings for screen sharing
+                ...(firefoxBrowser && {
+                    iceCandidatePoolSize: 15, // Higher pool for screen sharing
+                    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+                    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+                }),
             },
             sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
-        });
+            // Firefox works better with trickle ICE enabled for screen sharing
+            ...(firefoxBrowser && { trickle: true }),
+        };
 
-        this.userId = user.userId;
-        this.uniqueId = "screensharing_" + this.userId;
+        super(peerConfig);
 
-        let connectTimeout: ReturnType<typeof setTimeout> | undefined;
+        this.userId = spaceUser.userId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
@@ -105,8 +120,12 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._statusStore = writable<PeerStatus>("connecting");
 
+        // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
+            if (this.toClose) {
+                return;
+            }
             // transform sdp to force to use h264 codec
             this.sendWebrtcScreenSharingSignal(data);
 
@@ -115,10 +134,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             });
             if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
                 // If the signal is a candidate, we set a connection timer
-                if (connectTimeout) {
-                    clearTimeout(connectTimeout);
+                if (this.connectTimeout) {
+                    clearTimeout(this.connectTimeout);
                 }
-                connectTimeout = setTimeout(() => {
+                this.connectTimeout = setTimeout(() => {
                     this._statusStore.set("error");
                 }, CONNECTION_TIMEOUT);
             }
@@ -143,11 +162,23 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.on("error", (err: any) => {
             console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
             this._statusStore.set("error");
+
+            // Firefox-specific error handling for screen sharing
+            if (isFirefox() && err.message) {
+                // Log Firefox-specific screen sharing errors for better debugging
+                if (err.message.includes("ICE")) {
+                    console.warn("Firefox screen sharing ICE connection error - this may be temporary");
+                } else if (err.message.includes("DTLS")) {
+                    console.warn("Firefox screen sharing DTLS handshake error - checking TURN configuration");
+                } else if (err.message.includes("getDisplayMedia")) {
+                    console.warn("Firefox screen sharing capture error - check permissions");
+                }
+            }
         });
 
         this.on("connect", () => {
-            if (connectTimeout) {
-                clearTimeout(connectTimeout);
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
             }
             this._connected = true;
             customWebRTCLogger.info(`connect => ${this.userId}`);
@@ -188,7 +219,16 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
         try {
-            this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
+            this.space.emitPrivateMessage(
+                {
+                    $case: "webRtcScreenSharingSignalToServerMessage",
+                    webRtcScreenSharingSignalToServerMessage: {
+                        // receiverId: this.userId,
+                        signal: JSON.stringify(data),
+                    },
+                },
+                this.user.userId
+            );
         } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }
@@ -221,6 +261,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
             if (!this.toClose) {
                 return;
             }
+            if (this.connectTimeout) {
+                clearTimeout(this.connectTimeout);
+            }
+
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             super.destroy(error);
@@ -271,14 +315,61 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        const space = await this.space;
-        return lookupUserById(this.userId, space, 30_000);
+        return this.space.extendSpaceUser(this.spaceUser);
     }
 
     get media(): MediaStoreStreamable {
+        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
+        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
         return {
             type: "mediaStore",
             streamStore: this._streamStore,
+            attachVideo: (container: HTMLVideoElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const videoTracks = stream.getVideoTracks();
+                        if (videoTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(videoTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerScreenShareContainer(this.spaceUser.spaceUserId, container);
+                videoElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachVideo: (container: HTMLVideoElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = videoElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    videoElementUnsubscribers.delete(container);
+                }
+            },
+            attachAudio: (container: HTMLAudioElement) => {
+                const unsubscribe = this._streamStore.subscribe((stream) => {
+                    if (stream) {
+                        const audioTracks = stream.getAudioTracks();
+                        if (audioTracks.length === 0) {
+                            container.srcObject = null;
+                        } else {
+                            container.srcObject = new MediaStream(audioTracks);
+                        }
+                    }
+                });
+                this.space.spacePeerManager.registerScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                audioElementUnsubscribers.set(container, unsubscribe);
+            },
+            detachAudio: (container: HTMLAudioElement) => {
+                container.srcObject = null;
+                this.space.spacePeerManager.unregisterScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
+                const unsubscribe = audioElementUnsubscribers.get(container);
+                if (unsubscribe) {
+                    unsubscribe();
+                    audioElementUnsubscribers.delete(container);
+                }
+            },
         };
     }
 
@@ -295,7 +386,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.player.name);
+        return writable(this.spaceUser.name);
     }
 
     get showVoiceIndicator(): Readable<boolean> {

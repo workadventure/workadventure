@@ -1,1 +1,4 @@
-WA.nav.openCoWebSite("cowebsiteAllowApi.php", true, "");
+WA.onInit().then(() => {
+    WA.nav.openCoWebSite("cowebsiteAllowApi.php", true, "");
+});
+

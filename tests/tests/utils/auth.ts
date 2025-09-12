@@ -26,7 +26,7 @@ function isJsonCreate(name: string): boolean {
 }
 
 async function createUser(
-    name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
+    name: "Alice" | "Bob" | "Eve" | "Mallory" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
     browser: Browser, url: string): Promise<void> {
     
     if(isJsonCreate(name)) {
@@ -86,7 +86,7 @@ async function createUser(
 
 
 export async function getPage(browser: Browser,
-      name: "Alice" | "Bob" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
+      name: "Alice" | "Bob" | "Eve" | "Mallory" | "Admin1" | "Admin2" | "Member1" | "UserMatrix" | "UserLogin1" | "John" | "UserMatrix2",
       url:string,
       options: {
     pageCreatedHook?: (page: Page) => void,

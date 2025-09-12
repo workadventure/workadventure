@@ -16,10 +16,15 @@ export class WorkAdventureSpacesCommands extends IframeApiContribution<WorkAdven
      * {@link https://docs.workadventu.re/map-building/api-spaces.md#start-following-player | Website documentation}
      *
      * @param {string} spaceName Name of the space to join
-     * @param {("everyone"|"streaming")} filterType Type of filter to apply when joining the space. THis must match the filter decided by the first person joining the space.
+     * @param {("everyone"|"streaming")} filterType Type of filter to apply when joining the space. This must match the filter decided by the first person joining the space.
+     * @param {string[]} propertiesToSync List of properties to listen to. You will be notified if any of these properties change when synchronizing in the space.
      */
-    public async joinSpace(spaceName: string, filterType: "everyone" | "streaming"): Promise<Space> {
-        const port = await openMessagePort("joinSpace", { spaceName, filterType });
+    public async joinSpace(
+        spaceName: string,
+        filterType: "everyone" | "streaming",
+        propertiesToSync: string[]
+    ): Promise<Space> {
+        const port = await openMessagePort("joinSpace", { spaceName, filterType, propertiesToSync });
 
         return new Space(port);
     }

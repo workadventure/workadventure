@@ -11,6 +11,8 @@ export const iframeMessagePortTypeGuards = {
         data: z.object({
             spaceName: z.string(),
             filterType: z.enum(["everyone", "streaming"]),
+            // TODO: see if we can improve typing to directly get the properties to sync
+            propertiesToSync: z.array(z.string()),
         }),
         iframeEvents: z.union([
             z.object({
@@ -33,6 +35,12 @@ export const iframeMessagePortTypeGuards = {
                 type: z.literal("stopStreaming"),
                 data: z.undefined(),
             }),
+            z.object({
+                type: z.literal("setMetadata"),
+                data: z.object({
+                    metadata: z.record(z.string(), z.unknown()),
+                }),
+            }),
         ]),
         workAdventureEvents: z.union([
             z.object({
@@ -51,6 +59,12 @@ export const iframeMessagePortTypeGuards = {
                     spaceUserId: z.string(),
                     changes: NewSpaceUserEvent.partial(),
                     updateMask: z.array(z.string()),
+                }),
+            }),
+            z.object({
+                type: z.literal("onSetMetadata"),
+                data: z.object({
+                    metadata: z.record(z.string(), z.unknown()),
                 }),
             }),
         ]),

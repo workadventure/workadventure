@@ -14,7 +14,9 @@ export class WAMSettingsUtils {
             if (!mainURI) {
                 throw new Error("Cannot get megaphone url without room url or room group");
             }
-            return `${mainURI}/megaphone`.replace(/^https?:\/\//, "").replace(/\//g, "-");
+            return `${mainURI}/megaphone-${wamSettings.megaphone.title}`
+                .replace(/^https?:\/\//, "")
+                .replace(/\//g, "-");
         }
         return undefined;
     }
