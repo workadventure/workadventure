@@ -129,11 +129,11 @@ services:
       - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
       - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
       - MAP_STORAGE_API_TOKEN=${MAP_STORAGE_API_TOKEN:-${SECRET_KEY}}
-      - MATRIX_API_URI=${MATRIX_API_URI}
-      - MATRIX_PUBLIC_URI=${MATRIX_PUBLIC_URI}
-      - MATRIX_ADMIN_USER=${MATRIX_ADMIN_USER}
-      - MATRIX_ADMIN_PASSWORD=${MATRIX_ADMIN_PASSWORD}
-      - MATRIX_DOMAIN=${MATRIX_DOMAIN}
+      #- MATRIX_API_URI=${MATRIX_API_URI}
+      #- MATRIX_PUBLIC_URI=${MATRIX_PUBLIC_URI}
+      #- MATRIX_ADMIN_USER=${MATRIX_ADMIN_USER}
+      #- MATRIX_ADMIN_PASSWORD=${MATRIX_ADMIN_PASSWORD}
+      #- MATRIX_DOMAIN=${MATRIX_DOMAIN}
     labels:
       traefik.enable: "true"
 
@@ -309,39 +309,30 @@ services:
       traefik.http.routers.map-storage-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
-  # synapse:
-  #     image: matrixdotorg/synapse:v1.132.0
-  #     entrypoint: /data/start.sh
-  #     labels:
-  #       - "traefik.enable=true"
-  #       - "traefik.http.routers.matrix.rule=Host(`matrix.${DOMAIN}`)"
-  #       - "traefik.http.routers.matrix.entryPoints=websecure"
-  #       - "traefik.http.services.matrix.loadbalancer.server.port=8008"
-  #       - "traefik.http.routers.matrix.tls=true"
-  #       - "traefik.http.routers.matrix.tls.certresolver=myresolver"
-  #       - "traefik.http.routers.matrix.service=matrix"
-  #     volumes:
-  #       - ./synapse:/data/
-  #     environment:
-  #       SYNAPSE_SERVER_NAME: "${DOMAIN}"
-  #       SYNAPSE_REPORT_STATS: "no"
-  #       # MATRIX_ADMIN_USER: admin
-  #       # MATRIX_ADMIN_PASSWORD: MySecretPassword
-  #       JWT_SECRET: "${SECRET_KEY}"
-
-  # matrix:
-  #   image: matrixdotorg/synapse:latest
-  #   container_name: matrix-synapse
-  #   ports:
-  #     - "8008:8008"
-  #   volumes:
-  #     - ./matrix-data:/data
-  #     - ./homeserver.yaml:/data/homeserver.yaml
-  #   environment:
-  #     - SYNAPSE_SERVER_NAME=dev.iza.com.vc
-  #     - SYNAPSE_REPORT_STATS=no
-  #   command: python -m synapse.app.homeserver --config-path /data/homeserver.yaml
-  #   restart: unless-stopped
+  coturn:
+    image: coturn/coturn:4.5.2
+    command:
+      - turnserver
+      #- -c=/etc/coturn/turnserver.conf
+      - --log-file=stdout
+      - --external-ip=3.138.170.120
+      - --listening-port=3478
+      - --min-port=10000
+      - --max-port=10010
+      - --tls-listening-port=5349
+      - --listening-ip=0.0.0.0
+      - --realm=coturn.escritorio.dev.iza.com.vc
+      - --server-name=coturn.escritorio.dev.iza.com.vc
+      - --lt-cred-mech
+      # Enable Coturn "REST API" to validate temporary passwords.
+      #- --use-auth-secret
+      #- --static-auth-secret=SomeStaticAuthSecret
+      #- --userdb=/var/lib/turn/turndb
+      - --user=workadventure:WorkAdventure123
+      # use real-valid certificate/privatekey files
+      #- --cert=/root/letsencrypt/fullchain.pem
+      #- --pkey=/root/letsencrypt/privkey.pem
+    network_mode: host
 
 volumes:
   redisdata:
