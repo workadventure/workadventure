@@ -15,6 +15,7 @@
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
+    import { userActivationManager } from "../../Stores/UserActivationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -110,8 +111,6 @@
         }
     }
 
-    let missingUserActivation: false;
-
     let showAfterDelay = true;
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -195,12 +194,10 @@
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={peer.flipX}
-                muted={peer.muteAudio}
                 {videoUrl}
                 {videoConfig}
                 cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
                 withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
-                bind:missingUserActivation
             >
                 <UserName
                     name={$name}
@@ -272,24 +269,34 @@
         {/if}
     </div>
 
-    {#if inCameraContainer && videoEnabled && !missingUserActivation}
-        <button
-            class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-            on:click={() => highlightPeer(peer)}
-        >
-            <ArrowsMaximizeIcon />
-        </button>
+    {#if inCameraContainer && videoEnabled}
+        {#await userActivationManager.waitForUserActivation()}
+            <div />
+        {:then value}
+            <button
+                class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+                on:click={() => highlightPeer(peer)}
+            >
+                <ArrowsMaximizeIcon />
+            </button>
+        {/await}
     {/if}
-    {#if missingUserActivation && !peer.muteAudio}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-            on:click={() => (missingUserActivation = false)}
-        >
-            <div class="text-center">
-                <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+    {#if !peer.muteAudio}
+        {#await userActivationManager.waitForUserActivation()}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+                on:click={() => {
+                    userActivationManager.notifyUserActivation();
+                }}
+            >
+                <div class="text-center">
+                    <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+                </div>
             </div>
-        </div>
+        {:then value}
+            <!-- Nothing to do, the audio element is unmuted by the missingUserActivationStore -->
+        {/await}
     {/if}
 </div>
 

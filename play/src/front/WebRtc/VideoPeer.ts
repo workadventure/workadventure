@@ -28,7 +28,6 @@ const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s fo
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class VideoPeer extends Peer implements Streamable {
-    public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
@@ -42,7 +41,6 @@ export class VideoPeer extends Peer implements Streamable {
     public readonly volumeStore: Readable<number[] | undefined>;
     private readonly _statusStore: Writable<PeerStatus> = writable<PeerStatus>("connecting");
     private readonly _constraintsStore: Writable<ObtainedMediaStreamConstraints | null>;
-    private newMessageSubscription: Subscription | undefined;
     private closing = false; //this is used to prevent destroy() from being called twice
     private volumeStoreSubscribe?: Unsubscriber;
     private readonly localStreamStoreSubscribe: Unsubscriber;
@@ -62,7 +60,7 @@ export class VideoPeer extends Peer implements Streamable {
 
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
-        if (this.toClose || this.closing) {
+        if (this.closing) {
             return;
         }
         this.sendWebrtcSignal(data);
@@ -87,7 +85,6 @@ export class VideoPeer extends Peer implements Streamable {
         this._statusStore.set("closed");
 
         this._connected = false;
-        this.toClose = true;
         this.destroy();
     };
 
@@ -174,7 +171,6 @@ export class VideoPeer extends Peer implements Streamable {
                     if (message.value !== this.userUuid) break;
                     this._statusStore.set("closed");
                     this._connected = false;
-                    this.toClose = true;
                     this._onFinish();
                     this.destroy();
                     break;
@@ -320,7 +316,9 @@ export class VideoPeer extends Peer implements Streamable {
         }
 
         this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
-            if (streamValue.type === "success" && streamValue.stream) this.addStream(streamValue.stream);
+            if (streamValue.type === "success" && streamValue.stream) {
+                this.addStream(streamValue.stream);
+            }
         });
         this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
             this.write(
@@ -409,7 +407,7 @@ export class VideoPeer extends Peer implements Streamable {
             }
 
             this._connected = false;
-            if (!this.toClose || this.closing) {
+            if (this.closing) {
                 return;
             }
             this.closing = true;
@@ -417,11 +415,12 @@ export class VideoPeer extends Peer implements Streamable {
             // Unsubscribe from subscriptions
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            this.newMessageSubscription?.unsubscribe();
 
-            if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
-            if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
-            if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
+            this.localStreamStoreSubscribe();
+            this.apparentMediaConstraintStoreSubscribe();
+            this.volumeStoreSubscribe?.();
+            this.volumeStoreSubscribe = undefined;
+
             super.destroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
@@ -466,12 +465,9 @@ export class VideoPeer extends Peer implements Streamable {
             attachVideo: (container: HTMLVideoElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        const videoTracks = stream.getVideoTracks();
-                        if (videoTracks.length === 0) {
-                            container.srcObject = null;
-                        } else {
-                            container.srcObject = new MediaStream(videoTracks);
-                        }
+                        container.srcObject = stream;
+                    } else {
+                        container.srcObject = null;
                     }
                 });
                 this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
@@ -489,12 +485,9 @@ export class VideoPeer extends Peer implements Streamable {
             attachAudio: (container: HTMLAudioElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        const audioTracks = stream.getAudioTracks();
-                        if (audioTracks.length === 0) {
-                            container.srcObject = null;
-                        } else {
-                            container.srcObject = new MediaStream(audioTracks);
-                        }
+                        container.srcObject = new MediaStream(stream);
+                    } else {
+                        container.srcObject = null;
                     }
                 });
                 this.space.spacePeerManager.registerAudioContainer(this.spaceUser.spaceUserId, container);

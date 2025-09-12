@@ -32,7 +32,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
      * Whether this connection is currently receiving a video stream from a remote user.
      */
     private isReceivingStream = false;
-    public toClose = false;
+    private closing = false;
     public _connected = false;
     public readonly userId: number;
     public readonly uniqueId: string;
@@ -123,7 +123,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         // TODO: migrate this in separate event handlers like in VideoPeer
         //start listen signal for the peer connection
         this.on("signal", (data: SignalData) => {
-            if (this.toClose) {
+            if (this.closing) {
                 return;
             }
             // transform sdp to force to use h264 codec
@@ -213,7 +213,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.isReceivingStream = false;
         this._statusStore.set("closed");
         this._connected = false;
-        this.toClose = true;
         this.destroy();
     }
 
@@ -258,11 +257,13 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public destroy(error?: Error): void {
         try {
             this._connected = false;
-            if (!this.toClose) {
+            if (this.closing) {
                 return;
             }
+            this.closing = true;
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
+                this.connectTimeout = undefined;
             }
 
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"

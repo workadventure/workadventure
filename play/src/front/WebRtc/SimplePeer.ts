@@ -209,12 +209,10 @@ export class SimplePeer {
         if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
                 this._streamableSubjects.videoPeerRemoved.next(peerConnection.media);
-                peerConnection.toClose = true;
                 peerConnection.destroy();
 
                 //this.space.livekitVideoStreamStore.delete(user.userId);
             } else {
-                peerConnection.toClose = false;
                 return Promise.resolve(null);
             }
         }
@@ -231,8 +229,6 @@ export class SimplePeer {
         }
 
         const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this._space, spaceUser);
-
-        peer.toClose = false;
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
@@ -281,7 +277,6 @@ export class SimplePeer {
                 //peerScreenSharingConnection.destroy();
                 //this.space.screenSharingPeerStore.delete(user.userId);
             } else {
-                peerScreenSharingConnection.toClose = false;
                 return null;
             }
         }
@@ -372,7 +367,6 @@ export class SimplePeer {
 
             //create temp peer to close
             if (shouldCloseStream) {
-                peer.toClose = true;
                 peer.destroy();
                 this._space.allVideoStreamStore.delete(userId);
             }
@@ -612,8 +606,6 @@ export class SimplePeer {
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
             // Send message to close screen sharing peer connection
             PeerConnectionScreenSharing.finishScreenSharingToRemoteUser();
-            // Close the peer connection
-            PeerConnectionScreenSharing.toClose = true;
             // Destroy the peer connection
             PeerConnectionScreenSharing.destroy();
             // Close the screen sharing connection
