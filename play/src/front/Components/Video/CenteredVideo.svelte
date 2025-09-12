@@ -31,16 +31,10 @@
     export let verticalAlign: "center" | "top" = "center";
     export let isTalking = false;
     export let flipX = false;
-    // If set to true, the video will be muted (no sound will come out). This does not prevent the volume bar from being displayed.
-    export let muted = false;
     // If cover is true, the video will be stretched to cover the whole container (and some part of the video might be cropped).
     export let cover = true;
     // If true, the video will be displayed with a background is it does not cover the whole box
     export let withBackground = false;
-
-    // In case the user did not interact yet with the browser, the navigator will deny playing the video if it is not muted.
-    // The parent component can listen to this variable to display a message to the user.
-    export let missingUserActivation = false;
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -55,12 +49,6 @@
 
     function onLoadVideoElement() {}
 
-    $: if (attachVideo && videoElement) {
-        if (navigator.userActivation && !navigator.userActivation.hasBeenActive && !muted) {
-            console.warn("User has not interacted with the browser yet. The video will be muted.");
-            missingUserActivation = true;
-        }
-    }
     $: if (videoUrl && videoElement) {
         videoElement.src = videoUrl;
     }
@@ -248,7 +236,7 @@
             class:w-0={!videoEnabled}
             autoplay
             playsinline
-            muted={muted || missingUserActivation || $activePictureInPictureStore}
+            muted={true}
             {loop}
         />
     </div>

@@ -763,7 +763,7 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
-                // check if the new list has the prefered device
+                // check if the new list has the preferred device
                 const preferredVideoInputDevice = localUserStore.getPreferredVideoInputDevice();
                 const preferredAudioInputDevice = localUserStore.getPreferredAudioInputDevice();
                 const preferredSpeakerDevice = localUserStore.getSpeakerDeviceId();
