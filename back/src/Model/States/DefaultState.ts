@@ -22,4 +22,10 @@ export class DefaultState implements ICommunicationState {
         console.info("DefaultState handleUserToNotifyDeleted", user);
         return Promise.resolve();
     }
+    handleStartRecording(): void {
+        console.info("DefaultState handleStartRecording");
+    }
+    handleStopRecording(): void {
+        console.info("DefaultState handleStopRecording");
+    }
 }

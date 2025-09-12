@@ -162,7 +162,6 @@
             }
             callbackId = videoElement.requestVideoFrameCallback(() => {
                 // A video frame was displayed. No need to display a warning.
-                // console.log("video frame displayed", videoID);
                 displayNoVideoWarning = false;
                 clearTimeout(noVideoTimeout);
                 noVideoTimeout = undefined;

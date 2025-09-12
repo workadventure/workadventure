@@ -417,7 +417,12 @@
                         <IconX font-size="12" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="w-full h-full object-cover rounded-[10px]" src={preview.url} alt={preview.name} />
+                        <img
+                            draggable="false"
+                            class="w-full h-full object-cover rounded-[10px]"
+                            src={preview.url}
+                            alt={preview.name}
+                        />
                     {:else}
                         <div
                             title={preview.name}

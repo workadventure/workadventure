@@ -72,7 +72,13 @@ import {
     FilterType,
     UploadFileMessage,
     MapStorageJwtAnswer,
+    StartRecordingMessage,
+    StopRecordingMessage,
+    DeleteRecordingAnswer,
     PrivateEventPusherToFront,
+    NonUndefinedFields,
+    Recording,
+    noUndefined,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -213,6 +219,10 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
+    private readonly _startRecordingMessage = new Subject<StartRecordingMessage>();
+    public readonly startRecordingMessage = this._startRecordingMessage.asObservable();
+    private readonly _stopRecordingMessage = new Subject<StopRecordingMessage>();
+    public readonly stopRecordingMessage = this._stopRecordingMessage.asObservable();
     private readonly _spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
     public readonly spacePrivateMessageEvent = this._spacePrivateMessageEvent.asObservable();
     private readonly _spacePublicMessageEvent = new Subject<PublicEvent>();
@@ -983,6 +993,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitStartRecording(spaceName: string): void {
+        this.emitPublicSpaceEvent(spaceName, {
+            $case: "startRecordingMessage",
+            startRecordingMessage: {},
+        });
+    }
+
+    public emitStopRecording(spaceName: string): void {
+        this.emitPublicSpaceEvent(spaceName, {
+            $case: "stopRecordingMessage",
+            stopRecordingMessage: {
+                spaceName,
+                spaceUserId: this.getSpaceUserId(),
+            },
+        });
+    }
+
     public emitFollowRequest(forceFollow = false): void {
         if (!this.userId) {
             return;
@@ -1596,6 +1623,41 @@ export class RoomConnection implements RoomConnection {
         return answer.chatMembersAnswer;
     }
 
+    public async queryRecordings(): Promise<NonUndefinedFields<Recording>[]> {
+        const answer = await this.query({
+            $case: "getRecordingsQuery",
+            getRecordingsQuery: {},
+        });
+        if (answer.$case !== "getRecordingsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        const nonUndefinedRecordingsAnswer: NonUndefinedFields<Recording>[] =
+            answer.getRecordingsAnswer.recordings.reduce((acc, cur) => {
+                try {
+                    const noUndefinedCurr = noUndefined(cur);
+                    acc.push(noUndefinedCurr);
+                } catch (e) {
+                    console.error("Error while removing undefined fields from recording", cur, e);
+                }
+                return acc;
+            }, [] as NonUndefinedFields<Recording>[]);
+
+        return nonUndefinedRecordingsAnswer;
+    }
+
+    public async deleteRecording(recordingFileName: string): Promise<DeleteRecordingAnswer> {
+        const answer = await this.query({
+            $case: "deleteRecordingQuery",
+            deleteRecordingQuery: {
+                recordingId: recordingFileName,
+            },
+        });
+        if (answer.$case !== "deleteRecordingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.deleteRecordingAnswer;
+    }
+
     public async getOauthRefreshToken(tokenToRefresh: string): Promise<OauthRefreshToken> {
         try {
             const answer = await this.query({
@@ -1854,6 +1916,8 @@ export class RoomConnection implements RoomConnection {
         this._receivedEventMessageStream.complete();
         this._spacePrivateMessageEvent.complete();
         this._spacePublicMessageEvent.complete();
+        this._startRecordingMessage.complete();
+        this._stopRecordingMessage.complete();
         this._joinSpaceRequestMessage.complete();
         this._leaveSpaceRequestMessage.complete();
         this._externalModuleMessage.complete();

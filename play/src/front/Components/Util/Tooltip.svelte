@@ -46,6 +46,7 @@
             class="content-[''] absolute -top-1 start-0 end-0 m-auto w-2 h-1"
             alt="Sub menu arrow"
             style="visibility: hidden;"
+            draggable="false"
         />
         <span class="relative">
             {text}

@@ -142,6 +142,7 @@
                                                         : 'from-contrast'}"
                                                 />
                                                 <img
+                                                    draggable="false"
                                                     src={roomData.thumbnail ?? defaultMapImg}
                                                     alt={roomData.name}
                                                     class="shrink-0 w-80 h-52 shadow-xl bg-white object-cover group-hover:scale-110 transition-all z-0"

@@ -23,6 +23,8 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import WorldIcon from "../../Icons/WorldIcon.svelte";
     import { userIsAdminStore } from "../../../Stores/GameStore";
+    import StartRecordingIcon from "../../Icons/StartRecordingIcon.svelte";
+    import { showRecordingList } from "../../../Stores/RecordingStore";
     import { IconCalendar, IconCheckList } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
@@ -76,6 +78,16 @@
         <WorldIcon />
     </ActionBarButton>
 {/if}
+
+<ActionBarButton
+    on:click={() => {
+        $showRecordingList = true;
+    }}
+    label="recording"
+    state="normal"
+>
+    <StartRecordingIcon width="20" height="20" />
+</ActionBarButton>
 
 <!-- Calendar integration -->
 {#if $isCalendarActivatedStore || $userIsAdminStore}

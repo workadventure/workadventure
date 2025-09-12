@@ -102,21 +102,21 @@ export class WebRTCState extends CommunicationState {
             let nextState: LivekitState | undefined;
             if (getCapability("api/livekit/credentials") === "v1") {
                 const credentials = await adminApi.fetchLivekitCredentials(this._space.getSpaceName(), user.playUri);
-                nextState = new LivekitState(this._space, this._communicationManager, credentials, this._readyUsers);
+                nextState = await LivekitState.create(
+                    this._space,
+                    this._communicationManager,
+                    this._readyUsers,
+                    credentials
+                );
             } else {
                 if (!LIVEKIT_HOST || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
                     throw new Error("Livekit credentials are not set in environment variables");
                 }
-                nextState = new LivekitState(
-                    this._space,
-                    this._communicationManager,
-                    {
-                        livekitHost: LIVEKIT_HOST,
-                        livekitApiKey: LIVEKIT_API_KEY,
-                        livekitApiSecret: LIVEKIT_API_SECRET,
-                    },
-                    this._readyUsers
-                ); //fallback to default credentials
+                nextState = await LivekitState.create(this._space, this._communicationManager, this._readyUsers, {
+                    livekitHost: LIVEKIT_HOST,
+                    livekitApiKey: LIVEKIT_API_KEY,
+                    livekitApiSecret: LIVEKIT_API_SECRET,
+                }); //fallback to default credentials
             }
             this._readyUsers.add(user.spaceUserId);
             this._switchInitiatorUserId = user.spaceUserId;

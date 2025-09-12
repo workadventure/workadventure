@@ -857,7 +857,7 @@ export const selectDefaultSpeaker = () => {
     if (devices !== undefined && devices.length > 0) {
         speakerSelectedStore.set(devices[0].deviceId);
     } else {
-        speakerSelectedStore.set(undefined);
+        speakerSelectedStore.set("");
     }
 };
 

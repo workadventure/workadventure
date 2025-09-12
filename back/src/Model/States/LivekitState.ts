@@ -6,14 +6,16 @@ import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
 import { LiveKitService } from "../Services/LivekitService";
+import { IRecordableState } from "../Interfaces/ICommunicationState";
+import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationState } from "./AbstractCommunicationState";
 import { WebRTCState } from "./WebRTCState";
 
-export class LivekitState extends CommunicationState {
+export class LivekitState extends CommunicationState implements IRecordableState {
     protected _currentCommunicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
 
-    constructor(
+    private constructor(
         protected readonly _space: ICommunicationSpace,
         protected readonly _communicationManager: ICommunicationManager,
         protected readonly _livekitServerCredentials: LivekitCredentialsResponse = {
@@ -21,6 +23,7 @@ export class LivekitState extends CommunicationState {
             livekitApiSecret: LIVEKIT_API_SECRET ?? "",
             livekitHost: LIVEKIT_HOST ?? "",
         },
+        protected readonly _currentStrategy: IRecordableStrategy,
         protected readonly _readyUsers: Set<string> = new Set()
     ) {
         super(
@@ -39,6 +42,29 @@ export class LivekitState extends CommunicationState {
         );
         this.SWITCH_TIMEOUT_MS = 5000;
     }
+
+    public static async create(
+        _space: ICommunicationSpace,
+        _communicationManager: ICommunicationManager,
+        _readyUsers: Set<string> = new Set(),
+        _livekitServerCredentials: LivekitCredentialsResponse = {
+            livekitApiKey: LIVEKIT_API_KEY ?? "",
+            livekitApiSecret: LIVEKIT_API_SECRET ?? "",
+            livekitHost: LIVEKIT_HOST ?? "",
+        }
+    ) {
+        const strategy = await LivekitCommunicationStrategy.create(
+            _space,
+            new LiveKitService(
+                _livekitServerCredentials.livekitHost,
+                _livekitServerCredentials.livekitApiKey,
+                _livekitServerCredentials.livekitApiSecret,
+                _livekitServerCredentials.livekitHost.replace("http", "ws")
+            )
+        );
+        return new LivekitState(_space, _communicationManager, _livekitServerCredentials, strategy, _readyUsers);
+    }
+
     async handleUserAdded(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchBackToCurrentState()) {
             this.cancelSwitch();
@@ -126,5 +152,20 @@ export class LivekitState extends CommunicationState {
 
     protected preparedSwitchAction(readyUsers: Set<string>): void {
         this._currentStrategy.initialize(readyUsers);
+    }
+
+    async handleStartRecording(user: SpaceUser, userUuid: string): Promise<void> {
+        if (this.isRecordableStrategy(this._currentStrategy)) {
+            await this._currentStrategy.startRecording(user, userUuid).catch((error) => {
+                console.error("Error starting recording:", error);
+                throw new Error("Failed to start recording");
+            });
+        }
+    }
+
+    async handleStopRecording(): Promise<void> {
+        if (this.isRecordableStrategy(this._currentStrategy)) {
+            await this._currentStrategy.stopRecording();
+        }
     }
 }

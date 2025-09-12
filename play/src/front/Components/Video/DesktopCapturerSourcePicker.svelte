@@ -61,7 +61,7 @@
     <section class="streams">
         {#each desktopCapturerSources as source (source.id)}
             <div class="media-box clickable" on:click|preventDefault={() => selectDesktopCapturerSource(source)}>
-                <img src={source.thumbnailURL} alt={source.name} />
+                <img src={source.thumbnailURL} alt={source.name} draggable="false" />
                 <div class="container">
                     {source.name}
                 </div>

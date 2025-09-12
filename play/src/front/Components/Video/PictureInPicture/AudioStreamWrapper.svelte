@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Streamable } from "../../../Stores/StreamableCollectionStore";
     import { volumeProximityDiscussionStore } from "../../../Stores/PeerStore";
-    import { speakerSelectedStore } from "../../../Stores/MediaStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../../Stores/MediaStore";
     import AudioStream from "./AudioStream.svelte";
 
     export let peer: Streamable;
@@ -13,5 +13,6 @@
         detach={peer.media.detachAudio}
         volume={$volumeProximityDiscussionStore}
         outputDeviceId={$speakerSelectedStore}
+        on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
     />
 {/if}

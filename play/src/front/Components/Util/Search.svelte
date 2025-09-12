@@ -21,7 +21,7 @@
         {disabled}
     />
     <button type="submit" class="h-full m-0 rounded-l-none">
-        <img src="/static/images/send.png" alt="Send" width="20" />
+        <img src="/static/images/send.png" alt="Send" width="20" draggable="false" />
     </button>
 </form>
 

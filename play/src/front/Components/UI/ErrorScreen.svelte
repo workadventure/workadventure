@@ -59,6 +59,7 @@
                         src={errorScreen?.imageLogo ?? logoErrorSrc}
                         alt="Logo error"
                         style="max-height:25vh; max-width:80%;"
+                        draggable="false"
                     />
                 {/if}
             </div>
@@ -68,6 +69,7 @@
                     src={errorScreen?.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif}
                     alt="Error"
                     style="height:125px; max-width:100%;"
+                    draggable="false"
                 />
             </div>
             {#if $errorScreenStore.type !== "retry"}<h2 class="mt-10">{$errorScreenStore.title}</h2>{/if}
@@ -90,6 +92,7 @@
                                 src={reload}
                                 alt=""
                                 class="reload mr-2 hover:"
+                                draggable="false"
                             />{/if}
                         {$errorScreenStore.buttonTitle}
                     </button>

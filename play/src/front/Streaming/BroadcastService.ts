@@ -2,9 +2,14 @@ import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { FilterType } from "@workadventure/messages";
+import { get } from "svelte/store";
+import { Subscription } from "rxjs";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import LL from "../../i18n/i18n-svelte";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -22,6 +27,7 @@ export class BroadcastService {
     private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
     private broadcastSpaces: SpaceInterface[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
+    private unsubscribes: Subscription[] = [];
 
     constructor(private spaceRegistry: SpaceRegistryInterface) {}
 
@@ -41,6 +47,15 @@ export class BroadcastService {
             "microphoneState",
             "megaphoneState",
         ]);
+
+        this.unsubscribes.push(
+            space.observeUserJoined.subscribe((user) => {
+                if (user.megaphoneState) {
+                    notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
+                    gameManager.getCurrentGameScene().playSound("audio-megaphone");
+                }
+            })
+        );
 
         // const broadcastSpace = broadcastSpaceFactory
         //     ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
@@ -118,6 +133,7 @@ export class BroadcastService {
      * Destroy the broadcast service
      */
     public async destroy(): Promise<void> {
+        this.unsubscribes.forEach((unsubscribe) => unsubscribe.unsubscribe());
         await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
     }
 

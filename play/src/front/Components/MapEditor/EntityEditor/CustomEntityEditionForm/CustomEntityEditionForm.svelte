@@ -124,7 +124,7 @@
     </div>
     {#if !floatingObject}
         <div>
-            <img src={LogoCollisionGrid} alt="Logo collision grid" width="28px" />
+            <img draggable="false" src={LogoCollisionGrid} alt="Logo collision grid" width="28px" />
             <p class="text-xs m-0 p-0">{$LL.mapEditor.entityEditor.customEntityEditorForm.collision()}</p>
         </div>
     {/if}

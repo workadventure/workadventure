@@ -137,9 +137,6 @@
 
             const maxVisibleVideos = rowsPerPage * vpr;
 
-            //console.log("maxVisibleVideos", maxVisibleVideos);
-            //console.log('vpr', vpr, 'rowsPerPage', rowsPerPage, 'maxVisibleVideos', maxVisibleVideos);
-
             // The "maximum" number of videos we want to display. This is either the number of videos we have
             // or the maximumVideosPerPage constant.
             // This is not 100% accurate, as if we are in "solution 2", the maximum number of videos
@@ -148,11 +145,8 @@
 
             // If we need scrolling, calculate the maximum height that would fit
             if (maxVisibleVideos < maxNbVideos) {
-                //console.log("max width for vpr", width);
-                //console.log('vpr', vpr);
                 // Calculate total number of rows needed
                 const totalRows = Math.ceil(maxNbVideos / vpr);
-                //console.log('totalRows', totalRows);
 
                 // Special case: we are on one row only, and we need to adapt the width / height of the videos to the container height
                 if (totalRows === 1) {
@@ -194,10 +188,7 @@
 
                     // We put the maximum number of visible videos in a store. This store will be used to show active participants first.
                     maxVisibleVideosStore.set(vpr * (rowsPerPage + 1));
-
-                    //console.log("Solution 1, total row", totalRows, "vpr", vpr, "adjustedVpr", adjustedVpr, "adjustedWidth", adjustedWidth, "maxHeightPerVideo", maxHeightPerVideo, "containerHeight", containerHeight, "totalRows", totalRows, "containerWidth", containerWidth);
                 } else {
-                    //console.log("Solution 2, vpr", vpr+1);
                     // if solution 2 is better, the videos will not occupy all vertical space.
                     // We can fix this by breaking the aspect ratio.
                     adjustedWidth = adjustedWidthWithOneMoreVpr;

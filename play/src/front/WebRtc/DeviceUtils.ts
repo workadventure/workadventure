@@ -31,3 +31,7 @@ export function isAndroid(): boolean {
 export function isFirefox(): boolean {
     return window.navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
 }
+
+export function isSafari(): boolean {
+    return getNavigatorType() === NavigatorType.safari;
+}

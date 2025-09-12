@@ -7,7 +7,7 @@
 </script>
 
 <div class="btn-follow" class:hide={hidden} class:cancel={cancelButton}>
-    <img src={followImg} alt="" />
+    <img draggable="false" src={followImg} alt="" />
 </div>
 
 <style lang="scss">

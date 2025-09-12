@@ -59,6 +59,8 @@ const externalModule: BaseTranslation = {
         popupCancel: "Cancel",
         isSyncronized: "Synchronized with Google",
         popupScopeToSyncMeet: "Create online meetings",
+        openingMeet: "Opening Google Meet... 🙏",
+        unableJoinMeet: "Unable to join Google Meet 😭",
         googleMeetPopupWaiting: {
             title: "Google Meet 🎉",
             subtitle: "Creating your Google Space… this will only take a moment 💪",

@@ -41,9 +41,9 @@
     out:fade={{ duration: 200 }}
 >
     <h2 class="text-lg md:text-2xl text-center">
-        <img src="resources/logos/report.svg" alt="***" class="w-4 h-5 md:w-10 md:h-10" />
+        <img src="resources/logos/report.svg" alt="***" class="w-4 h-5 md:w-10 md:h-10" draggable="false" />
         {$LL.warning.importantMessage()}
-        <img src="resources/logos/report.svg" alt="***" class="w-4 h-5 md:w-10 md:h-10" />
+        <img src="resources/logos/report.svg" alt="***" class="w-4 h-5 md:w-10 md:h-10" draggable="false" />
     </h2>
     <div class="overflow-auto py-2 h-3/5 xl:h-fit h-max-96 my-0 md:my-3 lg:p-5">
         <p class="text-sm md:text-base">{message.text}</p>

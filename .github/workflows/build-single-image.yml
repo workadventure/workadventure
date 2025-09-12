@@ -98,7 +98,7 @@ jobs:
             "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || null }}"
             "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME_SLUG, env.GITHUB_SHA) }}"
           # Some images (the play image) can be built in two modes: normal mode and fast mode (without Legacy browser support)
           # We use the FAST_BUILD build-arg to control this.
