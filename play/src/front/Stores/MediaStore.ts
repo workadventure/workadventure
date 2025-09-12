@@ -244,7 +244,7 @@ export const videoConstraintStore = derived(
 export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($microphoneDeviceIdStore) => {
     let constraints = {
         //TODO: make these values configurable in the game settings menu and store them in localstorage
-        autoGainControl: false,
+        autoGainControl: true,
         echoCancellation: true,
         noiseSuppression: true,
     } as boolean | MediaTrackConstraints;
