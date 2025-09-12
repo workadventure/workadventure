@@ -1076,7 +1076,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         } catch (error) {
             console.error("Error adding room to space: ", error);
             Sentry.captureException(error);
-            throw new Error(get(LL).chat.addRoomToFolderError());
+            throw new Error(get(LL).chat.addRoomToFolderError(), { cause: error });
         }
     }
 

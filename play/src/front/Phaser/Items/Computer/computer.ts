@@ -60,7 +60,7 @@ export default {
                 if (err instanceof z.ZodError) {
                     console.error(err.issues);
                 }
-                throw new Error(`Invalid state received for computer object`);
+                throw new Error(`Invalid state received for computer object`, { cause: err });
             }
         }
 

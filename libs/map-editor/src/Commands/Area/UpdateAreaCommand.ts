@@ -24,7 +24,7 @@ export class UpdateAreaCommand extends Command {
             try {
                 this.oldConfig = structuredClone(oldConfig);
             } catch (e) {
-                throw new Error(String(e));
+                throw new Error(String(e), { cause: e });
             }
         } else {
             this.oldConfig = oldConfig;
@@ -32,7 +32,7 @@ export class UpdateAreaCommand extends Command {
         try {
             this.newConfig = structuredClone(this.parseDataToModify(dataToModify));
         } catch (e) {
-            throw new Error(String(e));
+            throw new Error(String(e), { cause: e });
         }
     }
 
