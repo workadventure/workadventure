@@ -200,15 +200,6 @@ export class SocketManager implements ZoneEventListener {
                         "':",
                     err
                 );
-
-                Sentry.captureMessage(
-                    "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        err,
-                    "debug"
-                );
                 if (!socketData.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -319,16 +310,6 @@ export class SocketManager implements ZoneEventListener {
                             "'at :" +
                             date.toLocaleString("en-GB"),
                         err
-                    );
-                    Sentry.captureMessage(
-                        "Error in connection to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            socketData.roomId +
-                            "': " +
-                            socketData.userUuid +
-                            err,
-                        "debug"
                     );
                     if (!socketData.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");

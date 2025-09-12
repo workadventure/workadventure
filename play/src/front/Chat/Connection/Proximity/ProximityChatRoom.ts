@@ -485,12 +485,10 @@ export class ProximityChatRoom implements ChatRoom {
         this._spacePromise = this._spacePromise.then(async (space) => {
             if (!space) {
                 console.error("Trying to leave a space that is not joined");
-                Sentry.captureMessage("Trying to leave a space that is not joined");
                 return;
             }
             if (space.getName() !== spaceName) {
                 console.error("Trying to leave a space different from the one joined");
-                Sentry.captureMessage("Trying to leave a space different from the one joined");
                 return;
             }
 
@@ -558,7 +556,6 @@ export class ProximityChatRoom implements ChatRoom {
     public dispatchSound(url: URL): Promise<void> {
         if (!this._space) {
             console.error("Trying to dispatch sound in a space that is not joined");
-            Sentry.captureMessage("Trying to dispatch sound in a space that is not joined");
             return Promise.resolve();
         }
         return this._space.dispatchSound(url);

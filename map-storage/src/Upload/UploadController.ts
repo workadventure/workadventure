@@ -682,9 +682,6 @@ export class UploadController {
                                 `[${new Date().toISOString()}] Failed to execute all request on resourceUrl`,
                                 error
                             );
-                            Sentry.captureMessage(
-                                `Failed to execute all request on resourceUrl ${JSON.stringify(error)}`
-                            );
                         }
                     }
                 }

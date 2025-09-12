@@ -170,7 +170,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 const space = this.spaces.get(message.spaceName);
                 if (!space) {
                     console.error("Space does not exist", message.spaceName);
-                    Sentry.captureException(new Error(`Space does not exist: ${message.spaceName}`));
                     return;
                 }
 

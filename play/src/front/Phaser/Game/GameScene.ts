@@ -1685,7 +1685,6 @@ export class GameScene extends DirtyScene {
                     .catch((e) => {
                         const errorMessage = "Failed to get chatConnection from gameManager : " + e;
                         console.error(errorMessage);
-                        Sentry.captureMessage(e);
                     });
 
                 this.initExtensionModule();
