@@ -522,7 +522,10 @@ export class MatrixChatRoom
             return;
         } catch (error) {
             console.error("Unable to leave", error);
-            throw new Error("Failed to leave room", { cause: error });
+            const err = new Error("Failed to leave room");
+            // Preserve original error for debugging - ESLint preserve-caught-error rule
+            Object.defineProperty(err, 'cause', { value: error, writable: false });
+            throw err;
         }
     }
     async inviteUsers(userIds: string[]): Promise<void> {

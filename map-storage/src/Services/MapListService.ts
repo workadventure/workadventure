@@ -91,12 +91,14 @@ export class MapListService {
                 wam: WAMFileFormat.parse(wamFileMigration.migrate(JSON.parse(wamFileString))),
             };
         } catch (e) {
-            throw new Error(
+            const error = new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
                     e
-                )}. Skipping this file for cache generation.`,
-                { cause: e }
+                )}. Skipping this file for cache generation.`
             );
+            // Preserve original error for debugging - ESLint preserve-caught-error rule
+            Object.defineProperty(error, 'cause', { value: e, writable: false });
+            throw error;
         }
     }
 

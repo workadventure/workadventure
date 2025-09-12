@@ -408,7 +408,10 @@ export class AdminController extends BaseHttpController {
                     });
                 });
             } catch (err) {
-                throw new Error("sendChatMessagePrompt => error" + err, { cause: err });
+                const error = new Error("sendChatMessagePrompt => error" + err);
+                // Preserve original error for debugging - ESLint preserve-caught-error rule
+                Object.defineProperty(error, 'cause', { value: err, writable: false });
+                throw error;
             }
 
             res.send("ok");
@@ -459,7 +462,10 @@ export class AdminController extends BaseHttpController {
                     });
                 });
             } catch (err) {
-                throw new Error("dispatchExternalModuleEvent => error: " + err, { cause: err });
+                const error = new Error("dispatchExternalModuleEvent => error: " + err);
+                // Preserve original error for debugging - ESLint preserve-caught-error rule
+                Object.defineProperty(error, 'cause', { value: err, writable: false });
+                throw error;
             }
 
             res.send("ok");

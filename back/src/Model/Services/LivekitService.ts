@@ -202,7 +202,10 @@ export class LiveKitService {
         } catch (error) {
             console.error("Failed to start recording:", error);
             Sentry.captureException(error);
-            throw new Error("Failed to start recording", { cause: error });
+            const err = new Error("Failed to start recording");
+            // Preserve original error for debugging - ESLint preserve-caught-error rule
+            Object.defineProperty(err, 'cause', { value: error, writable: false });
+            throw err;
         }
     }
 

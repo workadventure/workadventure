@@ -24,7 +24,10 @@ export class UpdateAreaCommand extends Command {
             try {
                 this.oldConfig = structuredClone(oldConfig);
             } catch (e) {
-                throw new Error(String(e), { cause: e });
+                const error = new Error(String(e));
+                // Preserve original error for debugging - ESLint preserve-caught-error rule
+                Object.defineProperty(error, 'cause', { value: e, writable: false });
+                throw error;
             }
         } else {
             this.oldConfig = oldConfig;
@@ -32,7 +35,10 @@ export class UpdateAreaCommand extends Command {
         try {
             this.newConfig = structuredClone(this.parseDataToModify(dataToModify));
         } catch (e) {
-            throw new Error(String(e), { cause: e });
+            const error = new Error(String(e));
+            // Preserve original error for debugging - ESLint preserve-caught-error rule
+            Object.defineProperty(error, 'cause', { value: e, writable: false });
+            throw error;
         }
     }
 

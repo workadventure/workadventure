@@ -379,7 +379,10 @@ class ConnectionManager {
                         if (this._currentRoom.authenticationMandatory) {
                             const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
-                                throw new Error("Unable to redirect on login page.", { cause: err });
+                                const error = new Error("Unable to redirect on login page.");
+                                // Preserve original error for debugging - ESLint preserve-caught-error rule
+                                Object.defineProperty(error, 'cause', { value: err, writable: false });
+                                throw error;
                             }
                             return redirect;
                         } else {

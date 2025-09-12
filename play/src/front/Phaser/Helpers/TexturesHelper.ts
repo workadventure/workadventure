@@ -45,7 +45,10 @@ export class TexturesHelper {
             });
         } catch (error) {
             rt.destroy();
-            throw new Error("Could not get the snapshot: " + error, { cause: error });
+            const err = new Error("Could not get the snapshot: " + error);
+            // Preserve original error for debugging - ESLint preserve-caught-error rule
+            Object.defineProperty(err, 'cause', { value: error, writable: false });
+            throw err;
         }
     }
 

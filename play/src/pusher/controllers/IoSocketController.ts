@@ -449,7 +449,10 @@ export class IoSocketController {
                             );
                             Sentry.captureException(e);
                             console.error(e);
-                            throw new Error("User cannot access this world", { cause: e });
+                            const error = new Error("User cannot access this world");
+                            // Preserve original error for debugging - ESLint preserve-caught-error rule
+                            Object.defineProperty(error, 'cause', { value: e, writable: false });
+                            throw error;
                         }
 
                         if (upgradeAborted.aborted) {

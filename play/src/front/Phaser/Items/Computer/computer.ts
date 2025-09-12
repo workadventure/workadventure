@@ -60,7 +60,10 @@ export default {
                 if (err instanceof z.ZodError) {
                     console.error(err.issues);
                 }
-                throw new Error(`Invalid state received for computer object`, { cause: err });
+                const error = new Error(`Invalid state received for computer object`);
+                // Preserve original error for debugging - ESLint preserve-caught-error rule
+                Object.defineProperty(error, 'cause', { value: err, writable: false });
+                throw error;
             }
         }
 
