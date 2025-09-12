@@ -156,6 +156,7 @@ export function generateConfig(tsconfigRootDir) {
                 "import/no-named-as-default-member": "off",
                 "svelte/no-ignored-unsubscribe": "error",
                 //"unused-imports/no-unused-imports": "error",
+                "preserve-caught-error": "error",
             },
         }
     ]);

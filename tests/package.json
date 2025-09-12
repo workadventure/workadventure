@@ -12,7 +12,7 @@
     "axios": "^1.7.4",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
-    "eslint": "^9.33.0",
+    "eslint": "^9.35.0",
     "eslint-plugin-playwright": "^2.2.2",
     "lint-staged": "^13.0.3"
   },
