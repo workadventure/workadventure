@@ -59,6 +59,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <img
+            draggable="false"
             class="w-6 me-2"
             src="resources/icons/icon_meeting.png"
             alt={$LL.mapEditor.properties.jitsiProperties.description()}

@@ -48,6 +48,10 @@ export class FileListener {
         event.preventDefault();
         event.stopPropagation();
 
+        if (!get(draggingFile)) {
+            return;
+        }
+
         const gameScene = gameManager.getCurrentGameScene();
 
         const userIsAdmin = gameScene.connection?.isAdmin();
@@ -121,6 +125,11 @@ export class FileListener {
     }
 
     private dragEnterHandler(event: DragEvent) {
+        // If the drag event comes from an element inside the page, we ignore it
+        // Note: relatedTarget is always null on WebKit because of a bug: https://bugs.webkit.org/show_bug.cgi?id=66547
+        if (event.relatedTarget) {
+            return;
+        }
         event.preventDefault();
 
         draggingFile.set(true);
@@ -128,8 +137,6 @@ export class FileListener {
 
     private dragOverHandler(event: DragEvent) {
         event.preventDefault();
-
-        draggingFile.set(true);
     }
 
     private dragLeaveHandler(event: DragEvent) {

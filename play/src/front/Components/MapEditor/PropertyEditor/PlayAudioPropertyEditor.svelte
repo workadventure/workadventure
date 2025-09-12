@@ -80,7 +80,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 me-2" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
+        <img
+            class="w-6 me-2"
+            src={audioSvg}
+            alt={$LL.mapEditor.properties.audioProperties.description()}
+            draggable="false"
+        />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">

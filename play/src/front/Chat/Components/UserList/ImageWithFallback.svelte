@@ -15,4 +15,4 @@
     $: currentSrc = src ?? fallback;
 </script>
 
-<img class={classes} src={currentSrc} {alt} on:error={handleError} />
+<img class={classes} src={currentSrc} {alt} on:error={handleError} draggable="false" />

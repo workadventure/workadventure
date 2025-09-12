@@ -50,9 +50,19 @@
                 <p class="err">
                     {$LL.notification.help.firefoxContent()}
                 </p>
-                <img src={$LL.notification.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
+                <img
+                    draggable="false"
+                    src={$LL.notification.help.screen.firefox()}
+                    alt="help camera setup"
+                    class="w-full m-auto"
+                />
             {:else if isChrome && !isAndroid}
-                <img src={$LL.notification.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
+                <img
+                    draggable="false"
+                    src={$LL.notification.help.screen.chrome()}
+                    alt="help camera setup"
+                    class="w-full m-auto"
+                />
             {/if}
         </div>
     </section>

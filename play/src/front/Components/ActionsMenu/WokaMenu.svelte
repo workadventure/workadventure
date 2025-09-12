@@ -169,7 +169,7 @@
                         data-testid="sendMessagefromVisitCardButton"
                         on:click={() => openChat(remotePlayer?.chatID ?? "")}
                     >
-                        <img src={chat} alt="chat" class="w-6 h-6" />
+                        <img draggable="false" src={chat} alt="chat" class="w-6 h-6" />
                         <span class="flex flex-row gap-2 items-center justify-center">
                             {$LL.menu.visitCard.sendMessage()}
                         </span>

@@ -81,7 +81,7 @@ export class EntryScene extends Scene {
                 if ((this.load as any).rexAwait) {
                     resolve();
                 } else {
-                    console.log("Waiting for rex plugins to be loaded...");
+                    console.info("Waiting for rex plugins to be loaded...");
                     setTimeout(check, 100);
                 }
             };

@@ -142,7 +142,7 @@
                         on:click|preventDefault={() => switchTool(tool.toolName)}
                         type="button"
                     >
-                        <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
+                        <img draggable="false" class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
                     </button>
                     <div
                         class=" bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 invisible opacity-0 transition-all peer-hover:visible peer-hover:opacity-100 rounded top-1/2 -translate-y-1/2 right-[130%]"

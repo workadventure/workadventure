@@ -7,8 +7,11 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UserProviderMerger } from "../UserProviderMerger/UserProviderMerger";
+    import { hideActionBarStoreBecauseOfChatBar } from "../ChatSidebarWidthStore";
+    import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import OnlineUsersCount from "./OnlineUsersCount.svelte";
-    import { IconMessageCircle2, IconSearch, IconUsers, IconX } from "@wa-icons";
+    import ChatActionMenu from "./ChatActionMenu.svelte";
+    import { IconMessageCircle2, IconUsers } from "@wa-icons";
 
     const gameScene = gameManager.getCurrentGameScene();
     const chat = gameManager.chatConnection;
@@ -16,15 +19,24 @@
     const showUserListButton = gameScene.room.isChatOnlineListEnabled;
     const showNavBar = gameScene.room.isChatOnlineListEnabled || gameScene.room.isChatDisconnectedListEnabled;
     const userProviderMergerPromise = gameScene.userProviderMerger;
-    let searchLoader = false;
     const chatStatusStore = chat.connectionStatus;
     let typingTimer: ReturnType<typeof setTimeout>;
+    let searchLoader = false;
     const DONE_TYPING_INTERVAL = 2000;
 
-    let searchValue = "";
+    $: isInSpecificDiscussion = $selectedRoomStore !== undefined;
+
+    function handleToggleSearch() {
+        searchActive = !searchActive;
+
+        if (!searchActive) {
+            chatSearchBarValue.set("");
+            joignableRoom.set([]);
+        }
+    }
 
     const handleKeyDown = () => {
-        if (searchValue === "") joignableRoom.set([]);
+        if ($chatSearchBarValue === "") joignableRoom.set([]);
         clearTimeout(typingTimer);
     };
 
@@ -67,7 +79,7 @@
     }
 </script>
 
-<div class="p-2 flex items-center absolute w-full z-40">
+<div class=" relative p-2 flex items-center w-full z-40">
     <div class={searchActive ? "hidden" : ""}>
         {#if showNavBar}
             {#if $navChat.key === "chat" && showUserListButton}
@@ -99,42 +111,37 @@
             <OnlineUsersCount {searchActive} />
         {/if}
     </div>
-    <div class="">
-        {#if $chatStatusStore !== "OFFLINE"}
-            <button
-                class="p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 relative z-50"
-                on:click={() => (searchActive = !searchActive)}
-            >
-                {#if searchLoader}
-                    <LoadingSmall />
-                {/if}
-                {#if !searchActive}
-                    <IconSearch font-size="20" />
-                {:else}
-                    <IconX font-size="20" />
-                {/if}
-            </button>
-        {:else}
-            <div class="w-12" />
-        {/if}
-        <!-- searchbar -->
-        {#if searchActive && $chatStatusStore !== "OFFLINE"}
-            {#await userProviderMergerPromise}
-                <div />
-            {:then userProviderMerger}
-                <div class="absolute w-full h-full z-40 right-0 top-0 bg-contrast/30">
-                    <input
-                        autocomplete="new-password"
-                        class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
-                        placeholder={$navChat.key === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
-                        on:keydown={handleKeyDown}
-                        on:keyup={() => handleKeyUp(userProviderMerger)}
-                        bind:value={$chatSearchBarValue}
-                        on:focusin={focusChatInput}
-                        on:focusout={unfocusChatInput}
-                    />
-                </div>
-            {/await}
-        {/if}
+    <div class="relative">
+        <ChatActionMenu
+            {searchActive}
+            hasCloseChat={$hideActionBarStoreBecauseOfChatBar}
+            hasSearch={$chatStatusStore !== "OFFLINE" && !isInSpecificDiscussion}
+            on:toggleSearch={handleToggleSearch}
+        />
+        <!-- Ici j'ai le bouton qui s'affiche pour chercher des utilisateurs ou des chats -->
     </div>
+    <!-- searchbar -->
+    {#if searchActive && $chatStatusStore !== "OFFLINE"}
+        {#await userProviderMergerPromise}
+            <div />
+        {:then userProviderMerger}
+            <div class="absolute w-full h-full z-40 right-0 top-0 bg-contrast/30">
+                <input
+                    autocomplete="new-password"
+                    class="wa-searchbar block text-white placeholder:text-white/50 w-full placeholder:text-sm border-none pl-6 pr-20 bg-transparent py-3 text-base h-full"
+                    placeholder={$navChat.key === "users" ? $LL.chat.searchUser() : $LL.chat.searchChat()}
+                    on:keydown={handleKeyDown}
+                    on:keyup={() => handleKeyUp(userProviderMerger)}
+                    bind:value={$chatSearchBarValue}
+                    on:focusin={focusChatInput}
+                    on:focusout={unfocusChatInput}
+                />
+                {#if searchLoader}
+                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <LoadingSmall />
+                    </div>
+                {/if}
+            </div>
+        {/await}
+    {/if}
 </div>

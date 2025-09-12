@@ -134,7 +134,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => pin()}
         >
-            <img src={PinSvg} class="w-4 h-4" alt="" />
+            <img src={PinSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.pin()}
         </button>
     {/if}
@@ -144,7 +144,7 @@
         class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
     >
-        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
+        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
         {$LL.camera.menu.muteAudioUser()}
     </button>
 
@@ -154,7 +154,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody(spaceUser)}
         >
-            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
+            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteAudioEveryBody()}
         </button>
     {/if}
@@ -165,7 +165,7 @@
         class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
     >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="" />
+        <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
         {$LL.camera.menu.muteVideoUser()}
     </button>
 
@@ -175,7 +175,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteVideoEveryBody(spaceUser)}
         >
-            <img src={NoVideoSvg} class="w-4 h-4" alt="" />
+            <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteVideoEveryBody()}
         </button>
     {/if}
@@ -187,7 +187,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => kickoff(spaceUser)}
         >
-            <img src={banUserSvg} class="w-4 h-4" alt="" />
+            <img src={banUserSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.kickoffUser()}
         </button>
     {/if}
