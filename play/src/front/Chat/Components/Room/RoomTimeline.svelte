@@ -180,7 +180,9 @@
     function onUpdateMessageBody(event: CustomEvent) {
         if (
             autoScroll ||
-            (event.detail.id === $messages[$messages.length - 1].id &&
+            (event.detail != undefined &&
+                $messages.length > 0 &&
+                event.detail.id === $messages[$messages.length - 1].id &&
                 $messages[$messages.length - 1].sender?.chatId === myChatID)
         ) {
             scrollToMessageListBottom();

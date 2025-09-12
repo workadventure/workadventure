@@ -5,7 +5,6 @@ import {
     WAMEntityData,
     WAMFileFormat,
 } from "@workadventure/map-editor";
-import * as Sentry from "@sentry/node";
 import * as jsonpatch from "fast-json-patch";
 import pLimit from "p-limit";
 import { HookManager } from "../../Modules/HookManager";
@@ -83,7 +82,6 @@ export class UpdateEntityMapStorageCommand extends UpdateEntityCommand {
             await Promise.all(promises);
         } catch (error) {
             console.error(`[${new Date().toISOString()}] Failed to execute all request on resourceUrl`, error);
-            Sentry.captureMessage(`Failed to execute all request on resourceUrl ${JSON.stringify(error)}`);
         }
 
         return await super.execute();

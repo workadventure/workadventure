@@ -11,7 +11,6 @@ import { deriveKey } from "matrix-js-sdk/lib/crypto/key_passphrase";
 import { decodeRecoveryKey } from "matrix-js-sdk/lib/crypto/recoverykey";
 import { openModal } from "svelte-modals";
 import { writable } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
 import { VerificationMethod } from "matrix-js-sdk/lib/types";
 import { Phase } from "matrix-js-sdk/lib/crypto/verification/request/VerificationRequest";
 import { Deferred } from "ts-deferred";
@@ -124,7 +123,6 @@ export class MatrixSecurity {
                 .bind(this)()
                 .catch((error) => {
                     console.error("initClientCryptoConfiguration error: ", error);
-                    Sentry.captureMessage(`initClientCryptoConfiguration error : ${error}`);
                     this.initializingEncryptionPromise = undefined;
                     initializingEncryptionReject(asError(error));
                     return;
@@ -267,8 +265,7 @@ export class MatrixSecurity {
 
             alreadyAskForInitCryptoConfiguration.set(false);
         } catch (error) {
-            console.error("Failed to reset KeybackUp");
-            Sentry.captureMessage(`Failed to reset key storage : ${error}`);
+            console.error("Failed to reset KeybackUp", error);
         }
     }
 
@@ -344,7 +341,6 @@ export class MatrixSecurity {
                 }
             });
         } catch (error) {
-            Sentry.captureMessage(`Failed to verify this device :  ${error}`);
             console.error("Failed to verify this device", error);
         }
     }
@@ -407,8 +403,7 @@ export class MatrixSecurity {
             }
             await this.initClientCryptoConfiguration();
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage(`Failed to open modal to choose Verification modal method : ${error}`);
+            console.error("Failed to open modal to choose Verification modal method:", error);
         } finally {
             this.isVerifyingDevice = false;
         }

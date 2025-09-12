@@ -548,7 +548,11 @@ export class SimplePeer {
         }
 
         for (const track of localScreenCapture.getTracks()) {
-            PeerConnection.addTrack(track, localScreenCapture);
+            try {
+                PeerConnection.addTrack(track, localScreenCapture);
+            } catch (e) {
+                console.error("May be the Track is already added!", e);
+            }
         }
         return;
     }

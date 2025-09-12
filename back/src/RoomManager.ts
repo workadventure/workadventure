@@ -281,15 +281,6 @@ const roomManager = {
                     "at : ",
                     today.toLocaleString("en-GB")
                 );
-
-                Sentry.captureMessage(
-                    `Connection lost with user
-                    ${JSON.stringify(user?.uuid)}
-                    ${JSON.stringify(user?.name)}
-                    in room 
-                    ${JSON.stringify(room?.roomUrl)}`,
-                    "debug"
-                );
                 call.write({
                     message: {
                         $case: "errorMessage",

@@ -170,7 +170,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 const space = this.spaces.get(message.spaceName);
                 if (!space) {
                     console.error("Space does not exist", message.spaceName);
-                    Sentry.captureException(new Error(`Space does not exist: ${message.spaceName}`));
                     return;
                 }
 
@@ -303,7 +302,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 if (!this.leavingSpacesPromises.has(space.getName())) {
                     await space.destroy();
                     console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-                    Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
                 }
             })
         );

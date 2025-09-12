@@ -89,7 +89,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             const user = usersList.get(spaceUser.spaceUserId);
             if (!user) {
                 console.error("User not found in this space", spaceUser);
-                Sentry.captureMessage(`User not found in this space ${spaceUser.spaceUserId}`);
                 return;
             }
 
@@ -171,7 +170,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
 
             if (!user) {
                 console.error("User not found in this space", spaceUserId);
-                Sentry.captureMessage(`User not found in this space ${spaceUserId}`);
                 return;
             }
 

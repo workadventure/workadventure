@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import {
         ChatRoomMember,
@@ -38,8 +37,7 @@
         banInProgress = true;
         room.ban(id)
             .catch((e) => {
-                console.error(e);
-                Sentry.captureMessage(`Failed to ban user : ${e}`);
+                console.error("Failed to ban user:", e);
             })
             .finally(() => {
                 banInProgress = false;
@@ -51,8 +49,7 @@
 
         room.unban(id)
             .catch((e) => {
-                console.error(e);
-                Sentry.captureMessage(`Failed to unban user : ${e}`);
+                console.error("Failed to unban user:", e);
             })
             .finally(() => {
                 unbanInProgress = false;
@@ -63,8 +60,7 @@
         kickInProgress = true;
         room.kick(id)
             .catch((e) => {
-                console.error(e);
-                Sentry.captureMessage(`Failed to kick user : ${e}`);
+                console.error("Failed to kick user:", e);
             })
             .finally(() => {
                 kickInProgress = false;
@@ -75,8 +71,7 @@
         inviteInProgress = true;
         room.inviteUsers([id])
             .catch((e) => {
-                console.error(e);
-                Sentry.captureMessage(`Failed to invite user : ${e}`);
+                console.error("Failed to invite user:", e);
             })
             .finally(() => {
                 inviteInProgress = false;
@@ -96,7 +91,6 @@
             case "leave":
                 return IconDoorExit;
             default:
-                Sentry.captureMessage("Failed to get icon for membership :  " + membership);
                 console.error("Failed to get icon for membership :  " + membership);
                 return IconPoint;
         }

@@ -1,5 +1,4 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-import * as Sentry from "@sentry/node";
 import { Request, Response } from "express";
 import Debug from "debug";
 import { matrixProvider } from "../services/MatrixProvider";
@@ -187,8 +186,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
         });
     }
     private handleError(res: Response, error: unknown) {
-        console.error(error);
-        Sentry.captureMessage(`Internal Server Error : ${error}`);
+        console.error("Internal Server Error:", error);
         return res.status(500).send("Internal Server Error");
     }
 }

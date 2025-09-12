@@ -301,8 +301,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         try {
             await this.waitInitialSync();
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage("Failed to wait initial sync");
+            console.error("Failed to wait initial sync:", error);
         }
     }
 

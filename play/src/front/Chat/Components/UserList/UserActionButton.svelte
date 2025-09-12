@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import * as Sentry from "@sentry/svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
@@ -53,7 +52,6 @@
             })
             .catch((error) => {
                 console.error("Failed to compute popover position : ", error);
-                Sentry.captureMessage(`Failed to compute popover position ${error}`);
             });
     }
 
