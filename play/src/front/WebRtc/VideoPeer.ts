@@ -485,7 +485,7 @@ export class VideoPeer extends Peer implements Streamable {
             attachAudio: (container: HTMLAudioElement) => {
                 const unsubscribe = this._streamStore.subscribe((stream) => {
                     if (stream) {
-                        container.srcObject = new MediaStream(stream);
+                        container.srcObject = stream;
                     } else {
                         container.srcObject = null;
                     }
