@@ -302,7 +302,6 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 if (!this.leavingSpacesPromises.has(space.getName())) {
                     await space.destroy();
                     console.warn(`Space "${space.getName()}" was not destroyed properly.`);
-                    Sentry.captureException(new Error(`Space "${space.getName()}" was not destroyed properly.`));
                 }
             })
         );
