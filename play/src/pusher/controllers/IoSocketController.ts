@@ -228,6 +228,7 @@ export class IoSocketController {
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             upgrade: (res, req, context) => {
+                console.log("upgrading websocket");
                 (async () => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
@@ -449,7 +450,7 @@ export class IoSocketController {
                             );
                             Sentry.captureException(e);
                             console.error(e);
-                            throw new Error("User cannot access this world");
+                            throw new Error("User cannot access this world", { cause: e });
                         }
 
                         if (upgradeAborted.aborted) {

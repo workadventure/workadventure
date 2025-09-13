@@ -3,7 +3,7 @@
       "rootDir": "src",
       "outDir": "dist",
       "baseUrl": "./",
-      "target": "es2020",
+      "target": "es2022",
       "lib": [
         "es2020",
         "dom"

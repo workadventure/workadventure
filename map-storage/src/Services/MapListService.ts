@@ -94,7 +94,8 @@ export class MapListService {
             throw new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
                     e
-                )}. Skipping this file for cache generation.`
+                )}. Skipping this file for cache generation.`,
+                { cause: e }
             );
         }
     }
