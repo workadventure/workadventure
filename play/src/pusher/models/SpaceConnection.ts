@@ -20,7 +20,7 @@ export interface SpaceConnectionInterface {
     removeSpace(space: SpaceInterface): void;
 }
 
-export class SpaceConnection {
+export class SpaceConnection implements SpaceConnectionInterface {
     private spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>> = new Map<
         number,
         Promise<BackSpaceConnection>
@@ -333,6 +333,8 @@ export class SpaceConnection {
         if (!message.message) return undefined;
 
         switch (message.message.$case) {
+            case "initSpaceUsersMessage":
+                return message.message.initSpaceUsersMessage?.spaceName;
             case "addSpaceUserMessage":
                 return message.message.addSpaceUserMessage?.spaceName;
             case "updateSpaceUserMessage":
@@ -352,8 +354,10 @@ export class SpaceConnection {
             }
             case "pingMessage":
                 return undefined;
-            default:
+            default: {
+                const _exhaustiveCheck: never = message.message;
                 return undefined;
+            }
         }
     }
 }

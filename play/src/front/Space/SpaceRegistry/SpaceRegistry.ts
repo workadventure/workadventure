@@ -301,6 +301,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     }
 
     async destroy() {
+        this.initSpaceUsersMessageStreamSubscription.unsubscribe();
         this.addSpaceUserMessageStreamSubscription.unsubscribe();
         this.updateSpaceUserMessageStreamSubscription.unsubscribe();
         this.removeSpaceUserMessageStreamSubscription.unsubscribe();

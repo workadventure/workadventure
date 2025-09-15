@@ -15,7 +15,7 @@ import {
     SpaceIsTyping,
     SpaceMessage,
     FilterType,
-    InitSpaceUsersPusherToFrontMessage,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
@@ -27,7 +27,7 @@ import { SpaceUserExtended } from "../SpaceInterface";
 
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public closed = false;
-    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
+    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
