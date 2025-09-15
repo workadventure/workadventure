@@ -9,12 +9,14 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
+import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 
 export interface UserSimplePeerInterface {
     userId: string;
@@ -29,7 +31,7 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
  * This class manages connections to all the peers in the same group as me.
  *
  */
-export class SimplePeer {
+export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly _unsubscribers: (() => void)[] = [];
     private readonly _rxJsUnsubscribers: Subscription[] = [];
     private _lastWebrtcUserName: string | undefined;
@@ -255,8 +257,15 @@ export class SimplePeer {
 
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
-        this._space.allVideoStreamStore.set(user.userId, peer);
-        this._streamableSubjects.videoPeerAdded.next(peer.media);
+        const videoBox: VideoBox = {
+            id: "video_" + user.userId,
+            SpaceUser: spaceUser,
+            streamable: peer,
+            priority: VIDEO_STARTING_PRIORITY,
+        };
+        
+        this._space.allVideoStreamStore.set(user.userId, videoBox);
+        this._streamableSubjects.videoPeerAdded.next(videoBox.streamable.media);
         return peer;
     }
 
@@ -304,6 +313,13 @@ export class SimplePeer {
             false
         );
 
+        const videoBox: VideoBox = {
+            id: "video_" + user.userId,
+            SpaceUser: spaceUser,
+            streamable: peer,
+            priority: SCREEN_SHARE_STARTING_PRIORITY,
+        };
+
         // Create subscription to statusStore to close connection when user stop sharing screen
         // Is automatically unsubscribed when peer is destroyed
         this._unsubscribers.push(
@@ -323,11 +339,11 @@ export class SimplePeer {
 
         // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("stream", (stream) => {
-            this._space.allScreenShareStreamStore.set(user.userId, peer);
+            this._space.allScreenShareStreamStore.set(user.userId, videoBox);
         });
 
         this.screenSharePeers.set(user.userId, peer);
-        this._streamableSubjects.screenSharingPeerAdded.next(peer.media);
+        this._streamableSubjects.screenSharingPeerAdded.next(videoBox.streamable.media);
         //}
         return peer;
     }
@@ -435,9 +451,9 @@ export class SimplePeer {
         }
     }
 
-    /**
-     * Unregisters any held event handler.
-     */
+    // /**
+    //  * Unregisters any held event handler.
+    //  */
     public unregister() {
         for (const unsubscriber of this._unsubscribers) {
             unsubscriber();
