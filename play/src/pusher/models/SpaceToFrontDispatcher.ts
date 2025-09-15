@@ -303,13 +303,17 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         const receiver = this._space._localConnectedUser.get(message.receiverUserId);
 
         if (!receiver) {
-            console.warn(`Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`);
+            console.warn(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+            );
             return;
         }
 
         const receiverSpaceUser = this._space._localConnectedUserWithSpaceUser.get(receiver);
         if (!receiverSpaceUser) {
-            console.warn(`Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`);
+            console.warn(
+                `Private message receiver ${message.receiverUserId} not found in space ${this._space.name}. Possibly disconnected or left the space.`
+            );
             return;
         }
 
