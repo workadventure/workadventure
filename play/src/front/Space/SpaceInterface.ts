@@ -10,6 +10,7 @@ import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
+import { VideoBox } from "./Space";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
 
@@ -58,11 +59,11 @@ export interface SpaceInterface {
     emitUpdateSpaceMetadata(metadata: Map<string, unknown>): void;
     watchSpaceMetadata(): Observable<UpdateSpaceMetadataMessage>;
     requestFullSync(): void;
-    videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    videoStreamStore: Readable<Map<string, VideoBox>>;
+    screenShareStreamStore: Readable<Map<string, VideoBox>>;
 
-    allVideoStreamStore: MapStore<string, ExtendedStreamable>;
-    allScreenShareStreamStore: MapStore<string, ExtendedStreamable>;
+    allVideoStreamStore: MapStore<string, VideoBox>;
+    allScreenShareStreamStore: MapStore<string, VideoBox>;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
     getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;

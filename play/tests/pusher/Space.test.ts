@@ -535,6 +535,7 @@ describe("SpaceConnection", () => {
 
             callbackMap.get("error")?.();
 
+            //TODO : timer avant le flushPromises
             await flushPromises();
 
             // Wait 1 second to let the reconnection happen

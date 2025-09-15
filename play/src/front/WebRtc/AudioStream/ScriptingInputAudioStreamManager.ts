@@ -71,8 +71,8 @@ export class ScriptingInputAudioStreamManager {
 
         // Let's add all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
-            if (peer.media.type === "mediaStore") {
-                this.addMediaStreamStore(peer.media.streamStore);
+            if (peer.streamable.media.type === "mediaStore") {
+                this.addMediaStreamStore(peer.streamable.media.streamStore);
             }
         });
     }
@@ -85,8 +85,8 @@ export class ScriptingInputAudioStreamManager {
 
         // Let's remove all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
-            if (peer.media.type === "mediaStore") {
-                this.removeMediaStreamStore(peer.media.streamStore);
+            if (peer.streamable.media.type === "mediaStore") {
+                this.removeMediaStreamStore(peer.streamable.media.streamStore);
             }
         });
 

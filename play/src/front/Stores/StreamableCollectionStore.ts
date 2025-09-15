@@ -26,6 +26,7 @@ import {
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 import { broadcastTracksStore } from "./BroadcastTrackStore";
+import { VideoBox } from "../Space/Space";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -78,15 +79,6 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
-    // The lower the priority, the more important the streamable is.
-    // -2: reserved for the local camera
-    // -1: reserved for the local screen sharing
-    // 0 - 1000: Videos started with scripting API
-    // From 1000 - 2000: other screen sharing streams
-    // 2000+: other streams
-    priority: number;
-    // Timestamp of the last time the streamable was speaking
-    lastSpeakTimestamp?: number;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -193,7 +185,7 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
-function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
+function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
     return derived(
         [
             broadcastTracksStore,
@@ -221,12 +213,12 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 $silentStore,
             ] /*, set*/
         ) => {
-            const peers = new Map<string, Streamable>();
+            const peers = new Map<string, VideoBox>();
 
-            const addPeer = (peer: Streamable) => {
-                peers.set(peer.uniqueId, peer);
+            const addPeer = (videoBox: VideoBox) => {
+                peers.set(videoBox.id, videoBox);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (peer instanceof ScreenSharingPeer || peer.usePresentationMode) {
+                if (videoBox.streamable instanceof ScreenSharingPeer || videoBox.streamable.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -276,6 +268,16 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
     );
 }
 
+const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBox => {
+
+    return {
+        id: streamable.uniqueId,
+        //SpaceUser: streamable.getExtendedSpaceUser(),
+        streamable,
+        priority,
+    };
+};
+
 export const streamableCollectionStore = createStreamableCollectionStore();
 
 /**
@@ -284,7 +286,7 @@ export const streamableCollectionStore = createStreamableCollectionStore();
 export const streamablePictureInPictureStore = derived(streamableCollectionStore, ($streamableCollectionStore) => {
     return new Map(
         Array.from($streamableCollectionStore.values())
-            .filter((streamable) => streamable.displayInPictureInPictureMode)
+            .filter((streamable) => streamable.streamable.displayInPictureInPictureMode)
             .map((streamable) => [streamable.uniqueId, streamable])
     );
 });
