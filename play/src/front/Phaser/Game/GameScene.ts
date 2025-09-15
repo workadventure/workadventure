@@ -1663,8 +1663,8 @@ export class GameScene extends DirtyScene {
                 this._spaceRegistry = _spaceRegistry;
                 this.spaceScriptingBridgeService = new SpaceScriptingBridgeService(this._spaceRegistry);
 
-                videoStreamStore.set(this._spaceRegistry.videoStreamStore);
-                screenShareStreamStore.set(this._spaceRegistry.screenShareStreamStore);
+                videoStreamStore.forward(this._spaceRegistry.videoStreamStore);
+                screenShareStreamStore.forward(this._spaceRegistry.screenShareStreamStore);
                 this._spaceRegistry
                     .joinSpace(WORLD_SPACE_NAME, FilterType.ALL_USERS, ["availabilityStatus", "chatID"])
                     .then((space) => {
