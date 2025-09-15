@@ -47,16 +47,16 @@ describe("Space with filter", () => {
             });
             space.addWatcher(watcherToAdd);
 
-            expect(writeFunctionMock).toHaveBeenCalledTimes(4);
+            expect(writeFunctionMock).toHaveBeenCalledTimes(2);
 
             expect(writeFunctionMock).toHaveBeenNthCalledWith(
                 1,
                 BackToPusherSpaceMessage.fromPartial({
                     message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
+                        $case: "initSpaceUsersMessage",
+                        initSpaceUsersMessage: {
                             spaceName: "test",
-                            user: spaceUser1,
+                            users: [spaceUser1, spaceUser2, spaceUser3],
                         },
                     },
                 })
@@ -64,32 +64,6 @@ describe("Space with filter", () => {
 
             expect(writeFunctionMock).toHaveBeenNthCalledWith(
                 2,
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: "test",
-                            user: spaceUser2,
-                        },
-                    },
-                })
-            );
-
-            expect(writeFunctionMock).toHaveBeenNthCalledWith(
-                3,
-                BackToPusherSpaceMessage.fromPartial({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: {
-                            spaceName: "test",
-                            user: spaceUser3,
-                        },
-                    },
-                })
-            );
-
-            expect(writeFunctionMock).toHaveBeenNthCalledWith(
-                4,
                 BackToPusherSpaceMessage.fromPartial({
                     message: {
                         $case: "updateSpaceMetadataMessage",

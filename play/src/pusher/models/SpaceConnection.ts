@@ -88,6 +88,7 @@ export class SpaceConnection {
             try {
                 if (message.message) {
                     switch (message.message.$case) {
+                        case "initSpaceUsersMessage":
                         case "addSpaceUserMessage":
                         case "updateSpaceUserMessage":
                         case "removeSpaceUserMessage":

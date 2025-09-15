@@ -42,7 +42,7 @@ export interface SpaceInterface {
     dispatcher: SpaceToFrontDispatcherInterface;
     initSpace(): void;
     name: string;
-    handleWatch(watcher: Socket): void;
+    handleWatch(watcher: Socket): Promise<void>;
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
@@ -122,7 +122,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.forwarder.syncLocalUsersWithServer(localUsers);
     }
 
-    public handleWatch(watcher: Socket) {
+    public async handleWatch(watcher: Socket) {
         debug(`${this.name} : filter added for ${watcher.getUserData().userId}`);
 
         const spaceUser = this._localConnectedUserWithSpaceUser.get(watcher);
@@ -142,9 +142,8 @@ export class Space implements SpaceForSpaceConnectionInterface {
         this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 
-        this.users.forEach((user) => {
-            this.dispatcher.notifyMeAddUser(watcher, user);
-        });
+        // Wait for the list of users to have been received from the back and then send all the users to the front
+        await this.dispatcher.notifyMeInit(watcher);
     }
 
     public handleUnwatch(watcher: Socket) {

@@ -20,6 +20,7 @@ import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 export type RoomConnectionForSpacesInterface = Pick<
     RoomConnection,
     | "closed"
+    | "initSpaceUsersMessageStream"
     | "addSpaceUserMessageStream"
     | "updateSpaceUserMessageStream"
     | "removeSpaceUserMessageStream"
@@ -45,6 +46,7 @@ export type RoomConnectionForSpacesInterface = Pick<
 export class SpaceRegistry implements SpaceRegistryInterface {
     private spaces: MapStore<string, Space> = new MapStore<string, Space>();
     private leavingSpacesPromises: Map<string, Promise<void>> = new Map<string, Promise<void>>();
+    private initSpaceUsersMessageStreamSubscription: Subscription;
     private addSpaceUserMessageStreamSubscription: Subscription;
     private updateSpaceUserMessageStreamSubscription: Subscription;
     private removeSpaceUserMessageStreamSubscription: Subscription;
@@ -119,6 +121,20 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         private connectStream = connectionManager.roomConnectionStream,
         private throttlingDetector = globalThrottlingDetector // ✅ Instance globale par défaut
     ) {
+        this.initSpaceUsersMessageStreamSubscription = roomConnection.initSpaceUsersMessageStream.subscribe(
+            (message) => {
+                if (!message.users) {
+                    console.error(message);
+                    throw new Error("initSpaceUsersMessage is missing users");
+                }
+
+                this.spaces
+                    .get(message.spaceName)
+                    ?.initUsers(message.users)
+                    .catch((e) => console.error(e));
+            }
+        );
+
         this.addSpaceUserMessageStreamSubscription = roomConnection.addSpaceUserMessageStream.subscribe((message) => {
             if (!message.user) {
                 console.error(message);

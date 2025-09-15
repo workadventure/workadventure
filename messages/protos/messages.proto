@@ -711,6 +711,7 @@ message SubMessage {
     PrivateEventPusherToFront privateEvent = 30;
 
     SpaceDestroyedMessage spaceDestroyedMessage = 23;
+    InitSpaceUsersPusherToFrontMessage initSpaceUsersMessage = 25;
   }
 }
 
@@ -1382,6 +1383,7 @@ message BackToPusherSpaceMessage{
     PublicEvent publicEvent = 13;
     PrivateEventBackToPusher privateEvent = 14;
     SpaceAnswerMessage spaceAnswerMessage = 15;
+    InitSpaceUsersBackToPusherMessage initSpaceUsersMessage = 16;
   }
 }
 
@@ -1450,11 +1452,21 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+  // TODO: useless, can be removed and merged with the type below
   FilterType filterType = 3;
 }
 message AddSpaceUserPusherToFrontMessage{
   string spaceName = 1;
   SpaceUser user = 2;
+}
+message InitSpaceUsersBackToPusherMessage{
+  string spaceName = 1;
+  repeated SpaceUser users = 2;
+  FilterType filterType = 3;
+}
+message InitSpaceUsersPusherToFrontMessage{
+  string spaceName = 1;
+  repeated SpaceUser users = 2;
 }
 
 /**
