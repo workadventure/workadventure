@@ -3806,6 +3806,15 @@ ${escapedMessage}
     }
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        const userId = this.connection?.getUserId();
+        if (userId && groupPositionMessage.userIds.includes(userId)) {
+            this.currentPlayerGroupId = groupPositionMessage.groupId;
+        }
+
+        if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
+            currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
+        }
+
         // TODO: keep a reference to the group sprite in the conversationBubble
         const existingGroup = this.groups.get(groupPositionMessage.groupId);
         if (existingGroup) {
@@ -3829,9 +3838,6 @@ ${escapedMessage}
         );
 
         this.groups.set(groupPositionMessage.groupId, conversationBubble);
-        if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
-            currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
-        }
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
