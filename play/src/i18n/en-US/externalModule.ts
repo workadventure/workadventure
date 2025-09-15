@@ -63,7 +63,7 @@ const externalModule: BaseTranslation = {
         unableJoinMeet: "Unable to join Google Meet 😭",
         googleMeetPopupWaiting: {
             title: "Google Meet 🎉",
-            subtitle: "Creating your Google Space… this will only take a moment 💪",
+            subtitle: "Creating your Google Space… this will only take a few seconds 💪",
             guestError: "You’re not connected, so you can’t create a Google Meet 😭",
             guestExplain:
                 "Please log in to the platform to create a Google Meet, or ask the owner to create one for you 🚀",
