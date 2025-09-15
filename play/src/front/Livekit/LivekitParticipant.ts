@@ -18,6 +18,7 @@ import {
     VIDEO_STARTING_PRIORITY,
 } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { VideoBox } from "../Space/Space";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -335,12 +336,12 @@ export class LiveKitParticipant {
         const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
 
         if (oldVideoStream) {
-            this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
+            this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.streamable.media);
         }
 
         this.space.allVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
 
-        this._streamableSubjects.videoPeerAdded.next(videoStream.media);
+        this._streamableSubjects.videoPeerAdded.next(videoStream.streamable.media);
     }
 
     private updateLivekitScreenShareStreamStore() {
@@ -348,16 +349,16 @@ export class LiveKitParticipant {
         const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
 
         if (oldScreenShareStream) {
-            this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
+            this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.streamable.media);
         }
 
         this.space.allScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
 
-        this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.media);
+        this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.streamable.media);
     }
 
-    public getVideoStream(): ExtendedStreamable {
-        return {
+    public getVideoStream(): VideoBox {
+        const streamable: ExtendedStreamable = {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
             hasVideo: this._hasVideo,
@@ -407,9 +408,19 @@ export class LiveKitParticipant {
             priority: VIDEO_STARTING_PRIORITY,
             lastSpeakTimestamp: this.lastSpeakTimestamp,
         };
+
+        const videoBox: VideoBox = {
+            id: "video_" + this._spaceUser.spaceUserId,
+            SpaceUser: this._spaceUser,
+            streamable: streamable,
+            priority: VIDEO_STARTING_PRIORITY,
+            lastSpeakTimestamp: this.lastSpeakTimestamp,
+        };
+
+        return videoBox;
     }
 
-    public getScreenShareStream(): ExtendedStreamable {
+    public getScreenShareStream(): VideoBox {
         const streamable: ExtendedStreamable = {
             uniqueId: this.participant.sid,
             hasAudio: writable(false),
@@ -463,12 +474,19 @@ export class LiveKitParticipant {
             once(event, callback) {
                 callback();
             },
-            priority: SCREEN_SHARE_STARTING_PRIORITY,
         };
 
         this.highlightedEmbedScreenStore.toggleHighlight(streamable);
 
-        return streamable;
+        const videoBox: VideoBox = {
+            id: "video_" + this._spaceUser.spaceUserId,
+            SpaceUser: this._spaceUser,
+            streamable: streamable,
+            priority: SCREEN_SHARE_STARTING_PRIORITY,
+            lastSpeakTimestamp: this.lastSpeakTimestamp,
+        };
+
+        return videoBox;
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {

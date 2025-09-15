@@ -16,6 +16,7 @@ import {
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
@@ -33,6 +34,27 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
+import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+
+export interface VideoBox {
+    id: string,
+    SpaceUser: SpaceUser,
+    streamable: ExtendedStreamable,
+    // The lower the priority, the more important the streamable is.
+    // -2: reserved for the local camera
+    // -1: reserved for the local screen sharing
+    // 0 - 1000: Videos started with scripting API
+    // From 1000 - 2000: other screen sharing streams
+    // 2000+: other streams
+    priority: number;
+    // Timestamp of the last time the streamable was speaking
+    lastSpeakTimestamp?: number;
+    boxStyle?: {[key: string]: unknown} | {
+        //objet bien typé avec que des optionnals
+    },
+}
+
+
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -40,12 +62,12 @@ export class Space implements SpaceInterface {
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private _onLeaveSpace = new Subject<void>();
-    public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
+    public  readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager | undefined;
-    public allVideoStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public allScreenShareStreamStore: MapStore<string, ExtendedStreamable> = new MapStore<string, ExtendedStreamable>();
-    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    public allVideoStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
+    public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
+    public readonly videoStreamStore: Readable<Map<string, VideoBox>>;
+    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>>;
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
@@ -144,11 +166,10 @@ export class Space implements SpaceInterface {
             };
         });
 
-        //TODO : voir si utile avec les nvx roles
         this.videoStreamStore = derived(
             [this.allVideoStreamStore, this.usersStore],
             ([videoStreamStore, usersStore]) => {
-                const newVideoStreamStore = new Map<string, ExtendedStreamable>();
+                const newVideoStreamStore = new Map<string, VideoBox>();
                 for (const [key, value] of videoStreamStore.entries()) {
                     if (usersStore.has(key)) {
                         newVideoStreamStore.set(key, value);
@@ -157,11 +178,10 @@ export class Space implements SpaceInterface {
                 return newVideoStreamStore;
             }
         );
-        //TODO : voir si utile avec les nvx roles
         this.screenShareStreamStore = derived(
             [this.allScreenShareStreamStore, this.usersStore],
             ([screenShareStreamStore, usersStore]) => {
-                const newScreenShareStreamStore = new Map<string, ExtendedStreamable>();
+                const newScreenShareStreamStore = new Map<string, VideoBox>();
                 for (const [key, value] of screenShareStreamStore.entries()) {
                     if (usersStore.has(key)) {
                         newScreenShareStreamStore.set(key, value);
@@ -504,6 +524,10 @@ export class Space implements SpaceInterface {
             });
         }
 
+        //TODO : si on passe le screenSharingState a false on doit supprimer le stream de la videoBox
+        if (maskedNewData.screenSharingState && !maskedNewData.screenSharingState) {
+            this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
+        }
         /*if (this._setUsers) {
             this._setUsers(this._users);
         }*/

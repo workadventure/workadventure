@@ -1,7 +1,7 @@
 import { FilterType } from "@workadventure/messages";
 import { Readable } from "svelte/store";
-import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceInterface } from "../SpaceInterface";
+import { VideoBox } from "../Space";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
@@ -15,6 +15,6 @@ export interface SpaceRegistryInterface {
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): Promise<void>;
     destroy(): Promise<void>;
-    videoStreamStore: Readable<Map<string, ExtendedStreamable>>;
-    screenShareStreamStore: Readable<Map<string, ExtendedStreamable>>;
+    videoStreamStore: Readable<Map<string, VideoBox>>;
+    screenShareStreamStore: Readable<Map<string, VideoBox>>;
 }

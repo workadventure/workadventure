@@ -1,13 +1,13 @@
 import { derived, writable } from "svelte/store";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 
-export const videoStreamStore = new ForwardableStore<Map<string, ExtendedStreamable>>(
-    new Map<string, ExtendedStreamable>()
+export const videoStreamStore = new ForwardableStore<Map<string, VideoBox>>(
+    new Map<string, VideoBox>()
 );
-export const screenShareStreamStore = new ForwardableStore<Map<string, ExtendedStreamable>>(
-    new Map<string, ExtendedStreamable>()
+export const screenShareStreamStore = new ForwardableStore<Map<string, VideoBox>>(
+    new Map<string, VideoBox>()
 );
 
 export const videoStreamElementsStore = derived(videoStreamStore, ($videoStreamStore) => {

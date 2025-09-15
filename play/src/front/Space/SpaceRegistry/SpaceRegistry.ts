@@ -7,11 +7,10 @@ import { MapStore } from "@workadventure/store-utils";
 import { derived, Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { SpaceAlreadyExistError, SpaceDoesNotExistError } from "../Errors/SpaceError";
-import { Space } from "../Space";
+import { Space, VideoBox } from "../Space";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { throttlingDetector as globalThrottlingDetector } from "../../Utils/ThrottlingDetector";
-import { ExtendedStreamable } from "../../Stores/StreamableCollectionStore";
 import { SpaceRegistryInterface } from "./SpaceRegistryInterface";
 /**
  * The subset of properties of RoomConnection that are used by the SpaceRegistry / Space / SpaceFilter class.
@@ -56,7 +55,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private spaceDestroyedMessageSubscription: Subscription;
     private roomConnectionStreamSubscription: Subscription;
 
-    public readonly videoStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
+    public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(
         this.spaces,
         ($spaces, set) => {
             if ($spaces.size === 0) {
@@ -67,7 +66,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             const spaceStores = Array.from($spaces.values()).map((space) => space.videoStreamStore);
 
             const combinedStore = derived(spaceStores, (allSpaceStreams) => {
-                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+                const aggregatedPeers = new Map<string, VideoBox>();
 
                 allSpaceStreams.forEach((spaceStreams) => {
                     spaceStreams.forEach((streamable, userId) => {
@@ -86,7 +85,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
     );
 
-    public readonly screenShareStreamStore: Readable<Map<string, ExtendedStreamable>> = derived(
+    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>> = derived(
         this.spaces,
         ($spaces, set) => {
             if ($spaces.size === 0) {
@@ -97,7 +96,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
             const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
 
             const combinedStore = derived(spaceStores, (allSpaceStreams) => {
-                const aggregatedPeers = new Map<string, ExtendedStreamable>();
+                const aggregatedPeers = new Map<string, VideoBox>();
 
                 allSpaceStreams.forEach((spaceStreams) => {
                     spaceStreams.forEach((streamable, userId) => {
