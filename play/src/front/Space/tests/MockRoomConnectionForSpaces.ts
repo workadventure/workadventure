@@ -8,14 +8,14 @@ import {
     PublicEvent,
     PrivateEventPusherToFront,
     SpaceDestroyedMessage,
-    InitSpaceUsersPusherToFrontMessage,
+    InitSpaceUsersMessage,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry";
 
 export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInterface {
     public closed = false;
-    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
+    public initSpaceUsersMessageStream = new Subject<InitSpaceUsersMessage>();
     public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();

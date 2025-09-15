@@ -253,7 +253,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 initSpaceUsersMessage: {
                     spaceName: this.name,
                     users: allSpaceUsers,
-                    filterType: this._filterType,
                 },
             },
         });
