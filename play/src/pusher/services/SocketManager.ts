@@ -1245,7 +1245,10 @@ export class SocketManager implements ZoneEventListener {
                 },
             };
         } catch (e) {
-            console.warn(`No member found for uuid ${getMemberQuery.uuid}. Probably the user left`, e);
+            console.warn(
+                `No member found for uuid ${getMemberQuery.uuid}. Probably the user doesn’t exist in the administration console`,
+                e
+            );
             return undefined; // Ensure a value is returned in the catch block
         }
     }
