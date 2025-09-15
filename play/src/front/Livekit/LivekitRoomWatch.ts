@@ -109,7 +109,7 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         } catch (error) {
             console.error("Failed to parse participant metadata:", error);
             Sentry.captureException(error);
-            throw new Error("Invalid participant metadata");
+            throw new Error("Invalid participant metadata", { cause: error });
         }
     }
 

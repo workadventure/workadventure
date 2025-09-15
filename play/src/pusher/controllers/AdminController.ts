@@ -408,7 +408,7 @@ export class AdminController extends BaseHttpController {
                     });
                 });
             } catch (err) {
-                throw new Error("sendChatMessagePrompt => error" + err);
+                throw new Error("sendChatMessagePrompt => error" + err, { cause: err });
             }
 
             res.send("ok");
@@ -459,8 +459,8 @@ export class AdminController extends BaseHttpController {
                     });
                 });
             } catch (err) {
-                console.error("dispatchExternalModuleEvent => error", err);
-                res.status(500).send("error");
+                console.error("dispatchExternalModuleEvent => error: " + err, { cause: err });
+                res.status(500).send({ cause: err });
                 return;
             }
 

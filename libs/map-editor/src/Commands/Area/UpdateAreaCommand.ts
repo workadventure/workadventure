@@ -21,19 +21,11 @@ export class UpdateAreaCommand extends Command {
             if (!oldConfig) {
                 throw new Error("Trying to update a non existing Area!");
             }
-            try {
-                this.oldConfig = structuredClone(oldConfig);
-            } catch (e) {
-                throw new Error(String(e));
-            }
+            this.oldConfig = structuredClone(oldConfig);
         } else {
             this.oldConfig = oldConfig;
         }
-        try {
-            this.newConfig = structuredClone(this.parseDataToModify(dataToModify));
-        } catch (e) {
-            throw new Error(String(e));
-        }
+        this.newConfig = structuredClone(this.parseDataToModify(dataToModify));
     }
 
     public execute(): Promise<void> {
