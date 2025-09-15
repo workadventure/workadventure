@@ -977,7 +977,7 @@ export class SocketManager implements ZoneEventListener {
 
         const space = this.spaces.get(newFilter.spaceName);
         if (space) {
-            space.handleWatch(client);
+            await space.handleWatch(client);
         } else {
             console.error(`Add space filter called on a space (${newFilter.spaceName}) that does not exist`);
             Sentry.captureException(

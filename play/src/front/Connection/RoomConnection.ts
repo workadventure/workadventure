@@ -73,6 +73,7 @@ import {
     UploadFileMessage,
     MapStorageJwtAnswer,
     PrivateEventPusherToFront,
+    InitSpaceUsersPusherToFrontMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -201,6 +202,8 @@ export class RoomConnection implements RoomConnection {
     public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
+    private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
+    public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
     public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
@@ -399,6 +402,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "leaveMucRoomMessage": {
                                 this._leaveMucRoomMessageStream.next(subMessage.leaveMucRoomMessage);
+                                break;
+                            }
+                            case "initSpaceUsersMessage": {
+                                this._initSpaceUsersMessageStream.next(subMessage.initSpaceUsersMessage);
                                 break;
                             }
                             case "addSpaceUserMessage": {

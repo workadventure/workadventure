@@ -240,24 +240,23 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.users.set(watcher, new Map<string, SpaceUser>());
         this.usersToNotify.set(watcher, new Map<string, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
-        for (const spaceUsers of this.users.values()) {
-            for (const spaceUser of spaceUsers.values()) {
-                if (!this.filterOneUser(spaceUser)) {
-                    continue;
-                }
 
-                watcher.write({
-                    message: {
-                        $case: "addSpaceUserMessage",
-                        addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
-                            spaceName: this.name,
-                            user: spaceUser,
-                            filterType: this._filterType,
-                        }),
-                    },
-                });
-            }
+        const allSpaceUsers: SpaceUser[] = [];
+        for (const spaceUsers of this.users.values()) {
+            const filteredSpaceUsers = Array.from(spaceUsers.values()).filter((user) => this.filterOneUser(user));
+            allSpaceUsers.push(...filteredSpaceUsers);
         }
+
+        watcher.write({
+            message: {
+                $case: "initSpaceUsersMessage",
+                initSpaceUsersMessage: {
+                    spaceName: this.name,
+                    users: allSpaceUsers,
+                    filterType: this._filterType,
+                },
+            },
+        });
 
         const metadata: { [key: string]: unknown } = {};
 

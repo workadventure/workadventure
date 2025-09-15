@@ -408,6 +408,28 @@ export class Space implements SpaceInterface {
         return Array.from(get(this.usersStore).values());
     }
 
+    async initUsers(users: SpaceUser[]): Promise<void> {
+        const promises = [];
+        for (const user of users) {
+            const promise = (async () => {
+                const extendSpaceUser = await this.extendSpaceUser(user);
+                if (!this._users.has(user.spaceUserId)) {
+                    this._users.set(user.spaceUserId, extendSpaceUser);
+                    if (this._addUserSubscriber) {
+                        this._addUserSubscriber.next(extendSpaceUser);
+                    }
+                }
+            })();
+            promises.push(promise);
+        }
+
+        await Promise.all(promises).catch((e) => console.error(e));
+
+        if (this._setUsers) {
+            this._setUsers(this._users);
+        }
+    }
+
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
         const extendSpaceUser = await this.extendSpaceUser(user);
 

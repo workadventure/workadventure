@@ -161,9 +161,12 @@ describe("Space", () => {
                 } as unknown as SpaceToBackForwarder);
 
             const mockNotifyMeAddUser = vi.fn();
+            const mockNotifyMeInit = vi.fn();
+
             const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
                 ({
                     notifyMeAddUser: mockNotifyMeAddUser,
+                    notifyMeInit: mockNotifyMeInit,
                 } as unknown as SpaceToFrontDispatcher);
 
             const mockOnBackEndDisconnect = vi.fn();
@@ -207,12 +210,9 @@ describe("Space", () => {
 
             await flushPromises();
 
-            space.handleWatch(mockSocket);
+            await space.handleWatch(mockSocket);
 
-            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(1, mockSocket, mockUsers[0]);
-            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(2, mockSocket, mockUsers[1]);
-            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(3, mockSocket, mockUsers[2]);
-            expect(mockNotifyMeAddUser).toHaveBeenCalledTimes(3);
+            expect(mockNotifyMeInit).toHaveBeenCalledOnce();
         });
 
         it("should not send users to the new watcher if the user is already watching the space", async () => {
@@ -299,7 +299,7 @@ describe("Space", () => {
 
             await flushPromises();
 
-            space.handleWatch(mockSocket);
+            await space.handleWatch(mockSocket);
 
             expect(mockNotifyMeAddUser).not.toHaveBeenCalled();
         });
