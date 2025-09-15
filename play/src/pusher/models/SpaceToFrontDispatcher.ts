@@ -41,7 +41,11 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "updateSpaceUserMessage": {
                     const updateSpaceUserMessage = noUndefined(message.message.updateSpaceUserMessage);
-                    this.updateUser(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+                    try{
+                        this.updateUser(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
+                    }catch(err){
+                        console.warn("User not found, maybe left the space", err);
+                    }
                     break;
                 }
                 case "removeSpaceUserMessage": {
@@ -127,7 +131,8 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
         user.lowercaseName = spaceUser.name.toLowerCase();
 
         if (this._space.users.has(spaceUser.spaceUserId)) {
-            throw new Error(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`);
+            console.warn(`User ${spaceUser.spaceUserId} already exists in space ${this._space.name}`); // Probably already added
+            return;
         }
         this._space.users.set(spaceUser.spaceUserId, user as SpaceUserExtended);
         debug(`${this._space.name} : user added ${spaceUser.spaceUserId}. User count ${this._space.users.size}`);
@@ -188,7 +193,7 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
 
             this.notifyAll(subMessage);
         } else {
-            throw new Error(`User not found in this space ${spaceUserId}`);
+            console.warn(`User not found in this space ${spaceUserId}`); // Probably already removed
         }
     }
 

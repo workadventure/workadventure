@@ -459,7 +459,9 @@ export class AdminController extends BaseHttpController {
                     });
                 });
             } catch (err) {
-                throw new Error("dispatchExternalModuleEvent => error: " + err);
+                console.error("dispatchExternalModuleEvent => error", err);
+                res.status(500).send("error");
+                return;
             }
 
             res.send("ok");

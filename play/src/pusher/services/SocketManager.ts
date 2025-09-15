@@ -1235,17 +1235,21 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer> {
-        const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
-        return {
-            member: {
-                id: memberFromApi.id,
-                name: memberFromApi.name ?? undefined,
-                email: memberFromApi.email ?? undefined,
-                visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
-                chatID: memberFromApi.chatID ?? undefined,
-            },
-        };
+    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer|undefined> {
+        try{
+            const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
+            return {
+                member: {
+                    id: memberFromApi.id,
+                    name: memberFromApi.name ?? undefined,
+                    email: memberFromApi.email ?? undefined,
+                    visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+                    chatID: memberFromApi.chatID ?? undefined,
+                },
+            };
+        }catch(e){
+            console.warn(`No member found for uuid ${getMemberQuery.uuid}. Probably the user left`, e);
+        }
     }
 
     async handleChatMembersQuery(client: Socket, chatMemberQuery: ChatMembersQuery): Promise<ChatMembersAnswer> {

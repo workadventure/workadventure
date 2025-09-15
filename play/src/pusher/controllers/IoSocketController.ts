@@ -128,7 +128,6 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
-                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -869,10 +868,19 @@ export class IoSocketController {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery
                                             );
-                                            answerMessage.answer = {
-                                                $case: "getMemberAnswer",
-                                                getMemberAnswer,
-                                            };
+                                            if(!getMemberAnswer){
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "User not found, probably left",
+                                                    },
+                                                };
+                                            }else{
+                                                answerMessage.answer = {
+                                                    $case: "getMemberAnswer",
+                                                    getMemberAnswer,
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
