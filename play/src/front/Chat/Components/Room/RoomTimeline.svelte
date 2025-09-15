@@ -106,7 +106,7 @@
     function scrollToMessageListBottom() {
         // Safety check for undefined reference
         // After disposing the component, the reference can be undefined
-        if(messageListRef == undefined) return;
+        if (messageListRef == undefined) return;
         messageListRef.scroll({ top: messageListRef.scrollHeight, behavior: "smooth" });
     }
 

@@ -41,9 +41,9 @@ export class SpaceToFrontDispatcher implements SpaceToFrontDispatcherInterface {
                 }
                 case "updateSpaceUserMessage": {
                     const updateSpaceUserMessage = noUndefined(message.message.updateSpaceUserMessage);
-                    try{
+                    try {
                         this.updateUser(updateSpaceUserMessage.user, updateSpaceUserMessage.updateMask);
-                    }catch(err){
+                    } catch (err) {
                         console.warn("User not found, maybe left the space", err);
                     }
                     break;
