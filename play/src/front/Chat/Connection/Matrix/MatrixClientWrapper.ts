@@ -241,7 +241,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 deviceId: device_id,
             };
         } catch (e) {
-            console.error(e);
+            console.error("Invalid login token", e);
             throw new InvalidLoginTokenError("Invalid login token");
         }
     }

@@ -390,10 +390,7 @@ export class SocketManager implements ZoneEventListener {
         try {
             await space.forwarder.registerUser(client, filterType);
             if (socketData.spaces.has(spaceName)) {
-                console.error(`User ${socketData.name} is trying to join a space he is already in.`);
-                Sentry.captureException(
-                    new Error(`User ${socketData.name} is trying to join a space he is already in.`)
-                );
+                console.warn(`User ${socketData.name} is trying to join a space he is already in.`);
             }
 
             socketData.spaces.add(space.name);
@@ -1235,8 +1232,8 @@ export class SocketManager implements ZoneEventListener {
         };
     }
 
-    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer|undefined> {
-        try{
+    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer | undefined> {
+        try {
             const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
             return {
                 member: {
@@ -1247,8 +1244,9 @@ export class SocketManager implements ZoneEventListener {
                     chatID: memberFromApi.chatID ?? undefined,
                 },
             };
-        }catch(e){
+        } catch (e) {
             console.warn(`No member found for uuid ${getMemberQuery.uuid}. Probably the user left`, e);
+            return undefined; // Ensure a value is returned in the catch block
         }
     }
 
@@ -1339,7 +1337,6 @@ export class SocketManager implements ZoneEventListener {
             );
         } catch (error) {
             console.error(error);
-            Sentry.captureException(error);
         }
 
         return;

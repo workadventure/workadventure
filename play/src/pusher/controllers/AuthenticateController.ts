@@ -2,7 +2,6 @@ import fs from "fs";
 import { v4 } from "uuid";
 import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
 import { z } from "zod";
-import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
 import Mustache from "mustache";
 import { Application } from "express";
@@ -301,7 +300,6 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo = await openIDClient.getUserInfo(req, res, playUri);
             } catch (err) {
                 //if no access on openid provider, return error
-                Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
                 res.status(500);
                 res.send("An error occurred while connecting to OpenID Provider");

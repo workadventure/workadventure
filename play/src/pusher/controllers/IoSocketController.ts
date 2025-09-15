@@ -868,14 +868,14 @@ export class IoSocketController {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery
                                             );
-                                            if(!getMemberAnswer){
+                                            if (!getMemberAnswer) {
                                                 answerMessage.answer = {
                                                     $case: "error",
                                                     error: {
                                                         message: "User not found, probably left",
                                                     },
                                                 };
-                                            }else{
+                                            } else {
                                                 answerMessage.answer = {
                                                     $case: "getMemberAnswer",
                                                     getMemberAnswer,
@@ -885,16 +885,24 @@ export class IoSocketController {
                                             break;
                                         }
                                         case "enterChatRoomAreaQuery": {
-                                            await socketManager.handleEnterChatRoomAreaQuery(
-                                                socket,
-                                                message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
-                                            );
-
-                                            answerMessage.answer = {
-                                                $case: "enterChatRoomAreaAnswer",
-                                                enterChatRoomAreaAnswer: {},
-                                            };
-
+                                            try {
+                                                await socketManager.handleEnterChatRoomAreaQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                                );
+                                                answerMessage.answer = {
+                                                    $case: "enterChatRoomAreaAnswer",
+                                                    enterChatRoomAreaAnswer: {},
+                                                };
+                                            } catch (e) {
+                                                console.warn("Error entering chat room area", e);
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "Error entering chat room area, try again later 🙏",
+                                                    },
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
