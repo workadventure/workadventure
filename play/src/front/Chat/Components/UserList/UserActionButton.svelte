@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import * as Sentry from "@sentry/svelte";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import walk from "../../images/walk.svg";
     import teleport from "../../images/teleport.svg";
@@ -53,7 +52,6 @@
             })
             .catch((error) => {
                 console.error("Failed to compute popover position : ", error);
-                Sentry.captureMessage(`Failed to compute popover position ${error}`);
             });
     }
 
@@ -106,7 +104,7 @@
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
-                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
+                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" draggable="false" />
                     {$LL.chat.userList.TalkTo()}</span
                 >
             {:else if user.playUri}
@@ -117,7 +115,14 @@
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
                         closeChatUserMenu();
                     }}
-                    ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
+                    ><img
+                        class="noselect"
+                        src={teleport}
+                        alt="Teleport to logo"
+                        height="13"
+                        width="13"
+                        draggable="false"
+                    />
                     {$LL.chat.userList.teleport()}</span
                 >
             {/if}
@@ -126,7 +131,14 @@
                 <span
                     class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
                     on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
-                    ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
+                    ><img
+                        class="noselect"
+                        src={businessCard}
+                        alt="Business card"
+                        height="13"
+                        width="13"
+                        draggable="false"
+                    />
                     {$LL.chat.userList.businessCard()}</span
                 >
             {/if}

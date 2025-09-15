@@ -47,6 +47,7 @@
 >
     <span slot="header" class="flex justify-center items-center">
         <img
+            draggable="false"
             class="w-6 me-2"
             src="resources/icons/icon_listener.png"
             alt={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}

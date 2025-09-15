@@ -244,7 +244,7 @@ export const videoConstraintStore = derived(
 export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($microphoneDeviceIdStore) => {
     let constraints = {
         //TODO: make these values configurable in the game settings menu and store them in localstorage
-        autoGainControl: false,
+        autoGainControl: true,
         echoCancellation: true,
         noiseSuppression: true,
     } as boolean | MediaTrackConstraints;
@@ -763,7 +763,7 @@ export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined
         navigator.mediaDevices
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
-                // check if the new list has the prefered device
+                // check if the new list has the preferred device
                 const preferredVideoInputDevice = localUserStore.getPreferredVideoInputDevice();
                 const preferredAudioInputDevice = localUserStore.getPreferredAudioInputDevice();
                 const preferredSpeakerDevice = localUserStore.getSpeakerDeviceId();
@@ -857,7 +857,7 @@ export const selectDefaultSpeaker = () => {
     if (devices !== undefined && devices.length > 0) {
         speakerSelectedStore.set(devices[0].deviceId);
     } else {
-        speakerSelectedStore.set(undefined);
+        speakerSelectedStore.set("");
     }
 };
 

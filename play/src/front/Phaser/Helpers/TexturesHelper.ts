@@ -45,7 +45,7 @@ export class TexturesHelper {
             });
         } catch (error) {
             rt.destroy();
-            throw new Error("Could not get the snapshot: " + error);
+            throw new Error("Could not get the snapshot", { cause: error });
         }
     }
 

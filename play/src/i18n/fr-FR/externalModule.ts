@@ -61,6 +61,8 @@ const externalModule: DeepPartial<Translation["externalModule"]> = {
         popupCancel: "Annuler",
         isSyncronized: "Synchronisé avec Google",
         popupScopeToSyncMeet: "Créer des réunions en ligne",
+        openingMeet: "Ouverture de Google Meet... 🙏",
+        unableJoinMeet: "Impossible de rejoindre Google Meet 😭",
         googleMeetPopupWaiting: {
             title: "Google Meet 🎉",
             subtitle: "Création de votre espace Google… cela ne prendra qu’un instant 💪",

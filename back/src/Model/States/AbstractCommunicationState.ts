@@ -20,7 +20,7 @@ export abstract class CommunicationState implements ICommunicationState {
         protected readonly _communicationManager: ICommunicationManager,
         protected readonly _currentStrategy: ICommunicationStrategy,
         protected readonly _readyUsers: Set<string> = new Set(),
-        protected readonly MAX_USERS_FOR_WEBRTC: number = CommunicationConfig.MAX_USERS_FOR_WEBRTC
+        protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC)
     ) {
         this.preparedSwitchAction(this._readyUsers);
     }
@@ -111,10 +111,15 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     handleUserAdded(user: SpaceUser): Promise<void> {
-        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        const switchInProgress = this.isSwitching();
-        this._currentStrategy.addUser(user, switchInProgress);
-        return Promise.resolve();
+        try {
+            this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
+            const switchInProgress = this.isSwitching();
+            this._currentStrategy.addUser(user, switchInProgress);
+            return Promise.resolve();
+        } catch (e) {
+            console.error(e);
+            return Promise.resolve();
+        }
     }
     handleUserDeleted(user: SpaceUser): Promise<void> {
         this._currentStrategy.deleteUser(user);
@@ -125,8 +130,13 @@ export abstract class CommunicationState implements ICommunicationState {
         return Promise.resolve();
     }
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
-        this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-        this._currentStrategy.addUserToNotify(user);
+        try {
+            this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
+            this._currentStrategy.addUserToNotify(user);
+        } catch (e) {
+            console.error(e);
+            return Promise.resolve();
+        }
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void> {

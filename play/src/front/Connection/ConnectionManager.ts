@@ -379,7 +379,7 @@ class ConnectionManager {
                         if (this._currentRoom.authenticationMandatory) {
                             const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
-                                throw new Error("Unable to redirect on login page.");
+                                throw new Error("Unable to redirect on login page.", { cause: err });
                             }
                             return redirect;
                         } else {
@@ -480,8 +480,8 @@ class ConnectionManager {
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.websocketErrorStream.subscribe((error: Event) => {
-                console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(asError(event));
+                console.info("onConnectError => An error occurred while connecting to socket server. Retrying", error);
+                reject(asError(error));
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.

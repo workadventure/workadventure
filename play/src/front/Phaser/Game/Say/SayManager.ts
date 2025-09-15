@@ -1,6 +1,7 @@
 import { SayMessageType } from "@workadventure/messages";
 import { RoomConnection } from "../../../Connection/RoomConnection";
 import { hasMovedEventName, Player } from "../../Player/Player";
+import type { HasPlayerMovedInterface } from "../../../Api/Events/HasPlayerMovedInterface";
 
 let lastSayPopupCloseDate: number | undefined = undefined;
 
@@ -32,14 +33,20 @@ export class SayManager {
         this.roomConnection.emitPlayerSayMessage({ message: text, type });
 
         if (type === SayMessageType.ThinkingCloud) {
-            this.currentPlayer.once(hasMovedEventName, () => {
+            const cancelThink = (event: HasPlayerMovedInterface) => {
+                if (!event.moving) {
+                    return;
+                }
                 if (this.bubbleDestroyTimeout) {
                     clearTimeout(this.bubbleDestroyTimeout);
                     this.bubbleDestroyTimeout = undefined;
                 }
                 player.say("", type);
                 this.roomConnection.emitPlayerSayMessage({ message: "", type });
-            });
+                this.currentPlayer.off(hasMovedEventName, cancelThink);
+            };
+
+            this.currentPlayer.on(hasMovedEventName, cancelThink);
         }
 
         if (duration) {

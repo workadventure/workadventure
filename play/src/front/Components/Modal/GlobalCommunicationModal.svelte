@@ -243,6 +243,7 @@
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h4>
@@ -288,6 +289,7 @@
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.textMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h4>
@@ -333,6 +335,7 @@
                                 src={audioMessageImg}
                                 class="h-8 w-8 mr-1 inline"
                                 alt={$LL.megaphone.modal.audioMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h4>
@@ -379,6 +382,7 @@
                                 src={textMessageImg}
                                 class="h-8 w-8 mr-1"
                                 alt={$LL.megaphone.modal.textMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
@@ -392,6 +396,7 @@
                                     src={audioMessageImg}
                                     class="h-8 w-8 mr-1"
                                     alt={$LL.megaphone.modal.audioMessage.title()}
+                                    draggable="false"
                                 />
                                 {$LL.megaphone.modal.audioMessage.title()}
                             </h3>
@@ -420,6 +425,7 @@
                                 src={liveMessageImg}
                                 class="h-8 w-8 mr-1 text-white"
                                 alt={$LL.megaphone.modal.liveMessage.title()}
+                                draggable="false"
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>

@@ -33,7 +33,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 mr-1" src={infoBulleSvg} alt={$LL.mapEditor.properties.tooltipProperties.label()} />
+        <img
+            class="w-6 mr-1"
+            src={infoBulleSvg}
+            alt={$LL.mapEditor.properties.tooltipProperties.label()}
+            draggable="false"
+        />
         <label for="contentTooltip">{$LL.mapEditor.properties.tooltipProperties.label()}</label>
     </span>
     {$LL.mapEditor.properties.tooltipProperties.label()}

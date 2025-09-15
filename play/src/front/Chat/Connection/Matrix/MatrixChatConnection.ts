@@ -42,6 +42,7 @@ import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import LL from "../../../../i18n/i18n-svelte";
 import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { MATRIX_ADMIN_USER, MATRIX_DOMAIN } from "../../../Enum/EnvironmentVariable";
+import { MatrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { MatrixSecurity, matrixSecurity as defaultMatrixSecurity } from "./MatrixSecurity";
 import { MatrixRoomFolder } from "./MatrixRoomFolder";
@@ -67,6 +68,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private isClientReady = false;
     private usersStatus: MapStore<string, AvailabilityStatus>;
     private userIdsNeedingPresenceUpdate = new Set();
+    private matrixRateLimiter: MatrixRateLimiter;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<MatrixChatRoom[]>;
     invitations: Readable<MatrixChatRoom[]>;
@@ -101,7 +103,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     ) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new AutoDestroyingMapStore<string, MatrixChatRoom>();
-
+        this.matrixRateLimiter = MatrixRateLimiter.getInstance();
         this.clientPromise = clientPromise;
         this.directRooms = derived(this.roomList, (roomList) => {
             return Array.from(roomList.values()).filter(
@@ -299,8 +301,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         try {
             await this.waitInitialSync();
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage("Failed to wait initial sync");
+            console.error("Failed to wait initial sync:", error);
         }
     }
 
@@ -513,7 +514,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return false;
             }
 
-            this.addRoomToParentFolder(room, parentFolder);
+            await this.addRoomToParentFolder(room, parentFolder);
+            // await parentFolder.refreshAllChildRooms();
             return true;
         } catch (e) {
             console.error("Error in tryAddRoomToParentFolder:", e);
@@ -535,13 +537,17 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         return null;
     }
 
-    private addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder): void {
+    private async addRoomToParentFolder(room: Room, parentFolder: MatrixRoomFolder): Promise<void> {
         const isSpaceRoom = room.isSpaceRoom();
         const roomId = room.roomId;
 
         // Add room/folder to parent's lists
         if (isSpaceRoom) {
-            parentFolder.folderList.set(roomId, new MatrixRoomFolder(room));
+            const roomFolder = new MatrixRoomFolder(room);
+            await roomFolder.refreshRooms();
+            // await roomFolder.refreshAllChildRooms();
+            // await roomFolder.refreshSuggestedRooms();
+            parentFolder.folderList.set(roomId, roomFolder);
         } else {
             parentFolder.roomList.set(roomId, new MatrixChatRoom(room));
         }
@@ -642,7 +648,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (currentRoom && currentRoom === roomId) selectedRoomStore.set(undefined);
     }
 
-    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined): void {
         const { roomId } = room;
 
         if (membership !== prevMembership && membership === KnownMembership.Join) {
@@ -1070,7 +1076,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         } catch (error) {
             console.error("Error adding room to space: ", error);
             Sentry.captureException(error);
-            throw new Error(get(LL).chat.addRoomToFolderError());
+            throw new Error(get(LL).chat.addRoomToFolderError(), { cause: error });
         }
     }
 

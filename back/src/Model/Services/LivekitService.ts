@@ -202,7 +202,7 @@ export class LiveKitService {
         } catch (error) {
             console.error("Failed to start recording:", error);
             Sentry.captureException(error);
-            throw new Error("Failed to start recording");
+            throw new Error("Failed to start recording", { cause: error });
         }
     }
 

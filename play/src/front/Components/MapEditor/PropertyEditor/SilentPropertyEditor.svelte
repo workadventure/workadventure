@@ -19,6 +19,7 @@
             class="w-6 me-2"
             src="resources/icons/icon_silent.png"
             alt={$LL.mapEditor.properties.silentProperty.description()}
+            draggable="false"
         />
         {$LL.mapEditor.properties.silentProperty.label()}
     </span>
