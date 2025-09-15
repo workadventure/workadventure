@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import TooltipContent from "./TooltipContent.svelte";
 
@@ -56,6 +56,13 @@
             closeFloatingUi = undefined;
         }
     }
+
+    onDestroy(() => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+        }
+        closeFloatingUi?.();
+    });
 </script>
 
 <button
