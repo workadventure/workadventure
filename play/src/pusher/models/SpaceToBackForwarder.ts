@@ -142,32 +142,24 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this.deleteUserFromNotify(spaceUser);
         }
 
-        try {
-            await this._space.query.send({
-                $case: "removeSpaceUserQuery",
-                removeSpaceUserQuery: {
-                    spaceName: this._space.name,
-                    spaceUserId,
-                },
-            });
+        this._space._localConnectedUser.delete(spaceUserId);
+        this._space._localWatchers.delete(spaceUserId);
+        this._space._localConnectedUserWithSpaceUser.delete(socket);
+        this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
 
-            this._space._localConnectedUser.delete(spaceUserId);
-            this._space._localWatchers.delete(spaceUserId);
-            this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
+        await this._space.query.send({
+            $case: "removeSpaceUserQuery",
+            removeSpaceUserQuery: {
+                spaceName: this._space.name,
+                spaceUserId,
+            },
+        });
 
-            debug(
-                `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
-            );
+        debug(
+            `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
+        );
 
-            debug(`${this._space.name} : user remove sent ${spaceUserId}`);
-        } catch (e) {
-            this._space._localConnectedUser.delete(spaceUserId);
-            this._space._localConnectedUserWithSpaceUser.delete(socket);
-            this._space._localWatchers.delete(spaceUserId);
-            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-            throw e;
-        }
+        debug(`${this._space.name} : user remove sent ${spaceUserId}`);
     }
 
     updateMetadata(metadata: { [key: string]: unknown }): void {

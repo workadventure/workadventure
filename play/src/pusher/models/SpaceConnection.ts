@@ -166,19 +166,24 @@ export class SpaceConnection {
     ) {
         return (err: Error) => {
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
-            console.error("Error in connection to back server '" + apiSpaceClient.getChannel().getTarget(), err);
+            console.error(
+                "Error in connection to back server for watchSpace '" + apiSpaceClient.getChannel().getTarget(),
+                err
+            );
             Sentry.captureException(err);
-            try {
-                this.removeListeners(spaceStreamToBack, backId);
-                this.retryConnection(backId);
-            } catch (e) {
-                console.error("Error while retrying connection ...", e);
-                Sentry.captureException(e);
-                this.cleanUpSpacePerBackId(backId).catch((e) => {
-                    console.error("Error while cleaning up space per back id", e);
+            this.removeListeners(spaceStreamToBack, backId);
+            setTimeout(() => {
+                try {
+                    this.retryConnection(backId);
+                } catch (e) {
+                    console.error("Error while retrying connection ...", e);
                     Sentry.captureException(e);
-                });
-            }
+                    this.cleanUpSpacePerBackId(backId).catch((e) => {
+                        console.error("Error while cleaning up space per back id", e);
+                        Sentry.captureException(e);
+                    });
+                }
+            }, 1000);
         };
     }
 

@@ -537,6 +537,11 @@ describe("SpaceConnection", () => {
 
             await flushPromises();
 
+            // Wait 1 second to let the reconnection happen
+            await new Promise((resolve) => {
+                setTimeout(resolve, 1000);
+            });
+
             expect(mockGetSpaceClient).toHaveBeenCalledTimes(2);
             expect(mockWatchSpace).toHaveBeenCalledTimes(2);
             expect(mockSendLocalUsersToBack).toHaveBeenCalledOnce();

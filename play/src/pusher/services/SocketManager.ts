@@ -606,12 +606,13 @@ export class SocketManager implements ZoneEventListener {
 
             if (space) {
                 try {
+                    socketData.joinSpacesPromise.delete(spaceName);
+
                     await space.forwarder.unregisterUser(socket);
                     if (space.isEmpty()) {
                         space.cleanup();
                     }
 
-                    socketData.joinSpacesPromise.delete(spaceName);
                     return { space, spaceName, success: true };
                 } catch (error) {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);

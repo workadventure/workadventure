@@ -329,7 +329,10 @@ export class SocketManager {
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
                 (groupId: number, listener: ZoneSocket) => {
-                    void this.onLockGroup(groupId, listener, roomPromise);
+                    this.onLockGroup(groupId, listener, roomPromise).catch((e) => {
+                        console.error("An error happened while handling a lock group event:", e);
+                        Sentry.captureException(e);
+                    });
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
