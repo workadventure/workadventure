@@ -698,7 +698,7 @@ message SubMessage {
     EditMapCommandMessage editMapCommandMessage = 13;
     JoinMucRoomMessage joinMucRoomMessage = 14;
     LeaveMucRoomMessage leaveMucRoomMessage = 15;
-    AddSpaceUserPusherToFrontMessage addSpaceUserMessage = 16;
+    AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserPusherToFrontMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserPusherToFrontMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
@@ -1452,17 +1452,10 @@ message SpaceUser{
 message AddSpaceUserMessage{
   string spaceName = 1;
   SpaceUser user = 2;
-  // TODO: useless, can be removed and merged with the type below
-  FilterType filterType = 3;
-}
-message AddSpaceUserPusherToFrontMessage{
-  string spaceName = 1;
-  SpaceUser user = 2;
 }
 message InitSpaceUsersBackToPusherMessage{
   string spaceName = 1;
   repeated SpaceUser users = 2;
-  FilterType filterType = 3;
 }
 message InitSpaceUsersPusherToFrontMessage{
   string spaceName = 1;

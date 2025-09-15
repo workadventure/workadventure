@@ -3,7 +3,7 @@ import {
     SpaceUser,
     PublicEvent,
     PrivateEventPusherToFront,
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
     KickOffUserPrivateMessage,
@@ -28,7 +28,7 @@ import { SpaceUserExtended } from "../SpaceInterface";
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public closed = false;
     public initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
@@ -258,7 +258,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };
@@ -308,7 +308,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };
@@ -353,7 +353,7 @@ describe("", () => {
             showVoiceIndicator: false,
         } satisfies SpaceUser;
 
-        const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
+        const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName,
             user: userFromMessage,
         };

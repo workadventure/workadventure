@@ -1538,7 +1538,6 @@ describe("Space with filter", () => {
                     const addMessage = events[0].message.addSpaceUserMessage;
                     expect(addMessage.spaceName).toBe("test");
                     expect(addMessage.user?.spaceUserId).toBe("user_1");
-                    expect(addMessage.filterType).toBe(FilterType.ALL_USERS);
                 }
             });
 
@@ -1782,7 +1781,6 @@ describe("Space with filter", () => {
                                 spaceUserId: "user_1",
                                 name: "User 1",
                             }),
-                            filterType: FilterType.ALL_USERS,
                         },
                     },
                 },
@@ -1817,7 +1815,6 @@ describe("Space with filter", () => {
                     addSpaceUserMessage: {
                         spaceName: "test",
                         user: SpaceUser.fromPartial({ spaceUserId: "user_1" }),
-                        filterType: FilterType.ALL_USERS,
                     },
                 },
             };

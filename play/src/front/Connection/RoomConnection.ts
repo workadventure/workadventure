@@ -59,7 +59,7 @@ import {
     SpaceEvent,
     PrivateSpaceEvent,
     UpdateSpaceUserPusherToFrontMessage,
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     RemoveSpaceUserPusherToFrontMessage,
     PublicEventFrontToPusher,
     PrivateEventFrontToPusher,
@@ -204,7 +204,7 @@ export class RoomConnection implements RoomConnection {
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
     private readonly _initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
     public readonly initSpaceUsersMessageStream = this._initSpaceUsersMessageStream.asObservable();
-    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public readonly addSpaceUserMessageStream = this._addSpaceUserMessageStream.asObservable();
     private readonly _updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
