@@ -594,7 +594,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                             addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                 spaceName: this.name,
                                 user: localUser,
-                                filterType: this._filterType,
                             }),
                         },
                     });
@@ -637,7 +636,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                 addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                     spaceName: this.name,
                                     user: localUser,
-                                    filterType: this._filterType,
                                 }),
                             },
                         });
@@ -730,7 +728,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                         addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                             spaceName: this.name,
                                             user: localUser,
-                                            filterType: this._filterType,
                                         }),
                                     },
                                 },
@@ -792,7 +789,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                                     addSpaceUserMessage: AddSpaceUserMessage.fromPartial({
                                         spaceName: this.name,
                                         user: localUser,
-                                        filterType: this._filterType,
                                     }),
                                 },
                             })

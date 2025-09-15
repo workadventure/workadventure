@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 import {
-    AddSpaceUserPusherToFrontMessage,
+    AddSpaceUserMessage,
     UpdateSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceMetadataMessage,
@@ -16,7 +16,7 @@ import { RoomConnectionForSpacesInterface } from "../SpaceRegistry/SpaceRegistry
 export class MockRoomConnectionForSpaces implements RoomConnectionForSpacesInterface {
     public closed = false;
     public initSpaceUsersMessageStream = new Subject<InitSpaceUsersPusherToFrontMessage>();
-    public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
+    public addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
     public updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
