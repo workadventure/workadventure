@@ -7,6 +7,7 @@ import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForward
 import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
+import { eventProcessor } from "../../src/pusher/models/eventProcessorInit";
 
 //TODO : see if there are not too many repetitions in the tests
 const flushPromises = () => new Promise(setImmediate);
@@ -40,7 +41,7 @@ describe("SpaceToBackForwarder", () => {
                     }),
                 }),
             });
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
                 async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
@@ -57,7 +58,7 @@ describe("SpaceToBackForwarder", () => {
                 _localConnectedUser: new Map(),
                 _localConnectedUserWithSpaceUser: new Map<Socket, SpaceUser>(),
             });
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(
                 async () => await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS)
@@ -106,7 +107,7 @@ describe("SpaceToBackForwarder", () => {
                 }),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS);
             await flushPromises();
@@ -175,7 +176,7 @@ describe("SpaceToBackForwarder", () => {
                 }),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS);
             await flushPromises();
@@ -241,7 +242,7 @@ describe("SpaceToBackForwarder", () => {
                 }),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await spaceForwarder.registerUser(mockSocket, FilterType.ALL_USERS);
             await flushPromises();
@@ -282,7 +283,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             spaceForwarder.updateUser(spaceUser, ["name"]);
             await flushPromises();
@@ -320,7 +321,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             expect(() => spaceForwarder.updateUser(spaceUser, ["name"])).toThrow();
         });
@@ -355,7 +356,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             expect(() => spaceForwarder.updateUser(spaceUser, ["name"])).toThrow();
         });
@@ -393,7 +394,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(async () => await spaceForwarder.unregisterUser(mockSocket)).rejects.toThrow();
         });
@@ -428,7 +429,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await expect(async () => await spaceForwarder.unregisterUser(mockSocket)).rejects.toThrow();
         });
@@ -469,7 +470,7 @@ describe("SpaceToBackForwarder", () => {
                 cleanup: vi.fn(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await spaceForwarder.unregisterUser(mockSocket);
             await flushPromises();
@@ -532,7 +533,7 @@ describe("SpaceToBackForwarder", () => {
                 }),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             await spaceForwarder.unregisterUser(mockSocket);
             await flushPromises();
@@ -576,7 +577,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             spaceForwarder.updateMetadata({
                 "metadata-1": "value-1",
@@ -621,7 +622,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             spaceForwarder.forwardMessageToSpaceBack({
                 $case: "updateSpaceMetadataMessage",
@@ -670,7 +671,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             expect(() =>
                 spaceForwarder.forwardMessageToSpaceBack({
@@ -719,7 +720,7 @@ describe("SpaceToBackForwarder", () => {
                 metadata: new Map(),
             } as unknown as Space;
 
-            const spaceForwarder = new SpaceToBackForwarder(mockSpace);
+            const spaceForwarder = new SpaceToBackForwarder(mockSpace, eventProcessor);
 
             spaceForwarder.syncLocalUsersWithServer([spaceUser]);
             await flushPromises();

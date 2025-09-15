@@ -368,6 +368,7 @@ export class IoSocketController {
                             canEdit: false,
                             world: "",
                             chatID,
+                            canRecord: false,
                         };
 
                         let characterTextures: WokaDetail[];
@@ -510,6 +511,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            canRecord: userData.canRecord ?? false,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -873,6 +875,30 @@ export class IoSocketController {
                                             answerMessage.answer = {
                                                 $case: "getMemberAnswer",
                                                 getMemberAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "getRecordingsQuery": {
+                                            const getRecordingsAnswer = await socketManager.handleGetRecordingsQuery(
+                                                socket
+                                            );
+                                            answerMessage.answer = {
+                                                $case: "getRecordingsAnswer",
+                                                getRecordingsAnswer,
+                                            };
+                                            this.sendAnswerMessage(socket, answerMessage);
+                                            break;
+                                        }
+                                        case "deleteRecordingQuery": {
+                                            const deleteRecordingAnswer =
+                                                await socketManager.handleDeleteRecordingQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.deleteRecordingQuery.recordingId
+                                                );
+                                            answerMessage.answer = {
+                                                $case: "deleteRecordingAnswer",
+                                                deleteRecordingAnswer,
                                             };
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;

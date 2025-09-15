@@ -547,6 +547,7 @@ export class Space implements SpaceInterface {
 
     private extractUserIdFromSpaceId(spaceId: string): number {
         const lastUnderscoreIndex = spaceId.lastIndexOf("_");
+        console.trace("📬📬📬??", spaceId, lastUnderscoreIndex);
         if (lastUnderscoreIndex === -1) {
             throw new Error("Invalid spaceId format: no underscore found");
         }

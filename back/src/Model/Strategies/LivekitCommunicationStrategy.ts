@@ -1,11 +1,12 @@
 import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { asError } from "catch-unknown";
 import { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
-import { ICommunicationStrategy } from "../Interfaces/ICommunicationStrategy";
+import { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { LiveKitService } from "../Services/LivekitService";
 
-export class LivekitCommunicationStrategy implements ICommunicationStrategy {
-    private usersReady: string[] = [];
+export class LivekitCommunicationStrategy implements IRecordableStrategy {
+    private usersReady: Set<string> = new Set();
 
     constructor(private space: ICommunicationSpace, private livekitService: LiveKitService) {
         this.livekitService.createRoom(this.space.getSpaceName()).catch((error) => {
@@ -14,6 +15,10 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
+    public static async create(space: ICommunicationSpace, livekitService: LiveKitService) {
+        await livekitService.createRoom(space.getSpaceName());
+        return new LivekitCommunicationStrategy(space, livekitService);
+    }
     addUser(user: SpaceUser, switchInProgress = false): void {
         //TODO : passer en async
         this.sendLivekitInvitationMessage(user, LivekitTokenType.STREAMER, switchInProgress).catch((error) => {
@@ -45,7 +50,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             });
         } catch (error) {
             console.error(`Error dispatching livekitDisconnectMessage for user ${user.spaceUserId}:`, error);
-            //  Sentry.captureException(error);
+            Sentry.captureException(error);
         }
     }
 
@@ -71,11 +76,11 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUserReady(userId: string): void {
-        this.usersReady.push(userId);
+        this.usersReady.add(userId);
     }
 
     canSwitch(): boolean {
-        return this.usersReady.length === this.space.getAllUsers().length;
+        return this.usersReady.size === this.space.getAllUsers().length;
     }
 
     addUserToNotify(user: SpaceUser, switchInProgress = false): void {
@@ -126,5 +131,15 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
             console.error(error);
             Sentry.captureException(error);
         });
+    }
+    async startRecording(user: SpaceUser, userUuid: string): Promise<void> {
+        try {
+            await this.livekitService.startRecording(this.space.getSpaceName(), user, userUuid);
+        } catch (e) {
+            throw asError(e);
+        }
+    }
+    async stopRecording(): Promise<void> {
+        await this.livekitService.stopRecording();
     }
 }

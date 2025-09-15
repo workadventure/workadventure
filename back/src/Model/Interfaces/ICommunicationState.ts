@@ -8,3 +8,8 @@ export interface ICommunicationState {
     handleUserToNotifyAdded(user: SpaceUser): Promise<void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
 }
+
+export interface IRecordableState extends ICommunicationState {
+    handleStartRecording(user: SpaceUser, userUuid: string): Promise<void>;
+    handleStopRecording(): Promise<void>;
+}
