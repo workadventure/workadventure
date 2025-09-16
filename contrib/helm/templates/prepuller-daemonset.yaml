@@ -11,7 +11,7 @@ metadata:
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   selector:
     matchLabels:
@@ -57,7 +57,7 @@ spec:
       # but doesn't take up resource on the cluster
       containers:
         - name: pause
-          image: gcr.io/google_containers/pause:3.2
+          image: registry.k8s.io/pause:3.9
           resources:
             limits:
               cpu: 1m
