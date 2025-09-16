@@ -6,6 +6,157 @@
 
 This Helm chart deploys Workadventure on Kubernetes.
 
+## Migration from Bitnami Charts (Important!)
+
+**As of August 27th, 2024, Bitnami charts are no longer freely available.** This chart has been updated to remove dependencies on Bitnami charts and now includes a built-in Redis deployment.
+
+### Redis Migration Guide
+
+If you are upgrading from a previous version that used the Bitnami Redis chart, you have two migration options:
+
+#### Option 1: Seamless Migration (Recommended) 
+
+For **zero-downtime migration without data backup/restore**, enable Bitnami compatibility mode:
+
+**1. Update your values.yaml with Bitnami compatibility:**
+```yaml
+redis:
+  enabled: true
+  auth:
+    enabled: false  # Match your original Bitnami setting
+  persistence:
+    enabled: true
+    bitnamiCompatible: true  # 🔑 This enables seamless migration
+    storageClass: "fast-ssd"  # Use same storage class as before
+    size: 8Gi               # Use same size as before
+```
+
+**2. Upgrade your Helm release:**
+```bash
+helm upgrade <release-name> workadventure/workadventure -f values.yaml
+```
+
+**How it works:** 
+- Uses the same PVC name as Bitnami (`data-<release-name>-redis-0`)
+- Mounts data at the same path (`/data`) 
+- Runs as the same user (1001) to preserve file permissions
+- **No data migration needed** - Redis will start with existing data intact
+
+**3. (Optional) Disable compatibility mode after migration:**
+Once migration is complete and tested, you can optionally switch to the new naming convention in a future upgrade by setting `bitnamiCompatible: false` and following the manual migration steps below.
+
+#### Option 2: Manual Migration
+
+If you prefer explicit data migration or need to change storage settings, follow these steps:
+
+**1. Backup your existing Redis data**
+
+Before upgrading, backup your Redis data if you have persistence enabled:
+
+```bash
+# Get the current Redis pod name
+kubectl get pods -l app.kubernetes.io/name=redis
+
+# Create a backup
+kubectl exec -it <redis-pod-name> -- redis-cli SAVE
+kubectl cp <redis-pod-name>:/data/dump.rdb ./redis-backup.rdb
+```
+
+**2. Update your values.yaml**
+
+The Redis configuration structure has changed. Update your `values.yaml`:
+
+**Old Bitnami Redis configuration:**
+```yaml
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      storageClass: "fast-ssd"
+      size: 8Gi
+```
+
+**New Redis configuration:**
+```yaml
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  persistence:
+    enabled: true
+    bitnamiCompatible: false  # Use new naming convention
+    storageClass: "fast-ssd"
+    size: 8Gi
+```
+
+**3. Handle Persistent Volumes**
+
+If you had persistence enabled with the Bitnami chart, you'll need to migrate the data:
+
+1. Scale down the old Redis deployment
+2. Create a temporary pod to access the old PVC
+3. Copy data to the new Redis PVC
+4. Update your Helm release
+
+**4. Upgrade the Helm chart**
+
+After updating your `values.yaml` and handling the PVC migration:
+
+```bash
+helm upgrade <release-name> workadventure/workadventure -f values.yaml
+```
+
+**5. Restore data (if needed)**
+
+If you need to restore from backup:
+
+```bash
+# Copy backup to new Redis pod
+kubectl cp ./redis-backup.rdb <new-redis-pod-name>:/data/
+
+# Restart Redis to load the backup
+kubectl delete pod <new-redis-pod-name>
+```
+
+### Redis Configuration Options
+
+The built-in Redis deployment supports the following configuration options:
+
+```yaml
+redis:
+  enabled: true                    # Enable/disable Redis deployment
+  
+  image:
+    repository: redis              # Redis image repository
+    tag: "7.2-alpine"             # Redis version
+    pullPolicy: IfNotPresent      # Image pull policy
+  
+  auth:
+    enabled: false                 # Enable Redis authentication
+    password: ""                   # Redis password (if auth enabled)
+  
+  persistence:
+    enabled: false                 # Enable persistent storage
+    storageClass: ""              # Storage class for PVC
+    accessMode: ReadWriteOnce     # Access mode for PVC
+    size: 8Gi                     # Size of persistent volume
+    # Set to true for seamless migration from Bitnami Redis chart
+    # Uses Bitnami-compatible PVC naming and user permissions
+    bitnamiCompatible: false      # Bitnami compatibility mode
+    
+  resources: {}                   # Resource limits and requests
+  nodeSelector: {}               # Node selector
+  tolerations: []                # Pod tolerations
+  affinity: {}                   # Pod affinity rules
+  
+  service:
+    type: ClusterIP              # Service type
+    port: 6379                   # Redis port
+```
+
 ## Installation
 
     helm repo add workadventure https://charts.workadventu.re/
@@ -67,6 +218,14 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   annotationsPath:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+# Redis configuration (using built-in Redis deployment)
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "fast-ssd"  # Use your preferred storage class
+    size: 8Gi
 
 commonSecretEnv:
   # Secret token to connect to the map storage API.

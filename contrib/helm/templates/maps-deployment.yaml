@@ -62,7 +62,7 @@ spec:
             {{- end }}
           {{- if .Values.maps.extraEnvVars }}
           env:
-            {{- include "common.tplvalues.render" (dict "value" .Values.maps.extraEnvVars "context" $) | nindent 12 }}
+            {{- toYaml .Values.maps.extraEnvVars | nindent 12 }}
           {{- end }}
           ports:
             - name: http

@@ -684,7 +684,38 @@ ingress:
   rewritePathSuffix: "(/|$)(.*)"
 
 redis:
-  architecture: standalone
-
+  enabled: true
+  image:
+    repository: redis
+    tag: "7.2-alpine"
+    pullPolicy: IfNotPresent
+  
   auth:
     enabled: false
+    password: ""
+  
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 8Gi
+    # Set to true to use Bitnami-compatible PVC naming for seamless migration
+    # This creates PVC named "data-{{ .Release.Name }}-redis-0" instead of "{{ include "workadventure.fullname" . }}-redis-data"
+    # and runs Redis as user 1001 (bitnami user) to match Bitnami Redis configuration
+    bitnamiCompatible: false
+    
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  service:
+    type: ClusterIP
+    port: 6379

@@ -61,7 +61,7 @@ spec:
             {{- end }}
           {{- if .Values.uploader.extraEnvVars }}
           env:
-            {{- include "common.tplvalues.render" (dict "value" .Values.uploader.extraEnvVars "context" $) | nindent 12 }}
+            {{- toYaml .Values.uploader.extraEnvVars | nindent 12 }}
           {{- end }}
           ports:
             - name: http
