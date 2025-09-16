@@ -19,7 +19,7 @@ import {
     localStreamStore,
     localVoiceIndicatorStore,
     localVolumeStore,
-    requestedCameraState,
+    mediaStreamConstraintsStore,
     requestedMicrophoneState,
     silentStore,
 } from "./MediaStore";
@@ -169,7 +169,10 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
         uniqueId: "-1",
         media,
         volumeStore: localVolumeStore,
-        hasVideo: requestedCameraState,
+        hasVideo: derived(
+            mediaStreamConstraintsStore,
+            ($mediaStreamConstraintsStore) => $mediaStreamConstraintsStore.video !== false
+        ),
         // hasAudio = true because the webcam has a microphone attached and could potentially play sound
         hasAudio: writable(true),
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
