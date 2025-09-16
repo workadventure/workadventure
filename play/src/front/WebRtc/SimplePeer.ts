@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { Deferred } from "ts-deferred";
@@ -9,7 +9,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { BubbleNotification as BasicNotification } from "../Notification/BubbleNotification";
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
-import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
@@ -29,12 +29,14 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
  * This class manages connections to all the peers in the same group as me.
  *
  */
-export class SimplePeer {
+export class SimplePeer implements SimplePeerConnectionInterface {
     private readonly _unsubscribers: (() => void)[] = [];
+    private _screenSharingUnsubscriber: Unsubscriber | undefined;
     private readonly _rxJsUnsubscribers: Subscription[] = [];
     private _lastWebrtcUserName: string | undefined;
     private _lastWebrtcPassword: string | undefined;
     private spaceDeferred = new Deferred<SpaceInterface>();
+    private localScreenCapture: MediaStream | undefined = undefined;
 
     private _pendingConnections: Map<string, AbortController> = new Map();
 
@@ -51,28 +53,6 @@ export class SimplePeer {
         private _customWebRTCLogger = customWebRTCLogger,
         private _blackListManager = blackListManager
     ) {
-        //we make sure we don't get any old peer.
-        let localScreenCapture: MediaStream | undefined = undefined;
-
-        this._unsubscribers.push(
-            this._screenSharingLocalStreamStore.subscribe((streamResult) => {
-                if (streamResult.type === "error") {
-                    // Let's ignore screen sharing errors, we will deal with those in a different way.
-                    return;
-                }
-
-                if (streamResult.stream !== undefined) {
-                    localScreenCapture = streamResult.stream;
-                    this.sendLocalScreenSharingStream(localScreenCapture);
-                } else {
-                    if (localScreenCapture) {
-                        this.stopLocalScreenSharingStream(localScreenCapture);
-                        localScreenCapture = undefined;
-                    }
-                }
-            })
-        );
-
         this.initialise();
 
         this._rxJsUnsubscribers.push(
@@ -154,10 +134,33 @@ export class SimplePeer {
                     webRtcPassword: webRtcStartMessage.webRtcPassword,
                 };
 
-                this.receiveWebrtcStart(user, message.sender).catch((e) => {
-                    console.error("Error while receiving WebRTC signal", e);
-                    Sentry.captureException(e);
-                });
+                this.receiveWebrtcStart(user, message.sender)
+                    .then(() => {
+                        if (!this._screenSharingUnsubscriber) {
+                            this._screenSharingUnsubscriber = this._screenSharingLocalStreamStore.subscribe(
+                                (streamResult) => {
+                                    if (streamResult.type === "error") {
+                                        // Let's ignore screen sharing errors, we will deal with those in a different way.
+                                        return;
+                                    }
+
+                                    if (streamResult.stream !== undefined) {
+                                        this.localScreenCapture = streamResult.stream;
+                                        this.sendLocalScreenSharingStream(this.localScreenCapture);
+                                    } else {
+                                        if (this.localScreenCapture) {
+                                            this.stopLocalScreenSharingStream(this.localScreenCapture);
+                                            this.localScreenCapture = undefined;
+                                        }
+                                    }
+                                }
+                            );
+                        }
+                    })
+                    .catch((e) => {
+                        console.error("Error while receiving WebRTC signal", e);
+                        Sentry.captureException(e);
+                    });
             })
         );
 
@@ -441,6 +444,9 @@ export class SimplePeer {
     public unregister() {
         for (const unsubscriber of this._unsubscribers) {
             unsubscriber();
+        }
+        if (this._screenSharingUnsubscriber) {
+            this._screenSharingUnsubscriber();
         }
         for (const subscription of this._rxJsUnsubscribers) {
             subscription.unsubscribe();
