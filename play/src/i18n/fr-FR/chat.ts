@@ -96,6 +96,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         title: "Votre historique",
         open: "Ouvrir votre historique de conversation !",
         description: "Historique de vos conversations",
+        newDiscussion: "Nouvelle discussion avec {userNames}",
         incoming: "{userName} a rejoint la conversation",
         outcoming: "{userName} a quitté la conversation",
         youLeft: "Vous avez quitté la conversation",
