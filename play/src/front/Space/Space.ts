@@ -1,7 +1,7 @@
 import { derived, get, readable, Readable, Writable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
-import { Observable, Subject, Subscriber, Subscription } from "rxjs";
+import { Observable, Subject, Subscription } from "rxjs";
 import { merge } from "lodash";
 import { Deferred } from "ts-deferred";
 import { MapStore } from "@workadventure/store-utils";
@@ -49,10 +49,10 @@ export class Space implements SpaceInterface {
 
     private _setUsers: ((value: Map<string, SpaceUserExtended>) => void) | undefined;
     private _users: Map<string, SpaceUserExtended> = new Map<string, SpaceUserExtended>();
-    private _addUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
-    private _leftUserSubscriber: Subscriber<SpaceUserExtended> | undefined;
-    private _updateUserSubscriber: Subscriber<UpdateSpaceUserEvent> | undefined;
-    private _metadataSubscriber: Subscriber<Map<string, unknown>> | undefined;
+    private _addUserSubject: Subject<SpaceUserExtended> = new Subject<SpaceUserExtended>();
+    private _leftUserSubject: Subject<SpaceUserExtended> = new Subject<SpaceUserExtended>();
+    private _updateUserSubject: Subject<UpdateSpaceUserEvent> = new Subject<UpdateSpaceUserEvent>();
+    private _metadataSubject: Subject<Map<string, unknown>> = new Subject<Map<string, unknown>>();
     private _registerRefCount = 0;
     private isDestroyed = false;
     public readonly usersStore: Readable<Map<string, Readonly<SpaceUserExtended>>>;
@@ -99,9 +99,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserJoined = new Observable<SpaceUserExtended>((subscriber) => {
             this.registerSpaceFilter();
-            this._addUserSubscriber = subscriber;
+            const sub = this._addUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -110,9 +111,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserLeft = new Observable<SpaceUserExtended>((subscriber) => {
             this.registerSpaceFilter();
-            this._leftUserSubscriber = subscriber;
+            const sub = this._leftUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -121,9 +123,10 @@ export class Space implements SpaceInterface {
 
         this.observeUserUpdated = new Observable<UpdateSpaceUserEvent>((subscriber) => {
             this.registerSpaceFilter();
-            this._updateUserSubscriber = subscriber;
+            const sub = this._updateUserSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -132,9 +135,10 @@ export class Space implements SpaceInterface {
 
         this.observeMetadata = new Observable<Map<string, unknown>>((subscriber) => {
             this.registerSpaceFilter();
-            this._metadataSubscriber = subscriber;
+            const sub = this._metadataSubject.subscribe(subscriber);
 
             return () => {
+                sub.unsubscribe();
                 if (!this.isDestroyed) {
                     this.unregisterSpaceFilter();
                 }
@@ -214,8 +218,8 @@ export class Space implements SpaceInterface {
         metadata.forEach((value, key) => {
             this._metadata.set(key, value);
         });
-        if (this._metadataSubscriber) {
-            this._metadataSubscriber.next(this._metadata);
+        if (this._metadataSubject) {
+            this._metadataSubject.next(this._metadata);
         }
     }
 
@@ -417,8 +421,8 @@ export class Space implements SpaceInterface {
                 const extendSpaceUser = await this.extendSpaceUser(user);
                 if (!this._users.has(user.spaceUserId)) {
                     this._users.set(user.spaceUserId, extendSpaceUser);
-                    if (this._addUserSubscriber) {
-                        this._addUserSubscriber.next(extendSpaceUser);
+                    if (this._addUserSubject) {
+                        this._addUserSubject.next(extendSpaceUser);
                     }
                 }
             })();
@@ -438,8 +442,9 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            if (this._addUserSubscriber) {
-                this._addUserSubscriber.next(extendSpaceUser);
+
+            if (this._addUserSubject) {
+                this._addUserSubject.next(extendSpaceUser);
             }
         }
 
@@ -453,8 +458,8 @@ export class Space implements SpaceInterface {
             if (this._setUsers) {
                 this._setUsers(this._users);
             }
-            if (this._leftUserSubscriber) {
-                this._leftUserSubscriber.next(user);
+            if (this._leftUserSubject) {
+                this._leftUserSubject.next(user);
             }
 
             this.allVideoStreamStore.delete(spaceUserId);
@@ -491,8 +496,8 @@ export class Space implements SpaceInterface {
             }
         }
 
-        if (this._updateUserSubscriber) {
-            this._updateUserSubscriber.next({
+        if (this._updateUserSubject) {
+            this._updateUserSubject.next({
                 newUser: userToUpdate,
                 changes: maskedNewData,
                 updateMask: updateMask,
