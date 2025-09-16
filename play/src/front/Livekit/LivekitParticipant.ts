@@ -112,6 +112,7 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
+        this.updateLivekitVideoStreamStore();
         this.initializeTracks();
     }
 
