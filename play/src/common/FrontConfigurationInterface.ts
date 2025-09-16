@@ -39,9 +39,6 @@ export interface FrontConfigurationInterface {
     SENTRY_RELEASE: string | undefined;
     SENTRY_TRACES_SAMPLE_RATE: number | undefined;
     WOKA_SPEED: number;
-    JITSI_DOMAIN: string | undefined;
-    JITSI_XMPP_DOMAIN: string | undefined;
-    JITSI_MUC_DOMAIN: string | undefined;
     FEATURE_FLAG_BROADCAST_AREAS: boolean;
     KLAXOON_ENABLED: boolean;
     KLAXOON_CLIENT_ID: string | undefined;
