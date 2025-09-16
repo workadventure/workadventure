@@ -55,65 +55,59 @@ export class SpaceRegistry implements SpaceRegistryInterface {
     private spaceDestroyedMessageSubscription: Subscription;
     private roomConnectionStreamSubscription: Subscription;
 
-    public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(
-        this.spaces,
-        ($spaces, set) => {
-            if ($spaces.size === 0) {
-                set(new Map());
-                return () => {};
-            }
-
-            const spaceStores = Array.from($spaces.values()).map((space) => space.videoStreamStore);
-
-            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
-                const aggregatedPeers = new Map<string, VideoBox>();
-
-                allSpaceStreams.forEach((spaceStreams) => {
-                    spaceStreams.forEach((streamable, userId) => {
-                        aggregatedPeers.set(userId, streamable);
-                    });
-                });
-
-                return aggregatedPeers;
-            });
-
-            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
-                set(new Map(aggregatedPeers));
-            });
-
-            return unsubscribe;
+    public readonly videoStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Map());
+            return () => {};
         }
-    );
 
-    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>> = derived(
-        this.spaces,
-        ($spaces, set) => {
-            if ($spaces.size === 0) {
-                set(new Map());
-                return () => {};
-            }
+        const spaceStores = Array.from($spaces.values()).map((space) => space.videoStreamStore);
 
-            const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
+        const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+            const aggregatedPeers = new Map<string, VideoBox>();
 
-            const combinedStore = derived(spaceStores, (allSpaceStreams) => {
-                const aggregatedPeers = new Map<string, VideoBox>();
-
-                allSpaceStreams.forEach((spaceStreams) => {
-                    spaceStreams.forEach((streamable, userId) => {
-                        aggregatedPeers.set(userId, streamable);
-                    });
+            allSpaceStreams.forEach((spaceStreams) => {
+                spaceStreams.forEach((streamable, userId) => {
+                    aggregatedPeers.set(userId, streamable);
                 });
-
-                return aggregatedPeers;
             });
 
-            const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
-                set(new Map(aggregatedPeers));
-            });
+            return aggregatedPeers;
+        });
 
-            return unsubscribe;
+        const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+            set(new Map(aggregatedPeers));
+        });
+
+        return unsubscribe;
+    });
+
+    public readonly screenShareStreamStore: Readable<Map<string, VideoBox>> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(new Map());
+            return () => {};
         }
-    );
+
+        const spaceStores = Array.from($spaces.values()).map((space) => space.screenShareStreamStore);
+
+        const combinedStore = derived(spaceStores, (allSpaceStreams) => {
+            const aggregatedPeers = new Map<string, VideoBox>();
+
+            allSpaceStreams.forEach((spaceStreams) => {
+                spaceStreams.forEach((streamable, userId) => {
+                    aggregatedPeers.set(userId, streamable);
+                });
+            });
+
+            return aggregatedPeers;
+        });
+
+        const unsubscribe = combinedStore.subscribe((aggregatedPeers) => {
+            set(new Map(aggregatedPeers));
+        });
+
+        return unsubscribe;
+    });
 
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
@@ -127,10 +121,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                     throw new Error("initSpaceUsersMessage is missing users");
                 }
 
-                this.spaces
-                    .get(message.spaceName)
-                    ?.initUsers(message.users)
-                    .catch((e) => console.error(e));
+                this.spaces.get(message.spaceName)?.initUsers(message.users);
             }
         );
 
@@ -140,10 +131,7 @@ export class SpaceRegistry implements SpaceRegistryInterface {
                 throw new Error("addSpaceUserMessage is missing a user");
             }
 
-            this.spaces
-                .get(message.spaceName)
-                ?.addUser(message.user)
-                .catch((e) => console.error(e));
+            this.spaces.get(message.spaceName)?.addUser(message.user);
         });
 
         this.updateSpaceUserMessageStreamSubscription = roomConnection.updateSpaceUserMessageStream.subscribe(

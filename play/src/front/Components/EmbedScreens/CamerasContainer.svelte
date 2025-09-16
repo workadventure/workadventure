@@ -35,6 +35,7 @@
 <script lang="ts">
     import { onDestroy, onMount, setContext } from "svelte";
     import { myCameraPeerStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    import VideoBox from "../Video/VideoBox.svelte";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
@@ -304,24 +305,8 @@
         id="cameras-container"
         data-testid="cameras-container"
     >
-        {#each $orderedStreamableCollectionStore as peer (peer.uniqueId)}
-            {#if ($highlightedEmbedScreen !== peer && (!isOnOneLine || oneLineMode === "horizontal")) || (isOnOneLine && oneLineMode === "vertical" && peer.displayInPictureInPictureMode)}
-                {#key peer.uniqueId}
-                    <div
-                        style={`width: ${videoWidth}px; max-width: ${videoWidth}px;${
-                            videoHeight ? `height: ${videoHeight}px; max-height: ${videoHeight}px;` : ""
-                        }`}
-                        class={isOnOneLine
-                            ? oneLineMode === "horizontal"
-                                ? "pointer-events-auto basis-40 shrink-0 min-w-40 grow camera-box first-of-type:ml-auto last-of-type:mr-auto"
-                                : "pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box"
-                            : "pointer-events-auto shrink-0 camera-box"}
-                        class:aspect-video={videoHeight === undefined}
-                    >
-                        <MediaBox streamable={peer} />
-                    </div>
-                {/key}
-            {/if}
+        {#each $orderedStreamableCollectionStore as videoBox (videoBox.uniqueId)}
+            <VideoBox {videoBox} {isOnOneLine} {oneLineMode} {videoWidth} {videoHeight} />
         {/each}
         <!-- in PictureInPicture, let's finish with our video feedback in small -->
         {#if isOnOneLine && oneLineMode === "vertical"}
@@ -334,7 +319,7 @@
                     class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
                     class:aspect-video={videoHeight === undefined}
                 >
-                    <MediaBox streamable={$myCameraPeerStore} />
+                    <MediaBox videoBox={$myCameraPeerStore} />
                 </div>
             </div>
         {/if}

@@ -7,7 +7,6 @@ import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { MediaStoreStreamable, Streamable } from "./StreamableCollectionStore";
-import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -288,14 +287,13 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
     const localMedia = {
         uniqueId: "localScreenSharingStream",
         media,
-        getExtendedSpaceUser(): Promise<SpaceUserExtended> | undefined {
+        getExtendedSpaceUser(): SpaceUserExtended | undefined {
             return undefined;
         },
         hasAudio: writable(false),
         hasVideo: writable(true),
         isMuted: writable(true),
         name: writable(""),
-        pictureStore: currentPlayerWokaStore,
         showVoiceIndicator: writable(false),
         statusStore: writable("connected"),
         volumeStore: writable(undefined),
@@ -307,7 +305,6 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
-        priority: -1,
     } satisfies Streamable;
 
     const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {

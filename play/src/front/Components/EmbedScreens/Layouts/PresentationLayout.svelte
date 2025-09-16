@@ -103,7 +103,7 @@
         {#if $streamableCollectionStore.size > 0 && $highlightedEmbedScreen && !inPictureInPicture}
             <div id="video-container-receive" class="mb-8 md:mb-0 flex-1" bind:this={highlightScreen}>
                 {#key $highlightedEmbedScreen.uniqueId}
-                    <MediaBox isHighlighted={true} streamable={$highlightedEmbedScreen} />
+                    <MediaBox isHighlighted={true} videoBox={$highlightedEmbedScreen} />
                 {/key}
             </div>
         {/if}

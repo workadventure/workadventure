@@ -8,7 +8,6 @@ import {
 } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { VideoBox } from "./Space";
 
@@ -64,10 +63,11 @@ export interface SpaceInterface {
 
     allVideoStreamStore: MapStore<string, VideoBox>;
     allScreenShareStreamStore: MapStore<string, VideoBox>;
+    getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
+    getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined;
 
     getSpaceUserBySpaceUserId(id: SpaceUser["spaceUserId"]): SpaceUserExtended | undefined;
     getSpaceUserByUserId(id: number): SpaceUserExtended | undefined;
-    extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended>;
     simplePeer: SimplePeerConnectionInterface | undefined;
     readonly onLeaveSpace: Observable<void>;
     get spacePeerManager(): SpacePeerManager;
@@ -100,7 +100,7 @@ export interface SpaceInterface {
 }
 
 export type ReactiveSpaceUser = {
-    [K in keyof Omit<SpaceUser, "spaceUserId">]: Readonly<Readable<SpaceUser[K]>>;
+    [K in keyof Omit<SpaceUser, "spaceUserId" | "playUri" | "roomName">]: Readonly<Readable<SpaceUser[K]>>;
 } & {
     spaceUserId: string;
     playUri: string | undefined;
@@ -108,15 +108,8 @@ export type ReactiveSpaceUser = {
 };
 
 export type SpaceUserExtended = SpaceUser & {
-    wokaPromise: Promise<string> | undefined;
-    getWokaBase64: string;
-    updateSubject: Subject<{
-        newUser: SpaceUserExtended;
-        changes: SpaceUser;
-        updateMask: string[];
-    }>;
+    pictureStore: Readable<string | undefined>;
     emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => void;
-    //emitter: JitsiEventEmitter | undefined;
-    space: SpaceInterface;
+    space: Pick<SpaceInterface, "emitPublicMessage">;
     reactiveUser: ReactiveSpaceUser;
 };

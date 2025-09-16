@@ -5,7 +5,7 @@ import { Readable, Unsubscriber } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-import { MediaStoreStreamable } from "../../Stores/StreamableCollectionStore";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { nbSoundPlayedInBubbleStore } from "../../Stores/ApparentMediaContraintStore";
 import { DefaultCommunicationState } from "./DefaultCommunicationState";
 
@@ -18,10 +18,10 @@ export interface ICommunicationState {
 }
 
 export interface StreamableSubjects {
-    videoPeerAdded: Subject<MediaStoreStreamable>;
-    videoPeerRemoved: Subject<MediaStoreStreamable>;
-    screenSharingPeerAdded: Subject<MediaStoreStreamable>;
-    screenSharingPeerRemoved: Subject<MediaStoreStreamable>;
+    videoPeerAdded: Subject<Streamable>;
+    videoPeerRemoved: Subject<Streamable>;
+    screenSharingPeerAdded: Subject<Streamable>;
+    screenSharingPeerRemoved: Subject<Streamable>;
 }
 
 export interface SimplePeerConnectionInterface {
@@ -44,16 +44,16 @@ export class SpacePeerManager {
     private screenShareContainerMap: Map<string, HTMLVideoElement[]> = new Map<string, HTMLVideoElement[]>();
     private screenShareAudioContainerMap: Map<string, HTMLAudioElement[]> = new Map<string, HTMLAudioElement[]>();
 
-    private readonly _videoPeerAdded = new Subject<MediaStoreStreamable>();
+    private readonly _videoPeerAdded = new Subject<Streamable>();
     public readonly videoPeerAdded = this._videoPeerAdded.asObservable();
 
-    private readonly _videoPeerRemoved = new Subject<MediaStoreStreamable>();
+    private readonly _videoPeerRemoved = new Subject<Streamable>();
     public readonly videoPeerRemoved = this._videoPeerRemoved.asObservable();
 
-    private readonly _screenSharingPeerAdded = new Subject<MediaStoreStreamable>();
+    private readonly _screenSharingPeerAdded = new Subject<Streamable>();
     public readonly screenSharingPeerAdded = this._screenSharingPeerAdded.asObservable();
 
-    private readonly _screenSharingPeerRemoved = new Subject<MediaStoreStreamable>();
+    private readonly _screenSharingPeerRemoved = new Subject<Streamable>();
     public readonly screenSharingPeerRemoved = this._screenSharingPeerRemoved.asObservable();
 
     private readonly _streamableSubjects = {

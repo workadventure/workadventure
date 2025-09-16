@@ -20,18 +20,18 @@ export class ScriptingInputAudioStreamManager {
     private videoPeerRemovedUnsubscriber: Subscription;
 
     constructor(spacePeerManager: SpacePeerManager) {
-        this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((media) => {
+        this.videoPeerAddedUnsubscriber = spacePeerManager.videoPeerAdded.subscribe((streamable) => {
             if (this.isListening) {
-                if (media.type === "mediaStore") {
-                    this.addMediaStreamStore(media.streamStore);
+                if (streamable.media.type === "mediaStore") {
+                    this.addMediaStreamStore(streamable.media.streamStore);
                 }
             }
         });
 
-        this.videoPeerRemovedUnsubscriber = spacePeerManager.videoPeerRemoved.subscribe((media) => {
+        this.videoPeerRemovedUnsubscriber = spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
             if (this.isListening) {
-                if (media.type === "mediaStore") {
-                    this.removeMediaStreamStore(media.streamStore);
+                if (streamable.media.type === "mediaStore") {
+                    this.removeMediaStreamStore(streamable.media.streamStore);
                 }
             }
         });
@@ -71,8 +71,9 @@ export class ScriptingInputAudioStreamManager {
 
         // Let's add all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
-            if (peer.streamable.media.type === "mediaStore") {
-                this.addMediaStreamStore(peer.streamable.media.streamStore);
+            const streamable = get(peer.streamable);
+            if (streamable && streamable.media.type === "mediaStore") {
+                this.addMediaStreamStore(streamable.media.streamStore);
             }
         });
     }
@@ -85,8 +86,9 @@ export class ScriptingInputAudioStreamManager {
 
         // Let's remove all the peers to the stream
         get(videoStreamElementsStore).forEach((peer) => {
-            if (peer.streamable.media.type === "mediaStore") {
-                this.removeMediaStreamStore(peer.streamable.media.streamStore);
+            const streamable = get(peer.streamable);
+            if (streamable && streamable.media.type === "mediaStore") {
+                this.removeMediaStreamStore(streamable.media.streamStore);
             }
         });
 

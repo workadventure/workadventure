@@ -1,4 +1,4 @@
-import { Writable, writable } from "svelte/store";
+import { readable, Writable, writable } from "svelte/store";
 import { AvailabilityStatus, ChatMember } from "@workadventure/messages";
 import { ChatUser, PartialChatUser } from "../Connection/ChatConnection";
 import { RoomConnection } from "../../Connection/RoomConnection";
@@ -27,7 +27,7 @@ export class AdminUserProvider implements UserProviderInterface {
             if (currentMember.chatId)
                 userAcc.push({
                     availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                    avatarUrl: undefined,
+                    pictureStore: readable(undefined),
                     chatId: currentMember.chatId,
                     roomName: undefined,
                     playUri: undefined,

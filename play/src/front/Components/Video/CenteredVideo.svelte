@@ -130,6 +130,15 @@
         }
     }
 
+    // React to attachVideo changes - call attachVideo when it becomes available
+    let lastAttachVideoFunction: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    $: {
+        if (attachVideo && videoElement && attachVideo !== lastAttachVideoFunction) {
+            attachVideo(videoElement);
+            lastAttachVideoFunction = attachVideo;
+        }
+    }
+
     let callbackId: number | undefined;
 
     function expectVideoWithin3Seconds() {

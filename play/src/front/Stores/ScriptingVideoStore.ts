@@ -19,7 +19,6 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         getExtendedSpaceUser: () => undefined,
         name: writable(config.name ?? ""),
         showVoiceIndicator: writable(false),
-        pictureStore: writable(config.avatar),
         flipX: false,
         muteAudio: false,
         // FIXME: move this to fit after our tests
@@ -29,7 +28,6 @@ function createStreamableFromVideo(url: string, config: VideoConfig): Streamable
         once: (event: string, callback: (...args: unknown[]) => void) => {
             callback();
         },
-        priority: 0,
     };
 }
 

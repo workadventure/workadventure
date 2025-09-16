@@ -123,12 +123,12 @@
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
         <div class="w-full h-full fixed start-0 end-0">
-            <MediaBox streamable={$highlightedEmbedScreen} isHighlighted={true} />
+            <MediaBox videoBox={$highlightedEmbedScreen} isHighlighted={true} />
         </div>
         <!-- If we are in fullscreen, the other streams are not displayed. We should therefore play the audio of hidden streams -->
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-            {#if peer.uniqueId !== $highlightedEmbedScreen.uniqueId}
-                <AudioStreamWrapper {peer} />
+        {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+            {#if videoBox.uniqueId !== $highlightedEmbedScreen.uniqueId}
+                <AudioStreamWrapper {videoBox} />
             {/if}
         {/each}
     {/if}

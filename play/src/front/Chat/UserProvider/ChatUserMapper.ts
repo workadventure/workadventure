@@ -5,7 +5,7 @@ export function mapExtendedSpaceUserToChatUser(user: SpaceUserExtended): ChatUse
     return {
         uuid: user.uuid,
         chatId: user.chatID ?? user.uuid,
-        avatarUrl: user.getWokaBase64,
+        pictureStore: user.pictureStore,
         availabilityStatus: user.reactiveUser.availabilityStatus,
         roomName: user.roomName,
         playUri: user.playUri,

@@ -12,19 +12,16 @@ import {
 import { derived, get, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
-import {
-    ExtendedStreamable,
-    SCREEN_SHARE_STARTING_PRIORITY,
-    VIDEO_STARTING_PRIORITY,
-} from "../Stores/StreamableCollectionStore";
+import { Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { VideoBox } from "../Space/Space";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
     private _connectionQualityStore: Writable<ConnectionQuality>;
     private _videoStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
+    private _actualVideo: Streamable | undefined;
+    private _actualScreenShare: Streamable | undefined;
     private _streamStore = derived(
         [this._videoStreamStore, this._audioStreamStore],
         ([$videoStreamStore, $audioStreamStore]) => {
@@ -250,9 +247,8 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
-            if (oldVideoStream) {
-                this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.media);
+            if (this._actualVideo) {
+                this._streamableSubjects.videoPeerRemoved.next(this._actualVideo);
             }
         } else if (publication.source === Track.Source.ScreenShare) {
             // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
@@ -268,9 +264,8 @@ export class LiveKitParticipant {
                 });
             }
 
-            const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
-            if (oldScreenShareStream) {
-                this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
+            if (this._actualScreenShare) {
+                this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
             }
         } else if (publication.source === Track.Source.Microphone) {
             // this.space.livekitAudioStreamStore.delete(this._spaceUser.spaceUserId);
@@ -299,11 +294,6 @@ export class LiveKitParticipant {
                     //audioElement.remove();
                 });
             }
-
-            /*const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
-            if (oldScreenShareStream) {
-                this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.media);
-            }*/
         }
     }
 
@@ -332,39 +322,39 @@ export class LiveKitParticipant {
     }
 
     private updateLivekitVideoStreamStore() {
-        const videoStream = this.getVideoStream();
-        const oldVideoStream = this.space.allVideoStreamStore.get(this._spaceUser.spaceUserId);
+        //Old stream
+        const actualVideo = this._actualVideo;
 
-        if (oldVideoStream) {
-            this._streamableSubjects.videoPeerRemoved.next(oldVideoStream.streamable.media);
+        if (actualVideo) {
+            this._streamableSubjects.videoPeerRemoved.next(actualVideo);
         }
 
-        this.space.allVideoStreamStore.set(this._spaceUser.spaceUserId, videoStream);
-
-        this._streamableSubjects.videoPeerAdded.next(videoStream.streamable.media);
+        // New Stream
+        this._actualVideo = this.getVideoStream();
+        this._streamableSubjects.videoPeerAdded.next(this._actualVideo);
     }
 
     private updateLivekitScreenShareStreamStore() {
-        const screenShareStream = this.getScreenShareStream();
-        const oldScreenShareStream = this.space.allScreenShareStreamStore.get(this._spaceUser.spaceUserId);
+        //Old stream
+        const actualScreenShare = this._actualScreenShare;
 
-        if (oldScreenShareStream) {
-            this._streamableSubjects.screenSharingPeerRemoved.next(oldScreenShareStream.streamable.media);
+        if (actualScreenShare) {
+            this._streamableSubjects.screenSharingPeerRemoved.next(actualScreenShare);
         }
 
-        this.space.allScreenShareStreamStore.set(this._spaceUser.spaceUserId, screenShareStream);
-
-        this._streamableSubjects.screenSharingPeerAdded.next(screenShareStream.streamable.media);
+        // New Stream
+        this._actualScreenShare = this.getScreenShareStream();
+        this._streamableSubjects.screenSharingPeerAdded.next(this._actualScreenShare);
     }
 
-    public getVideoStream(): VideoBox {
-        const streamable: ExtendedStreamable = {
+    public getVideoStream(): Streamable {
+        return {
             uniqueId: this.participant.identity,
             hasAudio: this._hasAudio,
             hasVideo: this._hasVideo,
             isMuted: this._isMuted,
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
+            getExtendedSpaceUser: () => this._spaceUser,
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
@@ -400,34 +390,21 @@ export class LiveKitParticipant {
                     }
                 },
             },
-            pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
             once(event, callback) {
                 callback();
             },
-            priority: VIDEO_STARTING_PRIORITY,
-            lastSpeakTimestamp: this.lastSpeakTimestamp,
         };
-
-        const videoBox: VideoBox = {
-            id: "video_" + this._spaceUser.spaceUserId,
-            SpaceUser: this._spaceUser,
-            streamable: streamable,
-            priority: VIDEO_STARTING_PRIORITY,
-            lastSpeakTimestamp: this.lastSpeakTimestamp,
-        };
-
-        return videoBox;
     }
 
-    public getScreenShareStream(): VideoBox {
-        const streamable: ExtendedStreamable = {
+    public getScreenShareStream(): Streamable {
+        return {
             uniqueId: this.participant.sid,
             hasAudio: writable(false),
             hasVideo: writable(true),
             isMuted: writable(false),
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => Promise.resolve(this._spaceUser),
+            getExtendedSpaceUser: () => this._spaceUser,
             name: this._nameStore,
             showVoiceIndicator: writable(false),
             flipX: false,
@@ -469,24 +446,11 @@ export class LiveKitParticipant {
                     }
                 },
             },
-            pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
             once(event, callback) {
                 callback();
             },
         };
-
-        this.highlightedEmbedScreenStore.toggleHighlight(streamable);
-
-        const videoBox: VideoBox = {
-            id: "video_" + this._spaceUser.spaceUserId,
-            SpaceUser: this._spaceUser,
-            streamable: streamable,
-            priority: SCREEN_SHARE_STARTING_PRIORITY,
-            lastSpeakTimestamp: this.lastSpeakTimestamp,
-        };
-
-        return videoBox;
     }
 
     public setActiveSpeaker(isActiveSpeaker: boolean) {

@@ -1,6 +1,5 @@
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { Subscription } from "rxjs";
-import * as Sentry from "@sentry/svelte";
 import { Deferred } from "ts-deferred";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
@@ -10,13 +9,13 @@ import { BubbleNotification as BasicNotification } from "../Notification/BubbleN
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { SCREEN_SHARE_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
-import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
-import { VideoBox } from "../Space/Space";
 
 export interface UserSimplePeerInterface {
     userId: string;
@@ -42,6 +41,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
     // A map of all screen sharing peers, indexed by spaceUserId
     private screenSharePeers: Map<string, ScreenSharingPeer> = new Map();
+    // A map of all video peers, indexed by spaceUserId
+    private videoPeers: Map<string, VideoPeer> = new Map();
 
     constructor(
         private _space: SpaceInterface,
@@ -111,10 +112,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     webRtcPassword: webRtcSignalToClientMessage.webRtcPassword,
                 };
 
-                this.receiveWebrtcSignal(webRtcSignalReceivedMessage, message.sender).catch((e) => {
-                    console.error("Error while receiving WebRTC signal", e);
-                    Sentry.captureException(e);
-                });
+                this.receiveWebrtcSignal(webRtcSignalReceivedMessage, message.sender);
             })
         );
 
@@ -130,10 +128,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     webRtcPassword: webRtcScreenSharingSignalToClientMessage.webRtcPassword,
                 };
 
-                this.receiveWebrtcScreenSharingSignal(webRtcSignalReceivedMessage).catch((e) => {
-                    console.error("Error while receiving WebRTC signal", e);
-                    Sentry.captureException(e);
-                });
+                this.receiveWebrtcScreenSharingSignal(webRtcSignalReceivedMessage);
             })
         );
 
@@ -156,10 +151,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     webRtcPassword: webRtcStartMessage.webRtcPassword,
                 };
 
-                this.receiveWebrtcStart(user, message.sender).catch((e) => {
-                    console.error("Error while receiving WebRTC signal", e);
-                    Sentry.captureException(e);
-                });
+                this.receiveWebrtcStart(user, message.sender);
             })
         );
 
@@ -175,7 +167,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         );
     }
 
-    private async receiveWebrtcStart(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): Promise<void> {
+    private receiveWebrtcStart(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): void {
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
@@ -186,9 +178,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         this._pendingConnections.set(user.userId, new AbortController());
+        const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
 
-        const extendedSpaceUser = await this._space.extendSpaceUser(spaceUser);
-        await this.createPeerConnection(user, extendedSpaceUser);
+        if (!extendedSpaceUser) {
+            console.error("Extended space user not found for user", user.userId);
+            return;
+        }
+
+        this.createPeerConnection(user, extendedSpaceUser);
 
         this._pendingConnections.delete(user.userId);
     }
@@ -200,22 +197,19 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * create peer connection to bind users
      */
-    private async createPeerConnection(
-        user: UserSimplePeerInterface,
-        spaceUser: SpaceUserExtended
-    ): Promise<VideoPeer | null> {
+    private createPeerConnection(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): VideoPeer | null {
         const uuid = spaceUser.uuid;
         if (this._blackListManager.isBlackListed(uuid)) return null;
 
-        const peerConnection = this._space.allVideoStreamStore.get(user.userId);
+        const peerConnection = this.videoPeers.get(user.userId);
         if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
-                this._streamableSubjects.videoPeerRemoved.next(peerConnection.media);
+                this._streamableSubjects.videoPeerRemoved.next(peerConnection);
                 peerConnection.destroy();
 
                 //this.space.livekitVideoStreamStore.delete(user.userId);
             } else {
-                return Promise.resolve(null);
+                return null;
             }
         }
 
@@ -250,22 +244,15 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         });
 
         //Create a notification for first user in circle discussion
-        if (this._space.allVideoStreamStore.size === 0) {
+        if (this.videoPeers.size === 0) {
             const notificationText = get(LL).notification.discussion({ name });
             this._notificationManager.createNotification(new BasicNotification(notificationText));
         }
 
         this._analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
 
-        const videoBox: VideoBox = {
-            id: "video_" + user.userId,
-            SpaceUser: spaceUser,
-            streamable: peer,
-            priority: VIDEO_STARTING_PRIORITY,
-        };
-        
-        this._space.allVideoStreamStore.set(user.userId, videoBox);
-        this._streamableSubjects.videoPeerAdded.next(videoBox.streamable.media);
+        this.videoPeers.set(user.userId, peer);
+        this._streamableSubjects.videoPeerAdded.next(peer);
         return peer;
     }
 
@@ -281,7 +268,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         if (peerScreenSharingConnection) {
             if (peerScreenSharingConnection.destroyed) {
-                this._streamableSubjects.screenSharingPeerRemoved.next(peerScreenSharingConnection.media);
+                this._streamableSubjects.screenSharingPeerRemoved.next(peerScreenSharingConnection);
                 //peerScreenSharingConnection.toClose = true;
                 //peerScreenSharingConnection.destroy();
                 //this.space.screenSharingPeerStore.delete(user.userId);
@@ -313,13 +300,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             false
         );
 
-        const videoBox: VideoBox = {
-            id: "video_" + user.userId,
-            SpaceUser: spaceUser,
-            streamable: peer,
+        const videoBox: VideoBox = this._space.getScreenSharingPeerVideoBox(spaceUser.spaceUserId) ?? {
+            uniqueId: "video_" + user.userId,
+            spaceUser: spaceUser,
+            streamable: writable(peer),
             priority: SCREEN_SHARE_STARTING_PRIORITY,
         };
-
         // Create subscription to statusStore to close connection when user stop sharing screen
         // Is automatically unsubscribed when peer is destroyed
         this._unsubscribers.push(
@@ -339,12 +325,17 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         // eslint-disable-next-line listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener
         peer.on("stream", (stream) => {
-            this._space.allScreenShareStreamStore.set(user.userId, videoBox);
+            if (!this.screenSharePeers.has(user.userId)) {
+                this.screenSharePeers.set(user.userId, peer);
+                return;
+            }
+
+            videoBox.streamable.set(peer);
         });
 
         this.screenSharePeers.set(user.userId, peer);
-        this._streamableSubjects.screenSharingPeerAdded.next(videoBox.streamable.media);
-        //}
+        this._streamableSubjects.screenSharingPeerAdded.next(peer);
+
         return peer;
     }
 
@@ -363,11 +354,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         try {
-            const peer = this._space.allVideoStreamStore.get(userId);
+            const peer = this.videoPeers.get(userId);
             if (!peer || !(peer instanceof VideoPeer)) {
                 return;
             }
-            this._streamableSubjects.videoPeerRemoved.next(peer.media);
+
+            this._streamableSubjects.videoPeerRemoved.next(peer);
 
             const videoElements = this._space.spacePeerManager.getVideoContainers(userId);
 
@@ -384,7 +376,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             //create temp peer to close
             if (shouldCloseStream) {
                 peer.destroy();
-                this._space.allVideoStreamStore.delete(userId);
+                this.videoPeers.delete(userId);
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
@@ -414,7 +406,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 return;
             }
 
-            this._streamableSubjects.screenSharingPeerRemoved.next(peer.media);
+            this._streamableSubjects.screenSharingPeerRemoved.next(peer);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
@@ -436,13 +428,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
 
         if (shouldCloseStream) {
-            this._space.allScreenShareStreamStore.delete(userId);
             this.screenSharePeers.delete(userId);
         }
     }
 
     public closeAllConnections(needToDelete?: boolean) {
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this.videoPeers.keys()) {
             this.closeConnection(userId, needToDelete);
         }
 
@@ -467,31 +458,31 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     public cleanupStore() {
-        this._space.allVideoStreamStore.forEach((peer) => {
-            if (peer instanceof VideoPeer) {
-                peer.destroy();
-                this._space.allVideoStreamStore.delete(peer.user.userId);
-            }
+        this.videoPeers.forEach((peer) => {
+            peer.destroy();
+            this.videoPeers.delete(peer.user.userId);
         });
 
         this.screenSharePeers.forEach((peer) => {
             peer.destroy();
             this.screenSharePeers.delete(peer.user.userId);
-            this._space.allScreenShareStreamStore.delete(peer.user.userId);
         });
     }
 
-    private async receiveWebrtcSignal(
-        data: WebRtcSignalReceivedMessageInterface,
-        spaceUser: SpaceUserExtended
-    ): Promise<void> {
+    private receiveWebrtcSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
         try {
             //if offer type, create peer connection
             if (data.signal.type === "offer") {
-                const extendedSpaceUser = await this._space.extendSpaceUser(spaceUser);
-                await this.createPeerConnection(data, extendedSpaceUser);
+                const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
+
+                if (!extendedSpaceUser) {
+                    console.error("Extended space user not found for user", data.userId);
+                    return;
+                }
+
+                this.createPeerConnection(data, extendedSpaceUser);
             }
-            const peer = this._space.allVideoStreamStore.get(data.userId);
+            const peer = this.videoPeers.get(data.userId);
 
             if (!(peer instanceof VideoPeer)) {
                 console.error("peer is not a VideoPeer");
@@ -508,7 +499,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
-    private async receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface): Promise<void> {
+    private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
         const spaceUser = this._space.getSpaceUserBySpaceUserId(data.userId);
 
         if (!spaceUser) {
@@ -547,7 +538,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
             //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be removed when user left circle discussion
-            await this.receiveWebrtcScreenSharingSignal(data);
+            this.receiveWebrtcScreenSharingSignal(data);
         }
     }
 
@@ -571,7 +562,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Triggered locally when clicking on the screen sharing button
      */
     public sendLocalScreenSharingStream(localScreenCapture: MediaStream) {
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this.videoPeers.keys()) {
             this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture);
         }
     }
@@ -580,7 +571,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Triggered locally when clicking on the screen sharing button
      */
     public stopLocalScreenSharingStream(stream: MediaStream) {
-        for (const userId of this._space.allVideoStreamStore.keys()) {
+        for (const userId of this.videoPeers.keys()) {
             this.stopLocalScreenSharingStreamToUser(userId, stream);
         }
     }
@@ -640,7 +631,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      * Used to send streams generated by the scripting API.
      */
     public dispatchStream(mediaStream: MediaStream) {
-        for (const videoPeer of this._space.allVideoStreamStore.values()) {
+        for (const videoPeer of this.videoPeers.values()) {
             if (videoPeer instanceof VideoPeer) {
                 videoPeer.addStream(mediaStream);
             }
