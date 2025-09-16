@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { applyFieldMask } from "protobuf-fieldmask";
 import { Observable, Subject, Subscriber, Subscription } from "rxjs";
 import { merge } from "lodash";
+import { Deferred } from "ts-deferred";
 import { MapStore } from "@workadventure/store-utils";
 import {
     PublicEvent,
@@ -64,6 +65,7 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserRemoved: Subscription;
 
     private _isDestroyed = false;
+    private initPromise: Deferred<void> | undefined;
 
     /**
      * IMPORTANT: The only valid way to create a space is to use the SpaceRegistry.
@@ -404,7 +406,7 @@ export class Space implements SpaceInterface {
 
     //FROM SPACE FILTER
 
-    getUsers(): SpaceUserExtended[] {
+    getUsersSync(): SpaceUserExtended[] {
         return Array.from(get(this.usersStore).values());
     }
 
@@ -424,10 +426,8 @@ export class Space implements SpaceInterface {
         }
 
         await Promise.all(promises).catch((e) => console.error(e));
-
-        if (this._setUsers) {
-            this._setUsers(this._users);
-        }
+        this._setUsers?.(this._users);
+        this.initPromise?.resolve();
     }
 
     async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
@@ -525,7 +525,9 @@ export class Space implements SpaceInterface {
                 this._connection.emitPrivateSpaceEvent(this.getName(), message, user.spaceUserId);
             },
             space: this,
-        } as unknown as SpaceUserExtended;
+            // reactiveUser will be initialized just after the object creation
+            reactiveUser: undefined as unknown as ReactiveSpaceUser,
+        } as SpaceUserExtended;
 
         extendedUser.reactiveUser = new Proxy(
             {
@@ -564,7 +566,7 @@ export class Space implements SpaceInterface {
             return;
         }
         if (this._registerRefCount === 0) return;
-        this._connection.emitRequestFullSync(this.name, this.getUsers());
+        this._connection.emitRequestFullSync(this.name, this.getUsersSync());
     }
 
     private extractUserIdFromSpaceId(spaceId: string): number {
@@ -591,6 +593,13 @@ export class Space implements SpaceInterface {
                     spaceName: this.getName(),
                 },
             });
+            if (this.initPromise) {
+                // Reject the pending init promise to cancel any awaiting getUsers()
+                // Attach a no-op catch to avoid unhandled rejection errors in tests/runtime.
+                this.initPromise.promise.catch(() => {});
+                this.initPromise.reject();
+                this.initPromise = undefined;
+            }
         }
     }
 
@@ -605,6 +614,14 @@ export class Space implements SpaceInterface {
                     spaceName: this.getName(),
                 },
             });
+            if (this.initPromise) {
+                // Cancel previous init promise if a new registration starts
+                this.initPromise.promise.catch(() => {});
+                this.initPromise.reject();
+            }
+            this.initPromise = new Deferred<void>();
+            // Ensure rejections are handled to prevent unhandled rejection warnings/errors
+            this.initPromise.promise.catch(() => {});
         }
         this._registerRefCount++;
     }
@@ -627,5 +644,33 @@ export class Space implements SpaceInterface {
 
     public get mySpaceUserId(): SpaceUser["spaceUserId"] {
         return this._mySpaceUserId;
+    }
+
+    /**
+     * Returns a promise that resolves to the current list of users in the space.
+     * The promise will only resolve once the initial list of users has been received from the server.
+     * After that, the promise will resolve immediately with the current list of users.
+     * Important! This method will register a space watcher on the connection if one is not already registered.
+     * If no other method is called to hold this watcher, it will be unregistered on the next tick of the event loop.
+     * Calling getUsers() multiple times would query the full user list multiple times, which is not efficient.
+     * Use observeUserJoined, observeUserLeft and observeUserUpdated to be notified of user changes or the usersStore.
+     */
+    public async getUsers(): Promise<Map<string, Readonly<SpaceUserExtended>>> {
+        this.registerSpaceFilter();
+
+        setTimeout(() => {
+            // Let's unregister, but later, to let potential subscribers register just after getUsers() returned.
+            if (!this.isDestroyed) {
+                this.unregisterSpaceFilter();
+            }
+        }, 0);
+
+        if (!this.initPromise) {
+            throw new Error("initPromise is not defined");
+        }
+
+        await this.initPromise.promise;
+
+        return this._users;
     }
 }

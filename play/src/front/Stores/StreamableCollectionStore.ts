@@ -93,7 +93,6 @@ export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen shari
 export const VIDEO_STARTING_PRIORITY = 2000; // Priority for other video streams
 
 export type ExtendedStreamable = Streamable & {
-    userId: number;
     media: MediaStoreStreamable;
 };
 

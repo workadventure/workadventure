@@ -31,6 +31,13 @@ import { blackListManager } from "../../../WebRtc/BlackListManager";
 import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 import { ScriptingOutputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingOutputAudioStreamManager";
 import { ScriptingInputAudioStreamManager } from "../../../WebRtc/AudioStream/ScriptingInputAudioStreamManager";
+import type { MessageUserJoined } from "../../../Connection/ConnexionModels";
+import { RemotePlayersRepository } from "../../../Phaser/Game/RemotePlayersRepository";
+import { hideBubbleConfirmationModal } from "../../../Rules/StatusRules/statusChangerFunctions";
+import { statusChanger } from "../../../Components/ActionBar/AvailabilityStatus/statusChanger";
+import { GameScene } from "../../../Phaser/Game/GameScene";
+import { faviconManager } from "../../../WebRtc/FaviconManager";
+import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -61,6 +68,11 @@ export class ProximityChatMessage implements ChatMessage {
     }
 }
 
+type SoundManager = Pick<
+    GameScene,
+    "playBubbleInSound" | "playBubbleOutSound" | "enableVoiceIndicator" | "disableVoiceIndicator"
+>;
+
 export class ProximityChatRoom implements ChatRoom {
     id = "proximity";
     name = writable("Proximity Chat");
@@ -76,6 +88,8 @@ export class ProximityChatRoom implements ChatRoom {
     private _spacePromise: Promise<SpaceInterface | undefined> = Promise.resolve(undefined);
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private observeUserJoinedSubscription: Subscription | undefined;
+    private observeUserLeftSubscription: Subscription | undefined;
     // Users by spaceUserId
     private users: Map<string, SpaceUserExtended> | undefined;
     private usersUnsubscriber: Unsubscriber | undefined;
@@ -105,11 +119,14 @@ export class ProximityChatRoom implements ChatRoom {
     private scriptingInputAudioStreamManager: ScriptingInputAudioStreamManager | undefined;
     private startListeningToStreamInBubbleStreamUnsubscriber: Subscription;
     private stopListeningToStreamInBubbleStreamUnsubscriber: Subscription;
+    private screenWakeRelease: undefined | (() => Promise<void>);
 
     constructor(
         private _spaceUserId: string,
         private spaceRegistry: SpaceRegistryInterface,
         iframeListenerInstance: Pick<typeof iframeListener, "newChatMessageWritingStatusStream">,
+        private remotePlayersRepository: RemotePlayersRepository,
+        private soundManager: SoundManager,
         private notifyNewMessage = (message: ProximityChatMessage) => {
             if (!localUserStore.getChatSounds() || get(this.areNotificationsMuted)) return;
             gameManager.getCurrentGameScene().playSound("new-message");
@@ -422,17 +439,6 @@ export class ProximityChatRoom implements ChatRoom {
                 return uuid && blackListManager.isBlackListed(uuid);
             };
 
-            this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
-                if (spaceUser.spaceUserId === this._spaceUserId) {
-                    return;
-                }
-                this.addIncomingUser(spaceUser);
-            });
-
-            this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
-                this.addOutcomingUser(spaceUser);
-            });
-
             this.spaceMessageSubscription?.unsubscribe();
             this.spaceMessageSubscription = this._space.observePublicEvent("spaceMessage").subscribe((event) => {
                 if (isBlackListed(event.sender)) {
@@ -476,9 +482,107 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
 
+            this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
+                if (spaceUser.spaceUserId === this._spaceUserId) {
+                    return;
+                }
+                this.addIncomingUser(spaceUser);
+            });
+
+            this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
+                this.addOutcomingUser(spaceUser);
+            });
+
+            // Let's wait for the users to be loaded
+            const users = await this.getFirstUsers(this._space);
+
+            const playersInSpace: MessageUserJoined[] = [];
+
+            for (const spaceUser of users.values()) {
+                const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
+                if (player) {
+                    playersInSpace.push(player);
+                }
+            }
+            iframeListener.sendJoinProximityMeetingEvent(playersInSpace);
+            this.soundManager.playBubbleInSound();
+            this.soundManager.enableVoiceIndicator();
+            faviconManager.pushNotificationFavicon();
+            screenWakeLock
+                .requestWakeLock()
+                .then((release) => (this.screenWakeRelease = release))
+                .catch((error) => console.error(error));
+
+            // Note: by design, if someone comes talk to us, there should be only one new user in the space.
+            // So we know for sure that there is only one new user.
+            const peer = Array.from(users.values()).find((user) => user.spaceUserId !== this._spaceUserId);
+
+            if (peer) {
+                statusChanger.setUserNameInteraction(peer.name ?? "unknown");
+                statusChanger.applyInteractionRules();
+            }
+
+            // Now that we have the complete user list we can listen to incoming and outgoing users
+            this.observeUserJoinedSubscription = this._space.observeUserJoined.subscribe((spaceUser) => {
+                const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
+                if (player) {
+                    iframeListener.sendParticipantJoinProximityMeetingEvent(player);
+                    this.soundManager.playBubbleInSound();
+                }
+            });
+
+            this.observeUserLeftSubscription = this._space.observeUserLeft.subscribe((spaceUser) => {
+                const player = this.getRemotePlayerFromSpaceUserId(spaceUser.spaceUserId);
+                if (player) {
+                    iframeListener.sendParticipantLeaveProximityMeetingEvent(player);
+                    this.soundManager.playBubbleOutSound();
+                }
+            });
+
             return this._space;
         });
         await this._spacePromise;
+    }
+
+    /**
+     * Wait for some users (that are not us) to be in the space, and return them.
+     */
+    private async getFirstUsers(space: SpaceInterface): Promise<SpaceUserExtended[]> {
+        const users = await space.getUsers();
+
+        const otherUsers = Array.from(users.values()).filter((user) => user.spaceUserId !== this._spaceUserId);
+        if (otherUsers.length > 0) {
+            return otherUsers;
+        }
+
+        return new Promise<SpaceUserExtended[]>((resolve) => {
+            const subscription = space.observeUserJoined.subscribe((user) => {
+                if (user.spaceUserId !== this._spaceUserId) {
+                    resolve([user]);
+                    subscription.unsubscribe();
+                }
+            });
+        });
+    }
+
+    private getRemotePlayerFromSpaceUserId(spaceUserId: string) {
+        const { /*roomUrl,*/ userId } = this.extractUserIdAndRoomUrlFromSpaceId(spaceUserId);
+        // Technically, we should check the roomUrl is the same as the current one.
+        // In practice, all users in this space are in the same room.
+        return this.remotePlayersRepository.getPlayers().get(userId);
+    }
+
+    private extractUserIdAndRoomUrlFromSpaceId(spaceId: string): { roomUrl: string; userId: number } {
+        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
+        if (lastUnderscoreIndex === -1) {
+            throw new Error("Invalid spaceId format: no underscore found");
+        }
+        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
+        if (isNaN(userId)) {
+            throw new Error("Invalid userId format: not a number");
+        }
+        const roomUrl = spaceId.substring(0, lastUnderscoreIndex);
+        return { roomUrl, userId };
     }
 
     public async leaveSpace(spaceName: string): Promise<void> {
@@ -490,6 +594,16 @@ export class ProximityChatRoom implements ChatRoom {
             if (space.getName() !== spaceName) {
                 console.error("Trying to leave a space different from the one joined");
                 return;
+            }
+
+            hideBubbleConfirmationModal();
+            iframeListener.sendLeaveProximityMeetingEvent();
+            faviconManager.pushOriginalFavicon();
+            this.soundManager.disableVoiceIndicator();
+            this.soundManager.playBubbleOutSound();
+            if (this.screenWakeRelease) {
+                this.screenWakeRelease().catch((error) => console.error(error));
+                this.screenWakeRelease = undefined;
             }
 
             if (this.users) {
@@ -511,6 +625,12 @@ export class ProximityChatRoom implements ChatRoom {
 
             this.spaceWatcherUserJoinedObserver?.unsubscribe();
             this.spaceWatcherUserLeftObserver?.unsubscribe();
+            this.spaceWatcherUserJoinedObserver = undefined;
+            this.spaceWatcherUserLeftObserver = undefined;
+            this.observeUserJoinedSubscription?.unsubscribe();
+            this.observeUserLeftSubscription?.unsubscribe();
+            this.observeUserJoinedSubscription = undefined;
+            this.observeUserLeftSubscription = undefined;
             if (this.usersUnsubscriber) {
                 this.usersUnsubscriber();
             }
@@ -572,6 +692,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.scriptingInputAudioStreamManager?.close();
         this.spaceWatcherUserJoinedObserver?.unsubscribe();
         this.spaceWatcherUserLeftObserver?.unsubscribe();
+        this.observeUserJoinedSubscription?.unsubscribe();
+        this.observeUserLeftSubscription?.unsubscribe();
         if (this.usersUnsubscriber) {
             this.usersUnsubscriber();
         }

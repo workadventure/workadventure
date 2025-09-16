@@ -142,18 +142,20 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             this.deleteUserFromNotify(spaceUser);
         }
 
-        this._space._localConnectedUser.delete(spaceUserId);
-        this._space._localWatchers.delete(spaceUserId);
-        this._space._localConnectedUserWithSpaceUser.delete(socket);
-        this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
-
-        await this._space.query.send({
-            $case: "removeSpaceUserQuery",
-            removeSpaceUserQuery: {
-                spaceName: this._space.name,
-                spaceUserId,
-            },
-        });
+        try {
+            await this._space.query.send({
+                $case: "removeSpaceUserQuery",
+                removeSpaceUserQuery: {
+                    spaceName: this._space.name,
+                    spaceUserId,
+                },
+            });
+        } finally {
+            this._space._localConnectedUser.delete(spaceUserId);
+            this._space._localWatchers.delete(spaceUserId);
+            this._space._localConnectedUserWithSpaceUser.delete(socket);
+            this._clientEventsEmitter.emitClientLeaveSpace(userData.userUuid, this._space.name);
+        }
 
         debug(
             `${this._space.name} : watcher removed ${userData.name}. Watcher count ${this._space._localConnectedUser.size}`
