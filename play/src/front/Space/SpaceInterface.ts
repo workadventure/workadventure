@@ -9,8 +9,6 @@ import {
 import { MapStore } from "@workadventure/store-utils";
 import { Readable } from "svelte/store";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { VideoPeer } from "../WebRtc/VideoPeer";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 
 export type PublicSpaceEvent = NonNullable<SpaceEvent["event"]>;
@@ -97,6 +95,7 @@ export interface SpaceInterface {
     readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
+    getUsers(): Promise<Map<string, Readonly<SpaceUserExtended>>>;
 }
 
 export type ReactiveSpaceUser = {
@@ -119,7 +118,4 @@ export type SpaceUserExtended = SpaceUser & {
     //emitter: JitsiEventEmitter | undefined;
     space: SpaceInterface;
     reactiveUser: ReactiveSpaceUser;
-    getPeerStore: () => Readable<VideoPeer> | undefined;
-    getScreenSharingPeerStore: () => Readable<ScreenSharingPeer> | undefined;
-    userId: number;
 };

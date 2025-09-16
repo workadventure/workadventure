@@ -34,7 +34,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     private isReceivingStream = false;
     private closing = false;
     public _connected = false;
-    public readonly userId: number;
     public readonly uniqueId: string;
     private readonly _streamStore: Writable<MediaStream | undefined>;
     private readonly _statusStore: Writable<PeerStatus>;
@@ -83,7 +82,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = spaceUser.userId;
         this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
@@ -160,7 +158,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
-            console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
+            console.error(`screen sharing error => ${this.spaceUser.spaceUserId} => ${err.code}`, err);
             this._statusStore.set("error");
 
             // Firefox-specific error handling for screen sharing
@@ -181,7 +179,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 clearTimeout(this.connectTimeout);
             }
             this._connected = true;
-            customWebRTCLogger.info(`connect => ${this.userId}`);
+            customWebRTCLogger.info(`connect => ${this.spaceUser.spaceUserId}`);
             this._statusStore.set("connected");
 
             // Set the max bitrate for the video stream
@@ -229,7 +227,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
+            console.error(`sendWebrtcScreenSharingSignal => ${this.spaceUser.spaceUserId}`, e);
         }
     }
 

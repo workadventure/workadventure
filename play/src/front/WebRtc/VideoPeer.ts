@@ -31,8 +31,6 @@ export class VideoPeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
-    /** @deprecated */
-    public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
@@ -91,7 +89,7 @@ export class VideoPeer extends Peer implements Streamable {
     private readonly errorHandler = (err: Error) => {
         this._statusStore.set("error");
 
-        console.error(`error for user ${this.userId}`, err);
+        console.error(`error for user ${this.spaceUser.spaceUserId}`, err);
         if ("code" in err) {
             console.error(`error code => ${err.code}`);
         }
@@ -147,18 +145,8 @@ export class VideoPeer extends Peer implements Streamable {
                     this.blocked = true;
                     this.toggleRemoteStream(false);
                     const simplePeer = this.space.simplePeer;
-                    const spaceUser = this.space.getSpaceUserByUserId(this.userId);
-                    if (!spaceUser) {
-                        console.error("spaceUser not found for userId", this.userId);
-                        return;
-                    }
-                    const spaceUserId = spaceUser.spaceUserId;
-                    if (!spaceUserId) {
-                        console.error("spaceUserId not found for userId", this.userId);
-                        return;
-                    }
                     if (simplePeer) {
-                        simplePeer.blockedFromRemotePlayer(spaceUserId);
+                        simplePeer.blockedFromRemotePlayer(this.spaceUser.spaceUserId);
                     }
                     break;
                 }
@@ -221,7 +209,6 @@ export class VideoPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.userId = spaceUser.userId;
         this.userUuid = spaceUser.uuid;
         this.uniqueId = "video_" + spaceUser.spaceUserId;
 
@@ -368,7 +355,7 @@ export class VideoPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcSignal => ${this.userId}`, e);
+            console.error(`sendWebrtcSignal => ${this.spaceUser.spaceUserId}`, e);
         }
     }
 

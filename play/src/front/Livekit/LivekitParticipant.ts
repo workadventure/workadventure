@@ -400,7 +400,6 @@ export class LiveKitParticipant {
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
-            userId: this._spaceUser.userId,
             once(event, callback) {
                 callback();
             },
@@ -460,7 +459,6 @@ export class LiveKitParticipant {
             },
             pictureStore: writable(this._spaceUser?.getWokaBase64),
             volumeStore: writable(undefined),
-            userId: this._spaceUser.userId,
             once(event, callback) {
                 callback();
             },
