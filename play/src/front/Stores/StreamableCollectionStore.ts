@@ -1,12 +1,11 @@
 import { Readable, derived, get, writable } from "svelte/store";
-import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
-import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceInterface";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
+import { VideoBox } from "../Space/Space";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -25,8 +24,6 @@ import {
 } from "./MediaStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
-import { broadcastTracksStore } from "./BroadcastTrackStore";
-import { VideoBox } from "../Space/Space";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -41,10 +38,6 @@ export interface MediaStoreStreamable {
     readonly detachAudio: (container: HTMLAudioElement) => void;
 }
 
-export interface JitsiTrackStreamable {
-    type: "jitsiTrack";
-    jitsiTrackStreamWrapper: JitsiTrackStreamWrapper;
-}
 
 export interface ScriptingVideoStreamable {
     type: "scripting";
@@ -58,7 +51,7 @@ export interface AttachableVideo {
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: MediaStoreStreamable | JitsiTrackStreamable | ScriptingVideoStreamable;
+    readonly media: MediaStoreStreamable | ScriptingVideoStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;
@@ -88,30 +81,7 @@ export type ExtendedStreamable = Streamable & {
     media: MediaStoreStreamable;
 };
 
-const jitsiTracksStore = derived([broadcastTracksStore], ([$broadcastTracksStore]) => {
-    const jitsiTracks = new Map<string, JitsiTrackWrapper>();
-    for (const [key, value] of $broadcastTracksStore) {
-        if (value instanceof JitsiTrackWrapper) {
-            jitsiTracks.set(key, value);
-        }
-    }
-    return jitsiTracks;
-});
 
-export const myJitsiCameraStore: Readable<Streamable | null> = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
-    for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
-        if (jitsiTrackWrapper.isLocal) {
-            const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
-            /*if (cameraTrackWrapper.isEmpty()) {
-                return null;
-            }*/
-            cameraTrackWrapper.flipX = true;
-            cameraTrackWrapper.muteAudio = true;
-            return cameraTrackWrapper;
-        }
-    }
-    return null;
-});
 
 const localstreamStoreValue = derived(localStreamStore, (myLocalStream) => {
     if (myLocalStream.type === "success") {
@@ -188,26 +158,22 @@ export const myCameraPeerStore: Readable<Streamable> = derived([LL], ([$LL]) => 
 function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
     return derived(
         [
-            broadcastTracksStore,
             screenShareStreamElementsStore,
             videoStreamElementsStore,
             screenSharingLocalMedia,
             scriptingVideoStore,
             myCameraStore,
-            myJitsiCameraStore,
             myCameraPeerStore,
             cameraEnergySavingStore,
             silentStore,
         ],
         (
             [
-                $broadcastTracksStore,
                 $screenShareStreamElementsStore,
                 $videoStreamElementsStore,
                 $screenSharingLocalMedia,
                 $scriptingVideoStore,
                 $myCameraStore,
-                $myJitsiCameraStore,
                 $myCameraPeerStore,
                 $cameraEnergySavingStore,
                 $silentStore,
@@ -224,10 +190,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 }
             };
 
-            if ($myCameraStore && !$myJitsiCameraStore && !$cameraEnergySavingStore && !$silentStore) {
+            if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
                 addPeer($myCameraPeerStore);
-            } else if ($myJitsiCameraStore) {
-                addPeer($myJitsiCameraStore);
             }
 
             $screenShareStreamElementsStore.forEach(addPeer);
@@ -235,22 +199,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             $videoStreamElementsStore.forEach(addPeer);
             $scriptingVideoStore.forEach(addPeer);
 
-            $broadcastTracksStore.forEach((trackWrapper) => {
-                if (trackWrapper instanceof JitsiTrackWrapper) {
-                    const cameraTrackWrapper = trackWrapper.cameraTrackWrapper;
-                    if (/*!cameraTrackWrapper.isEmpty() &&*/ !trackWrapper.isLocal) {
-                        addPeer(cameraTrackWrapper);
-                    }
-                    const screenSharingTrackWrapper = trackWrapper.screenSharingTrackWrapper;
-                    if (
-                        !screenSharingTrackWrapper.isEmpty() &&
-                        screenSharingTrackWrapper.jitsiTrackWrapper.getImmediateSpaceUser()?.screenSharingState !==
-                            false
-                    ) {
-                        addPeer(screenSharingTrackWrapper);
-                    }
-                }
-            });
+
 
             if ($screenSharingLocalMedia && $screenSharingLocalMedia.media.type === "mediaStore") {
                 addPeer($screenSharingLocalMedia);
@@ -293,9 +242,8 @@ export const streamablePictureInPictureStore = derived(streamableCollectionStore
 
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
-    [broadcastTracksStore, videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
+    [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
     ([
-        $broadcastTracksStore,
         $screenSharingStreamStore,
         $videoStreamElementsStore,
         $scriptingVideoStore,
@@ -309,13 +257,6 @@ export const isInRemoteConversation = derived(
         // Check if we have any peers
         if ($videoStreamElementsStore.length > 0) {
             return true;
-        }
-
-        // Check if we have any broadcast tracks (excluding local ones)
-        for (const trackWrapper of $broadcastTracksStore.values()) {
-            if (trackWrapper instanceof JitsiTrackWrapper && !trackWrapper.isLocal) {
-                return true;
-            }
         }
 
         // Check if we have any screen sharing streams

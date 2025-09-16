@@ -142,7 +142,6 @@
     "hyper-express": "^6.17.3",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.0",
-    "lib-jitsi-meet": "github:jitsi/lib-jitsi-meet#v1827.0.0+142c4410",
     "limiter": "^3.0.0",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
     "livekit-client": "^2.9.4",
