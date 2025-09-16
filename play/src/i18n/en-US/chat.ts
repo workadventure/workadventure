@@ -94,6 +94,7 @@ const chat: BaseTranslation = {
         title: "Your Timeline",
         open: "Open your time line history!",
         description: "Messages and events history",
+        newDiscussion: "New discussion with {userNames}",
         incoming: "{userName} joined the discussion",
         outcoming: "{userName} has left the discussion",
         youLeft: "You left the discussion",

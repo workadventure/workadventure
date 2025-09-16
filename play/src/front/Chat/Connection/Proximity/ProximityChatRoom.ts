@@ -13,7 +13,7 @@ import {
     ChatRoom,
     ChatUser,
 } from "../ChatConnection";
-import LL from "../../../../i18n/i18n-svelte";
+import LL, { locale } from "../../../../i18n/i18n-svelte";
 import { iframeListener } from "../../../Api/IframeListener";
 import { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInterface";
 import { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -223,6 +223,18 @@ export class ProximityChatRoom implements ChatRoom {
                 console.error("Error while sending message to WorkAdventure scripting API", e);
             }
         }
+    }
+
+    private addEnteringChatWithUsers(users: SpaceUserExtended[]) {
+        let userNames: string;
+        if (Intl.ListFormat) {
+            const formatter = new Intl.ListFormat(get(locale), { style: "long", type: "conjunction" });
+            userNames = formatter.format(users.map((user) => user.name));
+        } else {
+            // For old browsers
+            userNames = users.map((user) => user.name).join(", ");
+        }
+        this.sendMessage(get(LL).chat.timeLine.newDiscussion({ userNames }), "incoming", false);
     }
 
     private addIncomingUser(spaceUser: SpaceUserExtended): void {
@@ -482,17 +494,6 @@ export class ProximityChatRoom implements ChatRoom {
                 }
             }
 
-            this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
-                if (spaceUser.spaceUserId === this._spaceUserId) {
-                    return;
-                }
-                this.addIncomingUser(spaceUser);
-            });
-
-            this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
-                this.addOutcomingUser(spaceUser);
-            });
-
             // Let's wait for the users to be loaded
             const users = await this.getFirstUsers(this._space);
 
@@ -521,6 +522,20 @@ export class ProximityChatRoom implements ChatRoom {
                 statusChanger.setUserNameInteraction(peer.name ?? "unknown");
                 statusChanger.applyInteractionRules();
             }
+
+            this.addEnteringChatWithUsers(users);
+
+            this.spaceWatcherUserJoinedObserver = this._space.observeUserJoined.subscribe((spaceUser) => {
+                console.warn("User joined space: ", spaceUser);
+                if (spaceUser.spaceUserId === this._spaceUserId) {
+                    return;
+                }
+                this.addIncomingUser(spaceUser);
+            });
+
+            this.spaceWatcherUserLeftObserver = this._space.observeUserLeft.subscribe((spaceUser) => {
+                this.addOutcomingUser(spaceUser);
+            });
 
             // Now that we have the complete user list we can listen to incoming and outgoing users
             this.observeUserJoinedSubscription = this._space.observeUserJoined.subscribe((spaceUser) => {

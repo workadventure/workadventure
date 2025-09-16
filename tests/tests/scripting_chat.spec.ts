@@ -131,7 +131,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
 
     // Check that bob received the message
     //await bob.pause();
-    await expect(bob.getByText('Alice joined the discussion')).toBeVisible();
+    await expect(bob.getByText('New discussion with Alice')).toBeVisible();
 
     // Check that bob received the message
     await expect(bob.locator("#chat")).toContainText("Test message sent", {
@@ -139,7 +139,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
     });
 
     // Check that bob received the message
-    await expect(alice.getByText('Bob joined the discussion')).toBeVisible();
+    await expect(alice.getByText('New discussion with Bob')).toBeVisible();
 
     // Check that alice also received the message
     await expect(alice.locator("#chat")).toContainText("Test message sent", {
@@ -150,6 +150,14 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
     expect(chatMessageReceived.message).toBe("Test message sent");
     expect(chatMessageReceived.event.authorId).toBeDefined();
     expect(chatMessageReceived.event.author).toBeDefined();
+
+    // Let's add a third user, Charlie, to test the welcome message
+    await using charlie = await getPage(browser, "Charlie", Map.url("empty"));
+    await Map.teleportToPosition(charlie, 32, 32);
+
+    await expect(alice.getByText('Charlie joined the discussion')).toBeVisible();
+    await expect(bob.getByText('Charlie joined the discussion')).toBeVisible();
+
     await alice.context().close();
     await bob.context().close();
   });
