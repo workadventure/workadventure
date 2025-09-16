@@ -21,6 +21,7 @@ import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
+import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
     PrivateEventsObservables,
     PublicEventsObservables,
@@ -34,12 +35,12 @@ import { SpaceNameIsEmptyError } from "./Errors/SpaceError";
 import { RoomConnectionForSpacesInterface } from "./SpaceRegistry/SpaceRegistry";
 import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerManager/SpacePeerManager";
 import { lookupUserById } from "./Utils/UserLookup";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 
 export interface VideoBox {
-    id: string,
-    SpaceUser: SpaceUser,
-    streamable: ExtendedStreamable,
+    //TODO : voir si la priority doit etre aussi un
+    uniqueId: string;
+    spaceUser: SpaceUserExtended;
+    streamable: Writable<Streamable | undefined>;
     // The lower the priority, the more important the streamable is.
     // -2: reserved for the local camera
     // -1: reserved for the local screen sharing
@@ -49,12 +50,9 @@ export interface VideoBox {
     priority: number;
     // Timestamp of the last time the streamable was speaking
     lastSpeakTimestamp?: number;
-    boxStyle?: {[key: string]: unknown} | {
-        //objet bien typé avec que des optionnals
-    },
+    //TODO : use this to set the style of the video box
+    boxStyle?: { [key: string]: unknown };
 }
-
-
 
 export class Space implements SpaceInterface {
     private readonly name: string;
@@ -62,7 +60,7 @@ export class Space implements SpaceInterface {
     private readonly publicEventsObservables: PublicEventsObservables = {};
     private readonly privateEventsObservables: PrivateEventsObservables = {};
     private _onLeaveSpace = new Subject<void>();
-    public  readonly onLeaveSpace = this._onLeaveSpace.asObservable();
+    public readonly onLeaveSpace = this._onLeaveSpace.asObservable();
     private _peerManager: SpacePeerManager | undefined;
     public allVideoStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
     public allScreenShareStreamStore: MapStore<string, VideoBox> = new MapStore<string, VideoBox>();
@@ -85,6 +83,10 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserAdded: Subscription;
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
+    private readonly observeVideoPeerAdded: Subscription;
+    private readonly observeVideoPeerRemoved: Subscription;
+    private readonly observeScreenSharingPeerAdded: Subscription;
+    private readonly observeScreenSharingPeerRemoved: Subscription;
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
@@ -192,12 +194,84 @@ export class Space implements SpaceInterface {
         );
 
         this._peerManager = new SpacePeerManager(this);
+
+        this.observeVideoPeerAdded = this._peerManager.videoPeerAdded.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getVideoPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeVideoPeerAdded : videoBox not found for user", spaceUserId);
+                return;
+            }
+
+            videoBox.streamable.set(peer);
+        });
+
+        this.observeVideoPeerRemoved = this._peerManager.videoPeerRemoved.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getVideoPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeVideoPeerAdded : videoBox not found for user", spaceUserId);
+                return;
+            }
+        });
+
+        this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getScreenSharingPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeScreenSharingPeerAdded : videoBox not found for user", spaceUserId);
+                return;
+            }
+
+            videoBox.streamable.set(peer);
+        });
+        this.observeScreenSharingPeerRemoved = this._peerManager.screenSharingPeerRemoved.subscribe((peer) => {
+            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (!spaceUserId) {
+                console.error("observeVideoPeerAdded : peer has no spaceUserId");
+                return;
+            }
+
+            const videoBox = this.getScreenSharingPeerVideoBox(spaceUserId);
+
+            if (!videoBox) {
+                // Should not happen , we should have a videoBox for all users
+                console.error("observeScreenSharingPeerRemoved : videoBox not found for user", spaceUserId);
+                return;
+            }
+        });
+
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
             if (!message.addSpaceUserMessage.user) {
                 console.error("addSpaceUserMessage is missing a user");
                 return;
             }
-            this.addUser(message.addSpaceUserMessage.user).catch((e) => console.error(e));
+            this.addUser(message.addSpaceUserMessage.user);
         });
         this.observeSyncUserUpdated = this.observePrivateEvent("updateSpaceUserMessage").subscribe((message) => {
             if (!message.updateSpaceUserMessage.user || !message.updateSpaceUserMessage.updateMask) {
@@ -386,20 +460,26 @@ export class Space implements SpaceInterface {
         this.observeSyncUserAdded.unsubscribe();
         this.observeSyncUserUpdated.unsubscribe();
         this.observeSyncUserRemoved.unsubscribe();
+        this.observeVideoPeerAdded.unsubscribe();
+        this.observeVideoPeerRemoved.unsubscribe();
+        this.observeScreenSharingPeerAdded.unsubscribe();
+        this.observeScreenSharingPeerRemoved.unsubscribe();
 
         if (this._peerManager) {
             this._peerManager.destroy();
         }
 
         this.allVideoStreamStore.forEach((peer) => {
-            if (peer instanceof VideoPeer) {
-                peer.destroy();
+            const streamable = get(peer.streamable);
+            if (streamable instanceof VideoPeer) {
+                streamable.destroy();
             }
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
-            if (peer instanceof ScreenSharingPeer) {
-                peer.destroy();
+            const streamable = get(peer.streamable);
+            if (streamable instanceof ScreenSharingPeer) {
+                streamable.destroy();
             }
         });
 
@@ -434,30 +514,39 @@ export class Space implements SpaceInterface {
         return Array.from(get(this.usersStore).values());
     }
 
-    async initUsers(users: SpaceUser[]): Promise<void> {
-        const promises = [];
+    initUsers(users: SpaceUser[]): void {
         for (const user of users) {
-            const promise = (async () => {
-                const extendSpaceUser = await this.extendSpaceUser(user);
-                if (!this._users.has(user.spaceUserId)) {
-                    this._users.set(user.spaceUserId, extendSpaceUser);
-                    if (this._addUserSubject) {
-                        this._addUserSubject.next(extendSpaceUser);
+            const extendSpaceUser = this.extendSpaceUser(user);
+            if (!this._users.has(user.spaceUserId)) {
+                if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
+                    this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+
+                    if (user.screenSharingState) {
+                        this.allScreenShareStreamStore.set(
+                            user.spaceUserId,
+                            this.getEmptyVideoBox(extendSpaceUser, true)
+                        );
                     }
                 }
-            })();
-            promises.push(promise);
+
+                this._users.set(user.spaceUserId, extendSpaceUser);
+                if (this._addUserSubject) {
+                    this._addUserSubject.next(extendSpaceUser);
+                }
+            }
         }
 
-        await Promise.all(promises).catch((e) => console.error(e));
         this._setUsers?.(this._users);
         this.initPromise?.resolve();
     }
 
-    async addUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const extendSpaceUser = await this.extendSpaceUser(user);
+    addUser(user: SpaceUser): SpaceUserExtended {
+        const extendSpaceUser = this.extendSpaceUser(user);
 
         if (!this._users.has(user.spaceUserId)) {
+            if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
+                this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+            }
             this._users.set(user.spaceUserId, extendSpaceUser);
             if (this._setUsers) {
                 this._setUsers(this._users);
@@ -524,27 +613,32 @@ export class Space implements SpaceInterface {
             });
         }
 
-        //TODO : si on passe le screenSharingState a false on doit supprimer le stream de la videoBox
-        if (maskedNewData.screenSharingState && !maskedNewData.screenSharingState) {
-            this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
+        if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
+            if (maskedNewData.screenSharingState) {
+                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, this.getEmptyVideoBox(userToUpdate, true));
+            } else {
+                this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
+            }
         }
         /*if (this._setUsers) {
             this._setUsers(this._users);
         }*/
     }
 
-    public async extendSpaceUser(user: SpaceUser): Promise<SpaceUserExtended> {
-        const wokaBase64 = await CharacterLayerManager.wokaBase64(user.characterTextures);
-
+    private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
         const extendedUser = {
             ...user,
-            wokaPromise: undefined,
-            getWokaBase64: wokaBase64,
-            updateSubject: new Subject<{
-                newUser: SpaceUserExtended;
-                changes: SpaceUser;
-                updateMask: string[];
-            }>(),
+            pictureStore: readable<string | undefined>(undefined, (set) => {
+                CharacterLayerManager.wokaBase64(user.characterTextures)
+                    .then((wokaBase64) => {
+                        set(wokaBase64);
+                    })
+                    .catch((e) => {
+                        Sentry.captureException(e);
+                        console.warn("Error while getting woka base64", e);
+                    });
+            }),
+
             //emitter,
             emitPrivateEvent: (message: NonNullable<PrivateSpaceEvent["event"]>) => {
                 if (this._isDestroyed) {
@@ -596,18 +690,6 @@ export class Space implements SpaceInterface {
         }
         if (this._registerRefCount === 0) return;
         this._connection.emitRequestFullSync(this.name, this.getUsersSync());
-    }
-
-    private extractUserIdFromSpaceId(spaceId: string): number {
-        const lastUnderscoreIndex = spaceId.lastIndexOf("_");
-        if (lastUnderscoreIndex === -1) {
-            throw new Error("Invalid spaceId format: no underscore found");
-        }
-        const userId = parseInt(spaceId.substring(lastUnderscoreIndex + 1));
-        if (isNaN(userId)) {
-            throw new Error("Invalid userId format: not a number");
-        }
-        return userId;
     }
 
     private unregisterSpaceFilter() {
@@ -663,6 +745,18 @@ export class Space implements SpaceInterface {
         return lookupUserById(id, this);
     }
 
+    public getScreenSharingPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
+        return this.allScreenShareStreamStore.get(id);
+    }
+    public getVideoPeerVideoBox(id: SpaceUser["spaceUserId"]): VideoBox | undefined {
+        const videoBox = this.allVideoStreamStore.get(id);
+        if (!videoBox) {
+            console.error(">>>>> getVideoPeerVideoBox => Video box not found for user", id);
+            return undefined;
+        }
+        return videoBox;
+    }
+
     public async dispatchSound(url: URL): Promise<void> {
         await this.spacePeerManager.dispatchSound(url);
     }
@@ -701,5 +795,20 @@ export class Space implements SpaceInterface {
         await raceAbort(this.initPromise.promise, options?.signal);
 
         return this._users;
+    }
+
+    public isVideoSpace(): boolean {
+        return this._propertiesToSync.some((prop) =>
+            ["cameraState", "microphoneState", "screenSharingState"].includes(prop)
+        );
+    }
+
+    private getEmptyVideoBox(user: SpaceUserExtended, isScreenSharing: boolean = false): VideoBox {
+        return {
+            uniqueId: isScreenSharing ? "screensharing_" + user.spaceUserId : user.spaceUserId,
+            spaceUser: user,
+            streamable: writable(undefined),
+            priority: 0,
+        };
     }
 }

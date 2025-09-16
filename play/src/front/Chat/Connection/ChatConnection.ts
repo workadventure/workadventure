@@ -3,14 +3,15 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import { StateEvents } from "matrix-js-sdk";
 import { RoomConnection } from "../../Connection/RoomConnection";
+import { PictureStore } from "../../Stores/PictureStore";
 
-export type memberTypingInformation = { id: string; name: string | null; avatarUrl: string | null };
+export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
 export interface ChatUser {
     chatId: string;
     uuid?: string;
     availabilityStatus: Readable<AvailabilityStatus>;
     username: string | undefined;
-    avatarUrl: string | undefined;
+    pictureStore: PictureStore | undefined;
     roomName: string | undefined;
     playUri: string | undefined;
     isAdmin?: boolean;
@@ -43,7 +44,7 @@ export interface ChatRoom {
     readonly name: Readable<string>;
     readonly type: "direct" | "multiple";
     readonly hasUnreadMessages: Readable<boolean>;
-    readonly avatarUrl: string | undefined;
+    readonly pictureStore: PictureStore;
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly sendMessage: (message: string) => void;
     readonly sendFiles: (files: FileList) => Promise<void>;
@@ -51,7 +52,7 @@ export interface ChatRoom {
     readonly hasPreviousMessage: Readable<boolean>;
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
-    readonly typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    readonly typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     readonly startTyping: () => Promise<object>;
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;

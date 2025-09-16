@@ -186,7 +186,7 @@
     </div>
     <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
     <!-- So we need to play audio out of the PIP slot. -->
-    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-        <AudioStreamWrapper {peer} />
+    {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
+        <AudioStreamWrapper {videoBox} />
     {/each}
 </div>

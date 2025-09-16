@@ -1,6 +1,6 @@
 import { MapStore } from "@workadventure/store-utils";
 import { Participant, VideoPresets, Room, RoomEvent } from "livekit-client";
-import { Unsubscriber } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { SpaceInterface } from "../Space/SpaceInterface";
@@ -172,14 +172,17 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         }
 
         for (const speaker of speakers) {
-            const extendedVideoStream = this.space.allVideoStreamStore.get(speaker.identity);
-            if (extendedVideoStream) {
-                // If this is a video and not a screen share, we add 2000 to the priority
-                if (extendedVideoStream.displayMode === "cover") {
-                    extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
-                } else {
-                    extendedVideoStream.priority = priority + SCREEN_SHARE_STARTING_PRIORITY;
-                }
+            const extendedVideoStream = this.space.getVideoPeerVideoBox(speaker.identity);
+
+            // If this is a video and not a screen share, we add 2000 to the priority
+            if (!extendedVideoStream) {
+                continue;
+            }
+
+            if (get(extendedVideoStream.streamable)?.displayMode === "cover") {
+                extendedVideoStream.priority = priority + VIDEO_STARTING_PRIORITY;
+            } else {
+                extendedVideoStream.priority = priority + SCREEN_SHARE_STARTING_PRIORITY;
             }
             priority++;
         }

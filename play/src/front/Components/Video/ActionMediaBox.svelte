@@ -10,12 +10,12 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
+    import { VideoBox } from "../../Space/Space";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
-    export let embedScreen: Streamable;
+    export let embedScreen: VideoBox;
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
     export let onClose: () => void;
@@ -69,6 +69,7 @@
         trackStreamWrapper.ban();
     }*/
 
+    // TODO: reimplement the removePeer function (both backend and frontend)
     function kickoff(spaceUser: SpaceUserExtended) {
         analyticsClient.kickoffMeetingAction();
         spaceUser.emitPrivateEvent({
@@ -77,10 +78,11 @@
         });
         // FIXME: this works only in bubbles
         // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
-        const spaceUserId = spaceUser.spaceUserId;
+        //const spaceUserId = spaceUser.spaceUserId;
         // const userId = Number(spaceUserId.split("_").pop());
 
-        spaceUser.space.simplePeer?.removePeer(spaceUserId);
+        // TODO: reimplement the removePeer function (both backend and frontend)
+        //spaceUser.space.simplePeer?.removePeer(spaceUserId);
         close();
     }
 

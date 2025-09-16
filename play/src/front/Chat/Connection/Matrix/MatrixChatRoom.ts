@@ -41,6 +41,7 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
 import { notificationManager } from "../../../Notification/NotificationManager";
+import { PictureStore } from "../../../Stores/PictureStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { matrixSecurity } from "./MatrixSecurity";
@@ -57,7 +58,7 @@ export class MatrixChatRoom
     readonly name: Writable<string>;
     readonly type: "multiple" | "direct";
     readonly hasUnreadMessages: Writable<boolean>;
-    avatarUrl: string | undefined;
+    pictureStore: PictureStore;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
     members: Writable<MatrixChatRoomMember[]>;
     myMembership: Writable<ChatRoomMembership>;
@@ -65,7 +66,7 @@ export class MatrixChatRoom
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
     isEncrypted!: Writable<boolean>;
-    typingMembers: Readable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember>;
@@ -98,7 +99,7 @@ export class MatrixChatRoom
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
-        this.avatarUrl = matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
+        this.pictureStore = readable(matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined);
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
         this.sendMessage = this.sendMessage.bind(this);
         this.myMembership = writable(matrixRoom.getMyMembership());

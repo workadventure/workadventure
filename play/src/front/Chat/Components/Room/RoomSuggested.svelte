@@ -5,9 +5,10 @@
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { PictureStore } from "../../../Stores/PictureStore";
     import { IconLoader } from "@wa-icons";
 
-    export let roomInformation: { name: string; id: string; avatarUrl: string };
+    export let roomInformation: { name: string; id: string; pictureStore: PictureStore };
     let roomName = roomInformation.name;
     let loadingInvitation = false;
 
@@ -40,7 +41,7 @@
     data-testid="userInvitation"
 >
     <div class="relative">
-        <Avatar avatarUrl={roomInformation.avatarUrl} fallbackName={roomName} />
+        <Avatar pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
     </div>
     <div class="m-0 grow text-sm font-bold">
         {roomName}

@@ -3,13 +3,12 @@ import type { Subscription } from "rxjs";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
-import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { MediaStoreStreamable, Streamable, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -315,15 +314,12 @@ export class VideoPeer extends Peer implements Streamable {
             );
         });
 
-        this.getExtendedSpaceUser()
-            .then((spaceUser) => {
-                this.showVoiceIndicatorStore.forward(spaceUser.reactiveUser.showVoiceIndicator);
-                this._pictureStore.set(spaceUser.getWokaBase64);
-            })
-            .catch((e) => {
-                console.error("Error while getting extended space user", e);
-                Sentry.captureException(e);
-            });
+        const extendedSpaceUser = this.getExtendedSpaceUser();
+        if (!extendedSpaceUser) {
+            console.error("Extended space user not found for user", this.user.userId);
+            return;
+        }
+        this.showVoiceIndicatorStore.forward(extendedSpaceUser.reactiveUser.showVoiceIndicator);
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -375,7 +371,7 @@ export class VideoPeer extends Peer implements Streamable {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public destroy(): void {
+    public destroy(error?: Error): void {
         try {
             this.off("signal", this.signalHandler);
             this.off("stream", this.streamHandler);
@@ -405,7 +401,7 @@ export class VideoPeer extends Peer implements Streamable {
             this.volumeStoreSubscribe?.();
             this.volumeStoreSubscribe = undefined;
 
-            super.destroy();
+            super.destroy(error);
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
@@ -431,9 +427,8 @@ export class VideoPeer extends Peer implements Streamable {
         return this._statusStore;
     }
 
-    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return this.space.extendSpaceUser(this.spaceUser);
-        //return lookupUserById(this.userId, this.space, 30_000);
+    public getExtendedSpaceUser(): SpaceUserExtended | undefined {
+        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
     }
 
     get streamStore(): Readable<MediaStream | undefined> {

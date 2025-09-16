@@ -1,6 +1,7 @@
 import { MatrixEvent, RoomMember, RoomMemberEvent } from "matrix-js-sdk";
-import { Writable, get, writable } from "svelte/store";
+import { Writable, get, readable, writable } from "svelte/store";
 import { ChatPermissionLevel, ChatRoomMember, ChatRoomMembership, memberTypingInformation } from "../ChatConnection";
+import { PictureStore } from "../../../Stores/PictureStore";
 
 export class MatrixChatRoomMember implements ChatRoomMember {
     private handleRoomMemberMembership = this.onRoomMemberMembership.bind(this);
@@ -11,16 +12,16 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     readonly name: Writable<string>;
     readonly membership: Writable<ChatRoomMembership>;
     readonly permissionLevel: Writable<ChatPermissionLevel>;
-    readonly isTypingInformation: Writable<{ id: string; name: string | null; avatarUrl: string | null } | null> =
+    readonly isTypingInformation: Writable<{ id: string; name: string | null; pictureStore: PictureStore } | null> =
         writable(null);
-    private avatarUrl: string | null = null;
+    private pictureStore: PictureStore;
 
     constructor(private roomMember: RoomMember, baseUrl: string) {
         this.id = roomMember.userId;
         this.name = writable(this.roomMember.name);
         this.membership = writable(this.roomMember.membership);
         this.permissionLevel = writable(MatrixChatRoomMember.getPermissionLevel(this.roomMember.powerLevelNorm));
-        this.avatarUrl = this.roomMember.getAvatarUrl(baseUrl, 24, 24, "scale", false, false) ?? null;
+        this.pictureStore = readable(this.roomMember.getAvatarUrl(baseUrl, 24, 24, "scale", false, false) ?? undefined);
         this.startHandlingChatRoomMemberEvents();
     }
 
@@ -45,7 +46,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
             ? {
                   id: this.id,
                   name: get(this.name),
-                  avatarUrl: this.avatarUrl,
+                  pictureStore: this.pictureStore,
               }
             : null;
 

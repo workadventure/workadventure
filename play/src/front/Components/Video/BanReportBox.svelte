@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
@@ -7,11 +6,16 @@
     import reportImg from "./images/report.svg";
     export let peer: Streamable;
 
-    async function openReport(peer: Streamable) {
+    function openReport(peer: Streamable) {
         if (peer instanceof VideoPeer || peer instanceof ScreenSharingPeer) {
+            const extendedSpaceUser = peer.getExtendedSpaceUser();
+            if (!extendedSpaceUser) {
+                console.error("openReport : peer has no extendedSpaceUser");
+                return;
+            }
             showReportScreenStore.set({
-                userUuid: (await peer.getExtendedSpaceUser()).uuid,
-                userName: get(peer.name),
+                userUuid: extendedSpaceUser.uuid,
+                userName: extendedSpaceUser.name,
             });
         }
     }

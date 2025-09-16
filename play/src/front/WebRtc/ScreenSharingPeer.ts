@@ -2,12 +2,12 @@ import { Buffer } from "buffer";
 import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
-import * as Sentry from "@sentry/svelte";
 import { z } from "zod";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
+import { VideoBox } from "../Space/Space";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -142,7 +142,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            highlightedEmbedScreen.toggleHighlight(this);
+            highlightedEmbedScreen.toggleHighlight(this.videoBox);
             this._streamStore.set(stream);
             this.stream(stream);
 
@@ -196,15 +196,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         this._hasVideo = writable<boolean>(true);
         this._isMuted = writable<boolean>(false);
-
-        this.getExtendedSpaceUser()
-            .then((spaceUser) => {
-                this._pictureStore.set(spaceUser.getWokaBase64);
-            })
-            .catch((e) => {
-                console.error("Error while getting extended space user", e);
-                Sentry.captureException(e);
-            });
     }
 
     private close() {
@@ -312,10 +303,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         return this._streamStore;
     }
 
-    public async getExtendedSpaceUser(): Promise<SpaceUserExtended> {
-        return this.space.extendSpaceUser(this.spaceUser);
+    public getExtendedSpaceUser(): SpaceUserExtended | undefined {
+        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
     }
-
     get media(): MediaStoreStreamable {
         const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
         const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
@@ -393,6 +383,14 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
+    }
+    get videoBox(): VideoBox {
+        return {
+            uniqueId: this.uniqueId,
+            spaceUser: this.spaceUser,
+            streamable: writable(this),
+            priority: this.priority,
+        };
     }
 
     private async setMaxBitrate() {

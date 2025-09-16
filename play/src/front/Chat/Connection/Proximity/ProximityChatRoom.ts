@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
-import { Readable, Writable, get, writable, Unsubscriber } from "svelte/store";
+import { Readable, Writable, get, writable, Unsubscriber, readable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
 import { AvailabilityStatus, FilterType } from "@workadventure/messages";
@@ -41,6 +41,7 @@ import { statusChanger } from "../../../Components/ActionBar/AvailabilityStatus/
 import { GameScene } from "../../../Phaser/Game/GameScene";
 import { faviconManager } from "../../../WebRtc/FaviconManager";
 import { screenWakeLock } from "../../../Utils/ScreenWakeLock";
+import { PictureStore } from "../../../Stores/PictureStore";
 
 export class ProximityChatMessage implements ChatMessage {
     isQuotedMessage = undefined;
@@ -81,12 +82,12 @@ export class ProximityChatRoom implements ChatRoom {
     name = writable("Proximity Chat");
     type: "direct" | "multiple" = "direct";
     hasUnreadMessages = writable(false);
-    avatarUrl = undefined;
+    pictureStore = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>> = new MapStore();
     hasPreviousMessage = writable(false);
     isEncrypted = writable(false);
-    typingMembers: Writable<Array<{ id: string; name: string | null; avatarUrl: string | null }>>;
+    typingMembers: Writable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
     private _space: SpaceInterface | undefined;
     private _spacePromise: Promise<SpaceInterface | undefined> = Promise.resolve(undefined);
     private spaceMessageSubscription: Subscription | undefined;
@@ -112,7 +113,7 @@ export class ProximityChatRoom implements ChatRoom {
         uuid: "0",
         availabilityStatus: writable(AvailabilityStatus.ONLINE),
         username: "Unknown",
-        avatarUrl: undefined,
+        pictureStore: readable(undefined),
         roomName: undefined,
         playUri: undefined,
         color: undefined,
@@ -389,7 +390,7 @@ export class ProximityChatRoom implements ChatRoom {
                 typingMembers.push({
                     id,
                     name: sender.name ?? null,
-                    avatarUrl: sender.getWokaBase64 ?? null,
+                    pictureStore: sender.pictureStore,
                 });
             }
             return typingMembers;
@@ -418,7 +419,7 @@ export class ProximityChatRoom implements ChatRoom {
     addExternalTypingUser(id: string, name: string, avatarUrl: string | null): void {
         this.typingMembers.update((typingMembers) => {
             if (typingMembers.find((user) => user.id === id) == undefined) {
-                typingMembers.push({ id, name, avatarUrl });
+                typingMembers.push({ id, name, pictureStore: readable(avatarUrl ?? undefined) });
             }
             return typingMembers;
         });

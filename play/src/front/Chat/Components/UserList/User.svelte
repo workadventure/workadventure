@@ -22,7 +22,7 @@
 
     let showRoomCreationInProgress = false;
 
-    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, avatarUrl } = user);
+    $: ({ chatId, availabilityStatus, username = "", color, isAdmin, pictureStore } = user);
 
     $: isMe = user.chatId === localUserStore.getChatId() || user.chatId === localUserStore.getLocalUser()?.uuid;
 
@@ -83,7 +83,7 @@
                     >
                         <ImageWithFallback
                             classes="w-8 h-8 cursor-default"
-                            src={avatarUrl}
+                            src={$pictureStore}
                             alt="Avatar"
                             fallback={defaultWoka}
                         />

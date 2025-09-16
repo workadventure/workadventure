@@ -1,15 +1,16 @@
 <script lang="ts">
     import { getColorByString } from "../../Utils/ColorGenerator";
+    import { PictureStore } from "../../Stores/PictureStore";
 
-    export let avatarUrl: string | null = null;
+    export let pictureStore: PictureStore | undefined;
     export let fallbackName = "A";
     export let color: string | null = null;
     export let isChatAvatar = false;
 </script>
 
-{#if avatarUrl}
+{#if $pictureStore}
     <img
-        src={avatarUrl}
+        src={$pictureStore}
         alt="User avatar"
         class="rounded-sm h-6 w-6 object-contain bg-white"
         draggable="false"
