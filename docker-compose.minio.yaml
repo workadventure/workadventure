@@ -7,7 +7,7 @@ services:
           - 'cdn-mapstorage.workadventure.localhost'
 
   minio-mapstorage:
-    image: bitnami/minio:2022.9.7
+    image: bitnamilegacy/minio:2022.9.7
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio-mapstorage.rule=Host(`minio-mapstorage.workadventure.localhost`)"
