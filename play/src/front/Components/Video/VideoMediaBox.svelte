@@ -16,6 +16,7 @@
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
+    import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -135,8 +136,11 @@
     // Auto-hide logic based on user activity
     let hidden = false;
     let t: ReturnType<typeof setTimeout> | null = null;
+    $: shouldAutoHide = peer.uniqueId === "-1" && !$isInRemoteConversation;
 
     function showFor5s() {
+        if (!shouldAutoHide) return;
+
         hidden = false;
         if (t) clearTimeout(t);
         t = setTimeout(() => (hidden = true), 5000);
@@ -175,7 +179,9 @@
     }
 
     onMount(() => {
-        showFor5s();
+        if (shouldAutoHide) {
+            showFor5s();
+        }
 
         window.addEventListener("keydown", onKeyDown, { passive: true });
         window.addEventListener("pointermove", onPointerMove, { passive: true });
@@ -204,7 +210,7 @@
     });
 </script>
 
-{#if !hidden}
+{#if !hidden || !shouldAutoHide}
     <div
         class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
     >
