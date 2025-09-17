@@ -430,8 +430,11 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
-        if (this.joinSpaceAbortController || this._space) {
-            throw new Error("Space is already being joined or has been joined");
+        if (this.joinSpaceAbortController) {
+            throw new Error("Space is already being joined");
+        }
+        if (this._space) {
+            throw new Error("Space is already joined");
         }
         this.joinSpaceAbortController = new AbortController();
         this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync, new Map(), {
@@ -632,6 +635,7 @@ export class ProximityChatRoom implements ChatRoom {
             console.error("Trying to leave a space different from the one joined");
             return;
         }
+        this._space = undefined;
 
         hideBubbleConfirmationModal();
         iframeListener.sendLeaveProximityMeetingEvent();
@@ -687,7 +691,6 @@ export class ProximityChatRoom implements ChatRoom {
             console.error("Error leaving space: ", error);
             Sentry.captureException(error);
         }
-        this._space = undefined;
         return undefined;
     }
 

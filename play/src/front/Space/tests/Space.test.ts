@@ -136,7 +136,8 @@ describe("Space test", () => {
         expect(mockRoomConnection.emitJoinSpace).toHaveBeenCalledWith(
             spaceName,
             FilterType.ALL_USERS,
-            defaultPropertiesToSync
+            defaultPropertiesToSync,
+            undefined
         );
     });
 
