@@ -133,7 +133,7 @@
     });
 
     // Auto-hide logic based on user activity
-    let hidden = true;
+    let hidden = false;
     let t: ReturnType<typeof setTimeout> | null = null;
 
     function showFor5s() {
@@ -175,6 +175,8 @@
     }
 
     onMount(() => {
+        showFor5s();
+
         window.addEventListener("keydown", onKeyDown, { passive: true });
         window.addEventListener("pointermove", onPointerMove, { passive: true });
         window.addEventListener("pointerdown", onPointerDown, { passive: true });
