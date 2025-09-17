@@ -9,6 +9,9 @@ const area: DeepPartial<Translation["area"]> = {
             yes: "Ja",
             no: "Nein",
         },
+        personalSpaceWithNames: "{name}s persönlicher Bereich",
+        alreadyHavePersonalArea:
+            "Sie haben bereits einen persönlichen Bereich. Dieser wird gelöscht, wenn Sie diesen übernehmen.",
     },
 };
 
