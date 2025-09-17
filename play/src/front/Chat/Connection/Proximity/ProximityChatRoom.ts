@@ -434,7 +434,7 @@ export class ProximityChatRoom implements ChatRoom {
             throw new Error("Space is already being joined or has been joined");
         }
         this.joinSpaceAbortController = new AbortController();
-        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync, {
+        this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync, new Map(), {
             signal: this.joinSpaceAbortController.signal,
         });
 

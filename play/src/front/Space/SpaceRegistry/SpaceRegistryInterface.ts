@@ -9,7 +9,7 @@ export interface SpaceRegistryInterface {
         spaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        metadata: Map<string, unknown>,
+        metadata?: Map<string, unknown>,
         options?: { signal: AbortSignal }
     ): Promise<SpaceInterface>;
     exist(spaceName: string): boolean;
