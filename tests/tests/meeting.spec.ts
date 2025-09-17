@@ -117,6 +117,7 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
             await WA.player.teleport(0, 0);
             await new Promise(r => {setTimeout(r, 2000)});
         });
+
         await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
         await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
         await evaluateScript(userBob, async () => {

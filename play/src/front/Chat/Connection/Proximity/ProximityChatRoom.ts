@@ -7,6 +7,7 @@ import { AvailabilityStatus, FilterType } from "@workadventure/messages";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import {
     ChatMessage,
     ChatMessageContent,
@@ -431,10 +432,10 @@ export class ProximityChatRoom implements ChatRoom {
 
     public async joinSpace(spaceName: string, propertiesToSync: string[]): Promise<void> {
         if (this.joinSpaceAbortController) {
-            throw new Error("Space is already being joined");
+            throw new Error("A space is already being joined");
         }
         if (this._space) {
-            throw new Error("Space is already joined");
+            throw new Error(`While joining space ${spaceName}, space ${this._space.getName()} is already joined`);
         }
         this.joinSpaceAbortController = new AbortController();
         this._space = await this.spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, propertiesToSync, new Map(), {
@@ -501,9 +502,22 @@ export class ProximityChatRoom implements ChatRoom {
         }
 
         // Let's wait for the users to be loaded
-        const users = await this.getFirstUsers(this._space, {
-            signal: this.joinSpaceAbortController.signal,
-        });
+        let users: SpaceUserExtended[] = [];
+        try {
+            users = await this.getFirstUsers(this._space, {
+                signal: this.joinSpaceAbortController.signal,
+            });
+        } catch (e) {
+            this.usersUnsubscriber?.();
+            this.spaceMessageSubscription?.unsubscribe();
+            this.spaceIsTypingSubscription?.unsubscribe();
+            this.spaceRegistry.leaveSpace(this._space).catch((error) => {
+                console.error("Error leaving space: ", error);
+                Sentry.captureException(error);
+            });
+            this._space = undefined;
+            throw e;
+        }
 
         const playersInSpace: MessageUserJoined[] = [];
 
@@ -561,6 +575,8 @@ export class ProximityChatRoom implements ChatRoom {
                 this.soundManager.playBubbleOutSound();
             }
         });
+
+        this.joinSpaceAbortController = undefined;
     }
 
     /**
@@ -618,7 +634,7 @@ export class ProximityChatRoom implements ChatRoom {
 
     public async leaveSpace(spaceName: string): Promise<void> {
         if (this.joinSpaceAbortController) {
-            this.joinSpaceAbortController.abort();
+            this.joinSpaceAbortController.abort(new AbortError("Leave space called while joining a space"));
             this.joinSpaceAbortController = undefined;
 
             if (!this._space) {
