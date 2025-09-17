@@ -1,7 +1,7 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { getContext, onDestroy } from "svelte";
+    import { getContext, onDestroy, onMount } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -132,6 +132,56 @@
         }
     });
 
+    // Auto-hide logic based on user activity
+    let hidden = true;
+    let t: ReturnType<typeof setTimeout> | null = null;
+
+    function showFor5s() {
+        hidden = false;
+        if (t) clearTimeout(t);
+        t = setTimeout(() => (hidden = true), 5000);
+    }
+
+    // User activity listeners
+    const MOVEMENT_KEYS = new Set([
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "w",
+        "a",
+        "s",
+        "d",
+        "W",
+        "A",
+        "S",
+        "D",
+    ]);
+
+    function onKeyDown(e: KeyboardEvent) {
+        if (MOVEMENT_KEYS.has(e.key)) showFor5s();
+    }
+    function onPointerMove() {
+        showFor5s();
+    }
+    function onPointerDown() {
+        showFor5s();
+    }
+    function onTouchStart() {
+        showFor5s();
+    }
+    function onWheel() {
+        showFor5s();
+    }
+
+    onMount(() => {
+        window.addEventListener("keydown", onKeyDown, { passive: true });
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        window.addEventListener("pointerdown", onPointerDown, { passive: true });
+        window.addEventListener("touchstart", onTouchStart, { passive: true });
+        window.addEventListener("wheel", onWheel, { passive: true });
+    });
+
     function highlightPeer(peer: Streamable) {
         highlightedEmbedScreen.highlight(peer);
         analyticsClient.pinMeetingAction();
@@ -142,163 +192,177 @@
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
         unsubscribeStatusStore?.();
+
+        // Clean up auto-hide logic
+        if (t) clearTimeout(t);
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerdown", onPointerDown);
+        window.removeEventListener("touchstart", onTouchStart);
+        window.removeEventListener("wheel", onWheel);
     });
 </script>
 
-<div
-    class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
->
+{#if !hidden}
     <div
-        class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
-            (fullScreen || $statusStore !== "connected"
-                ? $statusStore === "error"
-                    ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
-                    : $statusStore === "connecting"
-                    ? "bg-gray-700/80 backdrop-blur"
-                    : "bg-contrast/80 backdrop-blur"
-                : "")}
-        style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
-        class:h-full={videoEnabled || !miniMode}
-        class:h-11={!videoEnabled && miniMode}
-        class:flex-col={videoEnabled}
-        class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:flex-row={!videoEnabled}
-        class:relative={!videoEnabled}
-        class:rounded-lg={!fullScreen}
-        class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox screen-blocker"
     >
-        {#if $statusStore === "connecting" && showAfterDelay}
-            <div class="absolute w-full h-full z-50 overflow-hidden">
-                <div
-                    class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
-                >
-                    <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
-                    <div class="connecting-spinner" />
-                </div>
-            </div>
-        {:else if $statusStore === "error"}
-            <div class="absolute w-full h-full z-50">
-                <div class="w-full h-full flex justify-center items-end">
-                    <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
-                </div>
-            </div>
-        {/if}
-
-        {#if showAfterDelay}
-            <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
-            <CenteredVideo
-                {attachVideo}
-                {detachVideo}
-                {videoEnabled}
-                expectVideoOutput={videoEnabled}
-                verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
-                isTalking={showVoiceIndicator}
-                flipX={peer.flipX}
-                {videoUrl}
-                {videoConfig}
-                cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
-                withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
-            >
-                <UserName
-                    name={$name}
-                    picture={pictureStore}
-                    isPlayingAudio={showVoiceIndicator}
-                    isCameraDisabled={!videoEnabled && !miniMode}
-                    position={videoEnabled
-                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
-                        : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
-                    grayscale={$statusStore === "connecting"}
-                >
-                    {#await extendedSpaceUserPromise}
-                        <div />
-                    {:then spaceUser}
-                        {#if spaceUser}
-                            <div
-                                class="flex items-center justify-center picture-in-picture:hidden"
-                                bind:this={userMenuButton}
-                            >
-                                <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
-                            </div>
-                        {/if}
-                    {/await}
-                </UserName>
-
-                <!-- The button at the top of the video that opens the menu to go fullscreen -->
-                {#if !inCameraContainer}
-                    <!-- The menu to go fullscreen -->
+        <div
+            class={"z-20 w-full rounded-lg transition-all bg-center bg-no-repeat " +
+                (fullScreen || $statusStore !== "connected"
+                    ? $statusStore === "error"
+                        ? "animate-pulse-bg from-danger-1100/80 to-danger-900/80 backdrop-blur"
+                        : $statusStore === "connecting"
+                        ? "bg-gray-700/80 backdrop-blur"
+                        : "bg-contrast/80 backdrop-blur"
+                    : "")}
+            style={videoEnabled && $statusStore === "connecting" ? "background-image: url(" + loaderImg + ")" : ""}
+            class:h-full={videoEnabled || !miniMode}
+            class:h-11={!videoEnabled && miniMode}
+            class:flex-col={videoEnabled}
+            class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+            class:flex-row={!videoEnabled}
+            class:relative={!videoEnabled}
+            class:rounded-lg={!fullScreen}
+            class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        >
+            {#if $statusStore === "connecting" && showAfterDelay}
+                <div class="absolute w-full h-full z-50 overflow-hidden">
                     <div
-                        class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                        class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                     >
-                        <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
-                            {#if !fullScreen}
-                                <button
-                                    class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
-                                    on:click={exitFullScreen}
-                                >
-                                    <ArrowsMinimizeIcon classList="w-14" />
-                                </button>
-                            {/if}
-                            <button
-                                class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
-                                on:click={toggleFullScreen}
-                            >
-                                {#if fullScreen}
-                                    <ArrowsMinimizeIcon classList="w-14" />
-                                {:else}
-                                    <ArrowsMaximizeIcon classList="w-14" />
-                                {/if}
-                            </button>
-                        </div>
+                        <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
+                        <div class="connecting-spinner" />
                     </div>
-                {/if}
+                </div>
+            {:else if $statusStore === "error"}
+                <div class="absolute w-full h-full z-50">
+                    <div class="w-full h-full flex justify-center items-end">
+                        <div class="text-lg text-white bold mb-4">{$LL.video.connection_issue()}</div>
+                    </div>
+                </div>
+            {/if}
 
-                {#if $statusStore === "connected" && $hasAudioStore}
-                    <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
-                        {#if !$isMutedStore}
-                            <SoundMeterWidget
-                                volume={$volumeStore}
-                                cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                                barColor="white"
-                            />
-                        {:else}
-                            <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: $name })} />
-                        {/if}
+            {#if showAfterDelay}
+                <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
+                <CenteredVideo
+                    {attachVideo}
+                    {detachVideo}
+                    {videoEnabled}
+                    expectVideoOutput={videoEnabled}
+                    verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
+                    isTalking={showVoiceIndicator}
+                    flipX={peer.flipX}
+                    {videoUrl}
+                    {videoConfig}
+                    cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
+                    withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
+                >
+                    <UserName
+                        name={$name}
+                        picture={pictureStore}
+                        isPlayingAudio={showVoiceIndicator}
+                        isCameraDisabled={!videoEnabled && !miniMode}
+                        position={videoEnabled
+                            ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                            : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
+                        grayscale={$statusStore === "connecting"}
+                    >
+                        {#await extendedSpaceUserPromise}
+                            <div />
+                        {:then spaceUser}
+                            {#if spaceUser}
+                                <div
+                                    class="flex items-center justify-center picture-in-picture:hidden"
+                                    bind:this={userMenuButton}
+                                >
+                                    <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
+                                </div>
+                            {/if}
+                        {/await}
+                    </UserName>
+
+                    <!-- The button at the top of the video that opens the menu to go fullscreen -->
+                    {#if !inCameraContainer}
+                        <!-- The menu to go fullscreen -->
+                        <div
+                            class="absolute m-auto top-0 right-0 left-0 h-14 w-fit z-20 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-25 hover:opacity-100 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                        >
+                            <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
+                                {#if !fullScreen}
+                                    <button
+                                        class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
+                                        on:click={exitFullScreen}
+                                    >
+                                        <ArrowsMinimizeIcon classList="w-14" />
+                                    </button>
+                                {/if}
+                                <button
+                                    class="muted-video p-4 h-full w-full hover:bg-white/10 flex justify-start cursor-pointer items-center z-25 rounded-lg text-base"
+                                    on:click={toggleFullScreen}
+                                >
+                                    {#if fullScreen}
+                                        <ArrowsMinimizeIcon classList="w-14" />
+                                    {:else}
+                                        <ArrowsMaximizeIcon classList="w-14" />
+                                    {/if}
+                                </button>
+                            </div>
+                        </div>
+                    {/if}
+
+                    {#if $statusStore === "connected" && $hasAudioStore}
+                        <div
+                            class="z-[251] absolute p-2 right-1"
+                            class:top-1={videoEnabled}
+                            class:top-0={!videoEnabled}
+                        >
+                            {#if !$isMutedStore}
+                                <SoundMeterWidget
+                                    volume={$volumeStore}
+                                    cssClass="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                                    barColor="white"
+                                />
+                            {:else}
+                                <MicOffIcon ariaLabel={$LL.video.user_is_muted({ name: $name })} />
+                            {/if}
+                        </div>
+                    {/if}
+                </CenteredVideo>
+            {/if}
+        </div>
+
+        {#if inCameraContainer && videoEnabled}
+            {#await userActivationManager.waitForUserActivation()}
+                <!-- Waiting for user activation; nothing to show -->
+            {:then value}
+                <button
+                    class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+                    on:click={() => highlightPeer(peer)}
+                >
+                    <ArrowsMaximizeIcon />
+                </button>
+            {/await}
+        {/if}
+        {#if !peer.muteAudio}
+            {#await userActivationManager.waitForUserActivation()}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+                    on:click={() => {
+                        userActivationManager.notifyUserActivation();
+                    }}
+                >
+                    <div class="text-center">
+                        <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
                     </div>
-                {/if}
-            </CenteredVideo>
+                </div>
+            {:then value}
+                <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
+            {/await}
         {/if}
     </div>
-
-    {#if inCameraContainer && videoEnabled}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- Waiting for user activation; nothing to show -->
-        {:then value}
-            <button
-                class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-                on:click={() => highlightPeer(peer)}
-            >
-                <ArrowsMaximizeIcon />
-            </button>
-        {/await}
-    {/if}
-    {#if !peer.muteAudio}
-        {#await userActivationManager.waitForUserActivation()}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div
-                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-                on:click={() => {
-                    userActivationManager.notifyUserActivation();
-                }}
-            >
-                <div class="text-center">
-                    <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
-                </div>
-            </div>
-        {:then value}
-            <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
-        {/await}
-    {/if}
-</div>
+{/if}
 
 <style>
     /* Spinner */
