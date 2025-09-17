@@ -5,7 +5,12 @@ import { SpaceInterface } from "../SpaceInterface";
 export interface SpaceRegistryInterface {
     getAll(): SpaceInterface[];
     get(spaceName: string): SpaceInterface;
-    joinSpace(spaceName: string, filterType: FilterType, propertiesToSync: string[]): Promise<SpaceInterface>;
+    joinSpace(
+        spaceName: string,
+        filterType: FilterType,
+        propertiesToSync: string[],
+        options?: { signal: AbortSignal }
+    ): Promise<SpaceInterface>;
     exist(spaceName: string): boolean;
     leaveSpace(space: SpaceInterface): Promise<void>;
     destroy(): Promise<void>;

@@ -14,7 +14,7 @@ import {
     PrivateSpaceEvent,
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
-import { gameManager } from "../Phaser/Game/GameManager";
+import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
@@ -77,8 +77,7 @@ export class Space implements SpaceInterface {
         private _connection: RoomConnectionForSpacesInterface,
         public readonly filterType: FilterType,
         private _propertiesToSync: string[] = [],
-        private _mySpaceUserId: SpaceUser["spaceUserId"],
-        private _remotePlayersRepository = gameManager.getCurrentGameScene().getRemotePlayersRepository()
+        private _mySpaceUserId: SpaceUser["spaceUserId"]
     ) {
         if (name === "") {
             throw new SpaceNameIsEmptyError();
@@ -201,9 +200,10 @@ export class Space implements SpaceInterface {
         filterType: FilterType,
         connection: RoomConnectionForSpacesInterface,
         propertiesToSync: string[] = [],
-        metadata = new Map<string, unknown>()
+        metadata = new Map<string, unknown>(),
+        options?: { signal: AbortSignal }
     ): Promise<Space> {
-        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync);
+        const spaceUserId = await connection.emitJoinSpace(name, filterType, propertiesToSync, options);
         const space = new Space(name, metadata, connection, filterType, propertiesToSync, spaceUserId);
         return space;
     }
@@ -660,7 +660,7 @@ export class Space implements SpaceInterface {
      * Calling getUsers() multiple times would query the full user list multiple times, which is not efficient.
      * Use observeUserJoined, observeUserLeft and observeUserUpdated to be notified of user changes or the usersStore.
      */
-    public async getUsers(): Promise<Map<string, Readonly<SpaceUserExtended>>> {
+    public async getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>> {
         this.registerSpaceFilter();
 
         setTimeout(() => {
@@ -674,7 +674,7 @@ export class Space implements SpaceInterface {
             throw new Error("initPromise is not defined");
         }
 
-        await this.initPromise.promise;
+        await raceAbort(this.initPromise.promise, options?.signal);
 
         return this._users;
     }
