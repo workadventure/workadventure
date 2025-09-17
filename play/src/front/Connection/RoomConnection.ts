@@ -1454,15 +1454,17 @@ export class RoomConnection implements RoomConnection {
         propertiesToSync: string[],
         options?: { signal: AbortSignal }
     ): Promise<SpaceUser["spaceUserId"]> {
-        const answer = await this.query({
-            $case: "joinSpaceQuery",
-            joinSpaceQuery: {
-                spaceName,
-                filterType,
-                propertiesToSync,
+        const answer = await this.query(
+            {
+                $case: "joinSpaceQuery",
+                joinSpaceQuery: {
+                    spaceName,
+                    filterType,
+                    propertiesToSync,
+                },
             },
-            options,
-        });
+            options
+        );
 
         if (answer.$case !== "joinSpaceAnswer") {
             throw new Error("Unexpected answer");
