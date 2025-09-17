@@ -353,7 +353,8 @@ export class SocketManager implements ZoneEventListener {
 
         localSpaceName: string,
         filterType: FilterType,
-        propertiesToSync: string[]
+        propertiesToSync: string[],
+        options: { signal: AbortSignal }
     ): Promise<void> {
         const socketData = client.getUserData();
 
@@ -389,6 +390,11 @@ export class SocketManager implements ZoneEventListener {
         socketData.joinSpacesPromise.set(spaceName, deferred);
         try {
             await space.forwarder.registerUser(client, filterType);
+            if (options.signal.aborted) {
+                // The user has aborted the request, we should not add him to the space
+                await space.forwarder.unregisterUser(client);
+                throw new Error("Join space aborted by the user");
+            }
             if (socketData.spaces.has(spaceName)) {
                 console.error(`User ${socketData.name} is trying to join a space he is already in.`);
                 Sentry.captureException(

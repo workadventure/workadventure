@@ -1909,8 +1909,17 @@ export class RoomConnection implements RoomConnection {
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
 
             const onAbort = () => {
-                // TODO: we could propagate the abort to the server by sending a specific message
-                // TODO: but for now, let's just ignore the answer when it arrives
+                // Let's inform the server that we don't want the answer anymore
+                // Note that due to latency, it is possible that the answer will arrive anyway
+                // and we will have to ignore it when it arrives
+                this.send({
+                    message: {
+                        $case: "abortQueryMessage",
+                        abortQueryMessage: {
+                            id: this.lastQueryId,
+                        },
+                    },
+                });
 
                 // Let's do nothing when the query answer actually finishes
                 this.queries.set(this.lastQueryId, {

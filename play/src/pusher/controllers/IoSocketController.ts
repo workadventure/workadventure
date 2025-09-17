@@ -510,6 +510,7 @@ export class IoSocketController {
                             roomName,
                             microphoneState,
                             cameraState,
+                            queryAbortControllers: new Map<number, AbortController>(),
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
@@ -808,6 +809,10 @@ export class IoSocketController {
                                     const answerMessage: AnswerMessage = {
                                         id: message.message.queryMessage.id,
                                     };
+                                    const abortController = new AbortController();
+                                    socket
+                                        .getUserData()
+                                        .queryAbortControllers.set(message.message.queryMessage.id, abortController);
                                     switch (message.message.queryMessage.query?.$case) {
                                         case "roomTagsQuery": {
                                             await socketManager.handleRoomTagsQuery(
@@ -930,7 +935,10 @@ export class IoSocketController {
                                                     message.message.queryMessage.query.joinSpaceQuery.spaceName,
                                                     localSpaceName,
                                                     message.message.queryMessage.query.joinSpaceQuery.filterType,
-                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync
+                                                    message.message.queryMessage.query.joinSpaceQuery.propertiesToSync,
+                                                    {
+                                                        signal: abortController.signal,
+                                                    }
                                                 );
 
                                                 answerMessage.answer = {
@@ -991,6 +999,9 @@ export class IoSocketController {
                                             break;
                                         }
                                         default: {
+                                            socket
+                                                .getUserData()
+                                                .queryAbortControllers.delete(message.message.queryMessage.id);
                                             socketManager.forwardMessageToBack(socket, message.message);
                                         }
                                     }
@@ -1007,6 +1018,20 @@ export class IoSocketController {
                                         },
                                     };
                                     this.sendAnswerMessage(socket, answerMessage);
+                                    socket.getUserData().queryAbortControllers.delete(message.message.queryMessage.id);
+                                }
+                                break;
+                            }
+                            case "abortQueryMessage": {
+                                const abortController = socket
+                                    .getUserData()
+                                    .queryAbortControllers.get(message.message.abortQueryMessage.id);
+                                if (abortController) {
+                                    abortController.abort();
+                                } else {
+                                    // If no abort controller found, it means the query has already been treated or has been forwarded to the back.
+                                    // Let's forward the abort message to the back anyway, just in case.
+                                    socketManager.forwardMessageToBack(socket, message.message);
                                 }
                                 break;
                             }
@@ -1180,6 +1205,7 @@ export class IoSocketController {
     }
 
     private sendAnswerMessage(socket: WebSocket<SocketData>, answerMessage: AnswerMessage) {
+        socket.getUserData().queryAbortControllers.delete(answerMessage.id);
         if (socket.getUserData().disconnecting) {
             return;
         }

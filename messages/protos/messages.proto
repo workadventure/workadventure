@@ -333,6 +333,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
+    AbortQueryMessage abortQueryMessage = 27;
     PingMessage pingMessage = 21;
     //XmppMessage xmppMessage = 22;
     AskPositionMessage askPositionMessage = 23;
@@ -436,6 +437,10 @@ message QueryMessage {
     LeaveSpaceQuery leaveSpaceQuery = 15;
     MapStorageJwtQuery mapStorageJwtQuery = 16;
   }
+}
+
+message AbortQueryMessage {
+  int32 id = 1;
 }
 
 message MapStorageJwtQuery {
@@ -1157,6 +1162,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
+    AbortQueryMessage abortQueryMessage = 25;
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
