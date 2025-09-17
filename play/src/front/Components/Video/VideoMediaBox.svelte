@@ -193,7 +193,6 @@
         if (connectingTimer) clearTimeout(connectingTimer);
         unsubscribeStatusStore?.();
 
-        // Clean up auto-hide logic
         if (t) clearTimeout(t);
         window.removeEventListener("keydown", onKeyDown);
         window.removeEventListener("pointermove", onPointerMove);
