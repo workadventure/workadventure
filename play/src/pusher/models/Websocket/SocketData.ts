@@ -64,4 +64,6 @@ export type SocketData = {
     roomName: string;
     microphoneState: boolean;
     cameraState: boolean;
+    // The abort controllers for each queries received
+    queryAbortControllers: Map<number, AbortController>;
 };

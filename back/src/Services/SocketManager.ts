@@ -50,6 +50,7 @@ import {
     AddSpaceUserToNotifyMessage,
     DeleteSpaceUserToNotifyMessage,
     RequestFullSyncMessage,
+    AbortQueryMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -634,6 +635,8 @@ export class SocketManager {
         const answerMessage: Partial<AnswerMessage> = {
             id: queryMessage.id,
         };
+        const abortController = new AbortController();
+        user.queryMessageAbortControllers.set(queryMessage.id, abortController);
 
         try {
             switch (queryCase) {
@@ -706,12 +709,21 @@ export class SocketManager {
                     message: error.message,
                 },
             };
+        } finally {
+            user.queryMessageAbortControllers.delete(queryMessage.id);
         }
 
         user.write({
             $case: "answerMessage",
             answerMessage: AnswerMessage.fromPartial(answerMessage),
         });
+    }
+
+    public handleAbortQueryMessage(room: GameRoom, user: User, abortQueryMessage: AbortQueryMessage) {
+        const controller = user.queryMessageAbortControllers.get(abortQueryMessage.id);
+        if (controller) {
+            controller.abort();
+        }
     }
 
     public async handleQueryJitsiJwtMessage(

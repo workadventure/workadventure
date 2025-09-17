@@ -125,6 +125,10 @@ const roomManager = {
                                 await socketManager.handleQueryMessage(room, user, message.message.queryMessage);
                                 break;
                             }
+                            case "abortQueryMessage": {
+                                socketManager.handleAbortQueryMessage(room, user, message.message.abortQueryMessage);
+                                break;
+                            }
                             case "emotePromptMessage": {
                                 socketManager.handleEmoteEventMessage(room, user, message.message.emotePromptMessage);
                                 break;
