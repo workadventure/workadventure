@@ -79,6 +79,7 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
@@ -1450,7 +1451,8 @@ export class RoomConnection implements RoomConnection {
     public async emitJoinSpace(
         spaceName: string,
         filterType: FilterType,
-        propertiesToSync: string[]
+        propertiesToSync: string[],
+        options?: { signal: AbortSignal }
     ): Promise<SpaceUser["spaceUserId"]> {
         const answer = await this.query({
             $case: "joinSpaceQuery",
@@ -1459,6 +1461,7 @@ export class RoomConnection implements RoomConnection {
                 filterType,
                 propertiesToSync,
             },
+            options,
         });
 
         if (answer.$case !== "joinSpaceAnswer") {
@@ -1892,12 +1895,39 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
+    private query<T extends Required<QueryMessage>["query"]>(
+        message: T,
+        options?: { signal: AbortSignal }
+    ): Promise<Required<AnswerMessage>["answer"]> {
+        if (options?.signal?.aborted) {
+            return Promise.reject(new AbortError());
+        }
         return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
+
+            const onAbort = () => {
+                // TODO: we could propagate the abort to the server by sending a specific message
+                // TODO: but for now, let's just ignore the answer when it arrives
+
+                // Let's do nothing when the query answer actually finishes
+                this.queries.set(this.lastQueryId, {
+                    answerType,
+                    resolve: () => {},
+                    reject: () => {},
+                });
+                // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
+                setTimeout(() => {
+                    this.queries.delete(this.lastQueryId);
+                }, 10000);
+                reject(new AbortError());
+            };
+
+            if (options?.signal) {
+                options.signal.addEventListener("abort", onAbort, { once: true });
+            }
 
             this.queries.set(this.lastQueryId, {
                 answerType,

@@ -235,7 +235,8 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         spaceName: string,
         filterType: FilterType,
         propertiesToSync: string[],
-        metadata: Map<string, unknown> = new Map<string, unknown>()
+        metadata: Map<string, unknown> = new Map<string, unknown>(),
+        options?: { signal: AbortSignal }
     ): Promise<SpaceInterface> {
         const leavingPromise = this.leavingSpacesPromises.get(spaceName);
         if (leavingPromise) {
@@ -243,7 +244,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         }
 
         if (this.exist(spaceName)) throw new SpaceAlreadyExistError(spaceName);
-        const newSpace = await Space.create(spaceName, filterType, this.roomConnection, propertiesToSync, metadata);
+        const newSpace = await Space.create(
+            spaceName,
+            filterType,
+            this.roomConnection,
+            propertiesToSync,
+            metadata,
+            options
+        );
         this.spaces.set(newSpace.getName(), newSpace);
         return newSpace;
     }
