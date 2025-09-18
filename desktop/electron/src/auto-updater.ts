@@ -41,35 +41,32 @@ export async function manualRequestUpdateCheck() {
 async function init() {
     autoUpdater.logger = log;
 
-    autoUpdater.on(
-        "update-downloaded",
-        (event) => {
-            void (async () => {
-                const releaseNotes = typeof event.releaseNotes === 'string' ? event.releaseNotes : '';
-                const releaseName = event.releaseName || '';
-                
-                const dialogOpts = {
-                    type: "question" as const,
-                    buttons: ["Install and Restart", "Install Later"],
-                    defaultId: 0,
-                    title: "WorkAdventure - Update",
-                    message: process.platform === "win32" ? releaseNotes : releaseName,
-                    detail: "A new version has been downloaded. Restart the application to apply the updates.",
-                };
+    autoUpdater.on("update-downloaded", (event) => {
+        void (async () => {
+            const releaseNotes = typeof event.releaseNotes === "string" ? event.releaseNotes : "";
+            const releaseName = event.releaseName || "";
 
-                const { response } = await dialog.showMessageBox(dialogOpts);
-                if (response === 0) {
-                    await sleep(1000);
+            const dialogOpts = {
+                type: "question" as const,
+                buttons: ["Install and Restart", "Install Later"],
+                defaultId: 0,
+                title: "WorkAdventure - Update",
+                message: process.platform === "win32" ? releaseNotes : releaseName,
+                detail: "A new version has been downloaded. Restart the application to apply the updates.",
+            };
 
-                    autoUpdater.quitAndInstall();
+            const { response } = await dialog.showMessageBox(dialogOpts);
+            if (response === 0) {
+                await sleep(1000);
 
-                    // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-                    // app.confirmedExitPrompt = true;
-                    app.quit();
-                }
-            })();
-        }
-    );
+                autoUpdater.quitAndInstall();
+
+                // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
+                // app.confirmedExitPrompt = true;
+                app.quit();
+            }
+        })();
+    });
 
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;

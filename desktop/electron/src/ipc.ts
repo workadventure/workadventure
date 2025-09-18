@@ -91,7 +91,7 @@ export default () => {
         const servers = settings.get("servers") || [];
         settings.set(
             "servers",
-            servers.filter((s) => s._id !== server._id)
+            servers.filter((s) => s._id !== server._id),
         );
         return true;
     });
@@ -102,7 +102,7 @@ export default () => {
     ipcMain.handle(
         "local-app:saveSetting",
         <T extends keyof SettingsData>(event: Electron.IpcMainInvokeEvent, key: T, value: SettingsData[T]) =>
-            settings.set(key, value)
+            settings.set(key, value),
     );
 
     ipcMain.handle("local-app:setShortcutsEnabled", (event, enabled: boolean) => setShortcutsEnabled(enabled));

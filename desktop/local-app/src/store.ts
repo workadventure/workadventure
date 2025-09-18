@@ -1,5 +1,5 @@
 import { writable, get } from "svelte/store";
-import { api, Server } from "~/lib/ipc";
+import { api, type Server } from "~/lib/ipc";
 
 export const newServer = writable<Omit<Server, "_id">>({
     name: "",

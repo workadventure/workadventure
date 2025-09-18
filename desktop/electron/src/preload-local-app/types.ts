@@ -1,4 +1,4 @@
-import { SettingsData } from "../settings";
+import type { SettingsData } from "../settings";
 
 export type Server = {
     _id: string;
@@ -6,7 +6,7 @@ export type Server = {
     url: string;
 };
 
-export { SettingsData };
+export type { SettingsData };
 
 export type WorkAdventureLocalAppApi = {
     desktop: boolean;
