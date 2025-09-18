@@ -7,6 +7,9 @@ import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
 import { getAppView, hideAppView, showAppView } from "./window";
 // import fetch from "node-fetch";
 
+// Re-export types for use in other files
+export { Server, SettingsData };
+
 export function emitMuteToggle() {
     const appView = getAppView();
     if (!appView) {
