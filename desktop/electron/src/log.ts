@@ -7,7 +7,7 @@ function onError(e: Error) {
         log.error(e);
 
         dialog.showErrorBox("WorkAdventure - A JavaScript error occurred", e.stack || "");
-    } catch (logError) {
+    } catch {
         console.error(e);
     }
 }
@@ -15,7 +15,6 @@ function onError(e: Error) {
 function onRejection(reason: Error) {
     if (reason instanceof Error) {
         let _reason = reason;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errPrototype = Object.getPrototypeOf(reason);
         const nameProperty = Object.getOwnPropertyDescriptor(errPrototype, "name");
 

@@ -93,9 +93,9 @@ export default () => {
         return true;
     });
 
-    ipcMain.handle("local-app:reloadShortcuts", (event) => loadShortcuts());
+    ipcMain.handle("local-app:reloadShortcuts", () => loadShortcuts());
 
-    ipcMain.handle("local-app:getSettings", (event) => settings.get() || {});
+    ipcMain.handle("local-app:getSettings", () => settings.get() || {});
     ipcMain.handle(
         "local-app:saveSetting",
         <T extends keyof SettingsData>(event: Electron.IpcMainInvokeEvent, key: T, value: SettingsData[T]) =>

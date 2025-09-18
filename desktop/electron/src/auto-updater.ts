@@ -1,7 +1,7 @@
 import { app, dialog } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
@@ -43,10 +43,13 @@ async function init() {
 
     autoUpdater.on(
         "update-downloaded",
-        ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
+        (event) => {
             void (async () => {
+                const releaseNotes = typeof event.releaseNotes === 'string' ? event.releaseNotes : '';
+                const releaseName = event.releaseName || '';
+                
                 const dialogOpts = {
-                    type: "question",
+                    type: "question" as const,
                     buttons: ["Install and Restart", "Install Later"],
                     defaultId: 0,
                     title: "WorkAdventure - Update",
