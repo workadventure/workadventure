@@ -79,6 +79,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                "world",
                 [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -188,6 +189,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                "world",
                 [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory,
@@ -277,6 +279,7 @@ describe("Space", () => {
                 FilterType.ALL_USERS,
                 mockOnBackEndDisconnect,
                 mockSpaceConnection,
+                "world",
                 [],
                 mockSpaceToBackForwarderFactory,
                 mockSpaceToFrontDispatcherFactory
@@ -433,6 +436,7 @@ describe("SpaceConnection", () => {
             const mockSpace = mock<SpaceForSpaceConnectionInterface>({
                 name: "test",
                 filterType: FilterType.ALL_USERS,
+                world: "world",
                 getPropertiesToSync: vi.fn().mockReturnValue([]),
             });
 
@@ -446,6 +450,7 @@ describe("SpaceConnection", () => {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
                         isRetry: false,
+                        world: "world",
                         propertiesToSync: [],
                     },
                 },

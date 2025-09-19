@@ -1401,6 +1401,7 @@ message JoinSpaceMessage{
   repeated string propertiesToSync = 2;
   FilterType filterType = 3;
   bool isRetry = 4;
+  string world = 5;
 }
 
 enum FilterType{
