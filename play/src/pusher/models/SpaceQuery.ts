@@ -36,13 +36,13 @@ export class Query {
         signals.push(AbortSignal.timeout(timeout));
         const finalSignal = AbortSignal.any(signals);
 
+        if (!message.$case.endsWith("Query")) {
+            throw new Error("Query types are supposed to be suffixed with Query");
+        }
         return new Promise((resolve, reject) => {
             if (finalSignal.aborted) {
                 reject(asError(finalSignal.reason));
                 return;
-            }
-            if (!message.$case.endsWith("Query")) {
-                throw new Error("Query types are supposed to be suffixed with Query");
             }
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
 
