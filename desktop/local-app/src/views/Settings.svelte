@@ -5,7 +5,7 @@
     import ToggleSwitch from "~/lib/ToggleSwitch.svelte";
     import InputField from "~/lib/InputField.svelte";
     import KeyRecord from "~/lib/KeyRecord.svelte";
-    import { api, SettingsData } from "../lib/ipc";
+    import { api, type SettingsData } from "../lib/ipc";
 
     const settings = writable<SettingsData | undefined>();
 
@@ -19,14 +19,16 @@
     });
 
     async function saveShortcut(key: keyof SettingsData["shortcuts"], value: string) {
-        const shortcuts = get(settings)['shortcuts'];
+        const currentSettings = get(settings);
+        if (!currentSettings?.shortcuts) return;
+        const shortcuts = currentSettings.shortcuts;
         shortcuts[key] = value;
-        settings.update((s) => ({ ...s, shortcuts }));
+        settings.update((s) => ({ ...s!, shortcuts }));
         await api.saveSetting("shortcuts", shortcuts);
     }
 
     async function saveAutoLaunch(auto_launch_enabled: boolean) {
-        settings.update((s) => ({ ...s, auto_launch_enabled }));
+        settings.update((s) => ({ ...s!, auto_launch_enabled }));
         await api.saveSetting("auto_launch_enabled", auto_launch_enabled);
     }
 </script>
