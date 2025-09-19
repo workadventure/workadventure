@@ -287,12 +287,15 @@ describe("SpaceToBackForwarder", () => {
             spaceForwarder.updateUser(spaceUser, ["name"]);
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceUserMessage",
+                        updateSpaceUserMessage: { spaceName: "test", user: spaceUser, updateMask: ["name"] },
+                    },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
         it("should throw an error when the user is not found in pusher local connected user", () => {
@@ -583,17 +586,20 @@ describe("SpaceToBackForwarder", () => {
             });
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceMetadataMessage",
-                    updateSpaceMetadataMessage: {
-                        spaceName: "world.test",
-                        metadata: JSON.stringify({
-                            "metadata-1": "value-1",
-                        }),
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "world.test",
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
+                        },
                     },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
     });
@@ -634,17 +640,20 @@ describe("SpaceToBackForwarder", () => {
             });
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "updateSpaceMetadataMessage",
-                    updateSpaceMetadataMessage: {
-                        spaceName: "test",
-                        metadata: JSON.stringify({
-                            "metadata-1": "value-1",
-                        }),
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: {
+                            spaceName: "test",
+                            metadata: JSON.stringify({
+                                "metadata-1": "value-1",
+                            }),
+                        },
                     },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
 
@@ -724,12 +733,15 @@ describe("SpaceToBackForwarder", () => {
             spaceForwarder.syncLocalUsersWithServer([spaceUser]);
             await flushPromises();
 
-            expect(mockWriteFunction).toHaveBeenCalledWith({
-                message: {
-                    $case: "syncSpaceUsersMessage",
-                    syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
+            expect(mockWriteFunction).toHaveBeenCalledWith(
+                {
+                    message: {
+                        $case: "syncSpaceUsersMessage",
+                        syncSpaceUsersMessage: { spaceName: "test", users: [spaceUser] },
+                    },
                 },
-            });
+                expect.any(Function)
+            );
             expect(mockWriteFunction).toHaveBeenCalledOnce();
         });
     });
