@@ -188,7 +188,7 @@ export class SocketManager implements ZoneEventListener {
                             roomId +
                             "'"
                     );
-                    this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
+                    this.closeAdminWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
             })
             .on("error", (err: Error) => {
@@ -201,7 +201,7 @@ export class SocketManager implements ZoneEventListener {
                     err
                 );
                 if (!socketData.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                    this.closeAdminWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
             });
 
@@ -410,9 +410,50 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    private closeWebsocketConnection(client: Socket | AdminSocket, code: number, reason: string): void {
+    private closeAdminWebsocketConnection(client: AdminSocket, code: number, reason: string): void {
         client.getUserData().disconnecting = true;
         client.end(code, reason);
+    }
+
+    private closeWebsocketConnection(client: Socket, code: number, reason: string): void {
+        this.cleanupSocket(client);
+        client.end(code, reason);
+    }
+
+    public cleanupSocket(client: Socket): void {
+        const socketData = client.getUserData();
+
+        if (socketData.disconnecting) {
+            // Cleanup already called
+            return;
+        }
+
+        try {
+            socketData.disconnecting = true;
+            this.leaveRoom(client);
+        } catch (e) {
+            Sentry.captureException(e);
+            console.error("Error while leaving room", e);
+        }
+        try {
+            this.leaveSpaces(client).catch((error) => {
+                console.error("Error while leaving spaces", error);
+                Sentry.captureException(error);
+            });
+        } catch (e) {
+            Sentry.captureException(e);
+            console.error(e);
+        }
+        try {
+            this.leaveChatRoomArea(client).catch((error) => {
+                console.error("Error while leaving chat room area", error);
+                Sentry.captureException(error);
+            });
+        } catch (e) {
+            Sentry.captureException(e);
+            console.error(e);
+        }
+        socketData.currentChatRoomArea = [];
     }
 
     handleViewport(client: Socket, viewport: ViewportMessage): void {
@@ -615,15 +656,17 @@ export class SocketManager implements ZoneEventListener {
                     socketData.joinSpacesPromise.delete(spaceName);
 
                     await space.forwarder.unregisterUser(socket);
-                    if (space.isEmpty()) {
-                        space.cleanup();
-                    }
 
                     return { space, spaceName, success: true };
                 } catch (error) {
                     console.error(`Error unregistering user from space ${spaceName}:`, error);
                     Sentry.captureException(error);
                     return { space, spaceName, success: false };
+                } finally {
+                    if (space.isEmpty()) {
+                        space.cleanup();
+                        this.spaces.delete(space.name);
+                    }
                 }
             } else {
                 console.error(

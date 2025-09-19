@@ -178,12 +178,19 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
         if (!this._space.spaceStreamToBackPromise) {
             throw new Error("Space stream to back not found");
         }
-
         this._space.spaceStreamToBackPromise
             .then((spaceStreamToBack) => {
-                spaceStreamToBack.write({
-                    message: pusherToBackSpaceMessage,
-                });
+                spaceStreamToBack.write(
+                    {
+                        message: pusherToBackSpaceMessage,
+                    },
+                    (error: unknown) => {
+                        if (error) {
+                            console.log("Error while forwarding message to space back", error);
+                            Sentry.captureException(error);
+                        }
+                    }
+                );
 
                 if (pusherToBackSpaceMessage && pusherToBackSpaceMessage.$case) {
                     this._clientEventsEmitter.emitSpaceEvent(this._space.name, pusherToBackSpaceMessage.$case);

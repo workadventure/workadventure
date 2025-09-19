@@ -14,9 +14,13 @@ export class Query {
 
     constructor(private readonly _space: Space) {}
 
-    public send<T extends Required<SpaceQueryMessage>["query"]>(
+    public async send<T extends Required<SpaceQueryMessage>["query"]>(
         message: T
     ): Promise<Required<SpaceAnswerMessage>["answer"]> {
+        const connection = await this._space.spaceStreamToBackPromise;
+        if (!connection || connection.closed) {
+            throw new Error("Connection to the back is closed");
+        }
         return new Promise((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
@@ -60,5 +64,11 @@ export class Query {
         }
 
         this._queries.delete(queryId);
+    }
+
+    public destroy() {
+        for (const query of this._queries.values()) {
+            query.reject(new Error("Query cancelled because the space is being destroyed"));
+        }
     }
 }

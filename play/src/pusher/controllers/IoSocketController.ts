@@ -228,7 +228,6 @@ export class IoSocketController {
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             upgrade: (res, req, context) => {
-                console.log("upgrading websocket");
                 (async () => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
@@ -1184,22 +1183,7 @@ export class IoSocketController {
                 }
 
                 const socket = ws as Socket;
-                try {
-                    socketData.disconnecting = true;
-                    socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketManager.leaveChatRoomArea(socket).catch((error) => {
-                        console.error(error);
-                        Sentry.captureException(error);
-                    });
-                    socketData.currentChatRoomArea = [];
-                } catch (e) {
-                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
-                    console.error(e);
-                }
+                socketManager.cleanupSocket(socket);
             },
         });
     }
