@@ -197,10 +197,15 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * @returns {Promise<{ x: number, y: number, cancelled: boolean }>} Promise to give an object with the position and if the move has been cancelled or not
      */
     public async moveTo(x: number, y: number, speed?: number): Promise<{ x: number; y: number; cancelled: boolean }> {
-        return await queryWorkadventure({
-            type: "movePlayerTo",
-            data: { x, y, speed },
-        });
+        return await queryWorkadventure(
+            {
+                type: "movePlayerTo",
+                data: { x, y, speed },
+            },
+            {
+                timeout: null, // Disable timeout, as moving can take a long time
+            }
+        );
     }
 
     public async teleport(x: number, y: number): Promise<void> {

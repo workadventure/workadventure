@@ -9,7 +9,9 @@ export class AudioStream {
                     data: float32Array as Float32Array<ArrayBuffer>,
                 },
             },
-            [float32Array.buffer]
+            {
+                transfer: [float32Array.buffer],
+            }
         );
     }
 
