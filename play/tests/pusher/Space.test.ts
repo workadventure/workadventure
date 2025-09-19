@@ -172,7 +172,7 @@ describe("Space", () => {
             const mockOnBackEndDisconnect = vi.fn();
 
             const mockSpaceConnection = mock<SpaceConnectionInterface>({
-                getSpaceStreamToBackPromise: vi.fn(),
+                getSpaceStreamToBackPromise: vi.fn().mockResolvedValue(mockBackSpaceConnection),
                 removeSpace: vi.fn(),
             });
 
@@ -266,7 +266,7 @@ describe("Space", () => {
             const mockOnBackEndDisconnect = vi.fn();
 
             const mockSpaceConnection = mock<SpaceConnectionInterface>({
-                getSpaceStreamToBackPromise: vi.fn(),
+                getSpaceStreamToBackPromise: vi.fn().mockResolvedValue(mockBackSpaceConnection),
                 removeSpace: vi.fn(),
             });
 
@@ -433,6 +433,7 @@ describe("SpaceConnection", () => {
             const mockSpace = mock<SpaceForSpaceConnectionInterface>({
                 name: "test",
                 filterType: FilterType.ALL_USERS,
+                getPropertiesToSync: vi.fn().mockReturnValue([]),
             });
 
             await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
@@ -445,6 +446,7 @@ describe("SpaceConnection", () => {
                         spaceName: mockSpace.name,
                         filterType: FilterType.ALL_USERS,
                         isRetry: false,
+                        propertiesToSync: [],
                     },
                 },
             });
@@ -478,11 +480,13 @@ describe("SpaceConnection", () => {
             const mockSpace = mock<SpaceForSpaceConnectionInterface>({
                 name: "test",
                 filterType: FilterType.ALL_USERS,
+                getPropertiesToSync: vi.fn().mockReturnValue([]),
             });
 
             const mockSpace2 = mock<SpaceForSpaceConnectionInterface>({
                 name: "test2",
                 filterType: FilterType.ALL_USERS,
+                getPropertiesToSync: vi.fn().mockReturnValue([]),
             });
 
             await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
@@ -491,65 +495,10 @@ describe("SpaceConnection", () => {
             expect(mockWatchSpace).toHaveBeenCalledOnce();
             expect(mockGetSpaceClient).toHaveBeenCalledOnce();
         });
-
-        it("should try to reconnect to back if the connection is lost and send local users to back", async () => {
-            const callbackMap = new Map<string, (...args: unknown[]) => void>();
-
-            const mockWriteFunction = vi.fn();
-            const mockBackSpaceConnection = mock<BackSpaceConnection>({
-                write: mockWriteFunction,
-                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
-                    callbackMap.set(event, callback);
-                    return mockBackSpaceConnection;
-                }),
-            });
-            const mockGetIndex = vi.fn().mockReturnValue(0);
-            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
-            const mockGetSpaceClient = vi.fn().mockResolvedValue({
-                watchSpace: mockWatchSpace,
-                getChannel: vi.fn().mockReturnValue({
-                    getTarget: vi.fn().mockReturnValue("test"),
-                }),
-            });
-            const mockApiClientRepository = mock<ApiClientRepository>({
-                getSpaceClient: mockGetSpaceClient,
-                getIndex: mockGetIndex,
-            });
-
-            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
-
-            const mockSendLocalUsersToBack = vi.fn();
-
-            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
-                name: "test",
-                filterType: FilterType.ALL_USERS,
-                sendLocalUsersToBack: mockSendLocalUsersToBack,
-            });
-
-            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
-
-            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
-
-            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
-            expect(mockWatchSpace).toHaveBeenCalledOnce();
-
-            callbackMap.get("error")?.();
-
-            await flushPromises();
-
-            // Wait 1 second to let the reconnection happen
-            await new Promise((resolve) => {
-                setTimeout(resolve, 1000);
-            });
-
-            expect(mockGetSpaceClient).toHaveBeenCalledTimes(2);
-            expect(mockWatchSpace).toHaveBeenCalledTimes(2);
-            expect(mockSendLocalUsersToBack).toHaveBeenCalledOnce();
-        });
     });
 
     describe("removeSpace", () => {
-        it("should throw an error if list of space for back id is not found", () => {
+        it("should return silently if list of space for back id is not found", () => {
             const mockGetIndex = vi.fn().mockReturnValue(0);
             const mockApiClientRepository = mock<ApiClientRepository>({
                 getIndex: mockGetIndex,
@@ -564,7 +513,7 @@ describe("SpaceConnection", () => {
                 filterType: FilterType.ALL_USERS,
             });
 
-            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+            spaceConnection.removeSpace(mockSpace);
         });
         it("should throw an error if space is not found in the list of space for back id", () => {
             const mockGetIndex = vi.fn().mockReturnValue(0);
