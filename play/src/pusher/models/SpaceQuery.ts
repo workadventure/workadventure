@@ -1,4 +1,5 @@
 import { SpaceAnswerMessage, SpaceQueryMessage } from "@workadventure/messages";
+import { asError } from "catch-unknown";
 import { Space } from "./Space";
 
 export class Query {
@@ -15,13 +16,31 @@ export class Query {
     constructor(private readonly _space: Space) {}
 
     public async send<T extends Required<SpaceQueryMessage>["query"]>(
-        message: T
+        message: T,
+        options?: {
+            // Timeout in milliseconds. Defaults to 10000 (10 seconds)
+            timeout?: number;
+            signal?: AbortSignal;
+        }
     ): Promise<Required<SpaceAnswerMessage>["answer"]> {
         const connection = await this._space.spaceStreamToBackPromise;
         if (!connection || connection.closed) {
             throw new Error("Connection to the back is closed");
         }
+
+        const signals: AbortSignal[] = [];
+        if (options?.signal) {
+            signals.push(options.signal);
+        }
+        const timeout = options?.timeout ?? 10000;
+        signals.push(AbortSignal.timeout(timeout));
+        const finalSignal = AbortSignal.any(signals);
+
         return new Promise((resolve, reject) => {
+            if (finalSignal.aborted) {
+                reject(asError(finalSignal.reason));
+                return;
+            }
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }
@@ -42,6 +61,17 @@ export class Query {
                 },
             });
 
+            finalSignal.addEventListener(
+                "abort",
+                () => {
+                    reject(asError(finalSignal.reason));
+                    this._queries.delete(this._lastQueryId);
+
+                    // TODO: we can improve this by sending a cancellation message to the back
+                },
+                { once: true }
+            );
+
             this._lastQueryId++;
         });
     }
@@ -53,7 +83,12 @@ export class Query {
 
         const query = this._queries.get(queryId);
         if (query === undefined) {
-            throw new Error("Got an answer to a query we have no track of: " + queryId.toString());
+            console.error(
+                "Received an answer for a query we have no record of. This might mean we received an answer after a query timeout.",
+                queryId,
+                answer
+            );
+            return;
         }
 
         if (answer.$case === "error") {
