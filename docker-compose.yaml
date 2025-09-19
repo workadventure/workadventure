@@ -251,6 +251,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=back"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
 
   map-storage:

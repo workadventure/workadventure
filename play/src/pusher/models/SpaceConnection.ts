@@ -153,10 +153,13 @@ export class SpaceConnection implements SpaceConnectionInterface {
         };
     }
 
-    private onEndListener(spaceStreamToBack: BackSpaceConnection) {
+    private onEndListener(spaceStreamToBack: BackSpaceConnection, backId: number) {
         return () => {
             debug("[space] spaceStreamsToBack ended");
             if (spaceStreamToBack.pingTimeout) clearTimeout(spaceStreamToBack.pingTimeout);
+            this.removeListeners(spaceStreamToBack, backId);
+            this.spaceStreamToBackPromises.delete(backId);
+            this.spacePerBackId.delete(backId);
         };
     }
 
@@ -173,18 +176,8 @@ export class SpaceConnection implements SpaceConnectionInterface {
             );
             Sentry.captureException(err);
             this.removeListeners(spaceStreamToBack, backId);
-            setTimeout(() => {
-                try {
-                    this.retryConnection(backId);
-                } catch (e) {
-                    console.error("Error while retrying connection ...", e);
-                    Sentry.captureException(e);
-                    this.cleanUpSpacePerBackId(backId).catch((e) => {
-                        console.error("Error while cleaning up space per back id", e);
-                        Sentry.captureException(e);
-                    });
-                }
-            }, 1000);
+            this.spaceStreamToBackPromises.delete(backId);
+            this.spacePerBackId.delete(backId);
         };
     }
 
@@ -204,11 +197,11 @@ export class SpaceConnection implements SpaceConnectionInterface {
         apiSpaceClient: SpaceManagerClient
     ) {
         const dataListener = this.onDataListener(spaceStreamToBack, backId);
-        const endListener = this.onEndListener(spaceStreamToBack);
+        const endListener = this.onEndListener(spaceStreamToBack, backId);
         const errorListener = this.onErrorListener(spaceStreamToBack, backId, apiSpaceClient);
 
         // eslint-disable-next-line listeners/no-missing-remove-event-listener , listeners/matching-remove-event-listener
-        spaceStreamToBack.on("data", dataListener).on("end", endListener).on("error", errorListener);
+        spaceStreamToBack.on("data", dataListener).on("end", endListener).prependListener("error", errorListener);
 
         this.listenersPerBackId.set(backId, {
             dataListener,
@@ -280,7 +273,9 @@ export class SpaceConnection implements SpaceConnectionInterface {
         const spacesForBackId = this.spacePerBackId.get(backId);
 
         if (!spacesForBackId) {
-            throw new Error("Space not found");
+            // If a "end" or "error" event happened before the "removeSpace" event, the spacesForBackId is already empty.
+            // There is nothing more to do in this case.
+            return;
         }
 
         const isDeleted = spacesForBackId.delete(space.name);
