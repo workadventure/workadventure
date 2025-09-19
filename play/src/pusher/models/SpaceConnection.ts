@@ -225,6 +225,7 @@ export class SpaceConnection implements SpaceConnectionInterface {
                             filterType: space.filterType,
                             isRetry,
                             propertiesToSync: space.getPropertiesToSync(),
+                            world: space.world,
                         },
                     },
                 });

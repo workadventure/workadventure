@@ -373,6 +373,7 @@ export class SocketManager implements ZoneEventListener {
                 filterType,
                 onSpaceEmpty,
                 this._spaceConnection,
+                client.getUserData().world,
                 propertiesToSync
             );
 

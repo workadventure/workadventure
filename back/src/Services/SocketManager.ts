@@ -101,27 +101,6 @@ export class SocketManager {
 
     private spaces = new Map<string, Space>();
 
-    constructor() {
-        clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
-            gaugeManager.incNbClientPerRoomGauge(roomId);
-        });
-        clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
-            gaugeManager.decNbClientPerRoomGauge(roomId);
-        });
-        clientEventsEmitter.registerToSpaceJoin((spaceName: string) => {
-            gaugeManager.incNbUsersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerToSpaceLeave((spaceName: string) => {
-            gaugeManager.decNbUsersPerSpace(spaceName);
-        });
-        clientEventsEmitter.registerToCreateSpace(() => {
-            gaugeManager.incNbSpaces();
-        });
-        clientEventsEmitter.registerToDeleteSpace(() => {
-            gaugeManager.decNbSpaces();
-        });
-    }
-
     public async handleJoinRoom(
         socket: UserSocket,
         joinRoomMessage: JoinRoomMessage
@@ -302,7 +281,7 @@ export class SocketManager {
             room.leave(user);
             this.cleanupRoomIfEmpty(room);
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
+            clientEventsEmitter.clientLeaveSubject.next({ clientUUid: user.uuid, roomId: room.roomUrl });
         }
     }
 
@@ -366,7 +345,7 @@ export class SocketManager {
         //join world
         const user = await room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.emitClientJoin(user.uuid, roomId);
+        clientEventsEmitter.clientJoinSubject.next({ clientUUid: user.uuid, roomId: roomId });
 
         return { room, user };
     }
@@ -1298,10 +1277,11 @@ export class SocketManager {
                 joinSpaceMessage.spaceName,
                 joinSpaceMessage.filterType,
                 eventProcessor,
-                joinSpaceMessage.propertiesToSync
+                joinSpaceMessage.propertiesToSync,
+                joinSpaceMessage.world
             );
             this.spaces.set(joinSpaceMessage.spaceName, space);
-            clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
+            clientEventsEmitter.newSpaceSubject.next(space);
         }
 
         if (space.filterType !== joinSpaceMessage.filterType) {
@@ -1341,7 +1321,7 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
-            clientEventsEmitter.emitDeleteSpace(space.name);
+            clientEventsEmitter.deleteSpaceSubject.next(space);
         }
     }
 
@@ -1539,7 +1519,7 @@ export class SocketManager {
         }
         space.closeAllWatcherConnections();
         this.spaces.delete(spaceName);
-        clientEventsEmitter.emitDeleteSpace(spaceName);
+        clientEventsEmitter.deleteSpaceSubject.next(space);
     }
 
     handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {

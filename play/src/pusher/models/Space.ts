@@ -46,6 +46,7 @@ export interface SpaceInterface {
     handleUnwatch(watcher: Socket): void;
     isEmpty(): boolean;
     filterType: FilterType;
+    world: string;
     applyAndGetUpdatedFieldsForUserFromSetPlayerDetails(
         client: Socket,
         playerDetailsMessage: SetPlayerDetailsMessage
@@ -94,6 +95,7 @@ export class Space implements SpaceForSpaceConnectionInterface {
         private _filterType: FilterType,
         private _onSpaceEmpty: (space: SpaceInterface) => void,
         private spaceConnection: SpaceConnectionInterface,
+        public readonly world: string,
         private propertiesToSync: string[] = [],
         private SpaceToBackForwarderFactory: (space: Space) => SpaceToBackForwarderInterface = (space: Space) =>
             new SpaceToBackForwarder(space),
