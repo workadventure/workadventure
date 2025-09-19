@@ -80,6 +80,9 @@ import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { generateFieldMask } from "protobuf-fieldmask";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
+import { asError } from "catch-unknown";
+import { abortAny } from "@workadventure/shared-utils/src/Abort/AbortAny";
+import { abortTimeout } from "@workadventure/shared-utils/src/Abort/AbortTimeout";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
@@ -1899,17 +1902,33 @@ export class RoomConnection implements RoomConnection {
 
     private query<T extends Required<QueryMessage>["query"]>(
         message: T,
-        options?: { signal: AbortSignal }
+        options?: {
+            signal?: AbortSignal;
+            // timeout in milliseconds, default is 15000ms
+            timeout?: number;
+        }
     ): Promise<Required<AnswerMessage>["answer"]> {
         if (options?.signal?.aborted) {
-            return Promise.reject(new AbortError());
+            return Promise.reject(asError(options?.signal?.reason));
         }
+        // Let's add a timeout to avoid waiting forever for an answer that will never come
+        // We cannot use AbortSignal.timeout() because it is not supported in Safari 15. Let's do it manually
+        const signals: AbortSignal[] = [];
+        if (options?.signal) {
+            signals.push(options.signal);
+        }
+        signals.push(
+            abortTimeout(options?.timeout ?? 15000, new AbortError("The query took too long and was aborted"))
+        );
+        const finalSignal = abortAny(signals);
+
         return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
             if (!message.$case.endsWith("Query")) {
                 throw new Error("Query types are supposed to be suffixed with Query");
             }
             const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
 
+            const queryId = this.lastQueryId;
             const onAbort = () => {
                 // Let's inform the server that we don't want the answer anymore
                 // Note that due to latency, it is possible that the answer will arrive anyway
@@ -1918,29 +1937,27 @@ export class RoomConnection implements RoomConnection {
                     message: {
                         $case: "abortQueryMessage",
                         abortQueryMessage: {
-                            id: this.lastQueryId,
+                            id: queryId,
                         },
                     },
                 });
 
                 // Let's do nothing when the query answer actually finishes
-                this.queries.set(this.lastQueryId, {
+                this.queries.set(queryId, {
                     answerType,
                     resolve: () => {},
                     reject: () => {},
                 });
                 // After 10 seconds, let's remove the query to avoid memory leaks. If the answer arrives after that, we will have a warning in the console, but it's better than a memory leak.
                 setTimeout(() => {
-                    this.queries.delete(this.lastQueryId);
+                    this.queries.delete(queryId);
                 }, 10000);
                 reject(new AbortError());
             };
 
-            if (options?.signal) {
-                options.signal.addEventListener("abort", onAbort, { once: true });
-            }
+            finalSignal.addEventListener("abort", onAbort, { once: true });
 
-            this.queries.set(this.lastQueryId, {
+            this.queries.set(queryId, {
                 answerType,
                 resolve,
                 reject,
@@ -1950,7 +1967,7 @@ export class RoomConnection implements RoomConnection {
                 message: {
                     $case: "queryMessage",
                     queryMessage: {
-                        id: this.lastQueryId,
+                        id: queryId,
                         query: message,
                     },
                 },
