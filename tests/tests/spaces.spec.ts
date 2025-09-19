@@ -13,7 +13,7 @@ test.describe("Spaces @nomobile @nowebkit", () => {
             "Skip on mobile and WebKit, this is a mostly back test"
         );
     });
-    test("purges spaces if back restarts @slow",
+    test("purges spaces if back restarts @docker @slow",
         async ({ browser, request }) => {
             await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "spaces"));
 
