@@ -627,8 +627,18 @@ export class GameScene extends DirtyScene {
             throw new Error("playerName is not set");
         }
         this.playerName = playerName;
-
-        this.Map = this.add.tilemap(this.mapUrlFile);
+        try {
+            this.Map = this.add.tilemap(this.mapUrlFile);
+        } catch (e) {
+            // Error when loading the map, probably because the map file is not a valid TMJ file.
+            this.handleErrorAndCleanup(
+                e,
+                "MAP_FILE_LOAD_ISSUE",
+                "Error when loading map file",
+                `An error occurred while loading the map file "${this.mapUrlFile}". Please check the URL or contact the map administrator.`
+            );
+            return;
+        }
         const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             if ("source" in tileset) {

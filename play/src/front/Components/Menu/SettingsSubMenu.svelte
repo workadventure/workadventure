@@ -214,7 +214,7 @@
     function changeBubbleSound() {
         localUserStore.setBubbleSound(valueBubbleSound);
         bubbleSoundStore.set(valueBubbleSound);
-        this.playBubbleSound();
+        playBubbleSound().catch((e) => console.error(e));
     }
 
     async function playBubbleSound() {
@@ -239,6 +239,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBarsIcon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 1)}
@@ -251,6 +252,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars2Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 2)}
@@ -263,6 +265,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars3Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueVideoBandwidth = 3)}
@@ -296,6 +299,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBarsIcon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
@@ -308,6 +312,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars2Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
@@ -320,6 +325,7 @@
                             : 'opacity-50 hover:opacity-80'}"
                     >
                         <TablerAntennaBars3Icon />
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span
                             class="absolute -bottom-4 cursor-pointer"
                             on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
