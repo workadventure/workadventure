@@ -827,7 +827,9 @@ export class SocketManager {
         } catch (e) {
             const error = asError(e);
             console.error("An error happened while answering a query:", e);
-            Sentry.captureException(`An error happened while answering a query: ${error.message}`);
+            Sentry.captureException(`An error happened while answering a query: ${error.message}`, {
+                extra: { queryMessage, userId: user.id, userUuid: user.uuid, roomId: gameRoom.roomUrl },
+            });
             answerMessage.answer = {
                 $case: "error",
                 error: {

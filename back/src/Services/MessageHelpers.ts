@@ -4,7 +4,6 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
 } from "@workadventure/messages";
-import * as Sentry from "@sentry/node";
 import { UserSocket } from "../Model/User";
 import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
 
@@ -56,7 +55,6 @@ export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): voi
 
 export function emitErrorOnRoomSocket(Client: RoomSocket, error: unknown): void {
     console.error(error);
-    Sentry.captureException(error);
     const message = getMessageFromError(error);
 
     const batchToPusherMessage: BatchToPusherRoomMessage = {

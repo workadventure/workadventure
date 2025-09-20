@@ -128,7 +128,6 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
-                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -863,24 +862,41 @@ export class IoSocketController {
                                             const getMemberAnswer = await socketManager.handleGetMemberQuery(
                                                 message.message.queryMessage.query.getMemberQuery
                                             );
-                                            answerMessage.answer = {
-                                                $case: "getMemberAnswer",
-                                                getMemberAnswer,
-                                            };
+                                            if (!getMemberAnswer) {
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "User not found, probably left",
+                                                    },
+                                                };
+                                            } else {
+                                                answerMessage.answer = {
+                                                    $case: "getMemberAnswer",
+                                                    getMemberAnswer,
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
                                         case "enterChatRoomAreaQuery": {
-                                            await socketManager.handleEnterChatRoomAreaQuery(
-                                                socket,
-                                                message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
-                                            );
-
-                                            answerMessage.answer = {
-                                                $case: "enterChatRoomAreaAnswer",
-                                                enterChatRoomAreaAnswer: {},
-                                            };
-
+                                            try {
+                                                await socketManager.handleEnterChatRoomAreaQuery(
+                                                    socket,
+                                                    message.message.queryMessage.query.enterChatRoomAreaQuery.roomID
+                                                );
+                                                answerMessage.answer = {
+                                                    $case: "enterChatRoomAreaAnswer",
+                                                    enterChatRoomAreaAnswer: {},
+                                                };
+                                            } catch (e) {
+                                                console.warn("Error entering chat room area", e);
+                                                answerMessage.answer = {
+                                                    $case: "error",
+                                                    error: {
+                                                        message: "Error entering chat room area, try again later 🙏",
+                                                    },
+                                                };
+                                            }
                                             this.sendAnswerMessage(socket, answerMessage);
                                             break;
                                         }
