@@ -1,4 +1,4 @@
-import type { WorkAdventureLocalAppApi, SettingsData, Server } from "@wa-preload-local-app";
+import type { WorkAdventureLocalAppApi, SettingsData, Server } from "~/types/electron";
 
 export type { WorkAdventureLocalAppApi, SettingsData, Server };
 
