@@ -200,10 +200,14 @@ export class MapValidator {
             return undefined;
         }
 
-        return errors.filter((error) => {
+        const filteredErrors = errors.filter((error) => {
             const logLevel = this.toLogNumber(error.type);
             return this.logLevel >= logLevel;
         });
+        if (filteredErrors.length < 1) {
+            return undefined;
+        }
+        return filteredErrors;
     }
 
     private validateRootProperties(map: ITiledMap): ValidationError[] {
