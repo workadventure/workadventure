@@ -75,8 +75,8 @@
             {#if $errorScreenStore.type !== "retry" && $errorScreenStore.type !== "reconnecting"}<p class="code">
                     Code : {$errorScreenStore.code}
                 </p>{/if}
-            <p class="details">
-                {detailsStylized}
+            <p class="details flex flex-row items-center justify-center content-center gap-2">
+                <span>{detailsStylized}</span>
                 {#if $errorScreenStore.type === "retry"}
                     <div class="loading" />
                 {:else if $errorScreenStore.type === "reconnecting"}
