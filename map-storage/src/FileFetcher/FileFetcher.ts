@@ -17,8 +17,15 @@ export function proxyFiles(fileSystem: FileSystemInterface) {
             const regex = /[.-]([a-f0-9]{8})\.([a-z]{2,4})$/i;
             const match = fileName.match(regex);
 
+            // Regular expression to match a UUID (used by WorkAdventure uploaded assets)
+            const regexUuid = /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}).*\.([a-z]{2,4})/i;
+            const matchUuid = fileName.match(regexUuid);
+
             // Check if the regular expression matched and the file extension is one of the common static file extensions
             if (match && staticFileExtensions.includes(match[2])) {
+                // Set the cache-control header to cache the file forever
+                res.set("Cache-Control", "public, max-age=31536000, immutable");
+            } else if (matchUuid && staticFileExtensions.includes(matchUuid[2])) {
                 // Set the cache-control header to cache the file forever
                 res.set("Cache-Control", "public, max-age=31536000, immutable");
             } else {
