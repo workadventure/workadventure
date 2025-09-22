@@ -466,19 +466,19 @@ jobs:
         working-directory: "desktop/local-app"
 
       - name: "Typecheck"
-        run: yarn check
+        run: yarn run check
         working-directory: "desktop/local-app"
 
       - name: "Lint"
-        run: yarn lint
+        run: yarn run lint
         working-directory: "desktop/local-app"
 
       - name: "Jasmine"
-        run: yarn test
+        run: yarn run test
         working-directory: "desktop/local-app"
 
       - name: "Prettier"
-        run: yarn pretty-check
+        run: yarn run pretty-check
         working-directory: "desktop/local-app"
 
   continuous-integration-end-to-end-tests:

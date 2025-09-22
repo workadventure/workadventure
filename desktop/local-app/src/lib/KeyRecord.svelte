@@ -81,8 +81,8 @@
 
     let shortCut: string[] = [];
     let recording = false;
-    let recordingTimeout: NodeJS.Timeout;
-    let keyInputTimeout: NodeJS.Timeout;
+    let recordingTimeout: NodeJS.Timeout | undefined;
+    let keyInputTimeout: NodeJS.Timeout | undefined;
 
     function camelPad(str: string) {
         return (
