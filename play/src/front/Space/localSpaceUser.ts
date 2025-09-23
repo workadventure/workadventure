@@ -6,7 +6,7 @@ import { availabilityStatusStore } from "../Stores/MediaStore";
 import LL from "../../i18n/i18n-svelte";
 import { SpaceUserExtended } from "./SpaceInterface";
 
-export const localSpaceUser = (): SpaceUserExtended => {
+export const localSpaceUser = (name?: string): SpaceUserExtended => {
     return {
         isLogged: localUserStore.isLogged(),
         availabilityStatus: get(availabilityStatusStore),
@@ -21,7 +21,7 @@ export const localSpaceUser = (): SpaceUserExtended => {
         chatID: localUserStore.getChatId() ?? undefined,
         showVoiceIndicator: true,
         spaceUserId: "local",
-        name: get(LL).camera.my.nameTag(),
+        name: name ?? get(LL).camera.my.nameTag(),
         playUri: "local",
         color: "local",
         jitsiParticipantId: undefined,

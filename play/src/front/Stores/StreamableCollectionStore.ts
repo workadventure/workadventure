@@ -212,7 +212,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
 const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBox => {
     return {
         uniqueId: streamable.uniqueId,
-        spaceUser: localSpaceUser(),
+        spaceUser: localSpaceUser(get(streamable.name)),
         streamable: writable(streamable),
         priority,
     };
