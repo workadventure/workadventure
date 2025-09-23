@@ -221,7 +221,7 @@
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
                 >
-                    {#if extendedSpaceUser}
+                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
                         <div
                             class="flex items-center justify-center picture-in-picture:hidden"
                             bind:this={userMenuButton}

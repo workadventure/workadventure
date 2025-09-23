@@ -21,7 +21,6 @@ export const localSpaceUser = (): SpaceUserExtended => {
         chatID: localUserStore.getChatId() ?? undefined,
         showVoiceIndicator: true,
         spaceUserId: "local",
-        //TODO : mettre la traduction de "vous"
         name: get(LL).camera.my.nameTag(),
         playUri: "local",
         color: "local",
