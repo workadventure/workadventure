@@ -17,7 +17,6 @@ import {
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
@@ -215,6 +214,10 @@ export class Space implements SpaceInterface {
         this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
             const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
 
+            if (spaceUserId === this._mySpaceUserId) {
+                return;
+            }
+
             if (!spaceUserId) {
                 console.error("observeVideoPeerAdded : peer has no spaceUserId");
                 return;
@@ -225,6 +228,7 @@ export class Space implements SpaceInterface {
             if (!videoBox) {
                 // Should not happen , we should have a videoBox for all users
                 console.error("observeScreenSharingPeerAdded : videoBox not found for user", spaceUserId);
+                console.trace();
                 return;
             }
 
@@ -448,7 +452,7 @@ export class Space implements SpaceInterface {
 
         this.allScreenShareStreamStore.forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable instanceof ScreenSharingPeer) {
+            if (streamable instanceof VideoPeer) {
                 streamable.destroy();
             }
         });

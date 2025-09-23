@@ -10,7 +10,7 @@ import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
-import { ScreenSharingPeer } from "./ScreenSharingPeer";
+import { localStreamStore } from "../Stores/MediaStore";
 import { VideoPeer } from "./VideoPeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -22,7 +22,8 @@ export interface UserSimplePeerInterface {
     webRtcPassword?: string | undefined;
 }
 
-export type RemotePeer = VideoPeer | ScreenSharingPeer;
+//TODO : rename videoPeer Class to RemotePeer
+export type RemotePeer = VideoPeer;
 
 /**
  * This class manages connections to all the peers in the same group as me.
@@ -35,7 +36,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private _lastWebrtcPassword: string | undefined;
 
     // A map of all screen sharing peers, indexed by spaceUserId
-    private screenSharePeers: Map<string, ScreenSharingPeer> = new Map();
+    private screenSharePeers: Map<string, VideoPeer> = new Map();
     // A map of all video peers, indexed by spaceUserId
     private videoPeers: Map<string, VideoPeer> = new Map();
     private abortController = new AbortController();
@@ -48,7 +49,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         private _analyticsClient = analyticsClient,
         private _notificationManager = notificationManager,
         private _customWebRTCLogger = customWebRTCLogger,
-        private _blackListManager = blackListManager
+        private _blackListManager = blackListManager,
+        private _localStreamStore = localStreamStore
     ) {
         //we make sure we don't get any old peer.
         let localScreenCapture: MediaStream | undefined = undefined;
@@ -211,7 +213,21 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._lastWebrtcUserName = user.webRtcUser;
         this._lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this._space, spaceUser);
+        const controller = this._pendingConnections.get(user.userId);
+        if (controller && controller.signal.aborted) {
+            this._pendingConnections.delete(user.userId);
+            return null;
+        }
+
+        const peer = new VideoPeer(
+            user,
+            user.initiator ? user.initiator : false,
+            this._space,
+            spaceUser,
+            false,
+            this._localStreamStore,
+            "video"
+        );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
@@ -249,7 +265,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
         stream: MediaStream | undefined
-    ): ScreenSharingPeer | null {
+    ): VideoPeer | null {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         const peerScreenSharingConnection = this.screenSharePeers.get(user.userId);
 
@@ -278,13 +294,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return null;
         }
 
-        const peer = new ScreenSharingPeer(
+        const peer = new VideoPeer(
             user,
             user.initiator ? user.initiator : false,
-            stream,
             this._space,
             spaceUser,
-            false
+            false,
+            this._screenSharingLocalStreamStore,
+            "screenSharing"
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -383,7 +400,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            if (peer instanceof ScreenSharingPeer) {
+            if (shouldCloseStream && peer instanceof VideoPeer) {
                 peer.destroy();
 
                 const screenShareElements = this._space.spacePeerManager.getScreenShareContainers(userId);

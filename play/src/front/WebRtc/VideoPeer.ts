@@ -1,13 +1,15 @@
 import { Buffer } from "buffer";
+import { PrivateSpaceEvent } from "@workadventure/messages";
 import type { Subscription } from "rxjs";
 import { derived, get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { ForwardableStore } from "@workadventure/store-utils";
 import { z } from "zod";
-import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
+import { LocalStreamStoreValue, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
@@ -15,11 +17,19 @@ import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMes
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
 import { isFirefox } from "./DeviceUtils";
-import { P2PMessage } from "./P2PMessages/P2PMessage";
+import {
+    P2PMessage,
+    STREAM_ENDED_MESSAGE_TYPE,
+    STREAM_STOPPED_MESSAGE_TYPE,
+    StreamEndedMessage,
+    StreamStoppedMessage,
+} from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
+
+//TODO : merge / peut etre faire un remote peer
 
 // Firefox needs more time for ICE negotiation
 const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
@@ -43,15 +53,16 @@ export class VideoPeer extends Peer implements Streamable {
     private volumeStoreSubscribe?: Unsubscriber;
     private readonly localStreamStoreSubscribe: Unsubscriber;
     private readonly apparentMediaConstraintStoreSubscribe: Unsubscriber;
-    private readonly _hasAudio = writable<boolean>(true);
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
     private readonly showVoiceIndicatorStore: ForwardableStore<boolean> = new ForwardableStore(false);
     public readonly flipX = false;
     public readonly muteAudio = false;
-    public readonly displayMode = "cover";
+    private readonly _hasAudio: Readable<boolean>;
+    public readonly displayMode: "fit" | "cover";
+    public readonly usePresentationMode: boolean;
     public readonly displayInPictureInPictureMode = true;
-    public readonly usePresentationMode = false;
+    public isReceivingStream = false;
     // Store event listener functions for proper cleanup
     private readonly signalHandler = (data: unknown) => {
         if (this.closing) {
@@ -77,7 +88,7 @@ export class VideoPeer extends Peer implements Streamable {
 
     private readonly closeHandler = () => {
         this._statusStore.set("closed");
-
+        this.isReceivingStream = false;
         this._connected = false;
         this.destroy();
     };
@@ -162,6 +173,18 @@ export class VideoPeer extends Peer implements Streamable {
                     this.destroy();
                     break;
                 }
+                case "stream_ended": {
+                    this.closeHandler();
+                    break;
+                }
+                case "stream_stopped": {
+                    if (this.isReceivingStream) {
+                        this.isReceivingStream = false;
+                    } else {
+                        this.closeHandler();
+                    }
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = message;
                 }
@@ -184,7 +207,11 @@ export class VideoPeer extends Peer implements Streamable {
         public user: UserSimplePeerInterface,
         initiator: boolean,
         private space: SpaceInterface,
-        private spaceUser: SpaceUserExtended
+        private spaceUser: SpaceUserExtended,
+        private isLocalPeer: boolean,
+        private localStreamStore: Readable<LocalStreamStoreValue>,
+        private type: "video" | "screenSharing",
+        private _highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
         incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
@@ -209,8 +236,15 @@ export class VideoPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
+        this._hasAudio = writable<boolean>(type === "video" ? true : false);
+        this.displayMode = type === "video" ? "cover" : "fit";
+        this.usePresentationMode = type === "video" ? false : true;
         this.userUuid = spaceUser.uuid;
-        this.uniqueId = "video_" + spaceUser.spaceUserId;
+        this.uniqueId = isLocalPeer
+            ? "localScreenSharingStream"
+            : type === "video"
+            ? "video_" + spaceUser.spaceUserId
+            : "screensharing_" + spaceUser.spaceUserId;
 
         this.volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
@@ -302,11 +336,12 @@ export class VideoPeer extends Peer implements Streamable {
             this.sendBlockMessage(true);
         }
 
-        this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
+        this.localStreamStoreSubscribe = this.localStreamStore.subscribe((streamValue) => {
             if (streamValue.type === "success" && streamValue.stream) {
                 this.addStream(streamValue.stream);
             }
         });
+
         this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
             this.write(
                 new Buffer(
@@ -342,24 +377,39 @@ export class VideoPeer extends Peer implements Streamable {
 
     private sendWebrtcSignal(data: unknown) {
         try {
-            this.space.emitPrivateMessage(
-                {
-                    $case: "webRtcSignalToServerMessage",
-                    webRtcSignalToServerMessage: {
-                        signal: JSON.stringify(data),
-                    },
-                },
-                this.user.userId
-            );
+            this.space.emitPrivateMessage(this.getSignalMessage(data), this.user.userId);
         } catch (e) {
             console.error(`sendWebrtcSignal => ${this.spaceUser.spaceUserId}`, e);
         }
     }
 
+    private getSignalMessage(data: unknown): NonNullable<PrivateSpaceEvent["event"]> {
+        if (this.type === "video") {
+            return {
+                $case: "webRtcSignalToServerMessage",
+                webRtcSignalToServerMessage: {
+                    signal: JSON.stringify(data),
+                },
+            };
+        }
+
+        return {
+            $case: "webRtcScreenSharingSignalToServerMessage",
+            webRtcScreenSharingSignalToServerMessage: {
+                signal: JSON.stringify(data),
+            },
+        };
+    }
     /**
      * Sends received stream to screen.
      */
     private stream(stream: MediaStream) {
+        if (this.type === "screenSharing") {
+            const videoBox = this.space.getScreenSharingPeerVideoBox(this.spaceUser.spaceUserId);
+            if (videoBox) {
+                this._highlightedEmbedScreenStore.toggleHighlight(videoBox);
+            }
+        }
         this._streamStore.set(stream);
 
         try {
@@ -369,6 +419,12 @@ export class VideoPeer extends Peer implements Streamable {
             }
         } catch (err) {
             console.error(err);
+        }
+
+        if (!stream) {
+            this.isReceivingStream = false;
+        } else {
+            this.isReceivingStream = true;
         }
     }
 
@@ -488,6 +544,31 @@ export class VideoPeer extends Peer implements Streamable {
                 }
             },
         };
+    }
+
+    public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
+        this.removeStream(stream);
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: STREAM_STOPPED_MESSAGE_TYPE,
+                } as StreamStoppedMessage)
+            )
+        );
+    }
+
+    public finishScreenSharingToRemoteUser() {
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: STREAM_ENDED_MESSAGE_TYPE,
+                } as StreamEndedMessage)
+            )
+        );
+    }
+
+    public isReceivingScreenSharingStream(): boolean {
+        return this.isReceivingStream;
     }
 
     get hasVideo(): Readable<boolean> {

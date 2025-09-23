@@ -1,5 +1,4 @@
 import { Readable, derived, get, writable } from "svelte/store";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
 import { SpaceUserExtended } from "../Space/SpaceInterface";
@@ -190,7 +189,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             const addPeer = (videoBox: VideoBox) => {
                 peers.set(videoBox.uniqueId, videoBox);
                 // if peer is ScreenSharing, change for presentation Layout mode
-                if (videoBox.streamable instanceof ScreenSharingPeer || get(videoBox.streamable)?.usePresentationMode) {
+                if (get(videoBox.streamable)?.usePresentationMode) {
                     // FIXME: we should probably do that only when the screen sharing is activated for the first time
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
