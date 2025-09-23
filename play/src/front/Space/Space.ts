@@ -15,8 +15,6 @@ import {
     PrivateEventPusherToFront,
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
-import { ExtendedStreamable } from "../Stores/StreamableCollectionStore";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 import { VideoPeer } from "../WebRtc/VideoPeer";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
@@ -37,7 +35,6 @@ import { SimplePeerConnectionInterface, SpacePeerManager } from "./SpacePeerMana
 import { lookupUserById } from "./Utils/UserLookup";
 
 export interface VideoBox {
-    //TODO : voir si la priority doit etre aussi un
     uniqueId: string;
     spaceUser: SpaceUserExtended;
     streamable: Writable<Streamable | undefined>;
