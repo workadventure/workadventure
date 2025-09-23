@@ -7,7 +7,6 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
-import { VideoBox } from "../Space/Space";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -142,7 +141,14 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            highlightedEmbedScreen.toggleHighlight(this.videoBox);
+            const videoBox = this.space.getScreenSharingPeerVideoBox(this.spaceUser.spaceUserId);
+
+            if (!videoBox) {
+                console.error("Video box not found for user", this.spaceUser.spaceUserId);
+                return;
+            }
+
+            highlightedEmbedScreen.toggleHighlight(videoBox);
             this._streamStore.set(stream);
             this.stream(stream);
 
@@ -384,15 +390,6 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
     }
-    get videoBox(): VideoBox {
-        return {
-            uniqueId: this.uniqueId,
-            spaceUser: this.spaceUser,
-            streamable: writable(this),
-            priority: this.priority,
-        };
-    }
-
     private async setMaxBitrate() {
         try {
             // Get the RTCPeerConnection instance
