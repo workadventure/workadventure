@@ -62,7 +62,6 @@
         {/if}
     </div>
     <Select
-        itemId="svelte-select"
         on:filter={handleFilter}
         bind:filterText
         loadOptions={queryOptions}
