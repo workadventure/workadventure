@@ -1,6 +1,6 @@
 import { Readable, derived, get, writable } from "svelte/store";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { PeerStatus } from "../WebRtc/VideoPeer";
+import { PeerStatus } from "../WebRtc/RemotePeer";
 import { SpaceUserExtended } from "../Space/SpaceInterface";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";

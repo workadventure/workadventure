@@ -11,7 +11,7 @@ import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { localStreamStore } from "../Stores/MediaStore";
-import { VideoPeer } from "./VideoPeer";
+import { RemotePeer } from "./RemotePeer";
 import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
@@ -21,9 +21,6 @@ export interface UserSimplePeerInterface {
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
 }
-
-//TODO : rename videoPeer Class to RemotePeer
-export type RemotePeer = VideoPeer;
 
 /**
  * This class manages connections to all the peers in the same group as me.
@@ -39,9 +36,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private _pendingConnections: Map<string, AbortController> = new Map();
 
     // A map of all screen sharing peers, indexed by spaceUserId
-    private screenSharePeers: Map<string, VideoPeer> = new Map();
+    private screenSharePeers: Map<string, RemotePeer> = new Map();
     // A map of all video peers, indexed by spaceUserId
-    private videoPeers: Map<string, VideoPeer> = new Map();
+    private videoPeers: Map<string, RemotePeer> = new Map();
 
     constructor(
         private _space: SpaceInterface,
@@ -197,12 +194,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): VideoPeer | null {
+    private createPeerConnection(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): RemotePeer | null {
         const uuid = spaceUser.uuid;
         if (this._blackListManager.isBlackListed(uuid)) return null;
 
         const peerConnection = this.videoPeers.get(user.userId);
-        if (peerConnection && peerConnection instanceof VideoPeer) {
+        if (peerConnection && peerConnection instanceof RemotePeer) {
             if (peerConnection.destroyed) {
                 this._streamableSubjects.videoPeerRemoved.next(peerConnection);
                 peerConnection.destroy();
@@ -224,7 +221,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return null;
         }
 
-        const peer = new VideoPeer(
+        const peer = new RemotePeer(
             user,
             user.initiator ? user.initiator : false,
             this._space,
@@ -270,7 +267,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
         stream: MediaStream | undefined
-    ): VideoPeer | null {
+    ): RemotePeer | null {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
         const peerScreenSharingConnection = this.screenSharePeers.get(user.userId);
 
@@ -299,7 +296,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return null;
         }
 
-        const peer = new VideoPeer(
+        const peer = new RemotePeer(
             user,
             user.initiator ? user.initiator : false,
             this._space,
@@ -356,7 +353,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
         try {
             const peer = this.videoPeers.get(userId);
-            if (!peer || !(peer instanceof VideoPeer)) {
+            if (!peer || !(peer instanceof RemotePeer)) {
                 return;
             }
 
@@ -411,7 +408,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            if (shouldCloseStream && peer instanceof VideoPeer) {
+            if (shouldCloseStream && peer instanceof RemotePeer) {
                 peer.destroy();
 
                 const screenShareElements = this._space.spacePeerManager.getScreenShareContainers(userId);
@@ -485,12 +482,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
             const peer = this.videoPeers.get(data.userId);
 
-            if (!(peer instanceof VideoPeer)) {
+            if (!(peer instanceof RemotePeer)) {
                 console.error("peer is not a VideoPeer");
                 return;
             }
 
-            if (peer && peer instanceof VideoPeer) {
+            if (peer && peer instanceof RemotePeer) {
                 peer.signal(data.signal);
             } else {
                 console.error('Could not find peer whose ID is "' + data.userId + '" in PeerConnectionArray');
@@ -633,7 +630,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     public dispatchStream(mediaStream: MediaStream) {
         for (const videoPeer of this.videoPeers.values()) {
-            if (videoPeer instanceof VideoPeer) {
+            if (videoPeer instanceof RemotePeer) {
                 videoPeer.addStream(mediaStream);
             }
         }
