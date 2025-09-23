@@ -74,5 +74,4 @@ export class BroadcastService {
         this.unsubscribes.forEach((unsubscribe) => unsubscribe.unsubscribe());
         await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
     }
-
 }
