@@ -234,9 +234,9 @@ export class RemotePeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this._hasAudio = writable<boolean>(type === "video" ? true : false);
+        this._hasAudio = writable<boolean>(type === "video");
         this.displayMode = type === "video" ? "cover" : "fit";
-        this.usePresentationMode = type === "video" ? false : true;
+        this.usePresentationMode = !(type === "video");
         this.userUuid = spaceUser.uuid;
         this.uniqueId = isLocalPeer
             ? "localScreenSharingStream"
