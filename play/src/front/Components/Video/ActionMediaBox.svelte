@@ -69,20 +69,13 @@
         trackStreamWrapper.ban();
     }*/
 
-    // TODO: reimplement the removePeer function (both backend and frontend)
     function kickoff(spaceUser: SpaceUserExtended) {
         analyticsClient.kickoffMeetingAction();
         spaceUser.emitPrivateEvent({
             $case: "kickOffUser",
             kickOffUser: {},
         });
-        // FIXME: this works only in bubbles
-        // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
-        //const spaceUserId = spaceUser.spaceUserId;
-        // const userId = Number(spaceUserId.split("_").pop());
 
-        // TODO: reimplement the removePeer function (both backend and frontend)
-        //spaceUser.space.simplePeer?.removePeer(spaceUserId);
         close();
     }
 
