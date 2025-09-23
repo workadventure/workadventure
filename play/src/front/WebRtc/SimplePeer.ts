@@ -442,9 +442,9 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
-    // /**
-    //  * Unregisters any held event handler.
-    //  */
+    /**
+     * Unregisters any held event handler.
+     */
     public unregister() {
         for (const unsubscriber of this._unsubscribers) {
             unsubscriber();
