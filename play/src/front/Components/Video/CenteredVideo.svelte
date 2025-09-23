@@ -180,10 +180,6 @@
             displayNoVideoWarning = false;
         });
 
-        if (attachVideo) {
-            attachVideo(videoElement);
-        }
-
         return () => {
             unsubscriber();
         };

@@ -247,7 +247,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public destroy(error?: Error): void {
         try {
             this._connected = false;
-            if (!this.toClose) {
+            if (this.toClose) {
                 return;
             }
             if (this.connectTimeout) {
