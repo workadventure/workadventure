@@ -81,9 +81,7 @@ export class Space implements SpaceInterface {
     private readonly observeSyncUserUpdated: Subscription;
     private readonly observeSyncUserRemoved: Subscription;
     private readonly observeVideoPeerAdded: Subscription;
-    private readonly observeVideoPeerRemoved: Subscription;
     private readonly observeScreenSharingPeerAdded: Subscription;
-    private readonly observeScreenSharingPeerRemoved: Subscription;
 
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
@@ -211,23 +209,6 @@ export class Space implements SpaceInterface {
             videoBox.streamable.set(peer);
         });
 
-        this.observeVideoPeerRemoved = this._peerManager.videoPeerRemoved.subscribe((peer) => {
-            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
-
-            if (!spaceUserId) {
-                console.error("observeVideoPeerAdded : peer has no spaceUserId");
-                return;
-            }
-
-            const videoBox = this.getVideoPeerVideoBox(spaceUserId);
-
-            if (!videoBox) {
-                // Should not happen , we should have a videoBox for all users
-                console.error("observeVideoPeerAdded : videoBox not found for user", spaceUserId);
-                return;
-            }
-        });
-
         this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
             const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
 
@@ -245,22 +226,6 @@ export class Space implements SpaceInterface {
             }
 
             videoBox.streamable.set(peer);
-        });
-        this.observeScreenSharingPeerRemoved = this._peerManager.screenSharingPeerRemoved.subscribe((peer) => {
-            const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
-
-            if (!spaceUserId) {
-                console.error("observeVideoPeerAdded : peer has no spaceUserId");
-                return;
-            }
-
-            const videoBox = this.getScreenSharingPeerVideoBox(spaceUserId);
-
-            if (!videoBox) {
-                // Should not happen , we should have a videoBox for all users
-                console.error("observeScreenSharingPeerRemoved : videoBox not found for user", spaceUserId);
-                return;
-            }
         });
 
         this.observeSyncUserAdded = this.observePrivateEvent("addSpaceUserMessage").subscribe((message) => {
@@ -458,9 +423,7 @@ export class Space implements SpaceInterface {
         this.observeSyncUserUpdated.unsubscribe();
         this.observeSyncUserRemoved.unsubscribe();
         this.observeVideoPeerAdded.unsubscribe();
-        this.observeVideoPeerRemoved.unsubscribe();
         this.observeScreenSharingPeerAdded.unsubscribe();
-        this.observeScreenSharingPeerRemoved.unsubscribe();
 
         if (this._peerManager) {
             this._peerManager.destroy();

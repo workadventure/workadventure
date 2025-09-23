@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store";
+import { get } from "svelte/store";
 import { Subscription } from "rxjs";
 import { Deferred } from "ts-deferred";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
@@ -9,8 +9,6 @@ import { BubbleNotification as BasicNotification } from "../Notification/BubbleN
 import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { SCREEN_SHARE_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
-import { VideoBox } from "../Space/Space";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
@@ -300,12 +298,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             false
         );
 
-        const videoBox: VideoBox = this._space.getScreenSharingPeerVideoBox(spaceUser.spaceUserId) ?? {
-            uniqueId: "video_" + user.userId,
-            spaceUser: spaceUser,
-            streamable: writable(peer),
-            priority: SCREEN_SHARE_STARTING_PRIORITY,
-        };
         // Create subscription to statusStore to close connection when user stop sharing screen
         // Is automatically unsubscribed when peer is destroyed
         this._unsubscribers.push(
@@ -329,8 +321,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                 this.screenSharePeers.set(user.userId, peer);
                 return;
             }
-
-            videoBox.streamable.set(peer);
         });
 
         this.screenSharePeers.set(user.userId, peer);
