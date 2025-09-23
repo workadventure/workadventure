@@ -15,8 +15,10 @@
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     const streamable = videoBox.streamable;
-    if ($streamable instanceof VideoPeer) {
-        constraintStore = streamable.constraintsStore;
+    $: {
+        if ($streamable instanceof VideoPeer) {
+            constraintStore = $streamable.constraintsStore;
+        }
     }
 
     const gameScene = gameManager.getCurrentGameScene();
