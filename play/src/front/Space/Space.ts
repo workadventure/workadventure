@@ -228,7 +228,6 @@ export class Space implements SpaceInterface {
             if (!videoBox) {
                 // Should not happen , we should have a videoBox for all users
                 console.error("observeScreenSharingPeerAdded : videoBox not found for user", spaceUserId);
-                console.trace();
                 return;
             }
 
