@@ -1,12 +1,12 @@
 <script lang="ts">
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { RemotePeer } from "../../WebRtc/RemotePeer";
     import reportImg from "./images/report.svg";
     export let peer: Streamable;
 
     function openReport(peer: Streamable) {
-        if (peer instanceof VideoPeer) {
+        if (peer instanceof RemotePeer) {
             const extendedSpaceUser = peer.getExtendedSpaceUser();
             if (!extendedSpaceUser) {
                 console.error("openReport : peer has no extendedSpaceUser");
@@ -20,7 +20,7 @@
     }
 </script>
 
-{#if peer instanceof VideoPeer}
+{#if peer instanceof RemotePeer}
     <button
         class="report-ban-btn bg-pop-red flex justify-center h-7 w-7 md:h-5 md:w-5 p-1 min-h-[1px]"
         on:click|stopPropagation={() => openReport(peer)}

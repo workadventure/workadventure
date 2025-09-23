@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { type Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { RemotePeer } from "../../WebRtc/RemotePeer";
     import type { VideoBox } from "../../Space/Space";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -16,7 +16,7 @@
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     const streamable = videoBox.streamable;
     $: {
-        if ($streamable instanceof VideoPeer) {
+        if ($streamable instanceof RemotePeer) {
             constraintStore = $streamable.constraintsStore;
         }
     }

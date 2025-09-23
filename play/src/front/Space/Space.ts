@@ -16,7 +16,7 @@ import {
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
-import { VideoPeer } from "../WebRtc/VideoPeer";
+import { RemotePeer } from "../WebRtc/RemotePeer";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
@@ -445,14 +445,14 @@ export class Space implements SpaceInterface {
 
         this.allVideoStreamStore.forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable instanceof VideoPeer) {
+            if (streamable instanceof RemotePeer) {
                 streamable.destroy();
             }
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable instanceof VideoPeer) {
+            if (streamable instanceof RemotePeer) {
                 streamable.destroy();
             }
         });

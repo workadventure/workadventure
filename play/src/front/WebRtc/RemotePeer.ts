@@ -29,15 +29,13 @@ import { UnblockMessage } from "./P2PMessages/UnblockMessage";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
-//TODO : merge / peut etre faire un remote peer
-
 // Firefox needs more time for ICE negotiation
 const CONNECTION_TIMEOUT = isFirefox() ? 10000 : 5000; // 10s for Firefox, 5s for others
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer implements Streamable {
+export class RemotePeer extends Peer implements Streamable {
     public _connected = false;
     public remoteStream!: MediaStream;
     private blocked = false;
