@@ -952,6 +952,7 @@ message PrivateSpaceEvent {
     AddSpaceUserMessage addSpaceUserMessage = 16;
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
+    CancelSwitchMessage cancelSwitchMessage = 19;
   }
 }
 
@@ -964,6 +965,10 @@ message PrepareSwitchMessage {
 }
 
 message ExecuteSwitchMessage {
+  string strategy = 1;
+}
+
+message CancelSwitchMessage {
   string strategy = 1;
 }
 
