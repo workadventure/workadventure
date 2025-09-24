@@ -189,7 +189,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
-        this.closeConnection(user.userId, true);
+        this.closeConnection(user.userId);
     }
 
     /**
@@ -336,7 +336,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public closeConnection(userId: string, shouldCloseStream = true) {
+    public closeConnection(userId: string) {
         const controller = this._pendingConnections.get(userId);
         if (controller) {
             controller.abort();
@@ -364,14 +364,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             });
 
             //create temp peer to close
-            if (shouldCloseStream) {
-                peer.destroy();
-                this.videoPeers.delete(userId);
-            }
+
+            peer.destroy();
+            this.videoPeers.delete(userId);
+
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            this.closeScreenSharingConnection(userId, shouldCloseStream);
+            this.closeScreenSharingConnection(userId);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
@@ -389,7 +389,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    private closeScreenSharingConnection(userId: string, shouldCloseStream = true) {
+    private closeScreenSharingConnection(userId: string) {
         try {
             const peer = this.screenSharePeers.get(userId);
             if (!peer) {
@@ -400,7 +400,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
-            if (shouldCloseStream && peer instanceof ScreenSharingPeer) {
+            if (peer instanceof ScreenSharingPeer) {
                 peer.destroy();
 
                 const screenShareElements = this._space.spacePeerManager.getScreenShareContainers(userId);
@@ -417,18 +417,16 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             console.error("An error occurred in closeScreenSharingConnection", err);
         }
 
-        if (shouldCloseStream) {
-            this.screenSharePeers.delete(userId);
-        }
+        this.screenSharePeers.delete(userId);
     }
 
-    public closeAllConnections(needToDelete?: boolean) {
+    public closeAllConnections() {
         for (const userId of this.videoPeers.keys()) {
-            this.closeConnection(userId, needToDelete);
+            this.closeConnection(userId);
         }
 
         for (const userId of this.screenSharePeers.keys()) {
-            this.closeScreenSharingConnection(userId, needToDelete);
+            this.closeScreenSharingConnection(userId);
         }
     }
 
