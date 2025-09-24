@@ -1,5 +1,24 @@
 import { gameManager } from "../Phaser/Game/GameManager";
 
+let webRtcConnectionsCount = 0;
+let livekitConnectionsCount = 0;
+
+export function incrementWebRtcConnectionsCount() {
+    webRtcConnectionsCount++;
+}
+
+export function decrementWebRtcConnectionsCount() {
+    webRtcConnectionsCount--;
+}
+
+export function incrementLivekitConnectionsCount() {
+    livekitConnectionsCount++;
+}
+
+export function decrementLivekitConnectionsCount() {
+    livekitConnectionsCount--;
+}
+
 /**
  * The e2eHooks object contains methods used for E2E tests.
  * We should refrain from growing this object too much but it can be useful in very specific circumstances (usually linked to Phaser testing)
@@ -12,5 +31,11 @@ export const e2eHooks = {
                 resolve();
             });
         });
+    },
+    getWebRtcConnectionsCount(): number {
+        return webRtcConnectionsCount;
+    },
+    getLivekitConnectionsCount(): number {
+        return livekitConnectionsCount;
     },
 };

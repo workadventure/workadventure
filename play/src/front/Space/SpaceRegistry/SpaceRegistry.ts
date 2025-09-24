@@ -311,15 +311,14 @@ export class SpaceRegistry implements SpaceRegistryInterface {
 
         await Promise.all(
             Array.from(this.spaces.values()).map(async (space) => {
-                if (!this.leavingSpacesPromises.has(space.getName())) {
+                try {
                     await space.destroy();
-                    console.warn(`Space "${space.getName()}" was not destroyed properly.`);
+                } finally {
+                    this.spaces.delete(space.getName());
                 }
+                console.warn(`Space "${space.getName()}" was not destroyed properly.`);
             })
         );
-
-        // Clear all spaces from the registry
-        this.spaces.clear();
 
         // Stop throttling detection and clean up resources
         this.throttlingDetector.destroy();
