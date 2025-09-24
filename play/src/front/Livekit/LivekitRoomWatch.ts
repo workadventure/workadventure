@@ -47,9 +47,15 @@ export class LiveKitRoomWatch implements LiveKitRoom {
         return this.room;
     }
 
+    private joinRoomCalled = false;
+
     public async joinRoom() {
         let room: Room;
 
+        if (this.joinRoomCalled) {
+            return;
+        }
+        this.joinRoomCalled = true;
         try {
             room = this.room ?? (await this.prepareConnection());
 
