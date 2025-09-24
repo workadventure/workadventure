@@ -26,7 +26,11 @@ export abstract class CommunicationState implements ICommunicationState {
     }
     dispatchSwitchEvent(
         userId: string,
-        eventType: "communicationStrategyMessage" | "prepareSwitchMessage" | "executeSwitchMessage",
+        eventType:
+            | "communicationStrategyMessage"
+            | "prepareSwitchMessage"
+            | "executeSwitchMessage"
+            | "cancelSwitchMessage",
         payload: unknown
     ): void {
         const event: PrivateEvent = {
@@ -52,15 +56,19 @@ export abstract class CommunicationState implements ICommunicationState {
         this._readyUsers.clear();
         const spaceUsers = this._space.getAllUsers();
 
-        this._waitingList.forEach((userId) => {
-            const waitingUser = spaceUsers.find(({ spaceUserId }) => spaceUserId === userId);
-            if (waitingUser) {
-                this.handleUserAdded(waitingUser).catch((e) => {
+        spaceUsers.forEach((user) => {
+            if (this._waitingList.has(user.spaceUserId)) {
+                this.handleUserAdded(user).catch((e) => {
                     Sentry.captureException(e);
                     console.error(e);
                 });
+            } else {
+                this.dispatchSwitchEvent(user.spaceUserId, "cancelSwitchMessage", {
+                    strategy: this._nextCommunicationType,
+                });
             }
         });
+
         this._waitingList.clear();
     }
 

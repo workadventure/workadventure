@@ -30,6 +30,7 @@ export class LivekitState implements ICommunicationState {
                     }
 
                     this._space.spacePeerManager.setState(this._nextState);
+                    this._nextState = null;
                 }
             })
         );
@@ -43,6 +44,15 @@ export class LivekitState implements ICommunicationState {
                         this._space.spacePeerManager.setState(nextState);
                     }
                 })
+        );
+
+        this.rxJsUnsubscribers.push(
+            this._space.observePrivateEvent(CommunicationMessageType.CANCEL_SWITCH_MESSAGE).subscribe((message) => {
+                if (message.cancelSwitchMessage.strategy === CommunicationType.WEBRTC && this._nextState) {
+                    this._nextState.destroy();
+                    this._nextState = null;
+                }
+            })
         );
     }
 
