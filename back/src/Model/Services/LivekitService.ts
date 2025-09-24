@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { LivekitTokenType, SpaceUser } from "@workadventure/messages";
+import { SpaceUser } from "@workadventure/messages";
 import {
     RoomServiceClient,
     AccessToken,
@@ -71,11 +71,11 @@ export class LiveKitService {
         await this.roomServiceClient.createRoom(createOptions);
     }
 
-    async generateToken(roomName: string, user: SpaceUser, tokenType: LivekitTokenType): Promise<string> {
+    async generateToken(roomName: string, user: SpaceUser): Promise<string> {
         const hashedRoomName = this.getHashedRoomName(roomName);
 
         const token = new AccessToken(this.livekitApiKey, this.livekitApiSecret, {
-            identity: this.getParticipantIdentity(user.spaceUserId, tokenType),
+            identity: this.getParticipantIdentity(user.spaceUserId),
             name: user.name,
             metadata: JSON.stringify({
                 userId: user.spaceUserId,
@@ -85,8 +85,10 @@ export class LiveKitService {
 
         token.addGrant({
             room: hashedRoomName,
-            canPublish: tokenType === LivekitTokenType.STREAMER,
-            canSubscribe: tokenType === LivekitTokenType.WATCHER,
+            // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
+            // not have published, its VideoBox will never be visible by anyone anyway.
+            canPublish: true,
+            canSubscribe: true,
             roomJoin: true,
             canPublishSources: [
                 TrackSource.CAMERA,
@@ -116,18 +118,18 @@ export class LiveKitService {
         }
     }
 
-    private getParticipantIdentity(participantName: string, tokenType: LivekitTokenType): string {
-        return participantName + "@" + (tokenType === LivekitTokenType.STREAMER ? "STREAMER" : "WATCHER");
+    private getParticipantIdentity(participantName: string): string {
+        return participantName;
     }
 
-    async removeParticipant(roomName: string, participantName: string, tokenType: LivekitTokenType): Promise<void> {
+    async removeParticipant(roomName: string, participantName: string): Promise<void> {
         try {
             const rooms = await this.roomServiceClient.listRooms([this.getHashedRoomName(roomName)]);
 
             if (rooms && rooms.length > 0) {
                 const participants = await this.roomServiceClient.listParticipants(this.getHashedRoomName(roomName));
                 const participantExists = participants.some(
-                    (p) => p.identity === this.getParticipantIdentity(participantName, tokenType)
+                    (p) => p.identity === this.getParticipantIdentity(participantName)
                 );
 
                 if (!participantExists) {

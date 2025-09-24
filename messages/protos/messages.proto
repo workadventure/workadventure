@@ -972,20 +972,13 @@ message CancelSwitchMessage {
   string strategy = 1;
 }
 
-enum LivekitTokenType {
-  WATCHER = 0;
-  STREAMER = 1;
-}
-
 message LivekitInvitationMessage {
   string token = 1;
   string serverUrl = 2;
   bool shouldJoinRoomImmediately = 3;
-  LivekitTokenType tokenType = 4;
 }
 
 message LivekitDisconnectMessage {
-  LivekitTokenType tokenType = 1;
 }
 
 message UserReadyForSwitchEvent {
