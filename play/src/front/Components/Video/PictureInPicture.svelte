@@ -3,11 +3,10 @@
     import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
     import Debug from "debug";
-    import { streamableCollectionStore, streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
+    import { streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import AudioStreamWrapper from "./PictureInPicture/AudioStreamWrapper.svelte";
     import {} from "./PictureInPicture/PictureInPictureWindow";
 
     const debug = Debug("app:PictureInPicture");
@@ -184,9 +183,4 @@
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
-    <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
-    <!-- So we need to play audio out of the PIP slot. -->
-    {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}
-        <AudioStreamWrapper {videoBox} />
-    {/each}
 </div>
