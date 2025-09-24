@@ -18,16 +18,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
-        console.log("XXXXXXX addUser start", user.spaceUserId);
-
         //TODO : passer en async
-
-        console.log(
-            "XXXXXXX AddUser",
-            user.spaceUserId,
-            "other users",
-            this.space.getUsersToNotify().map((u) => u.spaceUserId)
-        );
 
         if (this.streamingUsers.has(user.spaceUserId)) {
             console.warn("User already streaming in the room", user.spaceUserId);
@@ -72,8 +63,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     deleteUser(user: SpaceUser): void {
-        console.log("XXXXXXX deleteUser start", user.spaceUserId);
-
         const deleted = this.streamingUsers.delete(user.spaceUserId);
 
         if (!deleted) {
@@ -112,7 +101,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUserToNotify(user: SpaceUser, switchInProgress = false): void {
-        console.log("XXXXXXX addUserToNotify start", user.spaceUserId);
         if (this.receivingUsers.has(user.spaceUserId)) {
             console.warn("User already receiving in the room", user.spaceUserId);
             Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
@@ -120,13 +108,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
         }
 
         this.receivingUsers.set(user.spaceUserId, user);
-
-        console.log(
-            "XXXXXXX addUserToNotify",
-            user.spaceUserId,
-            "other users",
-            this.space.getUsersToNotify().map((u) => u.spaceUserId)
-        );
 
         // Let's only send the invitation if the user is not already streaming in the room
         if (!this.streamingUsers.has(user.spaceUserId)) {
@@ -138,8 +119,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     deleteUserFromNotify(user: SpaceUser): void {
-        console.log("XXXXXXX deleteUserFromNotify start", user.spaceUserId);
-
         const deleted = this.receivingUsers.delete(user.spaceUserId);
         if (!deleted) {
             console.warn("User to delete not found in receiving users", user.spaceUserId);
