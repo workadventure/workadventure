@@ -33,7 +33,6 @@ export class LivekitConnection {
     private initialize() {
         this.unsubscribers.push(
             this.space.observePrivateEvent(CommunicationMessageType.LIVEKIT_INVITATION_MESSAGE).subscribe((message) => {
-                console.warn("XXXXXX LivekitConnection LIVEKIT_INVITATION_MESSAGE received", message);
                 const serverUrl = message.livekitInvitationMessage.serverUrl;
                 const token = message.livekitInvitationMessage.token;
 
@@ -83,7 +82,6 @@ export class LivekitConnection {
             console.error("LivekitRoom not found");
             throw new Error("LivekitRoom not found");
         }
-        console.warn("XXXXXX LivekitConnection.joinRoom ");
 
         try {
             await this.livekitRoom?.joinRoom();

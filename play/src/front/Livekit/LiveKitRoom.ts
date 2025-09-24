@@ -22,7 +22,6 @@ import {
 } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore as screenSharingLocalStream } from "../Stores/ScreenSharingStore";
 import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stores/ApparentMediaContraintStore";
-import { localUserStore } from "../Connection/LocalUserStore";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
@@ -88,7 +87,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
         this.joinRoomCalled = true;
-        console.trace("WWWWWWW ENTERING LiveKitRoomWatch joinRoom", localUserStore.getName());
 
         try {
             room = this.room ?? (await this.prepareConnection());
@@ -116,7 +114,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
                     return;
                 }
-                console.warn("WWWWWWW JOINING ROOM", localUserStore.getName(), participant.sid, id);
 
                 this.participants.set(
                     participant.sid,
@@ -362,7 +359,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (spaceUser.spaceUserId === this.space.mySpaceUserId) {
             return;
         }
-        console.warn("WWWWWWW Participant connected", localUserStore.getName(), participant.sid, id);
         this.participants.set(
             participant.sid,
             new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
