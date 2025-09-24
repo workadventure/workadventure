@@ -73,6 +73,12 @@ export abstract class CommunicationState implements ICommunicationState {
     }
 
     protected setupSwitchTimeout(): void {
+        if (this._switchTimeout) {
+            console.warn("Switch timeout already set");
+            clearTimeout(this._switchTimeout);
+            this._switchTimeout = null;
+        }
+
         this._switchTimeout = setTimeout(() => {
             this.executeFinalSwitch().catch((e) => {
                 Sentry.captureException(e);

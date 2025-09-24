@@ -56,7 +56,7 @@ export class LivekitState extends CommunicationState {
     }
     async handleUserDeleted(user: SpaceUser): Promise<void> {
         if (this.shouldSwitchToNextState()) {
-            this.switchToNextState(undefined);
+            this.switchToNextState();
         }
 
         if (this._nextStatePromise) {
@@ -99,13 +99,8 @@ export class LivekitState extends CommunicationState {
         await super.handleUserDeleted(user);
     }
 
-    private switchToNextState(user: SpaceUser | undefined): void {
+    private switchToNextState(): void {
         this._nextStatePromise = Promise.resolve(new WebRTCState(this._space, this._communicationManager));
-        if (user) {
-            this._readyUsers.add(user.spaceUserId);
-            this.notifyUserOfCurrentStrategy(user, this._nextCommunicationType);
-        }
-
         this.notifyAllUsersToPrepareSwitchToNextState();
         this.setupSwitchTimeout();
     }

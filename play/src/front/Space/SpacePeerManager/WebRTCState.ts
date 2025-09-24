@@ -53,17 +53,6 @@ export class WebRTCState implements ICommunicationState {
         );
 
         this._rxJsUnsubscribers.push(
-            this._space
-                .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
-                .subscribe((message) => {
-                    if (message.communicationStrategyMessage.strategy === CommunicationType.LIVEKIT) {
-                        const nextState = new LivekitState(this._space, this._streamableSubjects);
-                        this._space.spacePeerManager.setState(nextState);
-                    }
-                })
-        );
-
-        this._rxJsUnsubscribers.push(
             this._space.observePrivateEvent(CommunicationMessageType.CANCEL_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.cancelSwitchMessage.strategy === CommunicationType.LIVEKIT && this._nextState) {
                     this._nextState.destroy();
