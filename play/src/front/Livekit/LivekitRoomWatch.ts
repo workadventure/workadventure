@@ -152,6 +152,14 @@ export class LiveKitRoomWatch implements LiveKitRoom {
     }
 
     private handleParticipantDisconnected(participant: Participant) {
+        const localParticipant = this.participants.get(participant.sid);
+
+        if (localParticipant) {
+            localParticipant.destroy();
+        } else {
+            console.warn("localParticipant not found for participant");
+        }
+
         this.participants.delete(participant.sid);
     }
 
