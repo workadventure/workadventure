@@ -3,6 +3,9 @@ import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import {expectLivekitConnectionsCountToBe, expectWebRtcConnectionsCountToBe} from "./utils/webRtc";
+
+test.setTimeout(240_000);
 
 test.describe('Meeting actions test', () => {
 
@@ -80,6 +83,9 @@ test.describe('Meeting actions test', () => {
         await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userMallory, 160, 160);
 
+        // At this point, we should have 3 webRtc connections open
+        await expectWebRtcConnectionsCountToBe(page, 3);
+
         await using userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userJohn, 160, 160);
 
@@ -96,6 +102,11 @@ test.describe('Meeting actions test', () => {
         await expect(page.locator('#cameras-container').getByText("Eve")).toBeVisible({timeout: 30_000});
         await expect(page.locator('#cameras-container').getByText("Mallory")).toBeVisible({timeout: 30_000});
         await expect(page.locator('#cameras-container').getByText("John")).toBeVisible({timeout: 30_000});
+
+        // At this point, we should have 0 webRtc connections open and 4 livekit connections
+        await expectLivekitConnectionsCountToBe(page, 4);
+        await expectWebRtcConnectionsCountToBe(page, 0);
+
 
         // Clean up
         await page.close();

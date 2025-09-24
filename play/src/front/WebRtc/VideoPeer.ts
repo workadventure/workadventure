@@ -10,6 +10,7 @@ import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -182,6 +183,7 @@ export class VideoPeer extends Peer implements Streamable {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended
     ) {
+        incrementWebRtcConnectionsCount();
         const bandwidth = get(videoBandwidthStore);
         const firefoxBrowser = isFirefox();
 
@@ -390,6 +392,8 @@ export class VideoPeer extends Peer implements Streamable {
                 return;
             }
             this.closing = true;
+
+            decrementWebRtcConnectionsCount();
 
             // Unsubscribe from subscriptions
             this.onBlockSubscribe.unsubscribe();

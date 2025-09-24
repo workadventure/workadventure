@@ -14,6 +14,7 @@ import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
+import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -92,6 +93,7 @@ export class LiveKitParticipant {
         private _streamableSubjects: StreamableSubjects,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
+        incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
         this.boundHandleTrackUnsubscribed = this.handleTrackUnsubscribed.bind(this);
         this.boundHandleTrackMuted = this.handleTrackMuted.bind(this);
@@ -461,6 +463,7 @@ export class LiveKitParticipant {
     }
 
     public destroy() {
+        decrementLivekitConnectionsCount();
         // Clean up video elements
 
         const videoElements = this.space.spacePeerManager.getVideoContainers(this._spaceUser.spaceUserId) || [];
