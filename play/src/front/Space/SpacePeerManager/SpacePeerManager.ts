@@ -25,12 +25,9 @@ export interface StreamableSubjects {
 }
 
 export interface SimplePeerConnectionInterface {
-    closeAllConnections(): void;
     blockedFromRemotePlayer(userId: string): void;
-    unregister(): void;
+    destroy(): void;
     dispatchStream(mediaStream: MediaStream): void;
-    cleanupStore(): void;
-    removePeer(userId: string): void;
 }
 
 export interface PeerFactoryInterface {

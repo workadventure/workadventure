@@ -38,7 +38,6 @@ vi.mock("../../Connection/ConnectionManager", () => {
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },

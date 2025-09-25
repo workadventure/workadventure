@@ -14,7 +14,6 @@ const defaultRoomConnectionMock = {
 
 // const defaultPeerStoreMock = {
 //     getSpaceStore: vi.fn(),
-//     cleanupStore: vi.fn(),
 //     removePeer: vi.fn(),
 //     getPeer: vi.fn(),
 // };
@@ -23,7 +22,6 @@ const defaultRoomConnectionMock = {
 vi.mock("../../Stores/PeerStore", () => ({
     screenSharingPeerStore: {
         getSpaceStore: vi.fn(),
-        cleanupStore: vi.fn(),
         removePeer: vi.fn(),
         getPeer: vi.fn(),
     },
