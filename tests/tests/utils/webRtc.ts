@@ -2,6 +2,7 @@ import {expect, Page} from "@playwright/test";
 
 export function getWebRtcConnectionsCount(page: Page): Promise<number> {
     return page.evaluate(async () => {
+        console.log("Current webRTC connections count:", window.e2eHooks.getWebRtcConnectionsCount());
         return window.e2eHooks.getWebRtcConnectionsCount();
     });
 }
