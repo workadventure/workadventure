@@ -3,7 +3,7 @@
     import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
     import Debug from "debug";
-    import { streamablePictureInPictureStore } from "../../Stores/StreamableCollectionStore";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -73,7 +73,7 @@
         activePictureInPictureStore.set(false);
     }
 
-    const unsubscribeStreamablePictureInPictureStore = streamablePictureInPictureStore.subscribe((streamables) => {
+    const unsubscribeStreamablePictureInPictureStore = streamableCollectionStore.subscribe((streamables) => {
         if (streamables.size == 0) {
             destroyPictureInPictureComponent();
         }
@@ -83,11 +83,10 @@
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
-        console.log("Request Picture in Picture mode", $streamablePictureInPictureStore.size);
-        // We activate the picture in picture mode only if we have a streamable in the collection
-        //if ($streamablePictureInPictureStore.size == 0) return;
 
-        console.log("Request Picture in Picture mode", pipWindow, pipRequested);
+        // We activate the picture in picture mode only if we have a streamable in the collection
+        if ($streamableCollectionStore.size == 1) return;
+
         if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
@@ -105,7 +104,7 @@
         }
 
         let pipHeightOption =
-            ($streamablePictureInPictureStore.size > 0 ? $streamablePictureInPictureStore.size : 1) * 227 + 80 + 78;
+            ($streamableCollectionStore.size > 1 ? $streamableCollectionStore.size - 1 : 1) * 227 + 80 + 78;
         if (window.screen.availHeight && pipHeightOption > window.screen.availHeight) {
             pipHeightOption = window.screen.availHeight;
         }

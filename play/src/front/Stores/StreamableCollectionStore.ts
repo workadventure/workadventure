@@ -223,17 +223,6 @@ const streamableToVideoBox = (streamable: Streamable, priority: number): VideoBo
 
 export const streamableCollectionStore = createStreamableCollectionStore();
 
-/**
- * A store containing only the streamables that should be displayed in picture-in-picture mode
- */
-export const streamablePictureInPictureStore = derived(streamableCollectionStore, ($streamableCollectionStore) => {
-    return new Map(
-        Array.from($streamableCollectionStore.values())
-            .filter((videoBox) => get(videoBox.streamable)?.displayInPictureInPictureMode)
-            .map((videoBox) => [videoBox.uniqueId, videoBox])
-    );
-});
-
 // Store to track if we are in a conversation with someone else
 export const isInRemoteConversation = derived(
     [videoStreamElementsStore, screenShareStreamElementsStore, scriptingVideoStore, silentStore],
