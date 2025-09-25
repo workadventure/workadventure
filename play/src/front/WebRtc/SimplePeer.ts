@@ -38,6 +38,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     private screenSharePeers: Map<string, ScreenSharingPeer> = new Map();
     // A map of all video peers, indexed by spaceUserId
     private videoPeers: Map<string, VideoPeer> = new Map();
+    private abortController = new AbortController();
 
     constructor(
         private _space: SpaceInterface,
@@ -168,8 +169,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // This would be symmetrical to the way we handle disconnection.
 
         (async () => {
-            // TODO: add abort signal support
-            const users = await this._space.getUsers();
+            const users = await this._space.getUsers({ signal: this.abortController.signal });
             const spaceUser = users.get(user.userId);
             if (!spaceUser) {
                 console.error("Space user not found for userId", user.userId);
@@ -427,6 +427,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         for (const subscription of this._rxJsUnsubscribers) {
             subscription.unsubscribe();
         }
+        this.abortController.abort();
     }
 
     private receiveWebrtcSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
