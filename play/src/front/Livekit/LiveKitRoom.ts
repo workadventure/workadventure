@@ -334,8 +334,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         const audioTrack = mediaStream.getAudioTracks()[0];
         if (!audioTrack) {
-            console.error("No video track found in the media stream");
-            Sentry.captureException(new Error("No video track found in the media stream"));
+            console.error("No audio track found in the media stream");
+            Sentry.captureException(new Error("No audio track found in the media stream"));
             return;
         }
 
@@ -417,7 +417,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.space.allVideoStreamStore.set(key, value);
         }
 
-        //TODO : revoir impl iteration sur tout les participants a chaque fois
+        //TODO: review implementation - iterating over all participants each time
         this.participants.forEach((participant) => {
             if (speakers.map((speaker) => speaker.sid).includes(participant.participant.sid)) {
                 participant.setActiveSpeaker(true);
