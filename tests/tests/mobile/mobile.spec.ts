@@ -43,10 +43,8 @@ test.describe('Mobile @nowebkit @nodesktop', () => {
         await Menu.openMenu(pageAlice);
         await Menu.closeMenu(pageAlice);
         
-        // check if we can pin the camera of other user
-        // to do this we use the pin button to unpin the video
-        await pageAlice.locator('#cameras-container').getByRole('button').nth(1).click();
-        await pageAlice.getByRole('button', {name: 'Pin', exact: true }).click();
+        // check if we can zoom the camera of other user
+        await pageAlice.locator('#cameras-container').locator('button.full-screen-button').nth(1).click();
 
         // Second browser
         const pageJohn = await getPage(browser, 'John', Map.url("empty"));
@@ -81,10 +79,9 @@ test.describe('Mobile @nowebkit @nodesktop', () => {
         // check if we can still open and close burgerMenu when 2 in proximity chat with cam on
         await Menu.openMenu(pageJohn);
         await Menu.closeMenu(pageJohn);
-        
-        await pageJohn.locator('#cameras-container').getByRole('button').nth(1).click();
-        await pageJohn.getByRole('button', {name: 'Pin', exact: true }).click();
-        
+
+        await pageJohn.locator('#cameras-container').locator('button.full-screen-button').nth(1).click();
+
 
         await pageAlice.close();
         await pageJohn.close();
