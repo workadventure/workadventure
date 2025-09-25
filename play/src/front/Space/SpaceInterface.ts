@@ -96,7 +96,7 @@ export interface SpaceInterface {
     readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
-    getUsers(options: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
+    getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
 }
 
 export type ReactiveSpaceUser = {

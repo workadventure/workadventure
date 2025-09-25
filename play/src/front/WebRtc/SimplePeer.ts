@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import { get } from "svelte/store";
 import { Subscription } from "rxjs";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
@@ -166,14 +167,29 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
 
-        const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
+        (async () => {
+            // TODO: add abort signal support
+            const users = await this._space.getUsers();
+            const spaceUser = users.get(user.userId);
+            if (!spaceUser) {
+                console.error("Space user not found for userId", user.userId);
+                Sentry.captureMessage("Space user not found for userId " + user.userId);
+                return;
+            }
+            this.createPeerConnection(user, spaceUser);
+        })().catch((e) => {
+            console.error("An error occurred in receiveWebrtcStart", e);
+            Sentry.captureException(e);
+        });
+
+        /*const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
 
         if (!extendedSpaceUser) {
             console.error("Extended space user not found for user", user.userId);
             return;
         }
 
-        this.createPeerConnection(user, extendedSpaceUser);
+        this.createPeerConnection(user, extendedSpaceUser);*/
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
