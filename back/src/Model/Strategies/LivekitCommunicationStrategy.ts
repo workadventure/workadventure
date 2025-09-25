@@ -104,7 +104,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                     Sentry.captureException(error);
                 });
             }
-            this.receivingUsers.clear();
+
             this.livekitService.deleteRoom(this.space.getSpaceName()).catch((error) => {
                 console.error(`Error deleting room ${this.space.getSpaceName()} from Livekit:`, error);
                 Sentry.captureException(error);
@@ -141,10 +141,6 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     async addUserToNotify(user: SpaceUser, switchInProgress = false): Promise<void> {
-        if (!this.createRoomPromise) {
-            return Promise.resolve();
-        }
-
         if (this.receivingUsers.has(user.spaceUserId)) {
             console.warn("User already receiving in the room", user.spaceUserId);
             Sentry.captureMessage(`User already receiving in the room ${user.spaceUserId}`);
@@ -153,6 +149,9 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         this.receivingUsers.set(user.spaceUserId, user);
 
+        if (!this.createRoomPromise) {
+            return Promise.resolve();
+        }
         await this.createRoomPromise;
 
         // Let's only send the invitation if the user is not already streaming in the room
