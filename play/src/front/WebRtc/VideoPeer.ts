@@ -109,6 +109,9 @@ export class VideoPeer extends Peer implements Streamable {
         if (this.connectTimeout) {
             clearTimeout(this.connectTimeout);
         }
+        if (this.closing) {
+            return;
+        }
         this._statusStore.set("connected");
 
         this._connected = true;
