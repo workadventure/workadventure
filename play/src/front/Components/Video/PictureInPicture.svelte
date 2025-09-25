@@ -82,13 +82,17 @@
     let pipRequested = false;
 
     function requestPictureInPicture() {
+        debug("Request Picture in Picture mode");
+        console.log("Request Picture in Picture mode", $streamablePictureInPictureStore.size);
         // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamablePictureInPictureStore.size == 0) return;
+        //if ($streamablePictureInPictureStore.size == 0) return;
 
+        console.log("Request Picture in Picture mode", pipWindow, pipRequested);
         if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
+            console.warn("Request Picture in Picture mode but not allowed by the user settings");
             return;
         }
 
@@ -100,12 +104,17 @@
             return;
         }
 
+        let pipHeightOption =
+            ($streamablePictureInPictureStore.size > 0 ? $streamablePictureInPictureStore.size : 1) * 227 + 80 + 78;
+        if (window.screen.availHeight && pipHeightOption > window.screen.availHeight) {
+            pipHeightOption = window.screen.availHeight;
+        }
         const options = {
             preferInitialWindowPlacement: true,
             // 227: the height of a video
             // 80: the height of the action bar
             // 78: the height of the video feedback of the current user
-            height: `${$streamablePictureInPictureStore.size * 227 + 80 + 78}`,
+            height: `${pipHeightOption}`,
             width: "400",
         };
 

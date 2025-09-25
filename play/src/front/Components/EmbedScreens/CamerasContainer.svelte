@@ -47,6 +47,7 @@
         orderedStreamableCollectionStore,
         maxVisibleVideosStore,
     } from "../../Stores/OrderedStreamableCollectionStore";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -302,6 +303,7 @@
         class:not-highlighted={!isOnOneLine}
         class:mt-0={!isOnOneLine}
         class:h-full={isOnOneLine && oneLineMode === "vertical"}
+        class:m-2={$activePictureInPictureStore}
         id="cameras-container"
         data-testid="cameras-container"
     >
@@ -315,6 +317,8 @@
                     data-unique-id="my-camera"
                     style={`top: -50px; width: ${videoWidth / 3}px; max-width: ${videoWidth / 3}px;${
                         videoHeight ? `height: ${videoHeight / 3}px; max-height: ${videoHeight / 3}px;` : ""
+                    } ${
+                        $activePictureInPictureStore ? "min-width: 224px; min-height: 130px; margin-right: 0.5rem;" : ""
                     }`}
                     class="pointer-events-auto basis-40 shrink-0 min-h-24 grow camera-box first-of-type:mt-auto last-of-type:mb-auto"
                     class:aspect-video={videoHeight === undefined}
