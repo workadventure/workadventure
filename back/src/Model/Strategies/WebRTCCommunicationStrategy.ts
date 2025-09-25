@@ -163,10 +163,10 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
 
     private establishConnection(user1: SpaceUser, user2: SpaceUser): void {
         const credentials1 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user1.spaceUserId).digest("hex")
+            crypto.createHash("md5").update(user1.spaceUserId).digest("hex").slice(0, 5)
         );
         const credentials2 = this._credentialsService.generateCredentials(
-            crypto.createHash("md5").update(user2.spaceUserId).digest("hex")
+            crypto.createHash("md5").update(user2.spaceUserId).digest("hex").slice(0, 5)
         );
         this.sendWebRTCStart(user1.spaceUserId, user2.spaceUserId, credentials1, true);
         this.sendWebRTCStart(user2.spaceUserId, user1.spaceUserId, credentials2, false);
