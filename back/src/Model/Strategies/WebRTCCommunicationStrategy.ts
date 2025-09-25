@@ -72,14 +72,16 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public addUser(newUser: SpaceUser): void {
-        const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
+        // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
+        // the space for that.
+        /*const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
 
         existingUsers.forEach((existingUser) => {
             if (this.shouldEstablishConnection(newUser, existingUser)) {
                 this.establishConnection(newUser, existingUser);
                 return;
             }
-        });
+        });*/
     }
 
     public deleteUser(user: SpaceUser): void {

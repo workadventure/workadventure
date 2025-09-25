@@ -143,11 +143,11 @@ export class Space implements SpaceForSpaceConnectionInterface {
         }
 
         this._localWatchers.add(spaceUser.spaceUserId);
-        this.forwarder.addUserToNotify(spaceUser);
         this._clientEventsEmitter.emitWatchSpace(this.name);
 
         // Wait for the list of users to have been received from the back and then send all the users to the front
         await this.dispatcher.notifyMeInit(watcher);
+        this.forwarder.addUserToNotify(spaceUser);
     }
 
     public handleUnwatch(watcher: Socket) {

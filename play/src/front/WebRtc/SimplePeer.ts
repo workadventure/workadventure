@@ -167,11 +167,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
 
-        //start connection
-        if (!user.initiator) {
-            return;
-        }
-
         const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
 
         if (!extendedSpaceUser) {
@@ -421,17 +416,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
     private receiveWebrtcSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
         try {
-            //if offer type, create peer connection
-            if (data.signal.type === "offer") {
-                const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
-
-                if (!extendedSpaceUser) {
-                    console.error("Extended space user not found for user", data.userId);
-                    return;
-                }
-
-                this.createPeerConnection(data, extendedSpaceUser);
-            }
             const peer = this.videoPeers.get(data.userId);
 
             if (!(peer instanceof VideoPeer)) {
