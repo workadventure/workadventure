@@ -18,7 +18,7 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
     }
 
     addUser(user: SpaceUser, switchInProgress = false): void {
-        //TODO : passer en async
+        //TODO: make this async
 
         if (this.streamingUsers.has(user.spaceUserId)) {
             console.warn("User already streaming in the room", user.spaceUserId);
