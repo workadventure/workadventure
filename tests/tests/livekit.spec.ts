@@ -80,11 +80,11 @@ test.describe('Meeting actions test', () => {
         await using userEve = await getPage(browser, 'Eve', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userEve, 160, 160);
 
+        // At this point, we should have 2 webRtc connections open
+        await expectWebRtcConnectionsCountToBe(page, 2);
+
         await using userMallory = await getPage(browser, 'Mallory', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userMallory, 160, 160);
-
-        // At this point, we should have 3 webRtc connections open
-        await expectWebRtcConnectionsCountToBe(page, 3);
 
         await using userJohn = await getPage(browser, 'John', publicTestMapUrl("tests/E2E/empty.json", "livekit"));
         await Map.teleportToPosition(userJohn, 160, 160);
@@ -107,6 +107,16 @@ test.describe('Meeting actions test', () => {
         await expectLivekitConnectionsCountToBe(page, 4);
         await expectWebRtcConnectionsCountToBe(page, 0);
 
+        // Let's move out 2 users (because dependending on the machine, the number where we switch from WebRtc to Livekit may be 4 or 5)
+        await Map.teleportToPosition(userJohn, 16, 16);
+        await Map.teleportToPosition(userMallory, 300, 300);
+
+        // We need to wait 5 seconds for the complete switch to be done
+        await new Promise<void>(resolve => {setTimeout(resolve, 5000)});
+
+        // At this point, we should have 2 webRtc connections open and 0 livekit connections
+        await expectLivekitConnectionsCountToBe(page, 0);
+        await expectWebRtcConnectionsCountToBe(page, 2);
 
         // Clean up
         await page.close();
