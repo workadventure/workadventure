@@ -70,6 +70,7 @@ import { PositionInterface } from "../Model/PositionInterface";
 import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
+import { webRTCCredentialsService } from "../Model/Services/WebRTCCredentialsService";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
@@ -1406,11 +1407,7 @@ export class SocketManager {
 
     private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
         if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
-            return {
-                webRtcUser: username,
-                webRtcPassword: password,
-            };
+            return webRTCCredentialsService.generateCredentials(userId);
         }
         return {};
     }
