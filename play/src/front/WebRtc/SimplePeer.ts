@@ -1,6 +1,5 @@
 import { get } from "svelte/store";
 import { Subscription } from "rxjs";
-import { Deferred } from "ts-deferred";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
@@ -571,18 +570,5 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
         }
         this.scriptingApiStream = mediaStream;
-    }
-
-    setSpace(spaceFilter: SpaceInterface | undefined) {
-        if (spaceFilter) {
-            this.spaceDeferred.resolve(spaceFilter);
-        } else {
-            this.spaceDeferred = new Deferred<SpaceInterface>();
-        }
-    }
-
-    public removePeer(userId: string) {
-        // this.space.livekitVideoStreamStore.delete(userId);
-        // this.space.screenSharingPeerStore.delete(userId);
     }
 }
