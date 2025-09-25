@@ -1,15 +1,10 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
     import NoVideoSvg from "../images/no-video.svg";
-    import PinSvg from "../images/pin.svg";
-    //import BubbleTalkPng from "../images/bubble-talk.png";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { VideoBox } from "../../Space/Space";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
@@ -82,19 +77,6 @@
         close();
     }
 
-    function pin() {
-        analyticsClient.pinMeetingAction();
-        if (videoEnabled) {
-            highlightedEmbedScreen.toggleHighlight(embedScreen);
-            embedScreenLayoutStore.set(LayoutMode.Presentation);
-        }
-        close();
-    }
-
-    /*function sendPrivateMessage() {
-        console.info("Not implemented yet");
-    }*/
-
     function toggleActionMenu(value: boolean) {
         moreActionOpened = value;
     }
@@ -126,17 +108,6 @@
     on:keydown={() => toggleActionMenu(!moreActionOpened)}
     on:mouseleave={() => close()}
 >
-    <!-- Pin -->
-    {#if videoEnabled}
-        <button
-            class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
-            on:click|preventDefault|stopPropagation={() => pin()}
-        >
-            <img src={PinSvg} class="w-4 h-4" alt="" draggable="false" />
-            {$LL.camera.menu.pin()}
-        </button>
-    {/if}
-
     {#if $isMicrophoneEnabled}
         <!-- Mute audio user -->
         <button

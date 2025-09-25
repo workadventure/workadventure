@@ -43,7 +43,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         muteAudioEveryBody: "静音所有人",
         muteVideoUser: "关闭视频",
         muteVideoEveryBody: "关闭所有人的视频",
-        pin: "固定",
         blockOrReportUser: "屏蔽或举报用户",
     },
 };
