@@ -31,7 +31,6 @@ import {
     SendUserMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
-    TurnCredentialsAnswer,
     UpdateMapToNewestWithKeyMessage,
     UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
@@ -201,9 +200,9 @@ export class SocketManager {
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            roomJoinedMessage.webRtcUserName = username;
-            roomJoinedMessage.webRtcPassword = password;
+            const { webRtcUserName, webRtcPassword } = webRTCCredentialsService.generateCredentials(user.id.toString());
+            roomJoinedMessage.webRtcUserName = webRtcUserName;
+            roomJoinedMessage.webRtcPassword = webRtcPassword;
         }
 
         user.write({
@@ -571,26 +570,6 @@ export class SocketManager {
         });
     }
 
-    /**
-     * Computes a unique user/password for the TURN server, using a shared secret between the WorkAdventure API server
-     * and the Coturn server.
-     * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
-     */
-    // TODO: this function is now duplicated in WebRTCCredentialsService, we should probably remove this.
-    private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
-        const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
-        const username = [unixTimeStamp, name].join(":");
-        const hmac = crypto.createHmac("sha1", secret);
-        hmac.setEncoding("base64");
-        hmac.write(username);
-        hmac.end();
-        const password = String(hmac.read() || "");
-        return {
-            username,
-            password,
-        };
-    }
-
     //disconnect user
     private disConnectedUser(user: User, group: Group) {
         user.write({
@@ -654,7 +633,7 @@ export class SocketManager {
                     break;
                 }
                 case "turnCredentialsQuery": {
-                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    const answer = webRTCCredentialsService.generateCredentials(user.id.toString());
                     answerMessage.answer = {
                         $case: "turnCredentialsAnswer",
                         turnCredentialsAnswer: answer,
@@ -1403,13 +1382,6 @@ export class SocketManager {
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
-    }
-
-    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
-        if (TURN_STATIC_AUTH_SECRET) {
-            return webRTCCredentialsService.generateCredentials(userId);
-        }
-        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
