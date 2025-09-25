@@ -33,11 +33,8 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
 
         await this.createRoomPromise;
 
-        // Register the user as streaming
-        this.streamingUsers.set(user.spaceUserId, user);
-
         // Send invitation to all receiving users if this is the first room creation
-        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 1) {
+        if (this.receivingUsers.size > 0 && this.streamingUsers.size === 0) {
             for (const receivingUser of this.receivingUsers.values()) {
                 this.sendLivekitInvitationMessage(receivingUser, switchInProgress).catch((error) => {
                     console.error(`Error generating token for user ${receivingUser.spaceUserId} in Livekit:`, error);
@@ -45,6 +42,8 @@ export class LivekitCommunicationStrategy implements ICommunicationStrategy {
                 });
             }
         }
+        // Register the user as streaming
+        this.streamingUsers.set(user.spaceUserId, user);
 
         // Send invitation to the new user if not already receiving
         if (!this.receivingUsers.has(user.spaceUserId)) {
