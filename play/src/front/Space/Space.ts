@@ -83,6 +83,9 @@ export class Space implements SpaceInterface {
     private readonly observeVideoPeerAdded: Subscription;
     private readonly observeScreenSharingPeerAdded: Subscription;
 
+    // TODO: add a isStreamingStore to say that the current user is willing to stream in this space (independent of the actual camera/microphone state)
+    private readonly _isStreamingStore: Writable<boolean>;
+
     private _isDestroyed = false;
     private initPromise: Deferred<void> | undefined;
 
@@ -245,6 +248,13 @@ export class Space implements SpaceInterface {
         this.observeSyncUserRemoved = this.observePrivateEvent("removeSpaceUserMessage").subscribe((message) => {
             this.removeUser(message.removeSpaceUserMessage.spaceUserId);
         });
+
+        this._isStreamingStore = writable(
+            filterType === FilterType.ALL_USERS &&
+                (this._propertiesToSync.includes("cameraState") ||
+                    this._propertiesToSync.includes("microphoneState") ||
+                    this._propertiesToSync.includes("screenSharingState"))
+        );
     }
 
     /**,
@@ -770,5 +780,37 @@ export class Space implements SpaceInterface {
             streamable: writable(undefined),
             priority: 0,
         };
+    }
+
+    /**
+     * Start streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    public startStreaming() {
+        if (this.filterType === FilterType.ALL_USERS) {
+            throw new Error("Cannot start streaming in a ALL_USERS space because everyone is always streaming");
+        }
+        this.emitUpdateUser({
+            megaphoneState: true,
+        });
+        this._isStreamingStore.set(true);
+    }
+
+    /**
+     * Stop streaming the local camera and microphone to other users in the space.
+     * This will trigger an error if the filter type is ALL_USERS (because everyone is always streaming in a ALL_USERS space).
+     */
+    public stopStreaming() {
+        if (this.filterType === FilterType.ALL_USERS) {
+            throw new Error("Cannot stop streaming in a ALL_USERS space because everyone is always streaming");
+        }
+        this.emitUpdateUser({
+            megaphoneState: false,
+        });
+        this._isStreamingStore.set(false);
+    }
+
+    get isStreamingStore(): Readable<boolean> {
+        return this._isStreamingStore;
     }
 }
