@@ -1,10 +1,12 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
     import { z } from "zod";
     import Debug from "debug";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import {
+        activePictureInPictureStore,
+        askPictureInPictureActivatingStore, pictureInPictureSupportedStore,
+    } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
@@ -14,8 +16,6 @@
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
-
-    let activePictureInPictureSubscriber: Unsubscriber | undefined;
 
     /* eslint-disable svelte/no-dom-manipulating */
 
@@ -64,8 +64,6 @@
         }
         parentDivElement.append(divElement);
 
-        if (activePictureInPictureSubscriber) activePictureInPictureSubscriber();
-
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
@@ -100,6 +98,7 @@
         const windowExtResult = WindowExtSchema.safeParse(window);
         if (!windowExtResult.success) {
             debug("Picture in Picture is not supported");
+            pictureInPictureSupportedStore.set(false);
             return;
         }
 
@@ -161,6 +160,20 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
+        if (WindowExtSchema.safeParse(window).success === false) {
+            debug("PictureInPicture is not supported by the browser");
+            pictureInPictureSupportedStore.set(false);
+        }
+
+        const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
+            if (active) {
+                requestPictureInPicture();
+            }else{
+                destroyPictureInPictureComponent();
+            }
+        });
+
+
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
@@ -170,6 +183,7 @@
         });
 
         return () => {
+            askPictureInPictureActivatingSubscriber();
             unsubscribe();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
