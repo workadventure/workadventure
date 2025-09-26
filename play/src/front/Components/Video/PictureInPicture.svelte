@@ -8,12 +8,15 @@
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
+    let mapImage = "https://member.workadventu.re/images/funnel/background.jpg";
 
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
 
@@ -69,7 +72,7 @@
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
-        pipRequested = false;
+        enterPictureInPictureEventCalled = false;
         activePictureInPictureStore.set(false);
     }
 
@@ -79,20 +82,25 @@
         }
     });
 
-    let pipRequested = false;
+    let enterPictureInPictureEventCalled = false;
+    function handlerEnterPictureInPictureEvent() {
+        enterPictureInPictureEventCalled = true;
+        return requestPictureInPicture();
+    }
 
-    function requestPictureInPicture() {
+    //let pipRequested = false;
+    function requestPictureInPicture(): Promise<void> {
         debug("Request Picture in Picture mode");
 
         // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamableCollectionStore.size == 1) return;
-
-        if (pipWindow !== undefined || pipRequested) return;
+        if ($streamableCollectionStore.size == 1) return Promise.resolve();
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
-            console.warn("Request Picture in Picture mode but not allowed by the user settings");
-            return;
+            console.warn(
+                "requestPictureInPicture => Request Picture in Picture mode but not allowed by the user settings"
+            );
+            return Promise.resolve();
         }
 
         // request permission to use the picture in picture mode
@@ -100,9 +108,12 @@
         const windowExtResult = WindowExtSchema.safeParse(window);
         if (!windowExtResult.success) {
             debug("Picture in Picture is not supported");
-            return;
+            return Promise.resolve();
         }
 
+        // 227: the height of a video
+        // 80: the height of the action bar
+        // 78: the height of the video feedback of the current user
         let pipHeightOption =
             ($streamableCollectionStore.size > 1 ? $streamableCollectionStore.size - 1 : 1) * 227 + 80 + 78;
         if (window.screen.availHeight && pipHeightOption > window.screen.availHeight) {
@@ -110,16 +121,11 @@
         }
         const options = {
             preferInitialWindowPlacement: true,
-            // 227: the height of a video
-            // 80: the height of the action bar
-            // 78: the height of the video feedback of the current user
             height: `${pipHeightOption}`,
             width: "400",
         };
 
-        pipRequested = true;
-
-        window.documentPictureInPicture
+        return window.documentPictureInPicture
             .requestWindow(options)
             .then((newPipWindow: Window) => {
                 // Picture in picture is possible
@@ -131,7 +137,7 @@
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
 
                 copySteelSheet(pipWindow);
-                //pipWindow.document.body.style.backgroundColor = "black";
+                pipWindow.document.body.style.background = `url("${mapImage}")`;
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.justifyContent = "center";
                 pipWindow.document.body.style.alignItems = "start";
@@ -139,11 +145,10 @@
                 pipWindow.document.body.style.width = "100%";
                 pipWindow.document.body.append(divElement);
 
-                /*setTimeout(() => {
-                    divElement.style.display = "flex";
-                }, 1000);*/
-
                 activePictureInPictureStore.set(true);
+
+                // Analytics on the feature usage
+                analyticsClient.pictureInPicture();
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
@@ -156,18 +161,37 @@
         try {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
-            navigator.mediaSession.setActionHandler("enterpictureinpicture", requestPictureInPicture);
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            navigator.mediaSession.setActionHandler("enterpictureinpicture", handlerEnterPictureInPictureEvent);
         } catch (e: unknown) {
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
+            console.error("requestPictureInPicture => e", e);
         }
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
             } else {
-                requestPictureInPicture();
+                setTimeout(() => {
+                    // Use a timeout to avoid calling the requestPictureInPicture too early
+                    // "enterpictureinpicture" event should be processed before
+                    // If "enterpictureinpicture" was successfully processed, we do not call requestPictureInPicture
+                    if (enterPictureInPictureEventCalled) return;
+                    requestPictureInPicture().catch((error) => console.warn("requestPictureInPicture => error", error));
+                }, 1000);
             }
         });
+
+        try {
+            const currentScene = gameManager.getCurrentGameScene();
+            if (currentScene) {
+                const mapImage_ = currentScene.mapFile.properties?.find((p) => p.name === "mapImage")?.value;
+                if (mapImage_ && typeof mapImage_ === "string")
+                    mapImage = new URL(mapImage_, currentScene.getMapUrl()).toString();
+            }
+        } catch (e: unknown) {
+            console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
+        }
 
         return () => {
             unsubscribe();
@@ -188,7 +212,12 @@
 </script>
 
 <div bind:this={parentDivElement} class="h-full w-full">
-    <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
+    <div
+        bind:this={divElement}
+        class="h-full w-full bg-contrast/80"
+        class:backdrop-blur-md={$activePictureInPictureStore}
+        class:pt-1={$activePictureInPictureStore}
+    >
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
 </div>

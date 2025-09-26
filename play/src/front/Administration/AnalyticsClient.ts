@@ -926,5 +926,12 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+    pictureInPicture(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_picture_in_picture");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
