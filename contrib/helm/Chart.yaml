@@ -30,3 +30,8 @@ dependencies:
   - name: common
     version: 2.x.x
     repository: oci://registry-1.docker.io/bitnamicharts
+  - name: livekit-server
+    alias: livekitServer
+    version: 1.8.3
+    repository: https://helm.livekit.io
+    condition: livekitServer.enabled

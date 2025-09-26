@@ -688,3 +688,19 @@ redis:
 
   auth:
     enabled: false
+
+livekitServer:
+  # Livekit-server is a video conferencing server (SFU) that is used to relay video /audio streams in large bubbles / meetings.
+  enabled: false
+
+  storeKeysInSecret:
+    enabled: true
+    existingSecret: "livekit-keys-secret"
+
+
+  livekit:
+    redis:
+      address: todo_change_this:6379
+      db: 2
+
+    key_file: keys.yaml

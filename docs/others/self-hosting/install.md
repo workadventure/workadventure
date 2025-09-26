@@ -43,7 +43,8 @@ In order to host WorkAdventure you will need to host:
 - **Coturn**: this is a service that proxies the WebRTC video signal in case a user is on a network that does not allow
   peer-to-peer connections. Coturn is optional, but without Coturn, approximately 15% of the users will fail to establish
   a audio/video connection.
-- **Jitsi**: in large meeting rooms, Jitsi is used to broadcast video streams to all users.
+- **Livekit**: in large bubbles / meeting rooms (>4 people), Livekit is used to broadcast video streams to all users.
+- **Jitsi (legacy)**: in large meeting rooms, Jitsi is used to broadcast video streams to all users.
 - **OIDC Provider** (optional): this is the service that authenticates users. It is optional as you can run a WorkAdventure
   instance with only anonymous users.
 - **Synapse**: this is the server that hosts the Matrix chat rooms. It is optional.
@@ -54,12 +55,14 @@ flowchart LR
     subgraph Servers
     WorkAdventure
     Jitsi
+    Livekit
     Coturn
     Synapse
     end
     Browser1["Your browser"]
     Browser1-->WorkAdventure
-    Browser1-->Jitsi
+    Browser1-->Jitsi["Jitsi (legacy)"]
+    Browser1-->Livekit
     Browser1-->Coturn
     Browser1-.->Synapse
     WorkAdventure-.->OIDC[OIDC Provider - SSO]
@@ -69,11 +72,12 @@ flowchart LR
 ```
 
 > [!WARNING]  
-> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Jitsi,
+> In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Livekit, Jitsi,
 > Coturn and Synapse installs out of scope. OpenID Connect authentication is also out of scope for now.
 
+Livekit install guide: https://docs.livekit.io/home/self-hosting/deployment/  
 Jitsi install guide: https://jitsi.github.io/handbook/docs/devops-guide/  
-Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html
+Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html  
 Synapse install guide: https://element-hq.github.io/synapse/latest/setup/installation.html
 
 ## Installation method for the WorkAdventure server

@@ -6,6 +6,10 @@
 
 This Helm chart deploys Workadventure on Kubernetes.
 
+In addition, you will still need to provide a few services (Livekit, Jitsi, Coturn, Synapse) and configure them to work with WorkAdventure.
+
+Note: This Helm chart optionally provides support for a Livekit deployment as a sub-chart.
+
 ## Installation
 
     helm repo add workadventure https://charts.workadventu.re/
@@ -102,7 +106,7 @@ using `singleDomain: false` in `values.yaml`).
 
 You will be asked to authenticate. Use the credentials you configured in the `.env` file.
 
-> **Note**
+> [!NOTE]
 > Right now, authentication is limited to a single user credential in the map-storage container,
 > hard coded in the `.env` file. This is not ideal, but works for now (the map-storage container
 > is quite new). Contributions are welcome if you want to improve this.
@@ -110,3 +114,59 @@ You will be asked to authenticate. Use the credentials you configured in the `.e
 You should see a link to the map you just uploaded.
 
 Are you connected? Congratulations! Share the URL with your friends and start using WorkAdventure!
+
+## Deploying Livekit as part of the WorkAdventure deployment
+
+Livekit is a SFU server. Its role is to manage the audio and video streams of the participants in a WorkAdventure room.
+It is used when the number of participants in a bubble or meeting room is greater than 4.
+
+The WorkAdventure Helm chart provides an option to deploy Livekit as part of the WorkAdventure deployment.
+Before you proceed, please note not all Kubernetes clusters are suitable for running Livekit.
+
+> [!WARNING]
+> LiveKit does not support deployment to serverless and/or private clusters. Private clusters have additional layers 
+> of NAT that make it unsuitable for WebRTC traffic.
+> See https://docs.livekit.io/home/self-hosting/kubernetes/ for details.
+
+To deploy Livekit as part of the WorkAdventure deployment, set the `livekitServer.enabled` value to `true` in the `values.yaml` file.
+
+Depending on your Kubernetes cluster, you may need additional software (like a Nginx Ingress controller Cert-manager to handle HTTPS certificates).
+
+All configuration options from the Livekit Helm chart are available in the `livekitServer` section of the `values.yaml` file.
+
+> [!NOTE]
+> Pro-tip: Livekit Helm chart supports AWS, GCP and Digital Ocean as cloud providers. If you are using a different cloud provider,
+> try the "Digital Ocean" configuration, as it is the most generic one.
+
+The WorkAdventure Helm chart will automatically generate an API key for Livekit and configure the WorkAdventure server to use it.
+
+Livekit needs a dedicated domain name. Please be sure to get one and point the IP of the domain to the load balancer IP of 
+your ingress controller.
+
+You still need to configure some values in the `livekitServer` section of the `values.yaml` file to have Livekit working correctly.
+
+Here are the most important values to configure:
+
+**values.yaml**
+  
+```yaml
+back:
+  env:
+    LIVEKIT_HOST: "https://livekit.your-domain.com"
+    LIVEKIT_WS_URL: "wss://livekit.your-domain.com"
+
+livekitServer:
+  enabled: true
+
+  loadBalancer:
+    # Use Digital Ocean unless you are using AWS or GCP (more examples at https://github.com/livekit/livekit-helm/tree/master/examples)
+    type: do
+    # TLS certificate generated automatically with certmanager / letsencrypt
+    # secretName is still required. certmanager will place the provisioned
+    # certificate in that secret
+    clusterIssuer: letsencrypt-prod
+    tls:
+      - hosts:
+          - livekit.your-domain.com
+        secretName: livekit-certificate-secret
+```
