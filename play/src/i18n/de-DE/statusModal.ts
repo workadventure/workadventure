@@ -7,6 +7,7 @@ const statusModal: DeepPartial<Translation["statusModal"]> = {
     confirm: "Bestätigen",
     goBackToOnlineStatusLabel: "Möchtest du wieder online gehen?",
     allowNotification: "Möchtest du Benachrichtigungen erlauben?",
+    allowNotificationExplanation: "Erhalte eine Desktop-Benachrichtigung, wenn jemand mit dir sprechen möchte.",
 };
 
 export default statusModal;
