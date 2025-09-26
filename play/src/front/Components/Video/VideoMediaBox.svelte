@@ -29,7 +29,6 @@
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
-    //const streamable = videoBox.streamable;
 
     let extendedSpaceUser = videoBox.spaceUser;
 
