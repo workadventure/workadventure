@@ -25,6 +25,7 @@ import { nbSoundPlayedInBubbleStore, INbSoundPlayedInBubbleStore } from "../Stor
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SCREEN_SHARE_STARTING_PRIORITY, VIDEO_STARTING_PRIORITY } from "../Stores/StreamableCollectionStore";
+import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import { LiveKitRoomInterface } from "./LiveKitRoomInterface";
 
@@ -33,6 +34,11 @@ const ParticipantMetadataSchema = z.object({
 });
 
 type ParticipantMetadata = z.infer<typeof ParticipantMetadataSchema>;
+
+type LivekitRoomCounter = {
+    increment: () => void;
+    decrement: () => void;
+};
 
 export class LiveKitRoom implements LiveKitRoomInterface {
     private room: Room | undefined;
@@ -53,8 +59,14 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private cameraDeviceIdStore: Readable<string | undefined> = requestedCameraDeviceIdStore,
         private microphoneDeviceIdStore: Readable<string | undefined> = requestedMicrophoneDeviceIdStore,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
-        private _nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore
-    ) {}
+        private _nbSoundPlayedInBubbleStore: INbSoundPlayedInBubbleStore = nbSoundPlayedInBubbleStore,
+        private _livekitRoomCounter: LivekitRoomCounter = {
+            increment: incrementLivekitRoomCount,
+            decrement: decrementLivekitRoomCount,
+        }
+    ) {
+        this._livekitRoomCounter.increment();
+    }
 
     public async prepareConnection(): Promise<Room> {
         this.room = new Room({
@@ -434,5 +446,6 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room?.off(RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
         this.room?.off(RoomEvent.ActiveSpeakersChanged, this.handleActiveSpeakersChanged.bind(this));
         this.leaveRoom();
+        this._livekitRoomCounter.decrement();
     }
 }

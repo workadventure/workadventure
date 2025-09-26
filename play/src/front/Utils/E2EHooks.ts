@@ -2,6 +2,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
+let livekitRoomCount = 0;
 
 export function incrementWebRtcConnectionsCount() {
     webRtcConnectionsCount++;
@@ -17,6 +18,14 @@ export function incrementLivekitConnectionsCount() {
 
 export function decrementLivekitConnectionsCount() {
     livekitConnectionsCount--;
+}
+
+export function incrementLivekitRoomCount() {
+    livekitRoomCount++;
+}
+
+export function decrementLivekitRoomCount() {
+    livekitRoomCount--;
 }
 
 /**
@@ -37,5 +46,8 @@ export const e2eHooks = {
     },
     getLivekitConnectionsCount(): number {
         return livekitConnectionsCount;
+    },
+    getLivekitRoomsCount(): number {
+        return livekitRoomCount;
     },
 };

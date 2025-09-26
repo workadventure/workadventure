@@ -128,7 +128,10 @@ export abstract class CommunicationState implements ICommunicationState {
         try {
             this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
             const switchInProgress = this.isSwitching();
-            this._currentStrategy.addUser(user, switchInProgress);
+            this._currentStrategy.addUser(user, switchInProgress).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
             return Promise.resolve();
         } catch (e) {
             console.error(e);
@@ -146,7 +149,10 @@ export abstract class CommunicationState implements ICommunicationState {
     handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         try {
             this.notifyUserOfCurrentStrategy(user, this._currentCommunicationType);
-            this._currentStrategy.addUserToNotify(user);
+            this._currentStrategy.addUserToNotify(user).catch((e) => {
+                Sentry.captureException(e);
+                console.error(e);
+            });
         } catch (e) {
             console.error(e);
             return Promise.resolve();

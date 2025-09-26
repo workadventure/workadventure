@@ -28,3 +28,17 @@ export function expectLivekitConnectionsCountToBe(page: Page, expectedCount: num
         timeout: timeout,
     }).toBe(expectedCount);
 }
+
+export function getLivekitRoomsCount(page: Page): Promise<number> {
+    return page.evaluate(async () => {
+        return window.e2eHooks.getLivekitRoomsCount();
+    });
+}
+
+export function expectLivekitRoomsCountToBe(page: Page, expectedCount: number, timeout: number = 10000): Promise<void> {
+    return expect.poll(async () => {
+        return getLivekitRoomsCount(page);
+    }, {
+        timeout: timeout,
+    }).toBe(expectedCount);
+}
