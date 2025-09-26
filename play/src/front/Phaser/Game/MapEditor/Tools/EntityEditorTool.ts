@@ -230,25 +230,33 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     }
 
     protected subscribeToEntityUpload() {
-        this.mapEditorEntityUploadStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
-            (uploadEntityMessage) => {
-                if (uploadEntityMessage) {
-                    (async () => {
-                        await this.mapEditorModeManager.executeCommand(
-                            new UploadEntityFrontCommand(
-                                uploadEntityMessage,
-                                this.entitiesManager,
-                                this.scene.getEntitiesCollectionsManager()
-                            )
-                        );
-                        mapEditorEntityUploadEventStore.set(undefined);
-                    })().catch((e) => {
-                        console.error(e);
-                        Sentry.captureException(e);
+        this.mapEditorEntityUploadStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe((storeValue) => {
+            if (storeValue.message && !storeValue.processingComplete) {
+                const message = storeValue.message;
+                (async () => {
+                    await this.mapEditorModeManager.executeCommand(
+                        new UploadEntityFrontCommand(
+                            message,
+                            this.entitiesManager,
+                            this.scene.getEntitiesCollectionsManager()
+                        )
+                    );
+                    // Set processingComplete to true to signal EntityUpload that processing is done
+                    mapEditorEntityUploadEventStore.set({
+                        message: undefined,
+                        processingComplete: true,
                     });
-                }
+                })().catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                    // Even in case of error, we need to signal that processing is complete
+                    mapEditorEntityUploadEventStore.set({
+                        message: undefined,
+                        processingComplete: true,
+                    });
+                });
             }
-        );
+        });
     }
 
     protected subscribeToModifyCustomEntityEventStore() {

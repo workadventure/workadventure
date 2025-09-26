@@ -58,7 +58,12 @@ export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataPrope
 
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
 
-export const mapEditorEntityUploadEventStore = writable<UploadEntityMessage | undefined>(undefined);
+// This store is used to communicate between EntityUpload.svelte and EntityEditorTool.ts
+// The processingComplete flag is used to ensure that EntityUpload subscription runs after EntityEditorTool
+export const mapEditorEntityUploadEventStore = writable<{
+    message: UploadEntityMessage | undefined;
+    processingComplete?: boolean;
+}>({ message: undefined });
 export const mapEditorModifyCustomEntityEventStore = writable<ModifyCustomEntityMessage | undefined>(undefined);
 export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntityMessage | undefined>(undefined);
 
