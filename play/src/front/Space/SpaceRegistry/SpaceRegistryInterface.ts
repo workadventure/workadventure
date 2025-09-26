@@ -17,4 +17,5 @@ export interface SpaceRegistryInterface {
     destroy(): Promise<void>;
     videoStreamStore: Readable<Map<string, VideoBox>>;
     screenShareStreamStore: Readable<Map<string, VideoBox>>;
+    readonly isLiveStreamingStore: Readable<boolean>;
 }
