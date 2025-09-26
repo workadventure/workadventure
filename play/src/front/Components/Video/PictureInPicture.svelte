@@ -95,9 +95,9 @@
         console.trace("requestPictureInPicture => Request Picture in Picture mode");
 
         // We activate the picture in picture mode only if we have a streamable in the collection
+        console.log("requestPictureInPicture => $streamableCollectionStore.size", $streamableCollectionStore.size);
+        console.log("requestPictureInPicture => $streamableCollectionStore", $streamableCollectionStore);
         if ($streamableCollectionStore.size == 1) return Promise.resolve();
-
-        //if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -139,13 +139,6 @@
 
                 // Listen the event when the user wants to close the picture in picture mode
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
-
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                //@ts-ignore
-
-                /*navigator.mediaSession.setActionHandler("enterpictureinpicture", async () => {
-                    await requestPictureInPicture();
-                });*/
 
                 copySteelSheet(pipWindow);
                 pipWindow.document.body.style.background = `url("${mapImage}")`;
