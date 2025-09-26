@@ -12,6 +12,7 @@
         pictureInPictureSupportedStore
     } from "../../../Stores/PeerStore";
     import {localUserStore} from "../../../Connection/LocalUserStore";
+    import {LL} from "../../../../i18n/i18n-svelte";
 
     const dispatch = createEventDispatcher<{
         click: void;
@@ -38,6 +39,8 @@
         : "disabled"
     }
     dataTestId="pictureInPictureButton"
+    tooltipTitle={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.title()}
+    desc={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.descDisabled()}
     on:click={pictureInPictureClick}
 >
     {#if !$silentStore}

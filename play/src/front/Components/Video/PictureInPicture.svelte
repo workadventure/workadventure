@@ -160,7 +160,7 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-        if (WindowExtSchema.safeParse(window).success === false) {
+       if (WindowExtSchema.safeParse(window).success === false) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }

@@ -131,6 +131,10 @@ const actionbar: BaseTranslation = {
             title: "Todolist",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
+        pictureInPicture: {
+            title: "Picture in picture",
+            descDisabled: "Unfortunately, this feature is not available on your device ❌. Please try using another device or browser, like Chrome or Edge, to access this feature.",
+        }
     },
     listStatusTitle: {
         enable: "Change your status",

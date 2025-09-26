@@ -133,6 +133,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Liste de tâches",
             desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
+        pictureInPicture: {
+            title: "Picture de Picture",
+            descDisabled: "Malheureusement, cette fonctionnalité n'est pas disponible sur votre appareil ❌. Veuillez essayer d'utiliser un autre appareil ou navigateur, comme Chrome ou Edge, pour accéder à cette fonctionnalité.",
+        }
     },
     listStatusTitle: {
         enable: "Changer de statut",
