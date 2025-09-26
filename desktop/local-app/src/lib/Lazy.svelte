@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
 
-    export let component;
-    export let delayMs = null;
+    export let component: () => Promise<any>;
+    export let delayMs: number | null | undefined = null;
 
-    let loadedComponent = null;
-    let timeout;
+    let loadedComponent: any = null;
+    let timeout: NodeJS.Timeout | undefined;
     let showFallback = !delayMs;
 
-    let props;
+    let props: Record<string, any>;
     $: {
         // eslint-disable-next-line no-shadow
         const { component, delayMs, ...restProps } = $$props;
@@ -21,10 +21,12 @@
                 showFallback = true;
             }, delayMs);
         }
-        component().then((module) => {
-            loadedComponent = module.default;
+        component().then((module: any) => {
+            loadedComponent = module.default || module;
         });
-        return () => clearTimeout(timeout);
+        return () => {
+            if (timeout) clearTimeout(timeout);
+        };
     });
 </script>
 
