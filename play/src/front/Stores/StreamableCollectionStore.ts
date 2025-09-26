@@ -53,7 +53,7 @@ export interface AttachableVideo {
 
 export interface Streamable {
     readonly uniqueId: string;
-    readonly media: MediaStoreStreamable | ScriptingVideoStreamable;
+    readonly media: MediaStoreStreamable | WebRtcStreamable | ScriptingVideoStreamable;
     readonly volumeStore: Readable<number[] | undefined> | undefined;
     readonly hasVideo: Readable<boolean>;
     readonly hasAudio: Readable<boolean>;

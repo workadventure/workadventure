@@ -5,6 +5,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
 
     /**
      * This component is in charge of displaying a <video> element in the center of the
@@ -219,7 +220,10 @@
               (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
             : ""}
     >
-        <video
+        <WebRtcVideo
+            {videoUrl}
+            {videoConfig}
+            {onLoadVideoElement}
             style={videoEnabled
                 ? "width: " +
                   Math.ceil(videoWidth) +
@@ -232,18 +236,13 @@
                       : "") +
                   (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
                 : ""}
+            class={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
             bind:videoWidth={videoStreamWidth}
             bind:videoHeight={videoStreamHeight}
             bind:this={videoElement}
-            on:loadedmetadata={onLoadVideoElement}
-            class="absolute block object-fill"
-            class:h-0={!videoEnabled}
-            class:w-0={!videoEnabled}
-            autoplay
-            playsinline
-            muted={true}
             {loop}
         />
+
     </div>
     {#if displayNoVideoWarning}
         <div
