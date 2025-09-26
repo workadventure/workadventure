@@ -69,7 +69,7 @@
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
-        pipRequested = false;
+        //pipRequested = false;
         activePictureInPictureStore.set(false);
     }
 
@@ -79,7 +79,7 @@
         }
     });
 
-    let pipRequested = false;
+    //let pipRequested = false;
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
@@ -88,7 +88,7 @@
         // We activate the picture in picture mode only if we have a streamable in the collection
         if ($streamableCollectionStore.size == 1) return;
 
-        if (pipWindow !== undefined || pipRequested) return;
+        //if (pipWindow !== undefined || pipRequested) return;
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -120,7 +120,6 @@
             width: "400",
         };
 
-        pipRequested = true;
         return window.documentPictureInPicture
             .requestWindow(options)
             .then((newPipWindow: Window) => {
