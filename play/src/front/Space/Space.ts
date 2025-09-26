@@ -16,8 +16,7 @@ import {
 } from "@workadventure/messages";
 import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
-import { VideoPeer } from "../WebRtc/VideoPeer";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { RemotePeer } from "../WebRtc/RemotePeer";
 import { ConnectionClosedError } from "../Connection/ConnectionClosedError";
 import { Streamable } from "../Stores/StreamableCollectionStore";
 import {
@@ -211,6 +210,10 @@ export class Space implements SpaceInterface {
 
         this.observeScreenSharingPeerAdded = this._peerManager.screenSharingPeerAdded.subscribe((peer) => {
             const spaceUserId = peer.getExtendedSpaceUser()?.spaceUserId;
+
+            if (spaceUserId === this._mySpaceUserId) {
+                return;
+            }
 
             if (!spaceUserId) {
                 console.error("observeVideoPeerAdded : peer has no spaceUserId");
@@ -431,14 +434,14 @@ export class Space implements SpaceInterface {
 
         this.allVideoStreamStore.forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable instanceof VideoPeer) {
+            if (streamable instanceof RemotePeer) {
                 streamable.destroy();
             }
         });
 
         this.allScreenShareStreamStore.forEach((peer) => {
             const streamable = get(peer.streamable);
-            if (streamable instanceof ScreenSharingPeer) {
+            if (streamable instanceof RemotePeer) {
                 streamable.destroy();
             }
         });
