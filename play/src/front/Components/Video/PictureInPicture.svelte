@@ -115,6 +115,9 @@
             return Promise.resolve();
         }
 
+        // 227: the height of a video
+        // 80: the height of the action bar
+        // 78: the height of the video feedback of the current user
         let pipHeightOption =
             ($streamableCollectionStore.size > 1 ? $streamableCollectionStore.size - 1 : 1) * 227 + 80 + 78;
         if (window.screen.availHeight && pipHeightOption > window.screen.availHeight) {
@@ -122,9 +125,6 @@
         }
         const options = {
             preferInitialWindowPlacement: true,
-            // 227: the height of a video
-            // 80: the height of the action bar
-            // 78: the height of the video feedback of the current user
             height: `${pipHeightOption}`,
             width: "400",
         };
