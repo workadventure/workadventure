@@ -1,6 +1,7 @@
 <script lang="ts">
     import Woka from "../Woka/Woka.svelte";
     import { PictureStore } from "../../Stores/PictureStore";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
 
     export let isCameraDisabled = false;
 
@@ -37,14 +38,24 @@
 {:else}
     <div class="{position} z-30 responsive-dimension">
         <div
-            class="flex justify-between rounded {isPlayingAudio
-                ? '@[17.5rem]/videomediabox:bg-secondary/90'
-                : '@[17.5rem]/videomediabox:bg-contrast/90'}"
+            class="flex justify-between rounded
+                {isPlayingAudio
+                ? $activePictureInPictureStore
+                    ? '@[10rem]/videomediabox:bg-secondary/90'
+                    : '@[17.5rem]/videomediabox:bg-secondary/90'
+                : $activePictureInPictureStore
+                ? '@[10rem]/videomediabox:bg-contrast/90'
+                : '@[17.5rem]/videomediabox:bg-contrast/90'}
+            "
         >
             <div
-                class="relative @[17.5rem]/videomediabox:backdrop-blur px-2 py-1 text-white text-sm text-shadow-md @[17.5rem]/videomediabox:text-shadow-none {$picture
-                    ? 'pl-12'
-                    : ''} bold rounded text-nowrap select-none"
+                class="
+                relative px-2 py-1 text-white text-sm text-shadow-md bold rounded text-nowrap select-none
+                    {$activePictureInPictureStore
+                    ? '@[10rem]/videomediabox:text-shadow-none @[10rem]/videomediabox:backdrop-blur'
+                    : '@[17.5rem]/videomediabox:text-shadow-none @[17.5rem]/videomediabox:backdrop-blur'}
+                "
+                class:pl-12={$picture}
             >
                 {#if $picture}
                     <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">

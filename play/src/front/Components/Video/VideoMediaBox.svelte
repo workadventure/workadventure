@@ -17,6 +17,7 @@
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
     import { userActivationManager } from "../../Stores/UserActivationStore";
+    import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -217,7 +218,10 @@
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
                     position={videoEnabled
-                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                        ? "absolute bottom-0 left-0" +
+                          ($activePictureInPictureStore
+                              ? "@[10rem]/videomediabox:bottom-2 @[10rem]/videomediabox:left-2"
+                              : "@[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2")
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
                 >
