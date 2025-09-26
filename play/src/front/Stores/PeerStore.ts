@@ -17,3 +17,5 @@ export const screenShareStreamElementsStore = derived(screenShareStreamStore, ($
 export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeProximityDiscussion());
 
 export const activePictureInPictureStore = writable(false);
+export const askPictureInPictureActivatingStore = writable(false);
+export const pictureInPictureSupportedStore = writable(true);
