@@ -118,6 +118,26 @@ test.describe('Meeting actions test', () => {
         await expectLivekitConnectionsCountToBe(page, 0);
         await expectWebRtcConnectionsCountToBe(page, 2);
 
+        // Now, let's enter and exit the meeting area very quickly to check that the switch to Livekit and back to WebRtc is working fine
+        await Map.teleportToPosition(userJohn, 160, 160);
+        await Map.teleportToPosition(userMallory, 160, 160);
+        await Map.teleportToPosition(userJohn, 16, 16);
+        await Map.teleportToPosition(userMallory, 300, 300);
+
+        await expectLivekitConnectionsCountToBe(userMallory, 0);
+        await expectWebRtcConnectionsCountToBe(userMallory, 0);
+        await expectLivekitConnectionsCountToBe(userJohn, 0);
+        await expectWebRtcConnectionsCountToBe(userJohn, 0);
+
+        // We need to wait 5 seconds for things to stabilize
+        await new Promise<void>(resolve => {setTimeout(resolve, 5000)});
+
+        // At this point, we should have again 2 webRtc connections open and 0 livekit connections
+        await expectLivekitConnectionsCountToBe(page, 0);
+        await page.pause();
+        await expectWebRtcConnectionsCountToBe(page, 2);
+
+
         // Clean up
         await page.close();
         await userBob.close();

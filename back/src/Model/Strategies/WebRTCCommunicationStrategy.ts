@@ -85,7 +85,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public deleteUser(user: SpaceUser): void {
-        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
+        /*const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
 
         if (!watchers.includes(user.spaceUserId)) {
             this.shutdownAllConnections(user);
@@ -100,7 +100,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             }
         });
 
-        this.cleanupUserMessages(user.spaceUserId);
+        this.cleanupUserMessages(user.spaceUserId);*/
     }
 
     private shutdownAllConnections(user: SpaceUser): void {
@@ -122,18 +122,11 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
     public deleteUserFromNotify(user: SpaceUser): void {
-        const streamers = this._space.getUsersInFilter().map((user) => user.spaceUserId);
-
-        if (!streamers.includes(user.spaceUserId)) {
-            this.shutdownAllConnections(user);
-            //return;
-        }
-
-        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
-
-        streamers.forEach((streamer) => {
-            if (!watchers.includes(streamer)) {
-                this.shutdownConnection(user.spaceUserId, streamer);
+        const usersInFilter = this._space.getUsersInFilter();
+        usersInFilter.forEach((existingUser) => {
+            if (existingUser.spaceUserId !== user.spaceUserId) {
+                this.shutdownConnection(existingUser.spaceUserId, user.spaceUserId);
+                return;
             }
         });
 
