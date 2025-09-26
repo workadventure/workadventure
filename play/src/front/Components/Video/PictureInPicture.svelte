@@ -134,8 +134,9 @@
 
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
-                navigator.mediaSession.setActionHandler("enterpictureinpicture", () => {
-                    console.log("requestPictureInPicture => setActionHandler => _");
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                navigator.mediaSession.setActionHandler("enterpictureinpicture", async () => {
+                    await requestPictureInPicture();
                 });
 
                 copySteelSheet(pipWindow);
@@ -155,7 +156,7 @@
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
-                destroyPictureInPictureComponent();
+                // destroyPictureInPictureComponent();
                 // Maybe we could propose a popup to the user to activate the Picture in Picture mode
             });
     }
