@@ -9,6 +9,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     const debug = Debug("app:PictureInPicture");
 
@@ -61,7 +62,6 @@
     }
 
     function destroyPictureInPictureComponent() {
-        console.trace("requestPictureInPicture => destroyPictureInPictureComponent");
         if (!parentDivElement) {
             return;
         }
@@ -84,7 +84,6 @@
 
     let enterPictureInPictureEventCalled = false;
     function handlerEnterPictureInPictureEvent() {
-        console.trace("requestPictureInPicture => hanldeEnterpictureinpictureEvent");
         enterPictureInPictureEventCalled = true;
         return requestPictureInPicture();
     }
@@ -92,11 +91,8 @@
     //let pipRequested = false;
     function requestPictureInPicture(): Promise<void> {
         debug("Request Picture in Picture mode");
-        console.trace("requestPictureInPicture => Request Picture in Picture mode");
 
         // We activate the picture in picture mode only if we have a streamable in the collection
-        console.log("requestPictureInPicture => $streamableCollectionStore.size", $streamableCollectionStore.size);
-        console.log("requestPictureInPicture => $streamableCollectionStore", $streamableCollectionStore);
         if ($streamableCollectionStore.size == 1) return Promise.resolve();
 
         debug("Entering Picture in Picture mode");
@@ -150,6 +146,9 @@
                 pipWindow.document.body.append(divElement);
 
                 activePictureInPictureStore.set(true);
+
+                // Analytics on the feature usage
+                analyticsClient.pictureInPicture();
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
@@ -164,7 +163,6 @@
             //@ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             navigator.mediaSession.setActionHandler("enterpictureinpicture", handlerEnterPictureInPictureEvent);
-            console.log("requestPictureInPicture => setActionHandler...");
         } catch (e: unknown) {
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             console.error("requestPictureInPicture => e", e);
@@ -201,7 +199,6 @@
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
                 navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
-                console.log("requestPictureInPicture => onMount => return");
             } catch (e: unknown) {
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
