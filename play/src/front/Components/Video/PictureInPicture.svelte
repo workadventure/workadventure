@@ -5,7 +5,8 @@
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import {
         activePictureInPictureStore,
-        askPictureInPictureActivatingStore, pictureInPictureSupportedStore,
+        askPictureInPictureActivatingStore,
+        pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -136,11 +137,8 @@
                 pipWindow.document.body.style.alignItems = "start";
                 pipWindow.document.body.style.height = "100vh";
                 pipWindow.document.body.style.width = "100%";
+                pipWindow.document.createAttribute("data-testid").value = "windowPictureInPicture";
                 pipWindow.document.body.append(divElement);
-
-                /*setTimeout(() => {
-                    divElement.style.display = "flex";
-                }, 1000);*/
 
                 activePictureInPictureStore.set(true);
             })
@@ -160,7 +158,7 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-       if (WindowExtSchema.safeParse(window).success === false) {
+        if (WindowExtSchema.safeParse(window).success === false) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }
@@ -168,11 +166,10 @@
         const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
             if (active) {
                 requestPictureInPicture();
-            }else{
+            } else {
                 destroyPictureInPictureComponent();
             }
         });
-
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {

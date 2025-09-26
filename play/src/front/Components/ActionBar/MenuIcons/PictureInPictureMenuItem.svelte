@@ -9,10 +9,10 @@
     import {
         activePictureInPictureStore,
         askPictureInPictureActivatingStore,
-        pictureInPictureSupportedStore
+        pictureInPictureSupportedStore,
     } from "../../../Stores/PeerStore";
-    import {localUserStore} from "../../../Connection/LocalUserStore";
-    import {LL} from "../../../../i18n/i18n-svelte";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import { LL } from "../../../../i18n/i18n-svelte";
 
     const dispatch = createEventDispatcher<{
         click: void;
@@ -30,15 +30,12 @@
         askPictureInPictureActivatingStore.set(!$askPictureInPictureActivatingStore);
     }
 </script>
+
 <ActionBarButton
     classList="group/btn-picture-in-picture"
     disabledHelp={$openedMenuStore !== undefined}
-    state={
-        $pictureInPictureSupportedStore
-        ? ($activePictureInPictureStore ? "active" : "normal")
-        : "disabled"
-    }
-    dataTestId="pictureInPictureButton"
+    state={$pictureInPictureSupportedStore ? ($activePictureInPictureStore ? "active" : "normal") : "disabled"}
+    dataTestId={$pictureInPictureSupportedStore ? "pictureInPictureButton" : "pictureInPictureButtonDisabled"}
     tooltipTitle={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.title()}
     desc={$pictureInPictureSupportedStore ? undefined : $LL.actionbar.help.pictureInPicture.descDisabled()}
     on:click={pictureInPictureClick}
