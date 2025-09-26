@@ -433,8 +433,8 @@ export class VideoPeer extends Peer implements Streamable {
         return this._statusStore;
     }
 
-    public getExtendedSpaceUser(): SpaceUserExtended | undefined {
-        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
+    public getExtendedSpaceUser(): SpaceUserExtended {
+        return this.spaceUser;
     }
 
     get streamStore(): Readable<MediaStream | undefined> {

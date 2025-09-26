@@ -2,7 +2,6 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { getContext, onDestroy } from "svelte";
-    import type { Readable } from "svelte/store";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox } from "../../Space/Space";
@@ -25,13 +24,14 @@
     export let fullScreen = false;
     export let videoBox: VideoBox; // If true, and if there is not video, the height of the video box will be 11rem
     export let miniMode = false;
+    $: streamableStore = videoBox.streamable;
+    $: streamable = $streamableStore;
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series or video or if it is the highlighted video.
     let inCameraContainer: boolean = getContext("inCameraContainer");
-    const streamable = videoBox.streamable;
+    //const streamable = videoBox.streamable;
 
     let extendedSpaceUser = videoBox.spaceUser;
-    let showVoiceIndicatorStore = $streamable?.showVoiceIndicator;
 
     const pictureStore = extendedSpaceUser.pictureStore;
 
@@ -39,46 +39,36 @@
     let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
 
     $: {
-        if ($streamable && $streamable.media.type === "mediaStore") {
-            attachVideo = $streamable.media.attachVideo;
-            detachVideo = $streamable.media.detachVideo;
+        if (streamable && streamable.media.type === "mediaStore") {
+            attachVideo = streamable.media.attachVideo;
+            detachVideo = streamable.media.detachVideo;
         }
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
     let videoUrl: string | undefined = undefined;
     let videoConfig: VideoConfig | undefined = undefined;
-    if ($streamable && $streamable.media.type === "scripting") {
-        videoUrl = $streamable.media.url;
-        videoConfig = $streamable.media.config;
+    if (streamable && streamable.media.type === "scripting") {
+        videoUrl = streamable.media.url;
+        videoConfig = streamable.media.config;
     }
 
-    let volumeStore = $streamable?.volumeStore;
     let name = videoBox.spaceUser.name;
-    let statusStore = $streamable?.statusStore;
-
-    let embedScreen: VideoBox;
 
     let showUserSubMenu = false;
 
-    let hasVideoStore: Readable<boolean> | undefined;
-    let hasAudioStore: Readable<boolean> | undefined;
-    let isMutedStore: Readable<boolean> | undefined;
+    $: hasVideoStore = streamable?.hasVideo;
+    $: hasAudioStore = streamable?.hasAudio;
+    $: isMutedStore = streamable?.isMuted;
+    $: statusStore = streamable?.statusStore;
+    $: volumeStore = streamable?.volumeStore;
+    $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
 
-    $: {
-        if ($streamable) {
-            hasVideoStore = $streamable.hasVideo;
-            hasAudioStore = $streamable.hasAudio;
-            isMutedStore = $streamable.isMuted;
-            embedScreen = $streamable as unknown as VideoBox;
-        }
-    }
+    $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     // If there is no constraintStore, we are in a screen sharing (so video is enabled)
 
     $: videoEnabled = $hasVideoStore;
-
-    $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
     function toggleFullScreen() {
         highlightFullScreen.update((current) => !current);
@@ -102,7 +92,7 @@
                 // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
                 ActionMediaBox,
                 {
-                    embedScreen,
+                    embedScreen: videoBox,
                     spaceUser,
                     videoEnabled: videoEnabled ?? false,
                     onClose: () => {
@@ -205,10 +195,10 @@
                 expectVideoOutput={videoEnabled}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
-                flipX={$streamable?.flipX}
+                flipX={streamable?.flipX}
                 {videoUrl}
                 {videoConfig}
-                cover={$streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
+                cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
                 withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
             >
                 <UserName
@@ -259,7 +249,6 @@
                         </div>
                     </div>
                 {/if}
-
                 {#if $statusStore === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
                         {#if !$isMutedStore}
@@ -289,7 +278,7 @@
             </button>
         {/await}
     {/if}
-    {#if !$streamable?.muteAudio}
+    {#if !streamable?.muteAudio}
         {#await userActivationManager.waitForUserActivation()}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
