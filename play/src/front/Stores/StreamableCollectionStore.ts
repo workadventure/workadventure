@@ -20,11 +20,13 @@ import {
     localVoiceIndicatorStore,
     localVolumeStore,
     mediaStreamConstraintsStore,
+    requestedCameraState,
     requestedMicrophoneState,
     silentStore,
 } from "./MediaStore";
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
+import { windowSize } from "./CoWebsiteStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -163,6 +165,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             myCameraPeerStore,
             cameraEnergySavingStore,
             silentStore,
+            requestedCameraState,
+            windowSize,
         ],
         (
             [
@@ -174,6 +178,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $myCameraPeerStore,
                 $cameraEnergySavingStore,
                 $silentStore,
+                $requestedCameraState,
+                $windowSize,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -188,7 +194,20 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             };
 
             if ($myCameraStore && !$cameraEnergySavingStore && !$silentStore) {
-                addPeer($myCameraPeerStore);
+                let shouldAddMyCamera = true;
+                // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
+                // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
+                if (
+                    $screenShareStreamElementsStore.length === 0 &&
+                    $videoStreamElementsStore.length === 0 &&
+                    (!$requestedCameraState || $windowSize.width < 768)
+                ) {
+                    shouldAddMyCamera = false;
+                }
+
+                if (shouldAddMyCamera) {
+                    addPeer($myCameraPeerStore);
+                }
             }
 
             $screenShareStreamElementsStore.forEach(addPeer);
