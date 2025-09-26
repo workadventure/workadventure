@@ -189,6 +189,7 @@
         {#if showAfterDelay}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
+                media={streamable?.media}
                 {attachVideo}
                 {detachVideo}
                 {videoEnabled}
