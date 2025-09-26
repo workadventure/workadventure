@@ -34,14 +34,7 @@ import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStor
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
-import {
-    inJitsiStore,
-    inLivekitStore,
-    inOpenWebsite,
-    isSpeakerStore,
-    silentStore,
-    streamingMegaphoneStore,
-} from "../../../Stores/MediaStore";
+import { inJitsiStore, inLivekitStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -1067,11 +1060,9 @@ export class AreasPropertiesListener {
             const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
-            streamingMegaphoneStore.set(true);
+            //streamingMegaphoneStore.set(true);
 
-            space.emitUpdateUser({
-                megaphoneState: true,
-            });
+            space.startStreaming();
 
             bindMuteEventsToSpace(space);
 
@@ -1092,7 +1083,8 @@ export class AreasPropertiesListener {
                 Sentry.captureException(e);
             });
 
-            streamingMegaphoneStore.set(false);
+            //streamingMegaphoneStore.set(false);
+
             if (property.chatEnabled) {
                 //this.handleLeaveMucRoom(uniqRoomName);
             }
