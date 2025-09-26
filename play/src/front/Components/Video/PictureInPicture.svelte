@@ -8,12 +8,14 @@
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     const debug = Debug("app:PictureInPicture");
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
+    let mapImage = "https://member.workadventu.re/images/funnel/background.jpg";
 
     let activePictureInPictureSubscriber: Unsubscriber | undefined;
 
@@ -146,17 +148,13 @@
                 });*/
 
                 copySteelSheet(pipWindow);
-                //pipWindow.document.body.style.backgroundColor = "black";
+                pipWindow.document.body.style.background = `url("${mapImage}")`;
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.justifyContent = "center";
                 pipWindow.document.body.style.alignItems = "start";
                 pipWindow.document.body.style.height = "100vh";
                 pipWindow.document.body.style.width = "100%";
                 pipWindow.document.body.append(divElement);
-
-                /*setTimeout(() => {
-                    divElement.style.display = "flex";
-                }, 1000);*/
 
                 activePictureInPictureStore.set(true);
             })
@@ -193,6 +191,17 @@
             }
         });
 
+        try {
+            const currentScene = gameManager.getCurrentGameScene();
+            if (currentScene) {
+                const mapImage_ = currentScene.mapFile.properties?.find((p) => p.name === "mapImage")?.value;
+                if (mapImage_ && typeof mapImage_ === "string")
+                    mapImage = new URL(mapImage_, currentScene.getMapUrl()).toString();
+            }
+        } catch (e: unknown) {
+            console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
+        }
+
         return () => {
             unsubscribe();
             try {
@@ -213,7 +222,12 @@
 </script>
 
 <div bind:this={parentDivElement} class="h-full w-full">
-    <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
+    <div
+        bind:this={divElement}
+        class="h-full w-full bg-contrast/80"
+        class:backdrop-blur-md={$activePictureInPictureStore}
+        class:pt-1={$activePictureInPictureStore}
+    >
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
 </div>
