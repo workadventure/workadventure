@@ -59,6 +59,7 @@
     }
 
     function destroyPictureInPictureComponent() {
+        console.trace("requestPictureInPicture => destroyPictureInPictureComponent");
         if (!parentDivElement) {
             return;
         }
@@ -69,7 +70,7 @@
         if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
-        //pipRequested = false;
+        enterPictureInPictureEventCalled = false;
         activePictureInPictureStore.set(false);
     }
 
@@ -79,14 +80,20 @@
         }
     });
 
-    //let pipRequested = false;
+    let enterPictureInPictureEventCalled = false;
+    function handlerEnterPictureInPictureEvent() {
+        console.trace("requestPictureInPicture => hanldeEnterpictureinpictureEvent");
+        enterPictureInPictureEventCalled = true;
+        return requestPictureInPicture();
+    }
 
-    function requestPictureInPicture() {
+    //let pipRequested = false;
+    function requestPictureInPicture(): Promise<void> {
         debug("Request Picture in Picture mode");
         console.trace("requestPictureInPicture => Request Picture in Picture mode");
 
         // We activate the picture in picture mode only if we have a streamable in the collection
-        if ($streamableCollectionStore.size == 1) return;
+        if ($streamableCollectionStore.size == 1) return Promise.resolve();
 
         //if (pipWindow !== undefined || pipRequested) return;
 
@@ -95,7 +102,7 @@
             console.warn(
                 "requestPictureInPicture => Request Picture in Picture mode but not allowed by the user settings"
             );
-            return;
+            return Promise.resolve();
         }
 
         // request permission to use the picture in picture mode
@@ -103,7 +110,7 @@
         const windowExtResult = WindowExtSchema.safeParse(window);
         if (!windowExtResult.success) {
             debug("Picture in Picture is not supported");
-            return;
+            return Promise.resolve();
         }
 
         let pipHeightOption =
@@ -133,10 +140,10 @@
 
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
-                // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                navigator.mediaSession.setActionHandler("enterpictureinpicture", async () => {
+
+                /*navigator.mediaSession.setActionHandler("enterpictureinpicture", async () => {
                     await requestPictureInPicture();
-                });
+                });*/
 
                 copySteelSheet(pipWindow);
                 //pipWindow.document.body.style.backgroundColor = "black";
@@ -155,7 +162,7 @@
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
-                // destroyPictureInPictureComponent();
+                destroyPictureInPictureComponent();
                 // Maybe we could propose a popup to the user to activate the Picture in Picture mode
             });
     }
@@ -165,10 +172,7 @@
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            navigator.mediaSession.setActionHandler("enterpictureinpicture", async (_) => {
-                console.log("requestPictureInPicture => setActionHandler => _", _);
-                await requestPictureInPicture();
-            });
+            navigator.mediaSession.setActionHandler("enterpictureinpicture", handlerEnterPictureInPictureEvent);
             console.log("requestPictureInPicture => setActionHandler...");
         } catch (e: unknown) {
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
@@ -179,9 +183,13 @@
             if (visible) {
                 destroyPictureInPictureComponent();
             } else {
-                void (async () => {
-                    await requestPictureInPicture();
-                })();
+                setTimeout(() => {
+                    // Use a timeout to avoid calling the requestPictureInPicture too early
+                    // "enterpictureinpicture" event should be processed before
+                    // If "enterpictureinpicture" was successfully processed, we do not call requestPictureInPicture
+                    if (enterPictureInPictureEventCalled) return;
+                    requestPictureInPicture().catch((error) => console.warn("requestPictureInPicture => error", error));
+                }, 1000);
             }
         });
 
