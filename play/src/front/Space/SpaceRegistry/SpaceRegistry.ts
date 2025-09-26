@@ -109,6 +109,28 @@ export class SpaceRegistry implements SpaceRegistryInterface {
         return unsubscribe;
     });
 
+    public readonly isLiveStreamingStore: Readable<boolean> = derived(this.spaces, ($spaces, set) => {
+        if ($spaces.size === 0) {
+            set(false);
+            return () => {};
+        }
+
+        const stores = Array.from($spaces.values(), (space) => space.isStreamingStore);
+        return derived(stores, (list) => list.some(Boolean)).subscribe(set);
+
+        /*const spaceStores = Array.from($spaces.values()).map((space) => space.isStreamingStore);
+
+        const combinedStore = derived(spaceStores, (isStreamingList) => {
+            return isStreamingList.some((isStreaming) => isStreaming);
+        });
+
+        const unsubscribe = combinedStore.subscribe((result) => {
+            set(result);
+        });
+
+        return unsubscribe;*/
+    });
+
     constructor(
         private roomConnection: RoomConnectionForSpacesInterface,
         private connectStream = connectionManager.roomConnectionStream,

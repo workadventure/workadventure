@@ -20,6 +20,7 @@ import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeet
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
 import { videoStreamElementsStore } from "./PeerStore";
+
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
@@ -272,7 +273,6 @@ export const cameraEnergySavingStore = derived(
         enabledWebCam10secondsAgoStore,
         mouseIsHoveringCameraButton,
         cameraNoEnergySavingStore,
-        streamingMegaphoneStore,
         devicesNotLoaded,
     ],
     ([
@@ -282,7 +282,6 @@ export const cameraEnergySavingStore = derived(
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
-        $streamingMegaphoneStore,
         $devicesNotLoaded,
     ]) => {
         return (
@@ -292,8 +291,7 @@ export const cameraEnergySavingStore = derived(
             $videoStreamElementsStore.length === 0 &&
             !$enabledWebCam10secondsAgoStore &&
             !$cameraNoEnergySavingStore &&
-            !$devicesNotLoaded &&
-            !$streamingMegaphoneStore
+            !$devicesNotLoaded
         );
     }
 );

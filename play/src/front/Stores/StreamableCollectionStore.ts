@@ -27,6 +27,7 @@ import {
 import { currentPlayerWokaStore } from "./CurrentPlayerWokaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
 import { windowSize } from "./CoWebsiteStore";
+import { isLiveStreamingStore } from "./IsStreamingStore";
 
 //export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -167,6 +168,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             silentStore,
             requestedCameraState,
             windowSize,
+            isLiveStreamingStore,
         ],
         (
             [
@@ -180,6 +182,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $silentStore,
                 $requestedCameraState,
                 $windowSize,
+                $isLiveStreamingStore,
             ] /*, set*/
         ) => {
             const peers = new Map<string, VideoBox>();
@@ -197,11 +200,7 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 let shouldAddMyCamera = true;
                 // Are we the only one to display video AND are we not publishing a video stream? If so, let's hide the video.
                 // Are we the only one to display video AND we are on a small screen? If so, let's hide the video (because the webcam takes space and makes iPhones laggy when it starts)
-                if (
-                    $screenShareStreamElementsStore.length === 0 &&
-                    $videoStreamElementsStore.length === 0 &&
-                    (!$requestedCameraState || $windowSize.width < 768)
-                ) {
+                if (!$isLiveStreamingStore && (!$requestedCameraState || $windowSize.width < 768)) {
                     shouldAddMyCamera = false;
                 }
 

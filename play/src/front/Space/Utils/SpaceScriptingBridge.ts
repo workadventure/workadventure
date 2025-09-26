@@ -2,7 +2,6 @@ import { Subscription } from "rxjs";
 import { get } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../SpaceInterface";
 import { CheckedWorkAdventureMessagePort } from "../../Api/Iframe/CheckedWorkAdventureMessagePort";
-import { streamingMegaphoneStore } from "../../Stores/MediaStore";
 
 /**
  * Represents a bridge between one Space and the scripting API.
@@ -102,21 +101,14 @@ export class SpaceScriptingBridge {
                 case "leave": {
                     this.leave();
                     this.onSpaceLeft();
-                    streamingMegaphoneStore.set(false);
                     break;
                 }
                 case "startStreaming": {
-                    streamingMegaphoneStore.set(true);
-                    this.space.emitUpdateUser({
-                        megaphoneState: true,
-                    });
+                    this.space.startStreaming();
                     break;
                 }
                 case "stopStreaming": {
-                    this.space.emitUpdateUser({
-                        megaphoneState: false,
-                    });
-                    streamingMegaphoneStore.set(false);
+                    this.space.stopStreaming();
                     break;
                 }
                 case "setMetadata": {
