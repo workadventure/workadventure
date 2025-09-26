@@ -6,11 +6,9 @@
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { SpaceUserExtended } from "../../Space/SpaceInterface";
-    import { VideoBox } from "../../Space/Space";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
-    export let embedScreen: VideoBox;
     export let spaceUser: SpaceUserExtended;
     export let videoEnabled: boolean;
     export let onClose: () => void;

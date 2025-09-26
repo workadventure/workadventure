@@ -94,7 +94,6 @@
                 // @ts-ignore See https://github.com/storybookjs/storybook/issues/21884
                 ActionMediaBox,
                 {
-                    embedScreen: videoBox,
                     spaceUser,
                     videoEnabled: videoEnabled ?? false,
                     onClose: () => {
