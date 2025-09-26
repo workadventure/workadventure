@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
@@ -37,10 +36,6 @@
         isMobile = isMediaBreakpointUp("md");
     };
 
-    afterUpdate(() => {
-        modifySizeCamIfScreenShare();
-    });
-
     onMount(() => {
         resizeHeight();
         window.addEventListener("resize", handleResize);
@@ -55,23 +50,6 @@
         if (availableHeight < 0) {
             availableHeight = 0;
         }
-    }
-
-    $: if ($highlightedEmbedScreen) modifySizeCamIfScreenShare();
-    $: if ($highlightFullScreen) modifySizeCamIfScreenShare();
-
-    function modifySizeCamIfScreenShare() {
-        /*if (camContainer) {
-            if ($highlightedEmbedScreen !== undefined && !$highlightFullScreen) {
-                camContainer.style.transform = "scale(0.7)";
-                camContainer.style.marginTop = "-24px";
-                camContainer.style.marginBottom = "-8px";
-            } else {
-                camContainer.style.transform = "scale(1)";
-                camContainer.style.marginTop = "0px";
-                camContainer.style.marginBottom = "0px";
-            }
-        }*/
     }
 
     $: oneLineMaxHeight = containerHeight * 0.2;
