@@ -83,6 +83,7 @@
 
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
+        console.trace("requestPictureInPicture => Request Picture in Picture mode");
 
         // We activate the picture in picture mode only if we have a streamable in the collection
         if ($streamableCollectionStore.size == 1) return;
@@ -91,7 +92,9 @@
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
-            console.warn("Request Picture in Picture mode but not allowed by the user settings");
+            console.warn(
+                "requestPictureInPicture => Request Picture in Picture mode but not allowed by the user settings"
+            );
             return;
         }
 
@@ -118,8 +121,7 @@
         };
 
         pipRequested = true;
-
-        window.documentPictureInPicture
+        return window.documentPictureInPicture
             .requestWindow(options)
             .then((newPipWindow: Window) => {
                 // Picture in picture is possible
@@ -129,6 +131,12 @@
 
                 // Listen the event when the user wants to close the picture in picture mode
                 pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
+
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                //@ts-ignore
+                navigator.mediaSession.setActionHandler("enterpictureinpicture", () => {
+                    console.log("requestPictureInPicture => setActionHandler => _");
+                });
 
                 copySteelSheet(pipWindow);
                 //pipWindow.document.body.style.backgroundColor = "black";
@@ -156,16 +164,24 @@
         try {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             //@ts-ignore
-            navigator.mediaSession.setActionHandler("enterpictureinpicture", requestPictureInPicture);
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            navigator.mediaSession.setActionHandler("enterpictureinpicture", async (_) => {
+                console.log("requestPictureInPicture => setActionHandler => _", _);
+                await requestPictureInPicture();
+            });
+            console.log("requestPictureInPicture => setActionHandler...");
         } catch (e: unknown) {
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
+            console.error("requestPictureInPicture => e", e);
         }
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
             if (visible) {
                 destroyPictureInPictureComponent();
             } else {
-                requestPictureInPicture();
+                void (async () => {
+                    await requestPictureInPicture();
+                })();
             }
         });
 
@@ -175,6 +191,7 @@
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
                 navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
+                console.log("requestPictureInPicture => onMount => return");
             } catch (e: unknown) {
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
