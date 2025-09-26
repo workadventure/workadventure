@@ -48,9 +48,11 @@
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
     let videoUrl: string | undefined = undefined;
     let videoConfig: VideoConfig | undefined = undefined;
-    if (streamable && streamable.media.type === "scripting") {
-        videoUrl = streamable.media.url;
-        videoConfig = streamable.media.config;
+    $: {
+        if (streamable && streamable.media.type === "scripting") {
+            videoUrl = streamable.media.url;
+            videoConfig = streamable.media.config;
+        }
     }
 
     let name = videoBox.spaceUser.name;
