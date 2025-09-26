@@ -22,7 +22,7 @@
     import CenteredVideo from "./CenteredVideo.svelte";
 
     export let fullScreen = false;
-    export let videoBox: VideoBox; // If true, and if there is not video, the height of the video box will be 11rem
+    export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
     export let miniMode = false;
     $: streamableStore = videoBox.streamable;
     $: streamable = $streamableStore;
