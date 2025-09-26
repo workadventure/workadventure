@@ -134,7 +134,6 @@ test.describe('Meeting actions test', () => {
 
         // At this point, we should have again 2 webRtc connections open and 0 livekit connections
         await expectLivekitConnectionsCountToBe(page, 0);
-        await page.pause();
         await expectWebRtcConnectionsCountToBe(page, 2);
 
 

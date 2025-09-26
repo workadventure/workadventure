@@ -181,15 +181,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             console.error("An error occurred in receiveWebrtcStart", e);
             Sentry.captureException(e);
         });
-
-        /*const extendedSpaceUser = this._space.getSpaceUserBySpaceUserId(spaceUser.spaceUserId);
-
-        if (!extendedSpaceUser) {
-            console.error("Extended space user not found for user", user.userId);
-            return;
-        }
-
-        this.createPeerConnection(user, extendedSpaceUser);*/
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
