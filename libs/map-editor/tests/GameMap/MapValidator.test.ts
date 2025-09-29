@@ -3,6 +3,8 @@ import * as fs from "fs";
 import { describe, expect, it } from "vitest";
 import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
 import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
+import { WamFileMigration } from "../../src/Migrations/WamFileMigration";
+import { WamVersion200 } from "../../src/Migrations/WamMigrations/WamVersion2_0_0";
 
 async function loadMap(mapPath: string, logLevel: ErrorType = "info"): Promise<MapValidation> {
     const file = fs.readFileSync(mapPath);
@@ -372,8 +374,9 @@ describe("Map validator", () => {
 
     describe("validateWAMFile", () => {
         it("should successfully validate a valid WAM file", () => {
+            const wamFileMigration = new WamFileMigration(new WamVersion200());
             // eslint-disable-next-line @typescript-eslint/require-await
-            const validator = new MapValidator("error", { fileExists: async () => true });
+            const validator = new MapValidator("error", { fileExists: async () => true }, wamFileMigration);
             const validWAM = {
                 version: "2.0.0",
                 mapUrl: "https://example.com/map.tmj",
