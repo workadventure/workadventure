@@ -33,7 +33,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 mr-1" src={infoBulleSvg} alt={$LL.mapEditor.properties.tooltipProperties.label()} />
+        <img
+            class="w-6 mr-1"
+            src={infoBulleSvg}
+            alt={$LL.mapEditor.properties.tooltipProperties.label()}
+            draggable="false"
+        />
         <label for="contentTooltip">{$LL.mapEditor.properties.tooltipProperties.label()}</label>
     </span>
     {$LL.mapEditor.properties.tooltipProperties.label()}
@@ -56,19 +61,18 @@
             />
         </div>
         {#if !infinity}
-            <div class="value-input">
-                <label for="durationTooltip">{$LL.mapEditor.properties.tooltipProperties.duration()}</label>
-                <Input
-                    id="durationTooltip"
-                    type="number"
-                    min={1}
-                    step={1}
-                    max={20}
-                    disabled={infinity}
-                    bind:value={property.duration}
-                    on:change={onValueChange}
-                />
-            </div>
+            <Input
+                id="durationTooltip"
+                type="number"
+                label={$LL.mapEditor.properties.tooltipProperties.duration()}
+                min={1}
+                step={1}
+                max={20}
+                disabled={infinity}
+                bind:value={property.duration}
+                on:change={onValueChange}
+                onInput={onValueChange}
+            />
         {/if}
     </span>
 </PropertyEditorBase>

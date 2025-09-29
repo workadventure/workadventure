@@ -78,16 +78,16 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
-      OPID_CLIENT_ID: $OPID_CLIENT_ID
-      OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
-      OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
-      OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
-      OPID_SCOPE: $OPID_SCOPE
-      OPID_PROMPT: $OPID_PROMPT
-      OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
-      OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
-      OPID_LOGOUT_REDIRECT_URL: "$OPID_LOGOUT_REDIRECT_URL"
+      OPENID_CLIENT_ID: authorization-code-client-id
+      OPENID_CLIENT_SECRET: authorization-code-client-secret
+      OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
+      OPENID_PROFILE_SCREEN_PROVIDER: $OPENID_PROFILE_SCREEN_PROVIDER
+      OPENID_SCOPE: profile openid email tags-scope
+      OPENID_PROMPT: $OPENID_PROMPT
+      OPENID_USERNAME_CLAIM: $OPENID_USERNAME_CLAIM
+      OPENID_LOCALE_CLAIM: $OPENID_LOCALE_CLAIM
+      OPENID_LOGOUT_REDIRECT_URL: "$OPENID_LOGOUT_REDIRECT_URL"
+
       SECRET_KEY: "$SECRET_KEY"
       ADMIN_API_URL: "$ADMIN_API_URL"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
@@ -158,7 +158,8 @@ services:
       MATRIX_DOMAIN: matrix.workadventure.localhost
       # oEmbed providers
       EMBEDLY_KEY: "$EMBEDLY_KEY"
-      IFRAMELY_KEY: "$IFRAMELY_KEY"
+      # Map editor restrictions (allow all users when OIDC is enabled by default)
+      MAP_EDITOR_ALLOW_ALL_USERS: "false"
       # LaSuite Docs
       LASUITE_DOCS_BACKEND: $LASUITE_DOCS_BACKEND
       LASUITE_DOCS_FRONTEND: $LASUITE_DOCS_FRONTEND
@@ -206,7 +207,7 @@ services:
       - "traefik.http.services.maps.loadbalancer.server.port=80"
 
   back:
-    image: thecodingmachine/nodejs:v2-20-bullseye
+    image: thecodingmachine/nodejs:v2-22-bullseye
     command: npm run dev
     working_dir: /usr/src/app/back
     environment:
@@ -270,6 +271,8 @@ services:
       ENABLE_BASIC_AUTHENTICATION: "true"
       AUTHENTICATION_USER: "john.doe"
       AUTHENTICATION_PASSWORD: "password"
+      ENABLE_BEARER_AUTHENTICATION: "true"
+      AUTHENTICATION_TOKEN: "123"
       API_URL: back:50051
       # Sentry integration
       SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
@@ -441,6 +444,28 @@ services:
                 "ValueType": "json"
               },
             ]
+          },
+          {
+            "SubjectId":"3",
+            "Username":"UserMatrix",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
+              },
+            ]
           }
         ]
       IDENTITY_RESOURCES_INLINE: |
@@ -463,7 +488,7 @@ services:
     # A mock server to test OpenID connect connectivity
 
   synapse:
-    image: matrixdotorg/synapse:v1.115.0
+    image: matrixdotorg/synapse:v1.132.0
     entrypoint: /data/start.sh
     labels:
       - "traefik.enable=true"

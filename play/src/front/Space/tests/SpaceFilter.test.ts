@@ -1,10 +1,54 @@
 import { describe, expect, it, vi } from "vitest";
-import { SpaceUser } from "@workadventure/messages";
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { get } from "svelte/store";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 import { RoomConnection } from "../../Connection/RoomConnection";
-import { AllUsersSpaceFilter } from "../SpaceFilter/AllUsersSpaceFilter";
 import { Space } from "../Space";
+import { SpaceUserExtended } from "../SpaceInterface";
+
+const defaultRoomConnectionMock = {
+    emitUserJoinSpace: vi.fn(),
+    emitAddSpaceFilter: vi.fn(),
+    emitJoinSpace: vi.fn(),
+    emitRemoveSpaceFilter: vi.fn(),
+} as unknown as RoomConnection;
+
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+//     cleanupStore: vi.fn(),
+//     removePeer: vi.fn(),
+//     getPeer: vi.fn(),
+// };
+
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+}));
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -19,50 +63,76 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
 vi.mock("../../Phaser/Game/GameManager", () => {
     return {
         gameManager: {
-            getCurrentGameScene: () => ({}),
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: vi.fn(),
+            }),
         },
     };
 });
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
 
-const defaultRoomConnectionMock = {
-    emitUserJoinSpace: vi.fn(),
-    emitAddSpaceFilter: vi.fn(),
-    emitJoinSpace: vi.fn(),
-    emitRemoveSpaceFilter: vi.fn(),
-} as unknown as RoomConnection;
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
 
 describe("SpaceFilter", () => {
     describe("addUser", () => {
         //not throw a error because this function is call when you receive a message by the pusher
         it("should add user when user is not exist in list  ", async () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                [],
+                new Map<string, unknown>()
+            );
             const spaceUserId = "foo_0";
             const user: Pick<SpaceUserExtended, "spaceUserId"> = {
                 spaceUserId,
             };
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
-            await spaceFilter.addUser(user as SpaceUserExtended);
-            expect(get(spaceFilter.usersStore).has(user.spaceUserId)).toBeTruthy();
+            await space.addUser(user as SpaceUserExtended);
+            expect(get(space.usersStore).has(user.spaceUserId)).toBeTruthy();
         });
 
         it("should not overwrite user when you add a new user and he already exists", async () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                [],
+                new Map<string, unknown>()
+            );
             const spaceUserId = "foo_1";
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
-            await spaceFilter.addUser({
+            await space.addUser({
                 spaceUserId,
                 name: "user-name",
             } as unknown as SpaceUserExtended);
-            await spaceFilter.addUser({
+            await space.addUser({
                 spaceUserId,
                 name: "user-name-overloaded",
             } as unknown as SpaceUserExtended);
 
-            const userInStore = get(spaceFilter.usersStore).get(spaceUserId);
+            const userInStore = get(space.usersStore).get(spaceUserId);
 
             expect(userInStore?.spaceUserId).toEqual(spaceUserId);
             expect(userInStore?.name).toBe("user-name");
@@ -70,8 +140,13 @@ describe("SpaceFilter", () => {
     });
     describe("updateUserData", () => {
         it("should not update userdata when user object do not have id ", async () => {
-            const spaceFilterName = "space-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                [],
+                new Map<string, unknown>()
+            );
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -85,19 +160,22 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUserExtended;
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
+            await space.addUser(user as SpaceUserExtended);
+            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
-
-            const storedUser = get(spaceFilter.usersStore).get(spaceUserId);
+            const storedUser = get(space.usersStore).get(spaceUserId);
             expect(storedUser).toBeDefined();
             expect(storedUser?.spaceUserId).toBe(spaceUserId);
             expect(storedUser?.name).toBe(user.name);
         });
         it("should update user data when user object have a id ", async () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                [],
+                new Map<string, unknown>()
+            );
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -117,12 +195,10 @@ describe("SpaceFilter", () => {
                 ...newData,
             };
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
+            await space.addUser(user as SpaceUserExtended);
+            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
-
-            const updatedUser = get(spaceFilter.usersStore).get(spaceUserId);
+            const updatedUser = get(space.usersStore).get(spaceUserId);
 
             expect(updatedUser?.spaceUserId).toBe(spaceUserId);
             expect(updatedUser?.name).toBe(updatedUserResult.name);
@@ -130,8 +206,13 @@ describe("SpaceFilter", () => {
             expect(updatedUser?.roomName).toBe(updatedUserResult.roomName);
         });
         it("should not update userdata when user object have a incorrect id ", async () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                defaultRoomConnectionMock,
+                [],
+                new Map<string, unknown>()
+            );
             const spaceUserId = "";
 
             const user: Pick<SpaceUserExtended, "spaceUserId" | "name"> = {
@@ -146,60 +227,61 @@ describe("SpaceFilter", () => {
                 roomName: "world",
             } as SpaceUser;
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, defaultRoomConnectionMock);
+            await space.addUser(user as SpaceUserExtended);
+            space.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
 
-            await spaceFilter.addUser(user as SpaceUserExtended);
-            spaceFilter.updateUserData(newData, ["name", "availabilityStatus", "roomName"]);
-
-            const updatedUser = get(spaceFilter.usersStore).get(spaceUserId);
+            const updatedUser = get(space.usersStore).get(spaceUserId);
 
             expect(updatedUser?.name).toBe(user.name);
         });
     });
 
     describe("emitFilterEvent", () => {
-        it("emit addSpaceFilter event when you create spaceFilter", () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-
+        it("emit addSpaceFilter event when you create spaceFilter", async () => {
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
                 emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                mockRoomConnection as unknown as RoomConnection,
+                [],
+                new Map<string, unknown>()
+            );
 
-            const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
+            const unsubscribe = space.usersStore.subscribe(() => {});
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitAddSpaceFilter).toHaveBeenCalledWith({
                 spaceFilterMessage: {
-                    filterName: spaceFilterName,
                     spaceName: space.getName(),
-                    filter: {
-                        $case: "spaceFilterEverybody",
-                        spaceFilterEverybody: {},
-                    },
                 },
             });
 
             unsubscribe();
         });
 
-        it("emit removeSpaceFilter event when you stop listening to a spaceFilter", () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-
+        it("emit removeSpaceFilter event when you stop listening to a spaceFilter", async () => {
             const mockRoomConnection = {
                 emitAddSpaceFilter: vi.fn(),
                 emitRemoveSpaceFilter: vi.fn(),
+                emitJoinSpace: vi.fn(),
             } as unknown as RoomConnection;
 
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
-            const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
+            const space = await Space.create(
+                "space-name",
+                FilterType.ALL_USERS,
+                mockRoomConnection as unknown as RoomConnection,
+                [],
+                new Map<string, unknown>()
+            );
+
+            const unsubscribe = space.usersStore.subscribe(() => {});
             unsubscribe();
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -207,44 +289,9 @@ describe("SpaceFilter", () => {
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockRoomConnection.emitRemoveSpaceFilter).toHaveBeenLastCalledWith({
                 spaceFilterMessage: {
-                    filterName: spaceFilterName,
                     spaceName: space.getName(),
                 },
             });
-        });
-        it("emit updateSpaceFilter event when you update spaceFilter", () => {
-            const spaceFilterName = "space-filter-name";
-            const space = new Space("space-name", new Map<string, unknown>(), defaultRoomConnectionMock);
-
-            const mockRoomConnection = {
-                emitAddSpaceFilter: vi.fn(),
-                emitUpdateSpaceFilter: vi.fn(),
-                emitRemoveSpaceFilter: vi.fn(),
-            } as unknown as RoomConnection;
-
-            const spaceFilter = new AllUsersSpaceFilter(spaceFilterName, space, mockRoomConnection);
-
-            const unsubscribe = spaceFilter.usersStore.subscribe(() => {});
-
-            spaceFilter.filterByName("foo");
-
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            expect(mockRoomConnection.emitUpdateSpaceFilter).toHaveBeenCalledOnce();
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            expect(mockRoomConnection.emitUpdateSpaceFilter).toHaveBeenLastCalledWith({
-                spaceFilterMessage: {
-                    filterName: spaceFilterName,
-                    spaceName: space.getName(),
-                    filter: {
-                        $case: "spaceFilterContainName",
-                        spaceFilterContainName: {
-                            value: "foo",
-                        },
-                    },
-                },
-            });
-
-            unsubscribe();
         });
     });
 });

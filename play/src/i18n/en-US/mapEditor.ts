@@ -227,12 +227,12 @@ const mapEditor: BaseTranslation = {
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
         },
-        openPdfProperties: {
-            label: "Open PDF",
-            description: "Open PDF within WorkAdventure.",
-            error: "Please enter a valid PDF URL",
-            disabled: "PDF integration is disabled.",
-            pdfUrlLabel: "PDF URL",
+        openFileProperties: {
+            label: "Open file",
+            description: "Open file within WorkAdventure.",
+            error: "Please enter a valid file",
+            disabled: "File integration is disabled.",
+            fileUrlLabel: "File URL",
             uploadFile: {
                 title: "Add your file",
                 description: "Drag and drop or choose your file",
@@ -240,8 +240,17 @@ const mapEditor: BaseTranslation = {
                 chooseFile: "Choose file",
                 errorOnFileFormat: "File format not supported",
                 errorOnFileNumber: "Multiple file drop is not supported",
+                errorOnFileSize: "File is too large, max size is {size} MB",
             },
         },
+        livekitProperties: {
+            label: "Livekit Room",
+            description: "Start Livekit meeting on enter.",
+            roomNameLabel: "Room Name",
+            livekitUrl: "Livekit URL",
+            roomNamePlaceholder: "Room name",
+        },
+        noProperties: "No properties defined",
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -260,6 +269,7 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
             },
         },
+        nameHelpText: "This input will be shown to the user if they enter the area.",
     },
     areaEditorInstructions: {
         title: "How it works ?",
@@ -269,9 +279,11 @@ const mapEditor: BaseTranslation = {
         header: {
             title: "Add object to your map",
             description: "Search, upload or select existing object and add it in the map.",
+            choose: "Choose an object",
         },
         title: "Put your object",
         editing: "Editing: {name}",
+        drop: "Drop your file anywhere",
         itemPicker: {
             searchPlaceholder: "Search",
             backToSelectObject: "Back to select object",
@@ -297,6 +309,7 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Choose file",
             errorOnFileFormat: "File format not supported",
             errorOnFileNumber: "Multiple file drop is not supported",
+            errorOnFileSize: "File is too large, max size is {size} MB",
         },
         images: "Image{{s}}",
         noImage: "No image",
@@ -323,6 +336,10 @@ const mapEditor: BaseTranslation = {
             delete: "Delete",
             save: "Save",
             upload: "Upload",
+        },
+        errors: {
+            dragNotConnected: "You can't upload files if you are not logged in and don't have the rights to do so.",
+            dragNotAllowed: "You do not have the rights to upload files on this map",
         },
     },
     settings: {

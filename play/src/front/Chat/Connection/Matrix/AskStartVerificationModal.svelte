@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as Sentry from "@sentry/svelte";
     import { closeModal } from "svelte-modals";
     import { ShowSasCallbacks, VerificationRequestEvent, Verifier, VerifierEvent } from "matrix-js-sdk/lib/crypto-api";
     import { VerificationMethod } from "matrix-js-sdk/lib/types";
@@ -20,8 +19,7 @@
         try {
             await request.accept();
         } catch (error) {
-            console.error(error);
-            Sentry.captureMessage(`Failed to accept verification request : ${error}`);
+            console.error("Failed to accept verification request:", error);
             errorLabel = "Failed to accept verification request ...";
             return;
         }
@@ -60,9 +58,8 @@
         });
 
         verifier.verify().catch((error) => {
-            console.error("error with verify ...");
+            console.error("error with verify ...", error);
             errorLabel = "Failed to start verification ...";
-            Sentry.captureMessage(`Failed to start verification ${error}`);
             doneDeferred.reject();
             verifier?.off(VerifierEvent.ShowSas, handleVerifierEventShowSas);
             request.off(VerificationRequestEvent.Change, handleChangeVerificationRequestEvent);
@@ -113,7 +110,7 @@
                 {$LL.chat.askStartVerificationModal.ignore()}
             </button>
             <button
-                class="btn btn-secondary flex-1 justify-center  bg-secondary"
+                class="btn btn-secondary flex-1 justify-center bg-secondary"
                 data-testid="VerifyTheSessionButton"
                 on:click={acceptToStartVerification}
             >

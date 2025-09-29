@@ -1,5 +1,4 @@
 import { MatrixClient, SetPresence, User } from "matrix-js-sdk";
-import * as Sentry from "@sentry/svelte";
 import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { ChatUser } from "../ChatConnection";
@@ -34,7 +33,6 @@ export function mapMatrixPresenceToAvailabilityStatus(presence: string = SetPres
             return AvailabilityStatus.BUSY;
         default:
             console.error(`Do not handle the status ${presence}`);
-            Sentry.captureMessage(`Do not handle the status ${presence}`);
             return AvailabilityStatus.UNCHANGED;
     }
 }

@@ -389,6 +389,15 @@
         applicationProperty = applicationPropertyEvent.detail;
     }
 
+    let applicationPropertyInProcessing = false;
+    function onProcessingApplicationProperty() {
+        applicationPropertyInProcessing = true;
+    }
+
+    function onProcessedApplicationProperty() {
+        applicationPropertyInProcessing = false;
+    }
+
     $: quotedMessageContent = $selectedChatMessageToReply?.content;
 </script>
 
@@ -408,11 +417,16 @@
                         <IconX font-size="12" />
                     </button>
                     {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img class="w-full h-full object-cover rounded-[10px]" src={preview.url} alt={preview.name} />
+                        <img
+                            draggable="false"
+                            class="w-full h-full object-cover rounded-[10px]"
+                            src={preview.url}
+                            alt={preview.name}
+                        />
                     {:else}
                         <div
                             title={preview.name}
-                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px] "
+                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
                         >
                             <span class="line-clamp-2 indent-3 text-xs">
                                 {preview.name}
@@ -619,6 +633,8 @@
             property={applicationProperty}
             on:close={() => (applicationProperty = undefined)}
             on:update={onUpdatApplicationProperty}
+            on:processing={onProcessingApplicationProperty}
+            on:processed={onProcessedApplicationProperty}
         />
     </div>
 {/if}
@@ -689,9 +705,7 @@
         <button
             data-testid="sendMessageButton"
             class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-none"
-            disabled={message.trim().length === 0 &&
-                files.length === 0 &&
-                (!applicationProperty || applicationProperty.link.length === 0)}
+            disabled={applicationPropertyInProcessing}
             on:click={() => sendMessage(message)}
         >
             <IconSend />

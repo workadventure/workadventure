@@ -187,9 +187,9 @@
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0 px-2" on:submit|preventDefault={submit}>
-    <section class="flex  min-h-dvh ">
+    <section class="flex min-h-dvh">
         <div
-            class="text-white justify-center items-center overflow-hidden  w-[100vw] container  flex flex-col min-h-dvh pb-24 pt-8 lg:pt-0 relative "
+            class="text-white justify-center items-center overflow-hidden w-[100vw] container flex flex-col min-h-dvh pb-36 pt-8 lg:pt-0 relative"
         >
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
@@ -199,7 +199,7 @@
             </section>
 
             <div
-                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row  lg:items-stretch lg:px-4 lg:pb-4 "
+                class="flex md:flex-wrap flex-col lg:space-x-4 w-full items-center justify-center lg:flex-row lg:items-stretch lg:px-4 lg:pb-4"
             >
                 <!-- MICROPHONE -->
 
@@ -211,7 +211,7 @@
                     <MicOnIcon height="h-8" width="w-8" slot="icon" />
                     <span slot="title">{$LL.actionbar.subtitle.microphone()}</span>
 
-                    <div class="absolute top-4 start-0 flex justify-center w-full " slot="widget">
+                    <div class="absolute top-4 start-0 flex justify-center w-full" slot="widget">
                         <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                     </div>
                 </SelectMicrophone>
@@ -227,7 +227,7 @@
                     <span slot="widget">
                         {#if selectedCamera !== undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
                             <video
-                                class="myCamVideoSetup flex items-center  justify-center w-full   aspect-video overflow-hidden scale-x-[-1]"
+                                class="myCamVideoSetup flex items-center justify-center w-full aspect-video overflow-hidden scale-x-[-1]"
                                 use:srcObject={$localStreamStore.stream}
                                 autoplay
                                 muted
@@ -254,14 +254,14 @@
                 {/if}
             </div>
             <div
-                class="fixed bottom-0 start-0  !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
+                class="fixed bottom-0 start-0 !w-[100vw] bg-contrast/80 backdrop-blur-md border border-solid border-t border-b-0 border-x-0 border-white/10"
             >
                 <section
-                    class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4 "
+                    class="container m-auto p-4 flex flex-col-reverse md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-4"
                 >
                     <button
                         type="submit"
-                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2 
+                        class="btn btn-light btn-lg btn-ghost w-full md:w-1/2
               
                      hidden">{$LL.actionbar.cancel()}</button
                     >

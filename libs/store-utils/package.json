@@ -22,7 +22,7 @@
     "@types/node": "^18.11.18",
     "@types/debug": "^4.1.5",
     "@workadventure/eslint-config": "1.0.0",
-    "eslint": "^9.25.1",
+    "eslint": "^9.35.0",
     "svelte": "^3.53.1",
     "svelte-check": "^2.9.2",
     "prettier": "^2.8.2",

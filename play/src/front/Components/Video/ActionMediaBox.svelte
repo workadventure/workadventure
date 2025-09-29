@@ -8,11 +8,10 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreenLayoutStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
-    import { peerStore } from "../../Stores/PeerStore";
+    import { SpaceUserExtended } from "../../Space/SpaceInterface";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { IconAlertTriangle, IconUser } from "@wa-icons";
 
@@ -79,9 +78,9 @@
         // FIXME: this works only in bubbles
         // extract the user id from the space user id (spaceUserId = roomId + "_" + userId)
         const spaceUserId = spaceUser.spaceUserId;
-        const userId = Number(spaceUserId.split("_").pop());
+        // const userId = Number(spaceUserId.split("_").pop());
 
-        peerStore.removePeer(userId);
+        spaceUser.space.simplePeer?.removePeer(spaceUserId);
         close();
     }
 
@@ -135,7 +134,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => pin()}
         >
-            <img src={PinSvg} class="w-4 h-4" alt="" />
+            <img src={PinSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.pin()}
         </button>
     {/if}
@@ -145,7 +144,7 @@
         class="action-button mute-audio-user flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteAudio(spaceUser)}
     >
-        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
+        <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
         {$LL.camera.menu.muteAudioUser()}
     </button>
 
@@ -155,7 +154,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody(spaceUser)}
         >
-            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" />
+            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteAudioEveryBody()}
         </button>
     {/if}
@@ -166,7 +165,7 @@
         class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
         on:click|preventDefault|stopPropagation={() => muteVideo(spaceUser)}
     >
-        <img src={NoVideoSvg} class="w-4 h-4" alt="" />
+        <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
         {$LL.camera.menu.muteVideoUser()}
     </button>
 
@@ -176,7 +175,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => muteVideoEveryBody(spaceUser)}
         >
-            <img src={NoVideoSvg} class="w-4 h-4" alt="" />
+            <img src={NoVideoSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.muteVideoEveryBody()}
         </button>
     {/if}
@@ -188,7 +187,7 @@
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             on:click|preventDefault|stopPropagation={() => kickoff(spaceUser)}
         >
-            <img src={banUserSvg} class="w-4 h-4" alt="" />
+            <img src={banUserSvg} class="w-4 h-4" alt="" draggable="false" />
             {$LL.camera.menu.kickoffUser()}
         </button>
     {/if}

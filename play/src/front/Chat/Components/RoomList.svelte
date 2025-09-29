@@ -38,7 +38,6 @@
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
-    //TODO : Make a distinction between invitations to a room or a space;
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
     let proximityHasUnreadMessages = proximityChatRoom.hasUnreadMessages;
@@ -155,7 +154,7 @@
             {/if}
             <ChatHeader />
             <div
-                class="relative pt-16 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
+                class="relative pt-2 {$isEncryptionRequiredAndNotSet === true && $isGuest === false
                     ? ' h-[calc(100%-2rem)]'
                     : 'h-full'}"
             >
@@ -201,7 +200,7 @@
                                 >
                                     <div class="absolute overflow-hidden w-full h-full rounded-full">
                                         <div
-                                            class=" flex items-center justify-center translate-y-[3px]  group-hover:translate-y-[0] transition-all"
+                                            class=" flex items-center justify-center translate-y-[3px] group-hover:translate-y-[0] transition-all"
                                         >
                                             <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
                                         </div>
@@ -327,7 +326,7 @@
     {:else if $selectedRoomStore === undefined && sideBarWidth >= CHAT_LAYOUT_LIMIT}
         <div class="flex flex-col flex-1 ps-4 items-center pt-8">
             <div class="text-center px-3 max-w-md">
-                <img src={getCloseImg} alt="Discussion bubble" />
+                <img src={getCloseImg} alt="Discussion bubble" draggable="false" />
                 <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
                 <div class="text-sm opacity-50 text-center">
                     {$LL.chat.noRoomOpenDescription()}
@@ -343,7 +342,7 @@
                 <button
                     data-testid="restoreEncryptionButton"
                     on:click|stopPropagation={initChatConnectionEncryption}
-                    class="text-white flex gap-2 justify-center w-full bg-neutral  hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
+                    class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
                     <IconCloudLock font-size="20" />
                     <div class="text-sm font-bold grow text-start">

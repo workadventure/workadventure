@@ -60,7 +60,7 @@ export default {
                 if (err instanceof z.ZodError) {
                     console.error(err.issues);
                 }
-                throw new Error(`Invalid state received for computer object`);
+                throw new Error(`Invalid state received for computer object`, { cause: err });
             }
         }
 
@@ -79,9 +79,13 @@ export default {
                 item.emit("TURN_OFF", state);
             }
         });
+        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         item.on("TURN_ON", () => {
             computer.anims.play("computer_run");
         });
+        // Phaser unsubscribes from the events when the scene is destroyed, so we don't need to unsubscribe here
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         item.on("TURN_OFF", () => {
             computer.anims.play("computer_off");
         });

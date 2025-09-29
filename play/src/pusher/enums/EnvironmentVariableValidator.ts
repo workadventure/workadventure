@@ -52,14 +52,133 @@ export const EnvironmentVariables = z.object({
     INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
         .transform(emptyStringToUndefined)
         .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
-    OPID_CLIENT_ID: z.string().optional(),
-    OPID_CLIENT_SECRET: z.string().optional(),
-    OPID_CLIENT_ISSUER: z.string().optional(),
-    OPID_PROFILE_SCREEN_PROVIDER: z.string().optional(),
-    OPID_SCOPE: z.string().optional(),
-    OPID_PROMPT: z.string().optional(),
-    OPID_USERNAME_CLAIM: z.string().optional(),
-    OPID_LOCALE_CLAIM: z.string().optional(),
+
+    OPID_CLIENT_ID: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_CLIENT_ID is deprecated. Please use OPENID_CLIENT_ID instead.");
+            }
+            return val;
+        }),
+    OPID_CLIENT_SECRET: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_CLIENT_SECRET is deprecated. Please use OPENID_CLIENT_SECRET instead.");
+            }
+            return val;
+        }),
+    OPID_CLIENT_ISSUER: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_CLIENT_ISSUER is deprecated. Please use OPENID_CLIENT_ISSUER instead.");
+            }
+            return val;
+        }),
+    OPID_CLIENT_REDIRECT_URL: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn(
+                    "Using OPID_CLIENT_REDIRECT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_URL instead."
+                );
+            }
+            return val;
+        }),
+    OPID_CLIENT_REDIRECT_LOGOUT_URL: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn(
+                    "Using OPID_CLIENT_REDIRECT_LOGOUT_URL is deprecated. Please use OPENID_CLIENT_REDIRECT_LOGOUT_URL instead."
+                );
+            }
+            return val;
+        }),
+    OPID_PROFILE_SCREEN_PROVIDER: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn(
+                    "Using OPID_PROFILE_SCREEN_PROVIDER is deprecated. Please use OPENID_PROFILE_SCREEN_PROVIDER instead."
+                );
+            }
+            return val;
+        }),
+    OPID_SCOPE: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_SCOPE is deprecated. Please use OPENID_SCOPE instead.");
+            }
+            return val;
+        }),
+    OPID_PROMPT: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_PROMPT is deprecated. Please use OPENID_PROMPT instead.");
+            }
+            return val;
+        }),
+    OPID_USERNAME_CLAIM: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_USERNAME_CLAIM is deprecated. Please use OPENID_USERNAME_CLAIM instead.");
+            }
+            return val;
+        }),
+    OPID_LOCALE_CLAIM: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_LOCALE_CLAIM is deprecated. Please use OPENID_LOCALE_CLAIM instead.");
+            }
+            return val;
+        }),
+    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional().transform((val) => {
+        if (val !== null && val !== undefined) {
+            console.warn("Using OPID_WOKA_NAME_POLICY is deprecated. Please use OPENID_WOKA_NAME_POLICY instead.");
+        }
+        return val;
+    }),
+    OPID_TAGS_CLAIM: z
+        .string()
+        .optional()
+        .transform((val) => {
+            if (val !== null && val !== undefined) {
+                console.warn("Using OPID_TAGS_CLAIM is deprecated. Please use OPENID_TAGS_CLAIM instead.");
+            }
+            return val;
+        }),
+
+    // New OPENID variables (replacing deprecated OPID_ variables)
+    OPENID_CLIENT_ID: z.string().optional(),
+    OPENID_CLIENT_SECRET: z.string().optional(),
+    OPENID_CLIENT_ISSUER: z.string().optional(),
+    OPENID_CLIENT_REDIRECT_URL: z.string().optional(),
+    OPENID_CLIENT_REDIRECT_LOGOUT_URL: z.string().optional(),
+    OPENID_PROFILE_SCREEN_PROVIDER: z.string().optional(),
+    OPENID_SCOPE: z.string().optional(),
+    OPENID_PROMPT: z.string().optional(),
+    OPENID_USERNAME_CLAIM: z.string().optional(),
+    OPENID_LOCALE_CLAIM: z.string().optional(),
+    OPENID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    OPENID_TAGS_CLAIM: z.string().optional(),
+
     USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional().transform((val) => toBool(val, false)),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
@@ -93,13 +212,16 @@ export const EnvironmentVariables = z.object({
     JITSI_PRIVATE_MODE: BoolAsString.optional().transform((val) => toBool(val, false)),
     MAX_USERNAME_LENGTH: PositiveIntAsString.optional().transform((val) => toNumber(val, 10)),
     MAX_PER_GROUP: PositiveIntAsString.optional().transform((val) => toNumber(val, 4)),
+    MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 16))
+        .describe(
+            "An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room."
+        ),
     NODE_ENV: z.string().optional(),
     CONTACT_URL: AbsoluteOrRelativeUrl.optional(),
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
-    OPID_TAGS_CLAIM: z.string().optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
@@ -172,6 +294,10 @@ export const EnvironmentVariables = z.object({
     LASUITE_DOCS_BACKEND: z.string().optional(),
     LASUITE_DOCS_ADMIN_ACCESS_TOKEN: z.string().optional(),
     LASUITE_DOCS_FRONTEND: z.string().optional(),
+    GRPC_MAX_MESSAGE_SIZE: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
+        .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

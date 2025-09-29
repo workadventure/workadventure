@@ -54,7 +54,7 @@ serviceAccount:
 commonEnv:
   ENABLE_MAP_EDITOR: "true"
   JITSI_URL: https://meet.jit.si
-  MAX_PER_GROUP: 4
+  MAX_PER_GROUP: 1000
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
   UPLOAD_MAX_FILESIZE: "10485760"
@@ -129,6 +129,33 @@ play:
 
   affinity: {}
 
+  # Additional volumes to be added to the play pod
+  extraVolumes: []
+  # Example:
+  # extraVolumes:
+  #   - name: my-config
+  #     configMap:
+  #       name: my-configmap
+  #   - name: my-secret
+  #     secret:
+  #       secretName: my-secret
+  #   - name: my-persistent-storage
+  #     persistentVolumeClaim:
+  #       claimName: my-pvc
+
+  # Additional volume mounts to be added to the play container
+  extraVolumeMounts: []
+  # Example:
+  # extraVolumeMounts:
+  #   - name: my-config
+  #     mountPath: /etc/config
+  #     readOnly: true
+  #   - name: my-secret
+  #     mountPath: /etc/secrets
+  #     readOnly: true
+  #   - name: my-persistent-storage
+  #     mountPath: /data
+
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
     JITSI_PRIVATE_MODE: "false"
@@ -142,6 +169,8 @@ play:
     MAX_USERNAME_LENGTH: 10
     DISABLE_ANONYMOUS: "false"
     DISABLE_NOTIFICATIONS: "false"
+    # Use STARTUP_COMMAND to execute a command when the container starts.
+    #STARTUP_COMMAND: "echo 'Hello World!'"
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
   extraEnvVars: []
@@ -224,6 +253,33 @@ back:
   tolerations: []
 
   affinity: {}
+
+  # Additional volumes to be added to the back pod
+  extraVolumes: []
+  # Example:
+  # extraVolumes:
+  #   - name: my-config
+  #     configMap:
+  #       name: my-configmap
+  #   - name: my-secret
+  #     secret:
+  #       secretName: my-secret
+  #   - name: my-persistent-storage
+  #     persistentVolumeClaim:
+  #       claimName: my-pvc
+
+  # Additional volume mounts to be added to the back container
+  extraVolumeMounts: []
+  # Example:
+  # extraVolumeMounts:
+  #   - name: my-config
+  #     mountPath: /etc/config
+  #     readOnly: true
+  #   - name: my-secret
+  #     mountPath: /etc/secrets
+  #     readOnly: true
+  #   - name: my-persistent-storage
+  #     mountPath: /data
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
@@ -526,6 +582,33 @@ mapstorage:
 
   affinity: {}
 
+  # Additional volumes to be added to the map-storage pod
+  extraVolumes: []
+  # Example:
+  # extraVolumes:
+  #   - name: my-config
+  #     configMap:
+  #       name: my-configmap
+  #   - name: my-secret
+  #     secret:
+  #       secretName: my-secret
+  #   - name: my-persistent-storage
+  #     persistentVolumeClaim:
+  #       claimName: my-pvc
+
+  # Additional volume mounts to be added to the map-storage container
+  extraVolumeMounts: []
+  # Example:
+  # extraVolumeMounts:
+  #   - name: my-config
+  #     mountPath: /etc/config
+  #     readOnly: true
+  #   - name: my-secret
+  #     mountPath: /etc/secrets
+  #     readOnly: true
+  #   - name: my-persistent-storage
+  #     mountPath: /data
+
   persistence:
     enabled: false
     storageClass: ""
@@ -591,13 +674,13 @@ ingress:
   tls: false
   secretName: ""
   pathType: ImplementationSpecific
+  # Annotations used in multi-domain mode for all routes (and in single-domain mode for "/ws" and "/" route).
+  annotationsRoot:
+    {}
+  # Annotations used only in single-domain mode for "/api", "/uploader", "/icon" and "/map-storage" paths (that are using the rewritePathSuffix).
   annotationsPath:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-  annotationsMapstoragePath:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-
   rewritePathSuffix: "(/|$)(.*)"
 
 redis:

@@ -37,7 +37,7 @@
         on:click|preventDefault={() => dispatch("click")}
         type="button"
     >
-        <img class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
+        <img draggable="false" class="h-6 w-6" src={tool.img} alt="open tool {tool.toolName}" />
     </button>
     {#if activeTooltip}
         <div

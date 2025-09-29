@@ -16,7 +16,7 @@ In order to remove warnings in your IDE, you need to build the typings from the 
 Run:
 
 ```console
-docker-compose exec play npm run build-typings
+docker compose exec play npm run build-typings
 ```
 
 If you change the scripting API, you will need to re-run this command.
@@ -34,7 +34,7 @@ npm run build
 Start WorkAdventure with:
 
 ```bash
-docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
+docker-compose up -d
 ```
 
 Wait 2-3 minutes for the environment to start, then:
@@ -57,7 +57,7 @@ npm run test-headed -- tests/[your_test_file.ts]
 Start WorkAdventure with:
 
 ```bash
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d --build
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
 ```
 
 Start the tests with:

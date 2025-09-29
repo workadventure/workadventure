@@ -59,8 +59,6 @@ const PING_INTERVAL = 80000;
 
 const roomManager = {
     joinRoom: (call: UserSocket): void => {
-        console.log("joinRoom called");
-
         let room: GameRoom | null = null;
         let user: User | null = null;
         let pongTimeoutId: NodeJS.Timeout | undefined;
@@ -121,18 +119,6 @@ const roomManager = {
                             }
                             case "variableMessage": {
                                 await socketManager.handleVariableEvent(room, user, message.message.variableMessage);
-                                break;
-                            }
-                            case "webRtcSignalToServerMessage": {
-                                socketManager.emitVideo(room, user, message.message.webRtcSignalToServerMessage);
-                                break;
-                            }
-                            case "webRtcScreenSharingSignalToServerMessage": {
-                                socketManager.emitScreenSharing(
-                                    room,
-                                    user,
-                                    message.message.webRtcScreenSharingSignalToServerMessage
-                                );
                                 break;
                             }
                             case "queryMessage": {
@@ -286,7 +272,7 @@ const roomManager = {
             }
             const today = new Date();
             pongTimeoutId = setTimeout(() => {
-                console.log(
+                console.info(
                     "Connection lost with user ",
                     user?.uuid,
                     user?.name,
@@ -294,15 +280,6 @@ const roomManager = {
                     room?.roomUrl,
                     "at : ",
                     today.toLocaleString("en-GB")
-                );
-
-                Sentry.captureMessage(
-                    `Connection lost with user
-                    ${JSON.stringify(user?.uuid)}
-                    ${JSON.stringify(user?.name)}
-                    in room 
-                    ${JSON.stringify(room?.roomUrl)}`,
-                    "debug"
                 );
                 call.write({
                     message: {
@@ -387,8 +364,6 @@ const roomManager = {
     },
 
     adminRoom(call: AdminSocket): void {
-        console.log("adminRoom called");
-
         const admin = new Admin(call);
         let room: GameRoom | null = null;
 

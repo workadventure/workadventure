@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpNotificationSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
@@ -24,13 +25,14 @@
         mapExplorationObjectSelectedStore,
     } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import { gameManager, GameSceneNotFoundError } from "../Phaser/Game/GameManager";
     import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import { highlightFullScreen } from "../Stores/ActionsCamStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { inputFormFocusStore } from "../Stores/UserInputStore";
+    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
@@ -59,47 +61,45 @@
     import ExternalComponents from "./ExternalModules/ExternalComponents.svelte";
     import PictureInPicture from "./Video/PictureInPicture.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
-    import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
-    let keyboardEventIsDisable = false;
 
     const handleFocusInEvent = (event: FocusEvent) => {
-        const target = event.target as HTMLElement | null;
         if (
-            target &&
-            (["INPUT", "TEXTAREA"].includes(target.tagName) ||
-                (target.tagName === "DIV" && target.getAttribute("role") === "textbox") ||
-                target.getAttribute("contenteditable") === "true" ||
-                target.classList.contains("block-user-action"))
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            event.target instanceof HTMLSelectElement ||
+            (event.target instanceof HTMLDivElement &&
+                (event.target.getAttribute("role") === "textbox" ||
+                    event.target.classList.contains("block-user-action") ||
+                    event.target.getAttribute("contenteditable") === "true"))
         ) {
-            try {
-                gameManager.getCurrentGameScene().userInputManager.disableControls("textField");
-                keyboardEventIsDisable = true;
-            } catch (error) {
-                if (error instanceof GameSceneNotFoundError) {
-                    keyboardEventIsDisable = false;
-                    return;
-                }
-                throw error;
-            }
+            inputFormFocusStore.set(true);
         }
     };
 
-    const handleFocusOutEvent = () => {
-        if (!keyboardEventIsDisable) return;
-        try {
-            gameManager.getCurrentGameScene().userInputManager.restoreControls("textField");
-            keyboardEventIsDisable = false;
-        } catch (error) {
-            if (error instanceof GameSceneNotFoundError) {
-                keyboardEventIsDisable = false;
-                return;
-            }
-            throw error;
+    const handleFocusOutEvent = (event: FocusEvent) => {
+        if (
+            event.target instanceof HTMLInputElement ||
+            event.target instanceof HTMLTextAreaElement ||
+            event.target instanceof HTMLSelectElement ||
+            (event.target instanceof HTMLDivElement &&
+                (event.target.getAttribute("role") === "textbox" ||
+                    event.target.classList.contains("block-user-action") ||
+                    event.target.getAttribute("contenteditable") === "true"))
+        ) {
+            inputFormFocusStore.set(false);
         }
     };
 
-    document.addEventListener("focusin", handleFocusInEvent);
-    document.addEventListener("focusout", handleFocusOutEvent);
+    onMount(() => {
+        document.addEventListener("focusin", handleFocusInEvent);
+        document.addEventListener("focusout", handleFocusOutEvent);
+    });
+
+    onDestroy(() => {
+        document.removeEventListener("focusin", handleFocusInEvent);
+        document.removeEventListener("focusout", handleFocusOutEvent);
+        inputFormFocusStore.set(false);
+    });
 
     $: marginLeft = $chatVisibilityStore ? $chatSidebarWidthStore : 0;
     $: marginRight =
@@ -111,7 +111,8 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout absolute h-full w-full pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout absolute h-full w-full pointer-events-none z-10 {[...$coWebsites.values()].length ===
+    0
         ? 'not-cowebsite'
         : ''}"
     style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
@@ -251,7 +252,7 @@
 </div>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+    @use "../style/breakpoints.scss" as *;
 
     .popups {
         z-index: 1000;

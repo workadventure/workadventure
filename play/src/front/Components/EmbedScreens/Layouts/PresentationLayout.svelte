@@ -10,6 +10,7 @@
     import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore } from "../../../Stores/PeerStore";
+    import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     export let inPictureInPicture: boolean;
 
@@ -24,6 +25,7 @@
         screenShareHeight: 0,
     });
 
+    let isMobile = isMediaBreakpointUp("md");
     const handleResize = () => {
         windowSize.set({
             height: window.innerHeight,
@@ -32,6 +34,7 @@
             screenShareHeight: highlightScreen?.offsetHeight || 0,
         });
         resizeHeight();
+        isMobile = isMediaBreakpointUp("md");
     };
 
     afterUpdate(() => {
@@ -79,7 +82,7 @@
         class="presentation-layout flex flex-col pointer-events-none h-full w-full absolute mobile:mt-3"
         bind:clientHeight={containerHeight}
     >
-        {#if $streamableCollectionStore.size > 0}
+        {#if $streamableCollectionStore.size > 0 && (!isMobile || $streamableCollectionStore.size > 1)}
             <div
                 class="justify-end md:justify-center w-full relative"
                 class:max-height-quarter={$isOnOneLine && !inPictureInPicture}

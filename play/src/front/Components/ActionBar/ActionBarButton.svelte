@@ -22,6 +22,7 @@
     export let media = "";
     export let desc = "";
     export let tooltipShortcuts: string[] = [];
+    export let boldLabel = false;
 
     // By default, the button will have a rounded corner on the left if it is the first of a div.
     // This behaviour can be overridden by setting the "first" prop to true or false explicitly.
@@ -99,22 +100,22 @@
             {#if !hideIconInActionBar}
                 <slot />
             {/if}
-            {#if label}<span>{label}</span>{/if}
+            {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc)}
+        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle != "" || tooltipDesc != "")}
             <HelpTooltip title={tooltipTitle} helpMedia={media} {desc} shortcuts={tooltipShortcuts} />
         {/if}
     </div>
 {:else}
     <button
-        class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
+        class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
                     {state === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {state === 'active' && !isGradient ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {state === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {isGradient ? 'gradient overflow-hidden' : ''}
                     {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
-                    {isGradient ? 'justify-center relative' : ''}"
+                    {isGradient ? 'relative' : ''}"
         use:action
         on:click={() => handleClick()}
         style={styleVars}

@@ -15,14 +15,18 @@ export class ApiClientRepository {
 
     public constructor(private apiUrls: string[]) {}
 
-    public async getClient(roomId: string): Promise<RoomManagerClient> {
+    public async getClient(roomId: string, GRPC_MAX_MESSAGE_SIZE: number): Promise<RoomManagerClient> {
         const index = this.getIndex(roomId);
 
         let client = this.roomManagerClients[index];
         if (client === undefined) {
             this.roomManagerClients[index] = client = new RoomManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure()
+                grpc.credentials.createInsecure(),
+                {
+                    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
+                    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
+                }
             );
         }
         debug("Mapping room %s to API server %s", roomId, this.apiUrls[index]);
@@ -30,23 +34,30 @@ export class ApiClientRepository {
         return Promise.resolve(client);
     }
 
-    public getAllClients(): Promise<RoomManagerClient[]> {
+    public getAllClients(GRPC_MAX_MESSAGE_SIZE: number): Promise<RoomManagerClient[]> {
         for (let i = 0; i < this.apiUrls.length; i++) {
             if (this.roomManagerClients[i] === undefined) {
-                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpc.credentials.createInsecure());
+                this.roomManagerClients[i] = new RoomManagerClient(this.apiUrls[i], grpc.credentials.createInsecure(), {
+                    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
+                    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
+                });
             }
         }
         return Promise.resolve(this.roomManagerClients);
     }
 
-    async getSpaceClient(spaceName: string) {
+    async getSpaceClient(spaceName: string, GRPC_MAX_MESSAGE_SIZE: number): Promise<SpaceManagerClient> {
         const index = this.getIndex(spaceName);
 
         let client = this.spaceManagerClients[index];
         if (client === undefined) {
             this.spaceManagerClients[index] = client = new SpaceManagerClient(
                 this.apiUrls[index],
-                grpc.credentials.createInsecure()
+                grpc.credentials.createInsecure(),
+                {
+                    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE,
+                    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE,
+                }
             );
         }
         debug("Mapping room %s to API server %s", spaceName, this.apiUrls[index]);

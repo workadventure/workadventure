@@ -102,15 +102,37 @@ export class GameMapAreas {
     public isUserHasWriteAccessOnAreaForEntityCoordinates(
         entityCenterCoordinates: EntityCoordinates,
         userConnectedTags: string[],
-        userUUID = ""
+        userUUID = "",
+        width: number,
+        height: number,
+        floating: boolean
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
-        if (areas?.length === 0) {
+        const topLeftCoordinates = {
+            x: entityCenterCoordinates.x - width / 2,
+            y: entityCenterCoordinates.y - height / 2,
+        };
+        const bottomRightCoordinates = {
+            x: entityCenterCoordinates.x + width / 2,
+            y: entityCenterCoordinates.y + height / 2,
+        };
+
+        let validAreas: AreaData[] = areas;
+
+        validAreas = areas.filter((area) => {
+            if (
+                MathUtils.isOverlappingWithRectangle(topLeftCoordinates, area) &&
+                MathUtils.isOverlappingWithRectangle(bottomRightCoordinates, area)
+            ) {
+                return true;
+            }
             return false;
-        }
+        });
+
+        if (validAreas?.length === 0) return false;
         return (
-            areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
-            areas.some((area) => this.isAreaOwner(area, userUUID))
+            validAreas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
+            validAreas.some((area) => this.isAreaOwner(area, userUUID))
         );
     }
 
@@ -157,16 +179,24 @@ export class GameMapAreas {
         return this.getPersonalAreaRightPropertyData(area) != undefined;
     }
 
-    public isGameMapContainsSpecificAreas(): boolean {
+    public isGameMapContainsSpecificAreas(userId: string | undefined, tags: string[]): boolean {
         let hasSpecificAreas = false;
         this.areas.forEach((area) => {
             if (this.getAreaRightPropertyData(area) !== undefined) {
-                hasSpecificAreas = true;
+                if (this.isUserHasWriteAccessOnAreaByUserTags(area, tags)) {
+                    hasSpecificAreas = true;
+                    return;
+                }
                 return;
             }
-            if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
-                hasSpecificAreas = true;
-                return;
+            if (userId) {
+                if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
+                    if (this.isAreaOwner(area, userId)) {
+                        hasSpecificAreas = true;
+                        return;
+                    }
+                    return;
+                }
             }
         });
         return hasSpecificAreas;

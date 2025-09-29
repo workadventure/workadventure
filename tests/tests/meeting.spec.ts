@@ -3,32 +3,33 @@ import Map from "./utils/map";
 import {publicTestMapUrl} from "./utils/urls";
 import {getPage} from "./utils/auth";
 import {isMobile} from "./utils/isMobile";
+import {evaluateScript} from "./utils/scripting";
 
-test.describe('Meeting actions test', () => {
+test.describe('Meeting actions test @nomobile @nowebkit', () => {
 
-    test.beforeEach(
-        "Ignore tests on mobilechromium because map editor not available for mobile devices",
-        ({ browserName, page }) => {
-            //Map Editor not available on mobile adn webkit have issue with camera
-            if (browserName === "webkit" || isMobile(page)) {
-                //eslint-disable-next-line playwright/no-skipped-test
-                test.skip();
-                return;
-            }
-        }
+  test.beforeEach(
+    "Ignore tests on mobilechromium because map editor not available for mobile devices",
+    ({ browserName, page }) => {
+      // Map Editor not available on mobile and WebKit has issues with camera
+      test.skip(
+        browserName === "webkit" || isMobile(page),
+        "Map editor is not available on mobile and WebKit has camera issues"
+      );
+    }
+  );
+
+  test('Meeting action to mute microphone & video @nofirefox', async ({ browser }) => {
+    // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+    test.skip(
+      browser.browserType().name() === "firefox",
+      "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
     );
-
-    test('Meeting action to mute microphone & video', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(userBob, 160, 160);
@@ -70,28 +71,89 @@ test.describe('Meeting actions test', () => {
             hasText: "Bob",
         }).locator('video')).toHaveClass(/w-0/);
 
-        await page.close();
-        await userBob.close();
+
+
         await userBob.context().close();
         await page.context().close();
   });
 
+    test('enter and exit meeting quickly', async ({ browser }) => {
+        // We test creating a bubble and closing it as soon as possible.
+        // The video element should be removed from the DOM when the bubble is closed.
+
+        // Go to the empty map
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user
+        await Map.teleportToPosition(page, 160, 160);
+
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+
+        // Move user in and out as fast as possible
+        await Map.teleportToPosition(userBob, 160, 160);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(100);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(200);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await Map.teleportToPosition(userBob, 160, 160);
+        await userBob.waitForTimeout(500);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await Map.teleportToPosition(userBob, 160, 160);
+        await Map.teleportToPosition(userBob, 0, 0);
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+
+        // Really fast now
+        await evaluateScript(userBob, async () => {
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+        });
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await evaluateScript(userBob, async () => {
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await new Promise(r => {setTimeout(r, 2000)});
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            await WA.player.teleport(160, 160);
+            await WA.player.teleport(0, 0);
+            return;
+        });
+        await expect(page.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+        await expect(userBob.getByText('⚠️ An error occurred in')).toBeHidden({timeout: 100});
+
+
+        // Let's wait a bit for all the events to be processed
+        await userBob.waitForTimeout(2000);
+
+        await expect(page.locator('#cameras-container').getByText("Bob")).toBeHidden();
+        await expect(userBob.locator('#cameras-container').getByText("Alice")).toBeHidden();
+
+        await userBob.context().close();
+        await page.context().close();
+    });
+
+
     // FIXME jitsi bug
   /*test('Jitsi meeting action to mute microphone & video', async ({ browser, request }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    if(browser.browserType() === webkit) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test.skip(project.name === 'mobilechromium', 'Skip on mobile Chromium');
+  test.skip(browser.browserType() === webkit, 'Skip on WebKit');
 
     await resetWamMaps(request);
-      const page = await getPage(browser, 'Admin1', Map.url("empty"));
+      await using page = await getPage(browser, 'Admin1', Map.url("empty"));
     // await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
@@ -117,7 +179,7 @@ test.describe('Meeting actions test', () => {
     //await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
-    const userBob = await getPage(browser, "Bob", Map.url("empty"))
+    await using userBob = await getPage(browser, "Bob", Map.url("empty"))
     // Move user "Bob" to the new area
     await Map.teleportToPosition(userBob, 2, 5);
 
@@ -146,23 +208,24 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('.video-media-box:has-text("Bob") video')).toHaveClass(/w-0/);
 
-    await page.close();
-    await userBob.close();
+
+
     await userBob.context().close();
     await page.context().close();
   });*/
 
-    test('Block users', async ({ browser }) => {
-        if (browser.browserType().name() === "firefox") {
-            // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
-            test.skip();
-        }
+  test('Block users @nofirefox', async ({ browser }) => {
+    // Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail.
+    test.skip(
+      browser.browserType().name() === "firefox",
+      "Sometimes, in Firefox, the WebRTC connection cannot be established and this causes this test to fail."
+    );
         // Go to the empty map
-        const page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using page = await getPage(browser, 'Alice', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(page, 160, 160);
-        const userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
+        await using userBob = await getPage(browser, 'Bob', publicTestMapUrl("tests/E2E/empty.json", "meeting"));
 
         // Move user
         await Map.teleportToPosition(userBob, 192, 160);
@@ -199,8 +262,8 @@ test.describe('Meeting actions test', () => {
         await expect(page.getByText('Hello unbanned!')).toBeVisible();
         await expect(page.getByText('Hello banned!')).toBeHidden();
 
-        await page.close();
-        await userBob.close();
+
+
         await userBob.context().close();
         await page.context().close();
     });

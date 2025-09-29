@@ -1,7 +1,6 @@
 <script lang="ts">
     import { getContext } from "svelte";
     import { audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-    import { silentStore } from "../../../Stores/MediaStore";
     import { bottomActionBarVisibilityStore } from "../../../Stores/BottomActionBarStore";
     import LL from "../../../../i18n/i18n-svelte";
     import AppsMenuItem from "./AppsMenuItem.svelte";
@@ -17,11 +16,11 @@
     // They switch automatically to the profile menu when the screen is small.
 </script>
 
-{#if inProfileMenu && (($audioManagerVisibilityStore !== "hidden" && !$silentStore) || $bottomActionBarVisibilityStore)}
+{#if inProfileMenu && ($audioManagerVisibilityStore !== "hidden" || $bottomActionBarVisibilityStore)}
     <HeaderMenuItem label={$LL.menu.sub.contextualActions()} />
 {/if}
 
-{#if $audioManagerVisibilityStore !== "hidden" && !$silentStore}
+{#if $audioManagerVisibilityStore !== "hidden"}
     <MusicMenuItem />
 {/if}
 

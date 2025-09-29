@@ -8,33 +8,40 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     MatrixRoomPropertyData,
-    OpenPdfPropertyData,
+    OpenFilePropertyData,
     OpenWebsitePropertyData,
     PersonalAreaAccessClaimMode,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
+    LivekitRoomPropertyData,
 } from "@workadventure/map-editor";
 import * as Sentry from "@sentry/svelte";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
-import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { get } from "svelte/store";
-import { Member } from "@workadventure/messages";
+import { FilterType, Member } from "@workadventure/messages";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { ADMIN_URL, JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStore";
 /**
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import {
+    inJitsiStore,
+    inLivekitStore,
+    inOpenWebsite,
+    isSpeakerStore,
+    silentStore,
+    streamingMegaphoneStore,
+} from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -66,7 +73,9 @@ import { popupStore } from "../../../Stores/PopupStore";
 import PopupCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte";
 import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
 import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte";
-import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
+import FilePopup from "../../../Components/PopUp/FilePopup.svelte";
+import { bindMuteEventsToSpace } from "../../../Space/Utils/BindMuteEvents";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -198,16 +207,29 @@ export class AreasPropertiesListener {
                 this.handleJitsiRoomPropertyOnEnter(property);
                 break;
             }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
+                break;
+            }
             case "silent": {
                 this.handleSilentPropertyOnEnter();
                 break;
             }
             case "speakerMegaphone": {
-                this.handleSpeakerMegaphonePropertyOnEnter(property);
+                this.handleSpeakerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
-                this.handleListenerMegaphonePropertyOnEnter(property);
+                this.handleListenerMegaphonePropertyOnEnter(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -238,8 +260,8 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(property);
                 break;
             }
-            case "openPdf": {
-                this.handleOpenPdfOnEnter(property).catch((error) => console.error("Error opening PDF:", error));
+            case "openFile": {
+                this.handleOpenFileOnEnter(property).catch((error) => console.error("Error opening File:", error));
                 break;
             }
 
@@ -277,16 +299,34 @@ export class AreasPropertiesListener {
                 this.handleJitsiRoomPropertyOnEnter(newProperty);
                 break;
             }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnLeave(oldProperty)
+                    .then(() => {
+                        newProperty = newProperty as typeof oldProperty;
+                        return this.handleLivekitRoomPropertyOnEnter(newProperty);
+                    })
+                    .catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                break;
+            }
             case "speakerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
-                this.handleSpeakerMegaphonePropertyOnEnter(newProperty);
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "listenerMegaphone": {
                 newProperty = newProperty as typeof oldProperty;
                 this.handleListenerMegaphonePropertyOnLeave(oldProperty);
-                this.handleListenerMegaphonePropertyOnEnter(newProperty);
+                this.handleListenerMegaphonePropertyOnEnter(newProperty).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "exit": {
@@ -316,10 +356,10 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnEnter(newProperty);
                 break;
             }
-            case "openPdf": {
+            case "openFile": {
                 newProperty = newProperty as typeof oldProperty;
-                this.handleOpenPdfOnLeave(oldProperty);
-                this.handleOpenPdfOnEnter(newProperty).catch((error) => console.error("Error opening PDF:", error));
+                this.handleOpenFileOnLeave(oldProperty);
+                this.handleOpenFileOnEnter(newProperty).catch((error) => console.error("Error opening file:", error));
                 break;
             }
             case "silent":
@@ -345,6 +385,13 @@ export class AreasPropertiesListener {
             }
             case "jitsiRoomProperty": {
                 this.handleJitsiRoomPropertyOnLeave(property);
+                break;
+            }
+            case "livekitRoomProperty": {
+                this.handleLivekitRoomPropertyOnLeave(property).catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
                 break;
             }
             case "silent": {
@@ -375,8 +422,8 @@ export class AreasPropertiesListener {
                 this.handleTooltipPropertyOnLeave(property);
                 break;
             }
-            case "openPdf": {
-                this.handleOpenPdfOnLeave(property);
+            case "openFile": {
+                this.handleOpenFileOnLeave(property);
                 break;
             }
             default: {
@@ -436,12 +483,12 @@ export class AreasPropertiesListener {
                  layoutManagerActionStore.addAction({
                  uuid: actionId,
                  type: "message",
-                        message: message,
-                        click: () => {
-                            popupStore.removePopup(actionId);
-                            scriptUtils.openTab(property.link as string);
-                        },
-                        userInputManager: this.scene.userInputManager,
+                 message: message,
+                 click: () => {
+                 popupStore.removePopup(actionId);
+                 scriptUtils.openTab(property.link as string);
+                 },
+                 userInputManager: this.scene.userInputManager,
                  });
                  */
             } else {
@@ -497,14 +544,14 @@ export class AreasPropertiesListener {
              layoutManagerActionStore.addAction({
              uuid: actionId,
              type: "message",
-                    message: message,
-                    click: () => {
-                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                actionId
-            );*/
+             message: message,
+             click: () => {
+             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+             },
+             userInputManager: this.scene.userInputManager,
+             },
+             actionId
+             );*/
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             let url = property.link ?? "";
             try {
@@ -567,27 +614,21 @@ export class AreasPropertiesListener {
                 jitsiUrl = answer.url;
             }
 
-            let domain = jitsiUrl || JITSI_URL;
-            if (domain === undefined) {
+            jitsiUrl = jitsiUrl || JITSI_URL;
+            if (jitsiUrl === undefined) {
                 throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
 
-            let domainWithoutProtocol = domain;
-            if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                domainWithoutProtocol = domain;
-                domain = `${location.protocol}//${domain}`;
-            } else {
-                if (domain.startsWith("http://")) {
-                    domainWithoutProtocol = domain.substring(7);
-                } else {
-                    domainWithoutProtocol = domain.substring(8);
-                }
+            if (!jitsiUrl.startsWith("http://") && !jitsiUrl.startsWith("https://")) {
+                jitsiUrl = `https://${jitsiUrl}`;
             }
+
+            jitsiUrl = jitsiUrl.replace(/\/+/g, "/");
 
             inJitsiStore.set(true);
 
             const coWebsite = new JitsiCoWebsite(
-                new URL(domain),
+                new URL(jitsiUrl),
                 property.width,
                 property.closable,
                 roomName,
@@ -595,7 +636,6 @@ export class AreasPropertiesListener {
                 jwt,
                 property.jitsiRoomConfig,
                 undefined,
-                domainWithoutProtocol,
                 property.jitsiRoomAdminTag ?? null
             );
 
@@ -652,17 +692,28 @@ export class AreasPropertiesListener {
              layoutManagerActionStore.addAction({
              uuid: "jitsi",
              type: "message",
-                    message: message,
-                    callback: () => {
-                        openJitsiRoomFunction().catch((e) => console.error(e));
-                    },
-                    userInputManager: this.scene.userInputManager,
-                },
-                "jitsi"
-            );*/
+             message: message,
+             callback: () => {
+             openJitsiRoomFunction().catch((e) => console.error(e));
+             },
+             userInputManager: this.scene.userInputManager,
+             },
+             "jitsi"
+             );*/
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }
+    }
+
+    private async handleLivekitRoomPropertyOnEnter(property: LivekitRoomPropertyData): Promise<void> {
+        inLivekitStore.set(true);
+        const spaceRegistry = this.scene.spaceRegistry;
+        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+        await spaceRegistry.joinSpace(roomName, FilterType.ALL_USERS, [
+            "cameraState",
+            "microphoneState",
+            "screenShareState",
+        ]);
     }
 
     private handleMatrixRoomAreaOnEnter(property: MatrixRoomPropertyData) {
@@ -684,8 +735,7 @@ export class AreasPropertiesListener {
                     if (property.shouldOpenAutomatically) chatVisibilityStore.set(true);
                 })
                 .catch((error) => {
-                    Sentry.captureMessage(`Failed to join room area : ${error}`);
-                    console.error(error);
+                    console.error("Failed to confirm emojis validation", error);
                 });
             return;
         }
@@ -713,18 +763,21 @@ export class AreasPropertiesListener {
         if (connectedUserUUID != ownerId) {
             const connection = this.scene.connection;
             if (connection && this.isPersonalAreaOwnerAway(ownerId, areaData)) {
-                connection
-                    .queryMember(ownerId)
-                    .then((member: Member) => {
-                        if (get(canRequestVisitCardsStore) === false) return;
-                        if (member?.visitCardUrl) {
-                            requestVisitCardsStore.set(member.visitCardUrl);
-                        }
-                        if (member?.chatID) {
-                            selectedChatIDRemotePlayerStore.set(member?.chatID);
-                        }
-                    })
-                    .catch((error) => console.error(error));
+                if (ADMIN_URL) {
+                    connection
+                        .queryMember(ownerId)
+                        .then((member: Member) => {
+                            if (get(canRequestVisitCardsStore) === false) return;
+                            if (member?.visitCardUrl) {
+                                requestVisitCardsStore.set(member.visitCardUrl);
+                            }
+                            if (member?.chatID) {
+                                selectedChatIDRemotePlayerStore.set(member?.chatID);
+                            }
+                        })
+                        .catch((error) => console.error(error));
+                }
+
                 area?.highLightArea(true);
             }
         }
@@ -827,7 +880,7 @@ export class AreasPropertiesListener {
          : undefined;
 
          if (action) {
-            popupStore.removePopup(actionTriggerUuid);
+         popupStore.removePopup(actionTriggerUuid);
          }
          */
 
@@ -883,13 +936,28 @@ export class AreasPropertiesListener {
         area?.unHighLightArea();
     }
 
+    private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
+        const spaceRegistry = this.scene.spaceRegistry;
+        const roomName = Jitsi.slugifyJitsiRoomName(property.roomName, this.scene.roomUrl, false);
+        const space = spaceRegistry.get(roomName);
+        if (space) {
+            await spaceRegistry.leaveSpace(space);
+        }
+        inLivekitStore.set(false);
+    }
+
     private handleExtensionModuleAreaPropertyOnLeave(subtype: string, area?: AreaData): void {
         const extensionModule = get(extensionModuleStore);
         for (const module of extensionModule) {
             if (!module.areaMapEditor) continue;
 
             const areaMapEditor = module.areaMapEditor();
-            if (areaMapEditor == undefined) continue;
+            if (
+                areaMapEditor == undefined ||
+                areaMapEditor[subtype] == undefined ||
+                areaMapEditor[subtype].handleAreaPropertyOnLeave == undefined
+            )
+                continue;
 
             areaMapEditor[subtype].handleAreaPropertyOnLeave(area);
             inJitsiStore.set(false);
@@ -902,7 +970,12 @@ export class AreasPropertiesListener {
             if (!module.areaMapEditor) continue;
 
             const areaMapEditor = module.areaMapEditor();
-            if (areaMapEditor == undefined) continue;
+            if (
+                areaMapEditor == undefined ||
+                areaMapEditor[subtype] == undefined ||
+                areaMapEditor[subtype].handleAreaPropertyOnEnter == undefined
+            )
+                continue;
             areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
         }
     }
@@ -933,7 +1006,7 @@ export class AreasPropertiesListener {
     }
 
     private openCoWebsiteFunction(
-        property: OpenWebsitePropertyData | OpenPdfPropertyData,
+        property: OpenWebsitePropertyData | OpenFilePropertyData,
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
@@ -987,15 +1060,23 @@ export class AreasPropertiesListener {
         popupStore.removePopup(actionId);
     }
 
-    private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
+    private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
-            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+            const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
+            currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
-            //requestedMegaphoneStore.set(true);
+            streamingMegaphoneStore.set(true);
+
+            space.emitUpdateUser({
+                megaphoneState: true,
+            });
+
+            bindMuteEventsToSpace(space);
+
+            //TODO : remove this or replace by matrix room
             if (property.chatEnabled) {
-                this.handleJoinMucRoom(uniqRoomName, "live");
+                //this.handleJoinMucRoom(uniqRoomName, "live");
             }
         }
     }
@@ -1005,14 +1086,20 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(uniqRoomName);
+            this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
+
+            streamingMegaphoneStore.set(false);
             if (property.chatEnabled) {
-                this.handleLeaveMucRoom(uniqRoomName);
+                //this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
 
-    private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
+    private async handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): Promise<void> {
+        // TODO: change the user's availability status to prevent them from creating a bubble
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
                 this.scene.getGameMap().getGameMapAreas()?.getAreas(),
@@ -1020,10 +1107,12 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                const broadcastSpace = this.scene.broadcastService.joinSpace(uniqRoomName, false);
-                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+                const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
+
+                currentLiveStreamingSpaceStore.set(space);
                 if (property.chatEnabled) {
-                    this.handleJoinMucRoom(uniqRoomName, "live");
+                    //TODO : remove this or replace by matrix room
+                    //this.handleJoinMucRoom(uniqRoomName, "live");
                 }
             }
         }
@@ -1038,26 +1127,15 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(uniqRoomName);
+                this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
                 if (property.chatEnabled) {
-                    this.handleLeaveMucRoom(uniqRoomName);
+                    //this.handleLeaveMucRoom(uniqRoomName);
                 }
             }
         }
-    }
-
-    private handleJoinMucRoom(name: string, type: string) {
-        iframeListener
-            .sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false)
-            .catch((error) => console.error(error));
-        chatZoneLiveStore.set(true);
-    }
-
-    private handleLeaveMucRoom(name: string) {
-        iframeListener
-            .sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`)
-            .catch((error) => console.error(error));
-        chatZoneLiveStore.set(false);
     }
 
     private handleExitPropertyOnEnter(url: string): void {
@@ -1080,21 +1158,26 @@ export class AreasPropertiesListener {
         this.scene.CurrentPlayer.destroyText(property.id);
     }
 
-    private async handleOpenPdfOnEnter(property: OpenPdfPropertyData): Promise<void> {
-        if (!property.link) {
+    private async handleOpenFileOnEnter(initialProperty: OpenFilePropertyData): Promise<void> {
+        if (!initialProperty.link) {
             return;
         }
 
         if (!this.scene.connection) {
-            console.info("Cannot open Pdf. No connection to Pusher server.");
+            console.info("Cannot open file. No connection to Pusher server.");
             return;
         }
 
+        const property = {
+            ...initialProperty,
+        };
+
         const answer = await this.scene.connection?.queryMapStorageJwtToken();
 
-        const url = `${property.link}?token=${answer.jwt}`;
+        const url = new URL(initialProperty.link);
+        url.searchParams.set("token", answer.jwt);
 
-        property.link = url;
+        property.link = url.toString();
 
         const actionId = "openWebsite-" + uuidv4();
 
@@ -1113,21 +1196,19 @@ export class AreasPropertiesListener {
                         message: message,
                         click: () => {
                             popupStore.removePopup(actionId);
-                            scriptUtils.openTab(url);
+                            scriptUtils.openTab(url.toString());
                         },
                         userInputManager: this.scene.userInputManager,
                     },
                     actionId
                 );
             } else {
-                scriptUtils.openTab(url);
+                scriptUtils.openTab(url.toString());
             }
-            property.link = url.split("?")[0];
             return;
         }
 
         if (this.openedCoWebsites.has(property.id)) {
-            property.link = url.split("?")[0];
             return;
         }
 
@@ -1146,7 +1227,7 @@ export class AreasPropertiesListener {
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
             popupStore.addPopup(
-                PopupCowebsite,
+                FilePopup,
                 {
                     message: message,
                     click: () => {
@@ -1157,9 +1238,9 @@ export class AreasPropertiesListener {
                 actionId
             );
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
-            let cowebsiteUrl = url ?? "";
+            let cowebsiteUrl = url.toString() ?? "";
             try {
-                cowebsiteUrl = scriptUtils.getWebsiteUrl(url ?? "");
+                cowebsiteUrl = scriptUtils.getWebsiteUrl(url.toString() ?? "");
             } catch (e) {
                 console.error("Error on getWebsiteUrl: ", e);
             }
@@ -1181,10 +1262,9 @@ export class AreasPropertiesListener {
         if (property.trigger == undefined || property.trigger === ON_ACTION_TRIGGER_ENTER) {
             this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
         }
-        property.link = url.split("?")[0];
     }
 
-    private handleOpenPdfOnLeave(property: OpenPdfPropertyData): void {
+    private handleOpenFileOnLeave(property: OpenFilePropertyData): void {
         const openWebsiteProperty: string | null = property.link;
 
         if (!openWebsiteProperty) {
@@ -1240,7 +1320,7 @@ export class AreasPropertiesListener {
          : undefined;
 
          if (action) {
-            popupStore.removePopup(actionTriggerUuid);
+         popupStore.removePopup(actionTriggerUuid);
          }
          */
 

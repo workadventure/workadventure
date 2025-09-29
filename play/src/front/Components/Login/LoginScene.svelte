@@ -93,6 +93,7 @@
 
 <section class="self-center absolute z-30 top-0 text-center w-full block">
     <img
+        draggable="false"
         src={logo}
         alt="logo"
         class="main-logo mt-8 {gameManager.currentStartedRoom.loginSceneLogo ? 'max-h-[200px] object-cover' : ''}"
@@ -112,7 +113,8 @@
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="text"
-                name="loginSceneName"
+                name="fname"
+                data-testid="loginSceneNameInput"
                 placeholder={$LL.login.input.name.placeholder()}
                 class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
                 autofocus
@@ -152,7 +154,7 @@
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-right flex powered-by justify-center items-end">
-            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="h-14" />
+            <img draggable="false" src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" class="h-14" />
         </section>
     {/if}
 </form>

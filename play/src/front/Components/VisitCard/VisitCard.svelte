@@ -5,8 +5,10 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { openDirectChatRoom } from "../../Chat/Utils";
+    import chat from "../images/chat.png";
 
     import ButtonClose from "../Input/ButtonClose.svelte";
+    import Spinner from "../Icons/Spinner.svelte";
     import { IconLoader } from "@wa-icons";
 
     export let visitCardUrl: string;
@@ -34,7 +36,6 @@
 
     function handleIframeMessage(message: MessageEvent) {
         if (message.data.type === "cvIframeSize") {
-            console.log("visitCard message", message.data);
             // w = message.data.data.w + "px";
             h = message.data.data.h;
         }
@@ -55,7 +56,7 @@
         {/if}
         {#if hidden}
             <div class="w-full flex justify-center items-center p-4">
-                <span class="loader border-4 border-solid der-white border-b-secondary" />
+                <Spinner size="lg" />
             </div>
         {/if}
         <div class={isEmbedded ? "" : "p-2"}>
@@ -74,10 +75,13 @@
                 {#if selectPlayerChatID && showSendMessageButton}
                     {#if !$roomCreationInProgress}
                         <button
-                            class="btn btn-secondary light cursor-pointer"
+                            class="btn btn-secondary text-nowrap justify-center m-2 flex-1 min-w-0"
                             data-testid="sendMessagefromVisitCardButton"
-                            on:click={openChat}>{$LL.menu.visitCard.sendMessage()}</button
+                            on:click={openChat}
                         >
+                            <img src={chat} alt="chat" class="w-6 h-6 mx-2" draggable="false" />
+                            {$LL.menu.visitCard.sendMessage()}
+                        </button>
                     {:else}
                         <button
                             class="light cursor-pointer px-3 mb-2 mr-0"
@@ -95,24 +99,6 @@
 <svelte:window on:message={handleIframeMessage} />
 
 <style lang="scss">
-    .loader {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        display: inline-block;
-        box-sizing: border-box;
-        animation: rotation 1s linear infinite;
-    }
-
-    @keyframes rotation {
-        0% {
-            transform: rotate(0deg);
-        }
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
     .visitCard {
         pointer-events: all;
         z-index: 350;

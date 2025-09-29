@@ -8,7 +8,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     close: "Fermer",
     login: "Se connecter",
     //logout: "Se déconnecter",
-    map: "Map",
+    map: "Carte",
     startScreenSharing: "Partager mon écran",
     stopScreenSharing: "Arrêter le partage",
     screenSharingMode: "Mode partage d'écran",
@@ -24,28 +24,35 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     todoList: "Liste de tâches",
     test: "Tester",
     editCamMic: "Camera / micro",
-    otherSettings: "Autres paramètres",
+    allSettings: "Tous les paramètres",
     bo: "Back office",
     globalMessage: "Envoyer un message global",
-    mapEditor: "Éditeur de carte",
+    mapEditor: "Éditer la carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     app: "Applications",
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
+        noDevices: "Aucune caméra trouvée",
     },
     microphone: {
         disabled: "Votre micro est désactivé",
         activate: "Activer votre micro",
+        noDevices: "Aucun micro trouvé",
     },
-
+    speaker: {
+        disabled: "Votre haut-parleur est désactivé",
+        activate: "Activer votre haut-parleur",
+        noDevices: "Aucun haut-parleur trouvé",
+    },
     status: {
         ONLINE: "En ligne",
         AWAY: "Absent",
         BACK_IN_A_MOMENT: "De retour bientôt",
         DO_NOT_DISTURB: "Ne pas déranger",
         BUSY: "Occupé",
+        OFFLINE: "Hors ligne",
         SILENT: "Silencieux",
         JITSI: "En réunion",
         BBB: "En réunion",
@@ -72,9 +79,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         audioManager: {
             title: "Volume des sons ambiants",
+            desc: "Réglez le volume des sons d’ambiance de la carte (musique, bruitages).",
         },
         audioManagerNotAllowed: {
             title: "Sons ambiants bloqués",
+            desc: "Votre navigateur a empêché la lecture des sons ambiants. Cliquez sur l’icône pour lancer la lecture.",
         },
         follow: {
             title: "Demander à vous suivre",
@@ -86,15 +95,19 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         mic: {
             title: "Activer/désactiver votre micro",
+            desc: "Activez ou coupez votre micro pour que les autres vous entendent pendant la discussion.",
         },
         micDisabledByStatus: {
             title: "Micro désactivé",
+            desc: "Votre micro est désactivé car votre statut est « {status} ».",
         },
         cam: {
             title: "Activer/désactiver votre caméra",
+            desc: "Activez ou coupez votre caméra pour montrer votre vidéo aux autres participants.",
         },
         camDisabledByStatus: {
             title: "Caméra désactivée",
+            desc: "Votre caméra est désactivée car votre statut est « {status} ».",
         },
         share: {
             title: "Partager votre écran",
@@ -110,12 +123,15 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Liste des salons",
+            desc: "Parcourez la liste des salons pour voir qui est présent et rejoindre une conversation en un clic.",
         },
         calendar: {
             title: "Calendrier",
+            desc: "Consultez vos réunions à venir et rejoignez-les directement depuis WorkAdventure.",
         },
         todolist: {
             title: "Liste de tâches",
+            desc: "Gérez vos tâches du jour sans quitter votre espace de travail.",
         },
     },
     listStatusTitle: {

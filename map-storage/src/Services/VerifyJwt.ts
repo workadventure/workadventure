@@ -15,8 +15,6 @@ const AuthTokenData = z.object({
 type AuthTokenData = z.infer<typeof AuthTokenData>;
 
 export async function verifyJWT(req: Request, res: Response, next: NextFunction) {
-    if (!req.url.includes("/file/")) return next();
-
     let token: string | null = null;
 
     if (typeof req.query.token === "string") {
@@ -47,7 +45,7 @@ export async function verifyJWT(req: Request, res: Response, next: NextFunction)
 }
 
 async function verifyWam(jwt: AuthTokenData, url: string): Promise<void> {
-    console.log("Verifying WAM URL:", jwt.wamUrl);
+    console.info("Verifying WAM URL:", jwt.wamUrl);
     const parsedUrl = new URL(jwt.wamUrl);
     const mapPath = mapPathUsingDomain(parsedUrl.pathname, parsedUrl.hostname);
 
@@ -105,11 +103,11 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
                 const wam = WAMFileFormat.parse(JSON.parse(wamString));
 
                 const area = wam.areas.find((a) =>
-                    a.properties.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                    a.properties.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
                 );
 
                 const entity = Object.values(wam.entities).find((e) =>
-                    e.properties?.some((p) => p.type === "openPdf" && decodeURI(p.link ?? "") === decodeURI(url))
+                    e.properties?.some((p) => p.type === "openFile" && decodeURI(p.link ?? "") === decodeURI(url))
                 );
 
                 if (area) {
@@ -117,11 +115,10 @@ async function getAndCheckWamFile(mapPath: string, url: string): Promise<AreaDat
                     resolve(area);
                 } else if (entity) {
                     clearInterval(interval);
-                    console.log("Found entity with PDF link matching:", url, entity);
                     resolve("entity");
                 } else if (Date.now() >= deadline) {
                     clearInterval(interval);
-                    reject(new Error(`No area or entity found with a PDF link matching: ${url}`));
+                    reject(new Error(`No area or entity found with a matching file: ${url}`));
                 }
             } catch (err) {
                 clearInterval(interval);

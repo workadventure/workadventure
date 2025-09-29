@@ -11,6 +11,8 @@ import parser from "svelte-eslint-parser";
 import importPlugin from 'eslint-plugin-import';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
+import listeners from "eslint-plugin-listeners";
+
 
 export function generateConfig(tsconfigRootDir) {
     return defineConfig([
@@ -86,7 +88,7 @@ export function generateConfig(tsconfigRootDir) {
                 },
 
                 //parser: tsParser,
-                ecmaVersion: 2018,
+                ecmaVersion: "latest",
                 sourceType: "module",
 
                 parserOptions: {
@@ -102,6 +104,7 @@ export function generateConfig(tsconfigRootDir) {
             plugins: {
                 //"@typescript-eslint": typescriptEslint,
                 rxjs: rxjs,
+                listeners: listeners,
                 //"unused-imports": unusedImports,
             },
 
@@ -153,6 +156,7 @@ export function generateConfig(tsconfigRootDir) {
                 "import/no-named-as-default-member": "off",
                 "svelte/no-ignored-unsubscribe": "error",
                 //"unused-imports/no-unused-imports": "error",
+                "preserve-caught-error": "error",
             },
         }
     ]);

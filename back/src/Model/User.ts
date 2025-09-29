@@ -184,7 +184,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.BBB ||
             this.availabilityStatus === AvailabilityStatus.SPEAKER ||
             this.availabilityStatus === AvailabilityStatus.DO_NOT_DISTURB ||
-            this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT
+            this.availabilityStatus === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            this.availabilityStatus === AvailabilityStatus.LIVEKIT
         );
     }
 
@@ -240,10 +241,6 @@ export class User implements Movable, CustomJsonReplacerInterface {
 
         const setVariable = details.setVariable;
         if (setVariable) {
-            /*console.log(
-                "Variable '" + setVariable.getName() + "' for user '" + this.name + "' updated. New value: '",
-                setVariable.getValue() + "'"
-            );*/
             const scope = setVariable.scope;
             if (scope === SetPlayerVariableMessage_Scope.WORLD) {
                 this.variables

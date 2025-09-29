@@ -22,6 +22,15 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe("URL of the S3 endpoint."),
+    S3_MAX_PARALLEL_REQUESTS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 50))
+        .describe("The maximum parallel number of requests done to the S3 bucket. Defaults to 50."),
+    S3_CONNECTION_TIMEOUT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 5000))
+        .describe("The timeout in milliseconds for the S3 connection in milliseconds. Defaults to 5000 (5 seconds)."),
+    S3_REQUEST_TIMEOUT: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 60000))
+        .describe("The timeout in milliseconds for the S3 requests in milliseconds. Defaults to 60000 (60 seconds)."),
     //UPLOADER_AWS_SIGNED_URL_EXPIRATION: PositiveIntAsString.optional(),
     S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()
@@ -157,6 +166,10 @@ export const EnvironmentVariables = z.object({
         .describe(
             "The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files."
         ),
+    GRPC_MAX_MESSAGE_SIZE: PositiveIntAsString.optional()
+        .or(z.string().max(0))
+        .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB
+        .describe("The maximum size of a gRPC message. Defaults to 20 MB."),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

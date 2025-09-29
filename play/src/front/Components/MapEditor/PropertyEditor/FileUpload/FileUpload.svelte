@@ -1,9 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenPdfPropertyData } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, OpenFilePropertyData } from "@workadventure/map-editor";
     import { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
+    import * as Sentry from "@sentry/svelte";
+    import { GRPC_MAX_MESSAGE_SIZE } from "../../../../Enum/EnvironmentVariable";
     import ButtonClose from "../../../Input/ButtonClose.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
@@ -11,13 +13,14 @@
     import { gameSceneStore } from "../../../../Stores/GameSceneStore";
     import { IconCloudUpload } from "@wa-icons";
 
-    export let property: OpenPdfPropertyData;
+    export let property: OpenFilePropertyData;
 
     let selectedFile: File | undefined = undefined;
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let errorOnFile: string | undefined;
     let fileToUpload: UploadFileMessage | undefined = undefined;
+    const BYTES_TO_MB = 1024 * 1024;
 
     const dispatch = createEventDispatcher<{
         change: string | null | undefined;
@@ -33,10 +36,13 @@
             const file = files.item(0);
             if (file && isASupportedFormat(file.type)) {
                 selectedFile = file;
-                void handleFileChange();
+                handleFileChange().catch((error) => {
+                    console.error("Error in handleFileChange:", error);
+                    Sentry.captureException(error);
+                });
             } else {
                 console.error("File format not supported");
-                errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
+                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
             }
         }
     }
@@ -45,6 +51,13 @@
         if (!selectedFile) {
             return;
         }
+        if (selectedFile.size > GRPC_MAX_MESSAGE_SIZE) {
+            errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileSize({
+                size: GRPC_MAX_MESSAGE_SIZE / BYTES_TO_MB,
+            });
+            return;
+        }
+
         const fileBuffer = await selectedFile.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         const generatedId = uuidv4();
@@ -60,10 +73,11 @@
         const uploadFileCommand = new UploadFileFrontCommand(fileToUpload);
         uploadFileCommand.emitEvent(roomConnection);
 
-        const fileName = selectedFile.name.split(".")[0];
-        const fileExt = selectedFile.name.split(".")[1];
+        const lastDot = selectedFile.name.lastIndexOf(".");
+        const fileName = selectedFile.name.slice(0, lastDot);
+        const fileExt = selectedFile.name.slice(lastDot + 1);
 
-        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}file/${fileName}-${
+        const fileUrl = `${get(gameSceneStore)?.room.mapStorageUrl?.toString()}private/files/${fileName}-${
             property.id
         }.${fileExt}`;
 
@@ -81,13 +95,13 @@
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
-                errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileNumber();
+                errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileNumber();
             } else {
                 if (isASupportedFormat(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
-                    errorOnFile = $LL.mapEditor.properties.openPdfProperties.uploadFile.errorOnFileFormat();
+                    errorOnFile = $LL.mapEditor.properties.openFileProperties.uploadFile.errorOnFileFormat();
                 }
             }
         }
@@ -96,10 +110,10 @@
     }
 </script>
 
-<div class="no-padding">
+<div class="p-1 bg-white/10 rounded-md flex flex-col gap-2">
     {#if !property.link}
-        <p class="m-0">{$LL.mapEditor.properties.openPdfProperties.uploadFile.title()}</p>
-        <p class="opacity-50">{$LL.mapEditor.properties.openPdfProperties.uploadFile.description()}</p>
+        <p class="m-0">{$LL.mapEditor.properties.openFileProperties.uploadFile.title()}</p>
+        <p class="opacity-50">{$LL.mapEditor.properties.openFileProperties.uploadFile.description()}</p>
         <div
             on:drop|preventDefault|stopPropagation={dropHandler}
             on:dragover|preventDefault={() => dropZoneRef.classList.add("border-cyan-400")}
@@ -113,9 +127,9 @@
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">
-                        {$LL.mapEditor.properties.openPdfProperties.uploadFile.dragDrop()}
+                        {$LL.mapEditor.properties.openFileProperties.uploadFile.dragDrop()}
                         <span class="hover:cursor-pointer underline text-contrast-300" id="chooseUpload"
-                            >{$LL.mapEditor.properties.openPdfProperties.uploadFile.chooseFile()}</span
+                            >{$LL.mapEditor.properties.openFileProperties.uploadFile.chooseFile()}</span
                         >
                     </span>
                     <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>
@@ -133,6 +147,7 @@
                 bgColor="bg-white/10"
                 hoverColor="bg-white/20"
                 textColor="text-white"
+                size="xs"
                 on:click={() => {
                     selectedFile = undefined;
                     dispatch("deleteFile");

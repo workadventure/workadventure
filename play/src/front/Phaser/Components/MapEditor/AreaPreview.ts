@@ -386,13 +386,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                     if (newWidth >= 10) {
                         this.displayWidth = newWidth;
-                        this.x = Math.floor(this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5);
+                        this.x = this.squares[Edge.LeftCenter].x + this.displayWidth * 0.5;
                     } else {
                         square.x = oldX;
                     }
                     if (newHeight >= 10) {
                         this.displayHeight = newHeight;
-                        this.y = Math.floor(this.squares[Edge.TopCenter].y + this.displayHeight * 0.5);
+                        this.y = this.squares[Edge.TopCenter].y + this.displayHeight * 0.5;
                     } else {
                         square.y = oldY;
                     }
@@ -431,13 +431,13 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
                 if (newWidth >= 10) {
                     this.displayWidth = newWidth;
-                    this.x = Math.floor(newCenterX);
+                    this.x = newCenterX;
                 } else {
                     square.x = oldX;
                 }
                 if (newHeight >= 10) {
                     this.displayHeight = newHeight;
-                    this.y = Math.floor(newCenterY);
+                    this.y = newCenterY;
                 } else {
                     square.y = oldY;
                 }
@@ -454,8 +454,8 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
                     id: this.getAreaData().id,
-                    x: Math.floor(this.x - this.displayWidth * 0.5),
-                    y: Math.floor(this.y - this.displayHeight * 0.5),
+                    x: this.x - this.displayWidth * 0.5,
+                    y: this.y - this.displayHeight * 0.5,
                     width: this.displayWidth,
                     height: this.displayHeight,
                 };
@@ -538,6 +538,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 return {
                     name: "Tooltip",
                     color: "0b66c2",
+                };
+            }
+            case "livekitRoomProperty": {
+                return {
+                    name: "Livekit",
+                    color: "1E88E5",
                 };
             }
             default:

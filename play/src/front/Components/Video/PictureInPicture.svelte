@@ -164,9 +164,13 @@
 
         return () => {
             unsubscribe();
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
+            try {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                //@ts-ignore
+                navigator.mediaSession.setActionHandler("enterpictureinpicture", null);
+            } catch (e: unknown) {
+                debug("PictureInPicture enterpictureinpicture handler is not supported", e);
+            }
         };
     });
 
@@ -180,11 +184,9 @@
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
         <slot inPictureInPicture={$activePictureInPictureStore} />
     </div>
-    {#if $activePictureInPictureStore}
-        <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
-        <!-- So we need to play audio out of the PIP slot. -->
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-            <AudioStreamWrapper {peer} />
-        {/each}
-    {/if}
+    <!-- Because of a bug in PIP, new content cannot play sound (it does not inherit UserActivation) -->
+    <!-- So we need to play audio out of the PIP slot. -->
+    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+        <AudioStreamWrapper {peer} />
+    {/each}
 </div>

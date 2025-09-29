@@ -12,7 +12,7 @@
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
     "lint": "DEBUG= eslint src/ --ext .ts",
-    "fix": "DEBUG= eslint --fix src/ --ext .ts",
+    "lint-fix": "DEBUG= eslint --fix src/ --ext .ts",
     "precommit": "lint-staged",
     "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
@@ -46,6 +46,7 @@
     "@grpc/grpc-js": "^1.7.1",
     "@grpc/proto-loader": "0.7.8",
     "@sentry/node": "^7.48.0",
+    "@types/express": "^5.0.3",
     "@workadventure/messages": "1.0.0",
     "@workadventure/shared-utils": "1.0.0",
     "@workadventure/tiled-map-type-guard": "^2.1.2",
@@ -53,8 +54,10 @@
     "bigbluebutton-js": "^0.1.1",
     "busboy": "^1.6.0",
     "debug": "^4.3.1",
+    "express": "^5.1.0",
     "google-protobuf": "^3.21.0",
     "jsonwebtoken": "^9.0.0",
+    "livekit-server-sdk": "^2.10.1",
     "mkdirp": "^1.0.4",
     "openapi3-ts": "^3.0.2",
     "prom-client": "^12.0.0",
@@ -64,7 +67,6 @@
     "source-map-support": "^0.5.21",
     "tsx": "^4.7.1",
     "uuidv4": "^6.0.7",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.32.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -79,12 +81,12 @@
     "@types/node": "^18.11.9",
     "@workadventure/eslint-config": "1.0.0",
     "catch-unknown": "^2.0.0",
-    "eslint": "^9.25.1",
+    "eslint": "^9.35.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
     "typescript": "^5.7.2",
-    "vitest": "^1.4.0",
-    "vitest-mock-extended": "^1.3.1"
+    "vitest": "^3.2.4",
+    "vitest-mock-extended": "^3.1.0"
   },
   "lint-staged": {
     "*.ts": [

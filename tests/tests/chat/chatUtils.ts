@@ -37,15 +37,15 @@ class ChatUtils {
     // Here, sometimes, SSO redirection is required by the Synapse server, sometimes it is not.
     // It is not clear why, especially since it can change from one test run to another.
 
-    //eslint-disable-next-line playwright/no-wait-for-timeout
+     
     // await page.waitForTimeout(1000);
 
     await page.getByText(roomName).click();
 
     // await page.getByTestId("VerifyWithPassphraseButton").click();
 
-    // //eslint-disable-next-line playwright/no-wait-for-timeout
-     await page.waitForTimeout(1000);
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     //eslint-disable-next-line playwright/no-element-handle
     const ssoButton = await page.$("text=Continue with SSO");
 
@@ -83,6 +83,9 @@ class ChatUtils {
       state: "visible",
       timeout: 20_000,
     });
+    //wait before filling the passphrase input because it fill too fast and the blur event is not triggered or not detected
+    //eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
     await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
     await page.getByTestId("passphraseInput").blur();
     await page.getByTestId("confirmAccessSecretStorageButton").click();
@@ -104,7 +107,7 @@ class ChatUtils {
   }
 
   public async openRoomAreaList(page: Page) {
-    return page.getByText("Rooms").click();
+    return page.getByTestId("roomAccordeon").click();
   }
 }
 

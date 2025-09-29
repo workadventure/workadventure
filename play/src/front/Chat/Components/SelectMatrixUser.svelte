@@ -4,6 +4,7 @@
     import Select from "svelte-select";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import UsersIcon from "../../Components/Icons/UsersIcon.svelte";
     import { searchChatMembersRule, SelectItem } from "./Room/searchChatMembersRule";
     export let value: SelectItem[] = [];
     export let placeholder = "";
@@ -69,14 +70,15 @@
 <Select
     bind:value
     multiple
-    class="border border-solid !bg-contrast !rounded-xl"
+    class="border border-solid !bg-contrast !rounded-md"
     inputStyles="box-shadow:none !important"
     --border-focused="2px solid hsl(var(--secondary-600))"
+    --border-hover="1px solid hsl(var(--secondary-500))"
     --input-color="white"
     --border="1px solid hsl(var(--contrast-400))"
     --clear-select-color="hsl(var(--danger-500))"
     --internal-padding="6px"
-    --value-container-padding="0 0 0 6px"
+    --value-container-padding="6px"
     --multi-select-input-padding="0 0 0 6px"
     --multi-item-color="hsl(var(--contrast-900))"
     --multi-item-bg="hsl(var(--contrast-200))"
@@ -94,6 +96,8 @@
     --item-is-active-color="hsl(var(--contrast-200))"
     --item-hover-bg="hsl(var(--contrast-900))"
     --item-hover-color="hsl(var(--contrast-200))"
+    --placeholder-color="hsl(var(--contrast-400))"
+    ----padding="8px"
     {placeholder}
     on:change={async () => {
         const validItems = await handleChange();
@@ -103,7 +107,10 @@
     bind:filterText
     {items}
 >
-    <div slot="item" let:item>
+    <div slot="prepend" class="ps-2">
+        <UsersIcon />
+    </div>
+    <div slot="item" let:item class="cursor-pointer">
         {item.created ? $LL.chat.addNew : ""}
         {`${item.label} (${item.value})`}
     </div>

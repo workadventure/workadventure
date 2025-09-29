@@ -1,5 +1,5 @@
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { Unsubscriber, Writable, get, writable } from "svelte/store";
+import { Unsubscriber, get, readable, Readable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import {
@@ -9,7 +9,6 @@ import {
     PositionMessage_Direction,
 } from "@workadventure/messages";
 import { defaultWoka } from "@workadventure/shared-utils";
-import { asError } from "catch-unknown";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { TalkIcon } from "../Components/TalkIcon";
@@ -25,6 +24,7 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+import { StringUtils } from "../../Utils/StringUtils";
 
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -62,9 +62,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emoteTween: Phaser.Tweens.Tween | null = null;
     private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
     private textsToBuild = new Map();
-    private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
-    private readonly _pictureStore: Writable<string | undefined>;
+    private lastRenderedSprite: string | undefined;
+    private readonly _pictureStore: Readable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
     private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
@@ -95,7 +95,32 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.clickable = false;
 
         this.sprites = new Map<string, Sprite>();
-        this._pictureStore = writable(undefined);
+
+        // Note: the picture store is rarely used because most of the time, we display the character sent in the space
+        // by the remote player.
+        // The sole place where we need the picture store is when you click on a Woka on the map and want to display
+        // the Woka sprite in the popup that opens.
+        this._pictureStore = readable<string | undefined>(undefined, (set) => {
+            this.waitAndGetSnapshot()
+                .then((htmlImageElementSrc) => {
+                    set(htmlImageElementSrc);
+                })
+                .catch((e) => {
+                    console.warn(e);
+                    set(defaultWoka);
+                });
+        });
+
+        if (userId != undefined) {
+            this.waitAndGetSnapshot()
+                .then((htmlImageElementSrc) => {
+                    currentPlayerWokaStore.set(htmlImageElementSrc);
+                })
+                .catch((e) => {
+                    console.warn(e);
+                    currentPlayerWokaStore.set(defaultWoka);
+                });
+        }
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
         this.texturePromise = texturesPromise
@@ -104,23 +129,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.invisible = false;
                 this.playAnimation(direction, moving);
                 this.textureLoadedDeferred.resolve();
-                // getSnapshot can be quite long (~16ms) so we delay it to avoid freezing the game.
-                // Since requestAnimationFrame has the priority over setTimeout, the game will keep running smoothly.
-                return new Promise<void>((resolve, reject) => {
-                    setTimeout(() => {
-                        this.getSnapshot()
-                            .then((htmlImageElementSrc) => {
-                                this._pictureStore.set(htmlImageElementSrc);
-                                if (userId != undefined) {
-                                    currentPlayerWokaStore.set(htmlImageElementSrc);
-                                }
-                                resolve();
-                            })
-                            .catch((e) => {
-                                reject(asError(e));
-                            });
-                    }, 0);
-                });
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
@@ -138,17 +146,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.invisible = false;
                         this.playAnimation(direction, moving);
                         this.textureLoadedDeferred.resolve();
-
-                        return this.getSnapshot().then((htmlImageElementSrc) => {
-                            // When there is no renderer (for instance with bots), the htmlImageElementSrc is an empty string
-                            if (!htmlImageElementSrc) {
-                                htmlImageElementSrc = defaultWoka;
-                            }
-                            if (userId != undefined) {
-                                currentPlayerWokaStore.set(htmlImageElementSrc);
-                            }
-                            this._pictureStore.set(htmlImageElementSrc);
-                        });
                     })
                     .catch((e) => {
                         this.textureLoadedDeferred.reject(e);
@@ -173,9 +170,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
 
             // Todo: Replace the font family with a better one
+            // Use larger font size for non-Latin characters (Arabic, CJK, etc.) for better readability
+            const fontSize = StringUtils.containsNonLatinCharacters(name) ? "11px" : "8px";
             this.playerNameText = new Text(scene, 0, playerNameY, name, {
                 fontFamily: '"Press Start 2P"',
-                fontSize: "8px",
+                fontSize,
                 strokeThickness: 2,
                 stroke: "#14304C",
                 metrics: {
@@ -230,6 +229,36 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.setDepth(0);
+    }
+
+    private waitAndGetSnapshot(): Promise<string> {
+        if (this.lastRenderedSprite) {
+            return Promise.resolve(this.lastRenderedSprite);
+        }
+        return new Promise((resolve) => {
+            // getSnapshot can be quite long (~16ms) so we delay it to avoid freezing the game.
+            // Since requestAnimationFrame has the priority over setTimeout, the game will keep running smoothly.
+            this.textureLoadedDeferred.promise
+                .then(() => {
+                    setTimeout(() => {
+                        this.getSnapshot()
+                            .then((htmlImageElementSrc) => {
+                                this.lastRenderedSprite = htmlImageElementSrc;
+                                resolve(htmlImageElementSrc);
+                            })
+                            .catch((e) => {
+                                console.warn(e);
+                                this.lastRenderedSprite = defaultWoka;
+                                resolve(defaultWoka);
+                            });
+                    }, 0);
+                })
+                .catch((e) => {
+                    console.warn(e);
+                    this.lastRenderedSprite = defaultWoka;
+                    resolve(defaultWoka);
+                });
+        });
     }
 
     public setClickable(clickable = true): void {
@@ -411,14 +440,15 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             case SayMessageType.ThinkingCloud: {
                 const thinkElement = new ThinkingCloud({
-                    text: text, //"Hello, I'm thinking about something quite long. It should wrap nicely!",
+                    text: text,
                     maxWidth: 200,
                     fontSize: 11,
                     cornerRadius: 10,
                     padding: 12,
                     fillColor: 0xffffff,
+                    fillAlpha: 0.8,
                 }).getElement();
-                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 60, thinkElement);
+                this.bubble = new DOMElement(this.scene, 0, 0 - CHARACTER_BODY_HEIGHT / 2 - 70, thinkElement);
                 this.add(this.bubble);
                 break;
             }

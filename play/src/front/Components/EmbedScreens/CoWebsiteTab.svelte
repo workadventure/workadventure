@@ -68,10 +68,19 @@
 
     function copyUrl() {
         url = coWebsite.getUrl().toString();
+
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         analyticsClient.copyCowebsiteLink();
         dispatch("copy");
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
+    }
+
+    function handleClick() {
+        url = coWebsite.getUrl().toString();
+
+        window.open(url, "_blank");
+        analyticsClient.openCowebsiteInNewTab();
+        if (isJitsi) closeTab();
     }
 </script>
 
@@ -85,11 +94,11 @@
 >
     {#if isLoading}
         {#if isJitsi}
-            <img src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {:else if isBBB}
-            <img src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {:else}
-            <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+            <img draggable="false" src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {/if}
     {:else}
         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
@@ -151,10 +160,7 @@
                 class="group {active
                     ? 'hover:bg-contrast/10'
                     : 'hover:bg-white/10'} transition-all aspect-ratio h-8 w-8 rounded flex items-center justify-center"
-                on:click={() => {
-                    window.open(coWebsite.getUrl().toString(), "_blank");
-                    analyticsClient.openCowebsiteInNewTab();
-                }}
+                on:click={handleClick}
             >
                 <CopyIcon
                     height="h-6"

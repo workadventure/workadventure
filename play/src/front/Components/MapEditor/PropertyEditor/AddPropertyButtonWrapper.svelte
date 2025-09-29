@@ -423,12 +423,14 @@
 
 {#if property === "extensionModule" && modulesExtensionMapEditor.length > 0 && subProperty !== undefined}
     {#each modulesExtensionMapEditor as moduleExtension, index (`modulesExtensionMapEditor-${index}`)}
-        <svelte:component
-            this={moduleExtension[subProperty].AddAreaPropertyButton}
-            on:click={(event) => {
-                dispatch("click", event.detail);
-            }}
-        />
+        {#if moduleExtension[subProperty] != undefined}
+            <svelte:component
+                this={moduleExtension[subProperty].AddAreaPropertyButton}
+                on:click={(event) => {
+                    dispatch("click", event);
+                }}
+            />
+        {/if}
     {/each}
 {/if}
 
@@ -469,27 +471,28 @@
         testId="addTooltipProperty"
     />
 {/if}
-{#if property === "openPdf"}
+{#if property === "openFile"}
     <AddPropertyButton
-        headerText={$LL.mapEditor.properties.openPdfProperties.label()}
-        descriptionText={$LL.mapEditor.properties.openPdfProperties.description()}
-        img="resources/icons/icon_pdf.png"
+        headerText={$LL.mapEditor.properties.openFileProperties.label()}
+        descriptionText={$LL.mapEditor.properties.openFileProperties.description()}
+        img="resources/icons/icon_file.png"
         style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
-        testId="openPdf"
+        testId="openFile"
         on:click={(event) => {
-            dispatch("click", {
-                    type: "openPdf",
-                    link: "",
-                    name: "",
-                    closable: true,
-                    newTab: false,
-                    hideButtonLabel: true,
-                    //TODO : revoir
-                    policy: undefined,
-                    width: 50,
-                    trigger: ON_ACTION_TRIGGER_ENTER,
-                });
+            dispatch("click", event);
         }}
+    />
+{/if}
+{#if property === "livekitRoomProperty"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.livekitProperties.label()}
+        descriptionText={$LL.mapEditor.properties.livekitProperties.description()}
+        img="resources/icons/icon_meeting.png"
+        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="livekitRoomProperty"
     />
 {/if}
 

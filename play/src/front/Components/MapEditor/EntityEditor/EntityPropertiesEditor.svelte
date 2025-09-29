@@ -12,6 +12,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
@@ -19,14 +20,17 @@
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
-    import OpenPdfPropertyEditor from "../PropertyEditor/OpenPdfPropertyEditor.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
+    import { Entity } from "../../../Phaser/ECS/Entity";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
     let entityDescription = "";
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
+    let hasLivekitRoomProperty: boolean;
     let showDescriptionField = false;
+    let selectedEntity: Entity | undefined = undefined;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -45,6 +49,7 @@
                 entityDescription = descriptionProperty.description ?? "";
                 entitySearchable = descriptionProperty.searchable ?? false;
             }
+            selectedEntity = currentEntity;
         }
     });
 
@@ -140,7 +145,14 @@
                     roomName: "JITSI ROOM",
                     buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
-            case "openPdf":
+            case "livekitRoomProperty":
+                return {
+                    id,
+                    type,
+                    roomName: "LIVEKIT ROOM",
+                    buttonLabel: $LL.mapEditor.properties.livekitProperties.label(),
+                };
+            case "openFile":
                 return {
                     id,
                     type,
@@ -148,7 +160,7 @@
                     name: "",
                     closable: true,
                     newTab: false,
-                    buttonLabel: $LL.mapEditor.properties.openPdfProperties.label(),
+                    buttonLabel: $LL.mapEditor.properties.openFileProperties.label(),
                     policy,
                     width: 50,
                 };
@@ -212,6 +224,7 @@
                     forceNewTab: false,
                     allowAPI: false,
                     policy,
+                    width: 50,
                 };
             case "playAudio":
                 return {
@@ -241,6 +254,7 @@
 
     function refreshFlags(): void {
         hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
     }
     function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
         return properties.find((property) => property.type === propertyType) !== undefined;
@@ -254,6 +268,7 @@
 
     onDestroy(() => {
         selectedEntityUnsubscriber();
+        selectedEntity?.removeEditColor();
     });
 
     function toggleDescriptionField() {
@@ -282,6 +297,14 @@
                     }}
                 />
             {/if}
+            {#if !hasLivekitRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="livekitRoomProperty"
+                    on:click={() => {
+                        onAddProperty("livekitRoomProperty");
+                    }}
+                />
+            {/if}
             <AddPropertyButtonWrapper
                 property="playAudio"
                 on:click={() => {
@@ -295,9 +318,9 @@
                 }}
             />
             <AddPropertyButtonWrapper
-                property="openPdf"
+                property="openFile"
                 on:click={() => {
-                    onAddProperty("openPdf");
+                    onAddProperty("openFile");
                 }}
             />
         </div>
@@ -398,7 +421,7 @@
                     id="objectDescription"
                     placeHolder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
                     bind:value={entityDescription}
-                    on:change={onUpdateDescription}
+                    onChange={onUpdateDescription}
                     onKeyPress={() => {}}
                 />
             {/if}
@@ -440,8 +463,16 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
-                    {:else if property.type === "openPdf"}
-                        <OpenPdfPropertyEditor
+                    {:else if property.type === "openFile"}
+                        <OpenFilePropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "livekitRoomProperty"}
+                        <LivekitRoomPropertyEditor
                             {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);

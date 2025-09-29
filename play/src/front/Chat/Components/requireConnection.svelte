@@ -6,7 +6,7 @@
 
 <div class="flex-col items-center justify-center text-center px-4 py-12">
     <slot name="emoji">
-        <img src={messageSmileyImg} alt="Smiley happy" />
+        <img src={messageSmileyImg} alt="Smiley happy" draggable="false" />
     </slot>
     <div class="w-full text-center text-lg font-bold">
         <slot name="title">

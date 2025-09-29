@@ -28,7 +28,12 @@
     }}
 >
     <span slot="header" class="flex justify-center items-center">
-        <img class="w-6 me-2" src={messageSvg} alt={$LL.mapEditor.properties.matrixProperties.description()} />
+        <img
+            draggable="false"
+            class="w-6 me-2"
+            src={messageSvg}
+            alt={$LL.mapEditor.properties.matrixProperties.description()}
+        />
         {$LL.mapEditor.properties.matrixProperties.label()}
     </span>
     <span slot="content">
@@ -44,15 +49,13 @@
                     onChange={onValueChange}
                 />
             </div>
-            <div class="value-input">
-                <InputCheckbox
-                    id="openAutomaticallyChatLabel"
-                    label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
-                    dataTestId="shouldOpenAutomaticallyCheckbox"
-                    bind:value={property.shouldOpenAutomatically}
-                    onChange={onValueChange}
-                />
-            </div>
+            <InputCheckbox
+                id="openAutomaticallyChatLabel"
+                label={$LL.mapEditor.properties.matrixProperties.openAutomaticallyChatLabel()}
+                dataTestId="shouldOpenAutomaticallyCheckbox"
+                bind:value={property.shouldOpenAutomatically}
+                onChange={onValueChange}
+            />
         {:else if isCreatingRoom && !creationRoomError}
             <ChatLoader label={$LL.chat.createRoom.loadingCreation()} />
         {:else}

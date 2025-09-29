@@ -1,23 +1,102 @@
 <script lang="ts">
-    export let stream: MediaStream;
-    export let volume: number | undefined = undefined;
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import Debug from "debug";
+    import * as Sentry from "@sentry/svelte";
+
+    export let attach: (container: HTMLAudioElement) => void;
+    export let detach: (container: HTMLAudioElement) => void;
+    export let outputDeviceId: string | undefined = undefined;
+
+    const debug = Debug("AudioStream");
+
+    const dispatch = createEventDispatcher<{
+        selectOutputAudioDeviceError: void;
+    }>();
+
+    export let volume: number;
     let audioElement: HTMLAudioElement;
-    function srcObject(node: HTMLAudioElement, stream: MediaStream) {
-        node.srcObject = stream;
-        return {
-            update(newStream: MediaStream) {
-                if (node.srcObject != newStream) {
-                    node.srcObject = newStream;
-                }
-            },
-        };
-    }
 
     $: {
-        if (volume !== undefined && audioElement) {
+        if (audioElement) {
             audioElement.volume = volume;
         }
     }
+
+    let lastRequestedDeviceId: string | undefined;
+
+    async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
+        if (destroyed) {
+            return false;
+        }
+        if (lastRequestedDeviceId === deviceId) {
+            return true;
+        }
+        if (typeof el.setSinkId !== "function") {
+            return false;
+        }
+        lastRequestedDeviceId = deviceId;
+        try {
+            debug("Setting output device to ", deviceId);
+            await el.setSinkId(deviceId);
+            debug("Output device set to ", deviceId);
+            return true;
+        } catch (e) {
+            if (destroyed) {
+                return false;
+            }
+
+            Sentry.captureException(e);
+            if (e instanceof DOMException && e.name === "AbortError") {
+                // An error occurred while setting the sinkId. Let's fall back to default.
+                console.warn("Error setting the audio output device. We fallback to default.");
+
+                try {
+                    lastRequestedDeviceId = "";
+                    await el.setSinkId("");
+                } catch (e) {
+                    console.error("Error resetting the audio output device: ", e);
+                }
+
+                dispatch("selectOutputAudioDeviceError");
+                return false;
+            }
+            console.error("Error setting the audio output device: ", e);
+            return false;
+        }
+    }
+
+    $: {
+        if (outputDeviceId && audioElement) {
+            safeSetSinkId(outputDeviceId, audioElement).catch((e) => {
+                console.error("Error setting the audio output device: ", e);
+                Sentry.captureException(e);
+            });
+        }
+    }
+
+    let destroyed = false;
+
+    onMount(() => {
+        (async () => {
+            if (outputDeviceId) {
+                // Because of a bug in Chrome, we need to wait for setSinkId to resolve before setting the srcObject.
+                await safeSetSinkId(outputDeviceId, audioElement);
+                if (destroyed || !audioElement) {
+                    return;
+                }
+                attach(audioElement);
+                audioElement.volume = volume;
+            }
+        })().catch((e) => {
+            console.error(e);
+            Sentry.captureException(e);
+        });
+    });
+
+    onDestroy(() => {
+        destroyed = true;
+        detach(audioElement);
+    });
 </script>
 
-<audio bind:this={audioElement} autoplay={true} use:srcObject={stream} />
+<audio bind:this={audioElement} autoplay={true} />

@@ -1,7 +1,15 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ConcatenateMapStore } from "@workadventure/store-utils";
+import { FilterType } from "@workadventure/messages";
+import { get } from "svelte/store";
+import { Subscription } from "rxjs";
+import { SpaceInterface } from "../Space/SpaceInterface";
 import { RoomConnection } from "../Connection/RoomConnection";
+import { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import LL from "../../i18n/i18n-svelte";
+import { gameManager } from "../Phaser/Game/GameManager";
 import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
@@ -10,17 +18,18 @@ const broadcastServiceLogger = debug("BroadcastService");
 
 export type BroadcastSpaceFactory = (
     connection: RoomConnection,
-    spaceName: string,
+    space: SpaceInterface,
     broadcastService: BroadcastService,
     playSound: boolean
 ) => BroadcastSpace;
 
 export class BroadcastService {
     private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
-    private broadcastSpaces: BroadcastSpace[] = [];
+    private broadcastSpaces: SpaceInterface[] = [];
     private tracks = new ConcatenateMapStore<string, TrackWrapper>();
+    private unsubscribes: Subscription[] = [];
 
-    constructor(private roomConnection: RoomConnection, private defaultBroadcastSpaceFactory: BroadcastSpaceFactory) {}
+    constructor(private spaceRegistry: SpaceRegistryInterface) {}
 
     /**
      * Join a broadcast space
@@ -29,36 +38,51 @@ export class BroadcastService {
      * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
      * @returns The broadcast space
      */
-    public joinSpace(
-        spaceName: string,
-        playSound = true,
-        broadcastSpaceFactory?: BroadcastSpaceFactory
-    ): BroadcastSpace {
+    public async joinSpace(spaceName: string): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const broadcastSpace = broadcastSpaceFactory
-            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound)
-            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, this, playSound);
+        const space = await this.spaceRegistry.joinSpace(spaceNameSlugify, FilterType.LIVE_STREAMING_USERS, [
+            "screenSharing",
+            "cameraState",
+            "microphoneState",
+            "megaphoneState",
+        ]);
 
-        this.broadcastSpaces.push(broadcastSpace);
+        this.unsubscribes.push(
+            space.observeUserJoined.subscribe((user) => {
+                if (user.megaphoneState) {
+                    notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
+                    gameManager.getCurrentGameScene().playSound("audio-megaphone");
+                }
+            })
+        );
 
-        this.tracks.addStore(broadcastSpace.tracks);
+        // const broadcastSpace = broadcastSpaceFactory
+        //     ? broadcastSpaceFactory(this.roomConnection, space, this, playSound)
+        //     : this.defaultBroadcastSpaceFactory(this.roomConnection, space, this, playSound);
+
+        this.broadcastSpaces.push(space);
+
+        // this.tracks.addStore(broadcastSpace.tracks);
         broadcastServiceLogger("joinSpace", spaceNameSlugify);
 
-        return broadcastSpace;
+        return space;
     }
 
     /**
      * Leave a broadcast space
      * @param spaceName The name of the space to leave
      */
-    public leaveSpace(spaceName: string) {
+    public async leaveSpace(spaceName: string) {
         const spaceNameSlugify = slugify(spaceName);
-        const space = this.broadcastSpaces.find((space) => space.space.getName() === spaceNameSlugify);
+        const space = this.broadcastSpaces.find((space) => space.getName() === spaceNameSlugify);
+
         if (space) {
-            space.destroy();
-            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.getName() !== spaceNameSlugify);
+            //await space.destroy();
+            await this.spaceRegistry.leaveSpace(space);
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.getName() !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
+            return;
         }
     }
 
@@ -108,10 +132,9 @@ export class BroadcastService {
     /**
      * Destroy the broadcast service
      */
-    public destroy(): void {
-        this.broadcastSpaces.forEach((space) => {
-            space.destroy();
-        });
+    public async destroy(): Promise<void> {
+        this.unsubscribes.forEach((unsubscribe) => unsubscribe.unsubscribe());
+        await Promise.all(this.broadcastSpaces.map((space) => this.spaceRegistry.leaveSpace(space)));
     }
 
     /**

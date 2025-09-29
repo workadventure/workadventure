@@ -209,7 +209,6 @@ export class ExplorerTool implements MapEditorTool {
         // Disable store of map exploration mode
         mapExplorationObjectSelectedStore.set(undefined);
         mapExplorationModeStore.set(false);
-        mapEditorVisibilityStore.set(true);
         mapExplorationAreasStore.set(undefined);
     }
     public activate(): void {

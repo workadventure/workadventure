@@ -48,9 +48,14 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- with .Values.mapstorage.extraVolumes }}
+        {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
       initContainers:
         - name: mapstorage-init
           image: busybox
+          securityContext:
+            {{- toYaml .Values.mapstorage.securityContext | nindent 12 }}
           command: ["/bin/sh", "-c"]
           args:
             - |
@@ -78,6 +83,11 @@ spec:
                 name: {{ .Values.mapstorage.externalSecretName }}
             {{- end }}
           env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: SECRET_KEY
             - name: MAP_STORAGE_API_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -104,6 +114,9 @@ spec:
           volumeMounts:
             - name: mapstorage
               mountPath: /maps
+            {{- with .Values.mapstorage.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- end }}
           resources:
             {{- toYaml .Values.mapstorage.resources | nindent 12 }}
           # lifecycle:

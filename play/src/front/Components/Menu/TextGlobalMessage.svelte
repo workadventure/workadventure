@@ -75,7 +75,7 @@
 </section>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+    @use "../../style/breakpoints.scss" as *;
     @import "quill/dist/quill.snow.css";
 
     section.section-input-send-text {

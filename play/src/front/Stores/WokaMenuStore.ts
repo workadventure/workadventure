@@ -33,17 +33,22 @@ function createWokaMenuStore() {
         },
         addAction: (action: WokaMenuAction) => {
             update((data) => {
+                if (data === undefined) return data;
+
                 const dataWithUuid = { ...action, uuid: action.uuid ?? v4() };
-                data?.actions.push(dataWithUuid);
+                data.actions = [...data.actions, dataWithUuid];
                 return data;
             });
         },
         removeAction: (actionName: string) => {
             update((data) => {
-                const index = data?.actions.findIndex((action) => (action.actionName = actionName));
-                if (index && index !== -1) {
-                    data?.actions.splice(index, 1);
-                }
+                if (!data) return data;
+                const index = data.actions.findIndex((action) => {
+                    return action.actionName === actionName;
+                });
+                if (index == undefined || index === -1) return data;
+
+                data.actions = [...data.actions.splice(index, 1)];
                 return data;
             });
         },

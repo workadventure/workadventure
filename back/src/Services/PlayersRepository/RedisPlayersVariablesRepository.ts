@@ -118,7 +118,6 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
         // TODO: SLOW WRITING EVERY 2 SECONDS WITH A TIMEOUT
 
         await this.redisClient.hSet(redisKey, key, storedValue);
-        console.log("Saved variable to Redis: ", redisKey, key, storedValue);
         if (maxExpire !== undefined) {
             this.redisClient.expire(redisKey, Math.floor((maxExpire - new Date().getTime()) / 1000)).catch((e) => {
                 console.error("Failed calling EXPIRE", e);

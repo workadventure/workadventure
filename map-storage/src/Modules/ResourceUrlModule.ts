@@ -15,10 +15,6 @@ export class ResourceUrlModule implements MapStorageModuleInterface {
                 return newProperty;
             }
 
-            if (newProperty.serverData) {
-                newProperty.serverData = undefined;
-            }
-
             const response = await _axios.patch(resourceUrl, newProperty);
             if (!response.data) {
                 return Promise.resolve(newProperty);

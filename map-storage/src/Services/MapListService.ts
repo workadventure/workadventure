@@ -94,7 +94,8 @@ export class MapListService {
             throw new Error(
                 `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
                     e
-                )}. Skipping this file for cache generation.`
+                )}. Skipping this file for cache generation.`,
+                { cause: e }
             );
         }
     }
@@ -200,7 +201,7 @@ export class MapListService {
             return cacheFile;
         } catch (e: unknown) {
             if (nbTry === 0) {
-                console.log(`[${new Date().toISOString()}] Trying to regenerate the cache file`);
+                console.info(`[${new Date().toISOString()}] Trying to regenerate the cache file`);
                 // The file does not exist. Let's generate it
                 await this.generateCacheFileNoLimit(domain);
                 return this.readCacheFileNoLimit(domain, nbTry + 1);

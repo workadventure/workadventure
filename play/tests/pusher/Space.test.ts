@@ -1,308 +1,657 @@
+import { FilterType, SpaceUser } from "@workadventure/messages";
 import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
-import {
-    AvailabilityStatus,
-    PusherToBackSpaceMessage,
-    SpaceFilterMessage,
-    SpaceUser,
-    SubMessage,
-} from "@workadventure/messages";
-import { Color } from "@workadventure/shared-utils";
-import { Space } from "../../src/pusher/models/Space";
+import { ApiClientRepository } from "@workadventure/shared-utils/src/ApiClientRepository";
+import { EventProcessor } from "../../src/pusher/models/EventProcessor";
+import { Space, SpaceForSpaceConnectionInterface } from "../../src/pusher/models/Space";
 import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
-import { Zone } from "../../src/pusher/models/Zone";
-import { EventProcessor } from "../../src/pusher/models/EventProcessor";
-describe("Space", () => {
-    let eventsWatcher: PusherToBackSpaceMessage[] = [];
-    const backSpaceConnection = mock<BackSpaceConnection>({
-        write(chunk: PusherToBackSpaceMessage): boolean {
-            eventsWatcher.push(chunk);
-            return true;
-        },
-    });
-    let eventsClient: SubMessage[] = [];
-    const clientData = {
-        rejected: false,
-        disconnecting: false,
-        token: "",
-        roomId: "",
-        userId: 1,
-        userUuid: "",
-        isLogged: false,
-        ipAddress: "",
-        name: "",
-        characterTextures: [],
-        companionTexture: undefined,
-        position: { x: 0, y: 0, direction: "up", moving: false },
-        viewport: { left: 0, top: 0, right: 0, bottom: 0 },
-        availabilityStatus: AvailabilityStatus.ONLINE,
-        lastCommandId: undefined,
-        messages: [],
-        tags: [],
-        visitCardUrl: null,
-        userRoomToken: undefined,
-        activatedInviteUser: undefined,
-        applications: undefined,
-        canEdit: false,
-        spaceUser: SpaceUser.fromPartial({
-            spaceUserId: "foo_1",
-            uuid: "",
-            name: "",
-            playUri: "",
-            roomName: "",
-            availabilityStatus: AvailabilityStatus.ONLINE,
-            isLogged: false,
-            color: Color.getColorByString(""),
-            tags: [],
-            cameraState: false,
-            screenSharingState: false,
-            microphoneState: false,
-            megaphoneState: false,
-            characterTextures: [
-                {
-                    url: "",
-                    id: "",
-                },
-            ],
-            visitCardUrl: undefined,
-        }),
-        batchedMessages: {
-            event: "",
-            payload: [],
-        },
-        batchTimeout: null,
-        backConnection: undefined,
-        listenedZones: new Set<Zone>(),
-        pusherRoom: undefined,
-        spaces: [],
-        spacesFilters: new Map<string, SpaceFilterMessage[]>([
-            [
-                "test",
-                [
-                    {
-                        filterName: "default",
-                        spaceName: "test",
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    },
-                ],
-            ],
-        ]),
-        cameraState: undefined,
-        microphoneState: undefined,
-        screenSharingState: undefined,
-        megaphoneState: undefined,
-        emitInBatch: (payload: SubMessage) => {
-            eventsClient.push(payload);
-        },
+import { SpaceToFrontDispatcher } from "../../src/pusher/models/SpaceToFrontDispatcher";
+import { SpaceToBackForwarder } from "../../src/pusher/models/SpaceToBackForwarder";
+import { SpaceConnection, SpaceConnectionInterface } from "../../src/pusher/models/SpaceConnection";
+import { ClientEventsEmitter } from "../../src/pusher/services/ClientEventsEmitter";
+
+const flushPromises = () => new Promise(setImmediate);
+
+vi.mock("../../src/pusher/enums/EnvironmentVariable.ts", () => {
+    return {
+        API_URL: "http://localhost:3000",
     };
-    const client = mock<Socket>({
-        getUserData: vi.fn().mockReturnValue(clientData),
-    });
-    const space = new Space("test", "localTest", backSpaceConnection, 1, new EventProcessor());
-    it("should return true because Space is empty", () => {
-        expect(space.isEmpty()).toBe(true);
-    });
-    it("should notify client and back that a new user is added", () => {
-        const spaceUser = SpaceUser.fromPartial({
-            spaceUserId: "foo_1",
-            uuid: "uuid-test",
-            name: "test",
-            playUri: "test",
-            color: "#000000",
-            roomName: "test",
-            isLogged: false,
-            availabilityStatus: 0,
-            cameraState: false,
-            microphoneState: false,
-            screenSharingState: false,
-            megaphoneState: false,
-            characterTextures: [],
-            tags: [],
-        });
-        space.addUser(spaceUser, client);
-        expect(eventsClient.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
-        expect(eventsWatcher.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
-    });
-    it("should return false because Space is not empty", () => {
-        expect(space.isEmpty()).toBe(false);
-    });
-    it("should notify client and back that a user is updated", () => {
-        eventsClient = [];
-        eventsWatcher = [];
-        const spaceUser = SpaceUser.fromPartial({
-            spaceUserId: "foo_1",
-            uuid: "uuid-test",
-            name: "test2",
-            playUri: "test2",
-            color: "#FFFFFF",
-            roomName: "test2",
-            isLogged: true,
-            availabilityStatus: 1,
-            cameraState: true,
-            microphoneState: true,
-            screenSharingState: true,
-            megaphoneState: true,
-            characterTextures: [],
-            tags: [],
-            visitCardUrl: "test",
-        });
-        space.updateUser(spaceUser, [
-            "name",
-            "playUri",
-            "color",
-            "roomName",
-            "isLogged",
-            "availabilityStatus",
-            "cameraState",
-            "microphoneState",
-            "screenSharingState",
-            "megaphoneState",
-            "visitCardUrl",
-        ]);
-        expect(eventsClient.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
-        expect(eventsWatcher.some((message) => message.message?.$case === "updateSpaceUserMessage")).toBe(true);
+});
 
-        const message = eventsWatcher.find((message) => message.message?.$case === "updateSpaceUserMessage");
-        expect(message).toBeDefined();
-        const subMessage = message?.message;
-        if (!subMessage || subMessage.$case !== "updateSpaceUserMessage") {
-            throw new Error("subMessage is not defined");
-        }
-        const updateSpaceUserMessage = subMessage.updateSpaceUserMessage;
-        expect(updateSpaceUserMessage).toBeDefined();
-        const user = updateSpaceUserMessage?.user;
-        expect(user).toBeDefined();
-        expect(user?.name).toBe("test2");
-        expect(user?.playUri).toBe("test2");
-        expect(user?.color).toBe("#FFFFFF");
-        expect(user?.roomName).toBe("test2");
-        expect(user?.isLogged).toBe(true);
-        expect(user?.availabilityStatus).toBe(1);
-        expect(user?.cameraState).toBe(true);
-        expect(user?.microphoneState).toBe(true);
-        expect(user?.megaphoneState).toBe(true);
-        expect(user?.screenSharingState).toBe(true);
-        expect(user?.visitCardUrl).toBe("test");
-    });
-    // Previously, the test developed by César was expecting "no delta" (because user is already sent, and delta return nothing)
-    // But this does not seem logical and was probably testing a bug. Indeed, when adding a new filter, we send all the users matching the filter
-    // even if another filter already exists.
-    it("should add the name filter 'test' and send me the delta (nothing because user is already sent, and delta return nothing)", () => {
-        eventsClient = [];
-        const filter: SpaceFilterMessage = {
-            filterName: "test",
-            spaceName: "test",
-            filter: {
-                $case: "spaceFilterContainName",
-                spaceFilterContainName: {
-                    value: "es",
+describe("Space", () => {
+    describe("sendLocalUsersToBack", () => {
+        it("should try to reconnect to back if the connection is lost and send local users to back", () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+
+            const mockUsers = [
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
                 },
-            },
-        };
-        client.getUserData().spacesFilters.set("test", [filter]);
-        space.handleAddFilter(client, { spaceFilterMessage: filter });
-        expect(eventsClient.length).toBe(1);
-    });
-    it("should update the name filter 'john' and send me the delta (remove userMessage)", () => {
-        const spaceFilterMessage: SpaceFilterMessage = {
-            filterName: "test",
-            spaceName: "test",
-            filter: {
-                $case: "spaceFilterContainName",
-                spaceFilterContainName: {
-                    value: "john",
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
                 },
-            },
-        };
-        space.handleUpdateFilter(client, { spaceFilterMessage });
-        client.getUserData().spacesFilters.set("test", [spaceFilterMessage]);
-        expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
-        const message = eventsClient.find((message) => message.message?.$case === "removeSpaceUserMessage");
-        expect(message).toBeDefined();
-        const subMessage = message?.message;
-        if (!subMessage || subMessage.$case !== "removeSpaceUserMessage") {
-            throw new Error("subMessage is not defined");
-        }
-        const removeSpaceUserMessage = subMessage.removeSpaceUserMessage;
-        expect(removeSpaceUserMessage).toBeDefined();
-        expect(removeSpaceUserMessage?.spaceUserId).toBe("foo_1");
-    });
-    it("should notify client that have filters that match the user", () => {
-        eventsClient = [];
-        const spaceUser = SpaceUser.fromPartial({
-            spaceUserId: "foo_2",
-            uuid: "uuid-test2",
-            name: "johnny",
-            playUri: "test",
-            color: "#000000",
-            roomName: "test",
-            isLogged: false,
-            availabilityStatus: 0,
-            cameraState: false,
-            microphoneState: false,
-            screenSharingState: false,
-            megaphoneState: false,
-            characterTextures: [],
-            tags: [],
-        });
-        const clientData2 = {
-            ...clientData,
-            spaceUser,
-            userId: 2,
-        };
-        const client2 = mock<Socket>({
-            getUserData: vi.fn().mockReturnValue(clientData2),
-        });
-        space.addUser(spaceUser, client2);
-        expect(eventsClient.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(true);
-        const message = eventsClient.find((message) => message.message?.$case === "addSpaceUserMessage");
-        expect(message).toBeDefined();
-        const subMessage = message?.message;
-        if (!subMessage || subMessage.$case !== "addSpaceUserMessage") {
-            throw new Error("subMessage is not defined");
-        }
-        const addSpaceUserMessage = subMessage.addSpaceUserMessage;
-        expect(addSpaceUserMessage).toBeDefined();
-        const user = addSpaceUserMessage.user;
-        expect(user).toBeDefined();
-        expect(user?.name).toBe("johnny");
-    });
-    it("should remove the name filter and NOT send me anything", () => {
-        client.getUserData().spacesFilters = new Map<string, SpaceFilterMessage[]>([
-            [
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
+            ];
+
+            const mockSyncLocalUsersWithServer = vi.fn();
+
+            const mockSpaceToBackForwarderFactory = (space: Space) =>
+                ({
+                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
+                } as unknown as SpaceToBackForwarder);
+
+            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
+                ({} as SpaceToFrontDispatcher);
+
+            const mockOnBackEndDisconnect = vi.fn();
+
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
+            const space = new Space(
                 "test",
-                [
-                    {
-                        filterName: "default",
-                        spaceName: "test",
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    },
-                ],
-            ],
-        ]);
-        eventsClient = [];
-        space.handleRemoveFilter(client, {
-            spaceFilterMessage: {
-                filterName: "test",
-                spaceName: "test",
-                filter: undefined,
-            },
+                "test",
+                new EventProcessor(),
+                FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
+                mockSpaceConnection,
+                [],
+                mockSpaceToBackForwarderFactory,
+                mockSpaceToFrontDispatcherFactory
+            );
+
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[0],
+                    }),
+                } as unknown as Socket,
+                mockUsers[0]
+            );
+
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[1],
+                    }),
+                } as unknown as Socket,
+                mockUsers[1]
+            );
+
+            space._localConnectedUserWithSpaceUser.set(
+                {
+                    getUserData: vi.fn().mockReturnValue({
+                        spaceUser: mockUsers[2],
+                    }),
+                } as unknown as Socket,
+                mockUsers[2]
+            );
+
+            space.sendLocalUsersToBack();
+
+            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledOnce();
+            expect(mockSyncLocalUsersWithServer).toHaveBeenCalledWith(mockUsers);
         });
-        expect(eventsClient.some((message) => message.message?.$case === "addSpaceUserMessage")).toBe(false);
+    });
+    describe("handleWatch", () => {
+        it("should send all users to the new watcher", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+
+            const mockUsers = [
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
+            ];
+
+            const mockSyncLocalUsersWithServer = vi.fn();
+
+            const mockSpaceToBackForwarderFactory = (space: Space) =>
+                ({
+                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
+                } as unknown as SpaceToBackForwarder);
+
+            const mockNotifyMeAddUser = vi.fn();
+            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
+                ({
+                    notifyMeAddUser: mockNotifyMeAddUser,
+                } as unknown as SpaceToFrontDispatcher);
+
+            const mockOnBackEndDisconnect = vi.fn();
+
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
+            const mockClientEventsEmitter = mock<ClientEventsEmitter>({
+                emitWatchSpace: vi.fn(),
+                emitUnwatchSpace: vi.fn(),
+            });
+
+            const space = new Space(
+                "test",
+                "test",
+                new EventProcessor(),
+                FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
+                mockSpaceConnection,
+                [],
+                mockSpaceToBackForwarderFactory,
+                mockSpaceToFrontDispatcherFactory,
+                mockClientEventsEmitter
+            );
+
+            space.initSpace();
+
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
+
+            const mockSocket = mock<Socket>({
+                getUserData: vi.fn().mockReturnValue({
+                    spaceUser: mockUsers[0],
+                }),
+            });
+
+            space._localConnectedUserWithSpaceUser.set(mockSocket, mockUsers[0]);
+
+            await flushPromises();
+
+            space.handleWatch(mockSocket);
+
+            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(1, mockSocket, mockUsers[0]);
+            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(2, mockSocket, mockUsers[1]);
+            expect(mockNotifyMeAddUser).toHaveBeenNthCalledWith(3, mockSocket, mockUsers[2]);
+            expect(mockNotifyMeAddUser).toHaveBeenCalledTimes(3);
+        });
+
+        it("should not send users to the new watcher if the user is already watching the space", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+
+            const mockUsers = [
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_1",
+                    }),
+                    lowercaseName: "foo_1",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_2",
+                    }),
+                    lowercaseName: "foo_2",
+                },
+                {
+                    ...SpaceUser.fromPartial({
+                        spaceUserId: "foo_3",
+                    }),
+                    lowercaseName: "foo_3",
+                },
+            ];
+
+            const mockSyncLocalUsersWithServer = vi.fn();
+
+            const mockSpaceToBackForwarderFactory = (space: Space) =>
+                ({
+                    syncLocalUsersWithServer: mockSyncLocalUsersWithServer,
+                    addUserToNotify: vi.fn(),
+                } as unknown as SpaceToBackForwarder);
+
+            const mockNotifyMeAddUser = vi.fn();
+            const mockSpaceToFrontDispatcherFactory = (space: Space, eventProcessor: EventProcessor) =>
+                ({
+                    notifyMeAddUser: mockNotifyMeAddUser,
+                } as unknown as SpaceToFrontDispatcher);
+
+            const mockOnBackEndDisconnect = vi.fn();
+
+            const mockSpaceConnection = mock<SpaceConnectionInterface>({
+                getSpaceStreamToBackPromise: vi.fn(),
+                removeSpace: vi.fn(),
+            });
+
+            const space = new Space(
+                "test",
+                "test",
+                new EventProcessor(),
+                FilterType.ALL_USERS,
+                mockOnBackEndDisconnect,
+                mockSpaceConnection,
+                [],
+                mockSpaceToBackForwarderFactory,
+                mockSpaceToFrontDispatcherFactory
+            );
+
+            space.initSpace();
+
+            space.users.set("foo_1", mockUsers[0]);
+            space.users.set("foo_2", mockUsers[1]);
+            space.users.set("foo_3", mockUsers[2]);
+            space._localWatchers.add("foo_1");
+
+            const mockSocket = mock<Socket>({
+                getUserData: vi.fn().mockReturnValue({
+                    spaceUser: mockUsers[0],
+                }),
+            });
+
+            space._localConnectedUserWithSpaceUser.set(mockSocket, mockUsers[0]);
+
+            await flushPromises();
+
+            space.handleWatch(mockSocket);
+
+            expect(mockNotifyMeAddUser).not.toHaveBeenCalled();
+        });
+    });
+});
+
+describe("SpaceConnection", () => {
+    describe("getSpaceStreamToBackPromise", () => {
+        it("should create a new spaceStreamToBack if there is no spaceStreamToBack for the backId", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: vi.fn(),
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+            });
+
+            const BackSpaceConnectionPromise = spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            await flushPromises();
+
+            expect(BackSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledOnce();
+            expect(mockGetIndex).toHaveBeenCalledWith(mockSpace.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledWith(mockSpace.name, mock_GRPC_MAX_MESSAGE_SIZE);
+        });
+
+        it("should create a new spaceStreamToBack if there is no spaceStreamToBack for the backId", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: vi.fn(),
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+            });
+
+            const mockSpace2 = mock<SpaceForSpaceConnectionInterface>({
+                name: "test2",
+            });
+
+            const backSpaceConnectionPromise = spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            await flushPromises();
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            expect(backSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledOnce();
+            expect(mockGetIndex).toHaveBeenCalledWith(mockSpace.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledWith(mockSpace.name, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const backSpaceConnectionPromise2 = spaceConnection.getSpaceStreamToBackPromise(mockSpace2);
+            await flushPromises();
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            expect(backSpaceConnectionPromise).toBeDefined();
+            expect(mockGetIndex).toHaveBeenCalledTimes(2);
+            expect(mockGetIndex).toHaveBeenNthCalledWith(2, mockSpace2.name);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(backSpaceConnectionPromise2).toStrictEqual(backSpaceConnectionPromise);
+        });
+        it("should send the joinSpaceMessage to the back when the spaceStreamToBack is created", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            expect(mockWriteFunction).toHaveBeenCalledOnce();
+            expect(mockWriteFunction).toHaveBeenCalledWith({
+                message: {
+                    $case: "joinSpaceMessage",
+                    joinSpaceMessage: {
+                        spaceName: mockSpace.name,
+                        filterType: FilterType.ALL_USERS,
+                        isRetry: false,
+                    },
+                },
+            });
+        });
+
+        it("shouldn't send the joinSpaceMessage to the back  if the space is already joined", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mockSpace2 = mock<SpaceForSpaceConnectionInterface>({
+                name: "test2",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace2);
+
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+        });
+
+        it("should try to reconnect to back if the connection is lost and send local users to back", async () => {
+            const callbackMap = new Map<string, (...args: unknown[]) => void>();
+
+            const mockWriteFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                write: mockWriteFunction,
+                on: vi.fn().mockImplementation((event: string, callback: (...args: unknown[]) => void) => {
+                    callbackMap.set(event, callback);
+                    return mockBackSpaceConnection;
+                }),
+            });
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockWatchSpace = vi.fn().mockReturnValue(mockBackSpaceConnection);
+            const mockGetSpaceClient = vi.fn().mockResolvedValue({
+                watchSpace: mockWatchSpace,
+                getChannel: vi.fn().mockReturnValue({
+                    getTarget: vi.fn().mockReturnValue("test"),
+                }),
+            });
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getSpaceClient: mockGetSpaceClient,
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const mockSendLocalUsersToBack = vi.fn();
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+                sendLocalUsersToBack: mockSendLocalUsersToBack,
+            });
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            await spaceConnection.getSpaceStreamToBackPromise(mockSpace);
+
+            expect(mockGetSpaceClient).toHaveBeenCalledOnce();
+            expect(mockWatchSpace).toHaveBeenCalledOnce();
+
+            callbackMap.get("error")?.();
+
+            await flushPromises();
+
+            expect(mockGetSpaceClient).toHaveBeenCalledTimes(2);
+            expect(mockWatchSpace).toHaveBeenCalledTimes(2);
+            expect(mockSendLocalUsersToBack).toHaveBeenCalledOnce();
+        });
     });
 
-    it("should notify client and back that a user is removed", () => {
-        eventsClient = [];
-        eventsWatcher = [];
-        space.removeUser(client);
-        //expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
-        expect(eventsWatcher.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
+    describe("removeSpace", () => {
+        it("should throw an error if list of space for back id is not found", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
+        it("should throw an error if space is not found in the list of space for back id", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>());
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
+        it("should end the connection if the list of space for back id is empty", async () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+            const mockEndFunction = vi.fn();
+            const mockBackSpaceConnection = mock<BackSpaceConnection>({
+                end: mockEndFunction,
+            });
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]]));
+            (
+                spaceConnection as unknown as { spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>> }
+            ).spaceStreamToBackPromises.set(0, Promise.resolve(mockBackSpaceConnection));
+            spaceConnection.removeSpace(mockSpace);
+
+            await flushPromises();
+
+            expect(mockEndFunction).toHaveBeenCalledOnce();
+            expect(
+                (
+                    spaceConnection as unknown as {
+                        spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                    }
+                ).spacePerBackId.get(0)
+            ).toBeUndefined();
+            expect(
+                (
+                    spaceConnection as unknown as {
+                        spaceStreamToBackPromises: Map<number, Promise<BackSpaceConnection>>;
+                    }
+                ).spaceStreamToBackPromises.get(0)
+            ).toBeUndefined();
+        });
+        it("should throw an error if back connection is not found", () => {
+            const mockGetIndex = vi.fn().mockReturnValue(0);
+            const mockApiClientRepository = mock<ApiClientRepository>({
+                getIndex: mockGetIndex,
+            });
+
+            const mockSpace = mock<SpaceForSpaceConnectionInterface>({
+                name: "test",
+                filterType: FilterType.ALL_USERS,
+            });
+
+            const mock_GRPC_MAX_MESSAGE_SIZE = 0;
+
+            const spaceConnection = new SpaceConnection(mockApiClientRepository, mock_GRPC_MAX_MESSAGE_SIZE);
+
+            (
+                spaceConnection as unknown as {
+                    spacePerBackId: Map<number, Map<string, SpaceForSpaceConnectionInterface>>;
+                }
+            ).spacePerBackId.set(0, new Map<string, SpaceForSpaceConnectionInterface>([["test", mockSpace]]));
+            expect(() => spaceConnection.removeSpace(mockSpace)).toThrow();
+        });
     });
 });

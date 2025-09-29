@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { AreaData, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
@@ -179,17 +180,8 @@ export class GameMapPropertiesListener {
                 if (domain === undefined) {
                     throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
                 }
-
-                let domainWithoutProtocol = domain;
-                if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                    domainWithoutProtocol = domain;
-                    domain = `${location.protocol}//${domain}`;
-                } else {
-                    if (domain.startsWith("http://")) {
-                        domainWithoutProtocol = domain.substring(7);
-                    } else {
-                        domainWithoutProtocol = domain.substring(8);
-                    }
+                if (!domain.startsWith("http")) {
+                    domain = "https://" + domain;
                 }
 
                 inJitsiStore.set(true);
@@ -229,7 +221,6 @@ export class GameMapPropertiesListener {
                     jwt,
                     jitsiConfig,
                     jitsiInterfaceConfig,
-                    domainWithoutProtocol,
                     jitsiRoomAdminTag
                 );
 
@@ -513,8 +504,14 @@ export class GameMapPropertiesListener {
         places.forEach((place) => {
             this.handleOpenWebsitePropertiesOnEnter(place);
             this.handleFocusablePropertiesOnEnter(place);
-            this.handleSpeakerMegaphonePropertiesOnEnter(place);
-            this.handleListenerMegaphonePropertiesOnEnter(place);
+            this.handleSpeakerMegaphonePropertiesOnEnter(place).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            this.handleListenerMegaphonePropertiesOnEnter(place).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
         });
     }
 
@@ -727,7 +724,7 @@ export class GameMapPropertiesListener {
         }
     }
 
-    private handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+    private async handleSpeakerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -739,8 +736,8 @@ export class GameMapPropertiesListener {
                 "handleSpeakerMegaphonePropertiesOnEnter => joinSpace => speakerZone.value : ",
                 speakerZone.value
             );
-            const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZone.value, false);
-            currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+            const space = await this.scene.broadcastService.joinSpace(speakerZone.value);
+            currentLiveStreamingSpaceStore.set(space);
             /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
             }*/
@@ -755,11 +752,14 @@ export class GameMapPropertiesListener {
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
             isSpeakerStore.set(false);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(speakerZone.value);
+            this.scene.broadcastService.leaveSpace(speakerZone.value).catch((e) => {
+                console.error("Error while leaving space", e);
+                Sentry.captureException(e);
+            });
         }
     }
 
-    private handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): void {
+    private async handleListenerMegaphonePropertiesOnEnter(place: ITiledPlace): Promise<void> {
         if (!place.properties) {
             return;
         }
@@ -777,8 +777,8 @@ export class GameMapPropertiesListener {
                     "handleListenerMegaphonePropertiesOnEnter => joinSpace => speakerZoneName : ",
                     speakerZoneName
                 );
-                const broadcastSpace = this.scene.broadcastService.joinSpace(speakerZoneName, false);
-                currentLiveStreamingSpaceStore.set(broadcastSpace.space);
+                const space = await this.scene.broadcastService.joinSpace(speakerZoneName);
+                currentLiveStreamingSpaceStore.set(space);
             }
         }
     }
@@ -797,7 +797,10 @@ export class GameMapPropertiesListener {
             );
             if (speakerZoneName) {
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(speakerZoneName);
+                this.scene.broadcastService.leaveSpace(speakerZoneName).catch((e) => {
+                    console.error("Error while leaving space", e);
+                    Sentry.captureException(e);
+                });
             }
         }
     }

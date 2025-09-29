@@ -2,14 +2,10 @@ import { expect, test } from '@playwright/test';
 import {maps_domain} from "./utils/urls";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Meta tags', () => {
+test.describe('Meta tags @nomobile @nofirefox @nowebkit', () => {
     test.beforeEach(async ({ page, browserName }) => {
-        // Skip test for mobile device
-        if(isMobile(page) && browserName !== "chromium") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+      // Skip test for mobile device
+      test.skip(isMobile(page) || browserName !== 'chromium', 'Skip on mobile non-Chromium');
     });
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({ request }) => {
     const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
@@ -20,9 +16,9 @@ test.describe('Meta tags', () => {
     const data = await result.text();
 
     // Validate the name can be found
-    await expect(data).toContain('MAP NAME');
+    expect(data).toContain('MAP NAME');
     // Validate the description can be found
-    await expect(data).toContain('Cette carte est tr');
+    expect(data).toContain('Cette carte est tr');
 
     // But if we scan with a normal browser, we don't get the metadata:
     const result2 = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
@@ -33,9 +29,9 @@ test.describe('Meta tags', () => {
     const data2 = await result2.text();
 
     // Validate the name can be found
-    await expect(data2).not.toContain('MAP NAME');
+    expect(data2).not.toContain('MAP NAME');
     // Validate the description can be found
-    await expect(data2).not.toContain('Cette carte est tr');
+    expect(data2).not.toContain('Cette carte est tr');
   });
 
   test('there is no error an funky URLs with bots. @selfsigned', async ({ request }) => {
@@ -46,7 +42,7 @@ test.describe('Meta tags', () => {
     });
 
     // Note: in the future, it would be even better to return a 404 error code.
-    await expect(result.ok()).toBeTruthy();
-    await expect(await result.text()).not.toContain('Cette carte est tr');
+    expect(result.ok()).toBeTruthy();
+    expect(await result.text()).not.toContain('Cette carte est tr');
   });
 });

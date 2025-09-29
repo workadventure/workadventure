@@ -2,7 +2,7 @@ import {
     UpdateSpaceMetadataMessage,
     SpaceUser,
     PublicEvent,
-    PrivateEvent,
+    PrivateEventPusherToFront,
     AddSpaceUserPusherToFrontMessage,
     RemoveSpaceUserPusherToFrontMessage,
     UpdateSpaceUserPusherToFrontMessage,
@@ -14,17 +14,18 @@ import {
     SpaceDestroyedMessage,
     SpaceIsTyping,
     SpaceMessage,
-    UpdateSpaceFilterMessage,
+    FilterType,
 } from "@workadventure/messages";
 import { Subject } from "rxjs";
 import { describe, expect, it, vi, assert } from "vitest";
 import { get } from "svelte/store";
 import { RoomConnectionForSpacesInterface, SpaceRegistry } from "../SpaceRegistry/SpaceRegistry";
-import { SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
+import { SpaceUserExtended } from "../SpaceInterface";
 
 /* eslint @typescript-eslint/unbound-method: 0 */
 
 class MockRoomConnection implements RoomConnectionForSpacesInterface {
+    public closed = false;
     public addSpaceUserMessageStream = new Subject<AddSpaceUserPusherToFrontMessage>();
     public updateSpaceUserMessageStream = new Subject<UpdateSpaceUserPusherToFrontMessage>();
     public removeSpaceUserMessageStream = new Subject<RemoveSpaceUserPusherToFrontMessage>();
@@ -35,7 +36,8 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     public emitJoinSpace = vi.fn();
     public emitLeaveSpace = vi.fn();
     public spacePublicMessageEvent = new Subject<PublicEvent>();
-    public spacePrivateMessageEvent = new Subject<PrivateEvent>();
+    public spacePrivateMessageEvent = new Subject<PrivateEventPusherToFront>();
+    public emitRequestFullSync = vi.fn();
     public spaceDestroyedMessage = new Subject<SpaceDestroyedMessage>();
     public emitPrivateSpaceEvent(
         spaceName: string,
@@ -61,9 +63,7 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
     ): void {
         throw new Error("Method not implemented.");
     }
-    public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage): void {
-        throw new Error("Method not implemented.");
-    }
+
     public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
         throw new Error("Method not implemented.");
     }
@@ -73,16 +73,41 @@ class MockRoomConnection implements RoomConnectionForSpacesInterface {
 
     // Add any other methods or properties that need to be mocked
 }
-
-vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
+vi.mock("../../Phaser/Game/GameManager", () => {
     return {
-        CharacterLayerManager: {
-            wokaBase64(): Promise<string> {
-                return Promise.resolve("");
-            },
+        gameManager: {
+            getCurrentGameScene: () => ({
+                getRemotePlayersRepository: () => ({
+                    getPlayer: vi.fn(),
+                }),
+                roomUrl: "test-room",
+            }),
         },
     };
 });
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
+    CharacterLayerManager: {
+        wokaBase64: vi.fn().mockReturnValue("data:image/png;base64,mockBase64String"),
+        prototype: {
+            getTexturesKeysForDefaultLayers: vi.fn().mockReturnValue([]),
+            getTexturesKeys: vi.fn().mockReturnValue([]),
+            loadTextures: vi.fn().mockResolvedValue(undefined),
+            getCharacterLayers: vi.fn().mockReturnValue([]),
+            setLayers: vi.fn(),
+            addLayers: vi.fn(),
+            removeLayers: vi.fn(),
+        },
+    },
+}));
 
 vi.mock("../../Connection/ConnectionManager", () => {
     return {
@@ -91,26 +116,107 @@ vi.mock("../../Connection/ConnectionManager", () => {
         },
     };
 });
+
+// Mock the PeerStore module
+vi.mock("../../Stores/PeerStore", () => ({
+    screenSharingPeerStore: {
+        getSpaceStore: vi.fn(),
+        cleanupStore: vi.fn(),
+        removePeer: vi.fn(),
+        getPeer: vi.fn(),
+    },
+    videoStreamStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+    videoStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+    screenShareStreamElementsStore: {
+        subscribe: vi.fn().mockImplementation((fn: (v: unknown[]) => void) => {
+            // send a default value immediately
+            fn([]);
+            return () => {};
+        }),
+    },
+}));
+
+// Mock SimplePeer
+vi.mock("../../WebRtc/SimplePeer", () => ({
+    SimplePeer: vi.fn().mockImplementation(() => ({
+        closeAllConnections: vi.fn(),
+        destroy: vi.fn(),
+    })),
+}));
+
+vi.mock("../../Phaser/Entity/CharacterLayerManager", () => ({
+    CharacterLayerManager: {
+        wokaBase64: vi.fn().mockReturnValue("data:image/png;base64,mockBase64String"),
+        prototype: {
+            getTexturesKeysForDefaultLayers: vi.fn().mockReturnValue([]),
+            getTexturesKeys: vi.fn().mockReturnValue([]),
+            loadTextures: vi.fn().mockResolvedValue(undefined),
+            getCharacterLayers: vi.fn().mockReturnValue([]),
+            setLayers: vi.fn(),
+            addLayers: vi.fn(),
+            removeLayers: vi.fn(),
+        },
+    },
+}));
+
+// const defaultPeerStoreMock = {
+//     getSpaceStore: vi.fn(),
+// } as unknown as PeerStoreInterface;
+
+vi.mock("../../Connection/ConnectionManager", () => {
+    return {
+        connectionManager: {
+            roomConnectionStream: new Subject(),
+        },
+    };
+});
+
+vi.mock("../../Enum/EnvironmentVariable.ts", () => {
+    return {
+        MATRIX_ADMIN_USER: "admin",
+        MATRIX_DOMAIN: "domain",
+        STUN_SERVER: "stun:test.com:19302",
+        TURN_SERVER: "turn:test.com:19302",
+        TURN_USER: "user",
+        TURN_PASSWORD: "password",
+        POSTHOG_API_KEY: "test-api-key",
+        POSTHOG_URL: "https://test.com",
+        MAX_USERNAME_LENGTH: 10,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: 1000,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH: 1000,
+    };
+});
+
 const flushPromises = () => new Promise(setImmediate);
 
 describe("", () => {
-    it("should emit event when you create space and spaceFilter", () => {
+    it("should emit event when you create space and spaceFilter", async () => {
         const roomConnection = new MockRoomConnection();
         const spaceRegistry = new SpaceRegistry(roomConnection, new Subject());
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         expect(roomConnection.emitJoinSpace).toHaveBeenCalledOnce();
 
-        const filter = space.watchAllUsers();
-
-        const unsubscribeUserStore = filter.usersStore.subscribe(() => {});
+        const unsubscribeUserStore = space.usersStore.subscribe(() => {});
 
         expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
 
-        const observeUserLeft = filter.observeUserJoined.subscribe(() => {});
+        const observeUserLeft = space.observeUserJoined.subscribe(() => {});
 
         expect(roomConnection.emitAddSpaceFilter).toHaveBeenCalledOnce();
 
@@ -127,8 +233,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -153,12 +258,11 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
         let users: Map<string, SpaceUserExtended> = new Map();
-        const unsubscribe = spaceFilter.usersStore.subscribe((newUsers) => {
+        const unsubscribe = space.usersStore.subscribe((newUsers) => {
             users = newUsers;
         });
 
@@ -179,8 +283,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -205,7 +308,6 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -213,7 +315,7 @@ describe("", () => {
 
         await flushPromises();
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
+        const userToCompare = get(space.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -226,8 +328,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
-        const spaceFilter = space.watchAllUsers();
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const userFromMessage = {
             spaceUserId: "foo_1",
@@ -252,7 +353,6 @@ describe("", () => {
 
         const addSpaceUserMessage: AddSpaceUserPusherToFrontMessage = {
             spaceName,
-            filterName: spaceFilter.getName(),
             user: userFromMessage,
         };
 
@@ -268,10 +368,9 @@ describe("", () => {
             spaceName,
             user: spaceUserUpdate,
             updateMask: ["chatID"],
-            filterName: spaceFilter.getName(),
         };
 
-        const userToCompare = get(spaceFilter.usersStore).get(userFromMessage.spaceUserId);
+        const userToCompare = get(space.usersStore).get(userFromMessage.spaceUserId);
 
         if (!userToCompare) assert.fail("user not found in store");
 
@@ -284,7 +383,7 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledTimes(2);
         expect(subscriber).toHaveBeenLastCalledWith("new@id.fr");
 
-        expect(get(spaceFilter.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
+        expect(get(space.usersStore).get(userFromMessage.spaceUserId)?.name).toBe("testName");
 
         unsubscriber();
     });
@@ -295,7 +394,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const subscriber = vi.fn();
 
@@ -335,7 +434,7 @@ describe("", () => {
 
         const spaceName = "space1";
 
-        const space = spaceRegistry.joinSpace(spaceName);
+        const space = await spaceRegistry.joinSpace(spaceName, FilterType.ALL_USERS, ["availabilityStatus", "chatID"]);
 
         const subscriber = vi.fn();
 
@@ -343,7 +442,10 @@ describe("", () => {
 
         roomConnection.spacePrivateMessageEvent.next({
             spaceName: "space1",
-            senderUserId: "foo_1",
+            sender: SpaceUser.fromPartial({
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+            }),
             receiverUserId: "foo_2",
             spaceEvent: {
                 event: {
@@ -360,7 +462,26 @@ describe("", () => {
         expect(subscriber).toHaveBeenCalledOnce();
         expect(subscriber).toHaveBeenLastCalledWith({
             spaceName: "space1",
-            sender: "foo_1",
+            sender: {
+                spaceUserId: "foo_1",
+                uuid: "uuid-foo-1",
+                name: "",
+                playUri: "",
+                roomName: undefined,
+                availabilityStatus: 0,
+                isLogged: false,
+                characterTextures: [],
+                cameraState: false,
+                screenSharingState: false,
+                microphoneState: false,
+                megaphoneState: false,
+                showVoiceIndicator: false,
+                color: "",
+                visitCardUrl: undefined,
+                chatID: undefined,
+                tags: [],
+                jitsiParticipantId: undefined,
+            },
             $case: "muteVideo",
             muteVideo: {
                 force: true,

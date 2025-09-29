@@ -69,7 +69,7 @@ Create the domains
 {{- end }}
 {{- define "workadventure.playUrl" -}}
 {{- if .Values.singleDomain -}}
-/
+{{- printf "https://%s" .Values.domainName }}
 {{- else -}}
 {{- if .Values.play.ingress.frontDomainName -}}
 {{ printf "https://%s" .Values.play.ingress.frontDomainName }}

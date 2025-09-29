@@ -13,13 +13,18 @@
     import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS, MATRIX_PUBLIC_URI, PUSHER_URL } from "../../../Enum/EnvironmentVariable";
+    import {
+        FEATURE_FLAG_BROADCAST_AREAS,
+        MATRIX_PUBLIC_URI,
+        PUSHER_URL,
+        ADMIN_URL,
+    } from "../../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import OpenPdfPropertyEditor from "../PropertyEditor/OpenPdfPropertyEditor.svelte";
+    import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
     import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
     import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
@@ -29,11 +34,12 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
-    import { IconChevronDown, IconChevronRight } from "../../Icons";
+    import { IconChevronDown, IconChevronRight, IconInfoCircle } from "../../Icons";
     import { extensionModuleStore } from "../../../Stores/GameSceneStore";
     import { ExtensionModule, ExtensionModuleAreaProperty } from "../../../ExternalModule/ExtensionModule";
     import MatrixRoomPropertyEditor from "../PropertyEditor/MatrixRoomPropertyEditor.svelte";
     import TooltipPropertyButton from "../PropertyEditor/TooltipPropertyButton.svelte";
+    import LivekitRoomPropertyEditor from "../PropertyEditor/LivekitRoomPropertyEditor.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import Input from "../../Input/Input.svelte";
     import TextArea from "../../Input/TextArea.svelte";
@@ -56,6 +62,7 @@
     let hasRightsProperty: boolean;
     let hasMatrixRoom: boolean;
     let hasTooltipPropertyData: boolean;
+    let hasLivekitRoomProperty: boolean;
 
     const ROOM_AREA_PUSHER_URL = new URL("roomArea", PUSHER_URL).toString();
 
@@ -114,6 +121,12 @@
                     hideButtonLabel: true,
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                     trigger: ON_ACTION_TRIGGER_ENTER,
+                };
+            case "livekitRoomProperty":
+                return {
+                    id,
+                    type,
+                    roomName: "",
                 };
             case "openWebsite":
                 // TODO refactore and use the same code than EntityPropertiesEditor
@@ -242,7 +255,7 @@
                     content: "",
                     duration: 2,
                 };
-            case "openPdf":
+            case "openFile":
                 return {
                     id,
                     type,
@@ -368,7 +381,6 @@
     }
 
     function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
-        console.log("mapEditorSelectedAreaPreviewStore", $mapEditorSelectedAreaPreviewStore);
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
@@ -391,6 +403,7 @@
         hasRightsProperty = hasProperty("restrictedRightsPropertyData");
         hasMatrixRoom = hasProperty("matrixRoomPropertyData");
         hasTooltipPropertyData = hasProperty("tooltipPropertyData");
+        hasLivekitRoomProperty = hasProperty("livekitRoomProperty");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -432,7 +445,7 @@
 {:else}
     <div class="overflow-x-hidden space-y-3">
         <div class="properties-buttons flex flex-row flex-wrap">
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty && ADMIN_URL}
                 <AddPropertyButtonWrapper
                     property="personalAreaPropertyData"
                     on:click={(event) => addProperty(event.detail)}
@@ -467,6 +480,14 @@
                     property="jitsiRoomProperty"
                     on:click={() => {
                         onAddProperty("jitsiRoomProperty");
+                    }}
+                />
+            {/if}
+            {#if !hasLivekitRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="livekitRoomProperty"
+                    on:click={() => {
+                        onAddProperty("livekitRoomProperty");
                     }}
                 />
             {/if}
@@ -535,9 +556,9 @@
                 />
             {/if}
             <AddPropertyButtonWrapper
-                property="openPdf"
+                property="openFile"
                 on:click={() => {
-                    onAddProperty("openPdf");
+                    onAddProperty("openFile");
                 }}
             />
         </div>
@@ -643,10 +664,14 @@
             bind:value={areaName}
             onChange={onUpdateName}
         />
+        <p class="help-text">
+            <IconInfoCircle font-size="18" />
+            {$LL.mapEditor.areaEditor.nameHelpText()}
+        </p>
 
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <button class="ps-0 text-blue-500 flex flex-row items-center " on:click={toggleDescriptionField}>
+                <button class="ps-0 text-blue-500 flex flex-row items-center" on:click={toggleDescriptionField}>
                     <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
@@ -767,15 +792,17 @@
                         />
                     {:else if property.type === "extensionModule" && extensionModulesAreaMapEditor.length > 0}
                         {#each extensionModulesAreaMapEditor as extensionModuleAreaMapEditor, index (`extensionModulesAreaMapEditor-${index}`)}
-                            <svelte:component
-                                this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
-                                {extensionModuleAreaMapEditor}
-                                {property}
-                                on:close={() => {
-                                    onDeleteProperty(property.id);
-                                }}
-                                on:change={() => onUpdateProperty(property)}
-                            />
+                            {#if extensionModuleAreaMapEditor[property.subtype] != undefined}
+                                <svelte:component
+                                    this={extensionModuleAreaMapEditor[property.subtype].AreaPropertyEditor}
+                                    {extensionModuleAreaMapEditor}
+                                    {property}
+                                    on:close={() => {
+                                        onDeleteProperty(property.id);
+                                    }}
+                                    on:change={() => onUpdateProperty(property)}
+                                />
+                            {/if}
                         {/each}
                     {:else if property.type === "matrixRoomPropertyData"}
                         <MatrixRoomPropertyEditor
@@ -793,10 +820,18 @@
                             }}
                             on:change={() => onUpdateProperty(property)}
                         />
-                    {:else if property.type === "openPdf"}
-                        <OpenPdfPropertyEditor
+                    {:else if property.type === "openFile"}
+                        <OpenFilePropertyEditor
                             {property}
                             isArea={true}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "livekitRoomProperty"}
+                        <LivekitRoomPropertyEditor
+                            {property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}

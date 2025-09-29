@@ -21,6 +21,7 @@ import {
     WEB_HOOK_URL,
     SENTRY_TRACES_SAMPLE_RATE,
     SENTRY_ENVIRONMENT,
+    GRPC_MAX_MESSAGE_SIZE,
 } from "./Enum/EnvironmentVariable";
 
 // Sentry integration
@@ -59,7 +60,10 @@ resourceUrlModule.init(hookManager);
 const fileModule = new FileModule();
 fileModule.init(hookManager);
 
-const server = new grpc.Server();
+const server = new grpc.Server({
+    "grpc.max_receive_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+    "grpc.max_send_message_length": GRPC_MAX_MESSAGE_SIZE, // 20 MB
+});
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 server.addService(MapStorageService, mapStorageServer);
@@ -68,8 +72,8 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
     if (err) {
         throw err;
     }
-    console.log(`[${new Date().toISOString()}] Application is running`);
-    console.log(`[${new Date().toISOString()}] gRPC port is 50053`);
+    console.info(`[${new Date().toISOString()}] Application is running`);
+    console.info(`[${new Date().toISOString()}] gRPC port is 50053`);
     server.start();
 });
 
@@ -92,8 +96,8 @@ for (const passportStrategy of passportStrategies) {
 }
 app.use(passport.initialize());
 
-app.get("*.wam", (req, res, next) => {
-    const wamPath = req.url;
+app.get(/.*\.wam$/, (req, res, next) => {
+    const wamPath = req.path;
     const domain = req.hostname;
     if (wamPath.includes("..") || domain.includes("..")) {
         res.status(400).send("Invalid request");
@@ -127,20 +131,24 @@ new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
 new PingController(app);
 
-app.use((req, res, next) => {
-    Promise.resolve(verifyJWT(req, res, next)).catch(next);
-});
+app.get(
+    "/private/files/{*splat}",
+    (req, res, next) => {
+        Promise.resolve(verifyJWT(req, res, next)).catch(next);
+    },
+    proxyFiles(fileSystem)
+);
 
 app.use(proxyFiles(fileSystem));
 
 // Check that the dist-ui directory exists
 if (fs.existsSync("dist-ui")) {
     app.use("/ui", express.static("dist-ui"));
-    app.get("/ui/*", (req, res) => {
+    app.get("/ui/{*splat}", (req, res, next) => {
         res.sendFile("index.html", { root: "dist-ui" });
     });
 }
 
 app.listen(3000, () => {
-    console.log(`[${new Date().toISOString()}] Application is running on port 3000`);
+    console.info(`[${new Date().toISOString()}] Application is running on port 3000`);
 });

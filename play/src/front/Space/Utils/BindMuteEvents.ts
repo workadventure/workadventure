@@ -1,4 +1,5 @@
 import { get } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { Subscription } from "rxjs";
 import { PrivateEvents, SpaceInterface } from "../SpaceInterface";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
@@ -7,16 +8,10 @@ import LL from "../../../i18n/i18n-svelte";
 import { currentLiveStreamingSpaceStore } from "../../Stores/MegaphoneStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { peerStore } from "../../Stores/PeerStore";
-import { SpaceFilterInterface } from "../SpaceFilter/SpaceFilter";
 import { popupStore } from "../../Stores/PopupStore";
 import MuteDialogPopup from "../../Components/PopUp/MuteDialogPopup.svelte";
 
-function displayMuteDialog(
-    event: PrivateEvents["muteAudio"] | PrivateEvents["muteVideo"],
-    space: SpaceInterface,
-    spaceFilter: SpaceFilterInterface
-) {
+function displayMuteDialog(event: PrivateEvents["muteAudio"] | PrivateEvents["muteVideo"], space: SpaceInterface) {
     const message =
         event.$case === "muteAudio"
             ? get(LL).notification.askToMuteMicrophone()
@@ -24,7 +19,7 @@ function displayMuteDialog(
 
     const popupName = event.$case + "-dialog-popup-" + event.sender;
 
-    const senderUser = get(spaceFilter.usersStore).get(event.sender);
+    const senderUser = get(space.usersStore).get(event.sender);
 
     let subscription: Subscription | undefined;
 
@@ -36,7 +31,7 @@ function displayMuteDialog(
 
     // In case the sender leaves the space, we remove the popup
     if (senderUser) {
-        subscription = spaceFilter.observeUserLeft.subscribe((user) => {
+        subscription = space.observeUserLeft.subscribe((user) => {
             if (user.spaceUserId === event.sender) {
                 cleanup();
             }
@@ -71,7 +66,7 @@ function displayMuteDialog(
 /**
  * This function listens to the space events and mutes the user when a mute request is received.
  */
-export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceFilterInterface): void {
+export function bindMuteEventsToSpace(space: SpaceInterface): void {
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.
     // eslint-disable-next-line rxjs/no-ignored-subscription,svelte/no-ignored-unsubscribe
     space.observePrivateEvent("muteAudio").subscribe((event) => {
@@ -80,7 +75,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
             requestedMicrophoneState.disableMicrophone();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), "microphone-off.png");
-            displayMuteDialog(event, space, spaceFilter);
+            displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
         }
     });
 
@@ -92,7 +87,7 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
             requestedCameraState.disableWebcam();
         } else {
             notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-            displayMuteDialog(event, space, spaceFilter);
+            displayMuteDialog({ ...event, sender: event.sender.spaceUserId }, space);
         }
     });
 
@@ -103,11 +98,17 @@ export function bindMuteEventsToSpace(space: SpaceInterface, spaceFilter: SpaceF
         isSpeakerStore.set(false);
         currentLiveStreamingSpaceStore.set(undefined);
         const scene = gameManager.getCurrentGameScene();
-        scene.broadcastService.leaveSpace(event.spaceName);
+        scene.broadcastService.leaveSpace(event.spaceName).catch((e) => {
+            console.error("Error while leaving space", e);
+            Sentry.captureException(e);
+        });
         chatZoneLiveStore.set(false);
         // Close all connection simple peer
-        scene.getSimplePeer().closeAllConnections();
-        peerStore.cleanupStore();
+        const simplePeer = space.simplePeer;
+        if (simplePeer) {
+            simplePeer.closeAllConnections(true);
+            simplePeer.cleanupStore();
+        }
     });
 
     // We can safely ignore the subscription because it will be automatically completed when the space is destroyed.

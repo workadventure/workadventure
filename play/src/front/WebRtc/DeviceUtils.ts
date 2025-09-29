@@ -27,3 +27,11 @@ export function getNavigatorType(): NavigatorType {
 export function isAndroid(): boolean {
     return window.navigator.userAgent.includes("Android");
 }
+
+export function isFirefox(): boolean {
+    return window.navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
+}
+
+export function isSafari(): boolean {
+    return getNavigatorType() === NavigatorType.safari;
+}

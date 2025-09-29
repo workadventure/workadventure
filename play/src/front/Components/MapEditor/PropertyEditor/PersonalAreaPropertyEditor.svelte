@@ -10,8 +10,9 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import ActionPopupOnPersonalAreaWithEntities from "../ActionPopupOnPersonalAreaWithEntities.svelte";
+    import ButtonClose from "../../Input/ButtonClose.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    import { IconInfoCircle } from "@wa-icons";
+    import { IconInfoCircle, IconUser } from "@wa-icons";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
 
@@ -130,12 +131,26 @@
                 </p>
                 {#if personalAreaOwner}
                     <div class="flex flex-col">
-                        <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
-                        <p class="m-0 text-blue-500">
-                            {personalAreaOwner}
-                        </p>
+                        <div class="flex flex-col gap-2 bg-black/10 rounded-md p-2">
+                            <div class="flex items-center justify-center gap-2 p-2">
+                                <IconUser />
+                                <span>{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</span>
+                            </div>
+                            <div class="bg-white p-2 rounded flex flex-row items-center justify-between">
+                                <div class="m-0 text-black flex items-center gap-2">
+                                    {personalAreaOwner}
+                                </div>
+                                <ButtonClose
+                                    size="sm"
+                                    textColor="text-black"
+                                    bgColor="bg-black/10"
+                                    hoverColor="hover:bg-black/20"
+                                    on:click={revokeOwner}
+                                />
+                            </div>
+                        </div>
                         <button
-                            class="self-center text-red-500"
+                            class="flex items-center justify-center text-white p-2 bg-red-500/80 hover:bg-red-500 rounded mt-2"
                             data-testid="revokeAccessButton"
                             on:click={revokeOwner}
                         >
@@ -159,12 +174,12 @@
                                 >
                             {/each}
                             <div slot="helper">
-                                <div class="help-text">
+                                <p class="help-text">
                                     <IconInfoCircle font-size="18" />
                                     {$LL.mapEditor.properties.personalAreaConfiguration[
                                         `${personalAreaPropertyData.accessClaimMode}AccessDescription`
                                     ]()}
-                                </div>
+                                </p>
                             </div>
                         </Select>
                     </div>

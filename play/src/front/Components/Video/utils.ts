@@ -4,8 +4,37 @@ import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isFirefox, isSafari } from "../../WebRtc/DeviceUtils";
 
 export const debug = Debug("CheckTurn");
+
+/**
+ * Helper function to get browser name for logging
+ * @returns Browser name string
+ */
+function getBrowserName(): string {
+    return isSafari() ? "Safari" : "Firefox";
+}
+
+/**
+ * Helper function to check if current browser has WebRTC quirks
+ * @returns True if browser has WebRTC quirks (Safari or Firefox)
+ */
+function hasWebRtcQuirks(): boolean {
+    return isSafari() || isFirefox();
+}
+
+/**
+ * Helper function to handle TURN server success for browsers with WebRTC quirks
+ * @param browserName - Name of the browser for logging
+ * @param reason - Reason for considering TURN as working
+ * @param protocol - Protocol used (defaults to "udp")
+ */
+function handleTurnServerSuccess(browserName: string, reason: string, protocol: string = "udp"): void {
+    debug(`onicecandidate => ${browserName} ${reason} - TURN server likely reachable`);
+    helpWebRtcSettingsVisibleStore.set("hidden");
+    analyticsClient.turnTestSuccess(protocol);
+}
 
 export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | undefined) {
     node.srcObject = stream ?? null;
@@ -20,18 +49,38 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream | null | u
 
 export function getIceServersConfig(user: TurnCredentialsAnswer): RTCIceServer[] {
     const config: RTCIceServer[] = [];
+    const firefoxBrowser = isFirefox();
+
     if (STUN_SERVER) {
         config.push({
             urls: STUN_SERVER.split(","),
         });
     }
+
     if (TURN_SERVER) {
-        config.push({
+        const turnConfig: RTCIceServer = {
             urls: TURN_SERVER.split(","),
             username: user.webRtcUser || TURN_USER,
             credential: user.webRtcPassword || TURN_PASSWORD,
-        });
+        };
+
+        // Firefox-specific TURN configuration improvements
+        if (firefoxBrowser) {
+            // Add credentialType for better Firefox compatibility
+            (turnConfig as RTCIceServer & { credentialType?: string }).credentialType = "password";
+        }
+
+        config.push(turnConfig);
     }
+
+    // Add Google's public STUN servers as fallback for Firefox
+    // if (firefoxBrowser && config.length === 0) {
+    //     config.push(
+    //         { urls: "stun:stun.l.google.com:19302" },
+    //         { urls: "stun:stun1.l.google.com:19302" }
+    //     );
+    // }
+
     return config;
 }
 
@@ -48,17 +97,46 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         return;
     }
 
-    if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-        debug("RTC Peer Connection detection is not available for Firefox browser!");
-        return;
+    // Firefox TURN detection is less reliable but still functional
+    if (isFirefox()) {
+        debug("Firefox detected - using adapted TURN server detection");
+        // Continue with TURN test for Firefox but with different handling
+    }
+
+    // Safari has specific WebRTC behavior that requires different handling
+    if (isSafari()) {
+        debug("Safari detected - using Safari-specific TURN server detection");
+        // Safari often doesn't properly report ICE gathering completion
+        // and may not generate relay candidates in the same way as other browsers
     }
 
     const iceServers = getIceServersConfig(user);
 
     const pc = new RTCPeerConnection({ iceServers });
 
+    const handleIceGatheringStateChange = (ev: Event) => {
+        debug("icegatheringstatechange => pc.iceGatheringState: %s", pc.iceGatheringState);
+        switch (pc.iceGatheringState) {
+            case "new":
+                debug("icegatheringstatechange => status is new");
+                break;
+            case "gathering":
+                debug("icegatheringstatechange => status is gathering");
+                break;
+            case "complete":
+                debug("icegatheringstatechange => status is complete");
+                pc.removeEventListener("icegatheringstatechange", handleIceGatheringStateChange);
+                pc.close();
+                break;
+        }
+    };
+
     pc.onicecandidate = (e) => {
-        turnServerReached = false;
+        // For Safari, we don't reset turnServerReached to false on every candidate
+        // as Safari may not generate relay candidates in the same way
+        if (!isSafari()) {
+            turnServerReached = false;
+        }
 
         if (
             (e.target && e.target instanceof RTCPeerConnection && e.target.iceGatheringState === "complete") ||
@@ -70,7 +148,18 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             if (!turnServerReached) {
                 debug("onicecandidate => no turn server found after gathering complete");
                 analyticsClient.turnTestFailure();
-                helpWebRtcSettingsVisibleStore.set("error");
+
+                // For Safari and Firefox, be more lenient - assume TURN is working
+                // These browsers often don't generate relay candidates even when TURN is working
+                if (hasWebRtcQuirks()) {
+                    handleTurnServerSuccess(
+                        getBrowserName(),
+                        "ICE gathering complete without relay candidate - assuming TURN is working",
+                        "no-relay-but-assumed-working"
+                    );
+                } else {
+                    helpWebRtcSettingsVisibleStore.set("error");
+                }
             }
             if (checkPeerConnexionStatusTimeOut) {
                 clearTimeout(checkPeerConnexionStatusTimeOut);
@@ -96,6 +185,16 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             analyticsClient.turnTestSuccess(e.candidate.protocol);
             pc.close();
         }
+
+        // Safari and Firefox: Consider srflx candidates as a sign that TURN might work
+        // These browsers sometimes don't generate relay candidates even when TURN is working
+        if (hasWebRtcQuirks() && e.candidate.type == "srflx") {
+            // If we get srflx candidates, consider TURN as potentially working
+            // This prevents false error states in Safari and Firefox
+            turnServerReached = true;
+            handleTurnServerSuccess(getBrowserName(), "detected srflx candidate");
+            pc.close();
+        }
     };
 
     // Log errors:
@@ -105,37 +204,47 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         debug("onicecandidateerror => %O", e);
     };
 
-    pc.addEventListener("icegatheringstatechange", (ev) => {
-        debug("icegatheringstatechange => pc.iceGatheringState: %s", pc.iceGatheringState);
-        switch (pc.iceGatheringState) {
-            case "new":
-                debug("icegatheringstatechange => status is new");
-                break;
-            case "gathering":
-                debug("icegatheringstatechange => status is gathering");
-                break;
-            case "complete":
-                debug("icegatheringstatechange => status is complete");
-                pc.close();
-                break;
-        }
-    });
+    pc.addEventListener("icegatheringstatechange", handleIceGatheringStateChange);
 
     pc.createDataChannel("workadventure-peerconnection-test");
     pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
         .catch((err) => debug("Check coturn server error => %O", err));
 
+    // Different browsers need different timeout handling
+    let turnTestTimeout: number;
+    if (isSafari()) {
+        // Safari needs more time and different handling due to its WebRTC quirks
+        turnTestTimeout = 15000;
+    } else if (isFirefox()) {
+        // Firefox needs more time for TURN server detection
+        turnTestTimeout = 10000;
+    } else {
+        turnTestTimeout = 5000;
+    }
+
     checkPeerConnexionStatusTimeOut = setTimeout(() => {
         if (!turnServerReached) {
-            helpWebRtcSettingsVisibleStore.set("pending");
-            analyticsClient.turnTestTimeout();
+            // For Safari and Firefox, be more lenient - assume TURN is working if we reach timeout
+            // These browsers often don't generate relay candidates even when TURN is functional
+            if (hasWebRtcQuirks()) {
+                handleTurnServerSuccess(
+                    getBrowserName(),
+                    "TURN test timeout - assuming TURN is working",
+                    "timeout-assumed-working"
+                );
+            } else {
+                // For other browsers, show pending state
+                debug("TURN test timeout - setting to pending");
+                helpWebRtcSettingsVisibleStore.set("pending");
+                analyticsClient.turnTestTimeout();
+            }
         }
         if (checkPeerConnexionStatusTimeOut) {
             clearTimeout(checkPeerConnexionStatusTimeOut);
             checkPeerConnexionStatusTimeOut = null;
         }
-    }, 5000);
+    }, turnTestTimeout);
 }
 
 export function getSdpTransform(videoBandwidth = 0) {

@@ -25,10 +25,10 @@ class AreaEditor {
   }
 
   async addProperty(page: Page, property: string) {
-    await page.locator('.map-editor');
-    await page.locator('.map-editor .sidebar');
-    await page.locator('.map-editor .sidebar .item-picker-container');
-    await page.locator('select#speakerZoneSelector');
+    page.locator('.map-editor');
+    page.locator('.map-editor .sidebar');
+    page.locator('.map-editor .sidebar .item-picker-container');
+    page.locator('select#speakerZoneSelector');
     await page.getByTestId(property).click();
   }
 
@@ -86,11 +86,11 @@ class AreaEditor {
     readRights: string[]
   ) {
     await page.getByTestId("restrictedRightsPropertyData").click();
-    const writeRightsInput = await page.getByTestId("writeTags");
+    const writeRightsInput = page.getByTestId("writeTags");
     for (const writeRight of writeRights) {
       await this.fullFillAreaRight(writeRightsInput, writeRight);
     }
-    const readRightsInput = await page.getByTestId("readTags");
+    const readRightsInput = page.getByTestId("readTags");
     for (const readRight of readRights) {
       await this.fullFillAreaRight(readRightsInput, readRight);
     }
@@ -101,7 +101,7 @@ class AreaEditor {
     await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link,{timeout : 20_000});
   }
 
-  async setOpenPdfProperty(page: Page, option = "Show immediately on enter") {
+  async setOpenFileProperty(page: Page, option = "Show immediately on enter") {
     await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
     const fileChooserPromise = page.waitForEvent("filechooser");
     await page.locator(".map-editor .sidebar .properties-container span#chooseUpload").click();
@@ -109,12 +109,13 @@ class AreaEditor {
     await fileChooser.setFiles(path.join(__dirname, `../../assets/lorem-ipsum.pdf`));
   }
 
-  async deletePdfFile(page: Page) {
+  async deleteFile(page: Page) {
     await page.getByTestId("closeFileUpload").click();
   }
 
   async setMatrixChatRoomProperty(page: Page,shouldOpenAutomatically: boolean, roomName?: string){
     //TODO : find a better way to wait for the room to be created
+    //eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(4000);
     await page.getByTestId("shouldOpenAutomaticallyCheckbox").click();
 
@@ -122,7 +123,8 @@ class AreaEditor {
       await page.getByPlaceholder("My room").isEnabled({timeout : 20_000});
       await page.getByPlaceholder("My room").fill(roomName,{timeout : 20_000});
     }
-        //TODO : find a better way to wait for the room to be created
+    //TODO : find a better way to wait for the room to be created
+    //eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(4000);
   }
 

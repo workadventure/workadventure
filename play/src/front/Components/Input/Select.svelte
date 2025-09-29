@@ -7,7 +7,7 @@
     export let options: { value: string | undefined; label: string }[] = [];
     export let id: string | undefined = undefined;
     export let value: string | boolean | null | undefined;
-    export let onChange = () => {};
+    export let onChange: (e: Event) => void = () => {};
     export let onClick = () => {};
     export let disabled = false;
     export let placeholder = "";
@@ -36,7 +36,7 @@
         {/if}
 
         {#if optional}
-            <div class="text-xs opacity-50 ">
+            <div class="text-xs opacity-50">
                 {$LL.form.optional()}
             </div>
         {/if}
@@ -62,9 +62,5 @@
 </div>
 
 {#if SLOTS.helper}
-    <div class="flex items-center px-3 space-x-1.5 opacity-50">
-        <div class="text-sm text-white grow">
-            <slot name="helper" />
-        </div>
-    </div>
+    <slot name="helper" />
 {/if}

@@ -76,12 +76,12 @@
 </script>
 
 <div
-    class="absolute top-20 start-1/2 transform -translate-x-1/2 text-white rounded-md w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:start-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-start-0 transition-all"
+    class="absolute top-20 bottom-auto mobile:top-auto mobile:bottom-20 start-1/2 transform -translate-x-1/2 text-white rounded-md w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:start-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-start-0 transition-all"
     in:fly={{ y: 40, duration: 150 }}
     use:clickOutside={() => dispatch("close")}
 >
     <div class="flex flex-col overflow-auto gap-2 p-1" style="max-height: calc(100vh - 160px);">
-        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length >= 1}
+        {#if $silentStore == false && $requestedCameraState && $cameraListStore && $cameraListStore.length > 0}
             <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.camera()}
@@ -134,24 +134,30 @@
                 </div>
                 <div class="group flex items-center relative z-10 px-2 font-sm justify-center">
                     <div class="text-sm italic">
-                        {$LL.actionbar.camera.disabled()}
+                        {#if $cameraListStore == undefined || $cameraListStore.length == 0}
+                            {$LL.actionbar.camera.noDevices()}
+                        {:else}
+                            {$LL.actionbar.camera.disabled()}
+                        {/if}
                     </div>
                 </div>
-                <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
-                    <button
-                        class="btn btn-danger btn-sm w-full justify-center"
-                        on:click={() => analyticsClient.camera()}
-                        on:click={cameraClick}
-                    >
-                        {$LL.actionbar.camera.activate()}
-                    </button>
-                </div>
+                {#if $silentStore == false && $requestedCameraState == false}
+                    <div class="group flex items-center relative z-10 py-1 px-2 overflow-hidden">
+                        <button
+                            class="btn btn-danger btn-sm w-full justify-center"
+                            on:click={() => analyticsClient.camera()}
+                            on:click={cameraClick}
+                        >
+                            {$LL.actionbar.camera.activate()}
+                        </button>
+                    </div>
+                {/if}
             </div>
         {/if}
         <div class="w-full z-10 flex items-center">
-            <div class="bg-white/10 w-full h-[1px] " />
+            <div class="bg-white/10 w-full h-[1px]" />
         </div>
-        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+        {#if $silentStore == false && $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
             <div class="flex flex-col gap-1">
                 <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
                     {$LL.actionbar.subtitle.microphone()}
@@ -203,22 +209,28 @@
                 </div>
                 <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
                     <div class="text-sm italic">
-                        {$LL.actionbar.microphone.disabled()}
+                        {#if $microphoneListStore == undefined || $microphoneListStore.length == 0}
+                            {$LL.actionbar.microphone.noDevices()}
+                        {:else}
+                            {$LL.actionbar.microphone.disabled()}
+                        {/if}
                     </div>
                 </div>
-                <div class="group flex items-center relative z-10 px-2 overflow-hidden">
-                    <button
-                        class="btn btn-danger btn-sm w-full justify-center"
-                        on:click={() => analyticsClient.microphone()}
-                        on:click={microphoneClick}
-                    >
-                        {$LL.actionbar.microphone.activate()}
-                    </button>
-                </div>
+                {#if $silentStore == false && $requestedMicrophoneState == false}
+                    <div class="group flex items-center relative z-10 px-2 overflow-hidden">
+                        <button
+                            class="btn btn-danger btn-sm w-full justify-center"
+                            on:click={() => analyticsClient.microphone()}
+                            on:click={microphoneClick}
+                        >
+                            {$LL.actionbar.microphone.activate()}
+                        </button>
+                    </div>
+                {/if}
             </div>
         {/if}
         <div class="w-full z-10 flex items-center">
-            <div class="bg-white/10 w-full h-[1px] " />
+            <div class="bg-white/10 w-full h-[1px]" />
         </div>
         {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
             <div class="flex flex-col gap-1">
@@ -263,6 +275,21 @@
                         {/if}
                     </div>
                 {/each}
+            </div>
+        {:else}
+            <div class="flex flex-col gap-1">
+                <div class="flex text-xxs uppercase text-white/50 px-2 pb-0.5 pt-1 relative bold">
+                    {$LL.actionbar.subtitle.speaker()}
+                </div>
+                <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                    <div class="text-sm italic">
+                        {#if $speakerListStore == undefined || $speakerListStore.length == 0}
+                            {$LL.actionbar.speaker.noDevices()}
+                        {:else}
+                            {$LL.actionbar.speaker.disabled()}
+                        {/if}
+                    </div>
+                </div>
             </div>
         {/if}
     </div>

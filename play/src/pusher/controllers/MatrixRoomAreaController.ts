@@ -1,10 +1,12 @@
 import { MatrixRoomPropertyData } from "@workadventure/map-editor";
-import * as Sentry from "@sentry/node";
 import { Request, Response } from "express";
+import Debug from "debug";
 import { matrixProvider } from "../services/MatrixProvider";
 import { validatePostQuery } from "../services/QueryValidator";
 import { mapStorageToken } from "../middlewares/MapStorageToken";
 import { BaseHttpController } from "./BaseHttpController";
+
+const debug = Debug("pusher:requests");
 
 /*
    This controller is used as the resource URL for the matrix chat area. It is called by the map storage. 
@@ -49,6 +51,9 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               example: Internal Server Error
          */
         this.app.post("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
+            debug(
+                `MatrixRoomAreaController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`
+            );
             try {
                 const body = validatePostQuery(req, res, MatrixRoomPropertyData);
 
@@ -107,6 +112,9 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *               example: Internal Server Error
          */
         this.app.delete("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
+            debug(
+                `MatrixRoomAreaController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`
+            );
             try {
                 const body = req.body;
                 const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
@@ -151,6 +159,9 @@ export class MatrixRoomAreaController extends BaseHttpController {
          *
          */
         this.app.patch("/roomArea", [mapStorageToken], async (req: Request, res: Response) => {
+            debug(
+                `MatrixRoomAreaController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`
+            );
             try {
                 const body = req.body;
                 const isMatrixRoomPropertyData = MatrixRoomPropertyData.safeParse(body);
@@ -175,8 +186,7 @@ export class MatrixRoomAreaController extends BaseHttpController {
         });
     }
     private handleError(res: Response, error: unknown) {
-        console.error(error);
-        Sentry.captureMessage(`Internal Server Error : ${error}`);
+        console.error("Internal Server Error:", error);
         return res.status(500).send("Internal Server Error");
     }
 }

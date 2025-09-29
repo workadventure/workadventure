@@ -200,6 +200,7 @@ export class GameManager {
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }
+
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
@@ -215,6 +216,14 @@ export class GameManager {
         } else {
             this.scenePlugin.run(fallbackSceneName);
         }
+    }
+
+    /**
+     * Tries to stop the current scene.
+     * @param fallbackSceneName
+     */
+    tryToStopScene(fallbackSceneName: string) {
+        this.scenePlugin.stop(fallbackSceneName);
     }
 
     public getCurrentGameScene(): GameScene {

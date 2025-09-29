@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/svelte";
+import { get } from "svelte/store";
 import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
@@ -6,6 +7,7 @@ import {
     ErrorApiUnauthorizedData,
     isRegisterData,
     MeResponse,
+    ErrorScreenMessage,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { KlaxoonService } from "@workadventure/shared-utils";
@@ -38,6 +40,9 @@ import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../Utils/locales";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { openChatRoom } from "../Chat/Utils";
+import LL from "../../i18n/i18n-svelte";
+import waLogo from "../Components/images/logo.svg";
+import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -91,6 +96,8 @@ class ConnectionManager {
     }
 
     constructor() {
+        // The listener never needs to be removed, because we are in a singleton that is never destroyed.
+        // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
         window.addEventListener("beforeunload", () => {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
@@ -119,8 +126,10 @@ class ConnectionManager {
      * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
      *
      * @param manuallyTriggered - Whether the login request resulted from a click on the "Sign in" button or from a mandatory authentication.
+     * @param providerId - The ID of the OpenID provider to use for authentication.
+     * @param providerScopes - The scopes to request from the OpenID provider.
      */
-    public loadOpenIDScreen(manuallyTriggered: boolean): URL | null {
+    public loadOpenIDScreen(manuallyTriggered: boolean, providerId?: string, providerScopes?: string[]): URL | null {
         localUserStore.setAuthToken(null);
         if (!ENABLE_OPENID || !this._currentRoom) {
             analyticsClient.loggedWithToken();
@@ -132,6 +141,14 @@ class ConnectionManager {
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         if (manuallyTriggered) {
             redirectUrl.searchParams.append("manuallyTriggered", "true");
+        }
+        if (providerId) {
+            redirectUrl.searchParams.append("providerId", providerId);
+        }
+        if (providerScopes) {
+            providerScopes.forEach((scope) => {
+                redirectUrl.searchParams.append("providerScopes", scope);
+            });
         }
         return redirectUrl;
     }
@@ -362,7 +379,7 @@ class ConnectionManager {
                         if (this._currentRoom.authenticationMandatory) {
                             const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
-                                throw new Error("Unable to redirect on login page.");
+                                throw new Error("Unable to redirect on login page.", { cause: err });
                             }
                             return redirect;
                         } else {
@@ -460,8 +477,10 @@ class ConnectionManager {
                 lastCommandId
             );
 
-            connection.onConnectError((error: object) => {
-                console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
+            // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+            connection.websocketErrorStream.subscribe((error: Event) => {
+                console.info("onConnectError => An error occurred while connecting to socket server. Retrying", error);
                 reject(asError(error));
             });
 
@@ -575,11 +594,21 @@ class ConnectionManager {
                     }
                 }
                 this._roomConnectionStream.next(connection);
+                errorScreenStore.delete();
                 resolve(connect);
             });
         }).catch((err) => {
             console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => err", err);
 
+            errorScreenStore.setError(
+                ErrorScreenMessage.fromPartial({
+                    type: "reconnecting",
+                    code: "reconnecting",
+                    title: get(LL).messageScreen.connecting(),
+                    subtitle: get(LL).messageScreen.pleaseWait(),
+                    image: gameManager?.currentStartedRoom?.loadingLogo ?? waLogo,
+                })
+            );
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve) => {
                 console.info("connectToRoomSocket => catch => new Promise[OnConnectInterface] => reconnectingTimeout");

@@ -104,7 +104,7 @@ class MapsManager {
     }
 
     public clearAfterUpload(key: string): void {
-        console.log(`[${new Date().toISOString()}] UPLOAD/DELETE DETECTED. CLEAR CACHE FOR: ${key}`);
+        console.info(`[${new Date().toISOString()}] UPLOAD/DELETE DETECTED. CLEAR CACHE FOR: ${key}`);
         this.loadedMaps.delete(key);
         this.loadedMapsCommandsQueue.delete(key);
         this.clearSaveMapInterval(key);
@@ -153,9 +153,6 @@ class MapsManager {
                 console.error(
                     `[${new Date().toISOString()}] Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
                 );
-                Sentry.captureMessage(
-                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
-                );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
     }
@@ -165,7 +162,7 @@ class MapsManager {
             key,
             setInterval(() => {
                 (async () => {
-                    console.log(`[${new Date().toISOString()}] saving map ${key}`);
+                    console.info(`[${new Date().toISOString()}] saving map ${key}`);
                     const gameMap = this.loadedMaps.get(key);
                     if (gameMap) {
                         await fileSystem.writeStringAsFile(key, JSON.stringify(gameMap.getWam()));
@@ -175,7 +172,7 @@ class MapsManager {
                         return;
                     }
                     if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
-                        console.log(
+                        console.info(
                             `[${new Date().toISOString()}] NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`
                         );
                         this.clearSaveMapInterval(key);

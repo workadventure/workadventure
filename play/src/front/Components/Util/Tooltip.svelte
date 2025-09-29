@@ -25,14 +25,13 @@
         } else if (rightPosition === "true") {
             toolTipPosition = "right-tooltip";
         }
-        console.log("tooltip parent ::::", tooltipElement?.parentElement);
-        tooltipElement?.parentElement?.addEventListener("mouseenter", () => show());
-        tooltipElement?.parentElement?.addEventListener("mouseleave", () => hide());
+        tooltipElement?.parentElement?.addEventListener("mouseenter", show);
+        tooltipElement?.parentElement?.addEventListener("mouseleave", hide);
     });
 
     onDestroy(() => {
-        tooltipElement?.parentElement?.removeEventListener("mouseenter", () => show());
-        tooltipElement?.parentElement?.removeEventListener("mouseleave", () => hide());
+        tooltipElement?.parentElement?.removeEventListener("mouseenter", show);
+        tooltipElement?.parentElement?.removeEventListener("mouseleave", hide);
     });
 </script>
 
@@ -47,6 +46,7 @@
             class="content-[''] absolute -top-1 start-0 end-0 m-auto w-2 h-1"
             alt="Sub menu arrow"
             style="visibility: hidden;"
+            draggable="false"
         />
         <span class="relative">
             {text}

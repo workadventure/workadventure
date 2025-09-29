@@ -18,11 +18,12 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
-import say from "./statusModal";
+import say from "./say";
 import statusModal from "./statusModal";
 import area from "./area";
 import externalModule from "./externalModule";
 import form from "./form";
+import refreshPrompt from "./refreshPrompt";
 
 const fr_FR = merge(en_US, {
     area,
@@ -48,6 +49,7 @@ const fr_FR = merge(en_US, {
     statusModal,
     externalModule,
     form,
+    refreshPrompt,
 });
 
 export default fr_FR;

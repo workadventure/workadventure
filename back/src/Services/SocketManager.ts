@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import {
-    AddSpaceUserMessage,
     AnswerMessage,
     AskPositionMessage,
     BanUserMessage,
@@ -25,13 +24,11 @@ import {
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
     QueryMessage,
-    RemoveSpaceUserMessage,
     RoomDescription,
     RoomJoinedMessage,
     RoomsList,
     SendEventQuery,
     SendUserMessage,
-    ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubToPusherMessage,
     TurnCredentialsAnswer,
@@ -41,15 +38,18 @@ import {
     UserJoinedZoneMessage,
     UserMovesMessage,
     VariableMessage,
-    WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage,
-    WebRtcStartMessage,
     Zone as ProtoZone,
     PublicEvent,
     PrivateEvent,
     LeaveSpaceMessage,
     JoinSpaceMessage,
     ExternalModuleMessage,
+    FilterType,
+    SyncSpaceUsersMessage,
+    SpaceQueryMessage,
+    AddSpaceUserToNotifyMessage,
+    DeleteSpaceUserToNotifyMessage,
+    RequestFullSyncMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -71,6 +71,7 @@ import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { eventProcessor } from "../Model/EventProcessorInit";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { getMapStorageClient } from "./MapStorageClient";
@@ -105,6 +106,18 @@ export class SocketManager {
         });
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
+        });
+        clientEventsEmitter.registerToSpaceJoin((spaceName: string) => {
+            gaugeManager.incNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToSpaceLeave((spaceName: string) => {
+            gaugeManager.decNbUsersPerSpace(spaceName);
+        });
+        clientEventsEmitter.registerToCreateSpace(() => {
+            gaugeManager.incNbSpaces();
+        });
+        clientEventsEmitter.registerToDeleteSpace(() => {
+            gaugeManager.decNbSpaces();
         });
     }
 
@@ -281,71 +294,6 @@ export class SocketManager {
         await room.setVariable(variable, newValue, "RoomApi");
     }
 
-    emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WebRTC signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcSignalToClientMessage",
-            webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
-    }
-
-    emitScreenSharing(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
-        //send only at user
-        const remoteUser = room.getUsers().get(data.receiverId);
-        if (remoteUser === undefined) {
-            console.warn(
-                "While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ",
-                data.receiverId,
-                " does not exist. This might be a race condition."
-            );
-            return;
-        }
-
-        const webrtcSignalToClientMessage: Partial<WebRtcSignalToClientMessage> = {
-            userId: user.id,
-            signal: data.signal,
-        };
-
-        // TODO: only compute credentials if data.signal.type === "offer"
-        if (TURN_STATIC_AUTH_SECRET) {
-            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-            webrtcSignalToClientMessage.webRtcUserName = username;
-            webrtcSignalToClientMessage.webRtcPassword = password;
-        }
-
-        //if (!client.disconnecting) {
-        remoteUser.write({
-            $case: "webRtcScreenSharingSignalToClientMessage",
-            webRtcScreenSharingSignalToClientMessage:
-                WebRtcSignalToClientMessage.fromPartial(webrtcSignalToClientMessage),
-        });
-        //}
-    }
-
     leaveRoom(room: GameRoom, user: User) {
         // leave previous room and world
         try {
@@ -354,7 +302,6 @@ export class SocketManager {
             this.cleanupRoomIfEmpty(room);
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
-            console.log("A user left");
         }
     }
 
@@ -366,11 +313,9 @@ export class SocketManager {
                 roomId,
                 (user: User, group: Group) => {
                     this.joinWebRtcRoom(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 (user: User, group: Group) => {
                     this.disConnectedUser(user, group);
-                    this.sendGroupUsersUpdateToGroupMembers(group);
                 },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
@@ -387,7 +332,10 @@ export class SocketManager {
                     void this.onLockGroup(groupId, listener, roomPromise);
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
-                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
+                (group: Group, listener: ZoneSocket) => {
+                    this.onUserEntersOrLeavesBubble(group, listener);
+                }
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -415,7 +363,7 @@ export class SocketManager {
         const user = await room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " A user joined");
+
         return { room, user };
     }
 
@@ -511,6 +459,21 @@ export class SocketManager {
         }
     }
 
+    private onUserEntersOrLeavesBubble(group: Group, client: ZoneSocket) {
+        emitZoneMessage(
+            {
+                message: {
+                    $case: "groupUsersUpdateMessage",
+                    groupUsersUpdateMessage: {
+                        groupId: group.getId(),
+                        userIds: group.getUsers().map((user) => user.id),
+                    },
+                },
+            },
+            client
+        );
+    }
+
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         emitZoneMessage(
             {
@@ -565,6 +528,7 @@ export class SocketManager {
                         groupSize: group.getSize,
                         fromZone: SocketManager.toProtoZone(fromZone),
                         locked: group.isLocked(),
+                        userIds: group.getUsers().map((user) => user.id),
                     },
                 },
             },
@@ -612,69 +576,15 @@ export class SocketManager {
         return undefined;
     }
 
-    private sendGroupUsersUpdateToGroupMembers(group: Group) {
-        const clientMessage: ServerToClientMessage["message"] = {
-            $case: "groupUsersUpdateMessage",
-            groupUsersUpdateMessage: {
-                groupId: group.getId(),
-                userIds: group.getUsers().map((user) => user.id),
-            },
-        };
-
-        group.getUsers().forEach((currentUser: User) => {
-            currentUser.write(clientMessage);
-        });
-    }
-
     private joinWebRtcRoom(user: User, group: Group) {
         user.write({
             $case: "joinSpaceRequestMessage",
             joinSpaceRequestMessage: {
                 // FIXME: before fixing the fact that spaceName is undefined, let's try to understand why I don't have any info about the user in the error caught above
                 spaceName: group.spaceName,
+                propertiesToSync: ["cameraState", "microphoneState", "screenSharingState"],
             },
         });
-
-        // TODO: remove code below when WebRTC is managed in spaces
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1: Partial<WebRtcStartMessage> = {
-                userId: otherUser.id,
-                initiator: true,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(
-                    otherUser.id.toString(),
-                    TURN_STATIC_AUTH_SECRET
-                );
-                webrtcStartMessage1.webRtcUserName = username;
-                webrtcStartMessage1.webRtcPassword = password;
-            }
-
-            user.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage1),
-            });
-
-            const webrtcStartMessage2: Partial<WebRtcStartMessage> = {
-                userId: user.id,
-                initiator: false,
-            };
-            if (TURN_STATIC_AUTH_SECRET) {
-                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.webRtcUserName = username;
-                webrtcStartMessage2.webRtcPassword = password;
-            }
-
-            otherUser.write({
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromPartial(webrtcStartMessage2),
-            });
-        }
     }
 
     /**
@@ -682,6 +592,7 @@ export class SocketManager {
      * and the Coturn server.
      * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
      */
+    // TODO: this function is now duplicated in WebRTCCredentialsService, we should probably remove this.
     private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
         const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
         const username = [unixTimeStamp, name].join(":");
@@ -704,35 +615,6 @@ export class SocketManager {
                 spaceName: group.spaceName,
             },
         });
-
-        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
-        // which will be shut for the other player).
-        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
-        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
-        // So we also send the disconnect event to the other player.
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            //if (!otherUser.socket.disconnecting) {
-            otherUser.write({
-                $case: "webRtcDisconnectMessage",
-                webRtcDisconnectMessage: {
-                    userId: user.id,
-                },
-            });
-            //}
-
-            //if (!user.socket.disconnecting) {
-            user.write({
-                $case: "webRtcDisconnectMessage",
-                webRtcDisconnectMessage: {
-                    userId: otherUser.id,
-                },
-            });
-            //}
-        }
     }
 
     public getWorlds(): Map<string, PromiseLike<GameRoom>> {
@@ -916,6 +798,10 @@ export class SocketManager {
             }
         }
 
+        if (bbbSettings === undefined || !bbbSettings.secret) {
+            throw new Error("You must set the SECRET_BBB_KEY key to the secret to generate JWT tokens for BBB.");
+        }
+
         const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
@@ -944,7 +830,7 @@ export class SocketManager {
             userID: user.id,
             joinViaHtml5: true,
         });
-        console.log(
+        debug(
             `User "${user.name}" (${user.uuid}) joined the BBB meeting "${meetingName}" as ${
                 isAdmin ? "Admin" : "Participant"
             }.`
@@ -1388,11 +1274,28 @@ export class SocketManager {
     handleJoinSpaceMessage(pusher: SpacesWatcher, joinSpaceMessage: JoinSpaceMessage) {
         let space: Space | undefined = this.spaces.get(joinSpaceMessage.spaceName);
         if (!space) {
-            space = new Space(joinSpaceMessage.spaceName);
+            if (joinSpaceMessage.filterType === FilterType.UNRECOGNIZED) {
+                throw new Error("Unrecognized filter type when joining space");
+            }
+            space = new Space(
+                joinSpaceMessage.spaceName,
+                joinSpaceMessage.filterType,
+                eventProcessor,
+                joinSpaceMessage.propertiesToSync
+            );
             this.spaces.set(joinSpaceMessage.spaceName, space);
+            clientEventsEmitter.emitCreateSpace(joinSpaceMessage.spaceName);
         }
+
+        if (space.filterType !== joinSpaceMessage.filterType) {
+            throw new Error("Filter type mismatch when joining space");
+        }
+
         pusher.watchSpace(space.name);
-        space.addWatcher(pusher);
+
+        if (!joinSpaceMessage.isRetry) {
+            space.addWatcher(pusher);
+        }
     }
 
     handleLeaveSpaceMessage(pusher: SpacesWatcher, leaveSpaceMessage: LeaveSpaceMessage) {
@@ -1421,13 +1324,7 @@ export class SocketManager {
             debug("[space] Space %s => deleted", space.name);
             this.spaces.delete(space.name);
             watcher.unwatchSpace(space.name);
-        }
-    }
-
-    handleAddSpaceUserMessage(pusher: SpacesWatcher, addSpaceUserMessage: AddSpaceUserMessage) {
-        const space = this.spaces.get(addSpaceUserMessage.spaceName);
-        if (space && addSpaceUserMessage.user) {
-            space.addUser(pusher, addSpaceUserMessage.user);
+            clientEventsEmitter.emitDeleteSpace(space.name);
         }
     }
 
@@ -1447,18 +1344,6 @@ export class SocketManager {
         }
 
         space.updateUser(pusher, updateSpaceUserMessage.user, updateMask);
-    }
-
-    handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
-        const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-        if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.spaceUserId);
-            if (space.canBeDeleted()) {
-                debug("[space] Space %s => deleted", space.name);
-                this.spaces.delete(space.name);
-                pusher.unwatchSpace(space.name);
-            }
-        }
     }
 
     handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
@@ -1484,10 +1369,20 @@ export class SocketManager {
                 kickOffMessage: {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
-                    filterName: kickUserMessage.filterName,
                 },
             },
         });
+    }
+
+    handleSyncSpaceUsersMessage(pusher: SpacesWatcher, syncSpaceUsersMessage: SyncSpaceUsersMessage) {
+        const { spaceName, users } = syncSpaceUsersMessage;
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            console.error("Could not find space to sync users in SyncSpaceUsersMessage");
+            Sentry.captureException("Could not find space to sync users in SyncSpaceUsersMessage");
+            return;
+        }
+        space.syncUsersFromPusher(pusher, users);
     }
 
     handlePublicEvent(pusher: SpacesWatcher, publicEvent: PublicEvent) {
@@ -1578,12 +1473,10 @@ export class SocketManager {
     async handleExternalModuleMessage(externalModuleMessage: ExternalModuleMessage) {
         if (!externalModuleMessage.roomId) {
             console.error("externalModuleMessage has no roomId. This feature isn't implemented yet.");
-            Sentry.captureMessage("externalModuleMessage has no roomId. This feature isn't implemented yet.");
             return;
         }
         if (!externalModuleMessage.recipientUuid) {
             console.error("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
-            Sentry.captureMessage("externalModuleMessage has no recipientUuid. This feature isn't implemented yet.");
             return;
         }
         const roomId = externalModuleMessage.roomId;
@@ -1596,22 +1489,12 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
-            Sentry.captureMessage(
-                "In handleExternalModuleMessage, could not find room with id '" +
-                    roomId +
-                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
-            );
             return;
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.size === 0) {
             console.info(
-                "In handleExternalModuleMessage, could not find user with id '" +
-                    recipientUuid +
-                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
-            );
-            Sentry.captureMessage(
                 "In handleExternalModuleMessage, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -1627,6 +1510,86 @@ export class SocketManager {
                 },
             });
         }
+    }
+
+    /*
+     * This function is used to close the connection of the space. for testing purpose.
+     */
+    closeSpaceConnection(spaceName: string) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Space ${spaceName} not found`);
+        }
+        space.closeAllWatcherConnections();
+        this.spaces.delete(spaceName);
+        clientEventsEmitter.emitDeleteSpace(spaceName);
+    }
+
+    handleSpaceQueryMessage(pusher: SpacesWatcher, spaceQueryMessage: SpaceQueryMessage) {
+        const space = this.spaces.get(spaceQueryMessage.spaceName);
+
+        if (!space) {
+            throw new Error(`Could not find space ${spaceQueryMessage.spaceName} to handle query`);
+        }
+
+        if (!spaceQueryMessage.query) {
+            console.error("SpaceQueryMessage has no query");
+            Sentry.captureException("SpaceQueryMessage has no query");
+            return;
+        }
+
+        try {
+            const answer = space.handleQuery(pusher, spaceQueryMessage);
+            pusher.write({
+                message: {
+                    $case: "spaceAnswerMessage",
+                    spaceAnswerMessage: {
+                        id: spaceQueryMessage.id,
+                        answer: answer.answer,
+                        spaceName: spaceQueryMessage.spaceName,
+                    },
+                },
+            });
+        } catch (e) {
+            console.error("Error while handling space query", e);
+            Sentry.captureException("Error while handling space query");
+            return;
+        }
+    }
+
+    handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {
+        const space = this.spaces.get(addSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${addSpaceUserToNotifyMessage.spaceName} to add user to notify`);
+        }
+        if (!addSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to add to notify is undefined in AddSpaceUserToNotifyMessage`);
+        }
+        space.addUserToNotify(pusher, addSpaceUserToNotifyMessage.user);
+    }
+
+    handleDeleteSpaceUserToNotifyMessage(
+        pusher: SpacesWatcher,
+        deleteSpaceUserToNotifyMessage: DeleteSpaceUserToNotifyMessage
+    ) {
+        const space = this.spaces.get(deleteSpaceUserToNotifyMessage.spaceName);
+        if (!space) {
+            throw new Error(
+                `Could not find space ${deleteSpaceUserToNotifyMessage.spaceName} to delete user to notify`
+            );
+        }
+        if (!deleteSpaceUserToNotifyMessage.user) {
+            throw new Error(`User to delete from notify is undefined in DeleteSpaceUserToNotifyMessage`);
+        }
+        space.deleteUserToNotify(pusher, deleteSpaceUserToNotifyMessage.user);
+    }
+
+    handleRequestFullSyncMessage(pusher: SpacesWatcher, { spaceName, users, senderUserId }: RequestFullSyncMessage) {
+        const space = this.spaces.get(spaceName);
+        if (!space) {
+            throw new Error(`Could not find space ${spaceName} to handle request full sync`);
+        }
+        space.syncUsersAndNotify(pusher, users, senderUserId);
     }
 }
 

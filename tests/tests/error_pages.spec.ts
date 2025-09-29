@@ -4,13 +4,9 @@ import {publicTestMapUrl} from "./utils/urls";
 import Map from "./utils/map";
 import {isMobile} from "./utils/isMobile";
 
-test.describe('Error pages', () => {
+test.describe('Error pages @nowebkit', () => {
   test.beforeEach(async ({ page }) => {
-    if (isMobile(page)) {
-        //eslint-disable-next-line playwright/no-skipped-test
-        test.skip();
-        return;
-    }
+    test.skip(isMobile(page), 'Skip on mobile devices');
   });
   test('successfully displayed for unsupported URLs', async ({ page }) => {
     await page.goto(
@@ -24,7 +20,7 @@ test.describe('Error pages', () => {
         publicTestMapUrl("does/not/exist", "error_pages")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");
@@ -37,7 +33,7 @@ test.describe('Error pages', () => {
         Map.url("not-found")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");
@@ -51,7 +47,7 @@ test.describe('Error pages', () => {
         publicTestMapUrl("tests/MapWithError/error.json", "error_pages")
     );
 
-    await page.fill('input[name="loginSceneName"]', 'Alice');
+    await page.getByTestId('loginSceneNameInput').fill('Alice');
     await page.click('button.loginSceneFormSubmit');
     await page.click('button.selectCharacterSceneFormSubmit');
     await page.click("text=Save");

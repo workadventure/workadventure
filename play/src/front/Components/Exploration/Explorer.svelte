@@ -240,10 +240,17 @@
                 }}
             />
             <AddPropertyButtonWrapper
-                property="openPdf"
-                isActive={$selectFilters.includes("openPdf")}
+                property="openFile"
+                isActive={$selectFilters.includes("openFile")}
                 on:click={() => {
-                    addFilter("openPdf");
+                    addFilter("openFile");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="livekitRoomProperty"
+                isActive={$selectFilters.includes("livekitRoomProperty")}
+                on:click={() => {
+                    addFilter("livekitRoomProperty");
                 }}
             />
 
@@ -268,7 +275,12 @@
                 class:bg-secondary={entityListActive}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
-                    <img class="w-10 h-auto pointer-events-none" src={EntityToolImg} alt="link icon" />
+                    <img
+                        draggable="false"
+                        class="w-10 h-auto pointer-events-none"
+                        src={EntityToolImg}
+                        alt="link icon"
+                    />
                     {#if $entitiesListFiltered.size > 0}
                         <span class="pointer-events-none flex flex-row items-center gap-2">
                             <span
@@ -301,6 +313,7 @@
                             class="item p-2 rounded-2xl flex flex-row justify-start items-center cursor-pointer hover:bg-white/10 transition-all"
                         >
                             <img
+                                draggable="false"
                                 class="w-6 max-h-10 h-auto mr-2 pointer-events-none object-contain"
                                 src={entity.getPrefab().imagePath}
                                 alt="link icon"
@@ -324,7 +337,7 @@
                 class:bg-secondary={areaListActive}
             >
                 <div class="flex flex-row items-center justify-start gap-2">
-                    <img class="w-10 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
+                    <img draggable="false" class="w-10 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
                     {#if $areasListFiltered.size > 0}
                         <span class="pointer-events-none flex flex-row items-center gap-2">
                             <span
@@ -357,7 +370,12 @@
                                 class="item p-2 rounded-2xl flex flex-row justify-start gap-2 items-center cursor-pointer hover:bg-white/10 transition-all"
                                 title={area.getAreaData().name || "No name"}
                             >
-                                <img class="w-6 h-auto pointer-events-none" src={AreaToolImg} alt="link icon" />
+                                <img
+                                    draggable="false"
+                                    class="w-6 h-auto pointer-events-none"
+                                    src={AreaToolImg}
+                                    alt="link icon"
+                                />
                                 <span
                                     class="pointer-events-none w-full text-nowrap text-ellipsis overflow-hidden whitespace-nowrap"
                                     class:italic={!area.getAreaData().name || area.getAreaData().name == ""}

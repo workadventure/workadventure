@@ -20,6 +20,7 @@ export interface FrontConfigurationInterface {
     PUBLIC_MAP_STORAGE_PREFIX: string | undefined;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
+    MAX_DISPLAYED_VIDEOS: number;
     NODE_ENV: string;
     CONTACT_URL: string | undefined;
     POSTHOG_API_KEY: string | undefined;
@@ -67,4 +68,5 @@ export interface FrontConfigurationInterface {
     ENABLE_CHAT_ONLINE_LIST: boolean | undefined;
     ENABLE_CHAT_DISCONNECTED_LIST: boolean | undefined;
     ENABLE_SAY: boolean | undefined;
+    GRPC_MAX_MESSAGE_SIZE: number;
 }

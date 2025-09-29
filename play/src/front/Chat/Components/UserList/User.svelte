@@ -49,6 +49,7 @@
                 return $LL.chat.status.back_in_a_moment();
             case AvailabilityStatus.JITSI:
             case AvailabilityStatus.BBB:
+            case AvailabilityStatus.LIVEKIT:
                 return $LL.chat.status.meeting();
             case AvailabilityStatus.SPEAKER:
                 return $LL.chat.status.megaphone();
@@ -91,7 +92,7 @@
             </div>
             <div class={`flex-auto ms-1 ${!$userStatus && "opacity-50"}  cursor-default`}>
                 <div class="flex items-center h-4">
-                    <div class="text-sm font-bold mb-0 cursor-default flex items-center">
+                    <div class="text-sm font-bold mb-0 cursor-default flex items-center text-nowrap">
                         {#each chunks as chunk (chunk.key)}
                             <div class={`${chunk.match ? "text-light-blue" : ""}  cursor-default`}>
                                 {chunk.text}
@@ -134,51 +135,53 @@
                     {/if}
                 </div>
             </div>
-            <div class="transition-all">
-                {#if !isMe}
-                    <UserActionButton {user} />
+            <div class="flex flex-wrap justify-start items-start content-start">
+                <div class="transition-all">
+                    {#if !isMe && $userStatus != 0}
+                        <UserActionButton {user} />
+                    {/if}
+                </div>
+                {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
+                    <div class="relative group">
+                        <div
+                            class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%]"
+                        >
+                            {#if user.uuid === chatId}
+                                {$LL.chat.remoteUserNotConnected()}
+                            {:else}
+                                {$LL.chat.userList.sendMessage()}
+                            {/if}
+                        </div>
+                        <button
+                            class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
+                            class:text-white={user.uuid !== chatId}
+                            class:text-gray-400={user.uuid === chatId}
+                            data-testId={`send-message-${user.username}`}
+                            disabled={user.uuid === chatId}
+                            on:click|stopPropagation={() => {
+                                openDirectChatRoom(chatId).catch((error) => {
+                                    console.error("Error opening direct chat room:", error);
+                                    Sentry.captureException(error, {
+                                        extra: {
+                                            userId: user.uuid,
+                                            chatId: chatId,
+                                            playUri: user.playUri,
+                                            username: user.username,
+                                        },
+                                    });
+                                });
+                                analyticsClient.sendMessageFromUserList();
+                            }}
+                        >
+                            <IconSend font-size="16" />
+                        </button>
+                    </div>
+                {:else if $roomCreationInProgress && showRoomCreationInProgress}
+                    <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
+                        <IconLoader class="animate-spin" />
+                    </div>
                 {/if}
             </div>
-            {#if !isMe && !showRoomCreationInProgress && isMatrixChatEnabled}
-                <div class="relative group">
-                    <div
-                        class="bg-contrast/90 backdrop-blur-xl text-white tooltip absolute text-nowrap p-2 opacity-0 transition-all group-hover:opacity-100 rounded top-1/2 -translate-y-1/2 start-[130%] "
-                    >
-                        {#if user.uuid === chatId}
-                            {$LL.chat.remoteUserNotConnected()}
-                        {:else}
-                            {$LL.chat.userList.sendMessage()}
-                        {/if}
-                    </div>
-                    <button
-                        class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                        class:text-white={user.uuid !== chatId}
-                        class:text-gray-400={user.uuid === chatId}
-                        data-testId={`send-message-${user.username}`}
-                        disabled={user.uuid === chatId}
-                        on:click|stopPropagation={() => {
-                            openDirectChatRoom(chatId).catch((error) => {
-                                console.error("Error opening direct chat room:", error);
-                                Sentry.captureException(error, {
-                                    extra: {
-                                        userId: user.uuid,
-                                        chatId: chatId,
-                                        playUri: user.playUri,
-                                        username: user.username,
-                                    },
-                                });
-                            });
-                            analyticsClient.sendMessageFromUserList();
-                        }}
-                    >
-                        <IconSend font-size="16" />
-                    </button>
-                </div>
-            {:else if $roomCreationInProgress && showRoomCreationInProgress}
-                <div class="min-h-[30px] text-md flex gap-2 justify-center flex-row items-center p-1">
-                    <IconLoader class="animate-spin" />
-                </div>
-            {/if}
         </div>
     </div>
 

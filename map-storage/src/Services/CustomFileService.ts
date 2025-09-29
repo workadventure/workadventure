@@ -15,23 +15,23 @@ export class CustomFileService {
         const { file } = uploadFileMessage;
         const { name: filename, ext: fileExtension } = path.parse(uploadFileMessage.name);
 
-        const errorm = "File extension is not a supported format pdf :" + fileExtension + uploadFileMessage.name;
+        const errorm = "File extension is not a supported format :" + fileExtension + uploadFileMessage.name;
 
         if (!fileExtension.match(fileUploadSupportedFormatForMapStorage)) {
             throw new Error(errorm);
         }
 
         const mapPath = mapPathUsingDomainWithPrefix(
-            `/file/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
+            `/private/files/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
             this.hostname
         );
-        console.log("Uploading file to: ", mapPath);
+        console.info("Uploading file to: ", mapPath);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
         return;
     }
 
     public async deleteFile(property: AreaDataProperty) {
-        if (property.type !== "openPdf") {
+        if (property.type !== "openFile") {
             throw new Error("Property is not a file");
         }
 
@@ -41,7 +41,10 @@ export class CustomFileService {
 
         const { name: filename, ext: fileExtension } = path.parse(property.name);
 
-        const mapPath = mapPathUsingDomainWithPrefix(`/file/${filename}-${property.id}${fileExtension}`, this.hostname);
+        const mapPath = mapPathUsingDomainWithPrefix(
+            `/private/files/${filename}-${property.id}${fileExtension}`,
+            this.hostname
+        );
 
         await fileSystem.deleteFiles(mapPath);
         return;

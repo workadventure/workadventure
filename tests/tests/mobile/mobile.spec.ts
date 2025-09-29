@@ -10,16 +10,12 @@ test.use({
   baseURL: play_url,
 })
 
-test.describe('Mobile', () => {
+test.describe('Mobile @nowebkit @nodesktop', () => {
     test.beforeEach(async ({ page, browserName }) => {
-        if (!isMobile(page) || browserName === "webkit") {
-            //eslint-disable-next-line playwright/no-skipped-test
-            test.skip();
-            return;
-        }
+        test.skip(!isMobile(page) || browserName === 'webkit', 'Run only on mobile Chromium');
     });
     test('Successfully bubble discussion with mobile device', async ({ browser }) => {
-        const page = await getPage(browser, 'Bob', Map.url("empty"));
+        await using page = await getPage(browser, 'Bob', Map.url("empty"));
 
         const positionToDiscuss = {
             x: 3 * 32,
@@ -60,6 +56,24 @@ test.describe('Mobile', () => {
         // TODO: find a solution to test Joystick
         await Map.walkToPosition(pageJohn, positionToDiscuss.x, positionToDiscuss.y);
 
+        const box = pageJohn.getByTestId('resize-handle');
+        const boxBoundingBox = box.boundingBox();
+
+        // Ensure the resize handle is visible and get its bounding box
+        await expect(box).toBeVisible();
+        const boundingBox = await boxBoundingBox;
+        expect(boundingBox).not.toBeNull();
+        
+        const startX = boundingBox.x + boundingBox.width / 2;
+        const startY = boundingBox.y + boundingBox.height / 2;
+
+        await pageJohn.mouse.move(startX, startY);
+        await pageJohn.mouse.down();
+
+        await pageJohn.mouse.move(startX, startY + 400, { steps: 10 });
+
+        await pageJohn.mouse.up();
+
         // Expect to see camera of users
         await expect(pageJohn.getByText('Bob')).toBeVisible();
         await expect(pageJohn.getByText('Alice')).toBeVisible();
@@ -74,21 +88,25 @@ test.describe('Mobile', () => {
 
         await pageAlice.close();
         await pageJohn.close();
-        await page.close();
+
         await pageJohn.context().close();
         await pageAlice.context().close();
         await page.context().close();
     });
 
     test('Successfully jitsi cowebsite with mobile device', async ({ browser }) => {
-        const page = await getPage(browser, 'Bob',
+        await using page = await getPage(browser, 'Bob',
             publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile'));
 
         // Move to open a cowebsite
-        await page.locator('#body').press('ArrowRight', { delay: 10000 });
+        await page.locator('#body').press('ArrowDown', { delay: 200 });
+        await page.locator('#body').press('ArrowRight', { delay: 3000 });
         // Now, let's move player 2 to the speaker zone
         
         // Click on the button to close the cowebsite
+        await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
+
+        // Click on the button to close the Jitsi
         await page.getByTestId('tab1').getByRole('button', {name: 'Close'}).click();
 
         // Check that the cowebsite is hidden
@@ -96,7 +114,7 @@ test.describe('Mobile', () => {
             timeout: 10000
         });
 
-        await page.close();
+
         await page.context().close();
     });
 

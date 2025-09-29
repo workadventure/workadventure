@@ -3,16 +3,17 @@
       "rootDir": "src",
       "outDir": "dist",
       "baseUrl": "./",
-      "target": "es2019",
+      "target": "es2022",
       "lib": [
-        "es2019",
-        "dom",
+        "es2020",
+        "dom"
       ],
-      "module": "CommonJS",
-      "moduleResolution": "Node",
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
       "esModuleInterop": true,
       "strict": true,
       "declaration": true,
-      "sourceMap": true
+      "sourceMap": true,
+      "skipLibCheck": true
     }
   }

@@ -5,8 +5,6 @@
     import { onDestroy } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { emoteDataStore, emoteMenuStore, emoteMenuSubCurrentEmojiSelectedStore } from "../../Stores/EmoteStore";
-    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-    import { inputFormFocusStore } from "../../Stores/UserInputStore";
 
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import XIcon from "../Icons/XIcon.svelte";
@@ -17,6 +15,9 @@
     import LazyEmote from "../EmoteMenu/LazyEmote.svelte";
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { popupStore } from "../../Stores/PopupStore";
+    import SayPopUp from "../PopUp/SayPopUp.svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let emoteDataLoading = false;
 
@@ -104,7 +105,7 @@
     }
 
     function onKeyDown(e: KeyboardEvent) {
-        if ($mapEditorModeStore || $inputFormFocusStore) return;
+        if (!gameManager.getCurrentGameScene().userInputManager.isControlsEnabled) return;
         let key = null;
         if (e.key === "1" || e.key === "F1") {
             key = 1;
@@ -228,15 +229,20 @@
         {#if isSayBubbleEnabled}
             <div class="w-full h-[1px] bg-white/10" />
 
-            <div class="px-1 py-2  flex flex-row items-center justify-between">
+            <div class="px-1 py-2 flex flex-row items-center justify-between">
                 <div class="flex flex-row justify-between gap-2 items-center w-full">
-                    <div
+                    <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         on:mouseenter={() => (showSayBubbleTooltip = true)}
                         on:mouseleave={() => (showSayBubbleTooltip = false)}
+                        on:click={() => {
+                            popupStore.addPopup(SayPopUp, { type: "say" }, "say");
+                            analyticsClient.openSayBubble();
+                        }}
+                        data-testid="say-bubble-button"
                     >
-                        Say Bubble
-                    </div>
+                        {$LL.say.type.say()}
+                    </button>
                     {#if showSayBubbleTooltip}
                         <div class="absolute top-1/3 left-0 m-auto w-2 h-1">
                             <HelpTooltip
@@ -248,13 +254,18 @@
                             />
                         </div>
                     {/if}
-                    <div
+                    <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         on:mouseenter={() => (showThinkBubbleTooltip = true)}
                         on:mouseleave={() => (showThinkBubbleTooltip = false)}
+                        on:click={() => {
+                            popupStore.addPopup(SayPopUp, { type: "think" }, "say");
+                            analyticsClient.openThinkBubble();
+                        }}
+                        data-testid="think-bubble-button"
                     >
-                        Think Bubble
-                    </div>
+                        {$LL.say.type.think()}
+                    </button>
                     {#if showThinkBubbleTooltip}
                         <div class="absolute top-1/3 right-[40%] m-auto w-2 h-1">
                             <HelpTooltip

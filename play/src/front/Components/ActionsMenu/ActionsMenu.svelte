@@ -61,7 +61,7 @@
 
 {#if actionsMenuData}
     <div
-        class="absolute max-w-md z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
+        class="absolute md:w-full w-11/12 max-w-2xl z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg pointer-events-auto overflow-hidden top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
         data-testid="actions-menu"
     >
         {#if actionsMenuData.menuName}
@@ -73,7 +73,7 @@
 
                     <div class="flex items-center justify-center p-2">
                         <div class="text-white flex flex-col justify-center items-center font-bold text-xl pl-3">
-                            <div class="w-max ml-5 mt-[29px] ">
+                            <div class="w-max ml-5 mt-[29px]">
                                 <h3>{actionsMenuData.menuName}</h3>
                             </div>
                         </div>
@@ -97,7 +97,7 @@
 
         {#if sortedActions}
             <div
-                class="flex items-center bg-contrast p-2"
+                class="flex items-center bg-contrast/80 p-2 gap-2"
                 class:margin-close={!actionsMenuData.menuName}
                 class:flex-col={buttonsLayout === "column"}
                 class:flex-row={buttonsLayout === "row"}
@@ -105,14 +105,15 @@
                 {#each sortedActions ?? [] as action (action.uuid)}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center w-full {action.style ?? ''}"
+                        class="btn btn-light btn-ghost text-nowrap justify-center w-full h-full !bg-white/10 hover:!bg-white/20 {action.style ??
+                            ''}"
                         class:mx-2={buttonsLayout === "column"}
                         on:click={() => analyticsClient.clickPropertyMapEditor(action.actionName, action.style)}
-                        on:click|preventDefault={() => {
-                            action.callback();
+                        on:click|preventDefault={async () => {
+                            await action.callback();
                         }}
                     >
-                        <span class="flex flex-row gap-2 items-center justify-center">
+                        <span class="flex flex-row gap-2 items-center justify-center text-wrap">
                             {#if action.actionIcon}
                                 <div
                                     class="w-6 h-6"
@@ -128,7 +129,7 @@
                 {#if !actionsMenuData.menuName}
                     <button
                         type="button"
-                        class="btn btn-light btn-ghost text-nowrap justify-center m-2 w-full"
+                        class="btn btn-light btn-ghost text-nowrap justify-center w-full h-full !bg-white/10 hover:!bg-white/20"
                         on:click|preventDefault|stopPropagation={closeActionsMenu}
                     >
                         {$LL.actionbar.close()}

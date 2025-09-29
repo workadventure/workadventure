@@ -1,23 +1,21 @@
 <script lang="ts">
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
-    import { Readable } from "svelte/store";
     import { getContext, onDestroy } from "svelte";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import { highlightFullScreen } from "../../Stores/ActionsCamStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import ArrowsMaximizeIcon from "../Icons/ArrowsMaximizeIcon.svelte";
     import ArrowsMinimizeIcon from "../Icons/ArrowsMinimizeIcon.svelte";
     import { VideoConfig } from "../../Api/Events/Ui/PlayVideoEvent";
     import { showFloatingUi } from "../../Utils/svelte-floatingui-show";
+    import { userActivationManager } from "../../Stores/UserActivationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -35,9 +33,12 @@
     let extendedSpaceUserPromise = peer.getExtendedSpaceUser();
     let showVoiceIndicatorStore = peer.showVoiceIndicator;
 
-    let streamStore: Readable<MediaStream | undefined> | undefined = undefined;
+    let attachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+    let detachVideo: ((container: HTMLVideoElement) => void) | undefined = undefined;
+
     if (peer.media.type === "mediaStore") {
-        streamStore = peer.media.streamStore;
+        attachVideo = peer.media.attachVideo;
+        detachVideo = peer.media.detachVideo;
     }
 
     // In the case of a video started from the scripting API, we can have a URL instead of a MediaStream
@@ -110,8 +111,6 @@
         }
     }
 
-    let missingUserActivation: false;
-
     let showAfterDelay = true;
     let connectingTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -171,7 +170,7 @@
         {#if $statusStore === "connecting" && showAfterDelay}
             <div class="absolute w-full h-full z-50 overflow-hidden">
                 <div
-                    class="flex w-8 h-8 flex justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
+                    class="flex w-8 h-8 justify-center items-center absolute right-2 top-2 @[22rem]/videomediabox:w-full @[22rem]/videomediabox:right-auto @[22rem]/videomediabox:top-auto @[22rem]/videomediabox:h-full @[22rem]/videomediabox:justify-center @[22rem]/videomediabox:items-center @[22rem]/videomediabox:right-none @[22rem]/videomediabox:top-none"
                 >
                     <!--                <div class="w-8 h-8 flex justify-center items-center absolute right-2 top-2">-->
                     <div class="connecting-spinner" />
@@ -188,21 +187,17 @@
         {#if showAfterDelay}
             <!-- FIXME: expectVideoOutput and videoEnabled are always equal -->
             <CenteredVideo
-                mediaStream={$streamStore}
+                {attachVideo}
+                {detachVideo}
                 {videoEnabled}
                 expectVideoOutput={videoEnabled}
-                outputDeviceId={$speakerSelectedStore}
-                volume={$volumeProximityDiscussionStore}
-                on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
                 verticalAlign={!inCameraContainer && !fullScreen ? "top" : "center"}
                 isTalking={showVoiceIndicator}
                 flipX={peer.flipX}
-                muted={peer.muteAudio}
                 {videoUrl}
                 {videoConfig}
                 cover={peer.displayMode === "cover" && inCameraContainer && !fullScreen}
                 withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
-                bind:missingUserActivation
             >
                 <UserName
                     name={$name}
@@ -210,7 +205,7 @@
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
                     position={videoEnabled
-                        ? "absolute -bottom-2 -left-2 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
+                        ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}
                 >
@@ -225,8 +220,6 @@
                                 <UpDownChevron enabled={showUserSubMenu} on:click={toggleUserMenu} />
                             </div>
                         {/if}
-                    {:catch error}
-                        <div class="bg-danger">{error}</div>
                     {/await}
                 </UserName>
 
@@ -276,23 +269,34 @@
         {/if}
     </div>
 
-    {#if inCameraContainer && videoEnabled && !missingUserActivation}
-        <button
-            class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
-            on:click={() => highlightPeer(peer)}
-        >
-            <ArrowsMaximizeIcon />
-        </button>
+    {#if inCameraContainer && videoEnabled}
+        {#await userActivationManager.waitForUserActivation()}
+            <!-- Waiting for user activation; nothing to show -->
+        {:then value}
+            <button
+                class="full-screen-button absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 hover:bg-white/10 cursor-pointer"
+                on:click={() => highlightPeer(peer)}
+            >
+                <ArrowsMaximizeIcon />
+            </button>
+        {/await}
     {/if}
-    {#if missingUserActivation && !peer.muteAudio}
-        <div
-            class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
-            on:click={() => (missingUserActivation = false)}
-        >
-            <div class="text-center">
-                <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+    {#if !peer.muteAudio}
+        {#await userActivationManager.waitForUserActivation()}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="absolute w-full h-full aspect-video mx-auto flex justify-center items-center bg-contrast/50 rounded-lg z-20 cursor-pointer"
+                on:click={() => {
+                    userActivationManager.notifyUserActivation();
+                }}
+            >
+                <div class="text-center">
+                    <div class="text-lg text-white bold">{$LL.video.click_to_unmute()}</div>
+                </div>
             </div>
-        </div>
+        {:then value}
+            <!-- Nothing to do, the audio element is unmuted by the userActivationManager -->
+        {/await}
     {/if}
 </div>
 

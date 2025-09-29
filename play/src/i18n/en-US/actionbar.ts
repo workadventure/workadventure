@@ -6,7 +6,7 @@ const actionbar: BaseTranslation = {
     cancel: "Cancel",
     close: "Close",
     login: "Login",
-    map: "Map",
+    map: "Build",
     profil: "Edit your name",
     startScreenSharing: "Start screen sharing",
     stopScreenSharing: "Stop screen sharing",
@@ -22,7 +22,7 @@ const actionbar: BaseTranslation = {
     //megaphone: "Use megaphone",
     test: "Test my settings",
     editCamMic: "Edit cam / mic",
-    otherSettings: "Other settings",
+    allSettings: "All settings",
     bo: "Back office",
     globalMessage: "Send global message",
     mapEditor: "Map editor",
@@ -32,10 +32,17 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
+        noDevices: "No camera device found",
     },
     microphone: {
         disabled: "Your microphone is disabled",
         activate: "Activate your microphone",
+        noDevices: "No microphone device found",
+    },
+    speaker: {
+        disabled: "Your speaker is disabled",
+        activate: "Activate your speaker",
+        noDevices: "No speaker device found",
     },
     status: {
         ONLINE: "Online",

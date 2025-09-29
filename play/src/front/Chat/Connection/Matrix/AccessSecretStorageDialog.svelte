@@ -1,7 +1,6 @@
 <script lang="ts">
     import { MatrixClient, SecretStorage } from "matrix-js-sdk";
     import { closeModal, onBeforeClose, openModal } from "svelte-modals";
-    import * as Sentry from "@sentry/svelte";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import resetKeyStorageConfirmationModal from "../../../Components/Menu/ResetKeyStorageConfirmationModal.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -50,8 +49,7 @@
             onClose(key);
             closeModal();
         } catch (e) {
-            console.debug("Unable to verify key");
-            Sentry.captureMessage(`Unable to verify key: ${e}`);
+            console.debug("Unable to verify key", e);
             error = true;
             return;
         } finally {

@@ -113,9 +113,14 @@
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
     }
 
+    // The parameter that determines if the link has already been checked, like if it's embeddable or not.
+    // If the link cannot be embedded, we suggest that the user open a new tab automatically.
+    let firstCheckLink = false;
+
     onMount(() => {
         // if the link is not set, try to open the picker
         if (property.link == undefined || property.link === "") {
+            firstCheckLink = true; // It will use to set new tab automatically if the link is not embeddable
             openPicker();
         }
 
@@ -480,7 +485,7 @@
                         }
                     } else {
                         //optionAdvancedActivated = true;
-                        property.newTab = true;
+                        if (firstCheckLink) property.newTab = true;
                         embeddable = false;
                     }
                     optionAdvancedActivated = shouldDisplayAdvancedOption();
@@ -503,12 +508,6 @@
 
     function onKeyPressed() {
         dispatch("change", property.link);
-    }
-
-    function onClickInputHandler() {
-        // If Klaxoon application, open the activity picker
-        if (property.link != undefined && property.link != "") return;
-        openPicker();
     }
 
     function openKlaxoonActivityPicker() {
@@ -647,16 +646,27 @@
 >
     <span slot="header" class="flex justify-center items-center">
         {#if property.application === "youtube"}
-            <img class="w-6 me-1" src={youtubeSvg} alt={$LL.mapEditor.properties.youtubeProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={youtubeSvg}
+                alt={$LL.mapEditor.properties.youtubeProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.youtubeProperties.label()}
         {:else if property.application === "klaxoon"}
-            <img class="w-6 me-1" src={klaxoonSvg} alt={$LL.mapEditor.properties.klaxoonProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={klaxoonSvg}
+                alt={$LL.mapEditor.properties.klaxoonProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.klaxoonProperties.label()}
         {:else if property.application === "googleDocs"}
             <img
                 class="w-6 me-1"
                 src={googleDocsSvg}
                 alt={$LL.mapEditor.properties.googleDocsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDocsProperties.label()}
         {:else if property.application === "googleSheets"}
@@ -664,6 +674,7 @@
                 class="w-6 me-1"
                 src={googleSheetsSvg}
                 alt={$LL.mapEditor.properties.googleSheetsProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSheetsProperties.label()}
         {:else if property.application === "googleSlides"}
@@ -671,6 +682,7 @@
                 class="w-6 me-1"
                 src={googleSlidesSvg}
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else if property.application === "googleDrive"}
@@ -678,10 +690,16 @@
                 class="w-6 me-1"
                 src={googleDriveSvg}
                 alt={$LL.mapEditor.properties.googleDriveProperties.description()}
+                draggable="false"
             />
             {$LL.mapEditor.properties.googleDriveProperties.label()}
         {:else if property.application === "eraser"}
-            <img class="w-6 me-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={eraserSvg}
+                alt={$LL.mapEditor.properties.eraserProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.eraserProperties.label()}
         {:else if property.application === "excalidraw"}
             <img
@@ -691,20 +709,30 @@
             />
             {$LL.mapEditor.properties.excalidrawProperties.label()}
         {:else if property.application === "cards"}
-            <img class="w-6 me-1" src={cardPng} alt={$LL.mapEditor.properties.cardsProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={cardPng}
+                alt={$LL.mapEditor.properties.cardsProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.cardsProperties.label()}
         {:else if property.application === "website"}
-            <img class="w-6 me-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            <img
+                class="w-6 me-1"
+                src={icon}
+                alt={$LL.mapEditor.properties.linkProperties.description()}
+                draggable="false"
+            />
             {$LL.mapEditor.properties.linkProperties.label()}
         {:else}
-            <img class="w-6 me-1" src={property.icon} alt={property.label} />
+            <img class="w-6 me-1" src={property.icon} alt={property.label} draggable="false" />
             {property.label}
         {/if}
     </span>
     <span slot="content">
         {#if property.poster}
             <div class="text-center">
-                <img class="w-20 me-1" src={property.poster} alt="" />
+                <img class="w-20 me-1" src={property.poster} alt="" draggable="false" />
             </div>
         {/if}
 
@@ -729,7 +757,7 @@
             </Select>
         {/if}
 
-        <div class="value-input flex flex-col">
+        <div class="flex flex-col">
             <label for="tabLink" class="px-3 pb-[0.375rem] grow font-light"
                 >{$LL.mapEditor.properties.linkProperties.linkLabel()}</label
             >
@@ -742,7 +770,6 @@
                     bind:value={property.link}
                     onChange={onValueChange}
                     onBlur={() => checkWebsiteProperty()}
-                    onClick={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
 
@@ -752,6 +779,7 @@
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress
@@ -768,6 +796,7 @@
                             class="w-6 ms-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={`${$LL.mapEditor.properties.linkProperties.openApplication()} ${property.application}`}
+                            draggable="false"
                             on:keydown
                             on:keyup
                             on:keypress
@@ -788,7 +817,7 @@
             {#if warning !== ""}
                 <span class="err text-warning-900 text-xs italic mt-1">{warning}</span>
             {/if}
-            {#if !embeddable && error === ""}
+            {#if !embeddable && property.newTab == false && error === ""}
                 <span class="err text-warning-900 text-xs italic mt-1"
                     ><IconAlertTriangle font-size="12" />
                     {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
@@ -817,7 +846,7 @@
             bind:value={optionAdvancedActivated}
         />
 
-        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option">
             {#if (isArea && triggerOptionActivated && triggerOnActionChoosen) || !isArea}
                 <Input
                     id="triggerMessage"
@@ -833,12 +862,17 @@
                 id="newTab"
                 label={$LL.mapEditor.properties.linkProperties.newTabLabel()}
                 bind:value={property.newTab}
-                onChange={onNewTabValueChange}
+                onChange={() => {
+                    // The "newTab" property won't be changed automatically by the service.
+                    firstCheckLink = false;
+                    oldNewTabValue = property.newTab;
+                    onNewTabValueChange();
+                }}
                 disabled={property.forceNewTab}
             />
 
             {#if property.forceNewTab == true}
-                <div class="mb-3 ">
+                <div class="mb-3">
                     <span class="err text-warning-900 text-xs italic">
                         <IconAlertTriangle font-size="12" />
                         {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
@@ -859,10 +893,6 @@
             {/if}
             {#if !property.newTab}
                 <div class="mt-3 mb-3">
-                    <!-- <label for="websiteWidth"
-                        >{$LL.mapEditor.properties.linkProperties.width()}: {property.width ?? 50}%</label
-                    > -->
-
                     <RangeSlider
                         id="websiteWidth"
                         min={15}

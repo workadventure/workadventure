@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import pLimit from "p-limit";
 import { EventType, ICreateRoomOpts, Visibility } from "matrix-js-sdk";
-import * as Sentry from "@sentry/node";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { MATRIX_ADMIN_PASSWORD, MATRIX_ADMIN_USER, MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
@@ -10,14 +9,12 @@ const ADMIN_CHAT_ID = `@${MATRIX_ADMIN_USER}:${MATRIX_DOMAIN}`;
 const limit = pLimit(10);
 class MatrixProvider {
     private accessToken: string | undefined;
-    private lastAccessTokenDate: number = Date.now();
     private roomAreaFolderName = slugify("current visited room");
     private roomAreaFolderID: string | undefined;
 
     constructor() {
         this.overrideRateLimitForAdminAccount().catch((error) => {
-            console.error(error);
-            Sentry.captureMessage(`Failed to override admin account ratelimit : ${error}`);
+            console.error("Failed to override admin account ratelimit:", error);
         });
 
         this.createChatFolderAreaAndSetID()
@@ -25,8 +22,7 @@ class MatrixProvider {
                 this.roomAreaFolderID = roomID;
             })
             .catch((error) => {
-                console.error(error);
-                Sentry.captureMessage(`Failed to create chat folder for room area : ${error}`);
+                console.error("Failed to create chat folder for room area:", error);
             });
     }
 
@@ -48,11 +44,8 @@ class MatrixProvider {
         return email.replace("@", "_");
     }
 
-    async getAccessToken(): Promise<string> {
-        if (
-            (this.accessToken && this.lastAccessTokenDate && Date.now() - this.lastAccessTokenDate > 3_600_000) ||
-            !this.accessToken
-        ) {
+    private async getAccessToken(): Promise<string> {
+        if (!this.accessToken) {
             const response = await axios.post(`${MATRIX_API_URI}_matrix/client/r0/login`, {
                 type: "m.login.password",
                 user: MATRIX_ADMIN_USER,
@@ -60,7 +53,6 @@ class MatrixProvider {
             });
             if (response.status === 200 && response.data.errcode === undefined) {
                 this.accessToken = response.data.access_token;
-                this.lastAccessTokenDate = Date.now();
                 return response.data.access_token;
             } else {
                 throw new Error("Failed with errcode " + response.data.errcode);
@@ -286,8 +278,7 @@ class MatrixProvider {
             await Promise.all(kickMembersPromises);
             return;
         } catch (e) {
-            console.error(e);
-            Sentry.captureMessage(`Failed to kick all user ${e}`);
+            console.error("Failed to kick all user", e);
             return;
         }
     }

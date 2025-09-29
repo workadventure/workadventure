@@ -1,3 +1,4 @@
+import {asError} from "catch-unknown";
 import axios from "axios";
 import { matrix_domain, matrix_server_url } from "../utils/urls";
 
@@ -55,8 +56,8 @@ class MatrixApi {
       await this.deactivateAndActivateUsers(users);
     } catch (error) {
       console.error(error);
-      throw new Error(error)
-    } 
+      throw error;
+    }
   }
 
   private async getUsers() {
@@ -69,7 +70,7 @@ class MatrixApi {
         (user) => user.name !== MATRIX_ADMIN_USER
       );
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
@@ -81,25 +82,21 @@ class MatrixApi {
    * @private
    */
   private async deactivateAndActivateUsers(users: { name: string }[]) {
-    try {
-      for (const user of users) {
+    for (const user of users) {
 
-        await axios.post(
-          `${DEACTIVATE_USER_ENDPOINT}/${user.name}`,
-          null,
-          this.getAuthenticatedHeader()
-        );
+      await axios.post(
+        `${DEACTIVATE_USER_ENDPOINT}/${user.name}`,
+        null,
+        this.getAuthenticatedHeader()
+      );
 
-        await axios.put(
-          `${USERS_ENDPOINT}/${user.name}`,
-          {
-            deactivated: false,
-          },
-          this.getAuthenticatedHeader()
-        );
-      }
-    } catch (error) {
-      throw new Error(error);
+      await axios.put(
+        `${USERS_ENDPOINT}/${user.name}`,
+        {
+          deactivated: false,
+        },
+        this.getAuthenticatedHeader()
+      );
     }
   }
 
@@ -126,34 +123,35 @@ class MatrixApi {
         );
       }
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
-  public async getMemberPowerLevel(roomAlias: string): Promise<number> {
-    try {
-      const publicRoomsResponse = await axios.get(
-        `${matrix_server_url}/_matrix/client/r0/publicRooms`,
-        this.getAuthenticatedHeader()
-      );
-
-      const room = publicRoomsResponse.data.chunk.find(
-        (room) => room.name === roomAlias
-      );
-
-      if (!room) {
-        throw new Error(`Room ${roomAlias} not found`);
+  public async acceptRoomInvitations(roomId : string) {
+      if (roomId) {
+        try {
+          await axios.post(
+              `${matrix_server_url}/_matrix/client/r0/join/${roomId}`,
+              {},
+              this.getAuthenticatedHeader()
+          );
+        } catch (error) {
+          throw asError(error);
+        }
       }
+  }
 
+  public async getMemberPowerLevel(roomId: string): Promise<number> {
+    try {
       const powerLevelsResponse = await axios.get(
-        `${matrix_server_url}/_matrix/client/r0/rooms/${room.room_id}/state/m.room.power_levels/`,
+        `${matrix_server_url}/_matrix/client/r0/rooms/${roomId}/state/m.room.power_levels/`,
         this.getAuthenticatedHeader()
       );
 
       return powerLevelsResponse.data.users[MATRIX_ADMIN_USER] || 0;
 
     } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 
@@ -177,7 +175,7 @@ class MatrixApi {
         throw new Error("Failed with status " + response.status);
     }
 } catch (error) {
-      throw new Error(error);
+      throw asError(error);
     }
   }
 }

@@ -10,6 +10,7 @@
     import { userIsConnected } from "../../Stores/MenuStore";
 
     import logoImg from "../images/logo-min-white.png";
+    import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import errorGif from "./images/error.gif";
 
     let errorScreen = $errorScreenStore;
@@ -53,11 +54,12 @@
             <!-- <div class="logo" bind:this={logoErrorParent} />
             <div class="icon" bind:this={imageErrorParent} /> -->
             <div class="logo">
-                {#if logoErrorSrc}
+                {#if logoErrorSrc && $errorScreenStore.type !== "reconnecting"}
                     <img
                         src={errorScreen?.imageLogo ?? logoErrorSrc}
                         alt="Logo error"
                         style="max-height:25vh; max-width:80%;"
+                        draggable="false"
                     />
                 {/if}
             </div>
@@ -67,25 +69,30 @@
                     src={errorScreen?.image ?? gameManager?.currentStartedRoom?.errorSceneLogo ?? errorGif}
                     alt="Error"
                     style="height:125px; max-width:100%;"
+                    draggable="false"
                 />
             </div>
-
             {#if $errorScreenStore.type !== "retry"}<h2 class="mt-10">{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
-            {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
+            {#if $errorScreenStore.type !== "retry" && $errorScreenStore.type !== "reconnecting"}<p class="code">
+                    Code : {$errorScreenStore.code}
+                </p>{/if}
             <p class="details">
                 {detailsStylized}
-                {#if $errorScreenStore.type === "retry" || $errorScreenStore.type === "reconnecting"}
+                {#if $errorScreenStore.type === "retry"}
                     <div class="loading" />
+                {:else if $errorScreenStore.type === "reconnecting"}
+                    <LoaderIcon />
                 {/if}
             </p>
             <div class="flex gap-2">
                 {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                    <button type="button" class="btn-lg btn btn-light btn-border  button" on:click={click}>
+                    <button type="button" class="btn-lg btn btn-light btn-border button" on:click={click}>
                         {#if $errorScreenStore.type === "retry"}<img
                                 src={reload}
                                 alt=""
                                 class="reload mr-2 hover:"
+                                draggable="false"
                             />{/if}
                         {$errorScreenStore.buttonTitle}
                     </button>

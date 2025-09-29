@@ -1,12 +1,18 @@
 import { z } from "zod";
+import Debug from "debug";
 import { openIDClient } from "../services/OpenIDClient";
 import { OPID_CLIENT_ISSUER } from "../enums/EnvironmentVariable";
 import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
+const debug = Debug("pusher:requests");
+
 export class OpenIdProfileController extends BaseHttpController {
     routes(): void {
         this.app.get("/profile", async (req, res) => {
+            debug(
+                `OpenIdProfileController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`
+            );
             const query = validateQuery(
                 req,
                 res,

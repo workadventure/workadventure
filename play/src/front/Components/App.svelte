@@ -15,7 +15,6 @@
     import { EnableCameraScene } from "../Phaser/Login/EnableCameraScene";
     import { ReconnectingScene } from "../Phaser/Reconnecting/ReconnectingScene";
     import { ErrorScene } from "../Phaser/Reconnecting/ErrorScene";
-    import { CustomizeScene } from "../Phaser/Login/CustomizeScene";
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -23,6 +22,7 @@
     import { desktopApi } from "../Api/Desktop";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
+    import { FileListener } from "../Phaser/FileUpload/FileListener";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
@@ -31,6 +31,8 @@
     let gameDiv: HTMLDivElement;
     let activeCowebsite = $coWebsites[0];
     let gameContainer: HTMLDivElement;
+    let canvas: HTMLCanvasElement;
+    let handleCanvasClick: () => void;
 
     onMount(() => {
         if (SENTRY_DSN_FRONT != undefined) {
@@ -130,7 +132,6 @@
                 EnableCameraScene,
                 ReconnectingScene,
                 ErrorScene,
-                CustomizeScene,
             ],
             //resolution: window.devicePixelRatio / 2,
             fps: fps,
@@ -182,14 +183,19 @@
 
         waScaleManager.setGame(game);
 
-        const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+        canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+
+        handleCanvasClick = function () {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+        };
 
         if (canvas) {
-            canvas.addEventListener("click", function () {
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
-                }
-            });
+            canvas.addEventListener("click", handleCanvasClick);
+
+            const fileListener = new FileListener(canvas);
+            fileListener.initDomListeners();
         }
 
         //updateScreenSize();
@@ -225,6 +231,9 @@
 
     onDestroy(() => {
         canvasSizeUnsubscriber?.();
+        if (canvas && handleCanvasClick) {
+            canvas.removeEventListener("click", handleCanvasClick);
+        }
     });
 </script>
 
