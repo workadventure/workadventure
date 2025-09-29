@@ -683,8 +683,6 @@ export class SocketManager {
                 case "searchTagsQuery":
                 case "chatMembersQuery":
                 case "oauthRefreshTokenQuery":
-                case "joinSpaceQuery":
-                case "leaveSpaceQuery":
                 case "mapStorageJwtQuery":
                 case "enterChatRoomAreaQuery": {
                     break;

@@ -291,6 +291,9 @@ export const EnvironmentVariables = z.object({
     MATRIX_ADMIN_PASSWORD: z.string().optional(),
     MATRIX_DOMAIN: z.string().optional(),
     EMBEDLY_KEY: z.string().optional(),
+    LASUITE_DOCS_BACKEND: z.string().optional(),
+    LASUITE_DOCS_ADMIN_ACCESS_TOKEN: z.string().optional(),
+    LASUITE_DOCS_FRONTEND: z.string().optional(),
     GRPC_MAX_MESSAGE_SIZE: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 20 * 1024 * 1024)) // Default to 20 MB

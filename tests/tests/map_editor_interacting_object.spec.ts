@@ -190,4 +190,91 @@ test.describe("Map editor interacting with object @oidc @nomobile", () => {
 
     await page.context().close();
   });
+
+  test("Success to interact with openPdf area and entity", async ({ browser, request }) => {
+    // Go to the map
+    await resetWamMaps(request);
+    const page = await getPage(browser, 'Admin1', Map.url("empty"));
+
+    // Create entity on the map for the test
+    await Menu.openMapEditor(page);
+    await MapEditor.openEntityEditor(page);
+    await EntityEditor.selectEntity(page, 0, "small table");
+    await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+    await EntityEditor.clearEntitySelection(page);
+    // await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.5);
+    await EntityEditor.moveAndClick(page, 1, 8.5 * 32 * 1.45);
+    await EntityEditor.setEntityName(page, "My Open Link");
+    await EntityEditor.addProperty(page, "openPdf");
+    await EntityEditor.setOpenPdfProperty(page);
+    await Menu.closeMapEditor(page);
+
+    // // Refresh the page to see the entity
+    // await page.goto(Map.url("empty"));
+    // // Wait for the map to be loaded
+    // await Menu.waitForMapLoad(page);
+
+    // Move to the entity
+    await EntityEditor.moveAndRightClick(page, 0, 8.5 * 32 * 1.5);
+
+    await page.keyboard.press("Space");
+    await expect(page.getByText('Open PDF')).toBeVisible();
+    await page.getByText('Open PDF').click();
+
+    // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
+    const iframeE = await page.waitForSelector('iframe[src*="ipsum-lorem"]');
+
+    // Assert that the iframe of the Entity has the correct 'src' attribute
+    const iframeSrcE = await iframeE.getAttribute('src');
+    expect(iframeSrcE).toContain('ipsum-lorem');
+
+    // Refresh the page to create area
+    await page.goto(Map.url("empty"));
+    // Wait for the map to be loaded
+    await Menu.waitForMapLoad(page);
+
+    // Create area on the map for the test
+    await Menu.openMapEditor(page);
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(
+      page,
+      { x: 8 * 32 * 1.5, y: 8 * 32 * 1.5 },
+      { x: 10 * 32 * 1.5, y: 10 * 32 * 1.5 }
+    );
+    await AreaEditor.setAreaName(page, "MyLinkZone");
+    await AreaEditor.addProperty(page, "openPdf");
+    await AreaEditor.setOpenPdfProperty(
+      page,
+      "Show immediately on enter"
+    );
+
+    // Walk to the area
+    await Map.teleportToPosition(page, 9 * 32, 9 * 32);
+
+    // Wait for iframe to appear (you might need to adjust the selector based on the actual iframe)
+    const iframeA = await page.waitForSelector('iframe[src*="lorem-ipsum"]');
+
+    // Assert that the iframe of the Area has the correct 'src' attribute
+    const iframeSrcA = await iframeA.getAttribute('src');
+    expect(iframeSrcA).toContain('lorem-ipsum');
+
+    // Check if the PDF files from entity iframe are accessible
+    const uploadFileE1 = request.post(iframeSrcE);
+    expect((await uploadFileE1).ok()).toBeTruthy();
+
+    // Check if the PDF files from area iframe are accessible
+    const uploadFileA1 = request.post(iframeSrcA);
+    expect((await uploadFileA1).ok()).toBeTruthy();
+
+    await AreaEditor.deletePdfFile(page);
+
+    // Check if the PDF files from area iframe are still accessible
+    const uploadedFileA2 = request.post(iframeSrcA);
+    expect((await uploadedFileA2).ok()).toBeFalsy();
+
+    await Menu.closeMapEditor(page);
+
+    await page.close();
+    await page.context().close();
+  });
 });

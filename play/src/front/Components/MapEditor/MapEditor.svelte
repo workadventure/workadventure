@@ -50,7 +50,7 @@
     </div>
     <div id="map-editor-right" bind:this={mapEditor} class={`map-editor relative h-dvh ${$mapEditorSelectedToolStore}`}>
         {#if $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor}
-            <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[2000]">
+            <div class="absolute h-dvh -start-0.5 top-0 flex flex-col z-[310]">
                 <MapEditorResizeHandle
                     minWidth={200}
                     maxWidth={$windowSize.width / 2}
@@ -59,7 +59,7 @@
                 />
             </div>
             <div
-                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md"
+                class="sidebar h-dvh bg-contrast/80 backdrop-blur-md z-[320]"
                 in:fly={{ x: 100, duration: 200, delay: 200 }}
                 out:fly={{ x: 100, duration: 200 }}
             >

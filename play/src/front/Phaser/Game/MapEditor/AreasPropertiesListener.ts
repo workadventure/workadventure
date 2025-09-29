@@ -977,7 +977,6 @@ export class AreasPropertiesListener {
             )
                 continue;
             areaMapEditor[subtype].handleAreaPropertyOnEnter(area);
-            inJitsiStore.set(true);
         }
     }
 

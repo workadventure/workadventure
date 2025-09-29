@@ -160,6 +160,10 @@ services:
       EMBEDLY_KEY: "$EMBEDLY_KEY"
       # Map editor restrictions (allow all users when OIDC is enabled by default)
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
+      # LaSuite Docs
+      LASUITE_DOCS_BACKEND: $LASUITE_DOCS_BACKEND
+      LASUITE_DOCS_FRONTEND: $LASUITE_DOCS_FRONTEND
+      LASUITE_DOCS_ADMIN_ACCESS_TOKEN: $LASUITE_DOCS_ADMIN_ACCESS_TOKEN
     labels:
       - "traefik.enable=true"
 

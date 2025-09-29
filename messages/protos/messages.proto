@@ -263,6 +263,11 @@ message DeleteEntityMessage {
   string id = 1;
 }
 
+message DeleteFileMessage {
+  string propertyId = 1;
+  string name = 2;
+}
+
 message CollisionGridRow {
   repeated uint32 row = 1;
 }
