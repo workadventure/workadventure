@@ -1,5 +1,4 @@
-import * as Sentry from "@sentry/svelte";
-import { get } from "svelte/store";
+import { get, Readable } from "svelte/store";
 import { Subscription } from "rxjs";
 import type { WebRtcSignalReceivedMessageInterface } from "../Connection/ConnexionModels";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
@@ -12,7 +11,6 @@ import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/Spac
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
-import { blackListManager } from "./BlackListManager";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
 
 export interface UserSimplePeerInterface {
@@ -43,12 +41,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     constructor(
         private _space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private _screenSharingLocalStreamStore = screenSharingLocalStreamStore,
         private _playersStore = playersStore,
         private _analyticsClient = analyticsClient,
         private _notificationManager = notificationManager,
-        private _customWebRTCLogger = customWebRTCLogger,
-        private _blackListManager = blackListManager
+        private _customWebRTCLogger = customWebRTCLogger
     ) {
         //we make sure we don't get any old peer.
         let localScreenCapture: MediaStream | undefined = undefined;
@@ -73,23 +71,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         );
 
         this.initialise();
-
-        this._rxJsUnsubscribers.push(
-            this._blackListManager.onBlockStream.subscribe((userUuid) => {
-                const user = this._playersStore.getPlayerByUuid(userUuid);
-                if (!user) {
-                    return;
-                }
-
-                const spaceUser = this._space.getSpaceUserByUserId(user.userId);
-
-                if (!spaceUser) {
-                    console.error("spaceUserId not found for userId", user.userId);
-                    return;
-                }
-                this.closeConnection(spaceUser.spaceUserId);
-            })
-        );
     }
 
     /**
@@ -163,24 +144,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         );
     }
 
-    private receiveWebrtcStart(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): void {
+    private receiveWebrtcStart(user: UserSimplePeerInterface, spaceUserFromBack: SpaceUserExtended): void {
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
 
-        (async () => {
-            const users = await this._space.getUsers({ signal: this.abortController.signal });
-            const spaceUser = users.get(user.userId);
-            if (!spaceUser) {
-                console.error("Space user not found for userId", user.userId);
-                Sentry.captureMessage("Space user not found for userId " + user.userId);
-                return;
-            }
-            this.createPeerConnection(user, spaceUser);
-        })().catch((e) => {
-            console.error("An error occurred in receiveWebrtcStart", e);
-            Sentry.captureException(e);
-        });
+        this.createPeerConnection(user, spaceUserFromBack, spaceUserFromBack.uuid);
     }
 
     private receiveWebrtcDisconnect(user: UserSimplePeerInterface): void {
@@ -190,9 +159,14 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user: UserSimplePeerInterface, spaceUser: SpaceUserExtended): VideoPeer | null {
-        const uuid = spaceUser.uuid;
-        if (this._blackListManager.isBlackListed(uuid)) return null;
+    private createPeerConnection(
+        user: UserSimplePeerInterface,
+        spaceUser: SpaceUserExtended,
+        uuid: string
+    ): VideoPeer | null {
+        //TODO : gerer le black list dans le space
+        // const uuid = spaceUser.uuid;
+        // if (this._blackListManager.isBlackListed(uuid)) return null;
 
         const peerConnection = this.videoPeers.get(user.userId);
         if (peerConnection && peerConnection instanceof VideoPeer) {
@@ -211,7 +185,13 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         this._lastWebrtcUserName = user.webRtcUser;
         this._lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this._space, spaceUser);
+        const peer = new VideoPeer(
+            user,
+            user.initiator ? user.initiator : false,
+            this._space,
+            spaceUser.spaceUserId,
+            this._blockedUsersStore
+        );
 
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
@@ -284,7 +264,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             stream,
             this._space,
             spaceUser,
-            false
+            false,
+            this._blockedUsersStore
         );
 
         // Create subscription to statusStore to close connection when user stop sharing screen
@@ -428,9 +409,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             return;
         }
 
-        const uuid = spaceUser.uuid;
-
-        if (this._blackListManager.isBlackListed(uuid)) return;
         const streamResult = get(this._screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
         if (streamResult.type === "success" && streamResult.stream !== undefined) {
@@ -501,8 +479,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             console.error("While sending local screen sharing, cannot find user with ID " + userId);
             return;
         }
-        const uuid = spaceUser.uuid;
-        if (this._blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this.screenSharePeers.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId, localScreenCapture);

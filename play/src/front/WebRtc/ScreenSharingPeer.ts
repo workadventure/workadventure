@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { get, Readable, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import { z } from "zod";
@@ -39,6 +39,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     private readonly _hasAudio = writable<boolean>(false);
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
+    private readonly _isBlocked: Readable<boolean>;
     // No volume in a screen sharing
     public readonly volumeStore: Readable<number[] | undefined> | undefined = undefined;
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
@@ -57,7 +58,8 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         stream: MediaStream | undefined,
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
-        isLocalScreenSharing: boolean
+        isLocalScreenSharing: boolean,
+        private _blockedUsersStore: Readable<Set<string>>
     ) {
         const bandwidth = get(screenShareBandwidthStore);
         const firefoxBrowser = isFirefox();
@@ -84,6 +86,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
+
+        this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) =>
+            $blockedUsersStore.has(this.spaceUser.spaceUserId)
+        );
 
         // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
         /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
@@ -316,6 +322,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         return {
             type: "webrtc" as const,
             streamStore: this._streamStore,
+            isBlocked: this._isBlocked,
         };
     }
 
@@ -342,6 +349,11 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
     }
+
+    get spaceUserId(): string | undefined {
+        return this.spaceUser.spaceUserId;
+    }
+
     private async setMaxBitrate() {
         try {
             // Get the RTCPeerConnection instance

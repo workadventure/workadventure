@@ -28,6 +28,7 @@
     export let cover = true;
     // If true, the video will be displayed with a background is it does not cover the whole box
     export let withBackground = false;
+    export let isBlocked = false;
 
     function onLoadVideoElement() {}
 
@@ -111,84 +112,86 @@
               (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
             : ""}
     >
-        {#if media?.type === "webrtc"}
-            <WebRtcVideo
-                {media}
-                {onLoadVideoElement}
-                style={videoEnabled
-                    ? "width: " +
-                      Math.ceil(videoWidth) +
-                      "px; height: " +
-                      Math.ceil(videoHeight) +
-                      "px; " +
-                      ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                      (cover
-                          ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                          : "") +
-                      (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                    : ""}
-                className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
-                bind:videoWidth={videoStreamWidth}
-                bind:videoHeight={videoStreamHeight}
-                on:noVideo={() => {
-                    displayNoVideoWarning = true;
-                }}
-                on:video={() => {
-                    displayNoVideoWarning = false;
-                }}
-            />
-        {:else if media?.type === "livekit" && media?.remoteVideoTrack}
-            <LivekitVideo
-                {...{
-                    ...{},
-                    /* @ts-ignore Typescript is not clever enough to understand that media has a non-nullable remoteVideoTrack */
-                }}
-                {media}
-                {onLoadVideoElement}
-                style={videoEnabled
-                    ? "width: " +
-                      Math.ceil(videoWidth) +
-                      "px; height: " +
-                      Math.ceil(videoHeight) +
-                      "px; " +
-                      ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                      (cover
-                          ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                          : "") +
-                      (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                    : ""}
-                className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
-                bind:videoWidth={videoStreamWidth}
-                bind:videoHeight={videoStreamHeight}
-                on:noVideo={() => {
-                    displayNoVideoWarning = true;
-                }}
-                on:video={() => {
-                    displayNoVideoWarning = false;
-                }}
-            />
-        {:else if media?.type === "scripting"}
-            <ScriptingVideo
-                {media}
-                {onLoadVideoElement}
-                style={videoEnabled
-                    ? "width: " +
-                      Math.ceil(videoWidth) +
-                      "px; height: " +
-                      Math.ceil(videoHeight) +
-                      "px; " +
-                      ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                      (cover
-                          ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                          : "") +
-                      (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                    : ""}
-                className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
-                bind:videoWidth={videoStreamWidth}
-                bind:videoHeight={videoStreamHeight}
-            />
-        {:else}
-            <p>Unknown media type</p>
+        {#if !isBlocked}
+            {#if media?.type === "webrtc"}
+                <WebRtcVideo
+                    {media}
+                    {onLoadVideoElement}
+                    style={videoEnabled
+                        ? "width: " +
+                          Math.ceil(videoWidth) +
+                          "px; height: " +
+                          Math.ceil(videoHeight) +
+                          "px; " +
+                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                          (cover
+                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                              : "") +
+                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
+                        : ""}
+                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    bind:videoWidth={videoStreamWidth}
+                    bind:videoHeight={videoStreamHeight}
+                    on:noVideo={() => {
+                        displayNoVideoWarning = true;
+                    }}
+                    on:video={() => {
+                        displayNoVideoWarning = false;
+                    }}
+                />
+            {:else if media?.type === "livekit" && media?.remoteVideoTrack}
+                <LivekitVideo
+                    {...{
+                        ...{},
+                        /* @ts-ignore Typescript is not clever enough to understand that media has a non-nullable remoteVideoTrack */
+                    }}
+                    {media}
+                    {onLoadVideoElement}
+                    style={videoEnabled
+                        ? "width: " +
+                          Math.ceil(videoWidth) +
+                          "px; height: " +
+                          Math.ceil(videoHeight) +
+                          "px; " +
+                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                          (cover
+                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                              : "") +
+                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
+                        : ""}
+                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    bind:videoWidth={videoStreamWidth}
+                    bind:videoHeight={videoStreamHeight}
+                    on:noVideo={() => {
+                        displayNoVideoWarning = true;
+                    }}
+                    on:video={() => {
+                        displayNoVideoWarning = false;
+                    }}
+                />
+            {:else if media?.type === "scripting"}
+                <ScriptingVideo
+                    {media}
+                    {onLoadVideoElement}
+                    style={videoEnabled
+                        ? "width: " +
+                          Math.ceil(videoWidth) +
+                          "px; height: " +
+                          Math.ceil(videoHeight) +
+                          "px; " +
+                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                          (cover
+                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                              : "") +
+                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
+                        : ""}
+                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    bind:videoWidth={videoStreamWidth}
+                    bind:videoHeight={videoStreamHeight}
+                />
+            {:else}
+                <p>Unknown media type</p>
+            {/if}
         {/if}
     </div>
     {#if displayNoVideoWarning}
@@ -207,13 +210,14 @@
 
     <!-- This div represents an overlay on top of the video -->
     <div
-        class={"absolute border-solid " + (videoEnabled || !withBackground ? "" : "bg-contrast/80 backdrop-blur")}
-        class:w-full={!videoEnabled || displayNoVideoWarning}
-        class:h-full={!videoEnabled || displayNoVideoWarning}
-        class:rounded-lg={!videoEnabled || displayNoVideoWarning}
-        class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled}
-        class:border-secondary={!videoEnabled && isTalking}
-        class:hidden={videoEnabled && !overlayHeight}
+        class={"absolute border-solid " +
+            ((videoEnabled || !withBackground) && !isBlocked ? "" : "bg-contrast/80 backdrop-blur")}
+        class:w-full={!videoEnabled || displayNoVideoWarning || isBlocked}
+        class:h-full={!videoEnabled || displayNoVideoWarning || isBlocked}
+        class:rounded-lg={!videoEnabled || displayNoVideoWarning || isBlocked}
+        class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
+        class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
+        class:hidden={videoEnabled && !overlayHeight && !isBlocked}
         style={videoEnabled && !displayNoVideoWarning
             ? "width: " +
               overlayWidth +

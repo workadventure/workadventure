@@ -3,12 +3,12 @@
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import { VideoBox } from "../../Space/Space";
     import reportImg from "./images/report.svg";
-    export let peer: Streamable;
+    export let videoBox: VideoBox;
 
-    function openReport(peer: Streamable) {
-        if (peer instanceof VideoPeer || peer instanceof ScreenSharingPeer) {
-            const extendedSpaceUser = peer.getExtendedSpaceUser();
+    function openReport(videoBox: VideoBox) {
+            const extendedSpaceUser = videoBox.spaceUser;
             if (!extendedSpaceUser) {
                 console.error("openReport : peer has no extendedSpaceUser");
                 return;
@@ -17,15 +17,12 @@
                 userUuid: extendedSpaceUser.uuid,
                 userName: extendedSpaceUser.name,
             });
-        }
     }
 </script>
 
-{#if peer instanceof VideoPeer || peer instanceof ScreenSharingPeer}
     <button
         class="report-ban-btn bg-pop-red flex justify-center h-7 w-7 md:h-5 md:w-5 p-1 min-h-[1px]"
-        on:click|stopPropagation={() => openReport(peer)}
+        on:click|stopPropagation={() => openReport(videoBox)}
     >
         <img alt="Report this user" draggable="false" src={reportImg} class="w-3 h-3 flex" />
     </button>
-{/if}

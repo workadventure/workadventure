@@ -71,21 +71,32 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         return true;
     }
 
-    public async addUser(newUser: SpaceUser, switchInProgress = false): Promise<void> {
+    public addUser(newUser: SpaceUser): void {
+        console.log("WWWWWWW WebRTCCommunicationStrategy addUser", newUser.name);
         // When someone enters the space, we don't need to try establishing the connection. We must wait for the user to watch
         // the space for that.
-        /*const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
+
+        if (!this._space.getUsersToNotify().find((user) => user.spaceUserId === newUser.spaceUserId)) {
+            return;
+        };
+
+        const existingUsers = this._space.getUsersToNotify().filter((user) => user.spaceUserId !== newUser.spaceUserId);
 
         existingUsers.forEach((existingUser) => {
             if (this.shouldEstablishConnection(newUser, existingUser)) {
                 this.establishConnection(newUser, existingUser);
                 return;
             }
-        });*/
+        });
     }
 
     public deleteUser(user: SpaceUser): void {
-        /*const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
+
+        if(!this._space.getUsersToNotify().find((user) => user.spaceUserId === user.spaceUserId)) {
+            return;
+        }
+        
+        const watchers = this._space.getUsersToNotify().map((user) => user.spaceUserId);
 
         if (!watchers.includes(user.spaceUserId)) {
             this.shutdownAllConnections(user);
@@ -100,7 +111,7 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
             }
         });
 
-        this.cleanupUserMessages(user.spaceUserId);*/
+        this.cleanupUserMessages(user.spaceUserId);
     }
 
     private shutdownAllConnections(user: SpaceUser): void {
@@ -112,7 +123,8 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
         });
     }
 
-    public addUserToNotify(user: SpaceUser): Promise<void> {
+    public addUserToNotify(user: SpaceUser): void {
+        console.log("WWWWWWW WebRTCCommunicationStrategy addUserToNotify", user.name);
         const usersInFilter = this._space.getUsersInFilter();
         usersInFilter.forEach((existingUser) => {
             if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {

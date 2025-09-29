@@ -53,6 +53,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private token: string,
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue> = screenSharingLocalStream,
@@ -129,7 +130,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
                 this.participants.set(
                     participant.sid,
-                    new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+                    new LiveKitParticipant(
+                        participant,
+                        this.space,
+                        spaceUser,
+                        this._streamableSubjects,
+                        this._blockedUsersStore
+                    )
                 );
             });
         } catch (err) {
@@ -373,7 +380,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
         this.participants.set(
             participant.sid,
-            new LiveKitParticipant(participant, this.space, spaceUser, this._streamableSubjects)
+            new LiveKitParticipant(
+                participant,
+                this.space,
+                spaceUser,
+                this._streamableSubjects,
+                this._blockedUsersStore
+            )
         );
     }
 

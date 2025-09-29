@@ -1,5 +1,6 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { Readable } from "svelte/store";
 import { SpaceInterface } from "../Space/SpaceInterface";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { CommunicationMessageType } from "../Space/SpacePeerManager/CommunicationMessageType";
@@ -19,13 +20,20 @@ export class LivekitConnection {
     constructor(
         private space: SpaceInterface,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private _streamingMegaphoneStore = streamingMegaphoneStore
     ) {
         this.initialize();
     }
 
     private createLivekitRoom(serverUrl: string, token: string): LiveKitRoomInterface {
-        this.livekitRoom = new LiveKitRoom(serverUrl, token, this.space, this._streamableSubjects);
+        this.livekitRoom = new LiveKitRoom(
+            serverUrl,
+            token,
+            this.space,
+            this._streamableSubjects,
+            this._blockedUsersStore
+        );
         this._streamingMegaphoneStore.set(true);
         return this.livekitRoom;
     }

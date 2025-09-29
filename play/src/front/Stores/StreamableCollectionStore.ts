@@ -3,7 +3,6 @@ import { RemoteVideoTrack } from "livekit-client";
 import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { PeerStatus } from "../WebRtc/VideoPeer";
-import { SpaceUserExtended } from "../Space/SpaceInterface";
 import { VideoConfig } from "../Api/Events/Ui/PlayVideoEvent";
 import LL from "../../i18n/i18n-svelte";
 import { VideoBox } from "../Space/Space";
@@ -38,17 +37,20 @@ export interface LivekitStreamable {
     remoteVideoTrack: RemoteVideoTrack | undefined;
     //remoteAudioTrack: RemoteAudioTrack | undefined;
     readonly streamStore: Readable<MediaStream | undefined>;
+    readonly isBlocked: Readable<boolean>;
 }
 
 export interface WebRtcStreamable {
     type: "webrtc";
     readonly streamStore: Readable<MediaStream | undefined>;
+    readonly isBlocked: Readable<boolean>;
 }
 
 export interface ScriptingVideoStreamable {
     type: "scripting";
     url: string;
     config: VideoConfig;
+    readonly isBlocked: Readable<boolean>;
 }
 
 export interface Streamable {
@@ -59,7 +61,6 @@ export interface Streamable {
     readonly hasAudio: Readable<boolean>;
     readonly isMuted: Readable<boolean>;
     readonly statusStore: Readable<PeerStatus>;
-    readonly getExtendedSpaceUser: () => SpaceUserExtended | undefined;
     readonly name: Readable<string>;
     readonly showVoiceIndicator: Readable<boolean>;
     readonly flipX: boolean;
@@ -73,6 +74,7 @@ export interface Streamable {
     readonly displayInPictureInPictureMode: boolean;
     readonly usePresentationMode: boolean;
     readonly once: (event: string, callback: (...args: unknown[]) => void) => void;
+    readonly spaceUserId: string | undefined;
 }
 
 export const SCREEN_SHARE_STARTING_PRIORITY = 1000; // Priority for screen sharing streams
@@ -97,6 +99,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         media: {
             type: "webrtc" as const,
             streamStore: mutedLocalStream,
+            isBlocked: writable(false),
         },
         volumeStore: localVolumeStore,
         hasVideo: derived(
@@ -107,7 +110,6 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
         hasAudio: writable(true),
         isMuted: derived(requestedMicrophoneState, (micState) => !micState),
         statusStore: writable("connected" as const),
-        getExtendedSpaceUser: () => undefined,
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,
         pictureStore: currentPlayerWokaStore,
@@ -120,6 +122,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL]) => {
             callback();
         },
         priority: -2,
+        spaceUserId: undefined,
     };
     return streamableToVideoBox(streamable, -2);
 });

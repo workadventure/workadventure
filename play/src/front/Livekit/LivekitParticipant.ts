@@ -9,7 +9,7 @@ import {
     RemoteVideoTrack,
     RemoteAudioTrack,
 } from "livekit-client";
-import { derived, get, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
@@ -91,6 +91,7 @@ export class LiveKitParticipant {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
         incrementLivekitConnectionsCount();
@@ -236,7 +237,7 @@ export class LiveKitParticipant {
             hasVideo: this._hasVideo,
             isMuted: this._isMuted,
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => this._spaceUser,
+            spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
@@ -250,6 +251,9 @@ export class LiveKitParticipant {
                 //remoteAudioTrack: this._audioRemoteTrack,
                 // Important note: the stream store only contains the audio track:
                 streamStore: this._audioStreamStore,
+                isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             once(event, callback) {
@@ -265,7 +269,7 @@ export class LiveKitParticipant {
             hasVideo: writable(true),
             isMuted: writable(false),
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => this._spaceUser,
+            spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
             showVoiceIndicator: writable(false),
             flipX: false,
@@ -279,6 +283,9 @@ export class LiveKitParticipant {
                 //remoteAudioTrack: this._screenShareAudioRemoteTrack,
                 // Important note: the stream store only contains the audio track:
                 streamStore: this._audioScreenShareStreamStore,
+                isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             once(event, callback) {

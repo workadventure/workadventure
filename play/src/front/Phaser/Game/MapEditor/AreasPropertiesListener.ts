@@ -1057,7 +1057,14 @@ export class AreasPropertiesListener {
     private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
+            console.log("handleSpeakerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
+
+            const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
+                "cameraState",
+                "microphoneState",
+                "screenShareState",
+            ]);
+
             currentLiveStreamingSpaceStore.set(space);
             isSpeakerStore.set(true);
             //streamingMegaphoneStore.set(true);
@@ -1078,10 +1085,17 @@ export class AreasPropertiesListener {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             currentLiveStreamingSpaceStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+            const space = this.scene.spaceRegistry.get(uniqRoomName);
+
+            if (!space) {
+                return;
+            }
+
+            this.scene.spaceRegistry.leaveSpace(space).catch((e) => {
                 console.error("Error while leaving space", e);
                 Sentry.captureException(e);
             });
+
 
             //streamingMegaphoneStore.set(false);
 
@@ -1100,7 +1114,12 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                const space = await this.scene.broadcastService.joinSpace(uniqRoomName);
+                console.log("handleListenerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
+                const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
+                    "cameraState",
+                    "microphoneState",
+                    "screenShareState",
+                ]);
 
                 currentLiveStreamingSpaceStore.set(space);
                 if (property.chatEnabled) {
@@ -1120,7 +1139,11 @@ export class AreasPropertiesListener {
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
                 currentLiveStreamingSpaceStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(uniqRoomName).catch((e) => {
+                const space = this.scene.spaceRegistry.get(uniqRoomName);
+                if (!space) {
+                    return;
+                }
+                this.scene.spaceRegistry.leaveSpace(space).catch((e) => {
                     console.error("Error while leaving space", e);
                     Sentry.captureException(e);
                 });

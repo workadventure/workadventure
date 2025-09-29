@@ -1,5 +1,6 @@
 import { Subscription } from "rxjs";
 import * as Sentry from "@sentry/svelte";
+import { Readable } from "svelte/store";
 import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
 import { SpaceInterface } from "../SpaceInterface";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
@@ -10,13 +11,17 @@ export class LivekitState implements ICommunicationState {
     private livekitConnection: LivekitConnection;
     private rxJsUnsubscribers: Subscription[] = [];
     private _nextState: WebRTCState | null = null;
-    constructor(private _space: SpaceInterface, private _streamableSubjects: StreamableSubjects) {
-        this.livekitConnection = new LivekitConnection(this._space, this._streamableSubjects);
+    constructor(
+        private _space: SpaceInterface,
+        private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>
+    ) {
+        this.livekitConnection = new LivekitConnection(this._space, this._streamableSubjects, this._blockedUsersStore);
 
         this.rxJsUnsubscribers.push(
             this._space.observePrivateEvent(CommunicationMessageType.PREPARE_SWITCH_MESSAGE).subscribe((message) => {
                 if (message.prepareSwitchMessage.strategy === CommunicationType.WEBRTC) {
-                    this._nextState = new WebRTCState(this._space, this._streamableSubjects);
+                    this._nextState = new WebRTCState(this._space, this._streamableSubjects, this._blockedUsersStore);
                 }
             })
         );
@@ -40,7 +45,11 @@ export class LivekitState implements ICommunicationState {
                 .observePrivateEvent(CommunicationMessageType.COMMUNICATION_STRATEGY_MESSAGE)
                 .subscribe((message) => {
                     if (message.communicationStrategyMessage.strategy === CommunicationType.WEBRTC) {
-                        const nextState = new WebRTCState(this._space, this._streamableSubjects);
+                        const nextState = new WebRTCState(
+                            this._space,
+                            this._streamableSubjects,
+                            this._blockedUsersStore
+                        );
                         this._space.spacePeerManager.setState(nextState);
                     }
                 })
