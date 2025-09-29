@@ -8,7 +8,7 @@ import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { MediaStoreStreamable, Streamable } from "../Stores/StreamableCollectionStore";
+import { Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { decrementWebRtcConnectionsCount, incrementWebRtcConnectionsCount } from "../Utils/E2EHooks";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
@@ -441,52 +441,10 @@ export class VideoPeer extends Peer implements Streamable {
         return this._streamStore;
     }
 
-    get media(): MediaStoreStreamable {
-        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
-        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
+    get media(): WebRtcStreamable {
         return {
-            type: "mediaStore",
+            type: "webrtc",
             streamStore: this._streamStore,
-            attachVideo: (container: HTMLVideoElement) => {
-                const unsubscribe = this._streamStore.subscribe((stream) => {
-                    if (stream) {
-                        container.srcObject = stream;
-                    } else {
-                        container.srcObject = null;
-                    }
-                });
-                this.space.spacePeerManager.registerVideoContainer(this.spaceUser.spaceUserId, container);
-                videoElementUnsubscribers.set(container, unsubscribe);
-            },
-            detachVideo: (container: HTMLVideoElement) => {
-                container.srcObject = null;
-                this.space.spacePeerManager.unregisterVideoContainer(this.spaceUser.spaceUserId, container);
-                const unsubscribe = videoElementUnsubscribers.get(container);
-                if (unsubscribe) {
-                    unsubscribe();
-                    videoElementUnsubscribers.delete(container);
-                }
-            },
-            attachAudio: (container: HTMLAudioElement) => {
-                const unsubscribe = this._streamStore.subscribe((stream) => {
-                    if (stream) {
-                        container.srcObject = stream;
-                    } else {
-                        container.srcObject = null;
-                    }
-                });
-                this.space.spacePeerManager.registerAudioContainer(this.spaceUser.spaceUserId, container);
-                audioElementUnsubscribers.set(container, unsubscribe);
-            },
-            detachAudio: (container: HTMLAudioElement) => {
-                container.srcObject = null;
-                this.space.spacePeerManager.unregisterAudioContainer(this.spaceUser.spaceUserId, container);
-                const unsubscribe = audioElementUnsubscribers.get(container);
-                if (unsubscribe) {
-                    unsubscribe();
-                    audioElementUnsubscribers.delete(container);
-                }
-            },
         };
     }
 

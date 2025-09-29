@@ -334,18 +334,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             this._streamableSubjects.videoPeerRemoved.next(peer);
 
-            const videoElements = this._space.spacePeerManager.getVideoContainers(userId);
-
-            videoElements.forEach((videoElement) => {
-                peer.media.detachVideo(videoElement);
-            });
-
-            const audioElements = this._space.spacePeerManager.getAudioContainers(userId);
-
-            audioElements.forEach((audioElement) => {
-                peer.media.detachAudio(audioElement);
-            });
-
             //create temp peer to close
 
             peer.destroy();
@@ -385,16 +373,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
 
             if (peer instanceof ScreenSharingPeer) {
                 peer.destroy();
-
-                const screenShareElements = this._space.spacePeerManager.getScreenShareContainers(userId);
-                screenShareElements.forEach((screenShareElement) => {
-                    peer.media.detachVideo(screenShareElement);
-                });
-
-                const screenShareAudioElements = this._space.spacePeerManager.getScreenShareAudioContainers(userId);
-                screenShareAudioElements.forEach((screenShareAudioElement) => {
-                    peer.media.detachAudio(screenShareAudioElement);
-                });
             }
         } catch (err) {
             console.error("An error occurred in closeScreenSharingConnection", err);

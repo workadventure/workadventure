@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
-import { MediaStoreStreamable, SCREEN_SHARE_STARTING_PRIORITY, Streamable } from "../Stores/StreamableCollectionStore";
+import { SCREEN_SHARE_STARTING_PRIORITY, Streamable, WebRtcStreamable } from "../Stores/StreamableCollectionStore";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -312,58 +312,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     public getExtendedSpaceUser(): SpaceUserExtended | undefined {
         return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
     }
-    get media(): MediaStoreStreamable {
-        const videoElementUnsubscribers = new Map<HTMLVideoElement, () => void>();
-        const audioElementUnsubscribers = new Map<HTMLAudioElement, () => void>();
+    get media(): WebRtcStreamable {
         return {
-            type: "mediaStore",
+            type: "webrtc" as const,
             streamStore: this._streamStore,
-            attachVideo: (container: HTMLVideoElement) => {
-                const unsubscribe = this._streamStore.subscribe((stream) => {
-                    if (stream) {
-                        const videoTracks = stream.getVideoTracks();
-                        if (videoTracks.length === 0) {
-                            container.srcObject = null;
-                        } else {
-                            container.srcObject = new MediaStream(videoTracks);
-                        }
-                    }
-                });
-                this.space.spacePeerManager.registerScreenShareContainer(this.spaceUser.spaceUserId, container);
-                videoElementUnsubscribers.set(container, unsubscribe);
-            },
-            detachVideo: (container: HTMLVideoElement) => {
-                container.srcObject = null;
-                this.space.spacePeerManager.unregisterScreenShareContainer(this.spaceUser.spaceUserId, container);
-                const unsubscribe = videoElementUnsubscribers.get(container);
-                if (unsubscribe) {
-                    unsubscribe();
-                    videoElementUnsubscribers.delete(container);
-                }
-            },
-            attachAudio: (container: HTMLAudioElement) => {
-                const unsubscribe = this._streamStore.subscribe((stream) => {
-                    if (stream) {
-                        const audioTracks = stream.getAudioTracks();
-                        if (audioTracks.length === 0) {
-                            container.srcObject = null;
-                        } else {
-                            container.srcObject = new MediaStream(audioTracks);
-                        }
-                    }
-                });
-                this.space.spacePeerManager.registerScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
-                audioElementUnsubscribers.set(container, unsubscribe);
-            },
-            detachAudio: (container: HTMLAudioElement) => {
-                container.srcObject = null;
-                this.space.spacePeerManager.unregisterScreenShareAudioContainer(this.spaceUser.spaceUserId, container);
-                const unsubscribe = audioElementUnsubscribers.get(container);
-                if (unsubscribe) {
-                    unsubscribe();
-                    audioElementUnsubscribers.delete(container);
-                }
-            },
         };
     }
 
