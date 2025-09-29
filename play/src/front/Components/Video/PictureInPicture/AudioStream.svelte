@@ -2,9 +2,9 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import Debug from "debug";
     import * as Sentry from "@sentry/svelte";
+    import { Readable } from "svelte/store";
 
-    export let attach: (container: HTMLAudioElement) => void;
-    export let detach: (container: HTMLAudioElement) => void;
+    export let streamStore: Readable<MediaStream | undefined>;
     export let outputDeviceId: string | undefined = undefined;
 
     const debug = Debug("AudioStream");
@@ -76,6 +76,14 @@
 
     let destroyed = false;
 
+    $: stream = $streamStore ? $streamStore : undefined;
+
+    $: if (audioElement && stream) {
+        if (audioElement.srcObject !== stream) {
+            audioElement.srcObject = stream;
+        }
+    }
+
     onMount(() => {
         (async () => {
             if (outputDeviceId) {
@@ -84,7 +92,7 @@
                 if (destroyed || !audioElement) {
                     return;
                 }
-                attach(audioElement);
+                audioElement.srcObject = stream ?? null;
                 audioElement.volume = volume;
             }
         })().catch((e) => {
@@ -95,7 +103,6 @@
 
     onDestroy(() => {
         destroyed = true;
-        detach(audioElement);
     });
 </script>
 
