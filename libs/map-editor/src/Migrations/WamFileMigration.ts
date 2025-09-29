@@ -1,6 +1,6 @@
 import { WAMFileFormat } from "../types";
 import { WamVersionMigration } from "./WamMigrations/AbstractWamVersionMigration";
-import { WamVersion201 } from "./WamMigrations/WamVersion2_0_1";
+import { WamVersion200 } from "./WamMigrations/WamVersion2_0_0";
 /**
  * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
  * Only the last version has his own type
@@ -12,7 +12,7 @@ import { WamVersion201 } from "./WamMigrations/WamVersion2_0_1";
  */
 
 export class WamFileMigration {
-    constructor(private lastVersion: WamVersionMigration = new WamVersion201()) {}
+    constructor(private lastVersion: WamVersionMigration = new WamVersion200()) {}
 
     public migrate(wamFileContent: any): WAMFileFormat {
         return WAMFileFormat.parse(this.lastVersion.migrate(wamFileContent));
