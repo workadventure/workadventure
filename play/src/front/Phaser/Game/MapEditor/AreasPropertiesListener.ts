@@ -1096,7 +1096,6 @@ export class AreasPropertiesListener {
                 Sentry.captureException(e);
             });
 
-
             //streamingMegaphoneStore.set(false);
 
             if (property.chatEnabled) {
