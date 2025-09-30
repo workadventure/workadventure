@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import { Readable } from "svelte/store";
 import { CommunicationType, LivekitConnection } from "../../Livekit/LivekitConnection";
 import { SpaceInterface } from "../SpaceInterface";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 import { WebRTCState } from "./WebRTCState";
 import { CommunicationMessageType } from "./CommunicationMessageType";
@@ -92,5 +93,13 @@ export class LivekitState implements ICommunicationState {
             console.error("An error occurred in dispatchStream", err);
             Sentry.captureException(err);
         });
+    }
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitConnection.getStreamableForUser(spaceUserId);
+    }
+
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitConnection.getScreenSharingForUser(spaceUserId);
     }
 }

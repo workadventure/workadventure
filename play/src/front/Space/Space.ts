@@ -556,7 +556,12 @@ export class Space implements SpaceInterface {
             const extendSpaceUser = this.extendSpaceUser(user);
             if (!this._users.has(user.spaceUserId)) {
                 if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
-                    this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+                    const videoBox = this.getEmptyVideoBox(extendSpaceUser);
+                    const streamable = this.spacePeerManager.getVideoForUser(user.spaceUserId);
+                    if (streamable) {
+                        videoBox.streamable.set(streamable);
+                    }
+                    this.allVideoStreamStore.set(user.spaceUserId, videoBox);
 
                     if (this._blackListManager.isBlackListed(user.spaceUserId)) {
                         this.emitPrivateMessage(
@@ -569,10 +574,12 @@ export class Space implements SpaceInterface {
                     }
 
                     if (user.screenSharingState) {
-                        this.allScreenShareStreamStore.set(
-                            user.spaceUserId,
-                            this.getEmptyVideoBox(extendSpaceUser, true)
-                        );
+                        const videoBox = this.getEmptyVideoBox(extendSpaceUser, true);
+                        const streamable = this.spacePeerManager.getScreenSharingForUser(user.spaceUserId);
+                        if (streamable) {
+                            videoBox.streamable.set(streamable);
+                        }
+                        this.allScreenShareStreamStore.set(user.spaceUserId, videoBox);
                     }
                 }
 
@@ -592,7 +599,13 @@ export class Space implements SpaceInterface {
 
         if (!this._users.has(user.spaceUserId)) {
             if (this.isVideoSpace() && user.spaceUserId !== this._mySpaceUserId) {
-                this.allVideoStreamStore.set(user.spaceUserId, this.getEmptyVideoBox(extendSpaceUser));
+                const streamable = this.spacePeerManager.getVideoForUser(user.spaceUserId);
+                const videoBox = this.getEmptyVideoBox(extendSpaceUser);
+
+                if (streamable) {
+                    videoBox.streamable.set(streamable);
+                }
+                this.allVideoStreamStore.set(user.spaceUserId, videoBox);
 
                 if (this._blackListManager.isBlackListed(user.spaceUserId)) {
                     this.emitPrivateMessage(
@@ -672,7 +685,12 @@ export class Space implements SpaceInterface {
 
         if (maskedNewData.screenSharingState !== undefined && userToUpdate.spaceUserId !== this._mySpaceUserId) {
             if (maskedNewData.screenSharingState) {
-                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, this.getEmptyVideoBox(userToUpdate, true));
+                const videoBox = this.getEmptyVideoBox(userToUpdate, true);
+                const streamable = this.spacePeerManager.getScreenSharingForUser(userToUpdate.spaceUserId);
+                if (streamable) {
+                    videoBox.streamable.set(streamable);
+                }
+                this.allScreenShareStreamStore.set(userToUpdate.spaceUserId, videoBox);
             } else {
                 this.allScreenShareStreamStore.delete(userToUpdate.spaceUserId);
             }

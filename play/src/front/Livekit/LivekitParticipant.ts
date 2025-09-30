@@ -301,6 +301,14 @@ export class LiveKitParticipant {
         this._isActiveSpeaker.set(isActiveSpeaker);
     }
 
+    public getStreamable(): Streamable {
+        return this.getVideoStream();
+    }
+
+    public getScreenSharingStreamable(): Streamable {
+        return this.getScreenShareStream();
+    }
+
     public destroy() {
         decrementLivekitConnectionsCount();
 

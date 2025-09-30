@@ -9,6 +9,7 @@ import { notificationManager } from "../Notification/NotificationManager";
 import LL from "../../i18n/i18n-svelte";
 import { SimplePeerConnectionInterface, StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
+import { Streamable } from "../Stores/StreamableCollectionStore";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
 import { customWebRTCLogger } from "./CustomWebRTCLogger";
@@ -532,5 +533,13 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             }
         }
         this.scriptingApiStream = mediaStream;
+    }
+
+    public getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this.videoPeers.get(spaceUserId);
+    }
+
+    public getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this.screenSharePeers.get(spaceUserId);
     }
 }

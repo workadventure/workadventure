@@ -2,6 +2,7 @@ import { Subscription } from "rxjs";
 import { Readable } from "svelte/store";
 import { SpaceInterface } from "../SpaceInterface";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { SimplePeerConnectionInterface, ICommunicationState, StreamableSubjects } from "./SpacePeerManager";
 import { LivekitState } from "./LivekitState";
 import { WebRTCState } from "./WebRTCState";
@@ -45,4 +46,12 @@ export class DefaultCommunicationState implements ICommunicationState {
     }
 
     dispatchStream(mediaStream: MediaStream): void {}
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return undefined;
+    }
+
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return undefined;
+    }
 }

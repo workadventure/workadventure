@@ -115,6 +115,10 @@ export class LivekitConnection {
         }
     }
 
+    getStreamableForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitRoom?.getVideoForUser(spaceUserId);
+    }
+
     destroy() {
         if (!this.livekitRoom) {
             return;

@@ -3,6 +3,7 @@ import { Readable } from "svelte/store";
 import { CommunicationType } from "../../Livekit/LivekitConnection";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { SpaceInterface } from "../SpaceInterface";
+import { Streamable } from "../../Stores/StreamableCollectionStore";
 import { LivekitState } from "./LivekitState";
 import {
     SimplePeerConnectionInterface,
@@ -91,5 +92,13 @@ export class WebRTCState implements ICommunicationState {
 
     blockRemoteUser(userId: string): void {
         this._peer.blockedFromRemotePlayer(userId);
+    }
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this._peer.getVideoForUser(spaceUserId);
+    }
+
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this._peer.getScreenSharingForUser(spaceUserId);
     }
 }

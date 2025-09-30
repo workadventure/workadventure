@@ -15,6 +15,8 @@ export interface ICommunicationState {
     completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
     // blockRemoteUser(userId: string): void;
 }
 
@@ -29,6 +31,8 @@ export interface SimplePeerConnectionInterface {
     blockedFromRemotePlayer(userId: string): void;
     destroy(): void;
     dispatchStream(mediaStream: MediaStream): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
 }
 
 export interface PeerFactoryInterface {
@@ -178,5 +182,13 @@ export class SpacePeerManager {
     dispatchStream(mediaStream: MediaStream): void {
         this.currentMediaStream = mediaStream;
         this._communicationState.dispatchStream(mediaStream);
+    }
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getVideoForUser(spaceUserId);
+    }
+
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getScreenSharingForUser(spaceUserId);
     }
 }
