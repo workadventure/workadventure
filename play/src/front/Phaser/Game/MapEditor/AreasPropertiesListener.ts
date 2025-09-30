@@ -1064,7 +1064,6 @@ export class AreasPropertiesListener {
     private async handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): Promise<void> {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            console.log("handleSpeakerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
 
             const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
                 "cameraState",
@@ -1120,7 +1119,7 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
-                console.log("handleListenerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
+
                 const space = await this.scene.spaceRegistry.joinSpace(uniqRoomName, FilterType.LIVE_STREAMING_USERS, [
                     "cameraState",
                     "microphoneState",

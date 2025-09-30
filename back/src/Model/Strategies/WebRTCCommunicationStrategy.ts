@@ -124,7 +124,6 @@ export class WebRTCCommunicationStrategy implements ICommunicationStrategy {
     }
 
     public async addUserToNotify(user: SpaceUser): Promise<void> {
-        console.log("WWWWWWW WebRTCCommunicationStrategy addUserToNotify", user.name);
         const usersInFilter = this._space.getUsersInFilter();
         usersInFilter.forEach((existingUser) => {
             if (this.shouldEstablishConnection(existingUser, user) && existingUser.spaceUserId !== user.spaceUserId) {

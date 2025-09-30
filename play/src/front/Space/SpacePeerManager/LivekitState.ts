@@ -96,7 +96,7 @@ export class LivekitState implements ICommunicationState {
     }
 
     getVideoForUser(spaceUserId: string): Streamable | undefined {
-        return this.livekitConnection.getStreamableForUser(spaceUserId);
+        return this.livekitConnection.getVideoForUser(spaceUserId);
     }
 
     getScreenSharingForUser(spaceUserId: string): Streamable | undefined {

@@ -297,24 +297,6 @@ export class VideoPeer extends Peer implements Streamable {
 
         this.once("finish", this.finishHandler);
 
-        // this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
-        //     if (userUuid === this.userUuid) {
-        //         this.toggleRemoteStream(false);
-        //         this.sendBlockMessage(true);
-        //     }
-        // });
-        // this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userUuid) => {
-        //     if (userUuid === this.userUuid) {
-        //         this.toggleRemoteStream(true);
-        //         this.sendBlockMessage(false);
-        //     }
-        // });
-
-        //TODO ; gérer le blacklisting directly in space
-        // if (blackListManager.isBlackListed(this.userUuid)) {
-        //     this.sendBlockMessage(true);
-        // }
-
         this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
             if (streamValue.type === "success" && streamValue.stream) {
                 this.addStream(streamValue.stream);

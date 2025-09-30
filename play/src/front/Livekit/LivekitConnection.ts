@@ -116,8 +116,11 @@ export class LivekitConnection {
         }
     }
 
-    getStreamableForUser(spaceUserId: string): Streamable | undefined {
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
         return this.livekitRoom?.getVideoForUser(spaceUserId);
+    }
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this.livekitRoom?.getScreenSharingForUser(spaceUserId);
     }
 
     destroy() {

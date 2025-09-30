@@ -48,7 +48,6 @@ export class WebRTCState extends CommunicationState {
         }
 
         if (this._nextStatePromise) {
-            // this._waitingList.delete(user.spaceUserId);
             const nextState = await this._nextStatePromise;
             await nextState.handleUserDeleted(user);
         }

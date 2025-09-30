@@ -165,10 +165,6 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         spaceUser: SpaceUserExtended,
         uuid: string
     ): VideoPeer | null {
-        //TODO : gerer le black list dans le space
-        // const uuid = spaceUser.uuid;
-        // if (this._blackListManager.isBlackListed(uuid)) return null;
-
         const peerConnection = this.videoPeers.get(user.userId);
         if (peerConnection && peerConnection instanceof VideoPeer) {
             if (peerConnection.destroyed) {
