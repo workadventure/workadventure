@@ -748,15 +748,28 @@ jobs:
             gatewayNamespace: "default"
           
           play:
+            ingress:
+              enabled: false
             secretEnv:
               ROOM_API_SECRET_KEY: \"password\"
           mapstorage:
+            ingress:
+              enabled: false
             env:
               AUTHENTICATION_USER: \"john.doe\"
             secretEnv:
               AUTHENTICATION_PASSWORD: \"password\"
           maps:
             enabled: true
+            ingress:
+              enabled: false
+          icon:
+            ingress:
+              enabled: false
+          uploader:
+            ingress:
+              enabled: false
+
           commonEnv:
             ENABLE_MAP_EDITOR: true
             KLAXOON_ENABLED: true
