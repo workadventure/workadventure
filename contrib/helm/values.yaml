@@ -679,6 +679,8 @@ ingress:
 
 redis:
   architecture: standalone
+  image:
+    repository: bitnamilegacy/redis
 
   auth:
     enabled: false
