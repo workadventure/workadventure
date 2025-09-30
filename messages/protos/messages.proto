@@ -19,6 +19,7 @@ enum AvailabilityStatus {
   DO_NOT_DISTURB = 9;
   BACK_IN_A_MOMENT = 10;
   LIVEKIT = 11;
+  LISTENER = 12;
 }
 
 message PositionMessage {

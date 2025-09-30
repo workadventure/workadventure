@@ -34,7 +34,14 @@ import { chatVisibilityStore, chatZoneLiveStore } from "../../../Stores/ChatStor
  * @DEPRECATED - This is the old way to show trigger message
  import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
  */
-import { inJitsiStore, inLivekitStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import {
+    inJitsiStore,
+    inLivekitStore,
+    inOpenWebsite,
+    isListenerStore,
+    isSpeakerStore,
+    silentStore,
+} from "../../../Stores/MediaStore";
 import { currentLiveStreamingSpaceStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
@@ -1121,6 +1128,7 @@ export class AreasPropertiesListener {
                 ]);
 
                 currentLiveStreamingSpaceStore.set(space);
+                isListenerStore.set(true);
                 if (property.chatEnabled) {
                     //TODO : remove this or replace by matrix room
                     //this.handleJoinMucRoom(uniqRoomName, "live");
@@ -1146,6 +1154,7 @@ export class AreasPropertiesListener {
                     console.error("Error while leaving space", e);
                     Sentry.captureException(e);
                 });
+                isListenerStore.set(false);
                 if (property.chatEnabled) {
                     //this.handleLeaveMucRoom(uniqRoomName);
                 }

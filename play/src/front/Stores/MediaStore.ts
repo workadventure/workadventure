@@ -300,6 +300,7 @@ export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 export const inLivekitStore = writable(false);
+export const isListenerStore = writable(false);
 
 export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
@@ -323,6 +324,7 @@ export const availabilityStatusStore = derived(
         isSpeakerStore,
         requestedStatusStore,
         inLivekitStore,
+        isListenerStore,
     ],
     ([
         $inJitsiStore,
@@ -333,6 +335,7 @@ export const availabilityStatusStore = derived(
         $isSpeakerStore,
         $requestedStatusStore,
         $inLivekitStore,
+        $isListenerStore,
     ]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
@@ -342,6 +345,7 @@ export const availabilityStatusStore = derived(
         if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
+        if ($isListenerStore) return AvailabilityStatus.LISTENER;
 
         return AvailabilityStatus.ONLINE;
     },
