@@ -115,6 +115,16 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
+        this._isMuted.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
+        );
+        this._hasVideo.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
+        );
         this.updateLivekitVideoStreamStore();
     }
 
