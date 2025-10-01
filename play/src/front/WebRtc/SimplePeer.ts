@@ -106,7 +106,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
                     webRtcPassword: webRtcScreenSharingSignalToClientMessage.webRtcPassword,
                 };
 
-                this.receiveWebrtcScreenSharingSignal(webRtcSignalReceivedMessage);
+                this.receiveWebrtcScreenSharingSignal(webRtcSignalReceivedMessage, message.sender);
             })
         );
 
@@ -225,6 +225,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
      */
     private createPeerScreenSharingConnection(
         user: UserSimplePeerInterface,
+        spaceUserId: string,
         stream: MediaStream | undefined
     ): ScreenSharingPeer | null {
         //const peerScreenSharingConnection = this.space.screenSharingPeerStore.get(user.userId);
@@ -247,20 +248,12 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             user.webRtcPassword = this._lastWebrtcPassword;
         }
 
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(user.userId);
-        if (!spaceUser) {
-            console.error(
-                "While creating peer screen sharing connection, cannot find space user with ID " + user.userId
-            );
-            return null;
-        }
-
         const peer = new ScreenSharingPeer(
             user,
             user.initiator ? user.initiator : false,
             stream,
             this._space,
-            spaceUser,
+            spaceUserId,
             false,
             this._blockedUsersStore
         );
@@ -396,16 +389,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         }
     }
 
-    private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(data.userId);
-
-        if (!spaceUser) {
-            console.error(
-                "While receiving webrtc screen sharing signal, cannot find space user with ID " + data.userId
-            );
-            return;
-        }
-
+    private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface, spaceUser: SpaceUserExtended) {
         const streamResult = get(this._screenSharingLocalStreamStore);
         let stream: MediaStream | undefined = undefined;
         if (streamResult.type === "success" && streamResult.stream !== undefined) {
@@ -415,7 +399,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         try {
             //if offer type, create peer connection
             if (data.signal.type === "offer") {
-                this.createPeerScreenSharingConnection(data, stream);
+                this.createPeerScreenSharingConnection(data, spaceUser.spaceUserId, stream);
             }
             const peer = this.screenSharePeers.get(data.userId);
             if (peer !== undefined) {
@@ -432,7 +416,7 @@ export class SimplePeer implements SimplePeerConnectionInterface {
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
             //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be removed when user left circle discussion
-            this.receiveWebrtcScreenSharingSignal(data);
+            this.receiveWebrtcScreenSharingSignal(data, spaceUser);
         }
     }
 
@@ -471,12 +455,8 @@ export class SimplePeer implements SimplePeerConnectionInterface {
     }
 
     private sendLocalScreenSharingStreamToUser(userId: string, localScreenCapture: MediaStream): void {
-        const spaceUser = this._space.getSpaceUserBySpaceUserId(userId);
-        if (!spaceUser) {
-            console.error("While sending local screen sharing, cannot find user with ID " + userId);
-            return;
-        }
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
+
         if (this.screenSharePeers.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId, localScreenCapture);
             return;
@@ -486,8 +466,10 @@ export class SimplePeer implements SimplePeerConnectionInterface {
             userId,
             initiator: true,
         };
+
         const PeerConnectionScreenSharing = this.createPeerScreenSharingConnection(
             screenSharingUser,
+            this._space.mySpaceUserId,
             localScreenCapture
         );
 

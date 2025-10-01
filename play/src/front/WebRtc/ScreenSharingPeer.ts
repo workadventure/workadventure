@@ -57,7 +57,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         initiator: boolean,
         stream: MediaStream | undefined,
         private space: SpaceInterface,
-        private spaceUser: SpaceUserExtended,
+        private _spaceUserId: string,
         isLocalScreenSharing: boolean,
         private _blockedUsersStore: Readable<Set<string>>
     ) {
@@ -83,12 +83,12 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + _spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
 
         this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) =>
-            $blockedUsersStore.has(this.spaceUser.spaceUserId)
+            $blockedUsersStore.has(this._spaceUserId)
         );
 
         // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
@@ -147,10 +147,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            const videoBox = this.space.getScreenSharingPeerVideoBox(this.spaceUser.spaceUserId);
+            const videoBox = this.space.getScreenSharingPeerVideoBox(this._spaceUserId);
 
             if (!videoBox) {
-                console.error("Video box not found for user", this.spaceUser.spaceUserId);
+                console.error("Video box not found for user", this._spaceUserId);
                 return;
             }
 
@@ -170,7 +170,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
-            console.error(`screen sharing error => ${this.spaceUser.spaceUserId} => ${err.code}`, err);
+            console.error(`screen sharing error => ${this._spaceUserId} => ${err.code}`, err);
             this._statusStore.set("error");
 
             // Firefox-specific error handling for screen sharing
@@ -191,7 +191,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 clearTimeout(this.connectTimeout);
             }
             this._connected = true;
-            customWebRTCLogger.info(`connect => ${this.spaceUser.spaceUserId}`);
+            customWebRTCLogger.info(`connect => ${this._spaceUserId}`);
             this._statusStore.set("connected");
 
             // Set the max bitrate for the video stream
@@ -231,7 +231,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcScreenSharingSignal => ${this.spaceUser.spaceUserId}`, e);
+            console.error(`sendWebrtcScreenSharingSignal => ${this._spaceUserId}`, e);
         }
     }
 
@@ -316,7 +316,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public getExtendedSpaceUser(): SpaceUserExtended | undefined {
-        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
+        return this.space.getSpaceUserBySpaceUserId(this._spaceUserId);
     }
     get media(): WebRtcStreamable {
         return {
@@ -339,7 +339,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.spaceUser.name);
+        return writable(this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.name ?? "Unknown");
     }
 
     get showVoiceIndicator(): Readable<boolean> {
@@ -351,7 +351,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get spaceUserId(): string | undefined {
-        return this.spaceUser.spaceUserId;
+        return this._spaceUserId;
     }
 
     private async setMaxBitrate() {
