@@ -12,6 +12,7 @@
     import eraserSvg from "../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
     import cardsPng from "../images/applications/icon_cards.svg";
+    import tldrawsJpeg from "../images/applications/icon_tldraw.jpeg";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -198,6 +199,21 @@
                             disabled={!connectionManager.cardsToolActivated}
                         >
                             <img draggable="false" src={cardsPng} style="padding: 2px" alt="Excalidraw" />
+                        </button>
+                    </div>
+                {/if}
+                {#if connectionManager.tldrawToolActivated}
+                    <div class="transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.tldrawProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://www.tldraw.com`, "_blanck");
+                                openedMenuStore.close("appMenu");
+                            }}
+                            id="button-app-tldraw"
+                            disabled={!connectionManager.tldrawToolActivated}
+                        >
+                            <img draggable="false" src={tldrawsJpeg} style="padding: 2px" alt="tldraw" />
                         </button>
                     </div>
                 {/if}

@@ -381,6 +381,13 @@
                     onAddProperty("openWebsite", "excalidraw");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="tldraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "tldraw");
+                }}
+            />
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
