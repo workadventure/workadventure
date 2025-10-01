@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import audioSvg from "../../images/audio-white.svg";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
@@ -43,10 +43,6 @@
         },
         []
     );
-
-    onMount(() => {
-        console.log("subProperty", subProperty);
-    });
 </script>
 
 {#if property === "personalAreaPropertyData"}

@@ -583,8 +583,6 @@ class ConnectionManager {
 
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
-                    console.log("app", app);
-                    console.log("connect.room.applications", connect.room.applications);
                     if (
                         defautlNativeIntegrationAppName.KLAXOON === app.name ||
                         defautlNativeIntegrationAppName.YOUTUBE === app.name ||

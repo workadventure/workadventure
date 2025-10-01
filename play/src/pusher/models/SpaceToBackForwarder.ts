@@ -186,7 +186,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     },
                     (error: unknown) => {
                         if (error) {
-                            console.log("Error while forwarding message to space back", error);
+                            console.error("Error while forwarding message to space back", error);
                             Sentry.captureException(error);
                         }
                     }
