@@ -31,8 +31,6 @@ export class DefaultCommunicationState implements ICommunicationState {
         );
     }
 
-    completeSwitch() {}
-
     destroy() {
         this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());
     }

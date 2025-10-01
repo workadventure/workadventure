@@ -86,21 +86,6 @@ export class LivekitConnection {
         );
     }
 
-    async joinRoom(): Promise<void> {
-        if (!this.livekitRoom) {
-            console.error("LivekitRoom not found");
-            throw new Error("LivekitRoom not found");
-        }
-
-        try {
-            await this.livekitRoom?.joinRoom();
-        } catch (err) {
-            console.error("Error joining Livekit room:", err);
-            Sentry.captureException(err);
-            throw err;
-        }
-    }
-
     async dispatchStream(mediaStream: MediaStream): Promise<void> {
         if (!this.livekitRoom) {
             console.error("LivekitRoom not found for dispatchStream");

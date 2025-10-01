@@ -69,10 +69,6 @@ export class WebRTCState implements ICommunicationState {
         );
     }
 
-    completeSwitch() {
-        //this._peer = this.peerFactory.create(this.space);
-    }
-
     destroy() {
         this._peer.destroy();
         this._rxJsUnsubscribers.forEach((unsubscriber) => unsubscriber.unsubscribe());

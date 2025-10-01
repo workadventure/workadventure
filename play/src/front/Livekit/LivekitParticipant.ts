@@ -126,6 +126,13 @@ export class LiveKitParticipant {
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
         this.updateLivekitVideoStreamStore();
+
+        for (const publication of this.participant.getTrackPublications()) {
+            const track = publication.track;
+            if (track && !publication.isLocal) {
+                this.handleTrackSubscribed(track as RemoteTrack, publication as RemoteTrackPublication);
+            }
+        }
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {

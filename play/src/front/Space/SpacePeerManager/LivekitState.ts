@@ -66,13 +66,6 @@ export class LivekitState implements ICommunicationState {
         );
     }
 
-    completeSwitch() {
-        this.livekitConnection.joinRoom().catch((err) => {
-            console.error("An error occurred in executeSwitchMessage", err);
-            Sentry.captureException(err);
-        });
-    }
-
     destroy() {
         this.livekitConnection.destroy();
         for (const subscription of this.rxJsUnsubscribers) {

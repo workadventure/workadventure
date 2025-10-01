@@ -12,7 +12,6 @@ import { DefaultCommunicationState } from "./DefaultCommunicationState";
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
-    completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
     getVideoForUser(spaceUserId: string): Streamable | undefined;
@@ -144,7 +143,6 @@ export class SpacePeerManager {
             this.desynchronizeMediaState();
         }
 
-        state.completeSwitch();
         this._communicationState = state;
         if (this.currentMediaStream) {
             // If we have a current media stream, we need to dispatch it to the new state
