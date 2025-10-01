@@ -15,6 +15,7 @@ import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
 import { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { decrementLivekitConnectionsCount, incrementLivekitConnectionsCount } from "../Utils/E2EHooks";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 export class LiveKitParticipant {
     private _isSpeakingStore: Writable<boolean>;
@@ -94,6 +95,7 @@ export class LiveKitParticipant {
         private _blockedUsersStore: Readable<Set<string>>,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
+        console.log(localUserStore.getName(), " : Create Livekit Participant : ", spaceUser.name);
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
         this.boundHandleTrackUnsubscribed = this.handleTrackUnsubscribed.bind(this);
