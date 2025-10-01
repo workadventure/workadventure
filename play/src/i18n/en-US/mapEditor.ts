@@ -212,6 +212,12 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
         },
+        tldrawProperties: {
+            label: "Open tldraw",
+            description: "A Online whiteboard / infinite canvas SDK.",
+            error: "Please enter a valid tldraw URL",
+            disabled: "tldraw integration is disabled.",
+        },
         matrixProperties: {
             label: "Link Matrix room",
             description: "Link Matrix room to your area",

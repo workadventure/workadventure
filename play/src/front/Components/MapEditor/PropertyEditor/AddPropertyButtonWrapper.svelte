@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import audioSvg from "../../images/audio-white.svg";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
@@ -13,6 +13,7 @@
     import workerWhiteSvg from "../../images/applications/worker_white.svg";
     import teamWhiteSvg from "../../images/applications/team_white.svg";
     import cardsPng from "../../images/applications/icon_cards.svg";
+    import tldrawsJpeg from "../../images/applications/icon_tldraw.jpeg";
     import messageSvg from "../../images/applications/icon_message.svg";
     import infoBulleSvg from "../../images/icon_infobulle.svg";
     import LL from "../../../../i18n/i18n-svelte";
@@ -42,6 +43,10 @@
         },
         []
     );
+
+    onMount(() => {
+        console.log("subProperty", subProperty);
+    });
 </script>
 
 {#if property === "personalAreaPropertyData"}
@@ -353,6 +358,22 @@
             dispatch("click", event);
         }}
         testId="openWebsiteCards"
+    />
+{/if}
+
+{#if property === "openWebsite" && subProperty === "tldraw"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.tldrawProperties.label()}
+        descriptionText={connectionManager.tldrawToolActivated
+            ? $LL.mapEditor.properties.tldrawProperties.description()
+            : $LL.mapEditor.properties.tldrawProperties.disabled()}
+        img={tldrawsJpeg}
+        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        disabled={!connectionManager.tldrawToolActivated}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+        testId="openWebsiteTldraw"
     />
 {/if}
 

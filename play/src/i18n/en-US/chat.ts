@@ -140,6 +140,10 @@ const chat: BaseTranslation = {
                 title: "Cards",
                 description: "Send a card in the chat!",
             },
+            tldraw: {
+                title: "Tldraw",
+                description: "Send tldraw online whiteboard.",
+            },
             weblink: {
                 error: "Please enter a valid URL",
             },

@@ -30,6 +30,7 @@ import {
     GOOGLE_SLIDES_ENABLED,
     KLAXOON_CLIENT_ID,
     KLAXOON_ENABLED,
+    TLDRAW_ENABLED,
     YOUTUBE_ENABLED,
 } from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
@@ -61,6 +62,7 @@ export const enum defautlNativeIntegrationAppName {
     ERASER = "Eraser",
     EXCALIDRAW = "Excalidraw",
     CARDS = "Cards",
+    TLDRAW = "tldraw",
 }
 
 class ConnectionManager {
@@ -85,6 +87,7 @@ class ConnectionManager {
     private _excalidrawToolActivated: boolean | undefined;
     private _excalidrawToolDomains: string[] | undefined;
     private _cardsToolActivated: boolean | undefined;
+    private _tldrawToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -118,6 +121,7 @@ class ConnectionManager {
         this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
         this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
         this.cardsToolActivated = CARDS_ENABLED;
+        this.tldrawToolActivated = TLDRAW_ENABLED;
     }
 
     /**
@@ -572,8 +576,15 @@ class ConnectionManager {
                 );
                 this.cardsToolActivated = CardsApp?.enabled ?? CARDS_ENABLED;
 
+                const TldrawApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.TLDRAW
+                );
+                this.tldrawToolActivated = TldrawApp?.enabled ?? TLDRAW_ENABLED;
+
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
+                    console.log("app", app);
+                    console.log("connect.room.applications", connect.room.applications);
                     if (
                         defautlNativeIntegrationAppName.KLAXOON === app.name ||
                         defautlNativeIntegrationAppName.YOUTUBE === app.name ||
@@ -583,7 +594,8 @@ class ConnectionManager {
                         defautlNativeIntegrationAppName.GOOGLE_SLIDES === app.name ||
                         defautlNativeIntegrationAppName.ERASER === app.name ||
                         defautlNativeIntegrationAppName.EXCALIDRAW === app.name ||
-                        defautlNativeIntegrationAppName.CARDS === app.name
+                        defautlNativeIntegrationAppName.CARDS === app.name ||
+                        defautlNativeIntegrationAppName.TLDRAW === app.name
                     ) {
                         continue;
                     }
@@ -884,6 +896,13 @@ class ConnectionManager {
     }
     set cardsToolActivated(activated: boolean | undefined) {
         this._cardsToolActivated = activated;
+    }
+
+    get tldrawToolActivated(): boolean {
+        return this._tldrawToolActivated ?? false;
+    }
+    set tldrawToolActivated(activated: boolean | undefined) {
+        this._tldrawToolActivated = activated;
     }
 
     get applications(): ApplicationDefinitionInterface[] {

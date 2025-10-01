@@ -27,6 +27,7 @@
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import cardPng from "../../images/applications/icon_cards.svg";
+    import tldrawJpeg from "../../images/applications/icon_tldraw.jpeg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
@@ -621,6 +622,9 @@
         if (property.application === "excalidraw") {
             window.open("https://excalidraw.com/", "_blank");
         }
+        if (property.application === "tldraw") {
+            window.open("https://tldraw.com/", "_blank");
+        }
 
         analyticsClient.openApplicationWithoutPicker(property.application);
     }
@@ -716,6 +720,9 @@
                 draggable="false"
             />
             {$LL.mapEditor.properties.cardsProperties.label()}
+        {:else if property.application === "tldraw"}
+            <img class="w-6 me-1" src={tldrawJpeg} alt={$LL.mapEditor.properties.tldrawProperties.description()} />
+            {$LL.mapEditor.properties.tldrawProperties.label()}
         {:else if property.application === "website"}
             <img
                 class="w-6 me-1"
@@ -790,7 +797,7 @@
                             leftPosition="true"
                         />
                     </div>
-                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw"}
+                {:else if property.application === "cards" || property.application === "eraser" || property.application === "excalidraw" || property.application === "tldraw"}
                     <div class="flex flex-row items-center justify-center">
                         <img
                             class="w-6 ms-4 items-center cursor-pointer"

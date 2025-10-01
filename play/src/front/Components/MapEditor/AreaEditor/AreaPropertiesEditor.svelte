@@ -129,6 +129,8 @@
                     roomName: "",
                 };
             case "openWebsite":
+                let newTab = false;
+                let forceNewTab = false;
                 // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
@@ -156,6 +158,8 @@
                         break;
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
+                        newTab = true;
+                        forceNewTab = true;
                         break;
                     case "excalidraw":
                         placeholder = "https://excalidraw.workadventu.re/";
@@ -163,6 +167,9 @@
                     case "cards":
                         placeholder =
                             "https://member.workadventu.re/cards?tenant=<your tenant from cards>&learning=<your leaning from cards>";
+                        break;
+                    case "tldraw":
+                        placeholder = "https://tldraw.com/";
                         break;
                     default:
                         placeholder = "https://workadventu.re";
@@ -173,12 +180,12 @@
                     type,
                     link: "",
                     closable: true,
-                    newTab: false,
+                    newTab: newTab,
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
                     allowAPI: false,
-                    forceNewTab: false,
+                    forceNewTab: forceNewTab,
                     policy,
                     width: 50,
                     trigger: ON_ACTION_TRIGGER_ENTER,
@@ -627,6 +634,13 @@
                 subProperty="cards"
                 on:click={() => {
                     onAddProperty("openWebsite", "cards");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="tldraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "tldraw");
                 }}
             />
         </div>
