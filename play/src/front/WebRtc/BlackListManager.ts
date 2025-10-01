@@ -1,12 +1,16 @@
 import { Subject } from "rxjs";
 
-class BlackListManager {
+export class BlackListManager {
     private list: Set<string> = new Set();
     public onBlockStream: Subject<string> = new Subject();
     public onUnBlockStream: Subject<string> = new Subject();
 
     isBlackListed(userUuid: string): boolean {
         return this.list.has(userUuid);
+    }
+
+    getBlackListedUsers(): Set<string> {
+        return this.list;
     }
 
     blackList(userUuid: string): void {

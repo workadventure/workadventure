@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { get, Readable, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SignalData } from "simple-peer";
 import { z } from "zod";
@@ -39,6 +39,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     private readonly _hasAudio = writable<boolean>(false);
     private readonly _hasVideo: Readable<boolean>;
     private readonly _isMuted: Readable<boolean>;
+    private readonly _isBlocked: Readable<boolean>;
     // No volume in a screen sharing
     public readonly volumeStore: Readable<number[] | undefined> | undefined = undefined;
     private readonly _pictureStore: Writable<string | undefined> = writable<string | undefined>(undefined);
@@ -56,8 +57,9 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         initiator: boolean,
         stream: MediaStream | undefined,
         private space: SpaceInterface,
-        private spaceUser: SpaceUserExtended,
-        isLocalScreenSharing: boolean
+        private _spaceUserId: string,
+        isLocalScreenSharing: boolean,
+        private _blockedUsersStore: Readable<Set<string>>
     ) {
         const bandwidth = get(screenShareBandwidthStore);
         const firefoxBrowser = isFirefox();
@@ -81,9 +83,13 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         super(peerConfig);
 
-        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + spaceUser.spaceUserId;
+        this.uniqueId = isLocalScreenSharing ? "localScreenSharingStream" : "screensharing_" + _spaceUserId;
 
         this._streamStore = writable<MediaStream | undefined>(undefined);
+
+        this._isBlocked = derived(this._blockedUsersStore, ($blockedUsersStore) =>
+            $blockedUsersStore.has(this._spaceUserId)
+        );
 
         // Event listeners are valid for the lifetime of the object and will be garbage collected when the object is destroyed
         /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
@@ -141,10 +147,10 @@ export class ScreenSharingPeer extends Peer implements Streamable {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            const videoBox = this.space.getScreenSharingPeerVideoBox(this.spaceUser.spaceUserId);
+            const videoBox = this.space.getScreenSharingPeerVideoBox(this._spaceUserId);
 
             if (!videoBox) {
-                console.error("Video box not found for user", this.spaceUser.spaceUserId);
+                console.error("Video box not found for user", this._spaceUserId);
                 return;
             }
 
@@ -164,7 +170,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on("error", (err: any) => {
-            console.error(`screen sharing error => ${this.spaceUser.spaceUserId} => ${err.code}`, err);
+            console.error(`screen sharing error => ${this._spaceUserId} => ${err.code}`, err);
             this._statusStore.set("error");
 
             // Firefox-specific error handling for screen sharing
@@ -185,7 +191,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 clearTimeout(this.connectTimeout);
             }
             this._connected = true;
-            customWebRTCLogger.info(`connect => ${this.spaceUser.spaceUserId}`);
+            customWebRTCLogger.info(`connect => ${this._spaceUserId}`);
             this._statusStore.set("connected");
 
             // Set the max bitrate for the video stream
@@ -225,7 +231,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
                 this.user.userId
             );
         } catch (e) {
-            console.error(`sendWebrtcScreenSharingSignal => ${this.spaceUser.spaceUserId}`, e);
+            console.error(`sendWebrtcScreenSharingSignal => ${this._spaceUserId}`, e);
         }
     }
 
@@ -310,12 +316,13 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     public getExtendedSpaceUser(): SpaceUserExtended | undefined {
-        return this.space.getSpaceUserBySpaceUserId(this.spaceUser.spaceUserId);
+        return this.space.getSpaceUserBySpaceUserId(this._spaceUserId);
     }
     get media(): WebRtcStreamable {
         return {
             type: "webrtc" as const,
             streamStore: this._streamStore,
+            isBlocked: this._isBlocked,
         };
     }
 
@@ -332,7 +339,7 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     }
 
     get name(): Readable<string> {
-        return writable(this.spaceUser.name);
+        return writable(this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.name ?? "Unknown");
     }
 
     get showVoiceIndicator(): Readable<boolean> {
@@ -342,6 +349,11 @@ export class ScreenSharingPeer extends Peer implements Streamable {
     get pictureStore(): Readable<string | undefined> {
         return this._pictureStore;
     }
+
+    get spaceUserId(): string | undefined {
+        return this._spaceUserId;
+    }
+
     private async setMaxBitrate() {
         try {
             // Get the RTCPeerConnection instance

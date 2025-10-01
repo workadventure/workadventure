@@ -12,9 +12,11 @@ import { DefaultCommunicationState } from "./DefaultCommunicationState";
 export interface ICommunicationState {
     getPeer(): SimplePeerConnectionInterface | undefined;
     destroy(): void;
-    completeSwitch(): void;
     shouldSynchronizeMediaState(): boolean;
     dispatchStream(mediaStream: MediaStream): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
+    // blockRemoteUser(userId: string): void;
 }
 
 export interface StreamableSubjects {
@@ -28,13 +30,20 @@ export interface SimplePeerConnectionInterface {
     blockedFromRemotePlayer(userId: string): void;
     destroy(): void;
     dispatchStream(mediaStream: MediaStream): void;
+    getVideoForUser(spaceUserId: string): Streamable | undefined;
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined;
 }
 
 export interface PeerFactoryInterface {
-    create(space: SpaceInterface, streamableSubjects: StreamableSubjects): SimplePeerConnectionInterface;
+    create(
+        space: SpaceInterface,
+        streamableSubjects: StreamableSubjects,
+        blockedUsersStore: Readable<Set<string>>
+    ): SimplePeerConnectionInterface;
 }
 export class SpacePeerManager {
     private unsubscribes: Unsubscriber[] = [];
+
     private _communicationState: ICommunicationState;
 
     private readonly _videoPeerAdded = new Subject<Streamable>();
@@ -58,13 +67,17 @@ export class SpacePeerManager {
 
     constructor(
         private space: SpaceInterface,
+        blockedUsersStore: Readable<Set<string>>,
         private microphoneStateStore: Readable<boolean> = requestedMicrophoneState,
         private cameraStateStore: Readable<boolean> = requestedCameraState,
         private screenSharingStateStore: Readable<boolean> = requestedScreenSharingState
     ) {
-        this._communicationState = new DefaultCommunicationState(this.space, this._streamableSubjects);
+        this._communicationState = new DefaultCommunicationState(
+            this.space,
+            this._streamableSubjects,
+            blockedUsersStore
+        );
     }
-
     private synchronizeMediaState(): void {
         if (this.isMediaStateSynchronized()) return;
 
@@ -109,6 +122,7 @@ export class SpacePeerManager {
         if (this._communicationState) {
             this._communicationState.destroy();
         }
+
         for (const unsubscribe of this.unsubscribes) {
             unsubscribe();
         }
@@ -129,7 +143,6 @@ export class SpacePeerManager {
             this.desynchronizeMediaState();
         }
 
-        state.completeSwitch();
         this._communicationState = state;
         if (this.currentMediaStream) {
             // If we have a current media stream, we need to dispatch it to the new state
@@ -167,5 +180,13 @@ export class SpacePeerManager {
     dispatchStream(mediaStream: MediaStream): void {
         this.currentMediaStream = mediaStream;
         this._communicationState.dispatchStream(mediaStream);
+    }
+
+    getVideoForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getVideoForUser(spaceUserId);
+    }
+
+    getScreenSharingForUser(spaceUserId: string): Streamable | undefined {
+        return this._communicationState.getScreenSharingForUser(spaceUserId);
     }
 }
