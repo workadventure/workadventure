@@ -95,7 +95,6 @@ export class LiveKitParticipant {
         private _blockedUsersStore: Readable<Set<string>>,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
-        console.log(localUserStore.getName(), " : Create Livekit Participant : ", spaceUser.name);
         incrementLivekitConnectionsCount();
         this.boundHandleTrackSubscribed = this.handleTrackSubscribed.bind(this);
         this.boundHandleTrackUnsubscribed = this.handleTrackUnsubscribed.bind(this);
@@ -103,6 +102,17 @@ export class LiveKitParticipant {
         this.boundHandleTrackUnmuted = this.handleTrackUnmuted.bind(this);
         this.boundHandleConnectionQualityChanged = this.handleConnectionQualityChanged.bind(this);
         this.boundHandleIsSpeakingChanged = this.handleIsSpeakingChanged.bind(this);
+
+        this._isMuted.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
+        );
+        this._hasVideo.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
+        );
 
         this.participant.on(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.on(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
@@ -115,16 +125,10 @@ export class LiveKitParticipant {
         this._isSpeakingStore = writable(this.participant.isSpeaking);
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
-        this._isMuted.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
-        );
-        this._hasVideo.set(
-            this.participant
-                .getTrackPublications()
-                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
-        );
+        console.log(localUserStore.getName(), " : Create Livekit Participant : ", spaceUser.name, {
+            isMuted: get(this._isMuted),
+            hasVideo: get(this._hasVideo),
+        });
         this.updateLivekitVideoStreamStore();
     }
 
