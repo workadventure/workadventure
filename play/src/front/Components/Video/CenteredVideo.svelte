@@ -117,19 +117,17 @@
                 <WebRtcVideo
                     {media}
                     {onLoadVideoElement}
-                    style={videoEnabled
-                        ? "width: " +
-                          Math.ceil(videoWidth) +
-                          "px; height: " +
-                          Math.ceil(videoHeight) +
-                          "px; " +
-                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                          (cover
-                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                              : "") +
-                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                        : ""}
-                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    style={"width: " +
+                        Math.ceil(videoWidth) +
+                        "px; height: " +
+                        Math.ceil(videoHeight) +
+                        "px; " +
+                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                        (cover
+                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                            : "") +
+                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                    className="absolute block object-fill"
                     bind:videoWidth={videoStreamWidth}
                     bind:videoHeight={videoStreamHeight}
                     on:noVideo={() => {
@@ -141,26 +139,19 @@
                 />
             {:else if media?.type === "livekit"}
                 <LivekitVideo
-                    {...{
-                        ...{},
-                        /* @ts-ignore Typescript is not clever enough to understand that media has a non-nullable remoteVideoTrack */
-                    }}
-                    {media}
                     remoteVideoTrack={media.remoteVideoTrack}
                     {onLoadVideoElement}
-                    style={videoEnabled
-                        ? "width: " +
-                          Math.ceil(videoWidth) +
-                          "px; height: " +
-                          Math.ceil(videoHeight) +
-                          "px; " +
-                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                          (cover
-                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                              : "") +
-                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                        : ""}
-                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    style={"width: " +
+                        Math.ceil(videoWidth) +
+                        "px; height: " +
+                        Math.ceil(videoHeight) +
+                        "px; " +
+                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                        (cover
+                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                            : "") +
+                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                    className="absolute block object-fill"
                     bind:videoWidth={videoStreamWidth}
                     bind:videoHeight={videoStreamHeight}
                     on:noVideo={() => {
@@ -174,19 +165,17 @@
                 <ScriptingVideo
                     {media}
                     {onLoadVideoElement}
-                    style={videoEnabled
-                        ? "width: " +
-                          Math.ceil(videoWidth) +
-                          "px; height: " +
-                          Math.ceil(videoHeight) +
-                          "px; " +
-                          ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
-                          (cover
-                              ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
-                              : "") +
-                          (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")
-                        : ""}
-                    className={`absolute block object-fill ${videoEnabled ? "" : "h-0 w-0"}`}
+                    style={"width: " +
+                        Math.ceil(videoWidth) +
+                        "px; height: " +
+                        Math.ceil(videoHeight) +
+                        "px; " +
+                        ` top: ${(containerHeight - videoHeight) / 2 - (containerHeight - overlayHeight) / 2}px;` +
+                        (cover
+                            ? ` left: ${(containerWidth - videoWidth) / 2 - (containerWidth - overlayWidth) / 2}px;`
+                            : "") +
+                        (flipX ? "-webkit-transform: scaleX(-1);transform: scaleX(-1);" : "")}
+                    className="absolute block object-fill"
                     bind:videoWidth={videoStreamWidth}
                     bind:videoHeight={videoStreamHeight}
                 />

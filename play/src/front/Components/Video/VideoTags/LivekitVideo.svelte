@@ -2,7 +2,6 @@
     import { createEventDispatcher, onDestroy } from "svelte";
     import { Readable } from "svelte/store";
     import { RemoteVideoTrack } from "livekit-client";
-    import { LivekitStreamable } from "../../../Stores/StreamableCollectionStore";
     import { NoVideoOutputDetector } from "./NoVideoOutputDetector";
 
     export let style: string;
@@ -11,7 +10,6 @@
     export let videoHeight: number;
     export let onLoadVideoElement: (event: Event) => void;
 
-    export let media: LivekitStreamable & { remoteVideoTrack: Readable<RemoteVideoTrack | undefined> };
     export let remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
     let videoElement: HTMLVideoElement;
     let noVideoOutputDetector: NoVideoOutputDetector | undefined;
@@ -24,6 +22,10 @@
     $: {
         if ($remoteVideoTrack) {
             $remoteVideoTrack.attach(videoElement);
+
+            if (noVideoOutputDetector) {
+                noVideoOutputDetector.destroy();
+            }
 
             noVideoOutputDetector = new NoVideoOutputDetector(
                 videoElement,
