@@ -6,6 +6,7 @@
 
     export let streamStore: Readable<MediaStream | undefined>;
     export let outputDeviceId: string | undefined = undefined;
+    export let isBlocked: Readable<boolean>;
 
     const debug = Debug("AudioStream");
 
@@ -106,4 +107,6 @@
     });
 </script>
 
-<audio bind:this={audioElement} autoplay={true} />
+{#if !$isBlocked}
+    <audio bind:this={audioElement} autoplay={true} />
+{/if}

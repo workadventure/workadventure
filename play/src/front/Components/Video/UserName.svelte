@@ -15,9 +15,10 @@
     export let name: string;
     export let position = "";
     export let grayscale = false;
+    export let isBlocked = false;
 </script>
 
-{#if isCameraDisabled}
+{#if isCameraDisabled || isBlocked}
     <div class="{position} z-30 responsive-dimension">
         <div class="flex justify-between rounded bg-transparent">
             <div class="relative px-2 py-1 text-white text-sm bold rounded text-nowrap flex flex-col items-center">

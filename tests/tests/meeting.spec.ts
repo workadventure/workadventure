@@ -69,7 +69,7 @@ test.describe('Meeting actions test @nomobile @nowebkit', () => {
         // Check if the user has been muted
         await expect(page.locator('#cameras-container .camera-box .video-media-box', {
             hasText: "Bob",
-        }).locator('video')).toHaveClass(/w-0/);
+        }).locator('video')).toHaveCount(0);
 
 
 

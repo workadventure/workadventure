@@ -7,9 +7,8 @@ import {
     Track,
     ParticipantEvent,
     RemoteVideoTrack,
-    RemoteAudioTrack,
 } from "livekit-client";
-import { derived, get, Writable, writable } from "svelte/store";
+import { derived, get, Readable, Writable, writable } from "svelte/store";
 import { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { LivekitStreamable, Streamable } from "../Stores/StreamableCollectionStore";
@@ -23,24 +22,7 @@ export class LiveKitParticipant {
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _actualVideo: Streamable | undefined;
     private _actualScreenShare: Streamable | undefined;
-    private _streamStore = derived(
-        [this._videoStreamStore, this._audioStreamStore],
-        ([$videoStreamStore, $audioStreamStore]) => {
-            const tracks = [];
-            if ($videoStreamStore) {
-                tracks.push(...$videoStreamStore.getTracks());
-            }
-            if ($audioStreamStore) {
-                tracks.push(...$audioStreamStore.getTracks());
-            }
 
-            if (tracks.length === 0) {
-                return undefined;
-            }
-
-            return new MediaStream(tracks);
-        }
-    );
     private _videoScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
         undefined
     );
@@ -72,10 +54,12 @@ export class LiveKitParticipant {
     private _hasVideo = writable<boolean>(false);
     private _isMuted = writable<boolean>(true);
     private _spaceUser: SpaceUserExtended;
-    private _videoRemoteTrack: RemoteVideoTrack | undefined;
-    private _audioRemoteTrack: RemoteAudioTrack | undefined;
-    private _screenShareRemoteTrack: RemoteVideoTrack | undefined;
-    private _screenShareAudioRemoteTrack: RemoteAudioTrack | undefined;
+    private _videoRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
+        undefined
+    );
+    private _screenShareRemoteTrack: Writable<RemoteVideoTrack | undefined> = writable<RemoteVideoTrack | undefined>(
+        undefined
+    );
     private _isActiveSpeaker = writable<boolean>(false);
     public lastSpeakTimestamp?: number;
 
@@ -91,6 +75,7 @@ export class LiveKitParticipant {
         private space: SpaceInterface,
         private spaceUser: SpaceUserExtended,
         private _streamableSubjects: StreamableSubjects,
+        private _blockedUsersStore: Readable<Set<string>>,
         private highlightedEmbedScreenStore = highlightedEmbedScreen
     ) {
         incrementLivekitConnectionsCount();
@@ -100,6 +85,17 @@ export class LiveKitParticipant {
         this.boundHandleTrackUnmuted = this.handleTrackUnmuted.bind(this);
         this.boundHandleConnectionQualityChanged = this.handleConnectionQualityChanged.bind(this);
         this.boundHandleIsSpeakingChanged = this.handleIsSpeakingChanged.bind(this);
+
+        this._isMuted.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Microphone && publication.isMuted)
+        );
+        this._hasVideo.set(
+            this.participant
+                .getTrackPublications()
+                .some((publication) => publication.source === Track.Source.Camera && !publication.isMuted)
+        );
 
         this.participant.on(ParticipantEvent.TrackSubscribed, this.boundHandleTrackSubscribed);
         this.participant.on(ParticipantEvent.TrackUnsubscribed, this.boundHandleTrackUnsubscribed);
@@ -113,6 +109,13 @@ export class LiveKitParticipant {
         this._connectionQualityStore = writable(this.participant.connectionQuality);
         this._nameStore = writable(this.participant.name);
         this.updateLivekitVideoStreamStore();
+
+        for (const publication of this.participant.getTrackPublications()) {
+            const track = publication.track;
+            if (track && !publication.isLocal) {
+                this.handleTrackSubscribed(track as RemoteTrack, publication as RemoteTrackPublication);
+            }
+        }
     }
 
     private handleTrackSubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
@@ -120,36 +123,25 @@ export class LiveKitParticipant {
             this._videoStreamStore.set(track.mediaStream);
             this._hasVideo.set(!track.isMuted);
 
-            this._videoRemoteTrack = track as RemoteVideoTrack;
-
-            this.updateLivekitVideoStreamStore();
-        } else if (publication.source === Track.Source.Microphone) {
-            this._audioStreamStore.set(track.mediaStream);
-            this._isMuted.set(track.isMuted);
-
-            this._audioRemoteTrack = track as RemoteAudioTrack;
+            this._videoRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitVideoStreamStore();
         } else if (publication.source === Track.Source.ScreenShare) {
             this._videoScreenShareStreamStore.set(track.mediaStream);
 
-            this._screenShareRemoteTrack = track as RemoteVideoTrack;
+            this._screenShareRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitScreenShareStreamStore();
-        } else if (publication.source === Track.Source.ScreenShareAudio) {
-            this._audioScreenShareStreamStore.set(track.mediaStream);
-
-            this._screenShareAudioRemoteTrack = track as RemoteAudioTrack;
-
-            this.updateLivekitScreenShareStreamStore();
+        } else if (publication.source === Track.Source.Microphone) {
+            this._audioStreamStore.set(track.mediaStream);
         }
     }
 
     private handleTrackUnsubscribed(track: RemoteTrack, publication: RemoteTrackPublication) {
         if (publication.source === Track.Source.Camera) {
             // this.space.livekitVideoStreamStore.delete(this._spaceUser.spaceUserId);
-            if (this._videoRemoteTrack === track) {
-                this._videoRemoteTrack = undefined;
+            if (get(this._videoRemoteTrack) === track) {
+                this._videoRemoteTrack.set(undefined);
             }
 
             if (this._actualVideo) {
@@ -157,25 +149,15 @@ export class LiveKitParticipant {
             }
         } else if (publication.source === Track.Source.ScreenShare) {
             // this.space.livekitScreenShareStreamStore.delete(this._spaceUser.spaceUserId);
-            if (this._screenShareRemoteTrack === track) {
-                this._screenShareRemoteTrack = undefined;
+            if (get(this._screenShareRemoteTrack) === track) {
+                this._screenShareRemoteTrack.set(undefined);
             }
 
             if (this._actualScreenShare) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
             }
         } else if (publication.source === Track.Source.Microphone) {
-            // this.space.livekitAudioStreamStore.delete(this._spaceUser.spaceUserId);
-            if (this._audioRemoteTrack === track) {
-                this._audioRemoteTrack = undefined;
-            }
-
-            // TODO: see what the this.space.allVideoStreamStore is about and if we need to remove the audio stream
-        } else if (publication.source === Track.Source.ScreenShareAudio) {
-            // this.space.livekitScreenShareAudioStreamStore.delete(this._spaceUser.spaceUserId);
-            if (this._screenShareAudioRemoteTrack === track) {
-                this._screenShareAudioRemoteTrack = undefined;
-            }
+            this._audioStreamStore.set(undefined);
         }
     }
 
@@ -236,7 +218,7 @@ export class LiveKitParticipant {
             hasVideo: this._hasVideo,
             isMuted: this._isMuted,
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => this._spaceUser,
+            spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
             showVoiceIndicator: this._isSpeakingStore,
             flipX: false,
@@ -250,6 +232,9 @@ export class LiveKitParticipant {
                 //remoteAudioTrack: this._audioRemoteTrack,
                 // Important note: the stream store only contains the audio track:
                 streamStore: this._audioStreamStore,
+                isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             once(event, callback) {
@@ -265,7 +250,7 @@ export class LiveKitParticipant {
             hasVideo: writable(true),
             isMuted: writable(false),
             statusStore: writable("connected"),
-            getExtendedSpaceUser: () => this._spaceUser,
+            spaceUserId: this._spaceUser.spaceUserId,
             name: this._nameStore,
             showVoiceIndicator: writable(false),
             flipX: false,
@@ -279,6 +264,9 @@ export class LiveKitParticipant {
                 //remoteAudioTrack: this._screenShareAudioRemoteTrack,
                 // Important note: the stream store only contains the audio track:
                 streamStore: this._audioScreenShareStreamStore,
+                isBlocked: derived(this._blockedUsersStore, ($blockedUsersStore) =>
+                    $blockedUsersStore.has(this._spaceUser.spaceUserId)
+                ),
             } as LivekitStreamable,
             volumeStore: writable(undefined),
             once(event, callback) {
@@ -292,6 +280,14 @@ export class LiveKitParticipant {
             this.lastSpeakTimestamp = Date.now();
         }
         this._isActiveSpeaker.set(isActiveSpeaker);
+    }
+
+    public getStreamable(): Streamable {
+        return this.getVideoStream();
+    }
+
+    public getScreenSharingStreamable(): Streamable {
+        return this.getScreenShareStream();
     }
 
     public destroy() {

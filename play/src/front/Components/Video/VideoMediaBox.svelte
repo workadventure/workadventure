@@ -43,6 +43,7 @@
     $: statusStore = streamable?.statusStore;
     $: volumeStore = streamable?.volumeStore;
     $: showVoiceIndicatorStore = streamable?.showVoiceIndicator;
+    $: isBlockedStore = streamable?.media?.isBlocked;
 
     $: showVoiceIndicator = showVoiceIndicatorStore ? $showVoiceIndicatorStore : false;
 
@@ -174,14 +175,17 @@
                 isTalking={showVoiceIndicator}
                 flipX={streamable?.flipX}
                 cover={streamable?.displayMode === "cover" && inCameraContainer && !fullScreen}
-                withBackground={inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting"}
+                isBlocked={$isBlockedStore}
+                withBackground={(inCameraContainer && $statusStore !== "error" && $statusStore !== "connecting") ||
+                    $isBlockedStore}
             >
                 <UserName
                     name={name ?? "unknown"}
                     picture={pictureStore}
                     isPlayingAudio={showVoiceIndicator}
                     isCameraDisabled={!videoEnabled && !miniMode}
-                    position={videoEnabled
+                    isBlocked={$isBlockedStore}
+                    position={videoEnabled && !$isBlockedStore
                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                     grayscale={$statusStore === "connecting"}

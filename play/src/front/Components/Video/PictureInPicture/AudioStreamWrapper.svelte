@@ -18,6 +18,7 @@
                 streamStore={$streamable.media.streamStore}
                 volume={$volumeProximityDiscussionStore}
                 outputDeviceId={$speakerSelectedStore}
+                isBlocked={$streamable.media.isBlocked}
                 on:selectOutputAudioDeviceError={() => selectDefaultSpeaker()}
             />
         {/if}

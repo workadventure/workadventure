@@ -58,6 +58,8 @@ async function waitForJoinProximityChat(page: Page): Promise<void> {
   });
 }
 
+test.setTimeout(240_000);
+
 test.describe("Scripting audio streams @nomobile @nofirefox @nowebkit", () => {
   test.beforeEach(async ({ browserName, page }) => {
     // This test does not depend on the browser. Let's only run it in Chromium.

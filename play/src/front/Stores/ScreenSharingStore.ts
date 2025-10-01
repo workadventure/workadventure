@@ -2,8 +2,7 @@ import { get, Readable, derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { localUserStore } from "../Connection/LocalUserStore";
 import LL from "../../i18n/i18n-svelte";
-import { SpaceUserExtended } from "../Space/SpaceInterface";
-import type { LocalStreamStoreValue } from "./MediaStore";
+import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { Streamable, WebRtcStreamable } from "./StreamableCollectionStore";
@@ -69,6 +68,7 @@ export const screenSharingConstraintsStore = derived(
         inExternalServiceStore,
         videoStreamElementsStore,
         screenShareStreamElementsStore,
+        isSpeakerStore,
     ],
     (
         [
@@ -78,6 +78,7 @@ export const screenSharingConstraintsStore = derived(
             $inExternalServiceStore,
             $videoStreamElementsStore,
             $screenShareStreamElementsStore,
+            $isSpeakerStore,
         ],
         set
     ) => {
@@ -97,7 +98,11 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing if no peers
-        if ($videoStreamElementsStore.length === 0 && $screenShareStreamElementsStore.length === 0) {
+        if (
+            $videoStreamElementsStore.length === 0 &&
+            $screenShareStreamElementsStore.length === 0 &&
+            !$isSpeakerStore
+        ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -255,10 +260,9 @@ export const screenSharingLocalMedia = readable<Streamable | undefined>(undefine
         media: {
             type: "webrtc" as const,
             streamStore: mutedLocalMediaStreamStore,
+            isBlocked: writable(false),
         } satisfies WebRtcStreamable,
-        getExtendedSpaceUser(): SpaceUserExtended | undefined {
-            return undefined;
-        },
+        spaceUserId: undefined,
         hasAudio: writable(false),
         hasVideo: writable(true),
         isMuted: writable(true),
