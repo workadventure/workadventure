@@ -139,13 +139,14 @@
                         displayNoVideoWarning = false;
                     }}
                 />
-            {:else if media?.type === "livekit" && media?.remoteVideoTrack}
+            {:else if media?.type === "livekit"}
                 <LivekitVideo
                     {...{
                         ...{},
                         /* @ts-ignore Typescript is not clever enough to understand that media has a non-nullable remoteVideoTrack */
                     }}
                     {media}
+                    remoteVideoTrack={media.remoteVideoTrack}
                     {onLoadVideoElement}
                     style={videoEnabled
                         ? "width: " +

@@ -34,7 +34,7 @@ import { isLiveStreamingStore } from "./IsStreamingStore";
 
 export interface LivekitStreamable {
     type: "livekit";
-    remoteVideoTrack: RemoteVideoTrack | undefined;
+    remoteVideoTrack: Readable<RemoteVideoTrack | undefined>;
     //remoteAudioTrack: RemoteAudioTrack | undefined;
     readonly streamStore: Readable<MediaStream | undefined>;
     readonly isBlocked: Readable<boolean>;
