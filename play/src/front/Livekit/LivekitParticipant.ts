@@ -22,24 +22,7 @@ export class LiveKitParticipant {
     private _audioStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(undefined);
     private _actualVideo: Streamable | undefined;
     private _actualScreenShare: Streamable | undefined;
-    private _streamStore = derived(
-        [this._videoStreamStore, this._audioStreamStore],
-        ([$videoStreamStore, $audioStreamStore]) => {
-            const tracks = [];
-            if ($videoStreamStore) {
-                tracks.push(...$videoStreamStore.getTracks());
-            }
-            if ($audioStreamStore) {
-                tracks.push(...$audioStreamStore.getTracks());
-            }
 
-            if (tracks.length === 0) {
-                return undefined;
-            }
-
-            return new MediaStream(tracks);
-        }
-    );
     private _videoScreenShareStreamStore: Writable<MediaStream | undefined> = writable<MediaStream | undefined>(
         undefined
     );
@@ -149,6 +132,8 @@ export class LiveKitParticipant {
             this._screenShareRemoteTrack.set(track as RemoteVideoTrack);
 
             this.updateLivekitScreenShareStreamStore();
+        } else if (publication.source === Track.Source.Microphone) {
+            this._audioStreamStore.set(track.mediaStream);
         }
     }
 
@@ -171,6 +156,8 @@ export class LiveKitParticipant {
             if (this._actualScreenShare) {
                 this._streamableSubjects.screenSharingPeerRemoved.next(this._actualScreenShare);
             }
+        } else if (publication.source === Track.Source.Microphone) {
+            this._audioStreamStore.set(undefined);
         }
     }
 
